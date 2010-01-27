@@ -1,0 +1,438 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A4A1A638-CEC9-43C2-ABC0-033A755509AC}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>D_Parser</RootNamespace>
+    <AssemblyName>D-IDE</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ManifestCertificateThumbprint>D48926A1D4C4403B3DA34A6064E155E5530CB469</ManifestCertificateThumbprint>
+    <ManifestKeyFile>D-IDE_TemporaryKey.pfx</ManifestKeyFile>
+    <GenerateManifests>true</GenerateManifests>
+    <TargetZone>LocalIntranet</TargetZone>
+    <SignManifests>false</SignManifests>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <StartupObject>D_IDE.Program</StartupObject>
+    <ApplicationIcon>d-ide.ico</ApplicationIcon>
+    <PublishUrl>C:\Users\Alexander\Desktop\D-IDE\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <SupportUrl>http://www.alexanderbothe.com/</SupportUrl>
+    <TargetCulture>en</TargetCulture>
+    <PlatformTarget>x86</PlatformTarget>
+    <ProductName>D-IDE</ProductName>
+    <PublisherName>Alexander Bothe</PublisherName>
+    <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <Win32Resource>
+    </Win32Resource>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DebugEngineWrapper, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\DebugEngineWrapper\Debug\DebugEngineWrapper.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.Core, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=efe927acf176eea2, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.NRefactory.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpDevelop, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.SharpDevelop.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpDevelop.Dom, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.SharpDevelop.Dom.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.TextEditor, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=4d61825e8dd49f1a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.TextEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WeifenLuo.WinFormsUI.Docking, Version=2.2.3633.27487, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\SharpDevelop\3.0\bin\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ClassHierarchy.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ClassHierarchy.Designer.cs">
+      <DependentUpon>ClassHierarchy.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CodeCompletion\AfterSpaceCompletionProvider.cs" />
+    <Compile Include="CodeCompletion\DCodeCompletionProvider_Basics.cs" />
+    <Compile Include="CodeCompletion\DCodeCompletionWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CodeCompletion\DCompletionData.cs" />
+    <Compile Include="CodeCompletion\DFormatting.cs" />
+    <Compile Include="CodeCompletion\InsightView.cs" />
+    <Compile Include="CodeCompletion\XMLFormatting.cs" />
+    <Compile Include="Dialogs\BuildProcessWin.cs">
+      <CustomToolNamespace>D_IDE.Dialogs</CustomToolNamespace>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\BuildProcessWin.Designer.cs">
+      <DependentUpon>BuildProcessWin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CodeCompletion\DCodeCompletionProvider.cs" />
+    <Compile Include="DBuilder.cs" />
+    <Compile Include="Dialogs\CachingScreen.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\CachingScreen.Designer.cs">
+      <DependentUpon>CachingScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\CachingScreen1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CachingScreen.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ErrorLog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ErrorLog.Designer.cs">
+      <DependentUpon>ErrorLog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\BreakpointWin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\BreakpointWin.Designer.cs">
+      <DependentUpon>BreakpointWin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\CallStackWin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\CallStackWin.Designer.cs">
+      <DependentUpon>CallStackWin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\NewPrj.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\NewPrj.Designer.cs">
+      <DependentUpon>NewPrj.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\StartPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\StartPage.Designer.cs">
+      <DependentUpon>StartPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DProject.cs" />
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\IDESettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\IDESettings.Designer.cs">
+      <DependentUpon>IDESettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\GoToLineDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\GoToLineDlg.Designer.cs">
+      <DependentUpon>GoToLineDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form1Debugger.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormsDesigner\FXFormsDesigner.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormsDesigner\HostSurface.cs" />
+    <Compile Include="FormsDesigner\NameCreationSvc.cs" />
+    <Compile Include="FormsDesigner\ToolBox\ToolboxItem.cs" />
+    <Compile Include="FormsDesigner\ToolBox\ToolboxItemCollection.cs" />
+    <Compile Include="FormsDesigner\ToolBox\ToolBoxSvc.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FormsDesigner\ToolBox\ToolboxTab.cs" />
+    <Compile Include="FormsDesigner\ToolBox\ToolboxTabCollection.cs" />
+    <Compile Include="FormsDesigner\ToolBox\ToolboxUIManagerVS.cs" />
+    <Compile Include="FormsDesigner\ToolBox\ToolboxXmlManager.cs" />
+    <Compile Include="PropertyView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PropertyView.Designer.cs">
+      <DependentUpon>PropertyView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form1Addition.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="ProjectExplorer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ProjectExplorer.Designer.cs">
+      <DependentUpon>ProjectExplorer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="ClassHierarchy.resx">
+      <DependentUpon>ClassHierarchy.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\BreakpointWin.resx">
+      <DependentUpon>BreakpointWin.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\BuildProcessWin.resx">
+      <DependentUpon>BuildProcessWin.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\CachingScreen.resx">
+      <DependentUpon>CachingScreen.cs</DependentUpon>
+      <SubType>Designer</SubType>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>CachingScreen1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\CallStackWin.resx">
+      <DependentUpon>CallStackWin.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ErrorLog.resx">
+      <DependentUpon>ErrorLog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\GoToLineDlg.resx">
+      <DependentUpon>GoToLineDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\NewPrj.resx">
+      <DependentUpon>NewPrj.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\StartPage.resx">
+      <DependentUpon>StartPage.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\IDESettings.resx">
+      <DependentUpon>IDESettings.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormsDesigner\ToolBox\ToolBoxSvc.resx">
+      <DependentUpon>ToolBoxSvc.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ProjectPropertyPage.resx">
+      <DependentUpon>ProjectPropertyPage.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PropertyView.resx">
+      <DependentUpon>PropertyView.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProjectExplorer.resx">
+      <DependentUpon>ProjectExplorer.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\SearchReplaceDlg.resx">
+      <DependentUpon>SearchReplaceDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <None Include="app.config" />
+    <None Include="D.xshd">
+    </None>
+    <None Include="Properties\app.manifest" />
+    <Compile Include="DModule.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\SearchReplaceDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\SearchReplaceDlg.Designer.cs">
+      <DependentUpon>SearchReplaceDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ProjectPropertyPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="d-ide.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\D.xshd" />
+    <None Include="bin\Debug\RC.xshd" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Resources\D_StyleSheet.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\d-ide_256.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\d-ide_2563.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\d_file.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\d_file_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\d_file_32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\d_file_48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dprj_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\d_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\stop_build.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\build_prj.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\prj_prop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\save.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\save_all.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\new.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\open.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\new_prj.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\build.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\build_dbg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dprj.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\step_over.png" />
+    <None Include="Resources\step_out.png" />
+    <None Include="Resources\step_in.png" />
+    <None Include="Resources\restart.png" />
+    <None Include="Resources\pause.png" />
+    <None Include="Resources\stop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="d.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Content Include="dbgeng.dll" />
+    <Content Include="dproj.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DParser\DParser\DParser.csproj">
+      <Project>{0290A229-9AA1-41C3-B525-CAFB86D8BC42}</Project>
+      <Name>DParser</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
