@@ -2025,35 +2025,43 @@ parseexpr:
 		void SynErr(int n,int col,int ln)
 		{
 			OnError(PhysFileName,Document.module, ln, col, n, "");
+			errors.SynErr(ln, col, n);
 		}
 		void SynErr(int n,int col,int ln, string msg)
 		{
             OnError(PhysFileName, Document.module, ln, col, n, msg);
+			errors.Error(ln, col, msg);
 		}
 		void SynErr(int n, string msg)
 		{
-            OnError(PhysFileName, Document.module, la.Location.Line, la.Location.Column, n, msg);
+           OnError(PhysFileName, Document.module, la.Location.Line, la.Location.Column, n, msg);
+		   errors.Error(la.Location.Line, la.Location.Column, msg);
 		}
 		void SynErr(int n)
 		{
 			OnError(PhysFileName, Document.module, la.Location.Line, la.Location.Column, n, "");
+			errors.SynErr(la.Location.Line, la.Location.Column, n);
 		}
 
 		void SemErr(int n, int col, int ln)
 		{
             OnSemanticError(PhysFileName, Document.module, ln, col, n, "");
+			errors.SemErr(ln, col, n);
 		}
 		void SemErr(int n, int col, int ln, string msg)
 		{
             OnSemanticError(PhysFileName, Document.module, ln, col, n, msg);
+			errors.Error(ln, col, msg);
 		}
 		void SemErr(int n, string msg)
 		{
 			OnSemanticError(PhysFileName, Document.module, la.Location.Line, la.Location.Column, n, msg);
+			errors.Error(la.Location.Line, la.Location.Column, msg);
 		}
 		void SemErr(int n)
 		{
 			OnSemanticError(PhysFileName, Document.module, la.Location.Line, la.Location.Column, n, "");
+			errors.SemErr(la.Location.Line, la.Location.Column, n);
 		}
 		#endregion
 	}

@@ -4,7 +4,7 @@
   <description asmv2:iconFile="d-ide.ico" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="D-IDE" version="1.0.3679.35133" language="neutral" processorArchitecture="x86" />
+    <assemblyIdentity name="D-IDE" version="1.0.3680.39038" language="neutral" processorArchitecture="x86" />
     <commandLine file="D-IDE.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -57,14 +57,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D_Parser.dll" size="61952">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D_Parser.dll" size="62464">
       <assemblyIdentity name="D_Parser" version="1.0.0.0" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>tSYQLdysQObJ+b8V98xF+lF5BgM=</dsig:DigestValue>
+        <dsig:DigestValue>lTCsGA7Eu3PZ2SWFcvnKZsey4tY=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -81,14 +81,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D-IDE.exe" size="675840">
-      <assemblyIdentity name="D-IDE" version="1.0.3679.35133" language="neutral" processorArchitecture="x86" />
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D-IDE.exe" size="674816">
+      <assemblyIdentity name="D-IDE" version="1.0.3680.39038" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>O1i7irEIn6XorzWznDud+T51mMU=</dsig:DigestValue>
+        <dsig:DigestValue>ddjuc7RAzc5cwiPszfcYODYTAng=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

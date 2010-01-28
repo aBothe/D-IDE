@@ -103,7 +103,7 @@ namespace D_IDE
 			HostCallbackImplementation.Register();
 			HighlightingManager.Manager.AddSyntaxModeFileProvider(new SyntaxFileProvider());
 
-			//DLexer.OnError += new DLexer.LexerErrorHandler(DLexer_OnError);
+			//DLexer.OnError += DLexer_OnError;
 
 			DParser.OnError += DParser_OnError;
 			DParser.OnSemanticError += DParser_OnSemanticError;
@@ -1235,7 +1235,7 @@ namespace D_IDE
 			string ans = "";
 			try
 			{
-				ans = wc.DownloadString(Program.d_ide_php + "?version=1&fromIDE=1");
+				ans = wc.DownloadString("http://d-ide.svn.sourceforge.net/viewvc/d-ide/ver.txt");
 			}
 			catch (Exception ex)
 			{
@@ -1276,9 +1276,10 @@ namespace D_IDE
 									if (MessageBox.Show(
 										"Your version is " + this_ver.ToString() +
 										"\nThere is a new version " + new_ver.ToString() +
-										"\nDo you want to download it?", "Update available", MessageBoxButtons.YesNo) == DialogResult.Yes)
+										"\nDo you want to visit the files page?", "Update available", MessageBoxButtons.YesNo) == DialogResult.Yes)
 									{
-										WebClient wc = new WebClient();
+										Process.Start("https://sourceforge.net/projects/d-ide/files/");
+										/*WebClient wc = new WebClient();
 										string file = wc.DownloadString(Program.d_ide_php + "?filename=1&fromIDE=1");
 
 										SaveFileDialog upd_sf = new SaveFileDialog();
@@ -1304,7 +1305,7 @@ namespace D_IDE
 											}
 											MessageBox.Show(file + " successfully downloaded!");
 
-										}
+										}*/
 									}
 								}
 								else Form1.thisForm.Log("No new version found!");
@@ -1373,8 +1374,7 @@ namespace D_IDE
 
 		private void aboutDIDEToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			MessageBox.Show("This software is freeware\nand is written by Alexander Bothe.\nFor info, check out www.alexanderbothe.com",
-				title);
+			MessageBox.Show("This software is freeware\nand is written by Alexander Bothe.",title);
 		}
 
 		private void saveAllToolStripMenuItem_Click(object sender, EventArgs e)
