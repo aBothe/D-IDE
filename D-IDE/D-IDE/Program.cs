@@ -11,8 +11,8 @@ namespace D_IDE
 		public static string prop_file = "D-IDE.properties.dat";
 		public static string ModuleCacheFile = "D-IDE.cache.dat";
 		public static string LayoutFile = "D-IDE.layout.xml";
-		public const string news_php = "http://www.alexanderbothe.com/classes/news.php";
-		//public const string news_php = "http://localhost/my/classes/news.php";
+		public const string news_php = "http://d-ide.sourceforge.net/classes/news.php";
+		public const string ver_txt = "http://d-ide.svn.sourceforge.net/viewvc/d-ide/ver.txt";
 		public static App app;
 		public static bool Parsing = false;
 		/// <summary>

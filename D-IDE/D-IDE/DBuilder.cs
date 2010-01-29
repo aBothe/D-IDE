@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading;
 using System.Diagnostics;
 using D_Parser;
+using Microsoft.Win32;
 
 namespace D_IDE
 {

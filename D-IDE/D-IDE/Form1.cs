@@ -1235,7 +1235,7 @@ namespace D_IDE
 			string ans = "";
 			try
 			{
-				ans = wc.DownloadString("http://d-ide.svn.sourceforge.net/viewvc/d-ide/ver.txt");
+				ans = wc.DownloadString(Program.ver_txt);
 			}
 			catch (Exception ex)
 			{

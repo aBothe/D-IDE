@@ -647,10 +647,10 @@ namespace D_IDE
 		public string exe_res = "rc.exe";
         public string exe_dbg = "windbg.exe";
 
-		public string cmp_obj = "-c -O \"$src\" -of\"$obj\"";
-		public string link_win_exe = "$objs $libs -L/su:windows -of\"$exe\"";
-		public string link_to_exe = "$objs $libs -of\"$exe\"";
-		public string link_to_dll = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\"";
+		public string cmp_obj = "-c -O \"$src\" -of\"$obj\" -gc";
+		public string link_win_exe = "$objs $libs -L/su:windows -of\"$exe\" -gc";
+		public string link_to_exe = "$objs $libs -of\"$exe\" -gc";
+		public string link_to_dll = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
 		public string link_to_lib = "$objs $libs -of\"$lib\"";
 		public string cmp_res = "/fo\"$res\" \"$rc\"";
         public string dbg_args = "\"$exe\"";

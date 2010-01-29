@@ -34,12 +34,12 @@
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this.lastFiles = new System.Windows.Forms.ListBox();
 			this.groupBox3 = new System.Windows.Forms.GroupBox();
+			this.web = new System.Windows.Forms.WebBrowser();
 			this.chTimer = new System.Windows.Forms.Timer(this.components);
 			this.doCheckAtStartCBox = new System.Windows.Forms.CheckBox();
 			this.button2 = new System.Windows.Forms.Button();
 			this.button1 = new System.Windows.Forms.Button();
 			this.button3 = new System.Windows.Forms.Button();
-			this.web = new System.Windows.Forms.WebBrowser();
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.groupBox3.SuspendLayout();
@@ -114,7 +114,20 @@
 			this.groupBox3.Size = new System.Drawing.Size(529, 559);
 			this.groupBox3.TabIndex = 2;
 			this.groupBox3.TabStop = false;
-			this.groupBox3.Text = "Latest news from alexanderbothe.com";
+			this.groupBox3.Text = "Latest news from d-ide.sourceforge.net";
+			// 
+			// web
+			// 
+			this.web.AllowNavigation = false;
+			this.web.AllowWebBrowserDrop = false;
+			this.web.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.web.IsWebBrowserContextMenuEnabled = false;
+			this.web.Location = new System.Drawing.Point(3, 16);
+			this.web.MinimumSize = new System.Drawing.Size(20, 20);
+			this.web.Name = "web";
+			this.web.Size = new System.Drawing.Size(523, 540);
+			this.web.TabIndex = 1;
+			this.web.WebBrowserShortcutsEnabled = false;
 			// 
 			// chTimer
 			// 
@@ -163,19 +176,6 @@
 			this.button3.Text = "Open Selected";
 			this.button3.UseVisualStyleBackColor = true;
 			this.button3.Click += new System.EventHandler(this.lastProjects_DoubleClick);
-			// 
-			// web
-			// 
-			this.web.AllowNavigation = false;
-			this.web.AllowWebBrowserDrop = false;
-			this.web.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.web.IsWebBrowserContextMenuEnabled = false;
-			this.web.Location = new System.Drawing.Point(3, 16);
-			this.web.MinimumSize = new System.Drawing.Size(20, 20);
-			this.web.Name = "web";
-			this.web.Size = new System.Drawing.Size(523, 540);
-			this.web.TabIndex = 1;
-			this.web.WebBrowserShortcutsEnabled = false;
 			// 
 			// StartPage
 			// 

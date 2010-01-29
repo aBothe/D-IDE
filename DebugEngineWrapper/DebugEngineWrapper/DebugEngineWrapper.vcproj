@@ -61,6 +61,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="dbgeng.lib user32.lib dbghelp.lib $(NOINHERIT)"
 				LinkIncremental="2"
+				EnableUAC="false"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				TargetMachine="1"
