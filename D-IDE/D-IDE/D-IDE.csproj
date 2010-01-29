@@ -8,7 +8,7 @@
     <ProjectGuid>{A4A1A638-CEC9-43C2-ABC0-033A755509AC}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>D_Parser</RootNamespace>
+    <RootNamespace>D_IDE</RootNamespace>
     <AssemblyName>D-IDE</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -420,6 +420,9 @@
     </Resource>
     <Content Include="dbgeng.dll" />
     <Content Include="dproj.ico" />
+    <None Include="Resources\paste.png" />
+    <None Include="Resources\cut.png" />
+    <None Include="Resources\copy.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DParser\DParser\DParser.csproj">

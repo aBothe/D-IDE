@@ -10,7 +10,7 @@ using System.Xml;
 using D_IDE.CodeCompletion;
 using D_Parser;
 using D_Parser.CodeCompletion;
-using D_Parser.Properties;
+using D_IDE.Properties;
 using ICSharpCode.NRefactory;
 using ICSharpCode.SharpDevelop.Dom;
 using ICSharpCode.TextEditor;

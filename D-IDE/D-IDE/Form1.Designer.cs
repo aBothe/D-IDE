@@ -110,6 +110,10 @@
 			this.open_TBS = new System.Windows.Forms.ToolStripButton();
 			this.save_TBS = new System.Windows.Forms.ToolStripButton();
 			this.saveAll_TBS = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator17 = new System.Windows.Forms.ToolStripSeparator();
+			this.cutTBSButton = new System.Windows.Forms.ToolStripButton();
+			this.copyTBSButton = new System.Windows.Forms.ToolStripButton();
+			this.pasteTBSButton = new System.Windows.Forms.ToolStripButton();
 			this.sep_TBS1 = new System.Windows.Forms.ToolStripSeparator();
 			this.build_TBS = new System.Windows.Forms.ToolStripButton();
 			this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
@@ -226,7 +230,7 @@
 			// 
 			// projectToolStripMenuItem
 			// 
-			this.projectToolStripMenuItem.Image = global::D_Parser.Properties.Resources.new_prj;
+			this.projectToolStripMenuItem.Image = global::D_IDE.Properties.Resources.new_prj;
 			this.projectToolStripMenuItem.Name = "projectToolStripMenuItem";
 			this.projectToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
 			this.projectToolStripMenuItem.Text = "Project";
@@ -243,7 +247,7 @@
 			// 
 			// openToolStripMenuItem
 			// 
-			this.openToolStripMenuItem.Image = global::D_Parser.Properties.Resources.open;
+			this.openToolStripMenuItem.Image = global::D_IDE.Properties.Resources.open;
 			this.openToolStripMenuItem.Name = "openToolStripMenuItem";
 			this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
 			this.openToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
@@ -252,7 +256,7 @@
 			// 
 			// saveToolStripMenuItem
 			// 
-			this.saveToolStripMenuItem.Image = global::D_Parser.Properties.Resources.save;
+			this.saveToolStripMenuItem.Image = global::D_IDE.Properties.Resources.save;
 			this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
 			this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
 			this.saveToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
@@ -273,7 +277,7 @@
 			// 
 			// saveAllToolStripMenuItem
 			// 
-			this.saveAllToolStripMenuItem.Image = global::D_Parser.Properties.Resources.save_all;
+			this.saveAllToolStripMenuItem.Image = global::D_IDE.Properties.Resources.save_all;
 			this.saveAllToolStripMenuItem.Name = "saveAllToolStripMenuItem";
 			this.saveAllToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
 			this.saveAllToolStripMenuItem.Text = "Save All";
@@ -456,7 +460,7 @@
 			// 
 			// buildToolStripMenuItem
 			// 
-			this.buildToolStripMenuItem.Image = global::D_Parser.Properties.Resources.build_prj;
+			this.buildToolStripMenuItem.Image = global::D_IDE.Properties.Resources.build_prj;
 			this.buildToolStripMenuItem.Name = "buildToolStripMenuItem";
 			this.buildToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F6;
 			this.buildToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
@@ -499,7 +503,7 @@
 			// 
 			// propertiesToolStripMenuItem
 			// 
-			this.propertiesToolStripMenuItem.Image = global::D_Parser.Properties.Resources.prj_prop;
+			this.propertiesToolStripMenuItem.Image = global::D_IDE.Properties.Resources.prj_prop;
 			this.propertiesToolStripMenuItem.Name = "propertiesToolStripMenuItem";
 			this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
 			this.propertiesToolStripMenuItem.Text = "Properties";
@@ -521,7 +525,7 @@
 			// 
 			// buildAndDebugToolStripMenuItem1
 			// 
-			this.buildAndDebugToolStripMenuItem1.Image = global::D_Parser.Properties.Resources.build_dbg;
+			this.buildAndDebugToolStripMenuItem1.Image = global::D_IDE.Properties.Resources.build_dbg;
 			this.buildAndDebugToolStripMenuItem1.Name = "buildAndDebugToolStripMenuItem1";
 			this.buildAndDebugToolStripMenuItem1.ShortcutKeys = System.Windows.Forms.Keys.F5;
 			this.buildAndDebugToolStripMenuItem1.Size = new System.Drawing.Size(240, 22);
@@ -530,7 +534,7 @@
 			// 
 			// runWithoutDebuggerToolStripMenuItem
 			// 
-			this.runWithoutDebuggerToolStripMenuItem.Image = global::D_Parser.Properties.Resources.build;
+			this.runWithoutDebuggerToolStripMenuItem.Image = global::D_IDE.Properties.Resources.build;
 			this.runWithoutDebuggerToolStripMenuItem.Name = "runWithoutDebuggerToolStripMenuItem";
 			this.runWithoutDebuggerToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+F5";
 			this.runWithoutDebuggerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F5)));
@@ -546,7 +550,7 @@
 			// singleSteptoolStripMenuItem3
 			// 
 			this.singleSteptoolStripMenuItem3.Enabled = false;
-			this.singleSteptoolStripMenuItem3.Image = global::D_Parser.Properties.Resources.step_in;
+			this.singleSteptoolStripMenuItem3.Image = global::D_IDE.Properties.Resources.step_in;
 			this.singleSteptoolStripMenuItem3.Name = "singleSteptoolStripMenuItem3";
 			this.singleSteptoolStripMenuItem3.ShortcutKeys = System.Windows.Forms.Keys.F11;
 			this.singleSteptoolStripMenuItem3.Size = new System.Drawing.Size(240, 22);
@@ -556,7 +560,7 @@
 			// stepOverToolStripMenuItem
 			// 
 			this.stepOverToolStripMenuItem.Enabled = false;
-			this.stepOverToolStripMenuItem.Image = global::D_Parser.Properties.Resources.step_over;
+			this.stepOverToolStripMenuItem.Image = global::D_IDE.Properties.Resources.step_over;
 			this.stepOverToolStripMenuItem.Name = "stepOverToolStripMenuItem";
 			this.stepOverToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F10;
 			this.stepOverToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
@@ -775,6 +779,10 @@
             this.open_TBS,
             this.save_TBS,
             this.saveAll_TBS,
+            this.toolStripSeparator17,
+            this.cutTBSButton,
+            this.copyTBSButton,
+            this.pasteTBSButton,
             this.sep_TBS1,
             this.build_TBS,
             this.toolStripButton1,
@@ -801,7 +809,7 @@
 			// newPrj_TBS
 			// 
 			this.newPrj_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.newPrj_TBS.Image = global::D_Parser.Properties.Resources.new_prj;
+			this.newPrj_TBS.Image = global::D_IDE.Properties.Resources.new_prj;
 			this.newPrj_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.newPrj_TBS.Name = "newPrj_TBS";
 			this.newPrj_TBS.Size = new System.Drawing.Size(23, 22);
@@ -822,7 +830,7 @@
 			// open_TBS
 			// 
 			this.open_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.open_TBS.Image = global::D_Parser.Properties.Resources.open;
+			this.open_TBS.Image = global::D_IDE.Properties.Resources.open;
 			this.open_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.open_TBS.Name = "open_TBS";
 			this.open_TBS.Size = new System.Drawing.Size(23, 22);
@@ -832,7 +840,7 @@
 			// save_TBS
 			// 
 			this.save_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.save_TBS.Image = global::D_Parser.Properties.Resources.save;
+			this.save_TBS.Image = global::D_IDE.Properties.Resources.save;
 			this.save_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.save_TBS.Name = "save_TBS";
 			this.save_TBS.Size = new System.Drawing.Size(23, 22);
@@ -842,12 +850,50 @@
 			// saveAll_TBS
 			// 
 			this.saveAll_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.saveAll_TBS.Image = global::D_Parser.Properties.Resources.save_all;
+			this.saveAll_TBS.Image = global::D_IDE.Properties.Resources.save_all;
 			this.saveAll_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.saveAll_TBS.Name = "saveAll_TBS";
 			this.saveAll_TBS.Size = new System.Drawing.Size(23, 22);
 			this.saveAll_TBS.Text = "Save all";
 			this.saveAll_TBS.Click += new System.EventHandler(this.saveAllToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator17
+			// 
+			this.toolStripSeparator17.Name = "toolStripSeparator17";
+			this.toolStripSeparator17.Size = new System.Drawing.Size(6, 25);
+			// 
+			// cutTBSButton
+			// 
+			this.cutTBSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.cutTBSButton.Image = global::D_IDE.Properties.Resources.cut;
+			this.cutTBSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.cutTBSButton.Name = "cutTBSButton";
+			this.cutTBSButton.Size = new System.Drawing.Size(23, 22);
+			this.cutTBSButton.Text = "toolStripButton3";
+			this.cutTBSButton.ToolTipText = "Cut";
+			this.cutTBSButton.Click += new System.EventHandler(this.cutTBSButton_Click);
+			// 
+			// copyTBSButton
+			// 
+			this.copyTBSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.copyTBSButton.Image = global::D_IDE.Properties.Resources.copy;
+			this.copyTBSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.copyTBSButton.Name = "copyTBSButton";
+			this.copyTBSButton.Size = new System.Drawing.Size(23, 22);
+			this.copyTBSButton.Text = "toolStripButton4";
+			this.copyTBSButton.ToolTipText = "Copy";
+			this.copyTBSButton.Click += new System.EventHandler(this.copyTBSButton_Click);
+			// 
+			// pasteTBSButton
+			// 
+			this.pasteTBSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.pasteTBSButton.Image = global::D_IDE.Properties.Resources.paste;
+			this.pasteTBSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.pasteTBSButton.Name = "pasteTBSButton";
+			this.pasteTBSButton.Size = new System.Drawing.Size(23, 22);
+			this.pasteTBSButton.Text = "toolStripButton5";
+			this.pasteTBSButton.ToolTipText = "Paste";
+			this.pasteTBSButton.Click += new System.EventHandler(this.toolStripButton5_Click);
 			// 
 			// sep_TBS1
 			// 
@@ -857,7 +903,7 @@
 			// build_TBS
 			// 
 			this.build_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.build_TBS.Image = global::D_Parser.Properties.Resources.build_prj;
+			this.build_TBS.Image = global::D_IDE.Properties.Resources.build_prj;
 			this.build_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.build_TBS.Name = "build_TBS";
 			this.build_TBS.Size = new System.Drawing.Size(23, 22);
@@ -867,7 +913,7 @@
 			// toolStripButton1
 			// 
 			this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.toolStripButton1.Image = global::D_Parser.Properties.Resources.build;
+			this.toolStripButton1.Image = global::D_IDE.Properties.Resources.build;
 			this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.toolStripButton1.Name = "toolStripButton1";
 			this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
@@ -878,7 +924,7 @@
 			// toolStripButton2
 			// 
 			this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.toolStripButton2.Image = global::D_Parser.Properties.Resources.prj_prop;
+			this.toolStripButton2.Image = global::D_IDE.Properties.Resources.prj_prop;
 			this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.toolStripButton2.Name = "toolStripButton2";
 			this.toolStripButton2.Size = new System.Drawing.Size(23, 22);
@@ -893,7 +939,7 @@
 			// dbgContinueTS
 			// 
 			this.dbgContinueTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.dbgContinueTS.Image = global::D_Parser.Properties.Resources.build_dbg;
+			this.dbgContinueTS.Image = global::D_IDE.Properties.Resources.build_dbg;
 			this.dbgContinueTS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.dbgContinueTS.Name = "dbgContinueTS";
 			this.dbgContinueTS.Size = new System.Drawing.Size(23, 22);
@@ -905,7 +951,7 @@
 			// 
 			this.dbgPauseButtonTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.dbgPauseButtonTS.Enabled = false;
-			this.dbgPauseButtonTS.Image = global::D_Parser.Properties.Resources.pause;
+			this.dbgPauseButtonTS.Image = global::D_IDE.Properties.Resources.pause;
 			this.dbgPauseButtonTS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.dbgPauseButtonTS.Name = "dbgPauseButtonTS";
 			this.dbgPauseButtonTS.Size = new System.Drawing.Size(23, 22);
@@ -917,7 +963,7 @@
 			// 
 			this.dbgStopButtonTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.dbgStopButtonTS.Enabled = false;
-			this.dbgStopButtonTS.Image = global::D_Parser.Properties.Resources.stop;
+			this.dbgStopButtonTS.Image = global::D_IDE.Properties.Resources.stop;
 			this.dbgStopButtonTS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.dbgStopButtonTS.Name = "dbgStopButtonTS";
 			this.dbgStopButtonTS.Size = new System.Drawing.Size(23, 22);
@@ -934,7 +980,7 @@
 			// 
 			this.stepInTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.stepInTS.Enabled = false;
-			this.stepInTS.Image = global::D_Parser.Properties.Resources.step_in;
+			this.stepInTS.Image = global::D_IDE.Properties.Resources.step_in;
 			this.stepInTS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.stepInTS.Name = "stepInTS";
 			this.stepInTS.Size = new System.Drawing.Size(23, 22);
@@ -945,7 +991,7 @@
 			// 
 			this.stepOverTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.stepOverTS.Enabled = false;
-			this.stepOverTS.Image = global::D_Parser.Properties.Resources.step_over;
+			this.stepOverTS.Image = global::D_IDE.Properties.Resources.step_over;
 			this.stepOverTS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.stepOverTS.Name = "stepOverTS";
 			this.stepOverTS.Size = new System.Drawing.Size(23, 22);
@@ -956,7 +1002,7 @@
 			// 
 			this.stepOutTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
 			this.stepOutTS.Enabled = false;
-			this.stepOutTS.Image = global::D_Parser.Properties.Resources.step_out;
+			this.stepOutTS.Image = global::D_IDE.Properties.Resources.step_out;
 			this.stepOutTS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.stepOutTS.Name = "stepOutTS";
 			this.stepOutTS.Size = new System.Drawing.Size(23, 22);
@@ -1113,6 +1159,10 @@
 		private System.Windows.Forms.ToolStripMenuItem stepOverToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator16;
 		private System.Windows.Forms.ToolStripMenuItem toggleBreakpointToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator17;
+		private System.Windows.Forms.ToolStripButton cutTBSButton;
+		private System.Windows.Forms.ToolStripButton copyTBSButton;
+		private System.Windows.Forms.ToolStripButton pasteTBSButton;
 	}
 }
 

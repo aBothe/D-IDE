@@ -10,7 +10,7 @@ using System.Xml;
 using D_IDE.CodeCompletion;
 using D_Parser;
 using D_Parser.CodeCompletion;
-using D_Parser.Properties;
+using D_IDE.Properties;
 using ICSharpCode.NRefactory;
 using ICSharpCode.SharpDevelop.Dom;
 using ICSharpCode.TextEditor;
@@ -39,6 +39,19 @@ namespace D_IDE
 			base.Update();
 		}
 
+		public void EmulateCopy()
+		{
+			txt.ActiveTextAreaControl.TextArea.ExecuteDialogKey(Keys.C | Keys.Control);
+		}
+		public void EmulateCut()
+		{
+			txt.ActiveTextAreaControl.TextArea.ExecuteDialogKey(Keys.X | Keys.Control);
+		}
+		public void EmulatePaste()
+		{
+			txt.ActiveTextAreaControl.TextArea.ExecuteDialogKey(Keys.V | Keys.Control);
+		}
+
 		void Init(string fn)
 		{
 			this.DockAreas = DockAreas.Document;
@@ -58,7 +71,6 @@ namespace D_IDE
 			txt.TextEditorProperties.EnableFolding = true;
 			txt.TextEditorProperties.IsIconBarVisible = false;
 			txt.TextEditorProperties.LineViewerStyle = LineViewerStyle.FullRow;
-			//txt.TextEditorProperties.UseCustomLine = true;
 
 			txt.TextEditorProperties.ShowEOLMarker = false;
 			txt.TextEditorProperties.ShowHorizontalRuler = false;
@@ -72,7 +84,7 @@ namespace D_IDE
 			txt.SetHighlighting(Path.GetExtension(fn).TrimStart(new char[] { '.' }).ToUpper());
 			txt.ActiveTextAreaControl.Caret.PositionChanged += new EventHandler(Caret_PositionChanged);
 
-			if(DModule.Parsable(fn))
+			if (DModule.Parsable(fn))
 			{
 				txt.Document.FormattingStrategy = new DFormattingStrategy();
 				txt.Document.TextContentChanged += Document_TextContentChanged;
@@ -88,11 +100,24 @@ namespace D_IDE
 			this.goToDefinitionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			createImportDirectiveItem = new ToolStripMenuItem();
 
+			ToolStripMenuItem tmi1 = new ToolStripMenuItem("Copy", global::D_IDE.Properties.Resources.copy, new EventHandler(delegate(object sender, EventArgs ea)
+				{
+					EmulateCopy();
+				}));
+			ToolStripMenuItem tmi2 = new ToolStripMenuItem("Cut", global::D_IDE.Properties.Resources.cut, new EventHandler(delegate(object sender, EventArgs ea)
+			{
+				EmulateCut();
+			}));
+			ToolStripMenuItem tmi3 = new ToolStripMenuItem("Paste", global::D_IDE.Properties.Resources.paste, new EventHandler(delegate(object sender, EventArgs ea)
+			{
+				EmulatePaste();
+			}));
+
 			this.tcCont.SuspendLayout();
 			// 
 			// tcCont
 			// 
-			this.tcCont.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.goToDefinitionToolStripMenuItem, createImportDirectiveItem });
+			this.tcCont.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tmi1, tmi2, tmi3, new ToolStripSeparator(), this.goToDefinitionToolStripMenuItem, createImportDirectiveItem });
 			this.tcCont.Name = "tcCont";
 			this.tcCont.Size = new System.Drawing.Size(158, 120);
 			// 
@@ -130,30 +155,30 @@ namespace D_IDE
 				" Col " + (txt.ActiveTextAreaControl.Caret.Column).ToString();
 			DataType tv = DCodeCompletionProvider.GetBlockAt(fileData.dom, Caret);
 
-			if(Form1.thisForm.CurBlockEnts.Tag != tv || Form1.thisForm.CurBlockEnts.Tag == null)
+			if (Form1.thisForm.CurBlockEnts.Tag != tv || Form1.thisForm.CurBlockEnts.Tag == null)
 			{
-				DCodeCompletionProvider.GenerateCurrentGlobalData(txt.ActiveTextAreaControl.TextArea,project,fileData);
+				DCodeCompletionProvider.GenerateCurrentGlobalData(txt.ActiveTextAreaControl.TextArea, project, fileData);
 				Form1.thisForm.CurBlockEnts.DropDownItems.Clear();
 				Form1.thisForm.CurBlockEnts.Tag = tv;
 				Form1.thisForm.CurBlockEnts.Image = Form1.thisForm.icons.Images[DCompletionData.GetImageIndex(Form1.thisForm.icons, (DataType)tv.Parent, (DataType)tv)];
 				Form1.thisForm.CurBlockEnts.Text = tv.name;
 				Form1.thisForm.CurBlockEnts.ToolTipText = tv.desc;
 
-				foreach(DataType ch in tv)
+				foreach (DataType ch in tv)
 				{
-                    if (Form1.thisForm.CurBlockEnts.DropDownItems.Count > 60)
-                    {
-                        Form1.thisForm.CurBlockEnts.DropDownItems.Add("[Too much elements]");
-                        break;
-                    }
+					if (Form1.thisForm.CurBlockEnts.DropDownItems.Count > 60)
+					{
+						Form1.thisForm.CurBlockEnts.DropDownItems.Add("[Too much elements]");
+						break;
+					}
 					ToolStripMenuItem tsmi = new ToolStripMenuItem(
 						DCompletionData.BuildDescriptionString(ch, false),
 						Form1.thisForm.icons.Images[DCompletionData.GetImageIndex(Form1.thisForm.icons, (DataType)tv, (DataType)ch)]
-						,delegate(Object s,EventArgs ea)
+						, delegate(Object s, EventArgs ea)
 						{
 							ToolStripMenuItem mi = (ToolStripMenuItem)s;
 							DocumentInstanceWindow diw = Form1.SelectedTabPage;
-							if(diw != null)
+							if (diw != null)
 							{
 								diw.txt.ActiveTextAreaControl.Caret.Position = new TextLocation((mi.Tag as DataType).startLoc.Column - 1, (mi.Tag as DataType).startLoc.Line - 1);
 								diw.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
@@ -192,19 +217,19 @@ namespace D_IDE
 					out gpf
 					);
 
-			if (gpf==null||dt == null) return;
+			if (gpf == null || dt == null) return;
 
-			if(fileData.import.Contains(dt.module))
+			if (fileData.import.Contains(dt.module))
 			{
 				MessageBox.Show("Import directive is already existing!");
 				return;
 			}
-			
-				TextLocation tl = txt.ActiveTextAreaControl.Caret.Position;
-				string inss = "import " + dt.module + ";\r\n";
-				txt.Document.TextContent = txt.Document.TextContent.Insert(0, inss);
-				tl.Line++;
-				txt.ActiveTextAreaControl.Caret.Position = tl;
+
+			TextLocation tl = txt.ActiveTextAreaControl.Caret.Position;
+			string inss = "import " + dt.module + ";\r\n";
+			txt.Document.TextContent = txt.Document.TextContent.Insert(0, inss);
+			tl.Line++;
+			txt.ActiveTextAreaControl.Caret.Position = tl;
 		}
 
 		/// <summary>
@@ -212,14 +237,14 @@ namespace D_IDE
 		/// </summary>
 		bool TextAreaKeyEventHandler(char key)
 		{
-			if(Program.Parsing) return false;
+			if (Program.Parsing) return false;
 			Modified = true;
 			Update();
-			if(key == '(')
+			if (key == '(')
 			{
 				txt.Document.Insert(CaretOffset, ")");
 			}
-			if(key == '(' || key == ',')
+			if (key == '(' || key == ',')
 			{
 				ShowFunctionParameterToolTip(key);
 				return false;
@@ -228,9 +253,9 @@ namespace D_IDE
 			ICompletionDataProvider dataProvider = null;
 
 			DProject prj = Form1.thisForm.prj;
-			if(prj == null) prj = new DProject();
+			if (prj == null) prj = new DProject();
 
-			if(Char.IsLetterOrDigit(key) || key == '_' || key == '.' || key == ' ')
+			if (Char.IsLetterOrDigit(key) || key == '_' || key == '.' || key == ' ')
 				dataProvider = new DCodeCompletionProvider(ref prj, Form1.thisForm.icons);
 			else return false;
 
@@ -246,7 +271,7 @@ namespace D_IDE
 
 		private void goToDefinitionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			if(Program.Parsing) return;
+			if (Program.Parsing) return;
 			int off = txt.ActiveTextAreaControl.Caret.Offset;
 			bool ctor, super, isInst, isNameSpace;
 
@@ -258,7 +283,7 @@ namespace D_IDE
 			}
 
 			int key = DKeywords.GetToken(exprs[0]);
-			if (key != -1 && key != DTokens.This && key != DTokens.Super)	return;
+			if (key != -1 && key != DTokens.This && key != DTokens.Super) return;
 			DModule gpf = null;
 			DataType dt =
 				DCodeCompletionProvider.FindActualExpression(project,
@@ -271,12 +296,12 @@ namespace D_IDE
 					out isNameSpace,
 					out gpf
 					);
-			
+
 			if (dt == null) return;
 
 			DocumentInstanceWindow diw = Form1.thisForm.Open(gpf.mod_file);
-			
-			if(diw != null)
+
+			if (diw != null)
 			{
 				//MessageBox.Show(dt.name);
 				diw.txt.ActiveTextAreaControl.Caret.Position = new TextLocation(dt.startLoc.Column - 1, dt.startLoc.Line - 1);
@@ -286,9 +311,9 @@ namespace D_IDE
 
 		void TextArea_ToolTipRequest(object sender, ToolTipRequestEventArgs e)
 		{
-			if(!e.InDocument || Program.Parsing) return;
+			if (!e.InDocument || Program.Parsing) return;
 			TextArea ta = (TextArea)sender;
-			if(ta == null || !fileData.IsParsable) return;
+			if (ta == null || !fileData.IsParsable) return;
 
 			int mouseOffset = 0;
 			try
@@ -299,15 +324,15 @@ namespace D_IDE
 			{
 				return;
 			}
-			if(mouseOffset < 1) return;
+			if (mouseOffset < 1) return;
 			bool ctor, super, isInst, isNameSpace;
-			DModule gpf=null;
+			DModule gpf = null;
 			int off = mouseOffset;
 			string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(ref off, out ctor, false);
-			if(exprs == null || exprs.Length < 1) return;
+			if (exprs == null || exprs.Length < 1) return;
 
 			int key = DKeywords.GetToken(exprs[0]);
-			if(key != -1 && key != DTokens.This && key != DTokens.Super)
+			if (key != -1 && key != DTokens.This && key != DTokens.Super)
 			{
 				e.ShowToolTip(DTokens.GetDescription(key));
 				return;
@@ -325,20 +350,20 @@ namespace D_IDE
 					out gpf
 					);
 
-			if(dt == null) return;
+			if (dt == null) return;
 
-			if(!ctor)
+			if (!ctor)
 				e.ShowToolTip(DCompletionData.BuildDescriptionString(dt));
 			else
 			{
 				string tt = "";
-				if(dt.Count < 1) return;
-				foreach(DataType ch in dt)
+				if (dt.Count < 1) return;
+				foreach (DataType ch in dt)
 				{
-					if(ch.fieldtype == FieldType.Constructor)
+					if (ch.fieldtype == FieldType.Constructor)
 						tt += DCompletionData.BuildDescriptionString(ch) + "\n\n";
 				}
-				if(tt != "") e.ShowToolTip(tt);
+				if (tt != "") e.ShowToolTip(tt);
 			}
 		}
 
@@ -356,7 +381,7 @@ namespace D_IDE
 			txt.Document.FormattingStrategy.IndentLine(txt.ActiveTextAreaControl.TextArea, txt.ActiveTextAreaControl.Caret.Line);
 		}
 
-		public DocumentInstanceWindow(string filename,DProject prj)
+		public DocumentInstanceWindow(string filename, DProject prj)
 		{
 			this.project = prj;
 			Init(filename);
@@ -377,7 +402,7 @@ namespace D_IDE
 			catch { txt.Document.TextContent = File.ReadAllText(filename); }
 		}
 
-		public DocumentInstanceWindow(string filename, string content,DProject prj)
+		public DocumentInstanceWindow(string filename, string content, DProject prj)
 		{
 			this.project = prj;
 			Init(filename);
@@ -386,7 +411,7 @@ namespace D_IDE
 
 		public void Save()
 		{
-			if(fileData.mod_file == "" || fileData.mod_file == null) return;
+			if (fileData.mod_file == "" || fileData.mod_file == null) return;
 			File.WriteAllText(fileData.mod_file, txt.Document.TextContent);
 			Modified = false;
 			Update();
@@ -394,15 +419,15 @@ namespace D_IDE
 
 		public void ParseFromText()
 		{
-            Form1.thisForm.errlog.parserErrors.Clear();
-            Form1.thisForm.errlog.Update();
+			Form1.thisForm.errlog.parserErrors.Clear();
+			Form1.thisForm.errlog.Update();
 
 			txt.Document.MarkerStrategy.RemoveAll(new Predicate<TextMarker>(delegate(TextMarker tm)
 			{
 				return true;
 			}));
 			Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + fileData.mod;
-			fileData.dom = DParser.ParseText(fileData.mod_file,fileData.mod, txt.Text, out fileData.import);
+			fileData.dom = DParser.ParseText(fileData.mod_file, fileData.mod, txt.Text, out fileData.import);
 			Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + fileData.mod;
 
 			if (project != null)
@@ -419,10 +444,10 @@ namespace D_IDE
 		{
 			List<FoldMarker> ret = new List<FoldMarker>();
 
-			if(env.Count > 1)
-				foreach(DataType ch in env)
+			if (env.Count > 1)
+				foreach (DataType ch in env)
 				{
-					if(DTokens.ClassLike[(int)ch.TypeToken] || ch.fieldtype == FieldType.Function || ch.fieldtype == FieldType.Constructor)
+					if (DTokens.ClassLike[(int)ch.TypeToken] || ch.fieldtype == FieldType.Function || ch.fieldtype == FieldType.Constructor)
 					{
 						ret.Add(new FoldMarker(
 							txt.Document,
@@ -442,7 +467,7 @@ namespace D_IDE
 	{
 		public static void Load(string fn)
 		{
-			if(File.Exists(fn))
+			if (File.Exists(fn))
 			{
 				BinaryFormatter formatter = new BinaryFormatter();
 
@@ -452,7 +477,7 @@ namespace D_IDE
 				{
 					Default = (D_IDE_Properties)formatter.Deserialize(stream);
 				}
-				catch(Exception ex) { MessageBox.Show(ex.Message); }
+				catch (Exception ex) { MessageBox.Show(ex.Message); }
 				stream.Close();
 			}
 		}
@@ -460,8 +485,8 @@ namespace D_IDE
 		#region Caching
 		public static void LoadGlobalCache(string file)
 		{
-			if(!File.Exists(file)) return;
-			if(cacheTh != null && cacheTh.IsAlive) return;
+			if (!File.Exists(file)) return;
+			if (cacheTh != null && cacheTh.IsAlive) return;
 
 			Program.Parsing = true;
 
@@ -470,7 +495,7 @@ namespace D_IDE
 
 			cacheTh = new Thread(delegate(object o)
 			{
-				if(cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
+				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
 				cscr.Show();
 				BinaryFormatter formatter = new BinaryFormatter();
 
@@ -479,7 +504,7 @@ namespace D_IDE
 				{
 					tmods.AddRange((DModule[])formatter.Deserialize(stream));
 				}
-				catch(Exception ex) { MessageBox.Show("Error loading " + file + ": " + ex.Message); }
+				catch (Exception ex) { MessageBox.Show("Error loading " + file + ": " + ex.Message); }
 				stream.Close();
 				cscr.Close();
 				GlobalModules = tmods;
@@ -493,15 +518,15 @@ namespace D_IDE
 		static CachingScreen cscr;
 		public static void SaveGlobalCache(string file)
 		{
-			if(cacheTh != null && cacheTh.IsAlive) return;
+			if (cacheTh != null && cacheTh.IsAlive) return;
 			int i = 0;
-			while(Program.Parsing && i < 500) { Thread.Sleep(100); i++; }
+			while (Program.Parsing && i < 500) { Thread.Sleep(100); i++; }
 
 			Program.Parsing = true;
 
 			cacheTh = new Thread(delegate(object o)
 			{
-				if(cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
+				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
 				cscr.Show();
 				BinaryFormatter formatter = new BinaryFormatter();
 
@@ -517,14 +542,16 @@ namespace D_IDE
 
 		public DModule this[string moduleName]
 		{
-			get {
+			get
+			{
 				foreach (DModule dm in GlobalModules)
 				{
 					if (dm.mod == moduleName) return dm;
 				}
 				return null;
 			}
-			set {
+			set
+			{
 				int i = 0;
 				foreach (DModule dm in GlobalModules)
 				{
@@ -538,14 +565,14 @@ namespace D_IDE
 				AddFileData(value);
 			}
 		}
-		
+
 		public static void Save(string fn)
 		{
-			if(fn == null) return;
-			if(fn == "") return;
+			if (fn == null) return;
+			if (fn == "") return;
 			BinaryFormatter formatter = new BinaryFormatter();
 
-			if(!Directory.Exists(Path.GetDirectoryName(fn)))
+			if (!Directory.Exists(Path.GetDirectoryName(fn)))
 				Directory.CreateDirectory(Path.GetDirectoryName(fn));
 			Stream stream = File.Open(fn, FileMode.Create);
 			formatter.Serialize(stream, Default);
@@ -554,9 +581,9 @@ namespace D_IDE
 
 		public static bool HasModule(string file)
 		{
-			foreach(DModule dpf in GlobalModules)
+			foreach (DModule dpf in GlobalModules)
 			{
-				if(dpf.mod_file == file)
+				if (dpf.mod_file == file)
 				{
 					return true;
 				}
@@ -565,9 +592,9 @@ namespace D_IDE
 		}
 		public static bool HasModule(List<DModule> modules, string file)
 		{
-			foreach(DModule dpf in modules)
+			foreach (DModule dpf in modules)
 			{
-				if(dpf.mod_file == file)
+				if (dpf.mod_file == file)
 				{
 					return true;
 				}
@@ -576,7 +603,7 @@ namespace D_IDE
 		}
 		public static bool AddFileData(DModule pf)
 		{
-			if(!pf.IsParsable) return false;
+			if (!pf.IsParsable) return false;
 
 			foreach (DModule dpf in GlobalModules)
 			{
@@ -595,7 +622,7 @@ namespace D_IDE
 		}
 		public static bool AddFileData(List<DModule> modules, DModule pf)
 		{
-			if(!pf.IsParsable) return false;
+			if (!pf.IsParsable) return false;
 
 			foreach (DModule dpf in modules)
 			{
@@ -627,7 +654,7 @@ namespace D_IDE
 		public Point lastFormLocation;
 		public Size lastFormSize;
 		public bool RetrieveNews = true;
-        public bool LogBuildProgress = true;
+		public bool LogBuildProgress = true;
 		public bool ShowBuildCommands = false;
 		public bool UseExternalDebugger = false;
 
@@ -645,7 +672,7 @@ namespace D_IDE
 		public string exe_dll;
 		public string exe_lib;
 		public string exe_res = "rc.exe";
-        public string exe_dbg = "windbg.exe";
+		public string exe_dbg = "windbg.exe";
 
 		public string cmp_obj = "-c -O \"$src\" -of\"$obj\" -gc";
 		public string link_win_exe = "$objs $libs -L/su:windows -of\"$exe\" -gc";
@@ -653,7 +680,7 @@ namespace D_IDE
 		public string link_to_dll = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
 		public string link_to_lib = "$objs $libs -of\"$lib\"";
 		public string cmp_res = "/fo\"$res\" \"$rc\"";
-        public string dbg_args = "\"$exe\"";
+		public string dbg_args = "\"$exe\"";
 
 		public string lastSearchDir = Application.StartupPath;
 
@@ -773,7 +800,7 @@ namespace D_IDE
 			IntPtr hImgSmall;
 			IntPtr hImgLarge;
 			SHFILEINFO shinfo = new SHFILEINFO();
-			if(Small)
+			if (Small)
 			{
 				hImgSmall = Win32.SHGetFileInfo(Path.GetFileName(FilePath), 0,
 					ref shinfo, (uint)Marshal.SizeOf(shinfo),
@@ -785,13 +812,13 @@ namespace D_IDE
 					ref shinfo, (uint)Marshal.SizeOf(shinfo),
 					Win32.SHGFI_ICON | Win32.SHGFI_LARGEICON | Win32.SHGFI_USEFILEATTRIBUTES);
 			}
-			if(shinfo.hIcon == null) return Form1.thisForm.Icon;
+			if (shinfo.hIcon == null) return Form1.thisForm.Icon;
 			try
 			{
 				Icon ret = (System.Drawing.Icon.FromHandle(shinfo.hIcon));
 				return ret;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				MessageBox.Show(ex.Message + "\n\n" + ex.StackTrace, FilePath);
 				return Form1.thisForm.Icon;

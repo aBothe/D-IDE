@@ -35,7 +35,7 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.BackgroundImage = global::D_Parser.Properties.Resources.d_ide_256;
+			this.BackgroundImage = global::D_IDE.Properties.Resources.d_ide_256;
 			this.ClientSize = new System.Drawing.Size(256, 256);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
 			this.Name = "CachingScreen";

@@ -17,7 +17,7 @@ using D_IDE.CodeCompletion;
 using D_IDE.Dialogs;
 using D_Parser;
 using D_Parser.CodeCompletion;
-using D_Parser.Properties;
+using D_IDE.Properties;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.Ast;
 using ICSharpCode.SharpDevelop.Dom;
@@ -1426,5 +1426,33 @@ namespace D_IDE
 		{
 			dbgwin.Show();
 		}
+		#region Basics
+		private void cutTBSButton_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				SelectedTabPage.EmulateCut();
+			}
+			catch { }
+		}
+
+		private void copyTBSButton_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				SelectedTabPage.EmulateCopy();
+			}
+			catch { }
+		}
+
+		private void toolStripButton5_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				SelectedTabPage.EmulatePaste();
+			}
+			catch { }
+		}
+		#endregion
 	}
 }

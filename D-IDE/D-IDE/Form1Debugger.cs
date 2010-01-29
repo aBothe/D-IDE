@@ -182,6 +182,8 @@ namespace D_IDE
 			uint ln;
 			if (dbg.Symbols.GetLineByOffset(dbg.CurrentInstructionOffset, out fn, out ln))
 				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);
+
+			callstackwin.Update();
 		}
 
 		#region Debug properties
@@ -324,7 +326,6 @@ namespace D_IDE
 				StopWaitingForEvents = true;
 				BreakPoint bp = dbg.GetBreakPointById(Id);
 				Log("Breakpoint #" + Id.ToString() + " at " + off.ToString() + ": " + exp);
-				callstackwin.Update();
 				string fn;
 				uint ln;
 
@@ -336,6 +337,7 @@ namespace D_IDE
 
 				Log(fn + ":" + ln.ToString());
 				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);
+				callstackwin.Update();
 
 				return DebugStatus.Break;
 			};
