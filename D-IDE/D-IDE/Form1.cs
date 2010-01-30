@@ -661,8 +661,6 @@ namespace D_IDE
 			prjexplorer.prjFiles.BeginUpdate();
 			foreach (string prjfn in D_IDE_Properties.Default.lastProjects)
 			{
-				if (!File.Exists(prjfn)) continue;
-
 				string ext = Path.GetExtension(prjfn);
 				if (!prjexplorer.fileIcons.Images.ContainsKey(ext))
 				{
@@ -672,7 +670,7 @@ namespace D_IDE
 
 				DProject LoadedPrj = (prj != null && prj.prjfn == prjfn) ? prj : DProject.LoadFrom(prjfn);
 				if (LoadedPrj == null) continue;
-				LoadedPrj.RemoveNonExisting();
+				//LoadedPrj.RemoveNonExisting();
 
 				ProjectNode CurPrjNode = new ProjectNode(LoadedPrj);
 				CurPrjNode.ImageKey = CurPrjNode.SelectedImageKey = ext;
@@ -759,9 +757,9 @@ namespace D_IDE
 		public void NewSourceFile(object sender, EventArgs e)
 		{
 			string tfn = "Untitled.d";
-			bool add = prj != null ? (MessageBox.Show("Do you want to add the file to the current project?", "New File",
+			bool add = sender is ProjectExplorer || (prj != null ? (MessageBox.Show("Do you want to add the file to the current project?", "New File",
 			MessageBoxButtons.YesNo, MessageBoxIcon.Question)
-			== DialogResult.Yes) : false;
+			== DialogResult.Yes) : false);
 
 			sF.Filter = "All Files (*.*)|*.*";
 			sF.FileName = tfn;
@@ -775,6 +773,7 @@ namespace D_IDE
 			DocumentInstanceWindow mtp = new DocumentInstanceWindow(tfn,
 			DModule.Parsable(tfn) ? "import std.stdio;\r\n\r\nvoid main(string[] args)\r\n{\r\n\twriteln(\"Hello World\");\r\n}" : "",
 			add ? prj : null);
+			mtp.Modified = true;
 			mtp.Save();
 			if (add) prj.AddSrc(tfn);
 
@@ -790,6 +789,7 @@ namespace D_IDE
 			if (prj != null) prj.Save();
 			UpdateLastFilesMenu();
 			UpdateFiles();
+			prjexplorer.Refresh();
 		}
 
 		public void NewProject(object sender, EventArgs e)
@@ -874,6 +874,8 @@ namespace D_IDE
 		}
 		public DocumentInstanceWindow Open(string file, DProject owner)
 		{
+			if (prj!=null &&  file == prj.prjfn) return null; // Don't reopen the current project
+
 			DocumentInstanceWindow ret = null;
 
 			foreach (DockContent dc in dockPanel.Documents)

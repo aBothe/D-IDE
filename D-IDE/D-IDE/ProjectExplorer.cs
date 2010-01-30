@@ -28,7 +28,21 @@ namespace D_IDE
 			}
 			else if(prjFiles.SelectedNode is FileTreeNode)
 			{
-				Form1.thisForm.Open((prjFiles.SelectedNode as FileTreeNode).FileName, (prjFiles.SelectedNode as FileTreeNode).Project);
+				string fn = (prjFiles.SelectedNode as FileTreeNode).FileName;
+				DProject prj = (prjFiles.SelectedNode as FileTreeNode).Project;
+
+				if (!prj.FileExists(fn))
+				{
+					if (MessageBox.Show(fn + " doesn't exist. Do you want to remove it from the project?", "File not found", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+					{
+						prj.resourceFiles.Remove((prjFiles.SelectedNode as FileTreeNode).fn);
+						prjFiles.SelectedNode.Remove();
+						prj.Save();
+					}
+					else return;
+				}
+
+				Form1.thisForm.Open(fn, prj);
 			}
 		}
 
@@ -58,15 +72,26 @@ namespace D_IDE
 			TreeNode tn = prjFiles.GetNodeAt(tp);
 			if(tn == null || !(tn is FileTreeNode)) return;
 
-			string f = ((FileTreeNode)tn).FileName;
-			if(File.Exists(f))
+			string f = ((FileTreeNode)tn).fn;
+			string phys_f = ((FileTreeNode)tn).FileName;
+
+			if (((FileTreeNode)tn).Project.FileExists(f))
 			{
 				DialogResult dr = MessageBox.Show("Do you want to remove \"" + Path.GetFileName(f) + "\" physically?", "Remove File",
 				MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
+				try
+				{
+					// Close tab that may contains deleted file
+					Form1.thisForm.FileDataByFile(phys_f).Close();
+				}
+				catch { }
+
 				if(dr == DialogResult.Yes)
-					File.Delete(f);
+					File.Delete(phys_f);
 				else if(dr == DialogResult.Cancel) return;
+
+				
 			}
 			else
 			{
@@ -83,7 +108,7 @@ namespace D_IDE
 
 		private void addNewFileToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			Form1.thisForm.NewSourceFile(sender, e);
+			Form1.thisForm.NewSourceFile(this, e);
 		}
 
 		private void addExistingToolStripMenuItem_Click(object sender, EventArgs e)
@@ -93,6 +118,7 @@ namespace D_IDE
 			TreeNode tn = prjFiles.GetNodeAt(tp);
 			if(tn == null) return;
 
+			Form1.thisForm.oF.InitialDirectory = ((ProjectNode)tn).Project.basedir;
 			if(Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
 			{
 				foreach(string file in Form1.thisForm.oF.FileNames)
@@ -243,8 +269,6 @@ namespace D_IDE
 					else
 						foreach(string file in files)	Form1.thisForm.Open(file);
 				}
-				
-				
 			}
 		}
 	
@@ -299,7 +323,15 @@ namespace D_IDE
 	public class FileTreeNode : TreeNode
 	{
 		public DProject Project;
-		public string FileName;
+		public string fn;
+		public string FileName
+		{
+			set { fn = value; }
+			get {
+
+				return Project.GetPhysFilePath(fn);
+			}
+		}
 		public FileTreeNode(DProject Project, string FileName)
 		{
 			this.Project = Project;
@@ -312,7 +344,16 @@ namespace D_IDE
 	public class DirectoryTreeNode : TreeNode
 	{
 		public DProject Project;
-		public string Path;
+		string path;
+		public string Path
+		{
+			set { path = value; }
+			get
+			{
+				if (System.IO.Path.IsPathRooted(Path)) return Path;
+				return Project.basedir + "\\" + Path;
+			}
+		}
 		public DirectoryTreeNode(DProject Project, string Path)
 		{
 			this.Project = Project;

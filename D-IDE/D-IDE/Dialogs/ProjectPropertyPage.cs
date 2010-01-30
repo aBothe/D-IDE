@@ -234,6 +234,7 @@ namespace D_IDE
 
 		private void button7_Click(object sender, EventArgs e)
 		{
+			Form1.thisForm.oF.InitialDirectory = project.basedir;
 			if(Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
 			{
 				foreach(string file in Form1.thisForm.oF.FileNames)

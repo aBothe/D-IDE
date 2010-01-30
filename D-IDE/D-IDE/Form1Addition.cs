@@ -31,12 +31,13 @@ namespace D_IDE
 
 		public DModule fileData;
 		public DProject project;
-		public bool Modified;
-
-		public new void Update()
-		{
-			this.Text = Path.GetFileName(fileData.mod_file) + (Modified ? " *" : "");
-			base.Update();
+		bool modified=false;
+		public bool Modified{
+			set{
+				if (value != modified) this.Text = Path.GetFileName(fileData.mod_file) + (value ? " *" : "");
+				modified=value;
+			}
+			get{return modified;}
 		}
 
 		public void EmulateCopy()
@@ -83,11 +84,11 @@ namespace D_IDE
 
 			txt.SetHighlighting(Path.GetExtension(fn).TrimStart(new char[] { '.' }).ToUpper());
 			txt.ActiveTextAreaControl.Caret.PositionChanged += new EventHandler(Caret_PositionChanged);
+			txt.Document.DocumentChanged += new DocumentEventHandler(Document_DocumentChanged);
 
 			if (DModule.Parsable(fn))
 			{
 				txt.Document.FormattingStrategy = new DFormattingStrategy();
-				txt.Document.TextContentChanged += Document_TextContentChanged;
 				txt.ActiveTextAreaControl.TextArea.ToolTipRequest += TextArea_ToolTipRequest;
 				txt.ActiveTextAreaControl.TextArea.KeyEventHandler += TextAreaKeyEventHandler;
 			}
@@ -137,6 +138,12 @@ namespace D_IDE
 
 			this.tcCont.ResumeLayout(false);
 			txt.ContextMenuStrip = tcCont;
+		}
+
+		void Document_DocumentChanged(object sender, DocumentEventArgs e)
+		{
+			//txt.Document.FormattingStrategy.IndentLine(txt.ActiveTextAreaControl.TextArea, txt.ActiveTextAreaControl.Caret.Line);
+			Modified = true;
 		}
 
 		public int CaretOffset
@@ -238,8 +245,6 @@ namespace D_IDE
 		bool TextAreaKeyEventHandler(char key)
 		{
 			if (Program.Parsing) return false;
-			Modified = true;
-			Update();
 			if (key == '(')
 			{
 				txt.Document.Insert(CaretOffset, ")");
@@ -376,11 +381,6 @@ namespace D_IDE
 			IW.ShowInsightWindow();
 		}
 
-		void Document_TextContentChanged(object sender, EventArgs e)
-		{
-			txt.Document.FormattingStrategy.IndentLine(txt.ActiveTextAreaControl.TextArea, txt.ActiveTextAreaControl.Caret.Line);
-		}
-
 		public DocumentInstanceWindow(string filename, DProject prj)
 		{
 			this.project = prj;
@@ -400,6 +400,7 @@ namespace D_IDE
 				}
 			}
 			catch { txt.Document.TextContent = File.ReadAllText(filename); }
+			Modified = false;
 		}
 
 		public DocumentInstanceWindow(string filename, string content, DProject prj)
@@ -407,14 +408,15 @@ namespace D_IDE
 			this.project = prj;
 			Init(filename);
 			txt.Document.TextContent = content;
+			Modified = false;
 		}
 
 		public void Save()
 		{
-			if (fileData.mod_file == "" || fileData.mod_file == null) return;
+			if (fileData.mod_file == "" || fileData.mod_file == null || !Modified) return;
 			File.WriteAllText(fileData.mod_file, txt.Document.TextContent);
+
 			Modified = false;
-			Update();
 		}
 
 		public void ParseFromText()
