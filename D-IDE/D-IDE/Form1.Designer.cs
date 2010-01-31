@@ -130,6 +130,7 @@
 			this.searchTool = new System.Windows.Forms.ToolStripTextBox();
 			this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
 			this.CurBlockEnts = new System.Windows.Forms.ToolStripDropDownButton();
+			this.visitDidesourceforgenetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			this.contextMenuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
@@ -616,6 +617,7 @@
 			// 
 			this.aboutToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.checkForUpdatesToolStripMenuItem,
+            this.visitDidesourceforgenetToolStripMenuItem,
             this.visitAlexanderbothecomToolStripMenuItem,
             this.toolStripSeparator4,
             this.aboutDIDEToolStripMenuItem,
@@ -628,38 +630,38 @@
 			// checkForUpdatesToolStripMenuItem
 			// 
 			this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
-			this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
-			this.checkForUpdatesToolStripMenuItem.Text = "Check for updates";
+			this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+			this.checkForUpdatesToolStripMenuItem.Text = "Download latest D-IDE revision";
 			this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
 			// 
 			// visitAlexanderbothecomToolStripMenuItem
 			// 
 			this.visitAlexanderbothecomToolStripMenuItem.Name = "visitAlexanderbothecomToolStripMenuItem";
-			this.visitAlexanderbothecomToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
+			this.visitAlexanderbothecomToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
 			this.visitAlexanderbothecomToolStripMenuItem.Text = "Visit alexanderbothe.com";
 			this.visitAlexanderbothecomToolStripMenuItem.Click += new System.EventHandler(this.visitAlexanderbothecomToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator4
 			// 
 			this.toolStripSeparator4.Name = "toolStripSeparator4";
-			this.toolStripSeparator4.Size = new System.Drawing.Size(227, 6);
+			this.toolStripSeparator4.Size = new System.Drawing.Size(233, 6);
 			// 
 			// aboutDIDEToolStripMenuItem
 			// 
 			this.aboutDIDEToolStripMenuItem.Name = "aboutDIDEToolStripMenuItem";
-			this.aboutDIDEToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
+			this.aboutDIDEToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
 			this.aboutDIDEToolStripMenuItem.Text = "About D-IDE";
 			this.aboutDIDEToolStripMenuItem.Click += new System.EventHandler(this.aboutDIDEToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator12
 			// 
 			this.toolStripSeparator12.Name = "toolStripSeparator12";
-			this.toolStripSeparator12.Size = new System.Drawing.Size(227, 6);
+			this.toolStripSeparator12.Size = new System.Drawing.Size(233, 6);
 			// 
 			// howToDebugDExecutablesToolStripMenuItem
 			// 
 			this.howToDebugDExecutablesToolStripMenuItem.Name = "howToDebugDExecutablesToolStripMenuItem";
-			this.howToDebugDExecutablesToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
+			this.howToDebugDExecutablesToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
 			this.howToDebugDExecutablesToolStripMenuItem.Text = "How to debug D executables?";
 			this.howToDebugDExecutablesToolStripMenuItem.Click += new System.EventHandler(this.howToDebugDExecutablesToolStripMenuItem_Click);
 			// 
@@ -1033,6 +1035,13 @@
 			this.CurBlockEnts.Size = new System.Drawing.Size(25, 22);
 			this.CurBlockEnts.Text = "-";
 			// 
+			// visitDidesourceforgenetToolStripMenuItem
+			// 
+			this.visitDidesourceforgenetToolStripMenuItem.Name = "visitDidesourceforgenetToolStripMenuItem";
+			this.visitDidesourceforgenetToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+			this.visitDidesourceforgenetToolStripMenuItem.Text = "Visit d-ide.sourceforge.net";
+			this.visitDidesourceforgenetToolStripMenuItem.Click += new System.EventHandler(this.visitDidesourceforgenetToolStripMenuItem_Click);
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1163,6 +1172,7 @@
 		private System.Windows.Forms.ToolStripButton cutTBSButton;
 		private System.Windows.Forms.ToolStripButton copyTBSButton;
 		private System.Windows.Forms.ToolStripButton pasteTBSButton;
+		private System.Windows.Forms.ToolStripMenuItem visitDidesourceforgenetToolStripMenuItem;
 	}
 }
 

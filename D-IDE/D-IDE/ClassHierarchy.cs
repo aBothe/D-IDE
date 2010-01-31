@@ -51,7 +51,7 @@ namespace D_IDE
 				diw.txt.ActiveTextAreaControl.TextArea.Focus();
 				diw.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
 			}
-			catch(Exception ex)
+			catch
 			{
 				return;
 			}

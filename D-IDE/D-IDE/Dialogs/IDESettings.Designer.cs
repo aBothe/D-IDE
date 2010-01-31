@@ -457,6 +457,7 @@
 			// updates
 			// 
 			this.updates.AutoSize = true;
+			this.updates.Enabled = false;
 			this.updates.Location = new System.Drawing.Point(8, 29);
 			this.updates.Name = "updates";
 			this.updates.Size = new System.Drawing.Size(160, 17);

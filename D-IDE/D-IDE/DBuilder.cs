@@ -153,7 +153,7 @@ namespace D_IDE
 
 		public static bool BuildObjFile(string file, string target)
 		{
-			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); return false; }
+			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
 
 			string args = D_IDE_Properties.Default.cmp_obj;
 			args = args.Replace("$src", file);
@@ -166,7 +166,7 @@ namespace D_IDE
 		}
 		public static bool BuildObjFile(string file, string target, string exeDir)
 		{
-			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); return false; }
+			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
 
 			string args = D_IDE_Properties.Default.cmp_obj;
 			args = args.Replace("$src", file);
@@ -180,7 +180,7 @@ namespace D_IDE
 
 		public static bool BuildResFile(string file, string target)
 		{
-			if (!file.EndsWith(".rc")) { throw new Exception("Cannot build resource file of " + file); return false; }
+			if (!file.EndsWith(".rc")) { throw new Exception("Cannot build resource file of " + file); }
 
 			string args = D_IDE_Properties.Default.cmp_res;
 			args = args.Replace("$rc", file);
@@ -193,7 +193,7 @@ namespace D_IDE
 		}
 		public static bool BuildResFile(string file, string target, string exeDir)
 		{
-			if (!file.EndsWith(".rc")) { throw new Exception("Cannot build resource file of " + file); return false; }
+			if (!file.EndsWith(".rc")) { throw new Exception("Cannot build resource file of " + file); }
 
 			string args = D_IDE_Properties.Default.cmp_res;
 			args = args.Replace("$rc", file);

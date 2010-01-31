@@ -108,6 +108,9 @@ namespace D_IDE
 			DParser.OnError += DParser_OnError;
 			DParser.OnSemanticError += DParser_OnSemanticError;
 
+			webclient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(wc_DownloadProgressChanged);
+			webclient.DownloadFileCompleted += new AsyncCompletedEventHandler(wc_DownloadFileCompleted);
+
 			DBuilder.OnOutput += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnOutput);
 			DBuilder.OnError += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnError);
 			DBuilder.OnExit += new EventHandler(DBuilder_OnExit);
@@ -131,9 +134,7 @@ namespace D_IDE
 
 			//(new FXFormsDesigner()).Show(dockPanel,DockState.Document);
 
-			Debugger.Log(0, "notice", "Check for updates");
-
-			if (D_IDE_Properties.Default.WatchForUpdates) CheckForUpdates();
+			//if (D_IDE_Properties.Default.WatchForUpdates) CheckForUpdates();
 		}
 
 		void DBuilder_OnExit(object sender, EventArgs e)
@@ -336,7 +337,7 @@ namespace D_IDE
 					}
 					catch (Exception ex)
 					{
-						if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n\n\n" + ex.StackTrace, "Error at "+tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
+						if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n\n\n" + ex.StackTrace, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
 						{
 							stopParsingToolStripMenuItem.Enabled = false;
 							return;
@@ -874,7 +875,7 @@ namespace D_IDE
 		}
 		public DocumentInstanceWindow Open(string file, DProject owner)
 		{
-			if (prj!=null &&  file == prj.prjfn) return null; // Don't reopen the current project
+			if (prj != null && file == prj.prjfn) return null; // Don't reopen the current project
 
 			DocumentInstanceWindow ret = null;
 
@@ -1255,65 +1256,48 @@ namespace D_IDE
 			return null;
 		}
 
-		static Thread dlTh = null;
-		public static void CheckForUpdates()
+		public static WebClient webclient = new WebClient();
+		public void CheckForUpdates()
 		{
-			if (dlTh != null && dlTh.IsAlive)
+			if (webclient.IsBusy)
 			{
-				MessageBox.Show("Cannot check for updates twice at one time!");
 				return;
 			}
-			dlTh = new Thread(delegate(object o)
-							{
-								Form1.thisForm.Log("Watch for new versions initiated!");
+			SaveFileDialog upd_sf = new SaveFileDialog();
 
-								Version new_ver = GetServerIDEVersion();
-								if (new_ver == null) { return; }
+			upd_sf.FileName = "D-IDE.tar.gz";
+			upd_sf.InitialDirectory = Application.StartupPath;
+			upd_sf.Filter = "All (*.*)|*.*";
+			upd_sf.DefaultExt = ".tar.gz";
+			//upd_sf.AutoUpgradeEnabled = true;
+			upd_sf.CheckPathExists = true;
+			upd_sf.SupportMultiDottedExtensions = true;
+			upd_sf.OverwritePrompt = true;
 
-								Version this_ver = new Version(Application.ProductVersion);
-								Form1.thisForm.Log("Client Version: " + this_ver.ToString());
-								Form1.thisForm.Log("Server Version: " + new_ver.ToString());
-								if (this_ver < new_ver)
-								{
-									if (MessageBox.Show(
-										"Your version is " + this_ver.ToString() +
-										"\nThere is a new version " + new_ver.ToString() +
-										"\nDo you want to visit the files page?", "Update available", MessageBoxButtons.YesNo) == DialogResult.Yes)
-									{
-										Process.Start("https://sourceforge.net/projects/d-ide/files/");
-										/*WebClient wc = new WebClient();
-										string file = wc.DownloadString(Program.d_ide_php + "?filename=1&fromIDE=1");
+			if (upd_sf.ShowDialog() == DialogResult.OK)
+			{
+				ProgressStatusLabel.Text = "Downloading D-IDE.tar.gz";
+				BuildProgressBar.Style = ProgressBarStyle.Marquee;
+				webclient.DownloadFileAsync(new Uri("http://d-ide.svn.sourceforge.net/viewvc/d-ide/D-IDE/D-IDE/bin/Debug.tar.gz?view=tar"), upd_sf.FileName, upd_sf.FileName);
+			}
+		}
 
-										SaveFileDialog upd_sf = new SaveFileDialog();
-										upd_sf.FileName = file;
-										upd_sf.Filter = "All (*.*)|*.*";
-										upd_sf.DefaultExt = Path.GetExtension(file);
-										//upd_sf.AutoUpgradeEnabled = true;
-										upd_sf.CheckPathExists = true;
-										upd_sf.SupportMultiDottedExtensions = true;
-										upd_sf.OverwritePrompt = true;
+		void wc_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
+		{
+			BuildProgressBar.Style = ProgressBarStyle.Continuous;
+			if (e.Cancelled)
+			{
+				MessageBox.Show("Error: " + e.Error.Message);
+				return;
+			}
+			MessageBox.Show(Path.GetFileName((string)e.UserState) + " successfully downloaded!");
+			ProgressStatusLabel.Text = "Ready";
+		}
 
-										if (upd_sf.ShowDialog() == DialogResult.OK)
-										{
-
-											try
-											{
-												wc.DownloadFile(new Uri(Program.d_ide_php + "?get=1&fromIDE=1"), upd_sf.FileName);
-											}
-											catch (Exception ex)
-											{
-												MessageBox.Show(ex.Message);
-												return;
-											}
-											MessageBox.Show(file + " successfully downloaded!");
-
-										}*/
-									}
-								}
-								else Form1.thisForm.Log("No new version found!");
-								Form1.thisForm.Log("Updating finished!");
-							});
-			dlTh.Start();
+		void wc_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+		{
+			BuildProgressBar.Maximum = 100;
+			BuildProgressBar.Value = e.ProgressPercentage;
 		}
 
 		private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1376,7 +1360,7 @@ namespace D_IDE
 
 		private void aboutDIDEToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			MessageBox.Show("This software is freeware\nand is written by Alexander Bothe.",title);
+			MessageBox.Show("This software is freeware\nand is written by Alexander Bothe.", title);
 		}
 
 		private void saveAllToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1456,5 +1440,10 @@ namespace D_IDE
 			catch { }
 		}
 		#endregion
+
+		private void visitDidesourceforgenetToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Process.Start("http://d-ide.sourceforge.net");
+		}
 	}
 }
