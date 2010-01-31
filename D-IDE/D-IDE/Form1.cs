@@ -869,8 +869,8 @@ namespace D_IDE
 		[DebuggerStepThrough()]
 		public DocumentInstanceWindow Open(string file)
 		{
-			if (Form1.thisForm.prj != null && Form1.thisForm.prj.resourceFiles.Contains(file))
-				return Open(file, Form1.thisForm.prj);
+			if (prj != null && prj.resourceFiles.Contains(prj.GetRelFilePath( file)))
+				return Open(prj.GetPhysFilePath( file), prj);
 			return Open(file, null);
 		}
 		public DocumentInstanceWindow Open(string file, DProject owner)

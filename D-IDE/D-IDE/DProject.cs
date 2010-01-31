@@ -58,10 +58,20 @@ namespace D_IDE
 		{
 			if (Path.IsPathRooted(file)) return file;
 
-			if (FileExists(file)) return basedir + "\\" + file;
-
-			return file;
+			return basedir + "\\" + file;
 		}
+
+		public string GetRelFilePath(string file)
+		{
+			if (!Path.IsPathRooted(file)) return file;
+
+			if (file.StartsWith(basedir + "\\"))
+			{
+				return file.Remove(0, basedir.Length + 1);
+			}
+			return basedir;
+		}
+
 		public bool FileExists(string file)
 		{
 			if (!File.Exists(file))

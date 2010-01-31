@@ -60,42 +60,45 @@ namespace D_IDE
 			fileData = new DModule(fn);
 
 			Update();
-			txt = new TextEditorControl();
-			txt.Dock = DockStyle.Fill;
-			this.Controls.Add(txt);
-
-			txt.TextEditorProperties.AllowCaretBeyondEOL = false;
-			txt.TextEditorProperties.AutoInsertCurlyBracket = true;
-			txt.TextEditorProperties.BracketMatchingStyle = BracketMatchingStyle.Before;
-			txt.TextEditorProperties.ConvertTabsToSpaces = false;
-			txt.TextEditorProperties.DocumentSelectionMode = DocumentSelectionMode.Normal;
-			txt.TextEditorProperties.EnableFolding = true;
-			txt.TextEditorProperties.IsIconBarVisible = false;
-			txt.TextEditorProperties.LineViewerStyle = LineViewerStyle.FullRow;
-
-			txt.TextEditorProperties.ShowEOLMarker = false;
-			txt.TextEditorProperties.ShowHorizontalRuler = false;
-			txt.TextEditorProperties.ShowInvalidLines = false;
-			txt.TextEditorProperties.ShowLineNumbers = true;
-			txt.TextEditorProperties.ShowMatchingBracket = true;
-			txt.TextEditorProperties.ShowTabs = false;
-			txt.TextEditorProperties.ShowSpaces = true;
-			txt.TextEditorProperties.ShowVerticalRuler = false;
-
-			txt.SetHighlighting(Path.GetExtension(fn).TrimStart(new char[] { '.' }).ToUpper());
-			txt.ActiveTextAreaControl.Caret.PositionChanged += new EventHandler(Caret_PositionChanged);
-			txt.Document.DocumentChanged += new DocumentEventHandler(Document_DocumentChanged);
-
-			if (DModule.Parsable(fn))
+			try
 			{
-				txt.Document.FormattingStrategy = new DFormattingStrategy();
-				txt.ActiveTextAreaControl.TextArea.ToolTipRequest += TextArea_ToolTipRequest;
-				txt.ActiveTextAreaControl.TextArea.KeyEventHandler += TextAreaKeyEventHandler;
+				txt = new TextEditorControl();
 			}
+			catch { return; }
+				txt.Dock = DockStyle.Fill;
+				this.Controls.Add(txt);
 
-			txt.TextEditorProperties.AutoInsertCurlyBracket = true;
-			txt.TextEditorProperties.IndentStyle = IndentStyle.Smart;
+				txt.TextEditorProperties.AllowCaretBeyondEOL = false;
+				txt.TextEditorProperties.AutoInsertCurlyBracket = true;
+				txt.TextEditorProperties.BracketMatchingStyle = BracketMatchingStyle.Before;
+				txt.TextEditorProperties.ConvertTabsToSpaces = false;
+				txt.TextEditorProperties.DocumentSelectionMode = DocumentSelectionMode.Normal;
+				txt.TextEditorProperties.EnableFolding = true;
+				txt.TextEditorProperties.IsIconBarVisible = false;
+				txt.TextEditorProperties.LineViewerStyle = LineViewerStyle.FullRow;
 
+				txt.TextEditorProperties.ShowEOLMarker = false;
+				txt.TextEditorProperties.ShowHorizontalRuler = false;
+				txt.TextEditorProperties.ShowInvalidLines = false;
+				txt.TextEditorProperties.ShowLineNumbers = true;
+				txt.TextEditorProperties.ShowMatchingBracket = true;
+				txt.TextEditorProperties.ShowTabs = false;
+				txt.TextEditorProperties.ShowSpaces = true;
+				txt.TextEditorProperties.ShowVerticalRuler = false;
+
+				txt.SetHighlighting(Path.GetExtension(fn).TrimStart(new char[] { '.' }).ToUpper());
+				txt.ActiveTextAreaControl.Caret.PositionChanged += new EventHandler(Caret_PositionChanged);
+				txt.Document.DocumentChanged += new DocumentEventHandler(Document_DocumentChanged);
+
+				if (DModule.Parsable(fn))
+				{
+					txt.Document.FormattingStrategy = new DFormattingStrategy();
+					txt.ActiveTextAreaControl.TextArea.ToolTipRequest += TextArea_ToolTipRequest;
+					txt.ActiveTextAreaControl.TextArea.KeyEventHandler += TextAreaKeyEventHandler;
+				}
+
+				txt.TextEditorProperties.AutoInsertCurlyBracket = true;
+				txt.TextEditorProperties.IndentStyle = IndentStyle.Smart;
 
 			this.tcCont = new System.Windows.Forms.ContextMenuStrip();
 			this.goToDefinitionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
