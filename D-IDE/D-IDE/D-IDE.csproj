@@ -64,9 +64,9 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DebugEngineWrapper, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="DebugEngineWrapper, Version=1.0.3685.35871, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\DebugEngineWrapper\Debug\DebugEngineWrapper.dll</HintPath>
+      <HintPath>..\..\DebugEngineWrapper\Release\DebugEngineWrapper.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.Core, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -418,7 +418,12 @@
     <Resource Include="d.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Content Include="dbgeng.dll" />
+    <Content Include="dbgeng.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="dbghelp.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="dproj.ico" />
     <None Include="Resources\paste.png" />
     <None Include="Resources\cut.png" />

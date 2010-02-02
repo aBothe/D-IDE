@@ -303,8 +303,12 @@ namespace D_IDE
 
 			dbg.Output += delegate(OutputFlags type, string msg)
 			{
+				if (!D_IDE_Properties.Default.VerboseDebugOutput && (type == OutputFlags.Verbose || type == OutputFlags.Normal)) return;
+
+				string m = msg.Replace("\n", "\r\n");
+
 				if (type != OutputFlags.Warning)
-					Log(msg.Replace("\n", "\r\n"));
+					Log(m);
 			};
 
 			dbg.OnLoadModule += delegate(ulong BaseOffset, uint ModuleSize, string ModuleName, uint Checksum, uint Timestamp)

@@ -8,7 +8,7 @@ namespace D_IDE
 	static class Program
 	{
 		public static string cfgDir = Application.StartupPath+"\\config";
-		public static string prop_file = "D-IDE.properties.dat";
+		public static string prop_file = "D-IDE.settings.xml";
 		public static string ModuleCacheFile = "D-IDE.cache.dat";
 		public static string LayoutFile = "D-IDE.layout.xml";
 		public const string news_php = "http://d-ide.sourceforge.net/classes/news.php";

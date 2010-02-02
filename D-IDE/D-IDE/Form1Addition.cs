@@ -19,6 +19,7 @@ using ICSharpCode.TextEditor.Gui.CompletionWindow;
 using ICSharpCode.TextEditor.Gui.InsightWindow;
 using WeifenLuo.WinFormsUI.Docking;
 using System.Globalization;
+using System.Text;
 
 namespace D_IDE
 {
@@ -31,13 +32,15 @@ namespace D_IDE
 
 		public DModule fileData;
 		public DProject project;
-		bool modified=false;
-		public bool Modified{
-			set{
+		bool modified = false;
+		public bool Modified
+		{
+			set
+			{
 				if (value != modified) this.Text = Path.GetFileName(fileData.mod_file) + (value ? " *" : "");
-				modified=value;
+				modified = value;
 			}
-			get{return modified;}
+			get { return modified; }
 		}
 
 		public void EmulateCopy()
@@ -65,40 +68,40 @@ namespace D_IDE
 				txt = new TextEditorControl();
 			}
 			catch { return; }
-				txt.Dock = DockStyle.Fill;
-				this.Controls.Add(txt);
+			txt.Dock = DockStyle.Fill;
+			this.Controls.Add(txt);
 
-				txt.TextEditorProperties.AllowCaretBeyondEOL = false;
-				txt.TextEditorProperties.AutoInsertCurlyBracket = true;
-				txt.TextEditorProperties.BracketMatchingStyle = BracketMatchingStyle.Before;
-				txt.TextEditorProperties.ConvertTabsToSpaces = false;
-				txt.TextEditorProperties.DocumentSelectionMode = DocumentSelectionMode.Normal;
-				txt.TextEditorProperties.EnableFolding = true;
-				txt.TextEditorProperties.IsIconBarVisible = false;
-				txt.TextEditorProperties.LineViewerStyle = LineViewerStyle.FullRow;
+			txt.TextEditorProperties.AllowCaretBeyondEOL = false;
+			txt.TextEditorProperties.AutoInsertCurlyBracket = true;
+			txt.TextEditorProperties.BracketMatchingStyle = BracketMatchingStyle.Before;
+			txt.TextEditorProperties.ConvertTabsToSpaces = false;
+			txt.TextEditorProperties.DocumentSelectionMode = DocumentSelectionMode.Normal;
+			txt.TextEditorProperties.EnableFolding = true;
+			txt.TextEditorProperties.IsIconBarVisible = false;
+			txt.TextEditorProperties.LineViewerStyle = LineViewerStyle.FullRow;
 
-				txt.TextEditorProperties.ShowEOLMarker = false;
-				txt.TextEditorProperties.ShowHorizontalRuler = false;
-				txt.TextEditorProperties.ShowInvalidLines = false;
-				txt.TextEditorProperties.ShowLineNumbers = true;
-				txt.TextEditorProperties.ShowMatchingBracket = true;
-				txt.TextEditorProperties.ShowTabs = false;
-				txt.TextEditorProperties.ShowSpaces = true;
-				txt.TextEditorProperties.ShowVerticalRuler = false;
+			txt.TextEditorProperties.ShowEOLMarker = false;
+			txt.TextEditorProperties.ShowHorizontalRuler = false;
+			txt.TextEditorProperties.ShowInvalidLines = false;
+			txt.TextEditorProperties.ShowLineNumbers = true;
+			txt.TextEditorProperties.ShowMatchingBracket = true;
+			txt.TextEditorProperties.ShowTabs = false;
+			txt.TextEditorProperties.ShowSpaces = true;
+			txt.TextEditorProperties.ShowVerticalRuler = false;
 
-				txt.SetHighlighting(Path.GetExtension(fn).TrimStart(new char[] { '.' }).ToUpper());
-				txt.ActiveTextAreaControl.Caret.PositionChanged += new EventHandler(Caret_PositionChanged);
-				txt.Document.DocumentChanged += new DocumentEventHandler(Document_DocumentChanged);
+			txt.SetHighlighting(Path.GetExtension(fn).TrimStart(new char[] { '.' }).ToUpper());
+			txt.ActiveTextAreaControl.Caret.PositionChanged += new EventHandler(Caret_PositionChanged);
+			txt.Document.DocumentChanged += new DocumentEventHandler(Document_DocumentChanged);
 
-				if (DModule.Parsable(fn))
-				{
-					txt.Document.FormattingStrategy = new DFormattingStrategy();
-					txt.ActiveTextAreaControl.TextArea.ToolTipRequest += TextArea_ToolTipRequest;
-					txt.ActiveTextAreaControl.TextArea.KeyEventHandler += TextAreaKeyEventHandler;
-				}
+			if (DModule.Parsable(fn))
+			{
+				txt.Document.FormattingStrategy = new DFormattingStrategy();
+				txt.ActiveTextAreaControl.TextArea.ToolTipRequest += TextArea_ToolTipRequest;
+				txt.ActiveTextAreaControl.TextArea.KeyEventHandler += TextAreaKeyEventHandler;
+			}
 
-				txt.TextEditorProperties.AutoInsertCurlyBracket = true;
-				txt.TextEditorProperties.IndentStyle = IndentStyle.Smart;
+			txt.TextEditorProperties.AutoInsertCurlyBracket = true;
+			txt.TextEditorProperties.IndentStyle = IndentStyle.Smart;
 
 			this.tcCont = new System.Windows.Forms.ContextMenuStrip();
 			this.goToDefinitionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -467,7 +470,6 @@ namespace D_IDE
 		}
 	}
 
-	[Serializable()]
 	public class D_IDE_Properties
 	{
 		public static void Load(string fn)
@@ -478,12 +480,263 @@ namespace D_IDE
 
 				Stream stream = File.Open(fn, FileMode.Open);
 
-				try
+				XmlTextReader xr = new XmlTextReader(stream);
+				XmlReader xsr = null;
+				D_IDE_Properties p = new D_IDE_Properties();
+
+				while (xr.Read())// now 'settings' should be the current node
 				{
-					Default = (D_IDE_Properties)formatter.Deserialize(stream);
+					if (xr.NodeType == XmlNodeType.Element)
+					{
+						switch (xr.LocalName)
+						{
+							default: break;
+
+							case "recentprojects":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "f")
+									{
+										try
+										{
+											p.lastProjects.Add(xr.ReadString());
+										}
+										catch { }
+									}
+									else break;
+								}
+								break;
+
+							case "recentfiles":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "f")
+									{
+										try
+										{
+											p.lastFiles.Add(xr.ReadString());
+										}
+										catch { }
+									}
+									else break;
+								}
+								break;
+
+
+							case "openlastprj":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.OpenLastPrj = xr.Value == "1";
+								}
+								break;
+
+							case "windowstate":
+								if (xr.MoveToAttribute("value"))
+								{
+									try { p.lastFormState = (FormWindowState)Convert.ToInt32(xr.Value); }
+									catch { }
+								}
+								break;
+
+							case "windowsize":
+								if (xr.MoveToAttribute("x"))
+								{
+									try { p.lastFormSize.Width = Convert.ToInt32(xr.Value); }
+									catch { }
+								}
+								if (xr.MoveToAttribute("y"))
+								{
+									try { p.lastFormSize.Height = Convert.ToInt32(xr.Value); }
+									catch { }
+								}
+								break;
+
+							case "retrievenews":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.RetrieveNews = xr.Value == "1";
+								}
+								break;
+
+							case "logbuildstatus":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.LogBuildProgress = xr.Value == "1";
+								}
+								break;
+
+							case "showbuildcommands":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.ShowBuildCommands = xr.Value == "1";
+								}
+								break;
+
+							case "externaldbg":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.UseExternalDebugger = xr.Value == "1";
+								}
+								break;
+
+							case "singleinstance":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.SingleInstance = xr.Value == "1";
+								}
+								break;
+
+							case "watchforupdates":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.WatchForUpdates = xr.Value == "1";
+								}
+								break;
+
+							case "defprjdir":
+								p.DefaultProjectDirectory = xr.ReadString();
+								break;
+
+							case "parsedirectories":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "dir")
+										p.parsedDirectories.Add(xr.ReadString());
+									else break;
+								}
+								break;
+
+							case "dtoobj":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "bin")
+									{
+										p.exe_cmp = xr.ReadString();
+									}
+									else if (xr.LocalName == "args")
+									{
+										p.cmp_obj = xr.ReadString();
+									}
+									else break;
+								}
+								break;
+
+							case "objtowinexe":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "bin")
+									{
+										p.exe_win = xr.ReadString();
+									}
+									else if (xr.LocalName == "args")
+									{
+										p.link_win_exe = xr.ReadString();
+									}
+									else break;
+								}
+								break;
+
+							case "objtoexe":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "bin")
+									{
+										p.exe_console = xr.ReadString();
+									}
+									else if (xr.LocalName == "args")
+									{
+										p.link_to_exe= xr.ReadString();
+									}
+									else break;
+								}
+								break;
+
+							case "objtodll":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "bin")
+									{
+										p.exe_dll = xr.ReadString();
+									}
+									else if (xr.LocalName == "args")
+									{
+										p.link_to_dll = xr.ReadString();
+									}
+									else break;
+								}
+								break;
+
+							case "objtolib":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "bin")
+									{
+										p.exe_lib = xr.ReadString();
+									}
+									else if (xr.LocalName == "args")
+									{
+										p.link_to_lib = xr.ReadString();
+									}
+									else break;
+								}
+								break;
+
+							case "rctores":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "bin")
+									{
+										p.exe_res= xr.ReadString();
+									}
+									else if (xr.LocalName == "args")
+									{
+										p.cmp_res = xr.ReadString();
+									}
+									else break;
+								}
+								break;
+
+							case "debugger":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "bin")
+									{
+										p.exe_dbg = xr.ReadString();
+									}
+									else if (xr.LocalName == "args")
+									{
+										p.dbg_args = xr.ReadString();
+									}
+									else break;
+								}
+								break;
+
+							case "lastsearchdir":
+								p.lastSearchDir = xr.ReadString();
+								break;
+
+							case "verbosedbgoutput":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.VerboseDebugOutput = xr.Value == "1";
+								}
+								break;
+						}
+					}
 				}
-				catch (Exception ex) { MessageBox.Show(ex.Message); }
-				stream.Close();
+
+				xr.Close();
+				Default = p;
 			}
 		}
 
@@ -575,13 +828,147 @@ namespace D_IDE
 		{
 			if (fn == null) return;
 			if (fn == "") return;
-			BinaryFormatter formatter = new BinaryFormatter();
 
-			if (!Directory.Exists(Path.GetDirectoryName(fn)))
-				Directory.CreateDirectory(Path.GetDirectoryName(fn));
-			Stream stream = File.Open(fn, FileMode.Create);
-			formatter.Serialize(stream, Default);
-			stream.Close();
+			XmlTextWriter xw = new XmlTextWriter(fn, Encoding.UTF8);
+			xw.WriteStartDocument();
+			xw.WriteStartElement("settings");
+
+			xw.WriteStartElement("recentprojects");
+			foreach (string f in Default.lastProjects)
+			{
+				xw.WriteStartElement("f"); xw.WriteCData(f); xw.WriteEndElement();
+			}
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("recentfiles");
+			foreach (string f in Default.lastFiles)
+			{
+				xw.WriteStartElement("f"); xw.WriteCData(f); xw.WriteEndElement();
+			}
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("openlastprj");
+			xw.WriteAttributeString("value", Default.OpenLastPrj ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("windowstate");
+			xw.WriteAttributeString("value", ((int)Default.lastFormState).ToString());
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("windowsize");
+			xw.WriteAttributeString("x", Default.lastFormSize.Width.ToString());
+			xw.WriteAttributeString("y", Default.lastFormSize.Height.ToString());
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("retrievenews");
+			xw.WriteAttributeString("value", Default.RetrieveNews ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("logbuildstatus");
+			xw.WriteAttributeString("value", Default.LogBuildProgress ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("showbuildcommands");
+			xw.WriteAttributeString("value", Default.ShowBuildCommands ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("externaldbg");
+			xw.WriteAttributeString("value", Default.UseExternalDebugger ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("singleinstance");
+			xw.WriteAttributeString("value", Default.SingleInstance ? "1" : "0");
+			xw.WriteEndElement();
+
+			/*xw.WriteStartElement("watchforupdates");
+			xw.WriteAttributeString("value",Default.WatchForUpdates ? "1" : "0");
+			xw.WriteEndElement();*/
+
+			xw.WriteStartElement("defprjdir");
+			xw.WriteCData(Default.DefaultProjectDirectory);
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("parsedirectories");
+			foreach (string dir in Default.parsedDirectories)
+			{
+				xw.WriteStartElement("dir"); xw.WriteCData(dir); xw.WriteEndElement();
+			}
+			xw.WriteEndElement();
+
+			// d source to obj
+			xw.WriteStartElement("dtoobj");
+			xw.WriteStartElement("bin");
+			xw.WriteCData(Default.exe_cmp);
+			xw.WriteEndElement();
+			xw.WriteStartElement("args");
+			xw.WriteCData(Default.cmp_obj);
+			xw.WriteEndElement();
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("objtowinexe");
+			xw.WriteStartElement("bin");
+			xw.WriteCData(Default.exe_win);
+			xw.WriteEndElement();
+			xw.WriteStartElement("args");
+			xw.WriteCData(Default.link_win_exe);
+			xw.WriteEndElement();
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("objtoexe");
+			xw.WriteStartElement("bin");
+			xw.WriteCData(Default.exe_console);
+			xw.WriteEndElement();
+			xw.WriteStartElement("args");
+			xw.WriteCData(Default.link_to_exe);
+			xw.WriteEndElement();
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("objtodll");
+			xw.WriteStartElement("bin");
+			xw.WriteCData(Default.exe_dll);
+			xw.WriteEndElement();
+			xw.WriteStartElement("args");
+			xw.WriteCData(Default.link_to_dll);
+			xw.WriteEndElement();
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("objtolib");
+			xw.WriteStartElement("bin");
+			xw.WriteCData(Default.exe_lib);
+			xw.WriteEndElement();
+			xw.WriteStartElement("args");
+			xw.WriteCData(Default.link_to_lib);
+			xw.WriteEndElement();
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("rctores");
+			xw.WriteStartElement("bin");
+			xw.WriteCData(Default.exe_res);
+			xw.WriteEndElement();
+			xw.WriteStartElement("args");
+			xw.WriteCData(Default.cmp_res);
+			xw.WriteEndElement();
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("debugger");
+			xw.WriteStartElement("bin");
+			xw.WriteCData(Default.exe_dbg);
+			xw.WriteEndElement();
+			xw.WriteStartElement("args");
+			xw.WriteCData(Default.dbg_args);
+			xw.WriteEndElement();
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("lastsearchdir");
+			xw.WriteCData(Default.lastSearchDir);
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("verbosedbgoutput");
+			xw.WriteAttributeString("value", Default.VerboseDebugOutput ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteEndDocument();
+			xw.Close();
 		}
 
 		public static bool HasModule(string file)
@@ -660,8 +1047,10 @@ namespace D_IDE
 		public Size lastFormSize;
 		public bool RetrieveNews = true;
 		public bool LogBuildProgress = true;
-		public bool ShowBuildCommands = false;
+		public bool ShowBuildCommands = true;
 		public bool UseExternalDebugger = false;
+
+		public bool VerboseDebugOutput = false;
 
 		public bool SingleInstance = true;
 		public bool WatchForUpdates = true;
@@ -693,24 +1082,20 @@ namespace D_IDE
 		{
 			return new Location(cloc.Column, cloc.Line);
 		}
-
 		public static CodeLocation toCodeLocation(Location loc)
 		{
 			return new CodeLocation(loc.Column, loc.Line);
 		}
-
 		public static DateTime DateFromUnixTime(long t)
 		{
 			DateTime ret = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 			return ret.AddSeconds(t);
 		}
-
 		public static long UnixTimeFromDate(DateTime t)
 		{
 			DateTime ret = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 			return (long)(t - ret).TotalSeconds;
 		}
-
 		public static CodeLocation toCodeLocation(TextLocation Caret)
 		{
 			return new CodeLocation(Caret.Column, Caret.Line);

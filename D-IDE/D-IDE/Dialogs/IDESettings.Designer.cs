@@ -63,6 +63,7 @@
 			this.parsedFiles = new System.Windows.Forms.ListBox();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.button6 = new System.Windows.Forms.Button();
 			this.button5 = new System.Windows.Forms.Button();
 			this.reopenLastPrj = new System.Windows.Forms.CheckBox();
 			this.updates = new System.Windows.Forms.CheckBox();
@@ -70,6 +71,7 @@
 			this.button4 = new System.Windows.Forms.Button();
 			this.defPrjDir = new System.Windows.Forms.TextBox();
 			this.singleInst = new System.Windows.Forms.CheckBox();
+			this.verbosedbgoutput = new System.Windows.Forms.CheckBox();
 			this.tabPage1.SuspendLayout();
 			this.tabPage3.SuspendLayout();
 			this.tabControl1.SuspendLayout();
@@ -89,6 +91,7 @@
 			// 
 			// tabPage1
 			// 
+			this.tabPage1.Controls.Add(this.verbosedbgoutput);
 			this.tabPage1.Controls.Add(this.UseIntegDbg);
 			this.tabPage1.Controls.Add(this.showCompleteLog);
 			this.tabPage1.Controls.Add(this.label9);
@@ -419,6 +422,7 @@
 			// 
 			// tabPage2
 			// 
+			this.tabPage2.Controls.Add(this.button6);
 			this.tabPage2.Controls.Add(this.button5);
 			this.tabPage2.Controls.Add(this.reopenLastPrj);
 			this.tabPage2.Controls.Add(this.updates);
@@ -433,6 +437,16 @@
 			this.tabPage2.TabIndex = 2;
 			this.tabPage2.Text = "IDE";
 			this.tabPage2.UseVisualStyleBackColor = true;
+			// 
+			// button6
+			// 
+			this.button6.Location = new System.Drawing.Point(8, 130);
+			this.button6.Name = "button6";
+			this.button6.Size = new System.Drawing.Size(124, 23);
+			this.button6.TabIndex = 7;
+			this.button6.Text = "Restore Defaults";
+			this.button6.UseVisualStyleBackColor = true;
+			this.button6.Click += new System.EventHandler(this.button6_Click_1);
 			// 
 			// button5
 			// 
@@ -502,6 +516,16 @@
 			this.singleInst.Text = "Allow just one instance of D-IDE (Needs restart)";
 			this.singleInst.UseVisualStyleBackColor = true;
 			// 
+			// verbosedbgoutput
+			// 
+			this.verbosedbgoutput.AutoSize = true;
+			this.verbosedbgoutput.Location = new System.Drawing.Point(104, 259);
+			this.verbosedbgoutput.Name = "verbosedbgoutput";
+			this.verbosedbgoutput.Size = new System.Drawing.Size(131, 17);
+			this.verbosedbgoutput.TabIndex = 24;
+			this.verbosedbgoutput.Text = "Verbose debug output";
+			this.verbosedbgoutput.UseVisualStyleBackColor = true;
+			// 
 			// IDESettings
 			// 
 			this.AcceptButton = this.button1;
@@ -569,5 +593,7 @@
 		private System.Windows.Forms.Label label9;
 		private System.Windows.Forms.CheckBox showCompleteLog;
 		private System.Windows.Forms.CheckBox UseIntegDbg;
+		private System.Windows.Forms.Button button6;
+		private System.Windows.Forms.CheckBox verbosedbgoutput;
 	}
 }

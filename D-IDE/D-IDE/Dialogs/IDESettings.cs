@@ -17,6 +17,11 @@ namespace D_IDE
 			this.DockAreas = DockAreas.Document;
 			InitializeComponent();
 
+			ReadValues();
+		}
+
+		public void ReadValues()
+		{
 			singleInst.Checked = D_IDE_Properties.Default.SingleInstance;
 			defPrjDir.Text = D_IDE_Properties.Default.DefaultProjectDirectory;
 			updates.Checked = D_IDE_Properties.Default.WatchForUpdates;
@@ -49,6 +54,8 @@ namespace D_IDE
 
 			logbuildprogress_chk.Checked = D_IDE_Properties.Default.LogBuildProgress;
 			showCompleteLog.Checked = D_IDE_Properties.Default.ShowBuildCommands;
+
+			verbosedbgoutput.Checked = D_IDE_Properties.Default.VerboseDebugOutput;
 		}
 
 		private void button1_Click(object sender, EventArgs e)
@@ -86,6 +93,8 @@ namespace D_IDE
 
 			D_IDE_Properties.Default.LogBuildProgress = logbuildprogress_chk.Checked;
 			D_IDE_Properties.Default.ShowBuildCommands = showCompleteLog.Checked;
+
+			D_IDE_Properties.Default.VerboseDebugOutput = verbosedbgoutput.Checked;
 		}
 
 		private void button2_Click(object sender, EventArgs e)
@@ -165,6 +174,12 @@ namespace D_IDE
 			{
 				MessageBox.Show(ex.Message);
 			}
+		}
+
+		private void button6_Click_1(object sender, EventArgs e)
+		{
+			D_IDE_Properties.Default = new D_IDE_Properties();
+			ReadValues();
 		}
 	}
 }

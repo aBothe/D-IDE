@@ -46,6 +46,7 @@
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -59,11 +60,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dbgeng.lib user32.lib dbghelp.lib $(NOINHERIT)"
+				AdditionalDependencies="dbgeng.lib kernel32.lib user32.lib dbghelp.lib"
 				LinkIncremental="2"
+				GenerateManifest="false"
 				EnableUAC="false"
+				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
-				AssemblyDebug="1"
+				AssemblyDebug="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -71,6 +74,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				EmbedManifest="true"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
