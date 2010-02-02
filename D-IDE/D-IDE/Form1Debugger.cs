@@ -54,7 +54,7 @@ namespace D_IDE
 
 				if (!D_IDE_Properties.Default.UseExternalDebugger)
 				{
-					Debug(bin);
+					Debug(bin,sender is string && sender=="untilmain");
 				}
 				else
 				{
@@ -175,6 +175,11 @@ namespace D_IDE
 			GoToCurrentLocation();
 		}
 
+		private void runUntilMainToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			RunDebugClick("untilmain",EventArgs.Empty);
+		}
+
 		void GoToCurrentLocation()
 		{
 			if (!IsDebugging) return;
@@ -207,7 +212,7 @@ namespace D_IDE
 		/// </summary>
 		/// <param name="exe"></param>
 		/// <returns></returns>
-		public bool Debug(string exe)
+		public bool Debug(string exe,bool runUntilMainOnly)
 		{
 			if (dbg == null) InitDebugger();
 			
@@ -261,6 +266,8 @@ namespace D_IDE
 					dbp.bp.Offset = off;
 				}
 			}
+
+			if(runUntilMainOnly)dbg.Execute("g _Dmain");
 
 			IsInitDebugger = false;
 
