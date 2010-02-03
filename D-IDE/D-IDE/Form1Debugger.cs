@@ -220,8 +220,6 @@ namespace D_IDE
 
 			IsDebugging = true;
 
-			Log(ProgressStatusLabel.Text = "Launch internal debugger engine...");
-
 			toggleBreakpointToolStripMenuItem.Enabled = false;
 
 			dbgPauseButtonTS.Enabled =
@@ -240,7 +238,9 @@ namespace D_IDE
 			opt.EngCreateFlags = EngCreateFlags.Default;
 
 			dbg.CreateProcessAndAttach(0, exe + " " + prj.execargs, opt, Path.GetDirectoryName(exe), "", 0, 0);
+			
 			dbg.Symbols.SourcePath = prj.basedir;
+			dbg.IsSourceCodeOrientedStepping = false;
 
 			IsInitDebugger = true;
 
@@ -258,18 +258,18 @@ namespace D_IDE
 				foreach (DIDEBreakpoint dbp in kv.Value)
 				{
 					ulong off = 0;
-					if (!dbg.Symbols.GetOffsetByLine(dbp.file, (uint)dbp.line, out off))
+					if (!dbg.Symbols.GetOffsetByLine(prj==null? dbp.file : prj.GetRelFilePath(dbp.file), (uint)dbp.line, out off))
 					{
+						Log("Couldn't set breakpoint at "+dbp.file+":"+dbp.line.ToString());
 						continue;
 					}
 					dbp.bp = dbg.AddBreakPoint(BreakPointOptions.Enabled);
 					dbp.bp.Offset = off;
 				}
 			}
+			IsInitDebugger = false;
 
 			if(runUntilMainOnly)dbg.Execute("g _Dmain");
-
-			IsInitDebugger = false;
 
 			WaitForEvent();
 
