@@ -408,6 +408,7 @@ namespace D_IDE
 			errlog.buildErrors.Clear();
 			errlog.Update();
 			SaveAllTabs();
+			
 			foreach (DockContent tp in dockPanel.Documents)
 			{
 				if (tp is DocumentInstanceWindow)
@@ -430,6 +431,7 @@ namespace D_IDE
 				MessageBox.Show("Create project first!");
 				return false;
 			}
+			
 			if (D_IDE_Properties.Default.LogBuildProgress) bpw.Show();
 
 			Log("Build entire project now");

@@ -62,18 +62,13 @@ namespace D_IDE
 
 			fileData = new DModule(fn);
 
-			Update();
-			try
-			{
-				txt = new TextEditorControl();
-			}
-			catch { return; }
+			txt = new TextEditorControl();
 			txt.Dock = DockStyle.Fill;
 			this.Controls.Add(txt);
 
 			txt.TextEditorProperties.AllowCaretBeyondEOL = false;
 			txt.TextEditorProperties.AutoInsertCurlyBracket = true;
-			txt.TextEditorProperties.BracketMatchingStyle = BracketMatchingStyle.Before;
+			txt.TextEditorProperties.BracketMatchingStyle = BracketMatchingStyle.After;
 			txt.TextEditorProperties.ConvertTabsToSpaces = false;
 			txt.TextEditorProperties.DocumentSelectionMode = DocumentSelectionMode.Normal;
 			txt.TextEditorProperties.EnableFolding = true;
@@ -166,7 +161,7 @@ namespace D_IDE
 			Form1.thisForm.LineLabel.Text =
 				"Line " + (txt.ActiveTextAreaControl.Caret.Line + 1).ToString() +
 				" Col " + (txt.ActiveTextAreaControl.Caret.Column).ToString();
-			DataType tv = DCodeCompletionProvider.GetBlockAt(fileData.dom, Caret);
+			/*DataType tv = DCodeCompletionProvider.GetBlockAt(fileData.dom, Caret);
 
 			if (Form1.thisForm.CurBlockEnts.Tag != tv || Form1.thisForm.CurBlockEnts.Tag == null)
 			{
@@ -200,7 +195,7 @@ namespace D_IDE
 					tsmi.Tag = ch;
 					Form1.thisForm.CurBlockEnts.DropDownItems.Add(tsmi);
 				}
-			}
+			}*/
 		}
 
 		void createImportDirectiveItem_Click(object sender, EventArgs e)
@@ -481,7 +476,6 @@ namespace D_IDE
 				Stream stream = File.Open(fn, FileMode.Open);
 
 				XmlTextReader xr = new XmlTextReader(stream);
-				XmlReader xsr = null;
 				D_IDE_Properties p = new D_IDE_Properties();
 
 				while (xr.Read())// now 'settings' should be the current node
@@ -651,7 +645,7 @@ namespace D_IDE
 									}
 									else if (xr.LocalName == "args")
 									{
-										p.link_to_exe= xr.ReadString();
+										p.link_to_exe = xr.ReadString();
 									}
 									else break;
 								}
@@ -695,7 +689,7 @@ namespace D_IDE
 								{
 									if (xr.LocalName == "bin")
 									{
-										p.exe_res= xr.ReadString();
+										p.exe_res = xr.ReadString();
 									}
 									else if (xr.LocalName == "args")
 									{

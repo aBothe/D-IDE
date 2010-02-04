@@ -74,6 +74,7 @@
 			this.buildAndDebugToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.runWithoutDebuggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
+			this.runUntilMainToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.singleSteptoolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
 			this.stepOverToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
@@ -129,9 +130,6 @@
 			this.stepOutTS = new System.Windows.Forms.ToolStripButton();
 			this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
 			this.searchTool = new System.Windows.Forms.ToolStripTextBox();
-			this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
-			this.CurBlockEnts = new System.Windows.Forms.ToolStripDropDownButton();
-			this.runUntilMainToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			this.contextMenuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
@@ -550,6 +548,13 @@
 			this.toolStripSeparator15.Name = "toolStripSeparator15";
 			this.toolStripSeparator15.Size = new System.Drawing.Size(237, 6);
 			// 
+			// runUntilMainToolStripMenuItem
+			// 
+			this.runUntilMainToolStripMenuItem.Name = "runUntilMainToolStripMenuItem";
+			this.runUntilMainToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+			this.runUntilMainToolStripMenuItem.Text = "Run until main()";
+			this.runUntilMainToolStripMenuItem.Click += new System.EventHandler(this.runUntilMainToolStripMenuItem_Click);
+			// 
 			// singleSteptoolStripMenuItem3
 			// 
 			this.singleSteptoolStripMenuItem3.Enabled = false;
@@ -807,9 +812,7 @@
             this.stepOverTS,
             this.stepOutTS,
             this.sep_TBS2,
-            this.searchTool,
-            this.toolStripSeparator10,
-            this.CurBlockEnts});
+            this.searchTool});
 			this.TBS.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
 			this.TBS.Location = new System.Drawing.Point(0, 24);
 			this.TBS.Name = "TBS";
@@ -1032,25 +1035,6 @@
 			this.searchTool.ToolTipText = "Press <Return> for search in current document";
 			this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
 			// 
-			// toolStripSeparator10
-			// 
-			this.toolStripSeparator10.Name = "toolStripSeparator10";
-			this.toolStripSeparator10.Size = new System.Drawing.Size(6, 25);
-			// 
-			// CurBlockEnts
-			// 
-			this.CurBlockEnts.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.CurBlockEnts.Name = "CurBlockEnts";
-			this.CurBlockEnts.Size = new System.Drawing.Size(25, 22);
-			this.CurBlockEnts.Text = "-";
-			// 
-			// runUntilMainToolStripMenuItem
-			// 
-			this.runUntilMainToolStripMenuItem.Name = "runUntilMainToolStripMenuItem";
-			this.runUntilMainToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
-			this.runUntilMainToolStripMenuItem.Text = "Run until main()";
-			this.runUntilMainToolStripMenuItem.Click += new System.EventHandler(this.runUntilMainToolStripMenuItem_Click);
-			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1149,10 +1133,8 @@
         private System.Windows.Forms.ToolStripSeparator sep_TBS1;
         private System.Windows.Forms.ToolStripButton build_TBS;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
-        private System.Windows.Forms.ToolStripSeparator sep_TBS2;
-		public System.Windows.Forms.ToolStripDropDownButton CurBlockEnts;
-        private System.Windows.Forms.ToolStripTextBox searchTool;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator10;
+		private System.Windows.Forms.ToolStripSeparator sep_TBS2;
+		private System.Windows.Forms.ToolStripTextBox searchTool;
 		public System.Windows.Forms.ToolStripProgressBar BuildProgressBar;
 		private System.Windows.Forms.ToolStripButton toolStripButton2;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;

@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 using System.IO;
+using ICSharpCode.TextEditor.Document;
 
 namespace D_IDE
 {
@@ -94,7 +95,8 @@ namespace D_IDE
 		public void DrawBreakpointHighlightsForOpenFiles()
 		{
 			return;
-			/*if (Form1.thisForm.dockPanel.DocumentsCount > 0)
+			/*
+			if (Form1.thisForm.dockPanel.DocumentsCount > 0)
 				foreach (IDockContent dc in Form1.thisForm.dockPanel.Documents)
 				{
 					if (!(dc is DocumentInstanceWindow)) continue;

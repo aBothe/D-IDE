@@ -14,6 +14,9 @@ namespace D_IDE
 	{
 		public static bool BuildProject(DProject prj)
 		{
+			try { prj.Save(); }
+			catch { }
+
 			List<string> builtfiles = new List<string>();
 			string args = "";
 

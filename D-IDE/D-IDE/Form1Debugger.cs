@@ -54,7 +54,7 @@ namespace D_IDE
 
 				if (!D_IDE_Properties.Default.UseExternalDebugger)
 				{
-					Debug(bin,sender is string && sender=="untilmain");
+					Debug(bin,sender is string && sender==(object)"untilmain");
 				}
 				else
 				{
@@ -185,7 +185,8 @@ namespace D_IDE
 			if (!IsDebugging) return;
 			string fn;
 			uint ln;
-			if (dbg.Symbols.GetLineByOffset(dbg.CurrentInstructionOffset, out fn, out ln))
+			ulong off = dbg.CurrentFrame.InstructionOffset;
+			if (dbg.Symbols.GetLineByOffset(off, out fn, out ln))
 				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);
 
 			callstackwin.Update();
@@ -240,7 +241,7 @@ namespace D_IDE
 			dbg.CreateProcessAndAttach(0, exe + " " + prj.execargs, opt, Path.GetDirectoryName(exe), "", 0, 0);
 			
 			dbg.Symbols.SourcePath = prj.basedir;
-			dbg.IsSourceCodeOrientedStepping = false;
+			dbg.IsSourceCodeOrientedStepping = true;
 
 			IsInitDebugger = true;
 
@@ -408,6 +409,7 @@ namespace D_IDE
 						dbg.EndPendingWaits();
 						dbg.Terminate();
 						dbg.MainProcess.Kill();
+						ProgressStatusLabel.Text = "Debuggee terminated";
 					}
 					catch { }
 				}
@@ -423,7 +425,7 @@ namespace D_IDE
 
 			}
 			catch { }
-
+			
 			//callstackwin.Clear();
 		}
 	}
