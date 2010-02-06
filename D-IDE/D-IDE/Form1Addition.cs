@@ -191,9 +191,12 @@ namespace D_IDE
 					}
 				else // Add classes etc from current module
 					DCodeCompletionProvider.AddAllClassMembers(fileData.dom, ref CurrentCompletionData, true, Form1.thisForm.icons);
-
-				CurrentCompletionData.AddRange(D_IDE_Properties.GlobalCompletionList);
-				
+				try
+				{
+					CurrentCompletionData.Capacity += D_IDE_Properties.GlobalCompletionList.Count;
+					CurrentCompletionData.AddRange(D_IDE_Properties.GlobalCompletionList);
+				}
+				catch { }
 				/*Form1.thisForm.CurBlockEnts.DropDownItems.Clear();
 				Form1.thisForm.CurBlockEnts.Tag = tv;
 				Form1.thisForm.CurBlockEnts.Image = Form1.thisForm.icons.Images[DCompletionData.GetImageIndex(Form1.thisForm.icons, (DataType)tv.Parent, (DataType)tv)];

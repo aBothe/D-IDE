@@ -238,9 +238,9 @@ namespace D_IDE
 					if (dt.name == name)
 						return dt;
 
-					if (!RootOnly && dt!=levelnode)
+					if (!RootOnly)
 					{
-						DataType tdt = GetExprByName(dt,levelnode, name, false);
+						DataType tdt = GetExprByName(dt, levelnode, name, dt == levelnode);
 						if (tdt != null) return tdt;
 					}
 				}
@@ -294,11 +294,8 @@ namespace D_IDE
 					if (dt.name == name)
 						return dt;
 
-					if (dt != currentLevelNode)
-					{
-						DataType tdt = GetExprByName(dt, currentLevelNode, name, false);
+					DataType tdt = GetExprByName(dt, currentLevelNode, name, dt == currentLevelNode);
 						if (tdt != null) return tdt;
-					}
 				}
 
 			string super = env.superClass;// Should be superior class
@@ -355,6 +352,31 @@ namespace D_IDE
 			}
 
 			return ret;
+		}
+		public static DataType SearchExprInClassHierarchyBackward(DataType node, string name)
+		{
+			if (node == null) return null;
+
+			if (node.name == name) { return node; }
+
+			DataType dt = GetExprByName(node,name,true);
+			if (dt != null) return dt;
+
+			string super = node.superClass;// Should be superior class
+			/*if(!DTokens.ClassLike[env.TypeToken] && !exact)
+			{
+				super = env.type;
+			}*/
+			if (super != "")
+			{
+				dt = SearchGlobalExpr(null, super);
+				if (dt != null)
+				{
+					return SearchExprInClassHierarchyBackward(dt, name);
+				}
+			}
+
+			return SearchExprInClassHierarchyBackward((DataType)node.Parent,name);
 		}
 
 		public static DataType SearchGlobalExpr(DataType local, string expr)

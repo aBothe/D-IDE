@@ -127,28 +127,21 @@ namespace D_IDE
 				}
 				else
 				{
+					// Search expression in all superior blocks
+					seldt = SearchExprInClassHierarchyBackward(GetBlockAt(local.dom, caretLocation), RemoveArrayOrTemplatePartFromDecl(expressions[0]));
 					// Search expression in current module root first
-					seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
-					// If there wasn't found anything, search deeper
-					DataType cb = GetBlockAt(local.dom, caretLocation);
-					if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom,cb, RemoveArrayOrTemplatePartFromDecl(expressions[0]));
+					if (seldt == null) seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
+					// If there wasn't found anything, search deeper and recursive
+					//if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom, GetBlockAt(local.dom, caretLocation), RemoveArrayOrTemplatePartFromDecl(expressions[0]));
+					// EDIT: Don't search recursively in all blocks of local.dom because you'd resolve something you couldn't access...
 
 					// If seldt is a variable, resolve its basic type such as a class etc
 					if (seldt != null) i++;
 					seldd = seldt;
 					seldt = ResolveReturnOrBaseType(prj, local, seldt, i >= expressions.Length - 1);
 					if (seldt != seldd) isInstance = true;
-					/*if (seldt != null && ((dotPressed && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl)) ||
-						(seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken]))
-					  )
-					{
-						seldd = seldt;
-						seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(seldt.type), true, out module);
-						if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom, seldd.type/*RemoveArrayOrTemplatePartFromDecl(expressions[0])* /);//SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(seldd.type), false, out module);
-						isInstance = true;
-					}*/
 
-					#region Seek in global and local(project) namespaces
+					#region Seek in global and local(project) namespace names
 					if (seldt == null) // if there wasn't still anything found in global space
 					{
 						string modpath = "";
@@ -228,19 +221,6 @@ namespace D_IDE
 					seldd=seldt;
 					seldt = ResolveReturnOrBaseType(prj,local,seldt,i==expressions.Length-1);
 					if (seldt != seldd) isInstance = true;
-					/*if ((seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl ||
-							(seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])
-						)
-					  )
-					{
-						seldd = seldt;
-						seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(seldt.type), true, out module);
-						if (seldt == null)
-							seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(seldd.type), false, out module);
-
-						if (seldt == null) seldt = seldd;
-						isInstance = true;
-					}*/
 				}
 
 				return seldt;
