@@ -12,7 +12,7 @@ using ICSharpCode.NRefactory.Parser;
 
 namespace D_IDE
 {
-	public class AfterSpaceCompletionProvider : ICompletionDataProvider
+	/*public class AfterSpaceCompletionProvider : ICompletionDataProvider
 	{
 		public ImageList icons;
 		public DProject prj;
@@ -96,7 +96,7 @@ namespace D_IDE
 						}
 						if(nameID == "") return null;
 						nameID=DCodeCompletionProvider.ReverseString(nameID);
-						*/
+						* /
 						seldt = DCodeCompletionProvider.GetClassAt(pf.dom, tl);
 						if(seldt != null)
 						{
@@ -111,7 +111,7 @@ namespace D_IDE
 							}
 
 						//DCodeCompletionProvider.AddGlobalSpaceContent(ref rl, icons);
-						rl.AddRange(DCodeCompletionProvider.globalList);
+						rl.AddRange(D_IDE_Properties.GlobalCompletionList);
 						break;
 					default:
 						return null;
@@ -162,5 +162,5 @@ namespace D_IDE
 		}
 
 		#endregion
-	}
+	}*/
 }

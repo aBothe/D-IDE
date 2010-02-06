@@ -11,8 +11,6 @@ namespace D_IDE
 {
 	public partial class DCodeCompletionProvider
 	{
-		public static List<ICompletionData> globalList = new List<ICompletionData>();
-
 		public ImageList icons;
 		public DProject prj;
 
@@ -28,12 +26,14 @@ namespace D_IDE
 			}
 			return ret;
 		}
-		public static bool isInCommentArea(string t, int offset)
+		public static bool isInCommentAreaOrString(string t, int offset)
 		{
-			bool commenting = false, multicomm = false;
+			bool commenting = false, multicomm = false, inString=false;
 			for (int i = 0; i < offset; i++)
 			{
 				char c = t[i];
+
+				if (c == '"' && t[i > 0 ? (i - 1) : 0] != '\\') inString = !inString;
 
 				if (i >= 1)
 				{
@@ -53,7 +53,7 @@ namespace D_IDE
 						}
 				}
 			}
-			return (commenting || multicomm);
+			return (commenting || multicomm || inString);
 		}
 
 		public static DataType GetBlockAt(DataType dataType, TextLocation textLocation)

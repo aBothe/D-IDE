@@ -351,6 +351,9 @@ namespace D_IDE
 			lock (D_IDE_Properties.GlobalModules)
 			{
 				D_IDE_Properties.GlobalModules = ret;
+
+				D_IDE_Properties.GlobalCompletionList.Clear();
+				DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList, icons);
 			}
 		}
 
@@ -829,6 +832,10 @@ namespace D_IDE
 				if (mtp.fileData.mod_file.StartsWith(dir))
 				{
 					D_IDE_Properties.AddFileData(mtp.fileData);
+
+					D_IDE_Properties.GlobalCompletionList.Clear();
+					DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList, icons);
+
 					break;
 				}
 			}
@@ -1446,6 +1453,11 @@ namespace D_IDE
 		private void visitDidesourceforgenetToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			Process.Start("http://d-ide.sourceforge.net");
+		}
+
+		private void showCompletionWindowToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (SelectedTabPage != null) SelectedTabPage.TextAreaKeyEventHandler('\0');
 		}
 	}
 }

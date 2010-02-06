@@ -20,6 +20,7 @@ using ICSharpCode.TextEditor.Gui.InsightWindow;
 using WeifenLuo.WinFormsUI.Docking;
 using System.Globalization;
 using System.Text;
+using ICSharpCode.NRefactory.Ast;
 
 namespace D_IDE
 {
@@ -156,17 +157,44 @@ namespace D_IDE
 			get { return txt.ActiveTextAreaControl.Caret.Position; }
 		}
 
+		DataType selectedBlock=null;
+		public List<ICompletionData> CurrentCompletionData = new List<ICompletionData>();
+
 		void Caret_PositionChanged(object sender, EventArgs e)
 		{
 			Form1.thisForm.LineLabel.Text =
 				"Line " + (txt.ActiveTextAreaControl.Caret.Line + 1).ToString() +
 				" Col " + (txt.ActiveTextAreaControl.Caret.Column).ToString();
-			/*DataType tv = DCodeCompletionProvider.GetBlockAt(fileData.dom, Caret);
+			DataType tv = DCodeCompletionProvider.GetBlockAt(fileData.dom, Caret);
 
-			if (Form1.thisForm.CurBlockEnts.Tag != tv || Form1.thisForm.CurBlockEnts.Tag == null)
+			if (selectedBlock != tv || selectedBlock== null)
 			{
-				DCodeCompletionProvider.GenerateCurrentGlobalData(txt.ActiveTextAreaControl.TextArea, project, fileData);
-				Form1.thisForm.CurBlockEnts.DropDownItems.Clear();
+				selectedBlock = tv;
+				CurrentCompletionData.Clear();
+				if (tv != null)
+				{/*
+				if(!DTokens.ClassLike[seldt.TypeToken])
+				{
+					//seldd = DCodeCompletionProvider.GetClassAt(module.dom, tl);
+					//if(seldd != null)
+						DCodeCompletionProvider.AddAllClassMembers(seldt, ref DCodeCompletionProvider.globalList, true, Form1.thisForm.icons);
+				}
+				else*/
+					DCodeCompletionProvider.AddAllClassMembers(tv, ref CurrentCompletionData, true, Form1.thisForm.icons);
+				}
+				if (project != null)
+					foreach (DModule ppf in project.files)
+					{
+						if (!ppf.IsParsable) continue;
+
+						DCodeCompletionProvider.AddAllClassMembers(ppf.dom, ref CurrentCompletionData, false, Form1.thisForm.icons);
+					}
+				else // Add classes etc from current module
+					DCodeCompletionProvider.AddAllClassMembers(fileData.dom, ref CurrentCompletionData, true, Form1.thisForm.icons);
+
+				CurrentCompletionData.AddRange(D_IDE_Properties.GlobalCompletionList);
+				
+				/*Form1.thisForm.CurBlockEnts.DropDownItems.Clear();
 				Form1.thisForm.CurBlockEnts.Tag = tv;
 				Form1.thisForm.CurBlockEnts.Image = Form1.thisForm.icons.Images[DCompletionData.GetImageIndex(Form1.thisForm.icons, (DataType)tv.Parent, (DataType)tv)];
 				Form1.thisForm.CurBlockEnts.Text = tv.name;
@@ -194,8 +222,8 @@ namespace D_IDE
 						});
 					tsmi.Tag = ch;
 					Form1.thisForm.CurBlockEnts.DropDownItems.Add(tsmi);
-				}
-			}*/
+				}*/
+			}
 		}
 
 		void createImportDirectiveItem_Click(object sender, EventArgs e)
@@ -203,7 +231,7 @@ namespace D_IDE
 			int off = txt.ActiveTextAreaControl.Caret.Offset;
 			bool ctor, super, isInst, isNameSpace;
 
-			string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(ref off, out ctor, false);
+			string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(txt.Document.TextContent,ref off, out ctor, false);
 			if (exprs == null || exprs.Length < 1)
 			{
 				MessageBox.Show("Nothing selected!");
@@ -243,13 +271,13 @@ namespace D_IDE
 		/// <summary>
 		/// Return true to handle the keypress, return false to let the text area handle the keypress
 		/// </summary>
-		bool TextAreaKeyEventHandler(char key)
+		public bool TextAreaKeyEventHandler(char key)
 		{
-			if (Program.Parsing) return false;
-			if (key == '(')
-			{
-				txt.Document.Insert(CaretOffset, ")");
-			}
+			if (Program.Parsing || 
+				DCodeCompletionProvider.isInCommentAreaOrString(txt.Document.TextContent, txt.ActiveTextAreaControl.Caret.Offset)) 
+				return false;
+
+			//if (key == '(')txt.Document.Insert(CaretOffset, ")");
 			if (key == '(' || key == ',')
 			{
 				ShowFunctionParameterToolTip(key);
@@ -261,7 +289,7 @@ namespace D_IDE
 			DProject prj = Form1.thisForm.prj;
 			if (prj == null) prj = new DProject();
 
-			if (Char.IsLetterOrDigit(key) || key == '_' || key == '.' || key == ' ')
+			if (Char.IsLetterOrDigit(key) || key == '_' || key == '.' || key == ' ' ||key=='\0')
 				dataProvider = new DCodeCompletionProvider(ref prj, Form1.thisForm.icons);
 			else return false;
 
@@ -281,7 +309,7 @@ namespace D_IDE
 			int off = txt.ActiveTextAreaControl.Caret.Offset;
 			bool ctor, super, isInst, isNameSpace;
 
-			string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(ref off, out ctor, false);
+			string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(txt.Document.TextContent,ref off, out ctor, false);
 			if (exprs == null || exprs.Length < 1)
 			{
 				MessageBox.Show("Nothing selected!");
@@ -303,16 +331,9 @@ namespace D_IDE
 					out gpf
 					);
 
-			if (dt == null) return;
+			if (dt == null || gpf==null) return;
 
-			DocumentInstanceWindow diw = Form1.thisForm.Open(gpf.mod_file);
-
-			if (diw != null)
-			{
-				//MessageBox.Show(dt.name);
-				diw.txt.ActiveTextAreaControl.Caret.Position = new TextLocation(dt.startLoc.Column - 1, dt.startLoc.Line - 1);
-				diw.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
-			}
+			ErrorLog.OpenError(gpf.mod_file,dt.StartLocation.Line,dt.StartLocation.Column);
 		}
 
 		void TextArea_ToolTipRequest(object sender, ToolTipRequestEventArgs e)
@@ -334,7 +355,7 @@ namespace D_IDE
 			bool ctor, super, isInst, isNameSpace;
 			DModule gpf = null;
 			int off = mouseOffset;
-			string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(ref off, out ctor, false);
+			string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(ta.Document.TextContent,ref off, out ctor, false);
 			if (exprs == null || exprs.Length < 1) return;
 
 			int key = DKeywords.GetToken(exprs[0]);
@@ -760,6 +781,11 @@ namespace D_IDE
 				stream.Close();
 				cscr.Close();
 				GlobalModules = tmods;
+
+				// add all loaded data to the precached completion list
+				D_IDE_Properties.GlobalCompletionList.Clear();
+				DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList, Form1.thisForm.icons);
+
 				Program.Parsing = false;
 			});
 			cacheTh.Start();
@@ -991,6 +1017,8 @@ namespace D_IDE
 		{
 			if (!pf.IsParsable) return false;
 
+			
+
 			foreach (DModule dpf in GlobalModules)
 			{
 				if (dpf.mod_file == pf.mod_file)
@@ -1004,6 +1032,7 @@ namespace D_IDE
 			}
 
 			GlobalModules.Add(pf);
+
 			return true;
 		}
 		public static bool AddFileData(List<DModule> modules, DModule pf)
@@ -1031,7 +1060,6 @@ namespace D_IDE
 			exe_cmp = exe_console = exe_dll = exe_lib = exe_win = "dmd.exe";
 		}
 
-		[NonSerialized()]
 		public static D_IDE_Properties Default = new D_IDE_Properties();
 
 		public List<string> lastProjects = new List<string>(), lastFiles = new List<string>();
@@ -1050,8 +1078,8 @@ namespace D_IDE
 		public bool WatchForUpdates = true;
 		public string DefaultProjectDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\D Projects";
 
-		[NonSerialized()]
 		public static List<DModule> GlobalModules = new List<DModule>();
+		public static List<ICompletionData> GlobalCompletionList = new List<ICompletionData>();
 		public List<string> parsedDirectories = new List<string>();
 
 		public string exe_cmp;

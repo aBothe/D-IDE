@@ -24,22 +24,24 @@ namespace D_IDE
 		/// <param name="mouseOffset"></param>
 		/// <param name="isNewConstructor"></param>
 		/// <returns><![CDATA[string["classA","classB","memberC"]]]></returns>
-		public static string[] GetExpressionStringsAtOffset(ref int mouseOffset, out bool isNewConstructor, bool backwardOnly)
+		public static string[] GetExpressionStringsAtOffset(string TextContent,ref int mouseOffset, out bool isNewConstructor, bool backwardOnly)
 		{
 			int origOff = mouseOffset;
 			isNewConstructor = false;
+			if (mouseOffset < 1 || String.IsNullOrEmpty(TextContent)) return null;
+
+			int TextLength = TextContent.Length;
+
 			try
 			{
 				List<string> expressions = new List<string>();
-				if (mouseOffset < 1 || Form1.SelectedTabPage == null) return null;
-				TextArea ta = Form1.SelectedTabPage.txt.ActiveTextAreaControl.TextArea;
-
+		
 				char tch;
 				string texpr = "";
 				int psb = 0;
-				for (; mouseOffset > 0 && mouseOffset < ta.Document.TextLength; mouseOffset--)
+				for (; mouseOffset > 0 && mouseOffset < TextLength; mouseOffset--)
 				{
-					tch = ta.Document.GetCharAt(mouseOffset);
+					tch = TextContent[mouseOffset];
 
 					if (tch == ']') psb++;
 
@@ -47,7 +49,7 @@ namespace D_IDE
 
 					if (!char.IsLetterOrDigit(tch) && tch != '_' && psb < 1)
 					{
-						if (mouseOffset > 3 && ta.Document.TextContent.Substring(mouseOffset - 3, 3) == "new") isNewConstructor = true; // =>new< MyClass()
+						if (mouseOffset > 3 && TextContent.Substring(mouseOffset - 3, 3) == "new") isNewConstructor = true; // =>new< MyClass()
 						expressions.Add(ReverseString(texpr.Trim()));
 
 						if (tch != '.')
@@ -66,10 +68,10 @@ namespace D_IDE
 
 				if (!backwardOnly)
 				{
-					if (!char.IsLetterOrDigit(ta.Document.GetCharAt(off)) && ta.Document.GetCharAt(off) != '_') return null;
-					for (int i = off + 1; i > 0 && i < ta.Document.TextLength - 1; i++) // Parse forward
+					if (!char.IsLetterOrDigit(TextContent[off]) && TextContent[off] != '_') return null;
+					for (int i = off + 1; i > 0 && i < TextLength - 1; i++) // Parse forward
 					{
-						tch = ta.Document.GetCharAt(i);
+						tch = TextContent[i];
 						if (!char.IsLetterOrDigit(tch) && tch != '_') break;
 						if (expressions.Count < 1) expressions.Add("");
 						texpr += tch;
@@ -129,18 +131,21 @@ namespace D_IDE
 					seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
 					// If there wasn't found anything, search deeper
 					if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom, RemoveArrayOrTemplatePartFromDecl(expressions[0]));
-					
+
 					// If seldt is a variable, resolve its basic type such as a class etc
 					if (seldt != null) i++;
-					if (seldt != null && ((dotPressed && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl)) ||
+					seldd = seldt;
+					seldt = ResolveReturnOrBaseType(prj, local, seldt, i >= expressions.Length - 1);
+					if (seldt != seldd) isInstance = true;
+					/*if (seldt != null && ((dotPressed && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl)) ||
 						(seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken]))
 					  )
 					{
 						seldd = seldt;
 						seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(seldt.type), true, out module);
-						if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom, seldd.type/*RemoveArrayOrTemplatePartFromDecl(expressions[0])*/);//SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(seldd.type), false, out module);
+						if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom, seldd.type/*RemoveArrayOrTemplatePartFromDecl(expressions[0])* /);//SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(seldd.type), false, out module);
 						isInstance = true;
-					}
+					}*/
 
 					#region Seek in global and local(project) namespaces
 					if (seldt == null) // if there wasn't still anything found in global space
@@ -219,7 +224,10 @@ namespace D_IDE
 					seldt = SearchExprInClassHierarchy(seldt, RemoveArrayOrTemplatePartFromDecl(expressions[i]));
 					if (seldt == null) break;
 
-					if ((seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl ||
+					seldd=seldt;
+					seldt = ResolveReturnOrBaseType(prj,local,seldt,i==expressions.Length-1);
+					if (seldt != seldd) isInstance = true;
+					/*if ((seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl ||
 							(seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])
 						)
 					  )
@@ -228,8 +236,10 @@ namespace D_IDE
 						seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(seldt.type), true, out module);
 						if (seldt == null)
 							seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(seldd.type), false, out module);
+
+						if (seldt == null) seldt = seldd;
 						isInstance = true;
-					}
+					}*/
 				}
 
 				return seldt;
@@ -241,44 +251,15 @@ namespace D_IDE
 			return null;
 		}
 
-		public static void GenerateCurrentGlobalData(TextArea ta, DProject project, DModule module)
-		{
-			globalList.Clear();
-
-			CodeLocation tl = new CodeLocation(ta.Caret.Column + 1, ta.Caret.Line + 1);
-			DataType seldt, seldd;
-			seldt = DCodeCompletionProvider.GetBlockAt(module.dom, tl);
-			if (seldt != null)
-			{/*
-				if(!DTokens.ClassLike[seldt.TypeToken])
-				{
-					//seldd = DCodeCompletionProvider.GetClassAt(module.dom, tl);
-					//if(seldd != null)
-						DCodeCompletionProvider.AddAllClassMembers(seldt, ref DCodeCompletionProvider.globalList, true, Form1.thisForm.icons);
-				}
-				else*/
-				DCodeCompletionProvider.AddAllClassMembers(seldt, ref DCodeCompletionProvider.globalList, true, Form1.thisForm.icons);
-			}
-			if (project != null && project.files.Contains(module))
-				foreach (DModule ppf in project.files)
-				{
-					if (!ppf.IsParsable) continue;
-
-					AddAllClassMembers(ppf.dom, ref DCodeCompletionProvider.globalList, false, Form1.thisForm.icons);
-				}
-			else // Add classes etc from current module
-				AddAllClassMembers(module.dom, ref DCodeCompletionProvider.globalList, true, Form1.thisForm.icons);
-
-			AddGlobalSpaceContent(ref DCodeCompletionProvider.globalList, Form1.thisForm.icons);
-		}
-
 		public ICompletionData[] GenerateCompletionData(string fn, TextArea ta, char ch)
 		{
 			List<ICompletionData> rl = new List<ICompletionData>();
 			List<string> expressions = new List<string>();
 			try
 			{
-				DModule pf = Form1.SelectedTabPage.fileData;
+				DocumentInstanceWindow diw = Form1.SelectedTabPage;
+				DProject project = diw.project;
+				DModule pf = diw.fileData;
 
 				CodeLocation tl = new CodeLocation(ta.Caret.Column + 1, ta.Caret.Line + 1);
 				DataType seldt, seldd;
@@ -326,19 +307,28 @@ namespace D_IDE
 
 				if (KeyWord == DTokens.New && expressions.Count < 1)
 				{
-					rl.AddRange(globalList);
+					rl.AddRange(D_IDE_Properties.GlobalCompletionList);
 					presel = null;
+					return rl.ToArray();
 				}
 
-				if (expressions.Count < 1) return rl.ToArray();
+				if (expressions.Count < 1 && ch != '\0') return rl.ToArray();
 
 				expressions.Reverse();
 				#endregion
 
-				if (ch != '.' && expressions.Count == 1 && expressions[0].Length < 2 && KeyWord < 0) // Reflect entire cache content including D KeyWords
+				if (expressions.Count < 1)
 				{
-					presel = expressions[expressions.Count - 1];
-					rl.AddRange(globalList);
+					if (ch == '\0') expressions.Add("");
+					else return null;
+				}
+
+				if (ch != '.' && (expressions.Count == 1 && expressions[0].Length < 2) && KeyWord < 0) // Reflect entire cache content including D KeyWords
+				{
+					if (expressions.Count > 0) presel = expressions[expressions.Count - 1];
+					else presel = null;
+					rl.AddRange(diw.CurrentCompletionData);
+
 					rl.Sort();
 					return rl.ToArray();
 				}
@@ -348,7 +338,7 @@ namespace D_IDE
 					#region A.B.c>.<
 					presel = null; // Important: After a typed dot ".", set previous selection string to null!
 					DModule gpf = null;
-					
+
 					seldt = FindActualExpression(prj, pf, tl, expressions.ToArray(), ch == '.', out isSuper, out isInst, out isNameSpace, out gpf);
 
 					if (seldt == null) return rl.ToArray();
@@ -511,6 +501,80 @@ namespace D_IDE
 			rl.Add(new DCompletionData("sizeof", "Yields the memory usage of a type in bytes", icons.Images.IndexOfKey("Icons.16x16.Literal.png")));
 			rl.Add(new DCompletionData("stringof", "Returns a string of the typename", icons.Images.IndexOfKey("Icons.16x16.Property.png")));
 			rl.Add(new DCompletionData("init", "Returns the default initializer of a type", icons.Images.IndexOfKey("Icons.16x16.Field.png")));
+		}
+
+		/// <summary>
+		/// Resolves either the return type of a method or the base type of a variable
+		/// </summary>
+		/// <param name="prj"></param>
+		/// <param name="local"></param>
+		/// <param name="owner"></param>
+		/// <param name="isLastInExpressionChain">This value is needed for resolving functions because if this parameter is true then it returns the owner node</param>
+		/// <returns></returns>
+		public static DataType ResolveReturnOrBaseType(DProject prj, DModule local, DataType owner, bool isLastInExpressionChain)
+		{
+			DataType ret = owner;
+			DModule mod = null;
+			if ((!DTokens.BasicTypes[(int)owner.TypeToken] && owner.fieldtype == FieldType.Variable) || ((owner.fieldtype == FieldType.Function || owner.fieldtype == FieldType.AliasDecl) && !isLastInExpressionChain))
+			{
+				ret = DCodeCompletionProvider.SearchExprInClassHierarchy((DataType)owner.Parent, RemoveArrayOrTemplatePartFromDecl(owner.type));
+				if (ret == null)
+					ret = DCodeCompletionProvider.SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(owner.type), false, out mod);
+			}
+			return ret;
+		}
+
+		/// <summary>
+		/// A subroutine for ResolveMultipleNodes
+		/// </summary><see cref="ResolveMultipleNodes"/>
+		/// <param name="prj"></param>
+		/// <param name="local"></param>
+		/// <param name="parent"></param>
+		/// <param name="i"></param>
+		/// <param name="expressions"></param>
+		/// <returns></returns>
+		static List<DataType> _res(DProject prj, DModule local, DataType parent, int i, string[] expressions)
+		{
+			List<DataType> tl = new List<DataType>();
+			if (expressions == null || i >= expressions.Length)
+			{
+				tl.Add(parent);
+				return tl;
+			}
+			DModule mod = null;
+			foreach (DataType dt in GetExprsByName(parent, expressions[i], true))
+			{
+				DataType seldt = ResolveReturnOrBaseType(prj, local, dt, i >= expressions.Length - 1);
+
+				if (seldt == null) seldt = dt;
+
+				tl.AddRange(_res(prj, local, seldt, i + 1, expressions));
+			}
+			return tl;
+		}
+
+		/// <summary>
+		/// Searches nodes in global space which have the same name and returns all of these
+		/// </summary>
+		/// <param name="prj"></param>
+		/// <param name="local"></param>
+		/// <param name="expressions"></param>
+		/// <returns></returns>
+		public static List<DataType> ResolveMultipleNodes(DProject prj, DModule local, string[] expressions)
+		{
+			if (expressions == null || expressions.Length < 1) return new List<DataType>();
+
+			List<DataType> rl = SearchGlobalExprs(prj, local.dom, expressions[0]);
+			if (expressions.Length < 2 || rl.Count < 1) return rl;
+
+			List<DataType> ret = new List<DataType>();
+			foreach (DataType dt in rl)
+			{
+				DataType seldt = ResolveReturnOrBaseType(prj, local, dt, expressions.Length==2);
+				if (seldt == null) seldt = dt;
+				ret.AddRange(_res(prj, local, seldt, 1, expressions));
+			}
+			return ret;
 		}
 	}
 }

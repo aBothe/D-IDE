@@ -131,7 +131,7 @@ namespace D_IDE
 			bool ctor = false;
 			int newOff = initialOffset - 1;
 			int i = 0;
-			string[] expressions = DCodeCompletionProvider.GetExpressionStringsAtOffset(ref newOff, out ctor, true);
+			string[] expressions = DCodeCompletionProvider.GetExpressionStringsAtOffset(ta.Document.TextContent,ref newOff, out ctor, true);
 
 			if (expressions == null || expressions.Length < 1) return;
 
@@ -170,8 +170,14 @@ namespace D_IDE
 			}
 			else
 			{
+				foreach (DataType dt in DCodeCompletionProvider.ResolveMultipleNodes(diw.project, diw.fileData, expressions))
+				{
+					data.Add(DCompletionData.BuildDescriptionString(dt));
+				}
+				/*
 				if (expressions.Length > 1)
 				{
+					
 					seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.project, diw.fileData, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
 					if (seldt == null) seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(diw.fileData.dom, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[0]));
 					
@@ -213,7 +219,7 @@ namespace D_IDE
 						data.Add(DCompletionData.BuildDescriptionString(dt));
 					}
 					return;
-				}
+				}*/
 			}
 
 
@@ -308,9 +314,11 @@ namespace D_IDE
 				seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(seldt, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[i]));
 				if (seldt == null) break;
 
-				if ((seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])) && i < expressions.Length - 1)
+				if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))
 				{
-					seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, seldt.type);
+					DataType seldd = seldt;
+					seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(seldt.type));
+					if (seldt == null) seldt = seldd;
 				}
 			}
 

@@ -32,7 +32,7 @@ namespace D_IDE
 			foreach (string fn in resourceFiles)
 			{
 				if (!DModule.Parsable(fn)) continue;
-				files.Add(new DModule(fn));
+				files.Add(new DModule(GetPhysFilePath( fn)));
 			}
 		}
 
@@ -328,6 +328,15 @@ namespace D_IDE
 			if (ret != null)
 			{
 				ret.files = new List<DModule>();
+				foreach (string f in ret.resourceFiles)
+				{
+					if (!DModule.Parsable(f)) continue;
+					try
+					{
+						ret.files.Add(new DModule(ret.GetPhysFilePath( f)));
+					}
+					catch { }
+				}
 				ret.prjfn = fn;
 			}
 			return ret;
