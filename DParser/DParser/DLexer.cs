@@ -128,7 +128,9 @@ namespace D_Parser
 							else if(Char.IsLetterOrDigit(ch) || ch == '_')
 							{
 								bool canBeKeyword;
-								token = new Token(DTokens.Identifier, x - 1, y, ReadIdent(ch, out canBeKeyword));
+								string ident = ReadIdent(ch, out canBeKeyword);
+								int tkind = DTokens.GetTokenID("@" + ident);
+								token = new Token(tkind<0? DTokens.Identifier:tkind, x - 1, y, (tkind<0?"":"@")+ident);
 							}
 							else
 							{

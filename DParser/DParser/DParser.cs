@@ -42,7 +42,11 @@ namespace D_Parser
 			catch(IOException iox) { imports = new List<string>(); return null; }
 			TextReader tr = new StreamReader(fs);
 
-			DParser p = new DParser(new DLexer(tr));
+			DLexer dl = new DLexer(tr);
+			
+			DParser p = new DParser(dl);
+			dl.Errors.SemErr = p.SemErr;
+			dl.Errors.SynErr = p.SynErr;
             p.PhysFileName = fn;
 			if(fs.Length > (1024 * 1024 * 2))
 			{
@@ -50,8 +54,14 @@ namespace D_Parser
 				imports = new List<string>();
 				return ret;
 			}
-			ret = p.Parse(moduleName, out imports);
-			fs.Close();
+			try
+			{
+				ret = p.Parse(moduleName, out imports);
+			}
+			finally
+			{
+				fs.Close();
+			}
 
 			return ret;
 		}

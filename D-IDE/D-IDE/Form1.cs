@@ -243,42 +243,50 @@ namespace D_IDE
 
 		void DParser_OnError(string file, string module, int line, int col, int kindOf, string msg)
 		{
-			errlog.AddParserError(file, line, col, msg);
-			DocumentInstanceWindow mtp;
-			foreach (IDockContent dc in dockPanel.Documents)
+			try
 			{
-				if (dc is DocumentInstanceWindow)
+				errlog.AddParserError(file, line, col, msg);
+				DocumentInstanceWindow mtp;
+				foreach (IDockContent dc in dockPanel.Documents)
 				{
-					mtp = (DocumentInstanceWindow)dc;
-					if (mtp.fileData.mod == module || mtp.fileData.mod_file == file)
+					if (dc is DocumentInstanceWindow)
 					{
-						int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
-						mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Red));
-						mtp.txt.ActiveTextAreaControl.Refresh();
-						break;
-					}
+						mtp = (DocumentInstanceWindow)dc;
+						if (mtp.fileData.mod == module || mtp.fileData.mod_file == file)
+						{
+							int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
+							mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Red));
+							mtp.txt.ActiveTextAreaControl.Refresh();
+							break;
+						}
 
+					}
 				}
 			}
+			catch { }
 		}
 		void DParser_OnSemanticError(string file, string module, int line, int col, int kindOf, string msg)
 		{
-			errlog.AddParserError(file, line, col, msg);
-			DocumentInstanceWindow mtp;
-			foreach (IDockContent dc in dockPanel.Documents)
+			try
 			{
-				if (dc is DocumentInstanceWindow)
+				errlog.AddParserError(file, line, col, msg);
+				DocumentInstanceWindow mtp;
+				foreach (IDockContent dc in dockPanel.Documents)
 				{
-					mtp = (DocumentInstanceWindow)dc;
-					if (mtp.fileData.mod == module)
+					if (dc is DocumentInstanceWindow)
 					{
-						int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
-						mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Blue));
-						mtp.txt.ActiveTextAreaControl.Refresh();
-						break;
+						mtp = (DocumentInstanceWindow)dc;
+						if (mtp.fileData.mod == module)
+						{
+							int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
+							mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Blue));
+							mtp.txt.ActiveTextAreaControl.Refresh();
+							break;
+						}
 					}
 				}
 			}
+			catch { }
 		}
 
 		void SaveAllTabs()

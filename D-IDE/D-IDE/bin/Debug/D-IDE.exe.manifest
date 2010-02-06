@@ -4,7 +4,7 @@
   <description asmv2:iconFile="d-ide.ico" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="D-IDE" version="1.0.3689.24794" language="neutral" processorArchitecture="x86" />
+    <assemblyIdentity name="D-IDE" version="1.0.3689.38717" language="neutral" processorArchitecture="x86" />
     <commandLine file="D-IDE.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -64,7 +64,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>sZrDkdVzB8g09DWxFSzRM70yxK0=</dsig:DigestValue>
+        <dsig:DigestValue>2lMOb7FoLMshDWXCP7VPhKfKkX4=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -81,14 +81,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D-IDE.exe" size="687616">
-      <assemblyIdentity name="D-IDE" version="1.0.3689.24794" language="neutral" processorArchitecture="x86" />
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D-IDE.exe" size="688128">
+      <assemblyIdentity name="D-IDE" version="1.0.3689.38717" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>zkZH40jjGH2r8ieTAxCI0rGAOek=</dsig:DigestValue>
+        <dsig:DigestValue>1xaaI3Me83RbdwuAhKsX4/moer4=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

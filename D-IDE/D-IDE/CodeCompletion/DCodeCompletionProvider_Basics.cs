@@ -216,6 +216,36 @@ namespace D_IDE
 				}
 			return null;
 		}
+		public static DataType GetExprByName(DataType env,DataType levelnode, string name, bool RootOnly)
+		{
+			if (env == null) return null;
+
+			if (env.name == name) { return env; }
+
+			if (env.param.Count > 0)
+				foreach (DataType dt in env.param)
+				{
+					dt.Parent = env;
+					if (dt.name == name)
+						return dt;
+				}
+
+			if (env.Count > 0)
+				foreach (DataType dt in env)
+				{
+					if (dt == env) continue;
+					dt.Parent = env;
+					if (dt.name == name)
+						return dt;
+
+					if (!RootOnly && dt!=levelnode)
+					{
+						DataType tdt = GetExprByName(dt,levelnode, name, false);
+						if (tdt != null) return tdt;
+					}
+				}
+			return null;
+		}
 		public static List<DataType> GetExprsByName(DataType env, string name, bool RootOnly)
 		{
 			List<DataType> ret = new List<DataType>();
@@ -243,7 +273,7 @@ namespace D_IDE
 			return ret;
 		}
 
-		public static DataType SearchExprInClassHierarchy(DataType env, string name)
+		public static DataType SearchExprInClassHierarchy(DataType env, DataType currentLevelNode, string name)
 		{
 			if (env == null) return null;
 
@@ -264,8 +294,11 @@ namespace D_IDE
 					if (dt.name == name)
 						return dt;
 
-					DataType tdt = GetExprByName(dt, name);
-					if (tdt != null) return tdt;
+					if (dt != currentLevelNode)
+					{
+						DataType tdt = GetExprByName(dt, currentLevelNode, name, false);
+						if (tdt != null) return tdt;
+					}
 				}
 
 			string super = env.superClass;// Should be superior class
@@ -277,7 +310,7 @@ namespace D_IDE
 			{
 				DataType dt = SearchGlobalExpr(null, super);
 				if (dt == null) return null;
-				return SearchExprInClassHierarchy(dt, name);
+				return SearchExprInClassHierarchy(dt,currentLevelNode, name);
 			}
 
 			return null;

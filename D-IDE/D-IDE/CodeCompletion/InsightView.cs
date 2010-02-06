@@ -311,7 +311,7 @@ namespace D_IDE
 					break;
 				}
 
-				seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(seldt, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[i]));
+				seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(seldt,null, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[i]));
 				if (seldt == null) break;
 
 				if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))

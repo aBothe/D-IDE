@@ -71,6 +71,11 @@ namespace D_Parser
 			set { if (children.Count > i) children[i] = value; }
         }
 
+		public override string ToString()
+		{
+			return "["+fieldtype.ToString()+"] "+type+" "+name;
+		}
+
         public void Add(DataType v)
         {
             children.Add(v);

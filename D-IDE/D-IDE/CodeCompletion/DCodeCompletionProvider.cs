@@ -130,7 +130,8 @@ namespace D_IDE
 					// Search expression in current module root first
 					seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
 					// If there wasn't found anything, search deeper
-					if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom, RemoveArrayOrTemplatePartFromDecl(expressions[0]));
+					DataType cb = GetBlockAt(local.dom, caretLocation);
+					if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom,cb, RemoveArrayOrTemplatePartFromDecl(expressions[0]));
 
 					// If seldt is a variable, resolve its basic type such as a class etc
 					if (seldt != null) i++;
@@ -221,7 +222,7 @@ namespace D_IDE
 				for (; i < expressions.Length && seldt != null; i++)
 				{
 					isInstance = false;
-					seldt = SearchExprInClassHierarchy(seldt, RemoveArrayOrTemplatePartFromDecl(expressions[i]));
+					seldt = SearchExprInClassHierarchy(seldt,null, RemoveArrayOrTemplatePartFromDecl(expressions[i]));
 					if (seldt == null) break;
 
 					seldd=seldt;
@@ -338,12 +339,16 @@ namespace D_IDE
 					#region A.B.c>.<
 					presel = null; // Important: After a typed dot ".", set previous selection string to null!
 					DModule gpf = null;
-
+					if (expressions[0] == "fx")
+					{
+					}
 					seldt = FindActualExpression(prj, pf, tl, expressions.ToArray(), ch == '.', out isSuper, out isInst, out isNameSpace, out gpf);
 
 					if (seldt == null) return rl.ToArray();
 					//Debugger.Log(0,"parsing", DCompletionData.BuildDescriptionString(seldt.Parent) + " " + DCompletionData.BuildDescriptionString(seldt));
 
+					//seldd = seldt;
+					//seldt = ResolveReturnOrBaseType(prj, pf, seldt, expressions.Count==2);
 					if (seldt.fieldtype == FieldType.Function	//||(seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])
 					   )
 					{
@@ -513,11 +518,12 @@ namespace D_IDE
 		/// <returns></returns>
 		public static DataType ResolveReturnOrBaseType(DProject prj, DModule local, DataType owner, bool isLastInExpressionChain)
 		{
+			if (owner == null) return null;
 			DataType ret = owner;
 			DModule mod = null;
 			if ((!DTokens.BasicTypes[(int)owner.TypeToken] && owner.fieldtype == FieldType.Variable) || ((owner.fieldtype == FieldType.Function || owner.fieldtype == FieldType.AliasDecl) && !isLastInExpressionChain))
 			{
-				ret = DCodeCompletionProvider.SearchExprInClassHierarchy((DataType)owner.Parent, RemoveArrayOrTemplatePartFromDecl(owner.type));
+				ret = DCodeCompletionProvider.SearchExprInClassHierarchy((DataType)owner.Parent,null, RemoveArrayOrTemplatePartFromDecl(owner.type));
 				if (ret == null)
 					ret = DCodeCompletionProvider.SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(owner.type), false, out mod);
 			}

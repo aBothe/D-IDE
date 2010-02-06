@@ -251,7 +251,10 @@ namespace D_Parser
 	"__traits",
 
 	"abstract",
-	"alias"
+	"alias",
+
+	"@property",
+	"@disabled",
 		};
 
 		static myLookupTable keywords = new myLookupTable(true);

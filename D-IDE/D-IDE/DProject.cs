@@ -69,7 +69,7 @@ namespace D_IDE
 			{
 				return file.Remove(0, basedir.Length + 1);
 			}
-			return basedir;
+			return file;
 		}
 
 		public bool FileExists(string file)

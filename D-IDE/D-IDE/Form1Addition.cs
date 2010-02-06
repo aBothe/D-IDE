@@ -421,7 +421,7 @@ namespace D_IDE
 						txt.LoadFile(filename, tfs, true, true);
 				}
 			}
-			catch { txt.Document.TextContent = File.ReadAllText(filename); }
+			catch(Exception ex) { txt.Document.TextContent = File.ReadAllText(filename); throw ex; }
 			Modified = false;
 		}
 
