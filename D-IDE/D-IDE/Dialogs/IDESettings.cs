@@ -56,6 +56,7 @@ namespace D_IDE
 			showCompleteLog.Checked = D_IDE_Properties.Default.ShowBuildCommands;
 
 			verbosedbgoutput.Checked = D_IDE_Properties.Default.VerboseDebugOutput;
+			AutoSkipUnknownCode.Checked = D_IDE_Properties.Default.SkipUnknownCode;
 		}
 
 		private void button1_Click(object sender, EventArgs e)
@@ -95,6 +96,7 @@ namespace D_IDE
 			D_IDE_Properties.Default.ShowBuildCommands = showCompleteLog.Checked;
 
 			D_IDE_Properties.Default.VerboseDebugOutput = verbosedbgoutput.Checked;
+			D_IDE_Properties.Default.SkipUnknownCode = AutoSkipUnknownCode.Checked;
 		}
 
 		private void button2_Click(object sender, EventArgs e)

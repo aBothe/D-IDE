@@ -188,7 +188,12 @@ namespace D_IDE
 			ulong off = dbg.CurrentFrame.InstructionOffset;
 			if (dbg.Symbols.GetLineByOffset(off, out fn, out ln))
 				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);
-
+			else
+			{
+				dbg.WaitForEvent();
+				GoToCurrentLocation();
+				return;
+			}
 			callstackwin.Update();
 		}
 

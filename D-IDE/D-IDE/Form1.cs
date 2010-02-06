@@ -509,6 +509,10 @@ namespace D_IDE
 
 		private void buildToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			if (prj != null)
+			{
+				prj.LastModifyingDates.Clear();
+			}
 			Build();
 		}
 
@@ -1368,10 +1372,11 @@ namespace D_IDE
 
 		private void closeAllOthersToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			foreach (DockContent dc in dockPanel.Documents)
+			IDockContent[] dcs=dockPanel.DocumentsToArray();
+			for (int i = 0; i < dcs.Length;i++ )
 			{
-				if (dc == dockPanel.ActiveDocument) continue;
-				dc.Close();
+				if (dcs[i] == dockPanel.ActiveDocument) continue;
+				(dcs[i] as DockContent).Close();
 			}
 		}
 

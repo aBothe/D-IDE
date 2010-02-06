@@ -749,6 +749,13 @@ namespace D_IDE
 									p.VerboseDebugOutput = xr.Value == "1";
 								}
 								break;
+
+							case "skipunknowncode":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.SkipUnknownCode = xr.Value == "1";
+								}
+								break;
 						}
 					}
 				}
@@ -990,6 +997,10 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Default.VerboseDebugOutput ? "1" : "0");
 			xw.WriteEndElement();
 
+			xw.WriteStartElement("skipunknowncode");
+			xw.WriteAttributeString("value", Default.SkipUnknownCode ? "1" : "0");
+			xw.WriteEndElement();
+
 			xw.WriteEndDocument();
 			xw.Close();
 		}
@@ -1075,7 +1086,10 @@ namespace D_IDE
 		public bool ShowBuildCommands = true;
 		public bool UseExternalDebugger = false;
 
+		#region Debugging
 		public bool VerboseDebugOutput = false;
+		public bool SkipUnknownCode = true;
+		#endregion
 
 		public bool SingleInstance = true;
 		public bool WatchForUpdates = true;

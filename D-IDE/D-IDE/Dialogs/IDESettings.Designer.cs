@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(IDESettings));
 			this.button1 = new System.Windows.Forms.Button();
 			this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -71,11 +72,15 @@
 			this.button4 = new System.Windows.Forms.Button();
 			this.defPrjDir = new System.Windows.Forms.TextBox();
 			this.singleInst = new System.Windows.Forms.CheckBox();
+			this.tabPage4 = new System.Windows.Forms.TabPage();
 			this.verbosedbgoutput = new System.Windows.Forms.CheckBox();
+			this.AutoSkipUnknownCode = new System.Windows.Forms.CheckBox();
+			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.tabPage1.SuspendLayout();
 			this.tabPage3.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPage2.SuspendLayout();
+			this.tabPage4.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// button1
@@ -91,7 +96,6 @@
 			// 
 			// tabPage1
 			// 
-			this.tabPage1.Controls.Add(this.verbosedbgoutput);
 			this.tabPage1.Controls.Add(this.UseIntegDbg);
 			this.tabPage1.Controls.Add(this.showCompleteLog);
 			this.tabPage1.Controls.Add(this.label9);
@@ -414,6 +418,7 @@
 			this.tabControl1.Controls.Add(this.tabPage2);
 			this.tabControl1.Controls.Add(this.tabPage3);
 			this.tabControl1.Controls.Add(this.tabPage1);
+			this.tabControl1.Controls.Add(this.tabPage4);
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
@@ -516,15 +521,42 @@
 			this.singleInst.Text = "Allow just one instance of D-IDE (Needs restart)";
 			this.singleInst.UseVisualStyleBackColor = true;
 			// 
+			// tabPage4
+			// 
+			this.tabPage4.Controls.Add(this.AutoSkipUnknownCode);
+			this.tabPage4.Controls.Add(this.verbosedbgoutput);
+			this.tabPage4.Location = new System.Drawing.Point(4, 22);
+			this.tabPage4.Name = "tabPage4";
+			this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPage4.Size = new System.Drawing.Size(714, 336);
+			this.tabPage4.TabIndex = 3;
+			this.tabPage4.Text = "Debugging";
+			this.tabPage4.UseVisualStyleBackColor = true;
+			// 
 			// verbosedbgoutput
 			// 
 			this.verbosedbgoutput.AutoSize = true;
-			this.verbosedbgoutput.Location = new System.Drawing.Point(104, 259);
+			this.verbosedbgoutput.Location = new System.Drawing.Point(8, 6);
 			this.verbosedbgoutput.Name = "verbosedbgoutput";
 			this.verbosedbgoutput.Size = new System.Drawing.Size(131, 17);
-			this.verbosedbgoutput.TabIndex = 24;
+			this.verbosedbgoutput.TabIndex = 25;
 			this.verbosedbgoutput.Text = "Verbose debug output";
 			this.verbosedbgoutput.UseVisualStyleBackColor = true;
+			// 
+			// AutoSkipUnknownCode
+			// 
+			this.AutoSkipUnknownCode.AutoSize = true;
+			this.AutoSkipUnknownCode.Location = new System.Drawing.Point(8, 29);
+			this.AutoSkipUnknownCode.Name = "AutoSkipUnknownCode";
+			this.AutoSkipUnknownCode.Size = new System.Drawing.Size(262, 17);
+			this.AutoSkipUnknownCode.TabIndex = 26;
+			this.AutoSkipUnknownCode.Text = "Skip non-resolvable code operations automatically";
+			this.toolTip1.SetToolTip(this.AutoSkipUnknownCode, "Check this to skip code with an unknown source location automatically");
+			this.AutoSkipUnknownCode.UseVisualStyleBackColor = true;
+			// 
+			// toolTip1
+			// 
+			this.toolTip1.AutomaticDelay = 250;
 			// 
 			// IDESettings
 			// 
@@ -546,6 +578,8 @@
 			this.tabControl1.ResumeLayout(false);
 			this.tabPage2.ResumeLayout(false);
 			this.tabPage2.PerformLayout();
+			this.tabPage4.ResumeLayout(false);
+			this.tabPage4.PerformLayout();
 			this.ResumeLayout(false);
 
 		}
@@ -594,6 +628,9 @@
 		private System.Windows.Forms.CheckBox showCompleteLog;
 		private System.Windows.Forms.CheckBox UseIntegDbg;
 		private System.Windows.Forms.Button button6;
+		private System.Windows.Forms.TabPage tabPage4;
 		private System.Windows.Forms.CheckBox verbosedbgoutput;
+		private System.Windows.Forms.CheckBox AutoSkipUnknownCode;
+		private System.Windows.Forms.ToolTip toolTip1;
 	}
 }
