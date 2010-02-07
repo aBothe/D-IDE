@@ -193,6 +193,8 @@ namespace D_IDE
 
 		static public int GetImageIndex(ImageList icons, DataType Parent, DataType Node)
 		{
+			if (icons == null) return -1;
+
 			DataType parent=(Parent as DataType);
 			DataType v=(Node as DataType);
 			if(v.fieldtype == FieldType.Delegate)

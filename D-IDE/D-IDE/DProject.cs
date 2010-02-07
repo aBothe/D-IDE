@@ -12,10 +12,16 @@ using System.Xml;
 
 namespace D_IDE
 {
-	[Serializable()]
 	public class DProject
 	{
-		[NonSerialized()]
+		public void CreateManifestFile()
+		{
+			string cont = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\"><assemblyIdentity name=\"DApplication\" processorArchitecture=\"x86\" version=\"1.0.0.0\" type=\"win32\"/><description></description><dependency><dependentAssembly><assemblyIdentity type=\"win32\" name=\"Microsoft.Windows.Common-Controls\" version=\"6.0.0.0\" processorArchitecture=\"x86\" publicKeyToken=\"6595b64144ccf1df\" language=\"*\" /></dependentAssembly></dependency></assembly>";
+			string f=basedir+"\\"+targetfilename+".manifest";
+
+			if (!File.Exists(f)) File.WriteAllText(f,cont,Encoding.UTF8);
+		}
+
 		public const string prjext = ".dproj";
 		public enum PrjType
 		{
@@ -46,6 +52,15 @@ namespace D_IDE
 		public PrjType type;
 		public string name;
 		public string targetfilename;
+		public string OutputDirectory="bin";
+		public string AbsoluteOutputDirectory
+		{
+			get {
+				if (Path.IsPathRooted(OutputDirectory)) return OutputDirectory;
+
+				return basedir+"\\"+OutputDirectory;
+			}
+		}
 
 		[NonSerialized()]
 		public string prjfn;
@@ -60,7 +75,6 @@ namespace D_IDE
 
 			return basedir + "\\" + file;
 		}
-
 		public string GetRelFilePath(string file)
 		{
 			if (!Path.IsPathRooted(file)) return file;
@@ -84,6 +98,7 @@ namespace D_IDE
 		[NonSerialized()]
 		public List<DModule> files = new List<DModule>();
 		public List<string> resourceFiles = new List<string>();
+		public List<string> FileDependencies = new List<string>();
 		public List<string> lastopen = new List<string>();
 
 		public DProject()
@@ -278,6 +293,11 @@ namespace D_IDE
 								ret.basedir = xr.ReadString();
 								break;
 
+							case "outputdirectory":
+								xr.Read();
+								ret.OutputDirectory = xr.ReadString();
+								break;
+
 							case "files":
 								if (ret.resourceFiles == null)
 									ret.resourceFiles = new List<string>();
@@ -317,6 +337,21 @@ namespace D_IDE
 									if (xsr.NodeType == XmlNodeType.CDATA)
 									{
 										ret.lastopen.Add(xr.ReadString());
+									}
+								}
+								break;
+
+							case "FileDeps":
+								if (ret.FileDependencies == null)
+									ret.FileDependencies = new List<string>();
+
+								xsr = xr.ReadSubtree();
+								while (xsr.Read())
+								{
+									if (xsr.NodeType == XmlNodeType.CDATA)
+									{
+										xr.Read();
+										ret.FileDependencies.Add(xr.ReadString());
 									}
 								}
 								break;
@@ -363,6 +398,7 @@ namespace D_IDE
 				xw.WriteStartElement("libs");
 				foreach (string lib in libs)
 				{
+					if (String.IsNullOrEmpty(lib)) continue;
 					xw.WriteStartElement("lib");
 					xw.WriteCData(lib);
 					xw.WriteEndElement();
@@ -405,11 +441,19 @@ namespace D_IDE
 				xw.WriteEndElement();
 			}
 
+			if (!String.IsNullOrEmpty(OutputDirectory))
+			{
+				xw.WriteStartElement("outputdirectory");
+				xw.WriteCData(OutputDirectory);
+				xw.WriteEndElement();
+			}
+
 			if (resourceFiles != null && resourceFiles.Count > 0)
 			{
 				xw.WriteStartElement("files");
 				foreach (string fn in resourceFiles)
 				{
+					if (String.IsNullOrEmpty(fn)) continue;
 					xw.WriteStartElement("file");
 					try
 					{
@@ -434,13 +478,21 @@ namespace D_IDE
 				xw.WriteEndElement();
 			}
 
+			if (FileDependencies.Count > 0)
+			{
+				xw.WriteStartElement("FileDeps");
+				foreach (string fn in FileDependencies)
+				{
+					if (String.IsNullOrEmpty(fn)) continue;
+					xw.WriteStartElement("file");
+					xw.WriteCData(fn);
+					xw.WriteEndElement();
+				}
+				xw.WriteEndElement();
+			}
+
 			xw.WriteEndElement();
 			xw.Close();
-			/*BinaryFormatter formatter = new BinaryFormatter();
-
-			Stream stream = File.Open(prjfn, FileMode.Create);
-			formatter.Serialize(stream, this);
-			stream.Close();*/
 		}
 
 		public DModule FileDataByFile(string fn)

@@ -73,9 +73,10 @@
 			this.defPrjDir = new System.Windows.Forms.TextBox();
 			this.singleInst = new System.Windows.Forms.CheckBox();
 			this.tabPage4 = new System.Windows.Forms.TabPage();
-			this.verbosedbgoutput = new System.Windows.Forms.CheckBox();
 			this.AutoSkipUnknownCode = new System.Windows.Forms.CheckBox();
+			this.verbosedbgoutput = new System.Windows.Forms.CheckBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+			this.DoAutoSave = new System.Windows.Forms.CheckBox();
 			this.tabPage1.SuspendLayout();
 			this.tabPage3.SuspendLayout();
 			this.tabControl1.SuspendLayout();
@@ -96,6 +97,7 @@
 			// 
 			// tabPage1
 			// 
+			this.tabPage1.Controls.Add(this.DoAutoSave);
 			this.tabPage1.Controls.Add(this.UseIntegDbg);
 			this.tabPage1.Controls.Add(this.showCompleteLog);
 			this.tabPage1.Controls.Add(this.label9);
@@ -131,7 +133,7 @@
 			// UseIntegDbg
 			// 
 			this.UseIntegDbg.AutoSize = true;
-			this.UseIntegDbg.Location = new System.Drawing.Point(104, 190);
+			this.UseIntegDbg.Location = new System.Drawing.Point(104, 212);
 			this.UseIntegDbg.Name = "UseIntegDbg";
 			this.UseIntegDbg.Size = new System.Drawing.Size(133, 17);
 			this.UseIntegDbg.TabIndex = 23;
@@ -141,7 +143,7 @@
 			// showCompleteLog
 			// 
 			this.showCompleteLog.AutoSize = true;
-			this.showCompleteLog.Location = new System.Drawing.Point(104, 236);
+			this.showCompleteLog.Location = new System.Drawing.Point(104, 258);
 			this.showCompleteLog.Name = "showCompleteLog";
 			this.showCompleteLog.Size = new System.Drawing.Size(132, 17);
 			this.showCompleteLog.TabIndex = 22;
@@ -161,7 +163,7 @@
 			// logbuildprogress_chk
 			// 
 			this.logbuildprogress_chk.AutoSize = true;
-			this.logbuildprogress_chk.Location = new System.Drawing.Point(104, 213);
+			this.logbuildprogress_chk.Location = new System.Drawing.Point(104, 235);
 			this.logbuildprogress_chk.Name = "logbuildprogress_chk";
 			this.logbuildprogress_chk.Size = new System.Drawing.Size(149, 17);
 			this.logbuildprogress_chk.TabIndex = 20;
@@ -533,16 +535,6 @@
 			this.tabPage4.Text = "Debugging";
 			this.tabPage4.UseVisualStyleBackColor = true;
 			// 
-			// verbosedbgoutput
-			// 
-			this.verbosedbgoutput.AutoSize = true;
-			this.verbosedbgoutput.Location = new System.Drawing.Point(8, 6);
-			this.verbosedbgoutput.Name = "verbosedbgoutput";
-			this.verbosedbgoutput.Size = new System.Drawing.Size(131, 17);
-			this.verbosedbgoutput.TabIndex = 25;
-			this.verbosedbgoutput.Text = "Verbose debug output";
-			this.verbosedbgoutput.UseVisualStyleBackColor = true;
-			// 
 			// AutoSkipUnknownCode
 			// 
 			this.AutoSkipUnknownCode.AutoSize = true;
@@ -554,9 +546,29 @@
 			this.toolTip1.SetToolTip(this.AutoSkipUnknownCode, "Check this to skip code with an unknown source location automatically");
 			this.AutoSkipUnknownCode.UseVisualStyleBackColor = true;
 			// 
+			// verbosedbgoutput
+			// 
+			this.verbosedbgoutput.AutoSize = true;
+			this.verbosedbgoutput.Location = new System.Drawing.Point(8, 6);
+			this.verbosedbgoutput.Name = "verbosedbgoutput";
+			this.verbosedbgoutput.Size = new System.Drawing.Size(131, 17);
+			this.verbosedbgoutput.TabIndex = 25;
+			this.verbosedbgoutput.Text = "Verbose debug output";
+			this.verbosedbgoutput.UseVisualStyleBackColor = true;
+			// 
 			// toolTip1
 			// 
 			this.toolTip1.AutomaticDelay = 250;
+			// 
+			// DoAutoSave
+			// 
+			this.DoAutoSave.AutoSize = true;
+			this.DoAutoSave.Location = new System.Drawing.Point(104, 189);
+			this.DoAutoSave.Name = "DoAutoSave";
+			this.DoAutoSave.Size = new System.Drawing.Size(182, 17);
+			this.DoAutoSave.TabIndex = 24;
+			this.DoAutoSave.Text = "Auto-Save all files before building";
+			this.DoAutoSave.UseVisualStyleBackColor = true;
 			// 
 			// IDESettings
 			// 
@@ -632,5 +644,6 @@
 		private System.Windows.Forms.CheckBox verbosedbgoutput;
 		private System.Windows.Forms.CheckBox AutoSkipUnknownCode;
 		private System.Windows.Forms.ToolTip toolTip1;
+		private System.Windows.Forms.CheckBox DoAutoSave;
 	}
 }

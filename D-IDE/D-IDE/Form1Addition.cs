@@ -756,6 +756,13 @@ namespace D_IDE
 									p.SkipUnknownCode = xr.Value == "1";
 								}
 								break;
+
+							case "autosave":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.DoAutoSaveOnBuilding = xr.Value == "1";
+								}
+								break;
 						}
 					}
 				}
@@ -1001,6 +1008,10 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Default.SkipUnknownCode ? "1" : "0");
 			xw.WriteEndElement();
 
+			xw.WriteStartElement("autosave");
+			xw.WriteAttributeString("value", Default.DoAutoSaveOnBuilding ? "1" : "0");
+			xw.WriteEndElement();
+
 			xw.WriteEndDocument();
 			xw.Close();
 		}
@@ -1081,16 +1092,18 @@ namespace D_IDE
 		public FormWindowState lastFormState = FormWindowState.Maximized;
 		public Point lastFormLocation;
 		public Size lastFormSize;
-		public bool RetrieveNews = true;
+		
 		public bool LogBuildProgress = true;
 		public bool ShowBuildCommands = true;
 		public bool UseExternalDebugger = false;
+		public bool DoAutoSaveOnBuilding = true;
 
 		#region Debugging
 		public bool VerboseDebugOutput = false;
 		public bool SkipUnknownCode = true;
 		#endregion
 
+		public bool RetrieveNews = true;
 		public bool SingleInstance = true;
 		public bool WatchForUpdates = true;
 		public string DefaultProjectDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\D Projects";

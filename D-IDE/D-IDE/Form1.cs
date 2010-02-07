@@ -418,8 +418,8 @@ namespace D_IDE
 			bpw.Clear();
 			errlog.buildErrors.Clear();
 			errlog.Update();
-			SaveAllTabs();
-			
+			if(D_IDE_Properties.Default.DoAutoSaveOnBuilding)SaveAllTabs();
+			/*
 			foreach (DockContent tp in dockPanel.Documents)
 			{
 				if (tp is DocumentInstanceWindow)
@@ -428,7 +428,7 @@ namespace D_IDE
 					//mtp.txt.Document.CustomLineManager.Clear();
 					mtp.txt.ActiveTextAreaControl.Refresh();
 				}
-			}
+			}*/
 
 			UseOutput = false;
 
@@ -697,6 +697,7 @@ namespace D_IDE
 					if (prj != null && prjfn == prj.prjfn)
 					{
 						CurPrjNode.NodeFont = new Font(DefaultFont, FontStyle.Bold);
+						Text = prj.name + " - " + title;
 					}
 				}
 				catch (Exception ex)
@@ -926,9 +927,6 @@ namespace D_IDE
 				}
 				prj = DProject.LoadFrom(file);
 				if (prj == null) { MessageBox.Show("Failed to load project! Perhaps the projects version differs from the current version."); return null; }
-
-				Text = prj.name + " - " + title;
-
 
 				if (D_IDE_Properties.Default.lastProjects.Contains(file)) D_IDE_Properties.Default.lastProjects.Remove(file);
 				D_IDE_Properties.Default.lastProjects.Insert(0, file);

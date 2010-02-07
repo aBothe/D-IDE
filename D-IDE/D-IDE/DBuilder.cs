@@ -22,6 +22,21 @@ namespace D_IDE
 
 			Directory.SetCurrentDirectory(prj.basedir);
 
+			if (Directory.Exists(prj.AbsoluteOutputDirectory))
+			{
+				Directory.CreateDirectory(prj.AbsoluteOutputDirectory);
+			}
+
+			foreach (string depFile in prj.FileDependencies)
+			{
+				try
+				{
+					if(File.Exists(depFile))
+					File.Copy(depFile, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depFile));
+				}
+				catch { }
+			}
+
 			if (!Directory.Exists("obj")) Directory.CreateDirectory("obj");
 
 			Form1.thisForm.BuildProgressBar.Value = 0;
@@ -69,6 +84,7 @@ namespace D_IDE
 						prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
 						File.Exists(obj))
 					{
+						// Do anything because targeted obj file is already existing in its latest version
 					}
 					else
 					{
@@ -76,7 +92,7 @@ namespace D_IDE
 						Form1.thisForm.ProgressStatusLabel.Text = "Compiling " + Path.GetFileName(rc);
 
 						OneFileChanged = true;
-						if (!BuildObjFile(rc, obj, prj.basedir)) return false;
+						if (!BuildObjFile(rc, obj, prj.basedir, prj.compileargs)) return false;
 
 						if (!prj.LastModifyingDates.ContainsKey(phys_rc))
 							prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
@@ -92,7 +108,7 @@ namespace D_IDE
 			}
 
 			string exe = "dmd.exe";
-			string target = Path.ChangeExtension(prj.targetfilename, null);
+			string target = prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null);
 			string objs = "";
 			string libs = "";
 
@@ -125,23 +141,23 @@ namespace D_IDE
 
 			if (!OneFileChanged && File.Exists(target))
 			{
-				OnMessage(prj,target,"Anything changed...no linking necessary!");
+				OnMessage(prj, target, "Anything changed...no linking necessary!");
 				Form1.thisForm.BuildProgressBar.Value++;
 				return true;
 			}
 
 			args = args.Replace("$target", target);
-			args = args.Replace("$exe", Path.ChangeExtension(prj.targetfilename, ".exe"));
-			args = args.Replace("$dll", Path.ChangeExtension(prj.targetfilename, ".dll"));
-			args = args.Replace("$def", Path.ChangeExtension(prj.targetfilename, ".def"));
+			args = args.Replace("$exe", Path.ChangeExtension(target, ".exe"));
+			args = args.Replace("$dll", Path.ChangeExtension(target, ".dll"));
+			args = args.Replace("$def", Path.ChangeExtension(target, ".def"));
 			args = args.Replace("$libs", libs);
-			args = args.Replace("$lib", Path.ChangeExtension(prj.targetfilename, ".lib"));
+			args = args.Replace("$lib", Path.ChangeExtension(target, ".lib"));
 			args = args.Replace("$objs", objs);
 
 			OnMessage(prj, target, "Link file to " + target);
 			Form1.thisForm.ProgressStatusLabel.Text = "Link file to " + target;
 
-			Process prc = DBuilder.Exec(exe, args, prj.basedir, true);
+			Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, true);
 			prc.WaitForExit(10000);
 			Form1.thisForm.BuildProgressBar.Value++;
 
@@ -154,20 +170,11 @@ namespace D_IDE
 			return false;
 		}
 
-		public static bool BuildObjFile(string file, string target)
+		public static bool BuildObjFile(string file, string target, string additionalArgs)
 		{
-			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
-
-			string args = D_IDE_Properties.Default.cmp_obj;
-			args = args.Replace("$src", file);
-			args = args.Replace("$obj", target);
-
-			Process prc = DBuilder.Exec(D_IDE_Properties.Default.exe_cmp, args, Path.GetDirectoryName(file), true);
-			prc.WaitForExit(10000);
-
-			return prc.ExitCode == 0;
+			return BuildObjFile(file, target, Path.GetDirectoryName(file), additionalArgs);
 		}
-		public static bool BuildObjFile(string file, string target, string exeDir)
+		public static bool BuildObjFile(string file, string target, string exeDir, string additionalArgs)
 		{
 			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
 
@@ -175,7 +182,7 @@ namespace D_IDE
 			args = args.Replace("$src", file);
 			args = args.Replace("$obj", target);
 
-			Process prc = DBuilder.Exec(D_IDE_Properties.Default.exe_cmp, args, exeDir, true);
+			Process prc = DBuilder.Exec(D_IDE_Properties.Default.exe_cmp, args + " " + additionalArgs, exeDir, true);
 			prc.WaitForExit(10000);
 
 			return prc.ExitCode == 0;

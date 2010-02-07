@@ -24,10 +24,16 @@ namespace D_IDE
 {
 	class ProjectPropertyPage : DockContent
 	{
-		private GroupBox groupBox5;
-		private Button button2;
-		private Button button7;
-		private ListView Files;
+		private Button button3;
+		private TextBox prjdir;
+		private ComboBox prjtype;
+		private TextBox tarfile;
+		private TextBox prjname;
+		private FolderBrowserDialog fD;
+		private Button button1;
+		private TabControl tabControl1;
+		private TabPage tabPage1;
+		private TabPage tabPage2;
 		private GroupBox groupBox4;
 		private TextBox lnkargs;
 		private Label label6;
@@ -36,42 +42,126 @@ namespace D_IDE
 		private CheckBox checkBox1;
 		private GroupBox groupBox3;
 		private TextBox execargs;
+		private TabPage tabPage3;
 		private GroupBox groupBox2;
 		private Button button6;
 		private Button button5;
 		private Button button4;
 		private TextBox tlib;
 		private ListBox libs;
+		private TabPage tabPage4;
+		private Button button2;
+		private Button button7;
+		private ListView Files;
 		private GroupBox groupBox1;
-		private Button button3;
-		private TextBox prjdir;
-		private ComboBox prjtype;
-		private TextBox tarfile;
-		private TextBox prjname;
-		private FolderBrowserDialog fD;
-		private Button button1;
+		private Button button9;
+		private Button button8;
+		private Button button10;
+		private Button button11;
+		private Button button12;
+		public DProject lastProject;
+		private Button button13;
+		private TextBox OutputDir;
+		private ListBox FileDeps;
 		public DProject project;
+
+
+		public void Load(DProject prj)
+		{
+			if (prj == null) return;
+			project = prj;
+
+			execargs.Text = prj.execargs;
+			prjname.Text = prj.name;
+			prjtype.SelectedIndex = (int)prj.type;
+			tarfile.Text = prj.targetfilename;
+			prjdir.Text = prj.basedir;
+			OutputDir.Text = prj.OutputDirectory;
+
+			checkBox1.Checked = prj.isRelease;
+			cpargs.Text = prj.compileargs;
+			lnkargs.Text = prj.linkargs;
+
+			if (libs.Items.Count > 0)
+				libs.SelectedIndex = 0;
+
+			Files.Items.Clear();
+			foreach (string fn in prj.resourceFiles)
+			{
+				ListViewItem lvi = Files.Items.Add((fn.StartsWith(prj.basedir)) ? fn.Substring(prj.basedir.Length + 1) : fn);
+				lvi.Tag = prj.GetPhysFilePath(fn);
+			}
+
+			FileDeps.Items.Clear();
+			foreach (string fn in prj.FileDependencies)
+			{
+				if (!String.IsNullOrEmpty(fn))
+				{
+					FileDeps.Items.Add(fn);
+				}
+			}
+
+			libs.Items.Clear();
+			foreach (string fn in prj.libs)
+			{
+				if (!String.IsNullOrEmpty(fn))
+					libs.Items.Add(fn);
+			}
+		}
+
+		public DProject Save()
+		{
+			lastProject = project;
+
+			DProject prj = new DProject();
+			prj.prjfn = project.prjfn;
+			prj.execargs = execargs.Text;
+			prj.name = prjname.Text;
+			project.type = (DProject.PrjType)prjtype.SelectedIndex;
+			prj.targetfilename = tarfile.Text;
+			prj.basedir = prjdir.Text;
+			prj.OutputDirectory = OutputDir.Text;
+			prj.isRelease = checkBox1.Checked;
+			prj.compileargs = cpargs.Text;
+			prj.linkargs = lnkargs.Text;
+
+			foreach (string lvi in FileDeps.Items)
+			{
+				if (!prj.FileDependencies.Contains(lvi))
+					prj.FileDependencies.Add(lvi);
+			}
+
+			foreach (string lib in libs.Items)
+				if (!String.IsNullOrEmpty(lib)) prj.libs.Add(lib);
+
+			foreach (ListViewItem lvi in Files.Items)
+			{
+				string fn = lvi.Text;
+				prj.resourceFiles.Add(prj.GetRelFilePath(fn));
+				if (DModule.Parsable(fn) && File.Exists(prj.GetPhysFilePath(fn)))
+					prj.files.Add(new DModule(prj.GetPhysFilePath(fn)));
+			}
+
+			project = prj;
+			prj.Save();
+
+			if (Form1.thisForm.prj.prjfn == prj.prjfn)
+				Form1.thisForm.prj = project;
+			Form1.thisForm.UpdateFiles();
+
+			return prj;
+		}
 
 		public ProjectPropertyPage(DProject project)
 		{
-			if(project == null) return;
+			if (project == null) return;
 			this.project = project;
 			this.DockAreas = DockAreas.Document;
 			this.TabText = project.name;
+
 			InitializeComponent();
-			UpdLibs();
-			execargs.Text = project.execargs;
-			prjname.Text = project.name;
-			prjtype.SelectedIndex = (int)project.type;
-			tarfile.Text = project.targetfilename;
-			prjdir.Text = project.basedir;
 
-			checkBox1.Checked = project.isRelease;
-			cpargs.Text = project.compileargs;
-			lnkargs.Text = project.linkargs;
-
-			if(libs.Items.Count > 0)
-				libs.SelectedIndex = 0;
+			Load(project);
 		}
 
 		private void libs_SelectedIndexChanged(object sender, EventArgs e)
@@ -79,173 +169,117 @@ namespace D_IDE
 			tlib.Text = (string)libs.SelectedItem;
 		}
 
-		void UpdLibs()
-		{
-			int ti = libs.SelectedIndex;
-			libs.Items.Clear();
-			foreach(string l in project.libs)
-				libs.Items.Add(l);
-			if(ti > 0 && libs.Items.Count > ti)
-				libs.SelectedIndex = ti;
-
-			Files.Items.Clear();
-			//foreach(DModule dmod in project.files)	Files.Items.Add((dmod.mod_file.StartsWith(project.basedir)) ? dmod.mod_file.Substring(project.basedir.Length + 1) : dmod.mod_file);
-			foreach(string fn in project.resourceFiles)
-				Files.Items.Add((fn.StartsWith(project.basedir)) ? fn.Substring(project.basedir.Length + 1) : fn);
-		}
-
 		private void button4_Click(object sender, EventArgs e)
 		{
-			string tl = tlib.Text;
-			if(tl == "") return;
+			string tl = tlib.Text.ToLower();
+			if (tl == "") return;
 
-			if(!project.libs.Contains(tl))
+			foreach (string t in libs.Items)
 			{
-				project.libs.Add(tl);
+				if (t.ToLower() == tl) return;
 			}
-			UpdLibs();
+
+			libs.Items.Add(tl);
+		}
+
+		private void button5_Click(object sender, EventArgs e)
+		{
+			libs.Items.RemoveAt(libs.SelectedIndex);
 		}
 
 		private void button6_Click(object sender, EventArgs e)
 		{
-			string tl = (string)libs.SelectedItem;
-			if(tl == "") return;
-
-			if(project.libs.Contains(tl))
-			{
-				project.libs.Remove(tl);
-				project.libs.Add(tlib.Text);
-			}
-			UpdLibs();
-		}
-
-		private void execargs_TextChanged(object sender, EventArgs e)
-		{
-			project.execargs = execargs.Text;
-		}
-
-		private void prjname_TextChanged(object sender, EventArgs e)
-		{
-			project.name = prjname.Text;
-		}
-
-		private void prjtype_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			switch(prjtype.SelectedIndex)
-			{
-				case 0: project.type = DProject.PrjType.WindowsApp; break;
-				case 1: project.type = DProject.PrjType.ConsoleApp; break;
-				case 2: project.type = DProject.PrjType.Dll; break;
-				case 3: project.type = DProject.PrjType.StaticLib; break;
-			}
-		}
-
-		private void tarfile_TextChanged(object sender, EventArgs e)
-		{
-			project.targetfilename = tarfile.Text;
+			button5_Click(sender, e);
+			button4_Click(sender, e);
 		}
 
 		private void button3_Click(object sender, EventArgs e)
 		{
-			fD.SelectedPath = project.basedir;
-			if(fD.ShowDialog() == DialogResult.OK)
+			fD.SelectedPath = prjdir.Text;
+			if (fD.ShowDialog() == DialogResult.OK)
 			{
 				prjdir.Text = fD.SelectedPath;
 			}
 		}
 
-		private void prjdir_TextChanged(object sender, EventArgs e)
-		{
-			project.basedir = prjdir.Text;
-		}
-
 		private void button1_Click(object sender, EventArgs e)
 		{
-			if(!Directory.Exists(project.basedir))
+			if (!Directory.Exists(prjdir.Text))
 			{
-				MessageBox.Show(project.basedir + " does not exist");
+				MessageBox.Show(prjdir.Text + " does not exist");
 				DialogResult = DialogResult.None;
 				return;
 			}
 
-			if(project.name == "")
+			if (prjname.Text == "")
 			{
 				MessageBox.Show("Project name cannot be empty");
 				DialogResult = DialogResult.None;
 				return;
 			}
 
-			if(project.targetfilename == "")
+			if (tarfile.Text == "")
 			{
 				MessageBox.Show("Target name cannot be empty");
 				DialogResult = DialogResult.None;
 				return;
 			}
 
-			project.Save();
+			Save();
 			Close();
-		}
-
-		private void button5_Click(object sender, EventArgs e)
-		{
-			string tl = (string)libs.SelectedItem;
-			if(tl == "") return;
-
-			project.libs.Remove(tl);
-			UpdLibs();
-		}
-
-		private void checkBox1_CheckedChanged(object sender, EventArgs e)
-		{
-			project.isRelease = checkBox1.Checked;
-		}
-
-		private void cpargs_TextChanged(object sender, EventArgs e)
-		{
-			project.compileargs = cpargs.Text;
-		}
-
-		private void lnkargs_TextChanged(object sender, EventArgs e)
-		{
-			project.linkargs = lnkargs.Text;
-		}
-
-		private void PrjProp_FormClosing(object sender, FormClosingEventArgs e)
-		{
-			Form1.thisForm.UpdateFiles();
 		}
 
 		private void button2_Click_1(object sender, EventArgs e)
 		{
-			foreach(ListViewItem lvi in Files.SelectedItems)
+			foreach (ListViewItem lvi in Files.SelectedItems)
 			{
-				string fn = lvi.Text;
-				if(!Path.IsPathRooted(fn))
-				{
-					fn = project.basedir + "\\" + fn;
-				}
-
-				project.files.Remove(project.FileDataByFile(fn));
-				project.resourceFiles.Remove(fn);
-				UpdLibs();
-				Form1.thisForm.UpdateFiles();
+				Files.Items.Remove(lvi);
 			}
 		}
 
 		private void button7_Click(object sender, EventArgs e)
 		{
-			Form1.thisForm.oF.InitialDirectory = project.basedir;
-			if(Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
+			Form1.thisForm.oF.InitialDirectory = prjdir.Text;
+			if (Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
 			{
-				foreach(string file in Form1.thisForm.oF.FileNames)
+				foreach (string file in Form1.thisForm.oF.FileNames)
 				{
-					if(Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
+					if (Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
 
-					project.AddSrc(file);
+					Files.Items.Add(file);
 				}
-				UpdLibs();
-				Form1.thisForm.UpdateFiles();
 			}
+		}
+
+		private void button10_Click(object sender, EventArgs e)
+		{
+			if (!Directory.Exists(prjdir.Text))
+			{
+				MessageBox.Show(prjdir.Text + " does not exist");
+				DialogResult = DialogResult.None;
+				return;
+			}
+
+			if (prjname.Text == "")
+			{
+				MessageBox.Show("Project name cannot be empty");
+				DialogResult = DialogResult.None;
+				return;
+			}
+
+			if (tarfile.Text == "")
+			{
+				MessageBox.Show("Target name cannot be empty");
+				DialogResult = DialogResult.None;
+				return;
+			}
+
+			Save();
+		}
+
+		private void button11_Click(object sender, EventArgs e)
+		{
+			Load(lastProject == null ? project : lastProject);
 		}
 
 		private void InitializeComponent()
@@ -254,10 +288,19 @@ namespace D_IDE
 			System.Windows.Forms.Label label4;
 			System.Windows.Forms.Label label2;
 			System.Windows.Forms.Label label1;
-			this.groupBox5 = new System.Windows.Forms.GroupBox();
-			this.button2 = new System.Windows.Forms.Button();
-			this.button7 = new System.Windows.Forms.Button();
-			this.Files = new System.Windows.Forms.ListView();
+			System.Windows.Forms.Label label7;
+			this.button3 = new System.Windows.Forms.Button();
+			this.prjdir = new System.Windows.Forms.TextBox();
+			this.prjtype = new System.Windows.Forms.ComboBox();
+			this.tarfile = new System.Windows.Forms.TextBox();
+			this.prjname = new System.Windows.Forms.TextBox();
+			this.fD = new System.Windows.Forms.FolderBrowserDialog();
+			this.button1 = new System.Windows.Forms.Button();
+			this.tabControl1 = new System.Windows.Forms.TabControl();
+			this.tabPage1 = new System.Windows.Forms.TabPage();
+			this.button13 = new System.Windows.Forms.Button();
+			this.OutputDir = new System.Windows.Forms.TextBox();
+			this.tabPage2 = new System.Windows.Forms.TabPage();
 			this.groupBox4 = new System.Windows.Forms.GroupBox();
 			this.lnkargs = new System.Windows.Forms.TextBox();
 			this.label6 = new System.Windows.Forms.Label();
@@ -266,35 +309,44 @@ namespace D_IDE
 			this.checkBox1 = new System.Windows.Forms.CheckBox();
 			this.groupBox3 = new System.Windows.Forms.GroupBox();
 			this.execargs = new System.Windows.Forms.TextBox();
+			this.tabPage3 = new System.Windows.Forms.TabPage();
+			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.button9 = new System.Windows.Forms.Button();
+			this.button8 = new System.Windows.Forms.Button();
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this.button6 = new System.Windows.Forms.Button();
 			this.button5 = new System.Windows.Forms.Button();
 			this.button4 = new System.Windows.Forms.Button();
 			this.tlib = new System.Windows.Forms.TextBox();
 			this.libs = new System.Windows.Forms.ListBox();
-			this.groupBox1 = new System.Windows.Forms.GroupBox();
-			this.button3 = new System.Windows.Forms.Button();
-			this.prjdir = new System.Windows.Forms.TextBox();
-			this.prjtype = new System.Windows.Forms.ComboBox();
-			this.tarfile = new System.Windows.Forms.TextBox();
-			this.prjname = new System.Windows.Forms.TextBox();
-			this.fD = new System.Windows.Forms.FolderBrowserDialog();
-			this.button1 = new System.Windows.Forms.Button();
+			this.tabPage4 = new System.Windows.Forms.TabPage();
+			this.button2 = new System.Windows.Forms.Button();
+			this.button7 = new System.Windows.Forms.Button();
+			this.Files = new System.Windows.Forms.ListView();
+			this.button10 = new System.Windows.Forms.Button();
+			this.button11 = new System.Windows.Forms.Button();
+			this.button12 = new System.Windows.Forms.Button();
+			this.FileDeps = new System.Windows.Forms.ListBox();
 			label3 = new System.Windows.Forms.Label();
 			label4 = new System.Windows.Forms.Label();
 			label2 = new System.Windows.Forms.Label();
 			label1 = new System.Windows.Forms.Label();
-			this.groupBox5.SuspendLayout();
+			label7 = new System.Windows.Forms.Label();
+			this.tabControl1.SuspendLayout();
+			this.tabPage1.SuspendLayout();
+			this.tabPage2.SuspendLayout();
 			this.groupBox4.SuspendLayout();
 			this.groupBox3.SuspendLayout();
-			this.groupBox2.SuspendLayout();
+			this.tabPage3.SuspendLayout();
 			this.groupBox1.SuspendLayout();
+			this.groupBox2.SuspendLayout();
+			this.tabPage4.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// label3
 			// 
 			label3.AutoSize = true;
-			label3.Location = new System.Drawing.Point(6, 101);
+			label3.Location = new System.Drawing.Point(6, 94);
 			label3.Name = "label3";
 			label3.Size = new System.Drawing.Size(85, 13);
 			label3.TabIndex = 12;
@@ -303,7 +355,7 @@ namespace D_IDE
 			// label4
 			// 
 			label4.AutoSize = true;
-			label4.Location = new System.Drawing.Point(6, 75);
+			label4.Location = new System.Drawing.Point(6, 68);
 			label4.Name = "label4";
 			label4.Size = new System.Drawing.Size(83, 13);
 			label4.TabIndex = 9;
@@ -312,7 +364,7 @@ namespace D_IDE
 			// label2
 			// 
 			label2.AutoSize = true;
-			label2.Location = new System.Drawing.Point(6, 48);
+			label2.Location = new System.Drawing.Point(6, 41);
 			label2.Name = "label2";
 			label2.Size = new System.Drawing.Size(67, 13);
 			label2.TabIndex = 3;
@@ -321,60 +373,155 @@ namespace D_IDE
 			// label1
 			// 
 			label1.AutoSize = true;
-			label1.Location = new System.Drawing.Point(6, 22);
+			label1.Location = new System.Drawing.Point(6, 15);
 			label1.Name = "label1";
 			label1.Size = new System.Drawing.Size(35, 13);
 			label1.TabIndex = 1;
 			label1.Text = "Name";
 			// 
-			// groupBox5
+			// label7
 			// 
-			this.groupBox5.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+			label7.AutoSize = true;
+			label7.Location = new System.Drawing.Point(6, 120);
+			label7.Name = "label7";
+			label7.Size = new System.Drawing.Size(84, 13);
+			label7.TabIndex = 15;
+			label7.Text = "Output Directory";
+			// 
+			// button3
+			// 
+			this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.button3.Location = new System.Drawing.Point(983, 89);
+			this.button3.Name = "button3";
+			this.button3.Size = new System.Drawing.Size(26, 23);
+			this.button3.TabIndex = 13;
+			this.button3.Text = "...";
+			this.button3.UseVisualStyleBackColor = true;
+			this.button3.Click += new System.EventHandler(this.button3_Click);
+			// 
+			// prjdir
+			// 
+			this.prjdir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.prjdir.Location = new System.Drawing.Point(132, 91);
+			this.prjdir.Name = "prjdir";
+			this.prjdir.ReadOnly = true;
+			this.prjdir.Size = new System.Drawing.Size(845, 20);
+			this.prjdir.TabIndex = 11;
+			// 
+			// prjtype
+			// 
+			this.prjtype.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.prjtype.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.prjtype.FormattingEnabled = true;
+			this.prjtype.Items.AddRange(new object[] {
+            "Windows App",
+            "Console App",
+            "Dynamic Link Library",
+            "Static Library"});
+			this.prjtype.Location = new System.Drawing.Point(132, 38);
+			this.prjtype.Name = "prjtype";
+			this.prjtype.Size = new System.Drawing.Size(877, 21);
+			this.prjtype.TabIndex = 10;
+			// 
+			// tarfile
+			// 
+			this.tarfile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.tarfile.Location = new System.Drawing.Point(132, 65);
+			this.tarfile.Name = "tarfile";
+			this.tarfile.Size = new System.Drawing.Size(877, 20);
+			this.tarfile.TabIndex = 7;
+			// 
+			// prjname
+			// 
+			this.prjname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.prjname.Location = new System.Drawing.Point(132, 12);
+			this.prjname.Name = "prjname";
+			this.prjname.Size = new System.Drawing.Size(877, 20);
+			this.prjname.TabIndex = 0;
+			// 
+			// button1
+			// 
+			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.button1.Location = new System.Drawing.Point(926, 495);
+			this.button1.Name = "button1";
+			this.button1.Size = new System.Drawing.Size(95, 23);
+			this.button1.TabIndex = 13;
+			this.button1.Text = "Apply && Close";
+			this.button1.UseVisualStyleBackColor = true;
+			this.button1.Click += new System.EventHandler(this.button1_Click);
+			// 
+			// tabControl1
+			// 
+			this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
 						| System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
-			this.groupBox5.Controls.Add(this.button2);
-			this.groupBox5.Controls.Add(this.button7);
-			this.groupBox5.Controls.Add(this.Files);
-			this.groupBox5.Location = new System.Drawing.Point(610, 12);
-			this.groupBox5.Name = "groupBox5";
-			this.groupBox5.Size = new System.Drawing.Size(310, 345);
-			this.groupBox5.TabIndex = 12;
-			this.groupBox5.TabStop = false;
-			this.groupBox5.Text = "Files";
+			this.tabControl1.Controls.Add(this.tabPage1);
+			this.tabControl1.Controls.Add(this.tabPage2);
+			this.tabControl1.Controls.Add(this.tabPage3);
+			this.tabControl1.Controls.Add(this.tabPage4);
+			this.tabControl1.Location = new System.Drawing.Point(0, 0);
+			this.tabControl1.Name = "tabControl1";
+			this.tabControl1.SelectedIndex = 0;
+			this.tabControl1.Size = new System.Drawing.Size(1025, 489);
+			this.tabControl1.TabIndex = 14;
 			// 
-			// button2
+			// tabPage1
 			// 
-			this.button2.Location = new System.Drawing.Point(157, 19);
-			this.button2.Name = "button2";
-			this.button2.Size = new System.Drawing.Size(147, 23);
-			this.button2.TabIndex = 5;
-			this.button2.Text = "Rem from Prj";
-			this.button2.UseVisualStyleBackColor = true;
-			this.button2.Click += new System.EventHandler(this.button2_Click_1);
+			this.tabPage1.Controls.Add(this.button13);
+			this.tabPage1.Controls.Add(label7);
+			this.tabPage1.Controls.Add(this.OutputDir);
+			this.tabPage1.Controls.Add(this.button3);
+			this.tabPage1.Controls.Add(label1);
+			this.tabPage1.Controls.Add(label3);
+			this.tabPage1.Controls.Add(this.prjname);
+			this.tabPage1.Controls.Add(this.prjdir);
+			this.tabPage1.Controls.Add(label2);
+			this.tabPage1.Controls.Add(this.prjtype);
+			this.tabPage1.Controls.Add(this.tarfile);
+			this.tabPage1.Controls.Add(label4);
+			this.tabPage1.Location = new System.Drawing.Point(4, 22);
+			this.tabPage1.Name = "tabPage1";
+			this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPage1.Size = new System.Drawing.Size(1017, 463);
+			this.tabPage1.TabIndex = 0;
+			this.tabPage1.Text = "General";
+			this.tabPage1.UseVisualStyleBackColor = true;
 			// 
-			// button7
+			// button13
 			// 
-			this.button7.Location = new System.Drawing.Point(6, 19);
-			this.button7.Name = "button7";
-			this.button7.Size = new System.Drawing.Size(145, 23);
-			this.button7.TabIndex = 4;
-			this.button7.Text = "Add";
-			this.button7.UseVisualStyleBackColor = true;
-			this.button7.Click += new System.EventHandler(this.button7_Click);
+			this.button13.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.button13.Location = new System.Drawing.Point(983, 115);
+			this.button13.Name = "button13";
+			this.button13.Size = new System.Drawing.Size(26, 23);
+			this.button13.TabIndex = 16;
+			this.button13.Text = "...";
+			this.button13.UseVisualStyleBackColor = true;
+			this.button13.Click += new System.EventHandler(this.button13_Click);
 			// 
-			// Files
+			// OutputDir
 			// 
-			this.Files.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)
+			this.OutputDir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
-			this.Files.FullRowSelect = true;
-			this.Files.HideSelection = false;
-			this.Files.Location = new System.Drawing.Point(6, 48);
-			this.Files.Name = "Files";
-			this.Files.Size = new System.Drawing.Size(298, 291);
-			this.Files.TabIndex = 0;
-			this.Files.UseCompatibleStateImageBehavior = false;
-			this.Files.View = System.Windows.Forms.View.List;
+			this.OutputDir.Location = new System.Drawing.Point(132, 117);
+			this.OutputDir.Name = "OutputDir";
+			this.OutputDir.Size = new System.Drawing.Size(845, 20);
+			this.OutputDir.TabIndex = 14;
+			// 
+			// tabPage2
+			// 
+			this.tabPage2.Controls.Add(this.groupBox4);
+			this.tabPage2.Controls.Add(this.groupBox3);
+			this.tabPage2.Location = new System.Drawing.Point(4, 22);
+			this.tabPage2.Name = "tabPage2";
+			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPage2.Size = new System.Drawing.Size(1017, 463);
+			this.tabPage2.TabIndex = 1;
+			this.tabPage2.Text = "Build options";
+			this.tabPage2.UseVisualStyleBackColor = true;
 			// 
 			// groupBox4
 			// 
@@ -383,10 +530,10 @@ namespace D_IDE
 			this.groupBox4.Controls.Add(this.label5);
 			this.groupBox4.Controls.Add(this.cpargs);
 			this.groupBox4.Controls.Add(this.checkBox1);
-			this.groupBox4.Location = new System.Drawing.Point(12, 148);
+			this.groupBox4.Location = new System.Drawing.Point(6, 60);
 			this.groupBox4.Name = "groupBox4";
 			this.groupBox4.Size = new System.Drawing.Size(425, 126);
-			this.groupBox4.TabIndex = 11;
+			this.groupBox4.TabIndex = 12;
 			this.groupBox4.TabStop = false;
 			this.groupBox4.Text = "Build arguments";
 			// 
@@ -398,7 +545,6 @@ namespace D_IDE
 			this.lnkargs.Name = "lnkargs";
 			this.lnkargs.Size = new System.Drawing.Size(413, 20);
 			this.lnkargs.TabIndex = 9;
-			this.lnkargs.TextChanged += new System.EventHandler(this.lnkargs_TextChanged);
 			// 
 			// label6
 			// 
@@ -426,7 +572,6 @@ namespace D_IDE
 			this.cpargs.Name = "cpargs";
 			this.cpargs.Size = new System.Drawing.Size(413, 20);
 			this.cpargs.TabIndex = 6;
-			this.cpargs.TextChanged += new System.EventHandler(this.cpargs_TextChanged);
 			// 
 			// checkBox1
 			// 
@@ -437,15 +582,14 @@ namespace D_IDE
 			this.checkBox1.TabIndex = 5;
 			this.checkBox1.Text = "Is Release Build";
 			this.checkBox1.UseVisualStyleBackColor = true;
-			this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
 			// 
 			// groupBox3
 			// 
 			this.groupBox3.Controls.Add(this.execargs);
-			this.groupBox3.Location = new System.Drawing.Point(12, 280);
+			this.groupBox3.Location = new System.Drawing.Point(6, 6);
 			this.groupBox3.Name = "groupBox3";
 			this.groupBox3.Size = new System.Drawing.Size(425, 48);
-			this.groupBox3.TabIndex = 10;
+			this.groupBox3.TabIndex = 11;
 			this.groupBox3.TabStop = false;
 			this.groupBox3.Text = "Execution arguments";
 			// 
@@ -457,7 +601,52 @@ namespace D_IDE
 			this.execargs.Name = "execargs";
 			this.execargs.Size = new System.Drawing.Size(413, 20);
 			this.execargs.TabIndex = 0;
-			this.execargs.TextChanged += new System.EventHandler(this.execargs_TextChanged);
+			// 
+			// tabPage3
+			// 
+			this.tabPage3.Controls.Add(this.groupBox1);
+			this.tabPage3.Controls.Add(this.groupBox2);
+			this.tabPage3.Location = new System.Drawing.Point(4, 22);
+			this.tabPage3.Name = "tabPage3";
+			this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPage3.Size = new System.Drawing.Size(1017, 463);
+			this.tabPage3.TabIndex = 2;
+			this.tabPage3.Text = "Dependencies";
+			this.tabPage3.UseVisualStyleBackColor = true;
+			// 
+			// groupBox1
+			// 
+			this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)));
+			this.groupBox1.Controls.Add(this.FileDeps);
+			this.groupBox1.Controls.Add(this.button9);
+			this.groupBox1.Controls.Add(this.button8);
+			this.groupBox1.Location = new System.Drawing.Point(173, 6);
+			this.groupBox1.Name = "groupBox1";
+			this.groupBox1.Size = new System.Drawing.Size(365, 451);
+			this.groupBox1.TabIndex = 11;
+			this.groupBox1.TabStop = false;
+			this.groupBox1.Text = "Files to copy into the output directory";
+			// 
+			// button9
+			// 
+			this.button9.Location = new System.Drawing.Point(92, 19);
+			this.button9.Name = "button9";
+			this.button9.Size = new System.Drawing.Size(80, 23);
+			this.button9.TabIndex = 2;
+			this.button9.Text = "Exclude";
+			this.button9.UseVisualStyleBackColor = true;
+			this.button9.Click += new System.EventHandler(this.button9_Click);
+			// 
+			// button8
+			// 
+			this.button8.Location = new System.Drawing.Point(6, 19);
+			this.button8.Name = "button8";
+			this.button8.Size = new System.Drawing.Size(80, 23);
+			this.button8.TabIndex = 1;
+			this.button8.Text = "Add";
+			this.button8.UseVisualStyleBackColor = true;
+			this.button8.Click += new System.EventHandler(this.button8_Click);
 			// 
 			// groupBox2
 			// 
@@ -468,10 +657,10 @@ namespace D_IDE
 			this.groupBox2.Controls.Add(this.button4);
 			this.groupBox2.Controls.Add(this.tlib);
 			this.groupBox2.Controls.Add(this.libs);
-			this.groupBox2.Location = new System.Drawing.Point(443, 12);
+			this.groupBox2.Location = new System.Drawing.Point(6, 6);
 			this.groupBox2.Name = "groupBox2";
-			this.groupBox2.Size = new System.Drawing.Size(161, 345);
-			this.groupBox2.TabIndex = 9;
+			this.groupBox2.Size = new System.Drawing.Size(161, 451);
+			this.groupBox2.TabIndex = 10;
 			this.groupBox2.TabStop = false;
 			this.groupBox2.Text = "Link Libraries";
 			// 
@@ -524,131 +713,169 @@ namespace D_IDE
 						| System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.libs.FormattingEnabled = true;
+			this.libs.IntegralHeight = false;
 			this.libs.Location = new System.Drawing.Point(9, 73);
 			this.libs.Name = "libs";
 			this.libs.RightToLeft = System.Windows.Forms.RightToLeft.No;
-			this.libs.Size = new System.Drawing.Size(146, 264);
+			this.libs.Size = new System.Drawing.Size(146, 368);
 			this.libs.TabIndex = 0;
 			this.libs.SelectedIndexChanged += new System.EventHandler(this.libs_SelectedIndexChanged);
 			// 
-			// groupBox1
+			// tabPage4
 			// 
-			this.groupBox1.Controls.Add(this.button3);
-			this.groupBox1.Controls.Add(label3);
-			this.groupBox1.Controls.Add(this.prjdir);
-			this.groupBox1.Controls.Add(this.prjtype);
-			this.groupBox1.Controls.Add(label4);
-			this.groupBox1.Controls.Add(this.tarfile);
-			this.groupBox1.Controls.Add(label2);
-			this.groupBox1.Controls.Add(label1);
-			this.groupBox1.Controls.Add(this.prjname);
-			this.groupBox1.Location = new System.Drawing.Point(12, 12);
-			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(425, 130);
-			this.groupBox1.TabIndex = 8;
-			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "Generic";
+			this.tabPage4.Controls.Add(this.button2);
+			this.tabPage4.Controls.Add(this.button7);
+			this.tabPage4.Controls.Add(this.Files);
+			this.tabPage4.Location = new System.Drawing.Point(4, 22);
+			this.tabPage4.Name = "tabPage4";
+			this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPage4.Size = new System.Drawing.Size(1017, 463);
+			this.tabPage4.TabIndex = 3;
+			this.tabPage4.Text = "Files";
+			this.tabPage4.UseVisualStyleBackColor = true;
 			// 
-			// button3
+			// button2
 			// 
-			this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.button3.Location = new System.Drawing.Point(393, 96);
-			this.button3.Name = "button3";
-			this.button3.Size = new System.Drawing.Size(26, 23);
-			this.button3.TabIndex = 13;
-			this.button3.Text = "...";
-			this.button3.UseVisualStyleBackColor = true;
-			this.button3.Click += new System.EventHandler(this.button3_Click);
+			this.button2.Location = new System.Drawing.Point(94, 6);
+			this.button2.Name = "button2";
+			this.button2.Size = new System.Drawing.Size(80, 23);
+			this.button2.TabIndex = 16;
+			this.button2.Text = "Exclude";
+			this.button2.UseVisualStyleBackColor = true;
+			this.button2.Click += new System.EventHandler(this.button2_Click_1);
 			// 
-			// prjdir
+			// button7
 			// 
-			this.prjdir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+			this.button7.Location = new System.Drawing.Point(8, 6);
+			this.button7.Name = "button7";
+			this.button7.Size = new System.Drawing.Size(80, 23);
+			this.button7.TabIndex = 15;
+			this.button7.Text = "Add";
+			this.button7.UseVisualStyleBackColor = true;
+			this.button7.Click += new System.EventHandler(this.button7_Click);
+			// 
+			// Files
+			// 
+			this.Files.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
-			this.prjdir.Location = new System.Drawing.Point(132, 98);
-			this.prjdir.Name = "prjdir";
-			this.prjdir.ReadOnly = true;
-			this.prjdir.Size = new System.Drawing.Size(255, 20);
-			this.prjdir.TabIndex = 11;
+			this.Files.FullRowSelect = true;
+			this.Files.HideSelection = false;
+			this.Files.Location = new System.Drawing.Point(8, 35);
+			this.Files.Name = "Files";
+			this.Files.Size = new System.Drawing.Size(1001, 422);
+			this.Files.TabIndex = 14;
+			this.Files.UseCompatibleStateImageBehavior = false;
+			this.Files.View = System.Windows.Forms.View.List;
 			// 
-			// prjtype
+			// button10
 			// 
-			this.prjtype.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+			this.button10.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.button10.Location = new System.Drawing.Point(764, 495);
+			this.button10.Name = "button10";
+			this.button10.Size = new System.Drawing.Size(75, 23);
+			this.button10.TabIndex = 15;
+			this.button10.Text = "Apply";
+			this.button10.UseVisualStyleBackColor = true;
+			this.button10.Click += new System.EventHandler(this.button10_Click);
+			// 
+			// button11
+			// 
+			this.button11.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.button11.Location = new System.Drawing.Point(657, 495);
+			this.button11.Name = "button11";
+			this.button11.Size = new System.Drawing.Size(101, 23);
+			this.button11.TabIndex = 16;
+			this.button11.Text = "Restore previous";
+			this.button11.UseVisualStyleBackColor = true;
+			this.button11.Click += new System.EventHandler(this.button11_Click);
+			// 
+			// button12
+			// 
+			this.button12.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.button12.Location = new System.Drawing.Point(845, 495);
+			this.button12.Name = "button12";
+			this.button12.Size = new System.Drawing.Size(75, 23);
+			this.button12.TabIndex = 17;
+			this.button12.Text = "Close";
+			this.button12.UseVisualStyleBackColor = true;
+			this.button12.Click += new System.EventHandler(this.button12_Click);
+			// 
+			// FileDeps
+			// 
+			this.FileDeps.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
-			this.prjtype.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.prjtype.FormattingEnabled = true;
-			this.prjtype.Items.AddRange(new object[] {
-            "Windows App",
-            "Console App",
-            "Dynamic Link Library",
-            "Static Library"});
-			this.prjtype.Location = new System.Drawing.Point(132, 45);
-			this.prjtype.Name = "prjtype";
-			this.prjtype.Size = new System.Drawing.Size(287, 21);
-			this.prjtype.TabIndex = 10;
-			this.prjtype.SelectedIndexChanged += new System.EventHandler(this.prjtype_SelectedIndexChanged);
-			// 
-			// tarfile
-			// 
-			this.tarfile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.tarfile.Location = new System.Drawing.Point(132, 72);
-			this.tarfile.Name = "tarfile";
-			this.tarfile.Size = new System.Drawing.Size(287, 20);
-			this.tarfile.TabIndex = 7;
-			this.tarfile.TextChanged += new System.EventHandler(this.tarfile_TextChanged);
-			// 
-			// prjname
-			// 
-			this.prjname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.prjname.Location = new System.Drawing.Point(132, 19);
-			this.prjname.Name = "prjname";
-			this.prjname.Size = new System.Drawing.Size(287, 20);
-			this.prjname.TabIndex = 0;
-			this.prjname.TextChanged += new System.EventHandler(this.prjname_TextChanged);
-			// 
-			// button1
-			// 
-			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.button1.Location = new System.Drawing.Point(845, 363);
-			this.button1.Name = "button1";
-			this.button1.Size = new System.Drawing.Size(75, 23);
-			this.button1.TabIndex = 13;
-			this.button1.Text = "Close";
-			this.button1.UseVisualStyleBackColor = true;
-			this.button1.Click += new System.EventHandler(this.button1_Click);
+			this.FileDeps.FormattingEnabled = true;
+			this.FileDeps.Location = new System.Drawing.Point(6, 48);
+			this.FileDeps.Name = "FileDeps";
+			this.FileDeps.Size = new System.Drawing.Size(353, 394);
+			this.FileDeps.TabIndex = 3;
 			// 
 			// ProjectPropertyPage
 			// 
 			this.AcceptButton = this.button1;
-			this.ClientSize = new System.Drawing.Size(932, 398);
+			this.ClientSize = new System.Drawing.Size(1025, 530);
+			this.Controls.Add(this.button12);
+			this.Controls.Add(this.button11);
+			this.Controls.Add(this.button10);
+			this.Controls.Add(this.tabControl1);
 			this.Controls.Add(this.button1);
-			this.Controls.Add(this.groupBox5);
-			this.Controls.Add(this.groupBox4);
-			this.Controls.Add(this.groupBox3);
-			this.Controls.Add(this.groupBox2);
-			this.Controls.Add(this.groupBox1);
 			this.Name = "ProjectPropertyPage";
-			this.Resize += new System.EventHandler(this.ProjectPropertyPage_Resize);
-			this.groupBox5.ResumeLayout(false);
+			this.tabControl1.ResumeLayout(false);
+			this.tabPage1.ResumeLayout(false);
+			this.tabPage1.PerformLayout();
+			this.tabPage2.ResumeLayout(false);
 			this.groupBox4.ResumeLayout(false);
 			this.groupBox4.PerformLayout();
 			this.groupBox3.ResumeLayout(false);
 			this.groupBox3.PerformLayout();
+			this.tabPage3.ResumeLayout(false);
+			this.groupBox1.ResumeLayout(false);
 			this.groupBox2.ResumeLayout(false);
 			this.groupBox2.PerformLayout();
-			this.groupBox1.ResumeLayout(false);
-			this.groupBox1.PerformLayout();
+			this.tabPage4.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
 
-		private void ProjectPropertyPage_Resize(object sender, EventArgs e)
+		private void button12_Click(object sender, EventArgs e)
 		{
-			int tx=Files.Width;
-			button7.Width = tx / 2;
-			button2.Left = button7.Left+ tx/2;
-			button2.Width = tx / 2;
+			Close();
+		}
+
+		private void button8_Click(object sender, EventArgs e)
+		{
+			Form1.thisForm.oF.InitialDirectory = prjdir.Text;
+			if (Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
+			{
+				foreach (string file in Form1.thisForm.oF.FileNames)
+				{
+					if (Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
+
+					if (FileDeps.Items.Contains(file)) continue;
+
+					FileDeps.Items.Add(file);
+				}
+				FileDeps.Refresh();
+			}
+		}
+
+		private void button9_Click(object sender, EventArgs e)
+		{
+			foreach (ListViewItem lvi in FileDeps.SelectedItems)
+			{
+				FileDeps.Items.Remove(lvi);
+			}
+		}
+
+		private void button13_Click(object sender, EventArgs e)
+		{
+			fD.SelectedPath = prjdir.Text;
+			if (fD.ShowDialog() == DialogResult.OK)
+			{
+				OutputDir.Text = fD.SelectedPath;
+			}
 		}
 	}
 }

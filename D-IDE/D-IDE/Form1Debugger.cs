@@ -44,7 +44,7 @@ namespace D_IDE
 					return;
 				}
 
-				string bin = prj.basedir + "\\" + Path.ChangeExtension(prj.targetfilename, null) + ".exe";
+				string bin = prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null) + ".exe";
 
 				if (!File.Exists(bin))
 				{
@@ -54,15 +54,15 @@ namespace D_IDE
 
 				if (!D_IDE_Properties.Default.UseExternalDebugger)
 				{
-					Debug(bin,sender is string && sender==(object)"untilmain");
+					Debug(bin, sender is string && sender == (object)"untilmain");
 				}
 				else
 				{
 					string dbgbin = D_IDE_Properties.Default.exe_dbg;
-					string dbgargs = D_IDE_Properties.Default.dbg_args.Replace("$exe",bin);
+					string dbgargs = D_IDE_Properties.Default.dbg_args.Replace("$exe", bin);
 
 					exeProc = Process.Start(dbgbin, dbgargs);
-					exeProc.Exited += delegate(object se,EventArgs ev)
+					exeProc.Exited += delegate(object se, EventArgs ev)
 					{
 						dbgStopButtonTS.Enabled = false;
 						Log(ProgressStatusLabel.Text = ("Debug process exited with code " + exeProc.ExitCode.ToString()));
@@ -79,7 +79,7 @@ namespace D_IDE
 			{
 				RunDebugClick(sender, e);
 			}
-			else if(dbg!=null)
+			else if (dbg != null)
 			{
 				dbg.Execute("gh");
 				WaitForEvent();
@@ -91,7 +91,9 @@ namespace D_IDE
 			if (dbg == null) return;
 			StopWaitingForEvents = true;
 			dbg.EndPendingWaits();
-			dbg.Execute("th");
+			Thread.Sleep(20);
+			//dbg.Execute("th");
+			GoToCurrentLocation();
 			//WaitForEvent();
 			/*dbg.ExecutionStatus = DebugStatus.Break;
 			dbg.InterruptTimeOut = 0;
@@ -106,13 +108,13 @@ namespace D_IDE
 			/*dbg.ExecutionStatus = DebugStatus.Break;
 			dbg.Interrupt();
 			dbg.WaitForEvent(100);*/
-
+			/*
 			string fn;
 			uint ln;
 
 			Log(dbg.CurrentInstructionOffset.ToString());
 			if (dbg.Symbols.GetLineByOffset(dbg.CurrentInstructionOffset, out fn, out ln))
-				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);
+				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);*/
 		}
 
 		private void dbgStopButtonTS_Click(object sender, EventArgs e)
@@ -153,7 +155,7 @@ namespace D_IDE
 			if (!IsDebugging) return;
 			dbg.Execute("t");
 			WaitForEvent();
-
+			StopWaitingForEvents = false;
 			GoToCurrentLocation();
 		}
 
@@ -162,43 +164,50 @@ namespace D_IDE
 			if (!IsDebugging) return;
 			dbg.Execute("p");
 			WaitForEvent();
-
+			StopWaitingForEvents = false;
 			GoToCurrentLocation();
 		}
 
 		private void stepOutTS_Click(object sender, EventArgs e)
 		{
 			if (!IsDebugging) return;
-			dbg.Execute("gu");
+			dbg.Execute("pt");
 			WaitForEvent();
-
+			StopWaitingForEvents = false;
 			GoToCurrentLocation();
+
+			//stepIn_Click(sender,e);
 		}
 
 		private void runUntilMainToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			RunDebugClick("untilmain",EventArgs.Empty);
+			RunDebugClick("untilmain", EventArgs.Empty);
 		}
 
 		void GoToCurrentLocation()
 		{
-			if (!IsDebugging) return;
 			string fn;
 			uint ln;
+		cont:
+			if (!IsDebugging || StopWaitingForEvents) return;
+
 			ulong off = dbg.CurrentFrame.InstructionOffset;
 			if (dbg.Symbols.GetLineByOffset(off, out fn, out ln))
 				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);
 			else
 			{
-				dbg.WaitForEvent();
-				GoToCurrentLocation();
-				return;
+				dbg.WaitForEvent(10);
+				if (!StopWaitingForEvents)
+				{
+					Application.DoEvents();
+					goto cont;
+				}
 			}
 			callstackwin.Update();
 		}
 
 		#region Debug properties
-		internal bool IsInitDebugger=false;
+		internal bool IsInitDebugger = false;
 		public DBGEngine dbg;
 		public Dictionary<string, ulong> LoadedModules = new Dictionary<string, ulong>();
 		internal bool StopWaitingForEvents;
@@ -218,10 +227,10 @@ namespace D_IDE
 		/// </summary>
 		/// <param name="exe"></param>
 		/// <returns></returns>
-		public bool Debug(string exe,bool runUntilMainOnly)
+		public bool Debug(string exe, bool runUntilMainOnly)
 		{
 			if (dbg == null) InitDebugger();
-			
+
 			ForceExitDebugging();
 
 			IsDebugging = true;
@@ -244,7 +253,7 @@ namespace D_IDE
 			opt.EngCreateFlags = EngCreateFlags.Default;
 
 			dbg.CreateProcessAndAttach(0, exe + " " + prj.execargs, opt, Path.GetDirectoryName(exe), "", 0, 0);
-			
+
 			dbg.Symbols.SourcePath = prj.basedir;
 			dbg.IsSourceCodeOrientedStepping = true;
 
@@ -257,16 +266,16 @@ namespace D_IDE
 			dbg.WaitForEvent();
 			//Log("Basedir: " + prj.basedir);
 			//dbg.Execute("l+s");
-			
+
 
 			foreach (KeyValuePair<string, List<DIDEBreakpoint>> kv in dbgwin.Breakpoints)
 			{
 				foreach (DIDEBreakpoint dbp in kv.Value)
 				{
 					ulong off = 0;
-					if (!dbg.Symbols.GetOffsetByLine(prj==null? dbp.file : prj.GetRelFilePath(dbp.file), (uint)dbp.line, out off))
+					if (!dbg.Symbols.GetOffsetByLine(prj == null ? dbp.file : prj.GetRelFilePath(dbp.file), (uint)dbp.line, out off))
 					{
-						Log("Couldn't set breakpoint at "+dbp.file+":"+dbp.line.ToString());
+						Log("Couldn't set breakpoint at " + dbp.file + ":" + dbp.line.ToString());
 						continue;
 					}
 					dbp.bp = dbg.AddBreakPoint(BreakPointOptions.Enabled);
@@ -275,7 +284,7 @@ namespace D_IDE
 			}
 			IsInitDebugger = false;
 
-			if(runUntilMainOnly)dbg.Execute("g _Dmain");
+			if (runUntilMainOnly) dbg.Execute("g _Dmain");
 
 			WaitForEvent();
 
@@ -286,7 +295,7 @@ namespace D_IDE
 		{
 			if (!IsDebugging) return;
 			ProgressStatusLabel.Text = "Debuggee running...";
-			WaitResult wr=WaitResult.OK;
+			WaitResult wr = WaitResult.OK;
 			while (IsDebugging && (wr = dbg.WaitForEvent(10)) == WaitResult.TimeOut)
 			{
 				if (wr == WaitResult.Unexpected) break;
@@ -430,7 +439,7 @@ namespace D_IDE
 
 			}
 			catch { }
-			
+
 			//callstackwin.Clear();
 		}
 	}
