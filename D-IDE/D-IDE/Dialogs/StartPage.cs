@@ -76,7 +76,7 @@ namespace D_IDE
 					c += "<div class=\"n\"><span class=\"a\">" + n.time.ToString() + "</span><br />" + n.content + "</div>";
 				}
 				c += "</body></html>";
-				//web.DocumentText = c;
+				web.DocumentText = c;
 			}
 		}
 
