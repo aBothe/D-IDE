@@ -70,23 +70,23 @@
     </Reference>
     <Reference Include="ICSharpCode.Core, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.Core.dll</HintPath>
+      <HintPath>..\..\externalDeps\ICSharpCode.Core.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.NRefactory, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=efe927acf176eea2, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.NRefactory.dll</HintPath>
+      <HintPath>..\..\externalDeps\ICSharpCode.NRefactory.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpDevelop, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.SharpDevelop.dll</HintPath>
+      <HintPath>..\..\externalDeps\ICSharpCode.SharpDevelop.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpDevelop.Dom, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.SharpDevelop.Dom.dll</HintPath>
+      <HintPath>..\..\externalDeps\ICSharpCode.SharpDevelop.Dom.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.TextEditor, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=4d61825e8dd49f1a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\SharpDevelop\3.0\bin\ICSharpCode.TextEditor.dll</HintPath>
+      <HintPath>..\..\externalDeps\ICSharpCode.TextEditor.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
@@ -102,7 +102,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="WeifenLuo.WinFormsUI.Docking, Version=2.2.3633.27487, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\SharpDevelop\3.0\bin\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
+      <HintPath>..\..\externalDeps\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

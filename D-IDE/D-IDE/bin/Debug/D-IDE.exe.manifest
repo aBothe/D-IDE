@@ -4,7 +4,7 @@
   <description asmv2:iconFile="d-ide.ico" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="D-IDE" version="1.0.3691.3023" language="neutral" processorArchitecture="x86" />
+    <assemblyIdentity name="D-IDE" version="1.0.3691.19892" language="neutral" processorArchitecture="x86" />
     <commandLine file="D-IDE.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -64,7 +64,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>2lMOb7FoLMshDWXCP7VPhKfKkX4=</dsig:DigestValue>
+        <dsig:DigestValue>lh6MCen4npHHGxqBecq5p7YCQUA=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -82,13 +82,13 @@
   </dependency>
   <dependency>
     <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D-IDE.exe" size="697856">
-      <assemblyIdentity name="D-IDE" version="1.0.3691.3023" language="neutral" processorArchitecture="x86" />
+      <assemblyIdentity name="D-IDE" version="1.0.3691.19892" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>UCo5a5uhZxpICl5C5lE5tNKX9Zc=</dsig:DigestValue>
+        <dsig:DigestValue>LNjCi+i7xRpFngG8eBd7Hzmg2vo=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -101,18 +101,6 @@
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
         <dsig:DigestValue>SEKa+fDWumsInP4NyFahx2asnrc=</dsig:DigestValue>
-      </hash>
-    </dependentAssembly>
-  </dependency>
-  <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="ICSharpCode.Core.WinForms.dll" size="57344">
-      <assemblyIdentity name="ICSharpCode.Core.WinForms" version="3.1.1.5327" publicKeyToken="F829DA5C02BE14EE" language="neutral" processorArchitecture="msil" />
-      <hash>
-        <dsig:Transforms>
-          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
-        </dsig:Transforms>
-        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>bT97sH2oFlx5R+2qqzGsi//xHbA=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -141,18 +129,6 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="ICSharpCode.SharpDevelop.BuildWorker.exe" size="45056">
-      <assemblyIdentity name="ICSharpCode.SharpDevelop.BuildWorker" version="3.1.1.5327" publicKeyToken="F829DA5C02BE14EE" language="neutral" processorArchitecture="x86" />
-      <hash>
-        <dsig:Transforms>
-          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
-        </dsig:Transforms>
-        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>plwtycbWdPJE3ff8oGNM8YHm0q8=</dsig:DigestValue>
-      </hash>
-    </dependentAssembly>
-  </dependency>
-  <dependency>
     <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="ICSharpCode.SharpDevelop.Dom.dll" size="352256">
       <assemblyIdentity name="ICSharpCode.SharpDevelop.Dom" version="3.1.1.5327" publicKeyToken="F829DA5C02BE14EE" language="neutral" processorArchitecture="msil" />
       <hash>
@@ -165,18 +141,6 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="ICSharpCode.SharpDevelop.Widgets.dll" size="90112">
-      <assemblyIdentity name="ICSharpCode.SharpDevelop.Widgets" version="3.1.1.5327" publicKeyToken="F829DA5C02BE14EE" language="neutral" processorArchitecture="msil" />
-      <hash>
-        <dsig:Transforms>
-          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
-        </dsig:Transforms>
-        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>+gYTiATameNHjRPI69TIrftVVzk=</dsig:DigestValue>
-      </hash>
-    </dependentAssembly>
-  </dependency>
-  <dependency>
     <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="ICSharpCode.TextEditor.dll" size="352256">
       <assemblyIdentity name="ICSharpCode.TextEditor" version="3.1.1.5327" publicKeyToken="4D61825E8DD49F1A" language="neutral" processorArchitecture="msil" />
       <hash>
@@ -185,30 +149,6 @@
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
         <dsig:DigestValue>9ynU+GBqjxOCa08k3YA2yjSvra4=</dsig:DigestValue>
-      </hash>
-    </dependentAssembly>
-  </dependency>
-  <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="log4net.dll" size="270336">
-      <assemblyIdentity name="log4net" version="1.2.10.0" publicKeyToken="1B44E1D426115821" language="neutral" processorArchitecture="msil" />
-      <hash>
-        <dsig:Transforms>
-          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
-        </dsig:Transforms>
-        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>gs3mWnUUwORl7g1QW+VsVmOf8LE=</dsig:DigestValue>
-      </hash>
-    </dependentAssembly>
-  </dependency>
-  <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="Mono.Cecil.dll" size="376832">
-      <assemblyIdentity name="Mono.Cecil" version="0.6.9.1" publicKeyToken="0738EB9F132ED756" language="neutral" processorArchitecture="msil" />
-      <hash>
-        <dsig:Transforms>
-          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
-        </dsig:Transforms>
-        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>8qryAWIcUmdFPLzgESTLfhev/Ao=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
