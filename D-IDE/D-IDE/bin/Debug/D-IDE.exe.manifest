@@ -4,7 +4,7 @@
   <description asmv2:iconFile="d-ide.ico" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="D-IDE" version="1.0.3691.22655" language="neutral" processorArchitecture="x86" />
+    <assemblyIdentity name="D-IDE" version="1.0.3691.23263" language="neutral" processorArchitecture="x86" />
     <commandLine file="D-IDE.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -82,13 +82,13 @@
   </dependency>
   <dependency>
     <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D-IDE.exe" size="698880">
-      <assemblyIdentity name="D-IDE" version="1.0.3691.22655" language="neutral" processorArchitecture="x86" />
+      <assemblyIdentity name="D-IDE" version="1.0.3691.23263" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>hQ/wL2AlmWcX3UXqNsPMGBo9kRY=</dsig:DigestValue>
+        <dsig:DigestValue>Jvo0ra4skrfHpdQAWtNeuhizagk=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

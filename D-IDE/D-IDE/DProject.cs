@@ -44,7 +44,7 @@ namespace D_IDE
 
 		public bool isRelease;
 
-		public bool EnableSubversioning = false;
+		public bool EnableSubversioning = true;
 		public bool AlsoStoreSources = true;
 		public int LastVersionCount = 10;
 		public string LastBuiltTarget = "";
