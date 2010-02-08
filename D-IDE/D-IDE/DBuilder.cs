@@ -49,6 +49,7 @@ namespace D_IDE
 
 			List<string> builtfiles = new List<string>();
 			string args = "";
+			bool OneFileChanged = String.IsNullOrEmpty(prj.LastBuiltTarget);
 
 			Directory.SetCurrentDirectory(prj.basedir);
 
@@ -94,15 +95,15 @@ namespace D_IDE
 			Form1.thisForm.BuildProgressBar.Value = 0;
 			Form1.thisForm.BuildProgressBar.Maximum = prj.resourceFiles.Count + 1;
 
-			bool OneFileChanged = String.IsNullOrEmpty(prj.LastBuiltTarget);
-
 			foreach (string rc in prj.resourceFiles)
 			{
 				string phys_rc = prj.GetPhysFilePath(rc);
+				string tdirname = Path.GetDirectoryName(rc).Replace('\\', '_').Replace(":","")+"_";
+
 				#region Compile Resources
 				if (rc.EndsWith(".rc"))
 				{
-					string res = "obj\\" + Path.GetFileNameWithoutExtension(rc) + ".res";
+					string res = "obj\\"+tdirname + Path.GetFileNameWithoutExtension(rc) + ".res";
 
 					if (prj.LastModifyingDates.ContainsKey(phys_rc) &&
 						prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
@@ -126,7 +127,7 @@ namespace D_IDE
 						{
 							try
 							{
-								File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + Path.GetFileName(rc));
+								File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + tdirname + Path.GetFileName(rc));
 							}
 							catch { }
 						}
@@ -139,13 +140,13 @@ namespace D_IDE
 				#region Compile D Sources
 				else if (DModule.Parsable(rc))
 				{
-					string obj = "obj\\" + Path.GetFileNameWithoutExtension(rc) + ".obj";
+					string obj = "obj\\" + tdirname+ Path.GetFileNameWithoutExtension(rc) + ".obj";
 
 					if (prj.LastModifyingDates.ContainsKey(phys_rc) &&
 						prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
 						File.Exists(obj))
 					{
-						// Do anything because targeted obj file is already existing in its latest version
+						// Do nothing because targeted obj file is already existing in its latest version
 					}
 					else
 					{
@@ -164,7 +165,7 @@ namespace D_IDE
 						{
 							try
 							{
-								File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + Path.GetFileName(rc));
+								File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + tdirname + Path.GetFileName(rc));
 							}
 							catch { }
 						}

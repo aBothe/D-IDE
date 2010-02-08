@@ -121,7 +121,7 @@ namespace D_IDE
 
 			Debugger.Log(0, "notice", "Open last files/projects");
 
-			if (args.Length < 1 && D_IDE_Properties.Default.OpenLastPrj && D_IDE_Properties.Default.lastProjects.Count > 0)
+			if (args.Length < 1 && D_IDE_Properties.Default.OpenLastPrj && D_IDE_Properties.Default.lastProjects.Count > 0 && File.Exists(D_IDE_Properties.Default.lastProjects[0]))
 				Open(D_IDE_Properties.Default.lastProjects[0]);
 
 			for (int i = 0; i < args.Length; i++)
@@ -659,122 +659,10 @@ namespace D_IDE
 			return true;
 		}
 
-		/// <summary>
-		/// Searches in child nodes of env
-		/// </summary>
-		/// <param name="env"></param>
-		/// <param name="Path"></param>
-		/// <returns>First match or null, if nothing were found</returns>
-		public static TreeNode ContainsDir(TreeNode env, string Path)
-		{
-			foreach (TreeNode tn in env.Nodes)
-			{
-				if (tn is DirectoryTreeNode)
-				{
-					if (tn.Text == Path) return tn;
-				}
-			}
-			return null;
-		}
-
 		public void UpdateFiles()
 		{
-			prjexplorer.prjFiles.Nodes.Clear();
-			prjexplorer.prjFiles.BeginUpdate();
-			foreach (string prjfn in D_IDE_Properties.Default.lastProjects)
-			{
-				string ext = Path.GetExtension(prjfn);
-				if (!prjexplorer.fileIcons.Images.ContainsKey(ext))
-				{
-					Icon tico = ExtractIcon.GetIcon(prjfn, true);
-					prjexplorer.fileIcons.Images.Add(ext, tico);
-				}
-
-				DProject LoadedPrj = (prj != null && prj.prjfn == prjfn) ? prj : DProject.LoadFrom(prjfn);
-				if (LoadedPrj == null) continue;
-				//LoadedPrj.RemoveNonExisting();
-
-				ProjectNode CurPrjNode = new ProjectNode(LoadedPrj);
-				CurPrjNode.ImageKey = CurPrjNode.SelectedImageKey = ext;
-				try
-				{
-					if (prj != null && prjfn == prj.prjfn)
-					{
-						CurPrjNode.NodeFont = new Font(DefaultFont, FontStyle.Bold);
-						Text = prj.name + " - " + title;
-					}
-				}
-				catch (Exception ex)
-				{
-					MessageBox.Show(ex.Message);
-				}
-
-				foreach (string file in LoadedPrj.resourceFiles)
-				{
-					ext = Path.GetExtension(file);
-					if (!prjexplorer.fileIcons.Images.ContainsKey(ext))
-					{
-						Icon tico = ExtractIcon.GetIcon(file, true);
-						prjexplorer.fileIcons.Images.Add(ext, tico);
-					}
-					try
-					{
-						FileTreeNode TargetFileNode = new FileTreeNode(LoadedPrj, file);
-						TargetFileNode.ImageKey = TargetFileNode.SelectedImageKey = Path.GetExtension(file);
-
-						// if file is in project dir and isn't located in prj dir
-						if (file.StartsWith(LoadedPrj.basedir) && Path.GetDirectoryName(file) != LoadedPrj.basedir)
-						{
-							string PathGone = "";
-							string[] DirectoriesToCheck = Path.GetDirectoryName(file).Substring(LoadedPrj.basedir.Length + 1).Split('\\');
-
-							TreeNode CurrentDirNode = new DirectoryTreeNode(LoadedPrj, LoadedPrj.basedir + "\\" + DirectoriesToCheck[0]);
-
-							TreeNode ContainedChildNode = ContainsDir(CurPrjNode, DirectoriesToCheck[0]);
-							bool isContained = false;
-							if (isContained = ContainedChildNode != null)
-								CurrentDirNode = ContainedChildNode;
-
-							DirectoryTreeNode tdtn = null;
-
-							if (DirectoriesToCheck.Length < 2)
-								CurrentDirNode.Nodes.Add(TargetFileNode);
-
-							for (int i = 1; i < DirectoriesToCheck.Length; i++)
-							{
-								string CurDirName = DirectoriesToCheck[i];
-								if (CurDirName.Trim() == String.Empty) continue;
-								PathGone += "\\" + CurDirName;
-
-								PathGone = PathGone.TrimEnd('\\');
-
-								ContainedChildNode = ContainsDir(CurrentDirNode, CurDirName);
-								if (ContainedChildNode != null) CurrentDirNode = ContainedChildNode;
-
-								tdtn = new DirectoryTreeNode(LoadedPrj, LoadedPrj.basedir + PathGone);
-								if (i == DirectoriesToCheck.Length - 1) tdtn.Nodes.Add(TargetFileNode);
-
-								CurrentDirNode.Nodes.Add(tdtn);
-
-								CurrentDirNode = tdtn;
-							}
-							if (!isContained) CurPrjNode.Nodes.Add(CurrentDirNode);
-						}
-						else
-						{
-							CurPrjNode.Nodes.Add(TargetFileNode);
-						}
-					}
-					catch (Exception ex)
-					{
-						MessageBox.Show(ex.Message + " (" + ex.Source + ")" + "\n\n" + ex.StackTrace);
-					}
-				}
-
-				prjexplorer.prjFiles.Nodes.Add(CurPrjNode);
-			}
-			prjexplorer.prjFiles.ExpandAll();
-			prjexplorer.prjFiles.EndUpdate();
+			if(prj!=null)Text = prj.name + " - " + title;
+			prjexplorer.UpdateFiles();
 		}
 
 		public void NewSourceFile(object sender, EventArgs e)
@@ -960,6 +848,7 @@ namespace D_IDE
 				}
 				prj.lastopen.Clear();
 				ret = SelectedTabPage;
+				UpdateFiles();
 			}
 			else
 			{
@@ -976,7 +865,6 @@ namespace D_IDE
 				ret = mtp;
 			}
 			RefreshClassHierarchy();
-			UpdateFiles();
 			UpdateLastFilesMenu();
 			if (this.dockPanel.ActiveDocumentPane != null) this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.contextMenuStrip1; // Set Tab selection bars context menu to ours
 			return ret;
@@ -1303,8 +1191,12 @@ namespace D_IDE
 
 		void wc_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
 		{
-			BuildProgressBar.Maximum = 100;
-			BuildProgressBar.Value = e.ProgressPercentage;
+			try
+			{
+				BuildProgressBar.Maximum = 100;
+				BuildProgressBar.Value = e.ProgressPercentage;
+			}
+			catch { }
 		}
 
 		private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1482,6 +1374,11 @@ namespace D_IDE
 		private void showCompletionWindowToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			if (SelectedTabPage != null) SelectedTabPage.TextAreaKeyEventHandler('\0');
+		}
+
+		private void reloadProjectTreeToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			prjexplorer.UpdateFiles();
 		}
 
 

@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 using System.IO;
+using System.Threading;
 
 namespace D_IDE
 {
@@ -17,25 +18,169 @@ namespace D_IDE
 			InitializeComponent();
 		}
 
+		/// <summary>
+		/// Read a project's file structure into a TreeNode
+		/// </summary>
+		/// <param name="RootNode"></param>
+		/// <param name="prj"></param>
+		public void ReadStructure(ref TreeNode RootNode, DProject prj)
+		{
+			string ext = "";
+			foreach (string fn in prj.resourceFiles)
+			{
+				// add file icon if it's not in the image array
+				ext = Path.GetExtension(fn);
+				if (!fileIcons.Images.ContainsKey(ext))
+				{
+					Icon tico = ExtractIcon.GetIcon(fn, true);
+					fileIcons.Images.Add(ext, tico);
+				}
+
+				#region Add file to treeview
+				string file = prj.GetRelFilePath(fn);
+
+				FileTreeNode TargetFileNode = new FileTreeNode(prj, file);
+				TargetFileNode.ImageKey = TargetFileNode.SelectedImageKey = Path.GetExtension(file);
+				TargetFileNode.ToolTipText = prj.GetPhysFilePath(fn);
+
+				// if its not in the project path or if it's in the projects root directory
+				if (Path.IsPathRooted(file) || String.IsNullOrEmpty(Path.GetDirectoryName(file)))
+				{
+					RootNode.Nodes.Add(TargetFileNode);
+				}
+				else // if it's in a subdirectory
+				{
+					string[] DirectoriesToCheck = Path.GetDirectoryName(file).Split('\\');
+
+					TreeNode CurDirNode = RootNode;
+					string tdir = "";
+					foreach (string d in DirectoriesToCheck)
+					{
+						tdir += d+"\\";
+						if (!CurDirNode.Nodes.ContainsKey(d))
+						{
+							CurDirNode = CurDirNode.Nodes.Add(d, d, "dir", "dir");
+							CurDirNode.Tag = new DirectoryTreeNode(prj, tdir);
+						}
+						else
+						{
+							CurDirNode = CurDirNode.Nodes[d];
+						}
+					}
+					CurDirNode.Nodes.Add(TargetFileNode);
+				}
+				#endregion
+			}
+		}
+
+		public void ExpandToFile(DProject prj, string fn)
+		{
+			if (prj == null || String.IsNullOrEmpty(fn)) return;
+
+			string file = prj.GetRelFilePath(fn);
+
+			TreeNode ttn = null;
+			foreach (TreeNode tn in prjFiles.Nodes)
+			{
+				if (!(tn is ProjectNode)) continue;
+				if ((tn as ProjectNode).Project.prjfn == prj.prjfn)
+				{
+					ttn = tn;
+					break;
+				}
+			}
+
+			if (ttn == null) return;
+			if (ttn.Nodes.Count == 1 && ttn.Nodes[0].Text == "::Dummy")
+			{
+				ReadStructure(ref ttn, (ttn as ProjectNode).Project);
+			}
+
+			foreach (string d in file.Split('\\'))
+			{
+				if (ttn == null) return;
+				foreach (TreeNode tn in ttn.Nodes)
+				{
+					if (tn.Text == d)
+					{
+						ttn = tn;
+						break;
+					}
+				}
+			}
+			ttn.EnsureVisible();
+			prjFiles.SelectedNode = ttn;
+		}
+
+		public void ExpandToCurrentFile()
+		{
+			DocumentInstanceWindow diw = Form1.SelectedTabPage;
+			if (diw != null)
+			{
+				ExpandToFile(diw.project, diw.fileData.mod_file);
+			}
+		}
+
+		public void UpdateFiles()
+		{
+			BeginInvoke(new EventHandler(delegate(object sender,EventArgs e)
+			{
+				prjFiles.Nodes.Clear();
+				prjFiles.BeginUpdate();
+				foreach (string prjfn in D_IDE_Properties.Default.lastProjects)
+				{
+					string ext = Path.GetExtension(prjfn);
+					if (!fileIcons.Images.ContainsKey(ext))
+					{
+						Icon tico = ExtractIcon.GetIcon(prjfn, true);
+						fileIcons.Images.Add(ext, tico);
+					}
+
+					// if the drawn project is the current one loaded in D-IDE take it then
+					DProject LoadedPrj = (Form1.thisForm.prj != null && Form1.thisForm.prj.prjfn == prjfn) ? Form1.thisForm.prj : DProject.LoadFrom(prjfn);
+					if (LoadedPrj == null) continue;
+
+					TreeNode CurPrjNode = (TreeNode)new DedicatedProjectNode(LoadedPrj);
+					CurPrjNode.ImageKey = CurPrjNode.SelectedImageKey = ext;
+
+					// Add a dummy node so it's possible to open the project which are still empty
+					CurPrjNode.Nodes.Add("::Dummy");
+
+					// if this project is the currently open one paint the font bold
+					if (Form1.thisForm.prj != null && prjfn == Form1.thisForm.prj.prjfn)
+					{
+						CurPrjNode.NodeFont = new Font(DefaultFont, FontStyle.Bold);
+						CurPrjNode.ExpandAll();
+					}
+						prjFiles.Nodes.Add(CurPrjNode);
+				}
+				prjFiles.ExpandAll();
+
+				ExpandToCurrentFile();
+
+				prjFiles.EndUpdate();
+			}),null,EventArgs.Empty);
+		}
+
 		private void prjFiles_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
 		{
-			if(prjFiles.SelectedNode == null) return;
+			if (prjFiles.SelectedNode == null) return;
 
-			if(prjFiles.SelectedNode is ProjectNode)
+			if (prjFiles.SelectedNode is DedicatedProjectNode)
 			{
 				DProject prj = (prjFiles.SelectedNode as ProjectNode).Project;
 				Form1.thisForm.Open(prj.prjfn);
 			}
-			else if(prjFiles.SelectedNode is FileTreeNode)
+			else if (prjFiles.SelectedNode is FileTreeNode)
 			{
-				string fn = (prjFiles.SelectedNode as FileTreeNode).FileName;
+				string fn = (prjFiles.SelectedNode as FileTreeNode).AbsolutePath;
 				DProject prj = (prjFiles.SelectedNode as FileTreeNode).Project;
 
 				if (!prj.FileExists(fn))
 				{
 					if (MessageBox.Show(fn + " doesn't exist. Do you want to remove it from the project?", "File not found", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
 					{
-						prj.resourceFiles.Remove((prjFiles.SelectedNode as FileTreeNode).fn);
+						prj.resourceFiles.Remove((prjFiles.SelectedNode as FileTreeNode).FileOrPath);
 						prjFiles.SelectedNode.Remove();
 						prj.Save();
 					}
@@ -48,19 +193,19 @@ namespace D_IDE
 
 		private void prjFiles_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
 		{
-			if(e.Button == MouseButtons.Right)
+			if (e.Button == MouseButtons.Right)
 			{
-				if(e.Node is ProjectNode)
-				{
-					DSourceMenu.Close();
-					ProjectMenu.Show(prjFiles, e.Location);
-					ProjectMenu.Tag = e.Location;
-				}
-				else if(e.Node is FileTreeNode)
+				if (e.Node is FileTreeNode)
 				{
 					ProjectMenu.Close();
 					DSourceMenu.Show(prjFiles, e.Location);
 					DSourceMenu.Tag = e.Location;
+				}
+				else if (e.Node is ProjectNode)
+				{
+					DSourceMenu.Close();
+					ProjectMenu.Show(prjFiles, e.Location);
+					ProjectMenu.Tag = e.Location;
 				}
 			}
 		}
@@ -68,12 +213,12 @@ namespace D_IDE
 		private void RemoveFile(object sender, EventArgs e)
 		{
 			Point tp = (Point)DSourceMenu.Tag;
-			if(tp == null) return;
+			if (tp == null) return;
 			TreeNode tn = prjFiles.GetNodeAt(tp);
-			if(tn == null || !(tn is FileTreeNode)) return;
+			if (tn == null || !(tn is FileTreeNode)) return;
 
-			string f = ((FileTreeNode)tn).fn;
-			string phys_f = ((FileTreeNode)tn).FileName;
+			string f = ((FileTreeNode)tn).FileOrPath;
+			string phys_f = ((FileTreeNode)tn).AbsolutePath;
 
 			if (((FileTreeNode)tn).Project.FileExists(f))
 			{
@@ -87,23 +232,22 @@ namespace D_IDE
 				}
 				catch { }
 
-				if(dr == DialogResult.Yes)
+				if (dr == DialogResult.Yes)
 					File.Delete(phys_f);
-				else if(dr == DialogResult.Cancel) return;
-
-				
+				else if (dr == DialogResult.Cancel) return;
 			}
 			else
 			{
-				if(MessageBox.Show("Do you want to remove \"" + Path.GetFileName(f) + "\" from project?", "Remove File",
-				MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No) return;
+				if (MessageBox.Show("Do you want to remove \"" + Path.GetFileName(f) + "\" from project?", "Remove File",
+				MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+				{
+					return;
+				}
 			}
 
 			((FileTreeNode)tn).Project.resourceFiles.Remove(f);
 			((FileTreeNode)tn).Project.Save();
 			Form1.thisForm.UpdateFiles();
-
-
 		}
 
 		private void addNewFileToolStripMenuItem_Click(object sender, EventArgs e)
@@ -114,16 +258,16 @@ namespace D_IDE
 		private void addExistingToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			Point tp = (Point)ProjectMenu.Tag;
-			if(tp == null) return;
+			if (tp == null) return;
 			TreeNode tn = prjFiles.GetNodeAt(tp);
-			if(tn == null) return;
+			if (tn == null) return;
 
 			Form1.thisForm.oF.InitialDirectory = ((ProjectNode)tn).Project.basedir;
-			if(Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
+			if (Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
 			{
-				foreach(string file in Form1.thisForm.oF.FileNames)
+				foreach (string file in Form1.thisForm.oF.FileNames)
 				{
-					if(Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
+					if (Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
 
 					((ProjectNode)tn).Project.AddSrc(file);
 				}
@@ -134,34 +278,26 @@ namespace D_IDE
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			Point tp = (Point)DSourceMenu.Tag;
-			if(tp == null) return;
+			if (tp == null) return;
 			TreeNode tn = prjFiles.GetNodeAt(tp);
-			if(tn == null) return;
+			if (tn == null) return;
 
-			if(tn is ProjectNode)
-				Form1.thisForm.Open((tn as ProjectNode).Project.prjfn);
-			if(tn is FileTreeNode)
-				Form1.thisForm.Open((tn as FileTreeNode).FileName, (tn as FileTreeNode).Project);
+			if (tn is FileTreeNode)
+				Form1.thisForm.Open((tn as FileTreeNode).AbsolutePath, (tn as FileTreeNode).Project);
+			else if (tn is ProjectNode)
+				Form1.thisForm.Open((tn as ProjectNode).FileOrPath);
 		}
 
 		private void AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
 		{
-			if(e.Node == null) { e.CancelEdit = true; return; }
+			if (e.Node == null) { e.CancelEdit = true; return; }
 
-			if(e.Node is ProjectNode)
-			{
-				DProject mpr = (e.Node as ProjectNode).Project;
-
-				mpr.name = e.Label;
-				mpr.Save();
-				Form1.thisForm.UpdateLastFilesMenu();
-			}
-			else if(e.Node is DirectoryTreeNode)
+			if (e.Node is DirectoryTreeNode)
 			{
 				DirectoryTreeNode dtn = e.Node as DirectoryTreeNode;
-				string ndir = Directory.GetParent(dtn.Path) + "\\" + e.Label;
+				string ndir = Directory.GetParent(dtn.AbsolutePath) + "\\" + e.Label;
 
-				if(Directory.Exists(ndir))
+				if (Directory.Exists(ndir))
 				{
 					MessageBox.Show(ndir + " already exists - Choose another name!");
 					e.CancelEdit = true;
@@ -169,21 +305,21 @@ namespace D_IDE
 				}
 
 				List<string> nfiles = new List<string>(dtn.Project.resourceFiles);
-				for(int i = 0; i < dtn.Project.resourceFiles.Count; i++)
+				for (int i = 0; i < dtn.Project.resourceFiles.Count; i++)
 				{
 					string file = dtn.Project.resourceFiles[i];
-					if(file.StartsWith(dtn.Path))
-						nfiles[i] = ndir + file.Substring(dtn.Path.Length);
+					if (file.StartsWith(dtn.AbsolutePath))
+						nfiles[i] = ndir + file.Substring(dtn.AbsolutePath.Length);
 				}
 
 				try
 				{
-					if(Directory.Exists(dtn.Path))
-						Directory.Move(dtn.Path, ndir);
+					if (Directory.Exists(dtn.AbsolutePath))
+						Directory.Move(dtn.AbsolutePath, ndir);
 					else
 						Directory.CreateDirectory(ndir);
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					MessageBox.Show(ex.Message);
 					e.CancelEdit = true;
@@ -193,6 +329,14 @@ namespace D_IDE
 
 				return;
 			}
+			else if (e.Node is ProjectNode)
+			{
+				DProject mpr = (e.Node as ProjectNode).Project;
+
+				mpr.name = e.Label;
+				mpr.Save();
+				Form1.thisForm.UpdateLastFilesMenu();
+			}
 
 			e.CancelEdit = true;
 		}
@@ -200,9 +344,9 @@ namespace D_IDE
 		private void setAsActiveToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			Point tp = (Point)ProjectMenu.Tag;
-			if(tp == null) return;
+			if (tp == null) return;
 			TreeNode tn = prjFiles.GetNodeAt(tp);
-			if(!(tn is ProjectNode)) return;
+			if (!(tn is ProjectNode)) return;
 
 			Form1.thisForm.Open(((ProjectNode)tn).Project.prjfn);
 		}
@@ -210,9 +354,9 @@ namespace D_IDE
 		private void createNewDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			Point tp = (Point)ProjectMenu.Tag;
-			if(tp == null) return;
+			if (tp == null) return;
 			TreeNode tn = prjFiles.GetNodeAt(tp);
-			if(tn == null || !(tn is ProjectNode)) return;
+			if (tn == null || !(tn is ProjectNode)) return;
 
 			string ndir = (tn as ProjectNode).Project.basedir + "\\New Directory";
 
@@ -223,20 +367,20 @@ namespace D_IDE
 
 		private void prjFiles_AfterCollapse(object sender, TreeViewEventArgs e)
 		{
-			if(e.Node is DirectoryTreeNode)
+			if (e.Node is DirectoryTreeNode)
 				(e.Node as DirectoryTreeNode).ImageKey = (e.Node as DirectoryTreeNode).SelectedImageKey = "dir";
 		}
 
 		private void prjFiles_AfterExpand(object sender, TreeViewEventArgs e)
 		{
-			if(e.Node is DirectoryTreeNode)
+			if (e.Node is DirectoryTreeNode)
 				(e.Node as DirectoryTreeNode).ImageKey = (e.Node as DirectoryTreeNode).SelectedImageKey = "dir_open";
 		}
 
 		#region Drag&Drop
 		private void prjFiles_DragEnter(object sender, DragEventArgs e)
 		{
-			if(e.Data.GetDataPresent(DataFormats.FileDrop))
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
 			{
 				e.Effect = DragDropEffects.Link;
 			}
@@ -246,43 +390,47 @@ namespace D_IDE
 
 		private void prjFiles_DragDrop(object sender, DragEventArgs e)
 		{
-			if(e.Data.GetDataPresent(DataFormats.FileDrop))
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
 			{
 				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 				TreeNode tn = prjFiles.GetNodeAt(prjFiles.PointToClient(new Point(e.X, e.Y)));
-				if(tn == null)
+				if (tn == null)
 				{
-					foreach(string file in files)	Form1.thisForm.Open(file);
+					foreach (string file in files) Form1.thisForm.Open(file);
 				}
-				if(tn is ProjectNode)
+				if (tn.Tag is ProjectNode)
 				{
-					DProject prj=(tn as ProjectNode).Project;
-					if(MessageBox.Show(this,"Do you want to add the file(s) to the "+prj.name+" project?","Add files to project",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button1)==DialogResult.Yes)
+					string local = (tn.Tag as ProjectNode).AbsolutePath;
+					if (tn.Tag is DirectoryTreeNode) local += "\\";
+
+					foreach (string file in files)
 					{
-						foreach(string file in files)
+						string tar = Path.GetDirectoryName(local) + "\\" + Path.GetFileName(file);
+						if (file != tar)
+							File.Copy(file, tar);
+						if ((tn.Tag as ProjectNode).Project.AddSrc(tar))
 						{
-							prj.AddSrc(file);
+							tn.Nodes.Add(new FileTreeNode((tn.Tag as ProjectNode).Project,tar));
+							(tn.Tag as ProjectNode).Project.Save();
 						}
-						prj.Save();
-						Form1.thisForm.UpdateFiles();
 					}
-					else
-						foreach(string file in files)	Form1.thisForm.Open(file);
 				}
 			}
 		}
-	
+
 
 		private void prjFiles_DragOver(object sender, DragEventArgs e)
 		{
-			if(e.Data.GetDataPresent(DataFormats.FileDrop))
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
 			{
 				TreeNode tn = prjFiles.GetNodeAt(prjFiles.PointToClient(new Point(e.X, e.Y)));
-				if(tn == null) e.Effect = DragDropEffects.Link;
-				if(tn is ProjectNode) e.Effect = DragDropEffects.Copy;
-				if(tn is FileTreeNode) e.Effect = DragDropEffects.None;
-				prjFiles.SelectedNode = tn;
-				prjFiles.Update();
+				if (tn == null) e.Effect = DragDropEffects.Link;
+				else
+				{
+					e.Effect = DragDropEffects.Copy;
+					prjFiles.SelectedNode = tn;
+					prjFiles.Update();
+				}
 			}
 			else
 				e.Effect = DragDropEffects.None;
@@ -292,20 +440,43 @@ namespace D_IDE
 		private void propertiesToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			Point tp = (Point)ProjectMenu.Tag;
-			if(tp == null) return;
+			if (tp == null) return;
 			TreeNode tn = prjFiles.GetNodeAt(tp);
-			if(tn == null || !(tn is ProjectNode)) return;
-			DProject prj=(tn as ProjectNode).Project;
-			foreach(DockContent dc in Form1.thisForm.dockPanel.Documents)
+			if (tn == null || !(tn is ProjectNode)) return;
+			DProject prj = (tn as ProjectNode).Project;
+			foreach (DockContent dc in Form1.thisForm.dockPanel.Documents)
 			{
-				if(dc is ProjectPropertyPage)
+				if (dc is ProjectPropertyPage)
 				{
-					if((dc as ProjectPropertyPage).project.prjfn == prj.prjfn) return;
+					if ((dc as ProjectPropertyPage).project.prjfn == prj.prjfn) return;
 				}
 			}
 			ProjectPropertyPage ppp = new ProjectPropertyPage(prj);
-			if(ppp != null)
+			if (ppp != null)
 				ppp.Show(Form1.thisForm.dockPanel);
+		}
+
+		private void prjFiles_BeforeExpand(object sender, TreeViewCancelEventArgs e)
+		{
+			if (e.Node is DedicatedProjectNode)
+			{
+				e.Node.Nodes.Clear();
+				TreeNode n = e.Node;
+				ReadStructure(ref n, (e.Node as ProjectNode).Project);
+			}
+		}
+
+		private void prjFiles_ItemDrag(object sender, ItemDragEventArgs e)
+		{
+			if (e.Item is FileTreeNode)
+			{
+				System.Collections.Specialized.StringCollection files = new System.Collections.Specialized.StringCollection();
+				files.Add((e.Item as ProjectNode).AbsolutePath);
+
+				DataObject dto = new DataObject();
+				dto.SetFileDropList(files);
+				prjFiles.DoDragDrop(dto,DragDropEffects.All);
+			}
 		}
 	}
 
@@ -313,53 +484,47 @@ namespace D_IDE
 	public class ProjectNode : TreeNode
 	{
 		public DProject Project;
+		public string FileOrPath;
+		public string AbsolutePath
+		{
+			get { return Project.GetPhysFilePath(FileOrPath); }
+		}
 		public ProjectNode(DProject project)
 		{
-			if(!String.IsNullOrEmpty(project.name)) Text = project.name;
+			if (!String.IsNullOrEmpty(project.name)) Text = project.name;
 			Project = project;
+			FileOrPath = Project.prjfn;
+			Tag = this;
 		}
 	}
 
-	public class FileTreeNode : TreeNode
+	public class DedicatedProjectNode : ProjectNode
 	{
-		public DProject Project;
-		public string fn;
-		public string FileName
+		public DedicatedProjectNode(DProject prj)
+			: base(prj)
 		{
-			set { fn = value; }
-			get {
-
-				return Project.GetPhysFilePath(fn);
-			}
 		}
+	}
+
+	public class FileTreeNode : ProjectNode
+	{
 		public FileTreeNode(DProject Project, string FileName)
+			: base(Project)
 		{
-			this.Project = Project;
-			if(DModule.Parsable(FileName))this.ImageKey = "d_src";
-			if(!String.IsNullOrEmpty(FileName)) Text = Path.GetFileName(FileName);
-			this.FileName = FileName;
+			if (DModule.Parsable(FileName)) this.ImageKey = "d_src";
+			if (!String.IsNullOrEmpty(FileName)) Text = Path.GetFileName(FileName);
+			FileOrPath = FileName;
 		}
 	}
 
-	public class DirectoryTreeNode : TreeNode
+	public class DirectoryTreeNode : ProjectNode
 	{
-		public DProject Project;
-		string path;
-		public string Path
-		{
-			set { path = value; }
-			get
-			{
-				if (System.IO.Path.IsPathRooted(Path)) return Path;
-				return Project.basedir + "\\" + Path;
-			}
-		}
 		public DirectoryTreeNode(DProject Project, string Path)
+			: base(Project)
 		{
-			this.Project = Project;
-			if(!String.IsNullOrEmpty(Path)) Text = System.IO.Path.GetFileName(Path);
+			if (!String.IsNullOrEmpty(Path)) Text = System.IO.Path.GetFileName(Path.TrimEnd('\\'));
 			this.ImageKey = this.SelectedImageKey = "dir";
-			this.Path = Path;
+			FileOrPath = Path.TrimEnd('\\');
 		}
 	}
 	#endregion
