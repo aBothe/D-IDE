@@ -110,6 +110,7 @@ namespace D_IDE
 
 			webclient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(wc_DownloadProgressChanged);
 			webclient.DownloadFileCompleted += new AsyncCompletedEventHandler(wc_DownloadFileCompleted);
+			webclient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(wc_DownloadStringCompleted);
 
 			DBuilder.OnOutput += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnOutput);
 			DBuilder.OnError += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnError);
@@ -134,7 +135,10 @@ namespace D_IDE
 
 			//(new FXFormsDesigner()).Show(dockPanel,DockState.Document);
 
-			//if (D_IDE_Properties.Default.WatchForUpdates) CheckForUpdates();
+			if (D_IDE_Properties.Default.WatchForUpdates)
+			{
+				CheckForUpdates();
+			}
 		}
 
 		void DBuilder_OnExit(object sender, EventArgs e)
@@ -418,7 +422,7 @@ namespace D_IDE
 			bpw.Clear();
 			errlog.buildErrors.Clear();
 			errlog.Update();
-			if(D_IDE_Properties.Default.DoAutoSaveOnBuilding)SaveAllTabs();
+			if (D_IDE_Properties.Default.DoAutoSaveOnBuilding) SaveAllTabs();
 			/*
 			foreach (DockContent tp in dockPanel.Documents)
 			{
@@ -442,7 +446,7 @@ namespace D_IDE
 				MessageBox.Show("Create project first!");
 				return false;
 			}
-			
+
 			if (D_IDE_Properties.Default.LogBuildProgress) bpw.Show();
 
 			Log("Build entire project now");
@@ -891,8 +895,8 @@ namespace D_IDE
 		[DebuggerStepThrough()]
 		public DocumentInstanceWindow Open(string file)
 		{
-			if (prj != null && prj.resourceFiles.Contains(prj.GetRelFilePath( file)))
-				return Open(prj.GetPhysFilePath( file), prj);
+			if (prj != null && prj.resourceFiles.Contains(prj.GetRelFilePath(file)))
+				return Open(prj.GetPhysFilePath(file), prj);
 			return Open(file, null);
 		}
 		public DocumentInstanceWindow Open(string file, DProject owner)
@@ -1251,53 +1255,37 @@ namespace D_IDE
 
 		#region Updates
 
-		public static Version GetServerIDEVersion()
-		{
-			WebClient wc = new WebClient();
-			string ans = "";
-			try
-			{
-				ans = wc.DownloadString(Program.ver_txt);
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Error while connecting: " + ex.Message);
-				return null;
-			}
-			try
-			{
-				return new Version(ans);
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("\"" + ans + "\" is an invalid version number: " + ex.Message, "Server error");
-			}
-			return null;
-		}
-
 		public static WebClient webclient = new WebClient();
+		public Thread RevisionUpdateThread;
 		public void CheckForUpdates()
 		{
-			if (webclient.IsBusy)
+			if ((RevisionUpdateThread != null && RevisionUpdateThread.IsAlive) || webclient.IsBusy) return;
+			RevisionUpdateThread = new Thread(delegate()
+					{
+						webclient.DownloadStringAsync(new Uri(Program.ver_txt), Program.ver_txt);
+					});
+			RevisionUpdateThread.Start();
+		}
+
+		void wc_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+		{
+			if (e.Cancelled || Program.ver_txt != (string)e.UserState) return;
+			try
 			{
-				return;
+				if (new Version(Application.ProductVersion) < new Version(e.Result))
+				{
+					if (MessageBox.Show("A higher version is available. Download it?", e.Result + " available", MessageBoxButtons.YesNo) == DialogResult.Yes)
+					{
+						DownloadLatestRevision(this, EventArgs.Empty);
+					}
+				}
 			}
-			SaveFileDialog upd_sf = new SaveFileDialog();
-
-			upd_sf.FileName = "D-IDE.tar.gz";
-			upd_sf.InitialDirectory = Application.StartupPath;
-			upd_sf.Filter = "All (*.*)|*.*";
-			upd_sf.DefaultExt = ".tar.gz";
-			//upd_sf.AutoUpgradeEnabled = true;
-			upd_sf.CheckPathExists = true;
-			upd_sf.SupportMultiDottedExtensions = true;
-			upd_sf.OverwritePrompt = true;
-
-			if (upd_sf.ShowDialog() == DialogResult.OK)
+			catch
 			{
-				ProgressStatusLabel.Text = "Downloading D-IDE.tar.gz";
-				BuildProgressBar.Style = ProgressBarStyle.Marquee;
-				webclient.DownloadFileAsync(new Uri("http://d-ide.svn.sourceforge.net/viewvc/d-ide/D-IDE/D-IDE/bin/Debug.tar.gz?view=tar"), upd_sf.FileName, upd_sf.FileName);
+				if (MessageBox.Show("Another version is available. Download it?", e.Result + " available", MessageBoxButtons.YesNo) == DialogResult.Yes)
+				{
+					DownloadLatestRevision(this, EventArgs.Empty);
+				}
 			}
 		}
 
@@ -1322,6 +1310,31 @@ namespace D_IDE
 		private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			CheckForUpdates();
+		}
+
+		private void DownloadLatestRevision(object sender, EventArgs e)
+		{
+			if (webclient.IsBusy)
+			{
+				return;
+			}
+			SaveFileDialog upd_sf = new SaveFileDialog();
+
+			upd_sf.FileName = "D-IDE.tar.gz";
+			upd_sf.InitialDirectory = Application.StartupPath;
+			upd_sf.Filter = "All (*.*)|*.*";
+			upd_sf.DefaultExt = ".tar.gz";
+			//upd_sf.AutoUpgradeEnabled = true;
+			upd_sf.CheckPathExists = true;
+			upd_sf.SupportMultiDottedExtensions = true;
+			upd_sf.OverwritePrompt = true;
+
+			if (upd_sf.ShowDialog() == DialogResult.OK)
+			{
+				ProgressStatusLabel.Text = "Downloading D-IDE.tar.gz";
+				BuildProgressBar.Style = ProgressBarStyle.Marquee;
+				webclient.DownloadFileAsync(new Uri("http://d-ide.svn.sourceforge.net/viewvc/d-ide/D-IDE/D-IDE/bin/Debug.tar.gz?view=tar"), upd_sf.FileName, upd_sf.FileName);
+			}
 		}
 
 		private void visitAlexanderbothecomToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1370,8 +1383,8 @@ namespace D_IDE
 
 		private void closeAllOthersToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			IDockContent[] dcs=dockPanel.DocumentsToArray();
-			for (int i = 0; i < dcs.Length;i++ )
+			IDockContent[] dcs = dockPanel.DocumentsToArray();
+			for (int i = 0; i < dcs.Length; i++)
 			{
 				if (dcs[i] == dockPanel.ActiveDocument) continue;
 				(dcs[i] as DockContent).Close();
@@ -1470,5 +1483,7 @@ namespace D_IDE
 		{
 			if (SelectedTabPage != null) SelectedTabPage.TextAreaKeyEventHandler('\0');
 		}
+
+
 	}
 }

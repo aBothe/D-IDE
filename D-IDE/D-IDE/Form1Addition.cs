@@ -917,9 +917,9 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Default.SingleInstance ? "1" : "0");
 			xw.WriteEndElement();
 
-			/*xw.WriteStartElement("watchforupdates");
+			xw.WriteStartElement("watchforupdates");
 			xw.WriteAttributeString("value",Default.WatchForUpdates ? "1" : "0");
-			xw.WriteEndElement();*/
+			xw.WriteEndElement();
 
 			xw.WriteStartElement("defprjdir");
 			xw.WriteCData(Default.DefaultProjectDirectory);

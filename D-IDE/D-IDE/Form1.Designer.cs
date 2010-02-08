@@ -132,6 +132,7 @@
 			this.stepOutTS = new System.Windows.Forms.ToolStripButton();
 			this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
 			this.searchTool = new System.Windows.Forms.ToolStripTextBox();
+			this.watchForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			this.contextMenuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
@@ -641,6 +642,7 @@
 			// aboutToolStripMenuItem
 			// 
 			this.aboutToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.watchForUpdatesToolStripMenuItem,
             this.checkForUpdatesToolStripMenuItem,
             this.visitDidesourceforgenetToolStripMenuItem,
             this.visitAlexanderbothecomToolStripMenuItem,
@@ -657,7 +659,7 @@
 			this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
 			this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
 			this.checkForUpdatesToolStripMenuItem.Text = "Download latest D-IDE revision";
-			this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
+			this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.DownloadLatestRevision);
 			// 
 			// visitDidesourceforgenetToolStripMenuItem
 			// 
@@ -1053,6 +1055,13 @@
 			this.searchTool.ToolTipText = "Press <Return> for search in current document";
 			this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
 			// 
+			// watchForUpdatesToolStripMenuItem
+			// 
+			this.watchForUpdatesToolStripMenuItem.Name = "watchForUpdatesToolStripMenuItem";
+			this.watchForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+			this.watchForUpdatesToolStripMenuItem.Text = "Watch for updates";
+			this.watchForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1185,6 +1194,7 @@
 		private System.Windows.Forms.ToolStripMenuItem runUntilMainToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator10;
 		private System.Windows.Forms.ToolStripMenuItem showCompletionWindowToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem watchForUpdatesToolStripMenuItem;
 	}
 }
 

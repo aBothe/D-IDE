@@ -35,6 +35,11 @@ namespace D_IDE
 			}
 		}
 
+		/// <summary>
+		/// Build a project. Also cares about the last versions and additional file dependencies
+		/// </summary>
+		/// <param name="prj"></param>
+		/// <returns></returns>
 		public static bool BuildProject(DProject prj)
 		{
 			try { prj.Save(); }
@@ -246,10 +251,6 @@ namespace D_IDE
 			return false;
 		}
 
-		public static bool BuildObjFile(string file, string target, string additionalArgs)
-		{
-			return BuildObjFile(file, target, Path.GetDirectoryName(file), additionalArgs);
-		}
 		public static bool BuildObjFile(string file, string target, string exeDir, string additionalArgs)
 		{
 			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
@@ -264,19 +265,6 @@ namespace D_IDE
 			return prc.ExitCode == 0;
 		}
 
-		public static bool BuildResFile(string file, string target)
-		{
-			if (!file.EndsWith(".rc")) { throw new Exception("Cannot build resource file of " + file); }
-
-			string args = D_IDE_Properties.Default.cmp_res;
-			args = args.Replace("$rc", file);
-			args = args.Replace("$res", target);
-
-			Process prc = DBuilder.Exec(D_IDE_Properties.Default.exe_res, args, Path.GetDirectoryName(file), true);
-			prc.WaitForExit(10000);
-
-			return prc.ExitCode == 0;
-		}
 		public static bool BuildResFile(string file, string target, string exeDir)
 		{
 			if (!file.EndsWith(".rc")) { throw new Exception("Cannot build resource file of " + file); }
@@ -327,6 +315,7 @@ namespace D_IDE
 			return proc;
 		}
 
+		#region Error Handlers
 		public delegate void OutputHandler(DProject project, string file, string message);
 		static public event OutputHandler OnMessage;
 		public static event DataReceivedEventHandler OnError;
@@ -349,5 +338,6 @@ namespace D_IDE
 			if (e.Data != null)
 				OnOutput(sender, e);
 		}
+		#endregion
 	}
 }
