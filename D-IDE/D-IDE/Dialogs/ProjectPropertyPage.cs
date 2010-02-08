@@ -63,6 +63,10 @@ namespace D_IDE
 		private Button button13;
 		private TextBox OutputDir;
 		private ListBox FileDeps;
+		private CheckBox SubversioningEnabled;
+		private CheckBox StoreLastSources;
+		private Label label8;
+		private TextBox LastVersionCount;
 		public DProject project;
 
 
@@ -81,6 +85,13 @@ namespace D_IDE
 			checkBox1.Checked = prj.isRelease;
 			cpargs.Text = prj.compileargs;
 			lnkargs.Text = prj.linkargs;
+
+			SubversioningEnabled.Checked = prj.EnableSubversioning;
+			StoreLastSources.Checked = prj.AlsoStoreSources;
+			if (prj.LastVersionCount > 0)
+			{
+				LastVersionCount.Text = prj.LastVersionCount.ToString();
+			}
 
 			if (libs.Items.Count > 0)
 				libs.SelectedIndex = 0;
@@ -124,6 +135,21 @@ namespace D_IDE
 			prj.isRelease = checkBox1.Checked;
 			prj.compileargs = cpargs.Text;
 			prj.linkargs = lnkargs.Text;
+
+			prj.EnableSubversioning = SubversioningEnabled.Checked;
+			prj.AlsoStoreSources = StoreLastSources.Checked;
+			try
+			{
+				if (LastVersionCount.Text.Length < 1) prj.LastVersionCount = -1;
+				{
+					int c = Convert.ToInt32(LastVersionCount.Text);
+					if (c > 0)
+						prj.LastVersionCount = c;
+					else
+						prj.LastVersionCount = -1;
+				}
+			}
+			catch { }
 
 			foreach (string lvi in FileDeps.Items)
 			{
@@ -301,6 +327,10 @@ namespace D_IDE
 			this.button13 = new System.Windows.Forms.Button();
 			this.OutputDir = new System.Windows.Forms.TextBox();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.label8 = new System.Windows.Forms.Label();
+			this.LastVersionCount = new System.Windows.Forms.TextBox();
+			this.StoreLastSources = new System.Windows.Forms.CheckBox();
+			this.SubversioningEnabled = new System.Windows.Forms.CheckBox();
 			this.groupBox4 = new System.Windows.Forms.GroupBox();
 			this.lnkargs = new System.Windows.Forms.TextBox();
 			this.label6 = new System.Windows.Forms.Label();
@@ -311,6 +341,7 @@ namespace D_IDE
 			this.execargs = new System.Windows.Forms.TextBox();
 			this.tabPage3 = new System.Windows.Forms.TabPage();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.FileDeps = new System.Windows.Forms.ListBox();
 			this.button9 = new System.Windows.Forms.Button();
 			this.button8 = new System.Windows.Forms.Button();
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -326,7 +357,6 @@ namespace D_IDE
 			this.button10 = new System.Windows.Forms.Button();
 			this.button11 = new System.Windows.Forms.Button();
 			this.button12 = new System.Windows.Forms.Button();
-			this.FileDeps = new System.Windows.Forms.ListBox();
 			label3 = new System.Windows.Forms.Label();
 			label4 = new System.Windows.Forms.Label();
 			label2 = new System.Windows.Forms.Label();
@@ -513,6 +543,10 @@ namespace D_IDE
 			// 
 			// tabPage2
 			// 
+			this.tabPage2.Controls.Add(this.label8);
+			this.tabPage2.Controls.Add(this.LastVersionCount);
+			this.tabPage2.Controls.Add(this.StoreLastSources);
+			this.tabPage2.Controls.Add(this.SubversioningEnabled);
 			this.tabPage2.Controls.Add(this.groupBox4);
 			this.tabPage2.Controls.Add(this.groupBox3);
 			this.tabPage2.Location = new System.Drawing.Point(4, 22);
@@ -523,6 +557,44 @@ namespace D_IDE
 			this.tabPage2.Text = "Build options";
 			this.tabPage2.UseVisualStyleBackColor = true;
 			// 
+			// label8
+			// 
+			this.label8.AutoSize = true;
+			this.label8.Location = new System.Drawing.Point(9, 237);
+			this.label8.Name = "label8";
+			this.label8.Size = new System.Drawing.Size(200, 13);
+			this.label8.TabIndex = 15;
+			this.label8.Text = "Limit last versions to: (Leave empty if not)";
+			// 
+			// LastVersionCount
+			// 
+			this.LastVersionCount.Location = new System.Drawing.Point(215, 234);
+			this.LastVersionCount.MaxLength = 10;
+			this.LastVersionCount.Name = "LastVersionCount";
+			this.LastVersionCount.Size = new System.Drawing.Size(80, 20);
+			this.LastVersionCount.TabIndex = 14;
+			this.LastVersionCount.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox1_KeyDown);
+			// 
+			// StoreLastSources
+			// 
+			this.StoreLastSources.AutoSize = true;
+			this.StoreLastSources.Location = new System.Drawing.Point(12, 211);
+			this.StoreLastSources.Name = "StoreLastSources";
+			this.StoreLastSources.Size = new System.Drawing.Size(250, 17);
+			this.StoreLastSources.TabIndex = 13;
+			this.StoreLastSources.Text = "Also store the changed sources in that directory";
+			this.StoreLastSources.UseVisualStyleBackColor = true;
+			// 
+			// SubversioningEnabled
+			// 
+			this.SubversioningEnabled.AutoSize = true;
+			this.SubversioningEnabled.Location = new System.Drawing.Point(12, 188);
+			this.SubversioningEnabled.Name = "SubversioningEnabled";
+			this.SubversioningEnabled.Size = new System.Drawing.Size(229, 17);
+			this.SubversioningEnabled.TabIndex = 10;
+			this.SubversioningEnabled.Text = "Store each new build in a new subdirectory";
+			this.SubversioningEnabled.UseVisualStyleBackColor = true;
+			// 
 			// groupBox4
 			// 
 			this.groupBox4.Controls.Add(this.lnkargs);
@@ -532,7 +604,7 @@ namespace D_IDE
 			this.groupBox4.Controls.Add(this.checkBox1);
 			this.groupBox4.Location = new System.Drawing.Point(6, 60);
 			this.groupBox4.Name = "groupBox4";
-			this.groupBox4.Size = new System.Drawing.Size(425, 126);
+			this.groupBox4.Size = new System.Drawing.Size(425, 122);
 			this.groupBox4.TabIndex = 12;
 			this.groupBox4.TabStop = false;
 			this.groupBox4.Text = "Build arguments";
@@ -627,6 +699,17 @@ namespace D_IDE
 			this.groupBox1.TabIndex = 11;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Files to copy into the output directory";
+			// 
+			// FileDeps
+			// 
+			this.FileDeps.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.FileDeps.FormattingEnabled = true;
+			this.FileDeps.Location = new System.Drawing.Point(6, 48);
+			this.FileDeps.Name = "FileDeps";
+			this.FileDeps.Size = new System.Drawing.Size(353, 394);
+			this.FileDeps.TabIndex = 3;
 			// 
 			// button9
 			// 
@@ -801,17 +884,6 @@ namespace D_IDE
 			this.button12.UseVisualStyleBackColor = true;
 			this.button12.Click += new System.EventHandler(this.button12_Click);
 			// 
-			// FileDeps
-			// 
-			this.FileDeps.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.FileDeps.FormattingEnabled = true;
-			this.FileDeps.Location = new System.Drawing.Point(6, 48);
-			this.FileDeps.Name = "FileDeps";
-			this.FileDeps.Size = new System.Drawing.Size(353, 394);
-			this.FileDeps.TabIndex = 3;
-			// 
 			// ProjectPropertyPage
 			// 
 			this.AcceptButton = this.button1;
@@ -826,6 +898,7 @@ namespace D_IDE
 			this.tabPage1.ResumeLayout(false);
 			this.tabPage1.PerformLayout();
 			this.tabPage2.ResumeLayout(false);
+			this.tabPage2.PerformLayout();
 			this.groupBox4.ResumeLayout(false);
 			this.groupBox4.PerformLayout();
 			this.groupBox3.ResumeLayout(false);
@@ -855,7 +928,7 @@ namespace D_IDE
 
 					if (FileDeps.Items.Contains(file)) continue;
 
-					FileDeps.Items.Add(file);
+					FileDeps.Items.Add(GetRelativePath(file));
 				}
 				FileDeps.Refresh();
 			}
@@ -869,13 +942,30 @@ namespace D_IDE
 			}
 		}
 
+		public string GetRelativePath(string f)
+		{
+			if (!Path.IsPathRooted(f)) return f;
+			string ret = f;
+
+			if (ret.StartsWith(prjdir.Text))
+				ret = ret.Substring(prjdir.Text.Length);
+
+			ret = ret.Trim(new char[] { '\\' });
+			return ret;
+		}
+
 		private void button13_Click(object sender, EventArgs e)
 		{
 			fD.SelectedPath = prjdir.Text;
 			if (fD.ShowDialog() == DialogResult.OK)
 			{
-				OutputDir.Text = fD.SelectedPath;
+				OutputDir.Text = GetRelativePath(fD.SelectedPath);
 			}
+		}
+
+		private void textBox1_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (!Char.IsDigit((char)e.KeyValue)) e.SuppressKeyPress = true;
 		}
 	}
 }

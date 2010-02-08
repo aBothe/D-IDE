@@ -43,8 +43,9 @@ namespace D_IDE
 					MessageBox.Show("Unable to execute a library!");
 					return;
 				}
-
-				string bin = prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null) + ".exe";
+				
+				// Use the last built target file as executable - for going sure that this file exists
+				string bin = Path.ChangeExtension(prj.LastBuiltTarget, null) + ".exe";//prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null) + ".exe";
 
 				if (!File.Exists(bin))
 				{

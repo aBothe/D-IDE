@@ -12,20 +12,58 @@ namespace D_IDE
 {
 	public class DBuilder
 	{
+		/// <summary>
+		/// Helper function to check if directory exists
+		/// </summary>
+		/// <param name="dir"></param>
+		public static void CreateDirectoryRecursively(string dir)
+		{
+			if (Directory.Exists(dir)) return;
+
+			string tdir="";
+			foreach(string d in dir.Split(new char[] {'\\'},StringSplitOptions.RemoveEmptyEntries))
+			{
+				tdir += d+"\\";
+				if (!Directory.Exists(tdir))
+				{
+					try
+					{
+						Directory.CreateDirectory(tdir);
+					}
+					catch { return; }
+				}
+			}
+		}
+
 		public static bool BuildProject(DProject prj)
 		{
 			try { prj.Save(); }
 			catch { }
+
+			prj.RefreshBuildDate();
 
 			List<string> builtfiles = new List<string>();
 			string args = "";
 
 			Directory.SetCurrentDirectory(prj.basedir);
 
-			if (Directory.Exists(prj.AbsoluteOutputDirectory))
+			/*int i=0;
+			foreach (string tdir in Directory.GetDirectories(prj.AbsoluteOutputDirectoryWithoutSVN))
 			{
-				Directory.CreateDirectory(prj.AbsoluteOutputDirectory);
-			}
+				DateTime dtime = null;
+				if (DateTime.TryParse(tdir, out dtime))
+				{
+					if (i > prj.LastVersionCount)
+					{
+						Directory.Delete(tdir);
+					}
+				}
+			}*/
+
+			CreateDirectoryRecursively(prj.AbsoluteOutputDirectory);
+
+			if (prj.EnableSubversioning && prj.AlsoStoreSources)
+				CreateDirectoryRecursively(prj.AbsoluteOutputDirectory+"\\src");
 
 			foreach (string depFile in prj.FileDependencies)
 			{
@@ -42,7 +80,7 @@ namespace D_IDE
 			Form1.thisForm.BuildProgressBar.Value = 0;
 			Form1.thisForm.BuildProgressBar.Maximum = prj.resourceFiles.Count + 1;
 
-			bool OneFileChanged = false;
+			bool OneFileChanged = String.IsNullOrEmpty( prj.LastBuiltTarget);
 
 			foreach (string rc in prj.resourceFiles)
 			{
@@ -69,6 +107,15 @@ namespace D_IDE
 							prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
 						else
 							prj.LastModifyingDates[phys_rc] = File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc();
+
+						if (prj.EnableSubversioning && prj.AlsoStoreSources)
+						{
+							try
+							{
+								File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + Path.GetFileName(rc));
+							}
+							catch { }
+						}
 					}
 					Form1.thisForm.BuildProgressBar.Value++;
 
@@ -98,6 +145,15 @@ namespace D_IDE
 							prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
 						else
 							prj.LastModifyingDates[phys_rc] = File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc();
+
+						if (prj.EnableSubversioning && prj.AlsoStoreSources)
+						{
+							try
+							{
+								File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + Path.GetFileName(rc));
+							}
+							catch { }
+						}
 					}
 
 					Form1.thisForm.BuildProgressBar.Value++;
@@ -139,10 +195,15 @@ namespace D_IDE
 					break;
 			}
 
-			if (!OneFileChanged && File.Exists(target))
+			if (!OneFileChanged && (File.Exists(target) || prj.EnableSubversioning))
 			{
 				OnMessage(prj, target, "Anything changed...no linking necessary!");
 				Form1.thisForm.BuildProgressBar.Value++;
+				try
+				{
+					if (prj.EnableSubversioning) Directory.Delete(prj.AbsoluteOutputDirectory, true);
+				}
+				catch { }
 				return true;
 			}
 
@@ -163,6 +224,9 @@ namespace D_IDE
 
 			if (prc.ExitCode == 0)
 			{
+				// This line of code is very important for debugging!
+				prj.LastBuiltTarget = target;
+
 				Form1.thisForm.ProgressStatusLabel.Text = "Linking done!";
 				OnMessage(prj, target, "Linking done!");
 				return true;

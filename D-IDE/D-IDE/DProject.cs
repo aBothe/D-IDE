@@ -17,9 +17,9 @@ namespace D_IDE
 		public void CreateManifestFile()
 		{
 			string cont = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\"><assemblyIdentity name=\"DApplication\" processorArchitecture=\"x86\" version=\"1.0.0.0\" type=\"win32\"/><description></description><dependency><dependentAssembly><assemblyIdentity type=\"win32\" name=\"Microsoft.Windows.Common-Controls\" version=\"6.0.0.0\" processorArchitecture=\"x86\" publicKeyToken=\"6595b64144ccf1df\" language=\"*\" /></dependentAssembly></dependency></assembly>";
-			string f=basedir+"\\"+targetfilename+".manifest";
+			string f = basedir + "\\" + targetfilename + ".manifest";
 
-			if (!File.Exists(f)) File.WriteAllText(f,cont,Encoding.UTF8);
+			if (!File.Exists(f)) File.WriteAllText(f, cont, Encoding.UTF8);
 		}
 
 		public const string prjext = ".dproj";
@@ -38,11 +38,21 @@ namespace D_IDE
 			foreach (string fn in resourceFiles)
 			{
 				if (!DModule.Parsable(fn)) continue;
-				files.Add(new DModule(GetPhysFilePath( fn)));
+				files.Add(new DModule(GetPhysFilePath(fn)));
 			}
 		}
 
 		public bool isRelease;
+
+		public bool EnableSubversioning = false;
+		public bool AlsoStoreSources = true;
+		public int LastVersionCount = 10;
+		public string LastBuiltTarget = "";
+		public DateTime LastBuildDate;
+		public void RefreshBuildDate()
+		{
+			LastBuildDate = DateTime.Now;
+		}
 
 		public List<string> libs;
 		public string execargs;
@@ -52,13 +62,26 @@ namespace D_IDE
 		public PrjType type;
 		public string name;
 		public string targetfilename;
-		public string OutputDirectory="bin";
+		public string OutputDirectory = "bin";
 		public string AbsoluteOutputDirectory
 		{
-			get {
+			get
+			{
+				string add = "";
+				if (EnableSubversioning)
+				{
+					add = "\\" + LastBuildDate.ToString().Replace(':','-');
+				}
+				if (Path.IsPathRooted(OutputDirectory)) return OutputDirectory + add;
+				return basedir + "\\" + OutputDirectory + add;
+			}
+		}
+		public string AbsoluteOutputDirectoryWithoutSVN
+		{
+			get
+			{
 				if (Path.IsPathRooted(OutputDirectory)) return OutputDirectory;
-
-				return basedir+"\\"+OutputDirectory;
+				return basedir + "\\" + OutputDirectory;
 			}
 		}
 
@@ -134,10 +157,10 @@ namespace D_IDE
 			catch { }
 			return AddSrc(file, mod);
 		}
-		public bool AddSrc(string file,long lastModified)
+		public bool AddSrc(string file, long lastModified)
 		{
 			string fn = file;
-			string phys_fn=GetPhysFilePath(file);
+			string phys_fn = GetPhysFilePath(file);
 			if (fn.StartsWith(basedir + "\\"))
 			{
 				fn = fn.Remove(0, basedir.Length + 1);
@@ -316,7 +339,7 @@ namespace D_IDE
 										try
 										{
 											string _fn = xsr.ReadString();
-											
+
 											if (mod != 0)
 												ret.AddSrc(_fn, mod);
 											else
@@ -355,6 +378,31 @@ namespace D_IDE
 									}
 								}
 								break;
+
+							case "enablesubversioning":
+								if (xr.MoveToAttribute("value"))
+								{
+									ret.EnableSubversioning = xr.Value == "1";
+								}
+								break;
+
+							case "alsostoresources":
+								if (xr.MoveToAttribute("value"))
+								{
+									ret.AlsoStoreSources = xr.Value == "1";
+								}
+								break;
+
+							case "lastversioncount":
+								if (xr.MoveToAttribute("value"))
+								{
+									try
+									{
+										ret.LastVersionCount = Convert.ToInt32(xr.Value);
+									}
+									catch { }
+								}
+								break;
 						}
 					}
 				}
@@ -368,7 +416,7 @@ namespace D_IDE
 					if (!DModule.Parsable(f)) continue;
 					try
 					{
-						ret.files.Add(new DModule(ret.GetPhysFilePath( f)));
+						ret.files.Add(new DModule(ret.GetPhysFilePath(f)));
 					}
 					catch { }
 				}
@@ -490,6 +538,18 @@ namespace D_IDE
 				}
 				xw.WriteEndElement();
 			}
+
+			xw.WriteStartElement("enablesubversioning");
+			xw.WriteAttributeString("value", EnableSubversioning?"1":"0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("alsostoresources");
+			xw.WriteAttributeString("value", AlsoStoreSources ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("lastversioncount");
+			xw.WriteAttributeString("value", LastVersionCount.ToString());
+			xw.WriteEndElement();
 
 			xw.WriteEndElement();
 			xw.Close();
