@@ -20,10 +20,10 @@ namespace D_IDE
 		{
 			if (Directory.Exists(dir)) return;
 
-			string tdir="";
-			foreach(string d in dir.Split(new char[] {'\\'},StringSplitOptions.RemoveEmptyEntries))
+			string tdir = "";
+			foreach (string d in dir.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries))
 			{
-				tdir += d+"\\";
+				tdir += d + "\\";
 				if (!Directory.Exists(tdir))
 				{
 					try
@@ -47,40 +47,49 @@ namespace D_IDE
 
 			Directory.SetCurrentDirectory(prj.basedir);
 
-			/*int i=0;
-			foreach (string tdir in Directory.GetDirectories(prj.AbsoluteOutputDirectoryWithoutSVN))
-			{
-				DateTime dtime = null;
-				if (DateTime.TryParse(tdir, out dtime))
-				{
-					if (i > prj.LastVersionCount)
-					{
-						Directory.Delete(tdir);
-					}
-				}
-			}*/
-
 			CreateDirectoryRecursively(prj.AbsoluteOutputDirectory);
 
+			#region Last version storing
+			if (prj.LastVersionCount > 0)
+			{
+				List<string> tdirs = new List<string>(Directory.GetDirectories(prj.AbsoluteOutputDirectoryWithoutSVN));
+				if (tdirs.Count > prj.LastVersionCount)
+				{
+					// Very important: Sort array to ensure the descending order of dates/times
+					tdirs.Sort();
+					for (int i = 0; i < tdirs.Count - prj.LastVersionCount; i++)
+					{
+						try
+						{
+							Directory.Delete(tdirs[i], true);
+						}
+						catch { }
+					}
+				}
+			}
 			if (prj.EnableSubversioning && prj.AlsoStoreSources)
-				CreateDirectoryRecursively(prj.AbsoluteOutputDirectory+"\\src");
+				CreateDirectoryRecursively(prj.AbsoluteOutputDirectory + "\\src");
+			#endregion
 
+			#region File dependencies
 			foreach (string depFile in prj.FileDependencies)
 			{
 				try
 				{
-					if(File.Exists(depFile))
-					File.Copy(depFile, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depFile));
+					if (File.Exists(depFile))
+						File.Copy(depFile, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depFile));
 				}
 				catch { }
 			}
+			#endregion
 
+			#region Compiling all sources
 			if (!Directory.Exists("obj")) Directory.CreateDirectory("obj");
 
 			Form1.thisForm.BuildProgressBar.Value = 0;
 			Form1.thisForm.BuildProgressBar.Maximum = prj.resourceFiles.Count + 1;
 
-			bool OneFileChanged = String.IsNullOrEmpty( prj.LastBuiltTarget);
+			bool OneFileChanged = String.IsNullOrEmpty(prj.LastBuiltTarget);
 
 			foreach (string rc in prj.resourceFiles)
 			{
@@ -162,7 +171,9 @@ namespace D_IDE
 				}
 				#endregion
 			}
+			#endregion
 
+			#region Linking
 			string exe = "dmd.exe";
 			string target = prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null);
 			string objs = "";
@@ -231,6 +242,7 @@ namespace D_IDE
 				OnMessage(prj, target, "Linking done!");
 				return true;
 			}
+			#endregion
 			return false;
 		}
 

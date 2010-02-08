@@ -568,7 +568,7 @@ namespace D_IDE
 			// 
 			// LastVersionCount
 			// 
-			this.LastVersionCount.Location = new System.Drawing.Point(215, 234);
+			this.LastVersionCount.Location = new System.Drawing.Point(243, 237);
 			this.LastVersionCount.MaxLength = 10;
 			this.LastVersionCount.Name = "LastVersionCount";
 			this.LastVersionCount.Size = new System.Drawing.Size(80, 20);
