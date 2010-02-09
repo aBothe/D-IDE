@@ -256,7 +256,7 @@ namespace D_IDE
 					if (dc is DocumentInstanceWindow)
 					{
 						mtp = (DocumentInstanceWindow)dc;
-						if (mtp.fileData.mod == module || mtp.fileData.mod_file == file)
+						if (mtp.fileData.ModuleName == module || mtp.fileData.mod_file == file)
 						{
 							int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
 							mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Red));
@@ -280,7 +280,7 @@ namespace D_IDE
 					if (dc is DocumentInstanceWindow)
 					{
 						mtp = (DocumentInstanceWindow)dc;
-						if (mtp.fileData.mod == module)
+						if (mtp.fileData.ModuleName == module)
 						{
 							int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
 							mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Blue));
@@ -341,7 +341,8 @@ namespace D_IDE
 					try
 					{
 						string tmodule = Path.ChangeExtension(tf, null).Remove(0, dir.Length + 1).Replace('\\', '.');
-						DModule gpf = new DModule(tf, tmodule);
+						DModule gpf = new DModule(null, tf);
+						gpf.ModuleName = tmodule;
 
 						D_IDE_Properties.AddFileData(ret, gpf);
 						Log(tf);
@@ -592,7 +593,7 @@ namespace D_IDE
 		#endregion
 
 		#region Project relevated things
-
+		/*
 		/// <summary>
 		/// TODO: Fix this
 		/// </summary>
@@ -657,11 +658,11 @@ namespace D_IDE
 
 			UpdateFiles();
 			return true;
-		}
+		}*/
 
 		public void UpdateFiles()
 		{
-			if(prj!=null)Text = prj.name + " - " + title;
+			if (prj != null) Text = prj.name + " - " + title;
 			prjexplorer.UpdateFiles();
 		}
 
@@ -757,7 +758,7 @@ namespace D_IDE
 			hierarchy.hierarchy.Nodes.Clear();
 
 			hierarchy.hierarchy.BeginUpdate();
-			TreeNode tn = new TreeNode(mtp.fileData.mod);
+			TreeNode tn = new TreeNode(mtp.fileData.ModuleName);
 			tn.SelectedImageKey = tn.ImageKey = "namespace";
 			int i = 0;
 			foreach (DataType ch in mtp.fileData.dom)
@@ -797,7 +798,7 @@ namespace D_IDE
 			{
 				if (!(dc is DocumentInstanceWindow)) continue;
 				DocumentInstanceWindow diw = (DocumentInstanceWindow)dc;
-				if (diw.fileData.mod_file == file)
+				if (diw.fileData.FileName == file)
 				{
 					diw.Activate();
 					Application.DoEvents();
@@ -807,7 +808,7 @@ namespace D_IDE
 
 			if (!File.Exists(file))
 			{
-				MessageBox.Show("File " + file + " doesn't exist!", "File not found!");
+				Log(ProgressStatusLabel.Text = ("File " + file + " doesn't exist!"));
 				return null;
 			}
 
@@ -815,7 +816,7 @@ namespace D_IDE
 			{
 				if (prj != null)
 				{
-					if (MessageBox.Show("Do you really want to open a new project?", "Open new project", MessageBoxButtons.YesNo) == DialogResult.No) return null;
+					if (MessageBox.Show("Do you want to open another project?", "Open new project", MessageBoxButtons.YesNo) == DialogResult.No) return null;
 				}
 				prj = DProject.LoadFrom(file);
 				if (prj == null) { MessageBox.Show("Failed to load project! Perhaps the projects version differs from the current version."); return null; }
@@ -834,14 +835,6 @@ namespace D_IDE
 
 				prj.ParseAll();
 
-				if (prj.lastopen.Count < 1 && prj.files.Count > 0)
-				{
-					string mfn = prj.files[0].mod_file;
-					if (File.Exists(mfn))
-					{
-						Open(prj.files[0].mod_file, prj);
-					}
-				}
 				foreach (string f in prj.lastopen)
 				{
 					Open(f, prj);
@@ -950,19 +943,31 @@ namespace D_IDE
 			if (!Directory.Exists(Program.cfgDir))
 				Directory.CreateDirectory(Program.cfgDir);
 
-			if (prj != null)
-			{
-				foreach (DockContent tp in dockPanel.Documents)
+			#region Save all projects that are still editing
+			List<DProject> changedPrjs = new List<DProject>();	
+			foreach (DockContent tp in dockPanel.Documents)
 				{
 					if (tp is DocumentInstanceWindow)
 					{
 						DocumentInstanceWindow mtp = (DocumentInstanceWindow)tp;
-						if (prj.FileDataByFile(mtp.fileData.mod_file) != null || prj.resourceFiles.Contains(mtp.fileData.mod_file))
-							prj.lastopen.Add(mtp.fileData.mod_file);
+						if (mtp.project != null)
+						{
+							mtp.project.lastopen.Add(mtp.fileData.FileName);
+							if (!changedPrjs.Contains(mtp.project))
+								changedPrjs.Add(mtp.project);
+						}
 					}
 				}
-				prj.Save();
+
+			foreach (DProject p in changedPrjs)
+			{
+				try
+				{
+					p.Save();
+				}
+				catch { }
 			}
+			#endregion
 
 			dockPanel.SaveAsXml(Program.LayoutFile);
 
@@ -978,28 +983,23 @@ namespace D_IDE
 		{
 			DocumentInstanceWindow tp = SelectedTabPage;
 			if (tp == null) return;
-			string bef = tp.fileData.mod_file;
+			string bef = tp.fileData.FileName;
 			sF.FileName = bef;
 
 			if (sF.ShowDialog() == DialogResult.OK)
 			{
 				if (prj != null)
 				{
-					if (DModule.Parsable(tp.fileData.mod_file))
+					if (DModule.Parsable(tp.fileData.FileName))
 					{
 						if (prj.files.Contains(tp.fileData))
-						{
 							prj.files.Remove(tp.fileData);
-						}
 					}
-					else
-					{
-						prj.resourceFiles.Remove(tp.fileData.mod_file);
-					}
+					
+					prj.resourceFiles.Remove(prj.GetRelFilePath( tp.fileData.FileName));
 					prj.AddSrc(sF.FileName);
 				}
-				tp.fileData.mod = Path.GetFileNameWithoutExtension(sF.FileName);
-				tp.fileData.mod_file = sF.FileName;
+				tp.fileData.FileName = sF.FileName;
 				tp.Update();
 				tp.Save();
 			}

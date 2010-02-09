@@ -413,8 +413,8 @@ namespace D_IDE
 							{
 								try
 								{
-									// Close tab that may contains moved file
-									Form1.thisForm.FileDataByFile(file).Close();
+									// Update tab that may contains moved file
+									Form1.thisForm.FileDataByFile(file).fileData.mod_file=tar;
 								}
 								catch { }
 

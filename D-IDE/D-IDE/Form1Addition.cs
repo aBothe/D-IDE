@@ -61,7 +61,7 @@ namespace D_IDE
 		{
 			this.DockAreas = DockAreas.Document;
 
-			fileData = new DModule(fn);
+			fileData = new DModule(project,fn);
 
 			txt = new TextEditorControl();
 			txt.Dock = DockStyle.Fill;
@@ -160,6 +160,11 @@ namespace D_IDE
 		DataType selectedBlock = null;
 		public List<ICompletionData> CurrentCompletionData = new List<ICompletionData>();
 
+		/// <summary>
+		/// Updates the local completion data cache
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
 		void Caret_PositionChanged(object sender, EventArgs e)
 		{
 			Form1.thisForm.LineLabel.Text =
@@ -172,23 +177,31 @@ namespace D_IDE
 				selectedBlock = tv;
 				CurrentCompletionData.Clear();
 				if (tv != null)
-				{/*
-				if(!DTokens.ClassLike[seldt.TypeToken])
 				{
-					//seldd = DCodeCompletionProvider.GetClassAt(module.dom, tl);
-					//if(seldd != null)
-						DCodeCompletionProvider.AddAllClassMembers(seldt, ref DCodeCompletionProvider.globalList, true, Form1.thisForm.icons);
-				}
-				else*/
 					DCodeCompletionProvider.AddAllClassMembers(tv, ref CurrentCompletionData, true, Form1.thisForm.icons);
 				}
+
 				if (project != null)
+				{
+					List<string> mods = new List<string>();
+					string tmod;
 					foreach (DModule ppf in project.files)
 					{
 						if (!ppf.IsParsable) continue;
-
+						if (!String.IsNullOrEmpty(ppf.ModuleName))
+						{
+							tmod = ppf.ModuleName.Split('.')[0];
+							if (!mods.Contains(tmod)) mods.Add(tmod);
+						}
+						// Add the content of the module
 						DCodeCompletionProvider.AddAllClassMembers(ppf.dom, ref CurrentCompletionData, false, Form1.thisForm.icons);
 					}
+					// Add all local modules
+					foreach (string mod in mods)
+					{
+						CurrentCompletionData.Add(new DCompletionData(mod, "Project Module", Form1.thisForm.icons.Images.IndexOfKey("namespace")));
+					}
+				}
 				else // Add classes etc from current module
 					DCodeCompletionProvider.AddAllClassMembers(fileData.dom, ref CurrentCompletionData, true, Form1.thisForm.icons);
 				try
@@ -197,35 +210,6 @@ namespace D_IDE
 					CurrentCompletionData.AddRange(D_IDE_Properties.GlobalCompletionList);
 				}
 				catch { }
-				/*Form1.thisForm.CurBlockEnts.DropDownItems.Clear();
-				Form1.thisForm.CurBlockEnts.Tag = tv;
-				Form1.thisForm.CurBlockEnts.Image = Form1.thisForm.icons.Images[DCompletionData.GetImageIndex(Form1.thisForm.icons, (DataType)tv.Parent, (DataType)tv)];
-				Form1.thisForm.CurBlockEnts.Text = tv.name;
-				Form1.thisForm.CurBlockEnts.ToolTipText = tv.desc;
-
-				foreach (DataType ch in tv)
-				{
-					if (Form1.thisForm.CurBlockEnts.DropDownItems.Count > 60)
-					{
-						Form1.thisForm.CurBlockEnts.DropDownItems.Add("[Too much elements]");
-						break;
-					}
-					ToolStripMenuItem tsmi = new ToolStripMenuItem(
-						DCompletionData.BuildDescriptionString(ch, false),
-						Form1.thisForm.icons.Images[DCompletionData.GetImageIndex(Form1.thisForm.icons, (DataType)tv, (DataType)ch)]
-						, delegate(Object s, EventArgs ea)
-						{
-							ToolStripMenuItem mi = (ToolStripMenuItem)s;
-							DocumentInstanceWindow diw = Form1.SelectedTabPage;
-							if (diw != null)
-							{
-								diw.txt.ActiveTextAreaControl.Caret.Position = new TextLocation((mi.Tag as DataType).startLoc.Column - 1, (mi.Tag as DataType).startLoc.Line - 1);
-								diw.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
-							}
-						});
-					tsmi.Tag = ch;
-					Form1.thisForm.CurBlockEnts.DropDownItems.Add(tsmi);
-				}*/
 			}
 		}
 
@@ -289,17 +273,16 @@ namespace D_IDE
 
 			ICompletionDataProvider dataProvider = null;
 
-			DProject prj = Form1.thisForm.prj;
-			if (prj == null) prj = new DProject();
+			if (project == null)project = new DProject();
 
 			if (Char.IsLetterOrDigit(key) || key == '_' || key == '.' || key == ' ' || key == '\0')
-				dataProvider = new DCodeCompletionProvider(ref prj, Form1.thisForm.icons);
+				dataProvider = new DCodeCompletionProvider(ref project, Form1.thisForm.icons);
 			else return false;
 
 			DCodeCompletionWindow.ShowCompletionWindow(
 				this,					// The parent window for the completion window
 				txt, 					// The text editor to show the window for
-				fileData.mod_file,		// Filename - will be passed back to the provider
+				fileData.FileName,		// Filename - will be passed back to the provider
 				dataProvider,		// Provider to get the list of possible completions
 				key							// Key pressed - will be passed to the provider
 			);
@@ -453,9 +436,9 @@ namespace D_IDE
 			{
 				return true;
 			}));
-			Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + fileData.mod;
-			fileData.dom = DParser.ParseText(fileData.mod_file, fileData.mod, txt.Text, out fileData.import);
-			Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + fileData.mod;
+			Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + fileData.ModuleName;
+			fileData.dom = DParser.ParseText(fileData.mod_file, fileData.ModuleName, txt.Text, out fileData.import);
+			Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + fileData.ModuleName;
 
 			if (project != null)
 			{
@@ -841,7 +824,7 @@ namespace D_IDE
 			{
 				foreach (DModule dm in GlobalModules)
 				{
-					if (dm.mod == moduleName) return dm;
+					if (dm.ModuleName == moduleName) return dm;
 				}
 				return null;
 			}
@@ -850,7 +833,7 @@ namespace D_IDE
 				int i = 0;
 				foreach (DModule dm in GlobalModules)
 				{
-					if (dm.mod == moduleName)
+					if (dm.ModuleName == moduleName)
 					{
 						GlobalModules[i] = value;
 						return;
@@ -1046,11 +1029,11 @@ namespace D_IDE
 
 			foreach (DModule dpf in GlobalModules)
 			{
-				if (dpf.mod_file == pf.mod_file)
+				if (dpf.FileName == pf.FileName)
 				{
 					dpf.dom = pf.dom;
 					dpf.folds = pf.folds;
-					dpf.mod = pf.mod;
+					dpf.ModuleName = pf.ModuleName;
 					dpf.import = pf.import;
 					return true;
 				}
@@ -1070,7 +1053,7 @@ namespace D_IDE
 				{
 					dpf.dom = pf.dom;
 					dpf.folds = pf.folds;
-					dpf.mod = pf.mod;
+					dpf.ModuleName = pf.ModuleName;
 					dpf.import = pf.import;
 					return true;
 				}

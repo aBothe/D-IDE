@@ -165,7 +165,7 @@ namespace D_IDE
 				string fn = lvi.Text;
 				prj.resourceFiles.Add(prj.GetRelFilePath(fn));
 				if (DModule.Parsable(fn) && File.Exists(prj.GetPhysFilePath(fn)))
-					prj.files.Add(new DModule(prj.GetPhysFilePath(fn)));
+					prj.files.Add(new DModule(prj,prj.GetPhysFilePath(fn)));
 			}
 
 			project = prj;

@@ -19,9 +19,22 @@ namespace D_IDE
     [Serializable()]
     public class DModule
     {
-        public string mod;
+		[NonSerialized()]
+		public DProject Project;
+        public string ModuleName;
         public string mod_file;
-        public string vdir;
+		public string FileName
+		{
+			get { return mod_file; }
+			set {
+				mod_file = value;
+				if (Project != null)
+				{
+					ModuleName = Path.ChangeExtension(Project.GetRelFilePath(value), null).Replace('\\', '.');
+				}else
+					ModuleName = Path.GetFileNameWithoutExtension(value);
+			}
+		}
         public List<INode> Children = new List<INode>();
 
         public bool IsParsable
@@ -39,22 +52,13 @@ namespace D_IDE
             dom = new DataType(FieldType.Root);
             import = new List<string>();
             folds = new List<FoldMarker>();
-            vdir = "";
         }
 
-        public DModule(string file)
+        public DModule(DProject Project,string file)
         {
+			this.Project = Project;
             Init();
-            mod_file = file;
-            mod = Path.GetFileNameWithoutExtension(file);
-            Parse(file);
-        }
-
-        public DModule(string file, string mod_name)
-        {
-            Init();
-            mod_file = file;
-            mod = mod_name;
+            FileName = file;
             Parse(file);
         }
 
@@ -73,10 +77,10 @@ namespace D_IDE
 
             mod_file = file;
 
-            try { Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + mod; }
+            try { Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + ModuleName; }
             catch { }
-            dom = DParser.ParseFile(mod, file, out import);
-            try { Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + mod; }
+            dom = DParser.ParseFile(ModuleName, file, out import);
+            try { Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + ModuleName; }
             catch { }
         }
 

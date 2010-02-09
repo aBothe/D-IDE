@@ -169,12 +169,12 @@ namespace D_IDE
 
 							foreach (DModule gpf in dmods)
 							{
-								if (gpf.mod.StartsWith(modpath, StringComparison.Ordinal))
+								if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
 								{
 									dmods2.Add(gpf);
 									module = gpf;
 									seldt = gpf.dom;
-									if (gpf.mod == modpath) // if this module has the same path as equally typed in the editor, take this as the only one
+									if (gpf.ModuleName == modpath) // if this module has the same path as equally typed in the editor, take this as the only one
 									{
 										dmods2.Clear();
 										dmods2.Add(gpf);
@@ -185,7 +185,7 @@ namespace D_IDE
 
 							if (dmods2.Count < 1) { i--; continue; }
 							isNameSpace = true;
-							if (dmods2.Count == 1 && dmods2[0].mod == modpath)
+							if (dmods2.Count == 1 && dmods2[0].ModuleName == modpath)
 							{
 								break;
 							}
@@ -197,7 +197,7 @@ namespace D_IDE
 							seldt.module = modpath;
 							if (module != null)
 							{
-								seldt.module = module.mod;
+								seldt.module = module.ModuleName;
 								seldt.children = module.Children;
 								seldt.endLoc = module.dom.endLoc;
 							}
@@ -319,9 +319,7 @@ namespace D_IDE
 					#region A.B.c>.<
 					presel = null; // Important: After a typed dot ".", set previous selection string to null!
 					DModule gpf = null;
-					if (expressions[0] == "fx")
-					{
-					}
+
 					seldt = FindActualExpression(prj, pf, tl, expressions.ToArray(), ch == '.', out isSuper, out isInst, out isNameSpace, out gpf);
 
 					if (seldt == null) return rl.ToArray();
@@ -460,9 +458,9 @@ namespace D_IDE
 			foreach (DModule gpf in D_IDE_Properties.GlobalModules)
 			{
 				if (!gpf.IsParsable) continue;
-				if (!String.IsNullOrEmpty(gpf.mod))
+				if (!String.IsNullOrEmpty(gpf.ModuleName))
 				{
-					tmod = gpf.mod.Split('.')[0];
+					tmod = gpf.ModuleName.Split('.')[0];
 					if (!mods.Contains(tmod)) mods.Add(tmod);
 				}
 

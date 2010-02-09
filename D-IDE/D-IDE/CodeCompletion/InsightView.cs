@@ -254,12 +254,12 @@ namespace D_IDE
 
 					foreach (DModule gpf in dmods)
 					{
-						if (gpf.mod.StartsWith(modpath, StringComparison.Ordinal))
+						if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
 						{
 							dmods2.Add(gpf);
 							module = gpf;
 							seldt = gpf.dom;
-							if (gpf.mod == modpath) // if this module has the same path as equally typed in the editor, take this as the only one
+							if (gpf.ModuleName == modpath) // if this module has the same path as equally typed in the editor, take this as the only one
 							{
 								dmods2.Clear();
 								dmods2.Add(gpf);
@@ -269,7 +269,7 @@ namespace D_IDE
 					}
 
 					if (dmods2.Count < 1) { i--; continue; }
-					if (dmods2.Count == 1 && dmods2[0].mod == modpath)
+					if (dmods2.Count == 1 && dmods2[0].ModuleName == modpath)
 					{
 						break;
 					}
@@ -281,7 +281,7 @@ namespace D_IDE
 					seldt.module = modpath;
 					if (module != null)
 					{
-						seldt.module = module.mod;
+						seldt.module = module.ModuleName;
 						seldt.children = module.Children;
 						seldt.endLoc = module.dom.endLoc;
 					}

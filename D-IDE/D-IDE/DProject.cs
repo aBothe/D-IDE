@@ -38,7 +38,7 @@ namespace D_IDE
 			foreach (string fn in resourceFiles)
 			{
 				if (!DModule.Parsable(fn)) continue;
-				files.Add(new DModule(GetPhysFilePath(fn)));
+				files.Add(new DModule(this,GetPhysFilePath(fn)));
 			}
 		}
 
@@ -416,7 +416,7 @@ namespace D_IDE
 					if (!DModule.Parsable(f)) continue;
 					try
 					{
-						ret.files.Add(new DModule(ret.GetPhysFilePath(f)));
+						ret.files.Add(new DModule(ret,ret.GetPhysFilePath(f)));
 					}
 					catch { }
 				}
