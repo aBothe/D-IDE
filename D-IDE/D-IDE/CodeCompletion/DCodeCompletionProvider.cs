@@ -145,9 +145,10 @@ namespace D_IDE
 					if (seldt == null) // if there wasn't still anything found in global space
 					{
 						string modpath = "";
+						string[] modpath_packages;
 						List<DModule> dmods = new List<DModule>(D_IDE_Properties.GlobalModules),
 							dmods2 = new List<DModule>();
-						dmods.AddRange(prj.files);
+						dmods.AddRange(prj.files);// Very important: add the project's files to the search list
 
 						i = expressions.Length;
 						/*
@@ -163,7 +164,7 @@ namespace D_IDE
 						{
 							modpath = "";
 							for (int _i = 0; _i < i; _i++) modpath += (_i > 0 ? "." : "") + expressions[_i];
-
+							modpath_packages = modpath.Split('.');
 							module = null;
 							seldt = null;
 
@@ -171,6 +172,7 @@ namespace D_IDE
 							{
 								if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
 								{
+									string[] path_packages = gpf.ModuleName.Split('.');
 									dmods2.Add(gpf);
 									module = gpf;
 									seldt = gpf.dom;
@@ -193,6 +195,7 @@ namespace D_IDE
 							if ((module = prj.FileDataByFile(modpath)) == null)
 								module = D_IDE_Properties.Default[modpath];
 
+							//Create a synthetic node which only contains module names
 							seldt = new DataType(FieldType.Root);
 							seldt.module = modpath;
 							if (module != null)
@@ -453,6 +456,7 @@ namespace D_IDE
 		public static void AddGlobalSpaceContent(ref List<ICompletionData> rl, ImageList icons)
 		{
 			List<string> mods = new List<string>();
+			string[] tmods;
 			string tmod;
 
 			foreach (DModule gpf in D_IDE_Properties.GlobalModules)
@@ -460,7 +464,8 @@ namespace D_IDE
 				if (!gpf.IsParsable) continue;
 				if (!String.IsNullOrEmpty(gpf.ModuleName))
 				{
-					tmod = gpf.ModuleName.Split('.')[0];
+					tmods = gpf.ModuleName.Split('.');
+					tmod = tmods[0];
 					if (!mods.Contains(tmod)) mods.Add(tmod);
 				}
 

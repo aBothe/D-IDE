@@ -324,6 +324,9 @@ namespace D_IDE
 
 			foreach (string dir in D_IDE_Properties.Default.parsedDirectories)
 			{
+				DProject dirProject = new DProject();
+				dirProject.basedir = dir;
+
 				Log("Parse directory " + dir);
 				if (!Directory.Exists(dir))
 				{
@@ -341,15 +344,15 @@ namespace D_IDE
 					try
 					{
 						string tmodule = Path.ChangeExtension(tf, null).Remove(0, dir.Length + 1).Replace('\\', '.');
-						DModule gpf = new DModule(null, tf);
+						DModule gpf = new DModule(dirProject, tf);
 						gpf.ModuleName = tmodule;
 
 						D_IDE_Properties.AddFileData(ret, gpf);
-						Log(tf);
 						BuildProgressBar.Value++;
 					}
 					catch (Exception ex)
 					{
+						Log(tf);
 						if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n\n\n" + ex.StackTrace, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
 						{
 							stopParsingToolStripMenuItem.Enabled = false;

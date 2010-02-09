@@ -181,13 +181,14 @@ namespace D_IDE
 		private void Init()
 		{
 			if(data == null) return;
-			if((data as DataType).fieldtype == FieldType.Root && (parent as DataType).fieldtype == FieldType.Root)
+			DataType d = data as DataType, par=parent as DataType;
+			if (d.fieldtype == FieldType.Root && par.fieldtype == FieldType.Root 
+				&& d.name.Length > par.module.Length + 1 && d.name.StartsWith(par.module+"."))
 			{
-				if((data as DataType).name.Length > (parent as DataType).module.Length+1)
-					this.text = (data as DataType).name.Substring((parent as DataType).module.Length + 1);
+					this.text = d.name.Substring(par.module.Length + 1);
 			}
 			else
-				this.text = (data as DataType).name;
+				this.text = d.name;
 			description = BuildDescriptionString(data);
 		}
 

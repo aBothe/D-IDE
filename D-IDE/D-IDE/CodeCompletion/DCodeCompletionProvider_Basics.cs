@@ -483,7 +483,7 @@ namespace D_IDE
 				foreach (DataType ch in selectedExpression)
 				{
 					ch.Parent = selectedExpression;
-					if (!ch.modifiers.Contains(DTokens.Private) || all)
+					if ((!ch.modifiers.Contains(DTokens.Private) || all) && ch.fieldtype!=FieldType.Constructor) // Exlude ctors because they aren't needed
 						rl.Add(new DCompletionData(ch, selectedExpression, icons));
 				}
 
