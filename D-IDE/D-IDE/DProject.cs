@@ -143,7 +143,7 @@ namespace D_IDE
 
 		public bool Contains(string file)
 		{
-			return resourceFiles.Contains(file);
+			return resourceFiles.Contains(GetRelFilePath( file));
 		}
 
 		[System.Diagnostics.DebuggerStepThrough()]

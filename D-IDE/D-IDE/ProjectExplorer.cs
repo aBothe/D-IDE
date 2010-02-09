@@ -56,7 +56,7 @@ namespace D_IDE
 					string tdir = "";
 					foreach (string d in DirectoriesToCheck)
 					{
-						tdir += d+"\\";
+						tdir += d + "\\";
 						if (!CurDirNode.Nodes.ContainsKey(d))
 						{
 							CurDirNode = CurDirNode.Nodes.Add(d, d, "dir", "dir");
@@ -123,10 +123,11 @@ namespace D_IDE
 
 		public void UpdateFiles()
 		{
-			BeginInvoke(new EventHandler(delegate(object sender,EventArgs e)
+			BeginInvoke(new EventHandler(delegate(object sender, EventArgs e)
 			{
-				prjFiles.Nodes.Clear();
+				Cursor.Current = Cursors.WaitCursor;
 				prjFiles.BeginUpdate();
+				prjFiles.Nodes.Clear();
 				foreach (string prjfn in D_IDE_Properties.Default.lastProjects)
 				{
 					string ext = Path.GetExtension(prjfn);
@@ -144,7 +145,8 @@ namespace D_IDE
 					CurPrjNode.ImageKey = CurPrjNode.SelectedImageKey = ext;
 
 					// Add a dummy node so it's possible to open the project which are still empty
-					CurPrjNode.Nodes.Add("::Dummy");
+					//CurPrjNode.Nodes.Add("::Dummy");
+					ReadStructure(ref CurPrjNode, LoadedPrj);
 
 					// if this project is the currently open one paint the font bold
 					if (Form1.thisForm.prj != null && prjfn == Form1.thisForm.prj.prjfn)
@@ -152,14 +154,16 @@ namespace D_IDE
 						CurPrjNode.NodeFont = new Font(DefaultFont, FontStyle.Bold);
 						CurPrjNode.ExpandAll();
 					}
-						prjFiles.Nodes.Add(CurPrjNode);
+
+					prjFiles.Nodes.Add(CurPrjNode);
 				}
 				prjFiles.ExpandAll();
 
 				ExpandToCurrentFile();
 
 				prjFiles.EndUpdate();
-			}),null,EventArgs.Empty);
+				Cursor.Current = Cursors.Default;
+			}), null, EventArgs.Empty);
 		}
 
 		private void prjFiles_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
@@ -378,16 +382,6 @@ namespace D_IDE
 		}
 
 		#region Drag&Drop
-		private void prjFiles_DragEnter(object sender, DragEventArgs e)
-		{
-			if (e.Data.GetDataPresent(DataFormats.FileDrop))
-			{
-				e.Effect = DragDropEffects.Link;
-			}
-			else
-				e.Effect = DragDropEffects.None;
-		}
-
 		private void prjFiles_DragDrop(object sender, DragEventArgs e)
 		{
 			if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -398,36 +392,70 @@ namespace D_IDE
 				{
 					foreach (string file in files) Form1.thisForm.Open(file);
 				}
-				if (tn.Tag is ProjectNode)
+				else if (tn.Tag is ProjectNode) // Take the tag because the node data is stored there
 				{
 					string local = (tn.Tag as ProjectNode).AbsolutePath;
 					if (tn.Tag is DirectoryTreeNode) local += "\\";
+					DProject prj = (tn.Tag as ProjectNode).Project;
 
 					foreach (string file in files)
 					{
 						string tar = Path.GetDirectoryName(local) + "\\" + Path.GetFileName(file);
 						if (file != tar)
-							File.Copy(file, tar);
-						if ((tn.Tag as ProjectNode).Project.AddSrc(tar))
 						{
-							tn.Nodes.Add(new FileTreeNode((tn.Tag as ProjectNode).Project,tar));
-							(tn.Tag as ProjectNode).Project.Save();
+							// Copy the file
+							if (e.Effect == DragDropEffects.Copy && file != tar)
+							{
+								File.Copy(file, tar);
+							}
+							// Move the file
+							else if (e.Effect == DragDropEffects.Move)
+							{
+								try
+								{
+									// Close tab that may contains moved file
+									Form1.thisForm.FileDataByFile(file).Close();
+								}
+								catch { }
+
+								prj.resourceFiles.Remove(prj.GetRelFilePath(file));
+								File.Move(file, tar);
+							}
+
+							if (prj.AddSrc(tar)) prj.Save();
+						}
+						// Duplicate file
+						else if (e.Effect == DragDropEffects.Copy)
+						{
+							tar = Path.GetDirectoryName(local) + "\\Copy of " + Path.GetFileName(file);
+							File.Copy(file, tar);
+							if (prj.AddSrc(tar)) prj.Save();
 						}
 					}
+					UpdateFiles();
 				}
 			}
 		}
-
 
 		private void prjFiles_DragOver(object sender, DragEventArgs e)
 		{
 			if (e.Data.GetDataPresent(DataFormats.FileDrop))
 			{
 				TreeNode tn = prjFiles.GetNodeAt(prjFiles.PointToClient(new Point(e.X, e.Y)));
-				if (tn == null) e.Effect = DragDropEffects.Link;
+				if (tn == null)
+					e.Effect = DragDropEffects.Link;
 				else
 				{
-					e.Effect = DragDropEffects.Copy;
+					string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+					if ((tn.Tag as ProjectNode).Project.Contains(files[0]))
+					{
+						if ((e.KeyState & 8) == 8)// CTRL pressed
+							e.Effect = DragDropEffects.Copy;
+						else
+							e.Effect = DragDropEffects.Move; // The main effect if project files get moved
+					}
+					else
+						e.Effect = DragDropEffects.Copy;
 					prjFiles.SelectedNode = tn;
 					prjFiles.Update();
 				}
@@ -456,16 +484,6 @@ namespace D_IDE
 				ppp.Show(Form1.thisForm.dockPanel);
 		}
 
-		private void prjFiles_BeforeExpand(object sender, TreeViewCancelEventArgs e)
-		{
-			if (e.Node is DedicatedProjectNode)
-			{
-				e.Node.Nodes.Clear();
-				TreeNode n = e.Node;
-				ReadStructure(ref n, (e.Node as ProjectNode).Project);
-			}
-		}
-
 		private void prjFiles_ItemDrag(object sender, ItemDragEventArgs e)
 		{
 			if (e.Item is FileTreeNode)
@@ -475,7 +493,8 @@ namespace D_IDE
 
 				DataObject dto = new DataObject();
 				dto.SetFileDropList(files);
-				prjFiles.DoDragDrop(dto,DragDropEffects.All);
+				//dto.SetData(e.Item);
+				prjFiles.DoDragDrop(dto, DragDropEffects.All);
 			}
 		}
 	}
