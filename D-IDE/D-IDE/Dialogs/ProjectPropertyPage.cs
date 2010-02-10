@@ -67,10 +67,15 @@ namespace D_IDE
 		private CheckBox StoreLastSources;
 		private Label label8;
 		private TextBox LastVersionCount;
+		private GroupBox groupBox5;
+		private ListBox ProjectDeps;
+		private Button button14;
+		private Button button15;
+		private ToolTip toolTip1;
+		private System.ComponentModel.IContainer components;
 		public DProject project;
 
-
-		public void Load(DProject prj)
+		public new void Load(DProject prj)
 		{
 			if (prj == null) return;
 			project = prj;
@@ -112,6 +117,15 @@ namespace D_IDE
 				}
 			}
 
+			ProjectDeps.Items.Clear();
+			foreach (string fn in prj.ProjectDependencies)
+			{
+				if (!String.IsNullOrEmpty(fn))
+				{
+					ProjectDeps.Items.Add(fn);
+				}
+			}
+
 			libs.Items.Clear();
 			foreach (string fn in prj.libs)
 			{
@@ -128,7 +142,7 @@ namespace D_IDE
 			prj.prjfn = project.prjfn;
 			prj.execargs = execargs.Text;
 			prj.name = prjname.Text;
-			project.type = (DProject.PrjType)prjtype.SelectedIndex;
+			prj.type = (DProject.PrjType)prjtype.SelectedIndex;
 			prj.targetfilename = tarfile.Text;
 			prj.basedir = prjdir.Text;
 			prj.OutputDirectory = OutputDir.Text;
@@ -155,6 +169,12 @@ namespace D_IDE
 			{
 				if (!prj.FileDependencies.Contains(lvi))
 					prj.FileDependencies.Add(lvi);
+			}
+
+			foreach (string lvi in ProjectDeps.Items)
+			{
+				if (!prj.ProjectDependencies.Contains(lvi))
+					prj.ProjectDependencies.Add(lvi);
 			}
 
 			foreach (string lib in libs.Items)
@@ -307,9 +327,10 @@ namespace D_IDE
 		{
 			Load(lastProject == null ? project : lastProject);
 		}
-
+		#region Form code
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			System.Windows.Forms.Label label3;
 			System.Windows.Forms.Label label4;
 			System.Windows.Forms.Label label2;
@@ -340,6 +361,10 @@ namespace D_IDE
 			this.groupBox3 = new System.Windows.Forms.GroupBox();
 			this.execargs = new System.Windows.Forms.TextBox();
 			this.tabPage3 = new System.Windows.Forms.TabPage();
+			this.groupBox5 = new System.Windows.Forms.GroupBox();
+			this.ProjectDeps = new System.Windows.Forms.ListBox();
+			this.button14 = new System.Windows.Forms.Button();
+			this.button15 = new System.Windows.Forms.Button();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.FileDeps = new System.Windows.Forms.ListBox();
 			this.button9 = new System.Windows.Forms.Button();
@@ -357,6 +382,7 @@ namespace D_IDE
 			this.button10 = new System.Windows.Forms.Button();
 			this.button11 = new System.Windows.Forms.Button();
 			this.button12 = new System.Windows.Forms.Button();
+			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			label3 = new System.Windows.Forms.Label();
 			label4 = new System.Windows.Forms.Label();
 			label2 = new System.Windows.Forms.Label();
@@ -368,6 +394,7 @@ namespace D_IDE
 			this.groupBox4.SuspendLayout();
 			this.groupBox3.SuspendLayout();
 			this.tabPage3.SuspendLayout();
+			this.groupBox5.SuspendLayout();
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.tabPage4.SuspendLayout();
@@ -421,7 +448,7 @@ namespace D_IDE
 			// button3
 			// 
 			this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.button3.Location = new System.Drawing.Point(983, 89);
+			this.button3.Location = new System.Drawing.Point(639, 89);
 			this.button3.Name = "button3";
 			this.button3.Size = new System.Drawing.Size(26, 23);
 			this.button3.TabIndex = 13;
@@ -436,7 +463,7 @@ namespace D_IDE
 			this.prjdir.Location = new System.Drawing.Point(132, 91);
 			this.prjdir.Name = "prjdir";
 			this.prjdir.ReadOnly = true;
-			this.prjdir.Size = new System.Drawing.Size(845, 20);
+			this.prjdir.Size = new System.Drawing.Size(501, 20);
 			this.prjdir.TabIndex = 11;
 			// 
 			// prjtype
@@ -452,7 +479,7 @@ namespace D_IDE
             "Static Library"});
 			this.prjtype.Location = new System.Drawing.Point(132, 38);
 			this.prjtype.Name = "prjtype";
-			this.prjtype.Size = new System.Drawing.Size(877, 21);
+			this.prjtype.Size = new System.Drawing.Size(533, 21);
 			this.prjtype.TabIndex = 10;
 			// 
 			// tarfile
@@ -461,7 +488,7 @@ namespace D_IDE
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.tarfile.Location = new System.Drawing.Point(132, 65);
 			this.tarfile.Name = "tarfile";
-			this.tarfile.Size = new System.Drawing.Size(877, 20);
+			this.tarfile.Size = new System.Drawing.Size(533, 20);
 			this.tarfile.TabIndex = 7;
 			// 
 			// prjname
@@ -470,13 +497,13 @@ namespace D_IDE
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.prjname.Location = new System.Drawing.Point(132, 12);
 			this.prjname.Name = "prjname";
-			this.prjname.Size = new System.Drawing.Size(877, 20);
+			this.prjname.Size = new System.Drawing.Size(533, 20);
 			this.prjname.TabIndex = 0;
 			// 
 			// button1
 			// 
 			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.button1.Location = new System.Drawing.Point(926, 495);
+			this.button1.Location = new System.Drawing.Point(582, 495);
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(95, 23);
 			this.button1.TabIndex = 13;
@@ -496,7 +523,7 @@ namespace D_IDE
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
-			this.tabControl1.Size = new System.Drawing.Size(1025, 489);
+			this.tabControl1.Size = new System.Drawing.Size(681, 489);
 			this.tabControl1.TabIndex = 14;
 			// 
 			// tabPage1
@@ -516,7 +543,7 @@ namespace D_IDE
 			this.tabPage1.Location = new System.Drawing.Point(4, 22);
 			this.tabPage1.Name = "tabPage1";
 			this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage1.Size = new System.Drawing.Size(1017, 463);
+			this.tabPage1.Size = new System.Drawing.Size(673, 463);
 			this.tabPage1.TabIndex = 0;
 			this.tabPage1.Text = "General";
 			this.tabPage1.UseVisualStyleBackColor = true;
@@ -524,7 +551,7 @@ namespace D_IDE
 			// button13
 			// 
 			this.button13.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.button13.Location = new System.Drawing.Point(983, 115);
+			this.button13.Location = new System.Drawing.Point(639, 115);
 			this.button13.Name = "button13";
 			this.button13.Size = new System.Drawing.Size(26, 23);
 			this.button13.TabIndex = 16;
@@ -538,7 +565,7 @@ namespace D_IDE
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.OutputDir.Location = new System.Drawing.Point(132, 117);
 			this.OutputDir.Name = "OutputDir";
-			this.OutputDir.Size = new System.Drawing.Size(845, 20);
+			this.OutputDir.Size = new System.Drawing.Size(501, 20);
 			this.OutputDir.TabIndex = 14;
 			// 
 			// tabPage2
@@ -552,7 +579,7 @@ namespace D_IDE
 			this.tabPage2.Location = new System.Drawing.Point(4, 22);
 			this.tabPage2.Name = "tabPage2";
 			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage2.Size = new System.Drawing.Size(1017, 463);
+			this.tabPage2.Size = new System.Drawing.Size(673, 463);
 			this.tabPage2.TabIndex = 1;
 			this.tabPage2.Text = "Build options";
 			this.tabPage2.UseVisualStyleBackColor = true;
@@ -676,15 +703,64 @@ namespace D_IDE
 			// 
 			// tabPage3
 			// 
+			this.tabPage3.Controls.Add(this.groupBox5);
 			this.tabPage3.Controls.Add(this.groupBox1);
 			this.tabPage3.Controls.Add(this.groupBox2);
 			this.tabPage3.Location = new System.Drawing.Point(4, 22);
 			this.tabPage3.Name = "tabPage3";
 			this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage3.Size = new System.Drawing.Size(1017, 463);
+			this.tabPage3.Size = new System.Drawing.Size(673, 463);
 			this.tabPage3.TabIndex = 2;
 			this.tabPage3.Text = "Dependencies";
 			this.tabPage3.UseVisualStyleBackColor = true;
+			// 
+			// groupBox5
+			// 
+			this.groupBox5.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBox5.Controls.Add(this.ProjectDeps);
+			this.groupBox5.Controls.Add(this.button14);
+			this.groupBox5.Controls.Add(this.button15);
+			this.groupBox5.Location = new System.Drawing.Point(432, 6);
+			this.groupBox5.Name = "groupBox5";
+			this.groupBox5.Size = new System.Drawing.Size(235, 451);
+			this.groupBox5.TabIndex = 12;
+			this.groupBox5.TabStop = false;
+			this.groupBox5.Text = "Projects to build before building";
+			// 
+			// ProjectDeps
+			// 
+			this.ProjectDeps.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.ProjectDeps.FormattingEnabled = true;
+			this.ProjectDeps.Location = new System.Drawing.Point(6, 48);
+			this.ProjectDeps.Name = "ProjectDeps";
+			this.ProjectDeps.Size = new System.Drawing.Size(223, 394);
+			this.ProjectDeps.TabIndex = 3;
+			this.toolTip1.SetToolTip(this.ProjectDeps, "These projects get builded and their targets get copied into the output directory" +
+					"");
+			// 
+			// button14
+			// 
+			this.button14.Location = new System.Drawing.Point(92, 19);
+			this.button14.Name = "button14";
+			this.button14.Size = new System.Drawing.Size(80, 23);
+			this.button14.TabIndex = 2;
+			this.button14.Text = "Exclude";
+			this.button14.UseVisualStyleBackColor = true;
+			this.button14.Click += new System.EventHandler(this.button14_Click);
+			// 
+			// button15
+			// 
+			this.button15.Location = new System.Drawing.Point(6, 19);
+			this.button15.Name = "button15";
+			this.button15.Size = new System.Drawing.Size(80, 23);
+			this.button15.TabIndex = 1;
+			this.button15.Text = "Add";
+			this.button15.UseVisualStyleBackColor = true;
+			this.button15.Click += new System.EventHandler(this.button15_Click);
 			// 
 			// groupBox1
 			// 
@@ -695,7 +771,7 @@ namespace D_IDE
 			this.groupBox1.Controls.Add(this.button8);
 			this.groupBox1.Location = new System.Drawing.Point(173, 6);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(365, 451);
+			this.groupBox1.Size = new System.Drawing.Size(253, 451);
 			this.groupBox1.TabIndex = 11;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Files to copy into the output directory";
@@ -708,7 +784,7 @@ namespace D_IDE
 			this.FileDeps.FormattingEnabled = true;
 			this.FileDeps.Location = new System.Drawing.Point(6, 48);
 			this.FileDeps.Name = "FileDeps";
-			this.FileDeps.Size = new System.Drawing.Size(353, 394);
+			this.FileDeps.Size = new System.Drawing.Size(241, 394);
 			this.FileDeps.TabIndex = 3;
 			// 
 			// button9
@@ -812,7 +888,7 @@ namespace D_IDE
 			this.tabPage4.Location = new System.Drawing.Point(4, 22);
 			this.tabPage4.Name = "tabPage4";
 			this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage4.Size = new System.Drawing.Size(1017, 463);
+			this.tabPage4.Size = new System.Drawing.Size(673, 463);
 			this.tabPage4.TabIndex = 3;
 			this.tabPage4.Text = "Files";
 			this.tabPage4.UseVisualStyleBackColor = true;
@@ -846,7 +922,7 @@ namespace D_IDE
 			this.Files.HideSelection = false;
 			this.Files.Location = new System.Drawing.Point(8, 35);
 			this.Files.Name = "Files";
-			this.Files.Size = new System.Drawing.Size(1001, 422);
+			this.Files.Size = new System.Drawing.Size(657, 422);
 			this.Files.TabIndex = 14;
 			this.Files.UseCompatibleStateImageBehavior = false;
 			this.Files.View = System.Windows.Forms.View.List;
@@ -854,7 +930,7 @@ namespace D_IDE
 			// button10
 			// 
 			this.button10.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.button10.Location = new System.Drawing.Point(764, 495);
+			this.button10.Location = new System.Drawing.Point(420, 495);
 			this.button10.Name = "button10";
 			this.button10.Size = new System.Drawing.Size(75, 23);
 			this.button10.TabIndex = 15;
@@ -865,7 +941,7 @@ namespace D_IDE
 			// button11
 			// 
 			this.button11.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.button11.Location = new System.Drawing.Point(657, 495);
+			this.button11.Location = new System.Drawing.Point(313, 495);
 			this.button11.Name = "button11";
 			this.button11.Size = new System.Drawing.Size(101, 23);
 			this.button11.TabIndex = 16;
@@ -876,7 +952,7 @@ namespace D_IDE
 			// button12
 			// 
 			this.button12.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.button12.Location = new System.Drawing.Point(845, 495);
+			this.button12.Location = new System.Drawing.Point(501, 495);
 			this.button12.Name = "button12";
 			this.button12.Size = new System.Drawing.Size(75, 23);
 			this.button12.TabIndex = 17;
@@ -887,7 +963,7 @@ namespace D_IDE
 			// ProjectPropertyPage
 			// 
 			this.AcceptButton = this.button1;
-			this.ClientSize = new System.Drawing.Size(1025, 530);
+			this.ClientSize = new System.Drawing.Size(681, 530);
 			this.Controls.Add(this.button12);
 			this.Controls.Add(this.button11);
 			this.Controls.Add(this.button10);
@@ -904,6 +980,7 @@ namespace D_IDE
 			this.groupBox3.ResumeLayout(false);
 			this.groupBox3.PerformLayout();
 			this.tabPage3.ResumeLayout(false);
+			this.groupBox5.ResumeLayout(false);
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox2.ResumeLayout(false);
 			this.groupBox2.PerformLayout();
@@ -911,12 +988,13 @@ namespace D_IDE
 			this.ResumeLayout(false);
 
 		}
-
+		#endregion
 		private void button12_Click(object sender, EventArgs e)
 		{
 			Close();
 		}
 
+		#region Filedependencies
 		private void button8_Click(object sender, EventArgs e)
 		{
 			Form1.thisForm.oF.InitialDirectory = prjdir.Text;
@@ -936,11 +1014,41 @@ namespace D_IDE
 
 		private void button9_Click(object sender, EventArgs e)
 		{
-			foreach (ListViewItem lvi in FileDeps.SelectedItems)
+			foreach (string lvi in FileDeps.SelectedItems)
 			{
 				FileDeps.Items.Remove(lvi);
 			}
 		}
+		#endregion
+		#region Project deps
+		private void button15_Click(object sender, EventArgs e)
+		{
+			Form1.thisForm.oF.InitialDirectory = prjdir.Text;
+			string filterBefore = Form1.thisForm.oF.Filter;
+			Form1.thisForm.oF.Filter = "D Projects (*"+DProject.prjext+")|*"+DProject.prjext;
+			if (Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
+			{
+				foreach (string file in Form1.thisForm.oF.FileNames)
+				{
+					if (Path.GetExtension(file) != DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
+
+					if (ProjectDeps.Items.Contains(file)) continue;
+
+					ProjectDeps.Items.Add(file);
+				}
+				ProjectDeps.Refresh();
+			}
+			Form1.thisForm.oF.Filter = filterBefore;
+		}
+
+		private void button14_Click(object sender, EventArgs e)
+		{
+			foreach (string lvi in ProjectDeps.SelectedItems)
+			{
+				ProjectDeps.Items.Remove(lvi);
+			}
+		}
+		#endregion
 
 		public string GetRelativePath(string f)
 		{
@@ -967,5 +1075,9 @@ namespace D_IDE
 		{
 			if (!Char.IsDigit((char)e.KeyValue)) e.SuppressKeyPress = true;
 		}
+
+		
+
+		
 	}
 }

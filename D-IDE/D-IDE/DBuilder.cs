@@ -10,6 +10,9 @@ using Microsoft.Win32;
 
 namespace D_IDE
 {
+	/// <summary>
+	/// Main class for building D projects
+	/// </summary>
 	public class DBuilder
 	{
 		/// <summary>
@@ -36,7 +39,7 @@ namespace D_IDE
 		}
 
 		/// <summary>
-		/// Build a project. Also cares about the last versions and additional file dependencies
+		/// Build a project. Also cares about the last versions and additional file and project dependencies
 		/// </summary>
 		/// <param name="prj"></param>
 		/// <returns></returns>
@@ -44,6 +47,8 @@ namespace D_IDE
 		{
 			try { prj.Save(); }
 			catch { }
+
+			OnMessage(prj,prj.prjfn,"Build "+prj.name+" project");
 
 			prj.RefreshBuildDate();
 
@@ -85,7 +90,32 @@ namespace D_IDE
 					if (File.Exists(depFile))
 						File.Copy(depFile, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depFile));
 				}
-				catch { }
+				catch (Exception ex) { OnMessage(prj, depFile, "Couldn't copy "+depFile+": "+ex.Message); }
+			}
+			#endregion
+
+			#region Project dependencies
+			foreach (string depFile in prj.ProjectDependencies)
+			{
+				if (!File.Exists(depFile) || depFile==prj.prjfn) continue;
+				try
+				{
+					DProject depProject = DProject.LoadFrom(depFile);
+					if (!BuildProject(depProject))
+					{
+						OnMessage(depProject, depFile, "Couldn't build "+depProject.name+" ... break main build process!");
+						return false;
+					}else
+					{
+						OnMessage(depProject,depProject.LastBuiltTarget,"Copy "+depProject.LastBuiltTarget+" to "+prj.AbsoluteOutputDirectory);
+						File.Copy(depProject.LastBuiltTarget, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depProject.LastBuiltTarget));
+					}
+				}
+				catch (Exception ex) 
+				{ 
+					OnMessage(prj, depFile, "Couldn't build " + depFile + ": " + ex.Message);
+					return false;
+				}
 			}
 			#endregion
 
@@ -280,6 +310,14 @@ namespace D_IDE
 			return prc.ExitCode == 0;
 		}
 
+		/// <summary>
+		/// Wrapper for executing compilers, linkers and other processes
+		/// </summary>
+		/// <param name="cmd"></param>
+		/// <param name="args"></param>
+		/// <param name="execdir"></param>
+		/// <param name="showConsole"></param>
+		/// <returns></returns>
 		public static Process Exec(string cmd, string args, string execdir, bool showConsole)
 		{
 			ProcessStartInfo psi = new ProcessStartInfo();

@@ -22,6 +22,7 @@ namespace D_IDE
 			if (!File.Exists(f)) File.WriteAllText(f, cont, Encoding.UTF8);
 		}
 
+		#region Properties
 		public const string prjext = ".dproj";
 		public enum PrjType
 		{
@@ -29,17 +30,6 @@ namespace D_IDE
 			ConsoleApp,
 			Dll,
 			StaticLib,
-		}
-
-		public void ParseAll()
-		{
-			if (files == null) files = new List<DModule>();
-			files.Clear();
-			foreach (string fn in resourceFiles)
-			{
-				if (!DModule.Parsable(fn)) continue;
-				files.Add(new DModule(this,GetPhysFilePath(fn)));
-			}
 		}
 
 		public bool isRelease;
@@ -70,7 +60,7 @@ namespace D_IDE
 				string add = "";
 				if (EnableSubversioning)
 				{
-					add = "\\" + LastBuildDate.ToString().Replace(':','-');
+					add = "\\" + LastBuildDate.ToString().Replace(':', '-');
 				}
 				if (Path.IsPathRooted(OutputDirectory)) return OutputDirectory + add;
 				return basedir + "\\" + OutputDirectory + add;
@@ -92,6 +82,24 @@ namespace D_IDE
 		[NonSerialized()]
 		public Dictionary<string, long> LastModifyingDates = new Dictionary<string, long>();
 
+		[NonSerialized()]
+		public List<DModule> files = new List<DModule>();
+		public List<string> resourceFiles = new List<string>();
+		public List<string> FileDependencies = new List<string>();
+		public List<string> ProjectDependencies = new List<string>();
+		public List<string> lastopen = new List<string>();
+		#endregion
+
+		public void ParseAll()
+		{
+			if (files == null) files = new List<DModule>();
+			files.Clear();
+			foreach (string fn in resourceFiles)
+			{
+				if (!DModule.Parsable(fn)) continue;
+				files.Add(new DModule(this,GetPhysFilePath(fn)));
+			}
+		}
 		public string GetPhysFilePath(string file)
 		{
 			if (Path.IsPathRooted(file)) return file;
@@ -117,12 +125,6 @@ namespace D_IDE
 			}
 			return true;
 		}
-
-		[NonSerialized()]
-		public List<DModule> files = new List<DModule>();
-		public List<string> resourceFiles = new List<string>();
-		public List<string> FileDependencies = new List<string>();
-		public List<string> lastopen = new List<string>();
 
 		public DProject()
 		{
@@ -199,7 +201,7 @@ namespace D_IDE
 			}
 			resourceFiles = newRC;
 		}*/
-
+		/*
 		public bool RenameFile(string from, string to)
 		{
 			if (!resourceFiles.Contains(from)) return false;
@@ -217,8 +219,9 @@ namespace D_IDE
 			resourceFiles.Remove(from);
 			resourceFiles.Add(to);
 			return true;
-		}
+		}*/
 
+		#region Load & Save
 		public static DProject LoadFrom(string fn)
 		{
 			DProject ret = null;
@@ -375,6 +378,21 @@ namespace D_IDE
 									{
 										xr.Read();
 										ret.FileDependencies.Add(xr.ReadString());
+									}
+								}
+								break;
+
+							case "ProjectDeps":
+								if (ret.ProjectDependencies == null)
+									ret.ProjectDependencies = new List<string>();
+
+								xsr = xr.ReadSubtree();
+								while (xsr.Read())
+								{
+									if (xsr.NodeType == XmlNodeType.CDATA)
+									{
+										xr.Read();
+										ret.ProjectDependencies.Add(xr.ReadString());
 									}
 								}
 								break;
@@ -539,6 +557,19 @@ namespace D_IDE
 				xw.WriteEndElement();
 			}
 
+			if (ProjectDependencies.Count > 0)
+			{
+				xw.WriteStartElement("ProjectDeps");
+				foreach (string fn in ProjectDependencies)
+				{
+					if (String.IsNullOrEmpty(fn)) continue;
+					xw.WriteStartElement("file");
+					xw.WriteCData(fn);
+					xw.WriteEndElement();
+				}
+				xw.WriteEndElement();
+			}
+
 			xw.WriteStartElement("enablesubversioning");
 			xw.WriteAttributeString("value", EnableSubversioning?"1":"0");
 			xw.WriteEndElement();
@@ -554,7 +585,7 @@ namespace D_IDE
 			xw.WriteEndElement();
 			xw.Close();
 		}
-
+		#endregion
 		public DModule FileDataByFile(string fn)
 		{
 			foreach (DModule pf in files)
