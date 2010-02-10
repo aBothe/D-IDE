@@ -39,6 +39,7 @@
 			this.button2 = new System.Windows.Forms.Button();
 			this.button1 = new System.Windows.Forms.Button();
 			this.button3 = new System.Windows.Forms.Button();
+			this.button4 = new System.Windows.Forms.Button();
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.groupBox3.SuspendLayout();
@@ -176,6 +177,17 @@
 			this.button3.UseVisualStyleBackColor = true;
 			this.button3.Click += new System.EventHandler(this.lastProjects_DoubleClick);
 			// 
+			// button4
+			// 
+			this.button4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.button4.Location = new System.Drawing.Point(672, 574);
+			this.button4.Name = "button4";
+			this.button4.Size = new System.Drawing.Size(75, 23);
+			this.button4.TabIndex = 8;
+			this.button4.Text = "Refresh";
+			this.button4.UseVisualStyleBackColor = true;
+			this.button4.Click += new System.EventHandler(this.button4_Click);
+			// 
 			// StartPage
 			// 
 			this.AcceptButton = this.button2;
@@ -183,6 +195,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
 			this.ClientSize = new System.Drawing.Size(843, 611);
+			this.Controls.Add(this.button4);
 			this.Controls.Add(this.button3);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.button2);
@@ -196,6 +209,7 @@
 			this.ShowHint = WeifenLuo.WinFormsUI.Docking.DockState.Document;
 			this.TabText = "StartPage";
 			this.Text = "StartPage";
+			this.Shown += new System.EventHandler(this.StartPage_Shown);
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox2.ResumeLayout(false);
 			this.groupBox3.ResumeLayout(false);
@@ -217,5 +231,6 @@
 		private System.Windows.Forms.Button button1;
 		private System.Windows.Forms.Button button3;
 		public System.Windows.Forms.WebBrowser web;
+		private System.Windows.Forms.Button button4;
 	}
 }

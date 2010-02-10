@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 using System.IO;
 using System.Threading;
+using System.Net;
 
 namespace D_IDE
 {
@@ -21,44 +22,39 @@ namespace D_IDE
 			InitializeComponent();
 			DockAreas = DockAreas.Document;
 
-			doCheckAtStartCBox.Checked = D_IDE_Properties.Default.RetrieveNews;
+			webclient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(webclient_DownloadStringCompleted);
 
-			if (doCheckAtStartCBox.Checked)
-				UpdateNews();
+			doCheckAtStartCBox.Checked = D_IDE_Properties.Default.RetrieveNews;
 		}
 
-		Thread newsTh;
-		List<NewsEntry> nl = new List<NewsEntry>();
+		WebClient webclient = new WebClient();
 		public void UpdateNews()
 		{
-			if (newsTh == null || newsTh.ThreadState == ThreadState.Stopped)
-				newsTh = new Thread(delegate(object o)
+			if (!webclient.IsBusy)
+				webclient.DownloadStringAsync(new Uri(Program.news_php + "?xml=1&max=30&fromIDE=1"));
+		}
+
+		void webclient_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+		{
+			List<NewsEntry> nl = new List<NewsEntry>();
+			try
+			{
+				nl.Clear();
+				XmlTextReader xtr = new XmlTextReader(new StringReader(e.Result));
+
+				xtr.ReadStartElement(); // Skip initial element
+
+				while (xtr.Name == "n" && xtr.NodeType == XmlNodeType.Element)
 				{
-					try
-					{
-						nl.Clear();
-						XmlTextReader xtr = new XmlTextReader(Program.news_php + "?xml=1&max=30&fromIDE=1");
-						try
-						{
-							xtr.ReadStartElement(); // Skip initial element
+					int nid = Convert.ToInt32(xtr.GetAttribute("id"));
+					long timestamp = Convert.ToInt64(xtr.GetAttribute("timestamp"));
+					string content = xtr.ReadElementContentAsString();
 
-							while (xtr.Name == "n" && xtr.NodeType == XmlNodeType.Element)
-							{
-								int nid = Convert.ToInt32(xtr.GetAttribute("id"));
-								long timestamp = Convert.ToInt64(xtr.GetAttribute("timestamp"));
-								string content = xtr.ReadElementContentAsString();
-
-								nl.Add(new NewsEntry(nid, D_IDE_Properties.DateFromUnixTime(timestamp).ToLocalTime(), content));
-							}
-						}
-						catch (Exception ex) { Form1.thisForm.Log(ex.Message); }
-					}
-					catch (Exception ex) { Form1.thisForm.Log(ex.Message); }
-
-				});
-			//if(!newsTh.IsAlive)
-			newsTh.Start();
-			chTimer.Start();
+					nl.Add(new NewsEntry(nid, D_IDE_Properties.DateFromUnixTime(timestamp).ToLocalTime(), content));
+				}
+				News = nl;
+			}
+			catch (Exception ex) { Form1.thisForm.Log(ex.Message); }
 		}
 
 
@@ -94,8 +90,8 @@ namespace D_IDE
 
 		private void chTimer_Tick(object sender, EventArgs e)
 		{
-			if (newsTh.IsAlive) return;
-			News = nl;
+			//if (newsTh.IsAlive) return;
+			//News = nl;
 			chTimer.Stop();
 		}
 
@@ -104,7 +100,7 @@ namespace D_IDE
 			Close();
 		}
 
-		private void button1_Click(object sender, EventArgs e)
+		private void button4_Click(object sender, EventArgs e)
 		{
 			UpdateNews();
 		}
@@ -117,6 +113,17 @@ namespace D_IDE
 		private void button1_Click_1(object sender, EventArgs e)
 		{
 			Form1.thisForm.NewProject(sender, e);
+		}
+
+		private void StartPage_Shown(object sender, EventArgs e)
+		{
+			if (doCheckAtStartCBox.Checked)
+			{
+				BeginInvoke(new EventHandler(delegate(object s, EventArgs ea)
+					{
+						UpdateNews();
+					}), null, EventArgs.Empty);
+			}
 		}
 	}
 

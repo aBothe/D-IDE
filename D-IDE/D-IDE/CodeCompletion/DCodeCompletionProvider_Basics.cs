@@ -494,8 +494,9 @@ namespace D_IDE
 
 				if (selectedExpression.superClass == "")
 				{
-					return;
-					if (!DTokens.ClassLike[selectedExpression.TypeToken] && selectedExpression.Parent != null && (selectedExpression.Parent as DataType).fieldtype != FieldType.Root)
+					//TODO: Find out what gets affected by returning here
+					//return;
+					if (selectedExpression.fieldtype!=FieldType.Variable && !DTokens.ClassLike[selectedExpression.TypeToken] && selectedExpression.Parent != null && (selectedExpression.Parent as DataType).fieldtype != FieldType.Root)
 						AddAllClassMembers((DataType)selectedExpression.Parent, ref rl, all, icons);
 				}
 				else

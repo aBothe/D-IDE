@@ -24,7 +24,7 @@ namespace D_IDE
 		/// <param name="mouseOffset"></param>
 		/// <param name="isNewConstructor"></param>
 		/// <returns><![CDATA[string["classA","classB","memberC"]]]></returns>
-		public static string[] GetExpressionStringsAtOffset(string TextContent,ref int mouseOffset, out bool isNewConstructor, bool backwardOnly)
+		public static string[] GetExpressionStringsAtOffset(string TextContent, ref int mouseOffset, out bool isNewConstructor, bool backwardOnly)
 		{
 			int origOff = mouseOffset;
 			isNewConstructor = false;
@@ -35,7 +35,7 @@ namespace D_IDE
 			try
 			{
 				List<string> expressions = new List<string>();
-		
+
 				char tch;
 				string texpr = "";
 				int psb = 0;
@@ -212,17 +212,17 @@ namespace D_IDE
 							break;
 						}
 					}
-				}
 					#endregion
+				}
 
 				for (; i < expressions.Length && seldt != null; i++)
 				{
 					isInstance = false;
-					seldt = SearchExprInClassHierarchy(seldt,null, RemoveArrayOrTemplatePartFromDecl(expressions[i]));
+					seldt = SearchExprInClassHierarchy(seldt, null, RemoveArrayOrTemplatePartFromDecl(expressions[i]));
 					if (seldt == null) break;
 
-					seldd=seldt;
-					seldt = ResolveReturnOrBaseType(prj,local,seldt,i==expressions.Length-1);
+					seldd = seldt;
+					seldt = ResolveReturnOrBaseType(prj, local, seldt, i == expressions.Length - 1);
 					if (seldt != seldd) isInstance = true;
 				}
 
@@ -313,7 +313,7 @@ namespace D_IDE
 					else presel = null;
 					rl.AddRange(diw.CurrentCompletionData);
 
-					rl.Sort();
+					//rl.Sort();
 					return rl.ToArray();
 				}
 
@@ -449,7 +449,7 @@ namespace D_IDE
 			{
 				Form1.thisForm.Log(ex.Message);
 			}
-			rl.Sort();
+			//rl.Sort();
 			return rl.ToArray();
 		}
 
@@ -506,7 +506,7 @@ namespace D_IDE
 			DModule mod = null;
 			if ((!DTokens.BasicTypes[(int)owner.TypeToken] && owner.fieldtype == FieldType.Variable) || ((owner.fieldtype == FieldType.Function || owner.fieldtype == FieldType.AliasDecl) && !isLastInExpressionChain))
 			{
-				ret = DCodeCompletionProvider.SearchExprInClassHierarchy((DataType)owner.Parent,null, RemoveArrayOrTemplatePartFromDecl(owner.type));
+				ret = DCodeCompletionProvider.SearchExprInClassHierarchy((DataType)owner.Parent, null, RemoveArrayOrTemplatePartFromDecl(owner.type));
 				if (ret == null)
 					ret = DCodeCompletionProvider.SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(owner.type), false, out mod);
 			}
@@ -559,7 +559,7 @@ namespace D_IDE
 			List<DataType> ret = new List<DataType>();
 			foreach (DataType dt in rl)
 			{
-				DataType seldt = ResolveReturnOrBaseType(prj, local, dt, expressions.Length==2);
+				DataType seldt = ResolveReturnOrBaseType(prj, local, dt, expressions.Length == 2);
 				if (seldt == null) seldt = dt;
 				ret.AddRange(_res(prj, local, seldt, 1, expressions));
 			}

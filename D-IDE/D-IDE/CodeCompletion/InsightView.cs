@@ -141,7 +141,7 @@ namespace D_IDE
 			if (expressions[0] == "this")
 			{
 				seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
-
+				i++;
 				if (expressions.Length < 2)
 				{
 					foreach (DataType dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
@@ -157,7 +157,7 @@ namespace D_IDE
 				if (seldt != null && seldt.superClass != "")
 				{
 					seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, seldt.superClass);
-
+					i++;
 					if (seldt != null && expressions.Length < 2)
 					{
 						foreach (DataType dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
@@ -174,52 +174,6 @@ namespace D_IDE
 				{
 					data.Add(DCompletionData.BuildDescriptionString(dt));
 				}
-				/*
-				if (expressions.Length > 1)
-				{
-					
-					seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.project, diw.fileData, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
-					if (seldt == null) seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(diw.fileData.dom, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[0]));
-					
-					if (seldt != null) i++;
-					if (seldt != null && ((seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken]) || seldt.fieldtype == FieldType.AliasDecl))
-					{
-						seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, seldt.type);
-					}
-				}
-				else
-				{
-					if (ctor)
-					{
-						seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.project, diw.fileData, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
-						if (seldt == null) seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(diw.fileData.dom, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[0]));
-						
-						if (seldt != null && seldt.Count > 0)
-						{
-							foreach (DataType dt in seldt.Children)
-								if (dt.fieldtype == FieldType.Constructor)
-									data.Add(DCompletionData.BuildDescriptionString(dt));
-						}
-						return;
-					}
-					seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
-
-					if (seldt != null)
-					{
-						List<DataType> dts = DCodeCompletionProvider.SearchExprsInClassHierarchy(seldt, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[0]));
-						if (dts != null)
-							foreach (DataType dt in dts)
-							{
-								data.Add(DCompletionData.BuildDescriptionString(dt));
-							}
-					}
-
-					foreach (DataType dt in DCodeCompletionProvider.SearchGlobalExprs(diw.project,diw.fileData.dom, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[0])))
-					{
-						data.Add(DCompletionData.BuildDescriptionString(dt));
-					}
-					return;
-				}*/
 			}
 
 
