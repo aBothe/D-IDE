@@ -106,59 +106,45 @@ namespace D_IDE
 
 		void IInsightDataProvider.SetupDataProvider(string fileName, TextArea ta)
 		{
-			initialOffset = ta.Caret.Offset;
-
-			if (key == ',')
+			try
 			{
-				char tch;
-				int psb = 0;
-				for (int off = initialOffset; off > 0; off--)
+				initialOffset = ta.Caret.Offset;
+
+				if (key == ',')
 				{
-					tch = ta.Document.GetCharAt(off);
-
-					if (tch == ')' || tch == '}' || tch == ']') psb++;
-					if (tch == '(' || tch == '{' || tch == '[') psb--;
-
-					if (psb < 1 && tch == '(')
+					char tch;
+					int psb = 0;
+					for (int off = initialOffset; off > 0; off--)
 					{
-						initialOffset = off;
-						break;
+						tch = ta.Document.GetCharAt(off);
+
+						if (tch == ')' || tch == '}' || tch == ']') psb++;
+						if (tch == '(' || tch == '{' || tch == '[') psb--;
+
+						if (psb < 1 && tch == '(')
+						{
+							initialOffset = off;
+							break;
+						}
 					}
 				}
-			}
 
-			CodeLocation caretLocation = new CodeLocation(ta.Caret.Column - 1, ta.Caret.Line - 1);
-			bool ctor = false;
-			int newOff = initialOffset - 1;
-			int i = 0;
-			string[] expressions = DCodeCompletionProvider.GetExpressionStringsAtOffset(ta.Document.TextContent,ref newOff, out ctor, true);
+				CodeLocation caretLocation = new CodeLocation(ta.Caret.Column - 1, ta.Caret.Line - 1);
+				bool ctor = false;
+				int newOff = initialOffset - 1;
+				int i = 0;
+				string[] expressions = DCodeCompletionProvider.GetExpressionStringsAtOffset(ta.Document.TextContent, ref newOff, out ctor, true);
 
-			if (expressions == null || expressions.Length < 1) return;
+				if (expressions == null || expressions.Length < 1) return;
 
-			DataType seldt = null; // Selected DataType
-			DModule module = null;
+				DataType seldt = null; // Selected DataType
+				DModule module = null;
 
-			if (expressions[0] == "this")
-			{
-				seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
-				i++;
-				if (expressions.Length < 2)
+				if (expressions[0] == "this")
 				{
-					foreach (DataType dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
-					{
-						data.Add(DCompletionData.BuildDescriptionString(dt));
-					}
-					return;
-				}
-			}
-			else if (expressions[0] == "super")
-			{
-				seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
-				if (seldt != null && seldt.superClass != "")
-				{
-					seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, seldt.superClass);
+					seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
 					i++;
-					if (seldt != null && expressions.Length < 2)
+					if (expressions.Length < 2 && seldt != null)
 					{
 						foreach (DataType dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
 						{
@@ -167,116 +153,130 @@ namespace D_IDE
 						return;
 					}
 				}
-			}
-			else
-			{
-				foreach (DataType dt in DCodeCompletionProvider.ResolveMultipleNodes(diw.project, diw.fileData, expressions))
+				else if (expressions[0] == "super")
 				{
-					data.Add(DCompletionData.BuildDescriptionString(dt));
-				}
-			}
-
-
-
-
-			
-			#region Seek in global and local(project) namespaces
-			if (seldt == null) // if there wasn't still anything found in global space
-			{
-				string modpath = "";
-				List<DModule> dmods = new List<DModule>(D_IDE_Properties.GlobalModules),
-					dmods2 = new List<DModule>();
-				if(diw.project!=null)dmods.AddRange(diw.project.files);
-
-				i = expressions.Length;
-				/*
-				 * i=0	i=1			i=2			i=3
-				 * std.
-				 * std.	socket.
-				 * std. socketstream
-				 * std.	windows.	windows.
-				 * std.	c.			stdio.		printf();
-				 * std.	complex
-				 */
-				while (i > 0)
-				{
-					modpath = "";
-					for (int _i = 0; _i < i; _i++) modpath += (_i > 0 ? "." : "") + expressions[_i];
-
-					module = null;
-					seldt = null;
-
-					foreach (DModule gpf in dmods)
+					seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
+					if (seldt != null && seldt.superClass != "")
 					{
-						if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
+						seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, seldt.superClass);
+						i++;
+						if (seldt != null && expressions.Length < 2)
 						{
-							dmods2.Add(gpf);
-							module = gpf;
-							seldt = gpf.dom;
-							if (gpf.ModuleName == modpath) // if this module has the same path as equally typed in the editor, take this as the only one
+							foreach (DataType dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
 							{
-								dmods2.Clear();
-								dmods2.Add(gpf);
-								break;
+								data.Add(DCompletionData.BuildDescriptionString(dt));
 							}
+							return;
 						}
 					}
-
-					if (dmods2.Count < 1) { i--; continue; }
-					if (dmods2.Count == 1 && dmods2[0].ModuleName == modpath)
+				}
+				else
+				{
+					foreach (DataType dt in DCodeCompletionProvider.ResolveMultipleNodes(diw.project, diw.fileData, expressions))
 					{
+						data.Add(DCompletionData.BuildDescriptionString(dt));
+					}
+				}
+
+
+
+
+
+				#region Seek in global and local(project) namespaces
+				if (seldt == null) // if there wasn't still anything found in global space
+				{
+					string modpath = "";
+					List<DModule> dmods = new List<DModule>(D_IDE_Properties.GlobalModules),
+						dmods2 = new List<DModule>();
+					if (diw.project != null) dmods.AddRange(diw.project.files);
+
+					i = expressions.Length;
+					/*
+					 * i=0	i=1			i=2			i=3
+					 * std.
+					 * std.	socket.
+					 * std. socketstream
+					 * std.	windows.	windows.
+					 * std.	c.			stdio.		printf();
+					 * std.	complex
+					 */
+					while (i > 0)
+					{
+						modpath = "";
+						for (int _i = 0; _i < i; _i++) modpath += (_i > 0 ? "." : "") + expressions[_i];
+
+						module = null;
+						seldt = null;
+
+						foreach (DModule gpf in dmods)
+						{
+							if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
+							{
+								dmods2.Add(gpf);
+								module = gpf;
+								seldt = gpf.dom;
+								if (gpf.ModuleName == modpath) // if this module has the same path as equally typed in the editor, take this as the only one
+								{
+									dmods2.Clear();
+									dmods2.Add(gpf);
+									break;
+								}
+							}
+						}
+
+						if (dmods2.Count < 1) { i--; continue; }
+						if (dmods2.Count == 1 && dmods2[0].ModuleName == modpath)
+						{
+							break;
+						}
+
+						if ((module = diw.project.FileDataByFile(modpath)) == null)
+							module = D_IDE_Properties.Default[modpath];
+
+						seldt = new DataType(FieldType.Root);
+						seldt.module = modpath;
+						if (module != null)
+						{
+							seldt.module = module.ModuleName;
+							seldt.children = module.Children;
+							seldt.endLoc = module.dom.endLoc;
+						}
+
+						foreach (DModule dm in dmods2)
+						{
+							seldt.Add(dm.dom);
+						}
+						break;
+					}
+				}
+				#endregion
+
+				for (; i < expressions.Length && seldt != null; i++)
+				{
+					if (i == expressions.Length - 1) // One before the last one
+					{
+						List<DataType> tt = DCodeCompletionProvider.SearchExprsInClassHierarchy(seldt, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[i]));
+						if (tt != null)
+							foreach (DataType dt in tt)
+							{
+								data.Add(DCompletionData.BuildDescriptionString(dt));
+							}
 						break;
 					}
 
-					if ((module = diw.project.FileDataByFile(modpath)) == null)
-						module = D_IDE_Properties.Default[modpath];
+					seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(seldt, null, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[i]));
+					if (seldt == null) break;
 
-					seldt = new DataType(FieldType.Root);
-					seldt.module = modpath;
-					if (module != null)
+					if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))
 					{
-						seldt.module = module.ModuleName;
-						seldt.children = module.Children;
-						seldt.endLoc = module.dom.endLoc;
+						DataType seldd = seldt;
+						seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(seldt.type));
+						if (seldt == null) seldt = seldd;
 					}
-
-					foreach (DModule dm in dmods2)
-					{
-						seldt.Add(dm.dom);
-					}
-					break;
 				}
+
 			}
-			#endregion
-
-
-
-
-			for (; i < expressions.Length && seldt != null; i++)
-			{
-				if (i == expressions.Length - 1) // One before the last one
-				{
-					List<DataType> tt = DCodeCompletionProvider.SearchExprsInClassHierarchy(seldt, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[i]));
-					if (tt != null)
-						foreach (DataType dt in tt)
-						{
-							data.Add(DCompletionData.BuildDescriptionString(dt));
-						}
-					break;
-				}
-
-				seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(seldt,null, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[i]));
-				if (seldt == null) break;
-
-				if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))
-				{
-					DataType seldd = seldt;
-					seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(seldt.type));
-					if (seldt == null) seldt = seldd;
-				}
-			}
-
-
+			catch (Exception ex) { Form1.thisForm.Log(ex.Message+ " ("+ex.Source+")"); }
 		}
 
 		#endregion

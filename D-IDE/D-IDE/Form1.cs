@@ -16,7 +16,6 @@ using System.Xml;
 using D_IDE.CodeCompletion;
 using D_IDE.Dialogs;
 using D_Parser;
-using D_Parser.CodeCompletion;
 using D_IDE.Properties;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.Ast;
@@ -863,6 +862,10 @@ namespace D_IDE
 			RefreshClassHierarchy();
 			UpdateLastFilesMenu();
 			if (this.dockPanel.ActiveDocumentPane != null) this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.contextMenuStrip1; // Set Tab selection bars context menu to ours
+
+			// Important: set Read-Only flag if Debugger is running currently
+			ret.txt.IsReadOnly = IsDebugging;
+			
 			return ret;
 		}
 
@@ -1383,7 +1386,6 @@ namespace D_IDE
 		{
 			prjexplorer.UpdateFiles();
 		}
-
 
 	}
 }

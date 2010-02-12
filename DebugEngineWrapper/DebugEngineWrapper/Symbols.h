@@ -5,6 +5,73 @@ using namespace System;
 
 namespace DebugEngineWrapper
 {
+	/*public ref class DebugSymbolGroup
+	{
+	internal:
+		DbgSymbolGroup* sg;
+		DebugSymbolGroup(DbgSymbolGroup *symg):sg(symg) {}
+	private:
+		DebugSymbolGroup(){}
+	public:
+		~DebugSymbolGroup()
+		{
+			this->!DebugSymbolGroup();
+		}
+
+		!DebugSymbolGroup()
+		{
+			sg->Release();
+		}
+
+		property ULONG Count
+		{
+			ULONG get(){
+			ULONG ret=0;
+				sg->GetNumberSymbols(&ret);
+			return ret;
+			}
+		}
+
+		String^ SymbolName(ULONG Index)
+		{
+			wchar_t* buf=new wchar_t[512];
+			ULONG len=0;
+			ULONG64 displacement=0;
+			if(sg->GetSymbolNameWide(Index,(PWSTR)buf,512,&len)==E_FAIL) return gcnew String("");
+			String^ v=gcnew String(buf);
+			delete [] buf;
+			return v;
+		}
+
+		ULONG64 SymbolOffset(ULONG Index)
+		{
+			ULONG64 ret=0;
+				sg->GetSymbolOffset(Index,&ret);
+			return ret;
+		}
+
+		String^ TypeName(ULONG Index)
+		{
+			wchar_t* buf=new wchar_t[1024];
+			ULONG len=0;
+			if(sg->GetSymbolTypeNameWide(Index,(PWSTR)buf,1024,&len)==E_FAIL) return gcnew String("");
+			String^ v=gcnew String(buf);
+			delete [] buf;
+			return v;
+		}
+
+		String^ ValueText(ULONG Index)
+		{
+			wchar_t* buf=new wchar_t[1024];
+			ULONG len=0;
+			if(sg->GetSymbolValueTextWide(Index,(PWSTR)buf,1024,&len)==E_FAIL) return gcnew String("");
+			String^ v=gcnew String(buf);
+			delete [] buf;
+			return v;
+		}
+	};*/
+
+
 	public ref class DebugSymbols
 	{
 	internal:
@@ -41,6 +108,30 @@ namespace DebugEngineWrapper
 			delete [] cmdbuf;
 			return v;
 		}
+
+		/*property DebugSymbolGroup^ ScopeLocalSymbols
+		{
+			DebugSymbolGroup^ get(){
+				DbgSymbolGroup* sg;
+				if(sym->GetScopeSymbolGroup(DEBUG_SCOPE_GROUP_LOCALS,0,(PDEBUG_SYMBOL_GROUP*)&sg)==S_OK)
+				{
+					return gcnew DebugSymbolGroup(sg);
+				}
+				return nullptr;
+			}
+		}
+
+		property DebugSymbolGroup^ ScopeArgumentSymbols
+		{
+			DebugSymbolGroup^ get(){
+				DbgSymbolGroup* sg;
+				if(sym->GetScopeSymbolGroup(DEBUG_SCOPE_GROUP_ARGUMENTS,0,(PDEBUG_SYMBOL_GROUP*)&sg)==S_OK)
+				{
+					return gcnew DebugSymbolGroup(sg);
+				}
+				return nullptr;
+			}
+		}*/
 
 		property String^ SymbolPath
 		{

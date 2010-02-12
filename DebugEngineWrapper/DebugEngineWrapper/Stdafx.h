@@ -17,9 +17,11 @@ typedef IDebugRegisters2 DbgRegisters;
 typedef IDebugSymbols3 DbgSymbols; 
 typedef IDebugSystemObjects4 DbgSystemObjects;
 typedef IDebugBreakpoint2 DbgBreakPoint;
+typedef IDebugSymbolGroup2 DbgSymbolGroup;
 
 #include "enums.h"
 #include "vcclr.h"
+#include "MemoryManagement.h"
 #include "Breakpoint.h"
 #include "Symbols.h"
 #include "StackFrame.h"

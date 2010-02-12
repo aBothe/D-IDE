@@ -8,7 +8,7 @@ using System.Drawing;
 using ICSharpCode.TextEditor;
 using D_IDE;
 
-namespace D_Parser.CodeCompletion
+namespace D_IDE
 {
 	class DCodeCompletionWindow : AbstractCompletionWindow
 	{
@@ -165,6 +165,7 @@ namespace D_Parser.CodeCompletion
 		void CodeCompletionListViewSelectedItemChanged(object sender, EventArgs e)
 		{
 			ICompletionData data = codeCompletionListView.SelectedCompletionData;
+
 			if (data != null && data.Description != null && data.Description.Length > 0) {
 				declarationViewWindow.Description = data.Description;
 				SetDeclarationViewLocation();

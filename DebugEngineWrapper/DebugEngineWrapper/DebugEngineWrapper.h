@@ -45,6 +45,7 @@ namespace DebugEngineWrapper {
 		}
 
 		DebugSymbols^ Symbols;
+		DebugDataSpaces^ Memory;
 
 		DBGEngine(DBGEngine^ eng)
 		{
@@ -65,6 +66,7 @@ namespace DebugEngineWrapper {
 			DbgClient * cl;
 			DbgControl * ctrl;
 			DbgSymbols * sym;
+			DbgDataSpaces* ds;
 
 			// Create the base IDebugClient object
 			hr = DebugCreate(__uuidof(DbgClient), (void**)&cl);
@@ -74,9 +76,12 @@ namespace DebugEngineWrapper {
 
 			hr = cl->QueryInterface(__uuidof(DbgSymbols), (void**)&sym);
 
+			hr = cl->QueryInterface(__uuidof(DbgDataSpaces), (void**)&ds);
+
 			this->client=cl;
 			this->control=ctrl;
 			this->Symbols=gcnew DebugSymbols(sym);
+			this->Memory=gcnew DebugDataSpaces(ds);
 
 			this->AssignCallbacks();
 

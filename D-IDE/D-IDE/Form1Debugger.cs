@@ -233,7 +233,7 @@ namespace D_IDE
 			if (dbg == null) InitDebugger();
 
 			ForceExitDebugging();
-
+			AllDocumentsReadOnly = true;
 			IsDebugging = true;
 
 			toggleBreakpointToolStripMenuItem.Enabled = false;
@@ -304,6 +304,10 @@ namespace D_IDE
 			}
 			ProgressStatusLabel.Text = "Debuggee broke into debugger...";
 		}
+
+		#region Expression resolving
+
+		#endregion
 
 		public bool AllDocumentsReadOnly
 		{
@@ -412,6 +416,7 @@ namespace D_IDE
 		{
 			try
 			{
+				AllDocumentsReadOnly = false;
 				if (exeProc != null && !exeProc.HasExited)
 				{
 					exeProc.Kill();

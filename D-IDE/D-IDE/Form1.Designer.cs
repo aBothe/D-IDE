@@ -64,6 +64,8 @@
 			this.startPageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.errorLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.debugOutputToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator18 = new System.Windows.Forms.ToolStripSeparator();
+			this.reloadProjectTreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.projectToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildSingleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -133,8 +135,6 @@
 			this.stepOutTS = new System.Windows.Forms.ToolStripButton();
 			this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
 			this.searchTool = new System.Windows.Forms.ToolStripTextBox();
-			this.toolStripSeparator18 = new System.Windows.Forms.ToolStripSeparator();
-			this.reloadProjectTreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			this.contextMenuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
@@ -466,6 +466,18 @@
 			this.debugOutputToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
 			this.debugOutputToolStripMenuItem.Text = "Breakpoints";
 			this.debugOutputToolStripMenuItem.Click += new System.EventHandler(this.debugOutputToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator18
+			// 
+			this.toolStripSeparator18.Name = "toolStripSeparator18";
+			this.toolStripSeparator18.Size = new System.Drawing.Size(173, 6);
+			// 
+			// reloadProjectTreeToolStripMenuItem
+			// 
+			this.reloadProjectTreeToolStripMenuItem.Name = "reloadProjectTreeToolStripMenuItem";
+			this.reloadProjectTreeToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.reloadProjectTreeToolStripMenuItem.Text = "Reload Project Tree";
+			this.reloadProjectTreeToolStripMenuItem.Click += new System.EventHandler(this.reloadProjectTreeToolStripMenuItem_Click);
 			// 
 			// projectToolStripMenuItem1
 			// 
@@ -1065,18 +1077,6 @@
 			this.searchTool.Size = new System.Drawing.Size(170, 25);
 			this.searchTool.ToolTipText = "Press <Return> for search in current document";
 			this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
-			// 
-			// toolStripSeparator18
-			// 
-			this.toolStripSeparator18.Name = "toolStripSeparator18";
-			this.toolStripSeparator18.Size = new System.Drawing.Size(173, 6);
-			// 
-			// reloadProjectTreeToolStripMenuItem
-			// 
-			this.reloadProjectTreeToolStripMenuItem.Name = "reloadProjectTreeToolStripMenuItem";
-			this.reloadProjectTreeToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
-			this.reloadProjectTreeToolStripMenuItem.Text = "Reload Project Tree";
-			this.reloadProjectTreeToolStripMenuItem.Click += new System.EventHandler(this.reloadProjectTreeToolStripMenuItem_Click);
 			// 
 			// Form1
 			// 
