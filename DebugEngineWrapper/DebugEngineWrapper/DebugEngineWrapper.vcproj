@@ -248,6 +248,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SymbolRetriever.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Symbols.h"
 				>
 			</File>

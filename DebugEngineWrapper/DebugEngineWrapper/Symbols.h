@@ -2,10 +2,11 @@
 #include "stdafx.h"
 
 using namespace System;
+using namespace System::Collections;
 
 namespace DebugEngineWrapper
 {
-	/*public ref class DebugSymbolGroup
+	public ref class DebugSymbolGroup
 	{
 	internal:
 		DbgSymbolGroup* sg;
@@ -69,7 +70,7 @@ namespace DebugEngineWrapper
 			delete [] buf;
 			return v;
 		}
-	};*/
+	};
 
 
 	public ref class DebugSymbols
@@ -109,7 +110,42 @@ namespace DebugEngineWrapper
 			return v;
 		}
 
-		/*property DebugSymbolGroup^ ScopeLocalSymbols
+		array<DebugSymbolData^>^ GetSymbols(String^ pattern)
+		{
+			pin_ptr<const wchar_t> s = PtrToStringChars(pattern);
+			ULONG64 searchHandle;
+			sym->StartSymbolMatchWide(s,&searchHandle);
+
+			ArrayList^ ret=gcnew ArrayList();
+			wchar_t* buf=new wchar_t[512];
+			ULONG64 Offset=0;
+
+			while(sym->GetNextSymbolMatchWide(searchHandle,buf,512,NULL,&Offset)==S_OK)
+			{
+				ret->Add(gcnew DebugSymbolData(gcnew String(buf),Offset));
+			}
+
+			sym->EndSymbolMatch(searchHandle);
+
+			array<DebugSymbolData^>^ ret2=gcnew array<DebugSymbolData^>(ret->Count);
+			for(int i=0; i<ret->Count;i++)
+			{
+				ret2[i]=(DebugSymbolData^)ret[i];
+			}
+			delete ret;
+
+			return ret2;
+		}
+		
+		property array<DebugSymbolData^>^ Symbols
+		{
+			array<DebugSymbolData^>^ get()
+			{
+				return this->GetSymbols("*");
+			}
+		}
+
+		property DebugSymbolGroup^ ScopeLocalSymbols
 		{
 			DebugSymbolGroup^ get(){
 				DbgSymbolGroup* sg;
@@ -131,7 +167,7 @@ namespace DebugEngineWrapper
 				}
 				return nullptr;
 			}
-		}*/
+		}
 
 		property String^ SymbolPath
 		{

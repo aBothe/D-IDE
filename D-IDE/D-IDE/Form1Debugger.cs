@@ -289,6 +289,14 @@ namespace D_IDE
 
 			WaitForEvent();
 
+			/*
+			foreach (DebugSymbolData sd in sda)
+			{
+				ms += sd.Name + " (" + sd.Offset.ToString() + ")\n";
+			}
+			MessageBox.Show(ms);
+			*/
+
 			return true;
 		}
 
@@ -369,6 +377,19 @@ namespace D_IDE
 				Log(fn + ":" + ln.ToString());
 				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);
 				callstackwin.Update();
+
+				/*string ms = "";
+				DebugSymbolData[] sda = dbg.Symbols.GetSymbols("image00400000!*");
+				if (sda != null)
+				{
+					foreach (DebugSymbolData dsd in sda)
+					{
+						ms += dsd.Name + " (" + dsd.Offset.ToString() + ")\r\n";
+					}
+					File.WriteAllText("symbols.log",ms);
+				}*/
+
+				//MessageBox.Show(dbg.Symbols.ScopeLocalSymbols);
 
 				return DebugStatus.Break;
 			};

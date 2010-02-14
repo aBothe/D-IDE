@@ -44,6 +44,19 @@ namespace DebugEngineWrapper {
 			}
 		}
 
+		property void* ProcessHandle
+		{
+			void* get(){
+			void* ret=0;
+
+			DbgSystemObjects* so;
+			client->QueryInterface(__uuidof(DbgSystemObjects), (void**)&so);
+
+			so->GetCurrentProcessHandle((PULONG64)&ret);
+			return ret;
+			}
+		}
+
 		DebugSymbols^ Symbols;
 		DebugDataSpaces^ Memory;
 

@@ -864,7 +864,7 @@ namespace D_IDE
 			if (this.dockPanel.ActiveDocumentPane != null) this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.contextMenuStrip1; // Set Tab selection bars context menu to ours
 
 			// Important: set Read-Only flag if Debugger is running currently
-			ret.txt.IsReadOnly = IsDebugging;
+			if(ret!=null && ret.txt!=null)ret.txt.IsReadOnly = IsDebugging;
 			
 			return ret;
 		}

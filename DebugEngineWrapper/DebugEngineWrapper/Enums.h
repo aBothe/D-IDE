@@ -393,7 +393,7 @@ namespace DebugEngineWrapper
 		SingleStep=EXCEPTION_SINGLE_STEP,
 		StackOverflow=EXCEPTION_STACK_OVERFLOW,
 		//FrameConsolidationExecuted=STATUS_UNWIND_CONSOLIDATE,
-		DException= 0xE0440001,//(3 << 30) | (1 << 29) | (0 << 28) | ('D' << 16) | 1,
+		DException= (3 << 30) | (1 << 29) | (0 << 28) | ('D' << 16) | 1,
 	};
 
 	public enum class SessionStatus
@@ -430,6 +430,18 @@ namespace DebugEngineWrapper
 		ULONG Type;
 		bool IsContinuable;
 		ULONG64 Address;
+	};
+
+	public ref struct DebugSymbolData
+	{
+	public:
+		DebugSymbolData(String^ SymbolName, ULONG64 SymOffset)
+		{
+			Name=SymbolName;
+			Offset=SymOffset;
+		}	
+		String^ Name;
+		ULONG64 Offset;
 	};
 
 }
