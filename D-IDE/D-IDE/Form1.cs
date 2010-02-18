@@ -1070,13 +1070,6 @@ namespace D_IDE
 			mtp.Close();
 		}
 
-		private void CloseAllTabs(object sender, EventArgs e)
-		{
-			SaveAllTabs();
-			foreach (DockContent tp in dockPanel.Documents)
-				tp.Close();
-		}
-
 		private void CloseAllOtherTabs(object sender, EventArgs e)
 		{
 			SaveAllTabs();
@@ -1288,10 +1281,9 @@ namespace D_IDE
 
 		private void closeAllToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			foreach (DockContent dc in dockPanel.Documents)
-			{
-				dc.Close();
-			}
+			IDockContent[] cts = dockPanel.DocumentsToArray();
+			foreach (DockContent tp in cts)
+				tp.Close();
 		}
 
 		private void closeAllOthersToolStripMenuItem_Click(object sender, EventArgs e)
