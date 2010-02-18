@@ -31,6 +31,7 @@ namespace D_IDE
 				if (Form1.thisForm.IsDebugging)
 					foreach (StackFrame sf in Form1.thisForm.dbg.CallStack)
 					{
+						
 						string n = Form1.thisForm.dbg.Symbols.GetNameByOffset(sf.InstructionOffset);
 						if (n == String.Empty) continue;
 						int i = n.LastIndexOf("!");

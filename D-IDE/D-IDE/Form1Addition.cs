@@ -525,11 +525,34 @@ namespace D_IDE
 								}
 								break;
 
+							case "lastopenedfiles":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "f")
+									{
+										try
+										{
+											p.lastOpenFiles.Add(xr.ReadString());
+										}
+										catch { }
+									}
+									else break;
+								}
+								break;
+
 
 							case "openlastprj":
 								if (xr.MoveToAttribute("value"))
 								{
 									p.OpenLastPrj = xr.Value == "1";
+								}
+								break;
+
+							case "openlastfiles":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.OpenLastFiles = xr.Value == "1";
 								}
 								break;
 
@@ -867,8 +890,19 @@ namespace D_IDE
 			}
 			xw.WriteEndElement();
 
+			xw.WriteStartElement("lastopenedfiles");
+			foreach (string f in Default.lastOpenFiles)
+			{
+				xw.WriteStartElement("f"); xw.WriteCData(f); xw.WriteEndElement();
+			}
+			xw.WriteEndElement();
+
 			xw.WriteStartElement("openlastprj");
 			xw.WriteAttributeString("value", Default.OpenLastPrj ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("openlastfiles");
+			xw.WriteAttributeString("value", Default.OpenLastFiles? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("windowstate");
@@ -1070,8 +1104,12 @@ namespace D_IDE
 
 		public static D_IDE_Properties Default = new D_IDE_Properties();
 
-		public List<string> lastProjects = new List<string>(), lastFiles = new List<string>();
+		public List<string> 
+			lastProjects = new List<string>(),
+			lastFiles = new List<string>(), 
+			lastOpenFiles=new List<string>();
 		public bool OpenLastPrj = true;
+		public bool OpenLastFiles = true;
 		public FormWindowState lastFormState = FormWindowState.Maximized;
 		public Point lastFormLocation;
 		public Size lastFormSize;

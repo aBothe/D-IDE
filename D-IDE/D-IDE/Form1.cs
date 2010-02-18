@@ -120,6 +120,12 @@ namespace D_IDE
 
 			Debugger.Log(0, "notice", "Open last files/projects");
 
+			if (D_IDE_Properties.Default.OpenLastFiles)
+			{
+				foreach (string f in D_IDE_Properties.Default.lastOpenFiles)
+					if (File.Exists(f)) Open(f);
+			}
+
 			if (args.Length < 1 && D_IDE_Properties.Default.OpenLastPrj && D_IDE_Properties.Default.lastProjects.Count > 0 && File.Exists(D_IDE_Properties.Default.lastProjects[0]))
 				Open(D_IDE_Properties.Default.lastProjects[0]);
 
@@ -864,8 +870,8 @@ namespace D_IDE
 			if (this.dockPanel.ActiveDocumentPane != null) this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.contextMenuStrip1; // Set Tab selection bars context menu to ours
 
 			// Important: set Read-Only flag if Debugger is running currently
-			if(ret!=null && ret.txt!=null)ret.txt.IsReadOnly = IsDebugging;
-			
+			if (ret != null && ret.txt != null) ret.txt.IsReadOnly = IsDebugging;
+
 			return ret;
 		}
 
@@ -949,21 +955,30 @@ namespace D_IDE
 			if (!Directory.Exists(Program.cfgDir))
 				Directory.CreateDirectory(Program.cfgDir);
 
-			#region Save all projects that are still editing
-			List<DProject> changedPrjs = new List<DProject>();	
+			#region Save all edited projects and store all opened files into an array
+			D_IDE_Properties.Default.lastOpenFiles.Clear();
+
+			List<DProject> changedPrjs = new List<DProject>();
 			foreach (DockContent tp in dockPanel.Documents)
+			{
+				if (tp is DocumentInstanceWindow)
 				{
-					if (tp is DocumentInstanceWindow)
+					DocumentInstanceWindow mtp = (DocumentInstanceWindow)tp;
+
+					#region Add file to last open files
+					string physfile = mtp.fileData.FileName;
+					if (mtp.project != null) mtp.project.GetPhysFilePath(physfile);
+					D_IDE_Properties.Default.lastOpenFiles.Add(physfile);
+					#endregion
+
+					if (mtp.project != null)
 					{
-						DocumentInstanceWindow mtp = (DocumentInstanceWindow)tp;
-						if (mtp.project != null)
-						{
-							mtp.project.lastopen.Add(mtp.fileData.FileName);
-							if (!changedPrjs.Contains(mtp.project))
-								changedPrjs.Add(mtp.project);
-						}
+						mtp.project.lastopen.Add(mtp.fileData.FileName);
+						if (!changedPrjs.Contains(mtp.project))
+							changedPrjs.Add(mtp.project);
 					}
 				}
+			}
 
 			foreach (DProject p in changedPrjs)
 			{
@@ -1001,8 +1016,8 @@ namespace D_IDE
 						if (prj.files.Contains(tp.fileData))
 							prj.files.Remove(tp.fileData);
 					}
-					
-					prj.resourceFiles.Remove(prj.GetRelFilePath( tp.fileData.FileName));
+
+					prj.resourceFiles.Remove(prj.GetRelFilePath(tp.fileData.FileName));
 					prj.AddSrc(sF.FileName);
 				}
 				tp.fileData.FileName = sF.FileName;

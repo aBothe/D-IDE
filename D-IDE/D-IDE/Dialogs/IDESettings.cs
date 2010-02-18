@@ -26,6 +26,7 @@ namespace D_IDE
 			defPrjDir.Text = D_IDE_Properties.Default.DefaultProjectDirectory;
 			updates.Checked = D_IDE_Properties.Default.WatchForUpdates;
 			reopenLastPrj.Checked = D_IDE_Properties.Default.OpenLastPrj;
+			restoreLastSession.Checked = D_IDE_Properties.Default.OpenLastFiles;
 
 			parsedFiles.Items.AddRange(D_IDE_Properties.Default.parsedDirectories.ToArray());
 
@@ -70,6 +71,7 @@ namespace D_IDE
 			D_IDE_Properties.Default.DefaultProjectDirectory = defPrjDir.Text;
 			D_IDE_Properties.Default.WatchForUpdates = updates.Checked;
 			D_IDE_Properties.Default.OpenLastPrj = reopenLastPrj.Checked;
+			D_IDE_Properties.Default.OpenLastFiles = restoreLastSession.Checked;
 
 			D_IDE_Properties.Default.exe_cmp = exe_cmp.Text;
 			D_IDE_Properties.Default.exe_win = exe_win.Text;
