@@ -443,5 +443,4 @@ namespace DebugEngineWrapper
 		String^ Name;
 		ULONG64 Offset;
 	};
-
 }

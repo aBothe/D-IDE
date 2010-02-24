@@ -6,7 +6,7 @@ using namespace System::Collections;
 
 namespace DebugEngineWrapper
 {
-	public ref class DebugSymbolGroup
+	/*public ref class DebugSymbolGroup
 	{
 	internal:
 		DbgSymbolGroup* sg;
@@ -70,7 +70,7 @@ namespace DebugEngineWrapper
 			delete [] buf;
 			return v;
 		}
-	};
+	};*/
 
 
 	public ref class DebugSymbols
@@ -145,7 +145,7 @@ namespace DebugEngineWrapper
 			}
 		}
 
-		property DebugSymbolGroup^ ScopeLocalSymbols
+		/*property DebugSymbolGroup^ ScopeLocalSymbols
 		{
 			DebugSymbolGroup^ get(){
 				DbgSymbolGroup* sg;
@@ -167,7 +167,7 @@ namespace DebugEngineWrapper
 				}
 				return nullptr;
 			}
-		}
+		}*/
 
 		property String^ SymbolPath
 		{
@@ -232,5 +232,7 @@ namespace DebugEngineWrapper
 			Offset=ret;
 			return true;
 		}
+		
+		
 	};
 }

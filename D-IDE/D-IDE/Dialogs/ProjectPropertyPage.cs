@@ -250,29 +250,8 @@ namespace D_IDE
 
 		private void button1_Click(object sender, EventArgs e)
 		{
-			if (!Directory.Exists(prjdir.Text))
-			{
-				MessageBox.Show(prjdir.Text + " does not exist");
-				DialogResult = DialogResult.None;
-				return;
-			}
-
-			if (prjname.Text == "")
-			{
-				MessageBox.Show("Project name cannot be empty");
-				DialogResult = DialogResult.None;
-				return;
-			}
-
-			if (tarfile.Text == "")
-			{
-				MessageBox.Show("Target name cannot be empty");
-				DialogResult = DialogResult.None;
-				return;
-			}
-
-			Save();
-			Close();
+			button10_Click(sender, e);
+			button12_Click(sender, e);
 		}
 
 		private void button2_Click_1(object sender, EventArgs e)
@@ -321,6 +300,11 @@ namespace D_IDE
 			}
 
 			Save();
+			if (project.prjfn == Form1.thisForm.prj.prjfn)
+			{
+				Form1.thisForm.prj = project;
+				//Form1.thisForm.UpdateFiles();
+			}
 		}
 
 		private void button11_Click(object sender, EventArgs e)
@@ -1014,7 +998,13 @@ namespace D_IDE
 
 		private void button9_Click(object sender, EventArgs e)
 		{
+			List<string> si=new List<string>();
 			foreach (string lvi in FileDeps.SelectedItems)
+			{
+				si.Add(lvi);
+			}
+
+			foreach (string lvi in si)
 			{
 				FileDeps.Items.Remove(lvi);
 			}
@@ -1043,7 +1033,12 @@ namespace D_IDE
 
 		private void button14_Click(object sender, EventArgs e)
 		{
+			List<string> si = new List<string>();
 			foreach (string lvi in ProjectDeps.SelectedItems)
+			{
+				si.Add(lvi);
+			}
+			foreach (string lvi in si)
 			{
 				ProjectDeps.Items.Remove(lvi);
 			}

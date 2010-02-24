@@ -267,8 +267,11 @@ namespace D_IDE
 
 			Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, true);
 			prc.WaitForExit(10000);
-			Form1.thisForm.BuildProgressBar.Value++;
-
+			try
+			{
+				Form1.thisForm.BuildProgressBar.Value++;
+			}
+			catch { }
 			if (prc.ExitCode == 0)
 			{
 				// This line of code is very important for debugging!

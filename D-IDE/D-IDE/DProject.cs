@@ -288,7 +288,6 @@ namespace D_IDE
 								{
 									if (xsr.NodeType == XmlNodeType.CDATA)
 									{
-										xr.Read();
 										ret.libs.Add(xr.ReadString());
 									}
 								}
@@ -376,7 +375,6 @@ namespace D_IDE
 								{
 									if (xsr.NodeType == XmlNodeType.CDATA)
 									{
-										xr.Read();
 										ret.FileDependencies.Add(xr.ReadString());
 									}
 								}
@@ -391,7 +389,6 @@ namespace D_IDE
 								{
 									if (xsr.NodeType == XmlNodeType.CDATA)
 									{
-										xr.Read();
 										ret.ProjectDependencies.Add(xr.ReadString());
 									}
 								}

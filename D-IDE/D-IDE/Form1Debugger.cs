@@ -204,6 +204,17 @@ namespace D_IDE
 					goto cont;
 				}
 			}
+			//se.DoExtract(off);	if(se.Result!=null)MessageBox.Show(String.Join("; ", se.Result));
+			
+			/*string ts = "";
+			foreach (ulong toff in dbg.CurrentFrame.ArgumentOffsets)
+			{
+				ts+=dbg.Symbols.GetNameByOffset(toff)+" ";
+				if (dbg.Symbols.GetLineByOffset(toff, out fn, out ln))
+					ts+=fn+":" +((int)ln - 1).ToString()+"\n";
+			}
+			MessageBox.Show(ts);
+			*/
 			callstackwin.Update();
 		}
 
@@ -212,6 +223,7 @@ namespace D_IDE
 		public DBGEngine dbg;
 		public Dictionary<string, ulong> LoadedModules = new Dictionary<string, ulong>();
 		internal bool StopWaitingForEvents;
+		SymbolExtracter se;
 		#endregion
 
 		public bool IsDebugging;/*{
@@ -249,6 +261,8 @@ namespace D_IDE
 			LoadedModules.Clear();
 			output.Clear();
 
+			//se = new SymbolExtracter(exe);
+			
 			DebugCreateProcessOptions opt = new DebugCreateProcessOptions();
 			opt.CreateFlags = CreateFlags.DebugOnlyThisProcess;
 			opt.EngCreateFlags = EngCreateFlags.Default;
@@ -367,6 +381,8 @@ namespace D_IDE
 				Log("Breakpoint #" + Id.ToString() + " at " + off.ToString() + ": " + exp);
 				string fn;
 				uint ln;
+
+				//se.DoExtract(off);		if (se.Result != null) MessageBox.Show(String.Join("; ", se.Result));
 
 				if (!dbg.Symbols.GetLineByOffset(off, out fn, out ln))
 				{

@@ -22,6 +22,8 @@ typedef IDebugSymbolGroup2 DbgSymbolGroup;
 #include "enums.h"
 #include "vcclr.h"
 #include "MemoryManagement.h"
+#include "CodeViewAnalyzer.h"
+#include "SymbolExtracter.h"
 #include "Breakpoint.h"
 #include "Symbols.h"
 #include "StackFrame.h"

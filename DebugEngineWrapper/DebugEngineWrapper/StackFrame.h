@@ -24,10 +24,10 @@ namespace DebugEngineWrapper
 			fte=frm.FuncTableEntry;
 
 			al=gcnew System::Collections::ArrayList();
-			if(frm.Params[0])al->Add(frm.Params[0]);
-			if(frm.Params[1])al->Add(frm.Params[1]);
-			if(frm.Params[2])al->Add(frm.Params[2]);
-			if(frm.Params[3])al->Add(frm.Params[3]);
+			if(frm.Params[0]!=0)al->Add(frm.Params[0]);
+			if(frm.Params[1]!=0)al->Add(frm.Params[1]);
+			if(frm.Params[2]!=0)al->Add(frm.Params[2]);
+			if(frm.Params[3]!=0)al->Add(frm.Params[3]);
 
 			fnum=frm.FrameNumber;
 			virt=frm.Virtual==TRUE;
@@ -77,7 +77,7 @@ namespace DebugEngineWrapper
 		{
 			array<ULONG64>^ get()
 			{
-				return reinterpret_cast<array<ULONG64>^>(al->ToArray(Int64::typeid));
+				return reinterpret_cast<array<ULONG64>^>(al->ToArray(UInt64::typeid));
 			}
 		};
 
