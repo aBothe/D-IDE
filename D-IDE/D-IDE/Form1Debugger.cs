@@ -261,7 +261,8 @@ namespace D_IDE
 			LoadedModules.Clear();
 			output.Clear();
 
-			//se = new SymbolExtracter(exe);
+			//se = new SymbolExtracter();
+			//se.DoExtract(exe);
 			
 			DebugCreateProcessOptions opt = new DebugCreateProcessOptions();
 			opt.CreateFlags = CreateFlags.DebugOnlyThisProcess;

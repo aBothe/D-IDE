@@ -496,7 +496,7 @@ namespace D_IDE
 				MessageBox.Show("Unable to execute a library!");
 				return false;
 			}
-			string bin = prj.basedir + "\\" + Path.ChangeExtension(prj.targetfilename, null) + ".exe";
+			string bin = prj.LastBuiltTarget;
 
 			if (File.Exists(bin))
 			{

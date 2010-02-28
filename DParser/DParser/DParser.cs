@@ -1439,7 +1439,7 @@ parseexpr:
 		}
 		string ParseTypeIdent(bool identifierOnly, out bool hasClampMod)
 		{
-			bool isDelegate = t.Kind == DTokens.Delegate || t.Kind == DTokens.Function;
+			bool isDelegate = t!=null &&( t.Kind == DTokens.Delegate || t.Kind == DTokens.Function);
 
 			hasClampMod = false; // const()
 			
