@@ -69,7 +69,7 @@ namespace D_IDE
 					}));
 				else
 				{
-					setDefaultPanelLayoutToolStripMenuItem_Click(null,EventArgs.Empty);
+					setDefaultPanelLayoutToolStripMenuItem_Click(null, EventArgs.Empty);
 				}
 			}
 			catch (Exception ex) { MessageBox.Show(ex.Message); }
@@ -502,13 +502,17 @@ namespace D_IDE
 
 				output.Log("Executing " + prj.targetfilename);
 				exeProc = DBuilder.Exec(bin, prj.execargs, prj.basedir, true); //prj.type == DProject.PrjType.ConsoleApp
+				if (exeProc == null) return false;
+
 				exeProc.Exited += delegate(object se, EventArgs ev)
 				{
-					toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = false;
-					DBuilder_OnExit(se, ev);
+				toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = false;
+				DBuilder_OnExit(se, ev);
 				};
 				exeProc.EnableRaisingEvents = true;
 				toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = true;
+
+
 				return true;
 			}
 			else
@@ -998,7 +1002,7 @@ namespace D_IDE
 			output.Show(dockPanel, DockState.DockBottomAutoHide);
 			errlog.Show(dockPanel, DockState.DockBottom);
 			callstackwin.Show(dockPanel, DockState.DockBottomAutoHide);
-			if (D_IDE_Properties.Default.EnableFXFormsDesigner) propView.Show(dockPanel,DockState.DockRight);
+			if (D_IDE_Properties.Default.EnableFXFormsDesigner) propView.Show(dockPanel, DockState.DockRight);
 		}
 
 		private void TabSelectionChanged(object sender, EventArgs e)

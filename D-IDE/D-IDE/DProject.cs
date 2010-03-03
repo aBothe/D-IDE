@@ -33,7 +33,7 @@ namespace D_IDE
 		public bool CreateExternalManifestFile()
 		{
 			if (!String.IsNullOrEmpty(LastBuiltTarget))
-				CreateManifestFile(LastBuiltTarget);
+				CreateManifestFile(LastBuiltTarget + ".manifest");
 			else return false;
 
 			return true;
@@ -87,7 +87,7 @@ namespace D_IDE
 				string add = "";
 				if (EnableSubversioning)
 				{
-					add = "\\" + LastBuildDate.ToString().Replace(':', '-');
+					add = "\\" + LastBuildDate.ToString().Replace(':', '-').Replace('/','.');
 				}
 				if (Path.IsPathRooted(OutputDirectory)) return OutputDirectory + add;
 				return basedir + "\\" + OutputDirectory + add;

@@ -338,10 +338,12 @@ namespace D_IDE
 			this.button13 = new System.Windows.Forms.Button();
 			this.OutputDir = new System.Windows.Forms.TextBox();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.Subversioning = new System.Windows.Forms.GroupBox();
+			this.SubversioningEnabled = new System.Windows.Forms.CheckBox();
+			this.StoreLastSources = new System.Windows.Forms.CheckBox();
 			this.label8 = new System.Windows.Forms.Label();
 			this.LastVersionCount = new System.Windows.Forms.TextBox();
-			this.StoreLastSources = new System.Windows.Forms.CheckBox();
-			this.SubversioningEnabled = new System.Windows.Forms.CheckBox();
+			this.ManifestCreation = new System.Windows.Forms.ComboBox();
 			this.groupBox4 = new System.Windows.Forms.GroupBox();
 			this.lnkargs = new System.Windows.Forms.TextBox();
 			this.label6 = new System.Windows.Forms.Label();
@@ -373,8 +375,6 @@ namespace D_IDE
 			this.button11 = new System.Windows.Forms.Button();
 			this.button12 = new System.Windows.Forms.Button();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.ManifestCreation = new System.Windows.Forms.ComboBox();
-			this.Subversioning = new System.Windows.Forms.GroupBox();
 			label3 = new System.Windows.Forms.Label();
 			label4 = new System.Windows.Forms.Label();
 			label2 = new System.Windows.Forms.Label();
@@ -383,6 +383,7 @@ namespace D_IDE
 			this.tabControl1.SuspendLayout();
 			this.tabPage1.SuspendLayout();
 			this.tabPage2.SuspendLayout();
+			this.Subversioning.SuspendLayout();
 			this.groupBox4.SuspendLayout();
 			this.groupBox3.SuspendLayout();
 			this.tabPage3.SuspendLayout();
@@ -390,7 +391,6 @@ namespace D_IDE
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.tabPage4.SuspendLayout();
-			this.Subversioning.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// label3
@@ -575,6 +575,39 @@ namespace D_IDE
 			this.tabPage2.Text = "Build options";
 			this.tabPage2.UseVisualStyleBackColor = true;
 			// 
+			// Subversioning
+			// 
+			this.Subversioning.Controls.Add(this.SubversioningEnabled);
+			this.Subversioning.Controls.Add(this.StoreLastSources);
+			this.Subversioning.Controls.Add(this.label8);
+			this.Subversioning.Controls.Add(this.LastVersionCount);
+			this.Subversioning.Location = new System.Drawing.Point(6, 188);
+			this.Subversioning.Name = "Subversioning";
+			this.Subversioning.Size = new System.Drawing.Size(425, 100);
+			this.Subversioning.TabIndex = 17;
+			this.Subversioning.TabStop = false;
+			this.Subversioning.Text = "Last version storage";
+			// 
+			// SubversioningEnabled
+			// 
+			this.SubversioningEnabled.AutoSize = true;
+			this.SubversioningEnabled.Location = new System.Drawing.Point(9, 19);
+			this.SubversioningEnabled.Name = "SubversioningEnabled";
+			this.SubversioningEnabled.Size = new System.Drawing.Size(229, 17);
+			this.SubversioningEnabled.TabIndex = 10;
+			this.SubversioningEnabled.Text = "Store each new build in a new subdirectory";
+			this.SubversioningEnabled.UseVisualStyleBackColor = true;
+			// 
+			// StoreLastSources
+			// 
+			this.StoreLastSources.AutoSize = true;
+			this.StoreLastSources.Location = new System.Drawing.Point(9, 42);
+			this.StoreLastSources.Name = "StoreLastSources";
+			this.StoreLastSources.Size = new System.Drawing.Size(250, 17);
+			this.StoreLastSources.TabIndex = 13;
+			this.StoreLastSources.Text = "Also store the changed sources in that directory";
+			this.StoreLastSources.UseVisualStyleBackColor = true;
+			// 
 			// label8
 			// 
 			this.label8.AutoSize = true;
@@ -594,25 +627,18 @@ namespace D_IDE
 			this.LastVersionCount.TabIndex = 14;
 			this.LastVersionCount.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox1_KeyDown);
 			// 
-			// StoreLastSources
+			// ManifestCreation
 			// 
-			this.StoreLastSources.AutoSize = true;
-			this.StoreLastSources.Location = new System.Drawing.Point(9, 42);
-			this.StoreLastSources.Name = "StoreLastSources";
-			this.StoreLastSources.Size = new System.Drawing.Size(250, 17);
-			this.StoreLastSources.TabIndex = 13;
-			this.StoreLastSources.Text = "Also store the changed sources in that directory";
-			this.StoreLastSources.UseVisualStyleBackColor = true;
-			// 
-			// SubversioningEnabled
-			// 
-			this.SubversioningEnabled.AutoSize = true;
-			this.SubversioningEnabled.Location = new System.Drawing.Point(9, 19);
-			this.SubversioningEnabled.Name = "SubversioningEnabled";
-			this.SubversioningEnabled.Size = new System.Drawing.Size(229, 17);
-			this.SubversioningEnabled.TabIndex = 10;
-			this.SubversioningEnabled.Text = "Store each new build in a new subdirectory";
-			this.SubversioningEnabled.UseVisualStyleBackColor = true;
+			this.ManifestCreation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.ManifestCreation.FormattingEnabled = true;
+			this.ManifestCreation.Items.AddRange(new object[] {
+            "Don\'t create manifest file",
+            "Create a manifest with a resource file",
+            "Create and copy the manifest into the output dir."});
+			this.ManifestCreation.Location = new System.Drawing.Point(6, 294);
+			this.ManifestCreation.Name = "ManifestCreation";
+			this.ManifestCreation.Size = new System.Drawing.Size(425, 21);
+			this.ManifestCreation.TabIndex = 16;
 			// 
 			// groupBox4
 			// 
@@ -952,32 +978,6 @@ namespace D_IDE
 			this.button12.UseVisualStyleBackColor = true;
 			this.button12.Click += new System.EventHandler(this.button12_Click);
 			// 
-			// ManifestCreation
-			// 
-			this.ManifestCreation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.ManifestCreation.FormattingEnabled = true;
-			this.ManifestCreation.Items.AddRange(new object[] {
-            "Don\'t create manifest file",
-            "Create a manifest with a resource file",
-            "Create and copy the manifest into the output dir."});
-			this.ManifestCreation.Location = new System.Drawing.Point(6, 294);
-			this.ManifestCreation.Name = "ManifestCreation";
-			this.ManifestCreation.Size = new System.Drawing.Size(425, 21);
-			this.ManifestCreation.TabIndex = 16;
-			// 
-			// Subversioning
-			// 
-			this.Subversioning.Controls.Add(this.SubversioningEnabled);
-			this.Subversioning.Controls.Add(this.StoreLastSources);
-			this.Subversioning.Controls.Add(this.label8);
-			this.Subversioning.Controls.Add(this.LastVersionCount);
-			this.Subversioning.Location = new System.Drawing.Point(6, 188);
-			this.Subversioning.Name = "Subversioning";
-			this.Subversioning.Size = new System.Drawing.Size(425, 100);
-			this.Subversioning.TabIndex = 17;
-			this.Subversioning.TabStop = false;
-			this.Subversioning.Text = "groupBox6";
-			// 
 			// ProjectPropertyPage
 			// 
 			this.AcceptButton = this.button1;
@@ -992,6 +992,8 @@ namespace D_IDE
 			this.tabPage1.ResumeLayout(false);
 			this.tabPage1.PerformLayout();
 			this.tabPage2.ResumeLayout(false);
+			this.Subversioning.ResumeLayout(false);
+			this.Subversioning.PerformLayout();
 			this.groupBox4.ResumeLayout(false);
 			this.groupBox4.PerformLayout();
 			this.groupBox3.ResumeLayout(false);
@@ -1002,8 +1004,6 @@ namespace D_IDE
 			this.groupBox2.ResumeLayout(false);
 			this.groupBox2.PerformLayout();
 			this.tabPage4.ResumeLayout(false);
-			this.Subversioning.ResumeLayout(false);
-			this.Subversioning.PerformLayout();
 			this.ResumeLayout(false);
 
 		}
