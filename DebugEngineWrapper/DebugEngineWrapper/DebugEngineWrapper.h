@@ -38,13 +38,13 @@ namespace DebugEngineWrapper {
 				DbgSystemObjects* so;
 				client->QueryInterface(__uuidof(DbgSystemObjects), (void**)&so);
 				
-				ULONG pid;
-				so->GetCurrentProcessId(&pid);
+				ULONG pid=0;
+				so->GetEventProcess(&pid);
 				return Process::GetProcessById(pid);
 			}
 		}
 
-		property void* ProcessHandle
+		/*property void* ProcessHandle
 		{
 			void* get(){
 			void* ret=0;
@@ -52,10 +52,10 @@ namespace DebugEngineWrapper {
 			DbgSystemObjects* so;
 			client->QueryInterface(__uuidof(DbgSystemObjects), (void**)&so);
 
-			so->GetCurrentProcessHandle((PULONG64)&ret);
+			so->GetEventProcessHandle((PULONG64)&ret);
 			return ret;
 			}
-		}
+		}*/
 
 		DebugSymbols^ Symbols;
 		DebugDataSpaces^ Memory;
@@ -393,6 +393,7 @@ namespace DebugEngineWrapper {
 		delegate DebugStatus LoadModuleHandler( ULONG64 BaseOffset, ULONG ModuleSize, String^ File, ULONG Checksum, ULONG Timestamp);
 		delegate DebugStatus UnloadModuleHandler( ULONG64 BaseOffset, String^ File);
 		delegate DebugStatus CreateProcHandler( ULONG64 BaseOffset, ULONG ModuleSize, String^ ModuleName, ULONG Checksum, ULONG Timestamp);
+		delegate String^ InputHandler( ULONG RequestedLength);
 		delegate void OutputHandler( OutputFlags OutputType,String^ Message);
 		delegate DebugStatus ExitProcHandler( ULONG ExitCode);
 		delegate DebugStatus SessionStatusHandler( SessionStatus Status);
@@ -402,6 +403,7 @@ namespace DebugEngineWrapper {
 		event LoadModuleHandler^ OnLoadModule;
 		event UnloadModuleHandler^ OnUnloadModule;
 		event CreateProcHandler^ OnCreateProcess;
+		event InputHandler^ InputRequest;
 		event OutputHandler^ Output;
 		event ExitProcHandler^ OnExitProcess;
 		event SessionStatusHandler^ OnSessionStatusChanged;
@@ -422,6 +424,11 @@ namespace DebugEngineWrapper {
 		DebugStatus RaiseSessSt(SessionStatus s)
 		{	return OnSessionStatusChanged(s);	}
 
+		void ReqInput( ULONG ReqLength)
+		{	String^ ret=InputRequest(ReqLength);
+		pin_ptr<const wchar_t> ptr = PtrToStringChars(ret);
+			control->ReturnInputWide(ptr);
+			}
 		void RaiseOutput( OutputFlags of,String^ s)
 		{	Output(of,s);	}
 #pragma endregion

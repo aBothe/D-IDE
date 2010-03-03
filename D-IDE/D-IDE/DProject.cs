@@ -14,13 +14,38 @@ namespace D_IDE
 {
 	public class DProject
 	{
-		public void CreateManifestFile()
+		#region Manifest creation
+		public static void CreateManifestFile(string file)
 		{
 			string cont = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\"><assemblyIdentity name=\"DApplication\" processorArchitecture=\"x86\" version=\"1.0.0.0\" type=\"win32\"/><description></description><dependency><dependentAssembly><assemblyIdentity type=\"win32\" name=\"Microsoft.Windows.Common-Controls\" version=\"6.0.0.0\" processorArchitecture=\"x86\" publicKeyToken=\"6595b64144ccf1df\" language=\"*\" /></dependentAssembly></dependency></assembly>";
-			string f = basedir + "\\" + targetfilename + ".manifest";
 
-			if (!File.Exists(f)) File.WriteAllText(f, cont, Encoding.UTF8);
+			File.WriteAllText(file, cont, Encoding.UTF8);
 		}
+
+		public static void CreateManifestImportingResourceFile(string rc,string manifestFile)
+		{
+			string cont = "// Automatically created resource file - changes will become deleted after the next build\r\n"+
+				"1 24 \""+manifestFile.Replace("\\","\\\\")+"\"\r\n";
+
+			File.WriteAllText(rc, cont, Encoding.ASCII);
+		}
+
+		public bool CreateExternalManifestFile()
+		{
+			if (!String.IsNullOrEmpty(LastBuiltTarget))
+				CreateManifestFile(LastBuiltTarget);
+			else return false;
+
+			return true;
+		}
+
+		public enum ManifestCreationType
+		{
+			None = 0,
+			IntegratedResource,
+			External,
+		}
+		#endregion
 
 		#region Properties
 		public const string prjext = ".dproj";
@@ -31,6 +56,8 @@ namespace D_IDE
 			Dll,
 			StaticLib,
 		}
+
+		public ManifestCreationType ManifestCreation=ManifestCreationType.None;
 
 		public bool isRelease;
 
@@ -274,6 +301,9 @@ namespace D_IDE
 						switch (xr.LocalName)
 						{
 							default: break;
+							case "manifestcreation":
+								ret.ManifestCreation = (ManifestCreationType)Convert.ToInt32(xr.GetAttribute("type"));
+								break;
 							case "name":
 								xr.Read();
 								ret.name = xr.ReadString();
@@ -451,6 +481,10 @@ namespace D_IDE
 			xw.WriteStartElement("dproject");
 			xw.WriteAttributeString("type", ((int)type).ToString());
 			xw.WriteAttributeString("release", isRelease ? "1" : "0");
+
+			xw.WriteStartElement("manifestcreation");
+			xw.WriteAttributeString("type", ((int)ManifestCreation).ToString());
+			xw.WriteEndElement();
 
 			xw.WriteStartElement("name");
 			xw.WriteCData(name);

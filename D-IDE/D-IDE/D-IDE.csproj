@@ -106,10 +106,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClassHierarchy.cs">
+    <Compile Include="Dialogs\ClassHierarchy.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ClassHierarchy.Designer.cs">
+    <Compile Include="Dialogs\ClassHierarchy.Designer.cs">
       <DependentUpon>ClassHierarchy.cs</DependentUpon>
     </Compile>
     <Compile Include="CodeCompletion\AfterSpaceCompletionProvider.cs" />
@@ -207,24 +207,30 @@
     <Compile Include="FormsDesigner\ToolBox\ToolboxTabCollection.cs" />
     <Compile Include="FormsDesigner\ToolBox\ToolboxUIManagerVS.cs" />
     <Compile Include="FormsDesigner\ToolBox\ToolboxXmlManager.cs" />
-    <Compile Include="PropertyView.cs">
+    <Compile Include="Dialogs\InputDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="PropertyView.Designer.cs">
+    <Compile Include="Dialogs\InputDlg.Designer.cs">
+      <DependentUpon>InputDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormsDesigner\PropertyView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormsDesigner\PropertyView.Designer.cs">
       <DependentUpon>PropertyView.cs</DependentUpon>
     </Compile>
     <Compile Include="Form1Addition.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="ProjectExplorer.cs">
+    <Compile Include="Dialogs\ProjectExplorer.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ProjectExplorer.Designer.cs">
+    <Compile Include="Dialogs\ProjectExplorer.Designer.cs">
       <DependentUpon>ProjectExplorer.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="ClassHierarchy.resx">
+    <EmbeddedResource Include="Dialogs\ClassHierarchy.resx">
       <DependentUpon>ClassHierarchy.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -278,11 +284,15 @@
       <DependentUpon>ProjectPropertyPage.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PropertyView.resx">
+    <EmbeddedResource Include="Dialogs\InputDlg.resx">
+      <DependentUpon>InputDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormsDesigner\PropertyView.resx">
       <DependentUpon>PropertyView.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="ProjectExplorer.resx">
+    <EmbeddedResource Include="Dialogs\ProjectExplorer.resx">
       <DependentUpon>ProjectExplorer.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>

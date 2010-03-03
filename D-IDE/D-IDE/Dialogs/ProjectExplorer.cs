@@ -497,6 +497,25 @@ namespace D_IDE
 				prjFiles.DoDragDrop(dto, DragDropEffects.All);
 			}
 		}
+
+		private void openInFormsEditorToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+
+			if (!D_IDE_Properties.Default.EnableFXFormsDesigner)
+			{
+				MessageBox.Show("This feature will be implemented veeery soon ;-)");
+				return;
+			}
+
+
+			Point tp = (Point)DSourceMenu.Tag;
+			if (tp == null) return;
+			TreeNode tn = prjFiles.GetNodeAt(tp);
+			if (tn == null) return;
+
+			if (tn is FileTreeNode)
+				Form1.thisForm.OpenFormsDesigner((tn as FileTreeNode).AbsolutePath);
+		}
 	}
 
 	#region Nodes

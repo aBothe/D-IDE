@@ -119,13 +119,24 @@ namespace D_IDE
 			}
 			#endregion
 
-			#region Compiling all sources
+			#region Compile all sources
+			List<string> FilesToCompile = new List<string>(prj.resourceFiles);
+
 			if (!Directory.Exists("obj")) Directory.CreateDirectory("obj");
 
 			Form1.thisForm.BuildProgressBar.Value = 0;
 			Form1.thisForm.BuildProgressBar.Maximum = prj.resourceFiles.Count + 1;
 
-			foreach (string rc in prj.resourceFiles)
+			if (prj.ManifestCreation == DProject.ManifestCreationType.IntegratedResource)
+			{
+				string manifestFile = "Manifest.manifest";
+				string manifestRCFile = "Manifest.rc";
+				DProject.CreateManifestFile(manifestFile);
+				DProject.CreateManifestImportingResourceFile(manifestRCFile,manifestFile);
+				FilesToCompile.Add(manifestRCFile);
+			}
+
+			foreach (string rc in FilesToCompile)
 			{
 				string phys_rc = prj.GetPhysFilePath(rc);
 				string tdirname = Path.GetDirectoryName(rc).Replace('\\', '_').Replace(":","")+"_";
@@ -276,6 +287,9 @@ namespace D_IDE
 			{
 				// This line of code is very important for debugging!
 				prj.LastBuiltTarget = target;
+				
+				// If enabled, create external manifest file now
+				if (prj.ManifestCreation == DProject.ManifestCreationType.External) prj.CreateExternalManifestFile();
 
 				Form1.thisForm.ProgressStatusLabel.Text = "Linking done!";
 				OnMessage(prj, target, "Linking done!");

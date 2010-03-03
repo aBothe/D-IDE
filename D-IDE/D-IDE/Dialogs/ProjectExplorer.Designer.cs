@@ -42,6 +42,7 @@ namespace D_IDE
 			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
 			this.setAsActiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.openInFormsEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.DSourceMenu.SuspendLayout();
 			this.ProjectMenu.SuspendLayout();
 			this.SuspendLayout();
@@ -83,21 +84,22 @@ namespace D_IDE
 			// 
 			this.DSourceMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
-            this.removeToolStripMenuItem});
+            this.removeToolStripMenuItem,
+            this.openInFormsEditorToolStripMenuItem});
 			this.DSourceMenu.Name = "contextMenuStrip1";
-			this.DSourceMenu.Size = new System.Drawing.Size(118, 48);
+			this.DSourceMenu.Size = new System.Drawing.Size(187, 92);
 			// 
 			// openToolStripMenuItem
 			// 
 			this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-			this.openToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+			this.openToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
 			this.openToolStripMenuItem.Text = "Open";
 			this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
 			// 
 			// removeToolStripMenuItem
 			// 
 			this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
-			this.removeToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+			this.removeToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
 			this.removeToolStripMenuItem.Text = "Remove";
 			this.removeToolStripMenuItem.Click += new System.EventHandler(this.RemoveFile);
 			// 
@@ -145,6 +147,13 @@ namespace D_IDE
 			this.propertiesToolStripMenuItem.Text = "Properties";
 			this.propertiesToolStripMenuItem.Click += new System.EventHandler(this.propertiesToolStripMenuItem_Click);
 			// 
+			// openInFormsEditorToolStripMenuItem
+			// 
+			this.openInFormsEditorToolStripMenuItem.Name = "openInFormsEditorToolStripMenuItem";
+			this.openInFormsEditorToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
+			this.openInFormsEditorToolStripMenuItem.Text = "Open in Forms Editor";
+			this.openInFormsEditorToolStripMenuItem.Click += new System.EventHandler(this.openInFormsEditorToolStripMenuItem_Click);
+			// 
 			// ProjectExplorer
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -175,5 +184,6 @@ namespace D_IDE
 		private System.Windows.Forms.ToolStripMenuItem setAsActiveToolStripMenuItem;
 		public System.Windows.Forms.ImageList fileIcons;
 		private System.Windows.Forms.ToolStripMenuItem propertiesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem openInFormsEditorToolStripMenuItem;
 	}
 }

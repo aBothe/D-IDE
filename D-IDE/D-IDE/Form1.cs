@@ -49,11 +49,9 @@ namespace D_IDE
 					this.Location = D_IDE_Properties.Default.lastFormLocation;
 			}
 
+			#region Load Panel Layout
 			dockPanel.DocumentStyle = DocumentStyle.DockingWindow;
 
-			Debugger.Log(0, "notice", "Load form layouts");
-
-			#region Load Panel Layout
 			try
 			{
 				if (File.Exists(Program.LayoutFile))
@@ -66,24 +64,16 @@ namespace D_IDE
 						else if (s == typeof(ProjectExplorer).ToString()) return prjexplorer;
 						else if (s == typeof(CallStackWin).ToString()) return callstackwin;
 						else if (s == typeof(ErrorLog).ToString()) return errlog;
-						//else if(s == typeof(PropertyView).ToString())	return propView;
+						else if (s == typeof(PropertyView).ToString() && D_IDE_Properties.Default.EnableFXFormsDesigner) return propView;
 						return null;
 					}));
+				else
+				{
+					setDefaultPanelLayoutToolStripMenuItem_Click(null,EventArgs.Empty);
+				}
 			}
 			catch (Exception ex) { MessageBox.Show(ex.Message); }
 
-			try
-			{
-				if (!hierarchy.Visible) hierarchy.Show(dockPanel, DockState.DockRight);
-				if (!prjexplorer.Visible) prjexplorer.Show(dockPanel, DockState.DockLeft);
-				if (!dbgwin.Visible) dbgwin.Show(dockPanel, DockState.DockBottomAutoHide);
-				if (!bpw.Visible) bpw.Show(dockPanel, DockState.DockBottomAutoHide);
-				if (!output.Visible) output.Show(dockPanel, DockState.DockBottomAutoHide);
-				if (!errlog.Visible) errlog.Show(dockPanel, DockState.DockBottom);
-				if (!callstackwin.Visible) callstackwin.Show(dockPanel, DockState.DockBottomAutoHide);
-				//if(!propView.Visible)propView.Show(dockPanel);
-			}
-			catch { }
 			output.Text = "Program output";
 			output.TabText = "Output";
 
@@ -97,8 +87,7 @@ namespace D_IDE
 			DProject.prjext + ")|*" + DProject.prjext +
 			"|D Source file|*.d|Resourcefile|*.rc";
 
-			Debugger.Log(0, "notice", "Register callbacks");
-
+			#region Callbacks
 			HostCallbackImplementation.Register();
 			HighlightingManager.Manager.AddSyntaxModeFileProvider(new SyntaxFileProvider());
 
@@ -115,11 +104,11 @@ namespace D_IDE
 			DBuilder.OnError += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnError);
 			DBuilder.OnExit += new EventHandler(DBuilder_OnExit);
 			DBuilder.OnMessage += new DBuilder.OutputHandler(delegate(DProject p, string file, string m) { Log(m); });
+			#endregion
 
 			oF.InitialDirectory = sF.InitialDirectory = D_IDE_Properties.Default.DefaultProjectDirectory;
 
-			Debugger.Log(0, "notice", "Open last files/projects");
-
+			#region Open last files/projects
 			if (D_IDE_Properties.Default.OpenLastFiles)
 			{
 				foreach (string f in D_IDE_Properties.Default.lastOpenFiles)
@@ -137,8 +126,7 @@ namespace D_IDE
 				UpdateLastFilesMenu();
 				UpdateFiles();
 			}
-
-			//(new FXFormsDesigner()).Show(dockPanel,DockState.Document);
+			#endregion
 
 			if (D_IDE_Properties.Default.WatchForUpdates)
 			{
@@ -208,6 +196,16 @@ namespace D_IDE
 				if (!(dc is DocumentInstanceWindow)) continue;
 				DocumentInstanceWindow diw = dc as DocumentInstanceWindow;
 				if (diw.fileData.mod_file == fn) return diw;
+			}
+			return null;
+		}
+		public FXFormsDesigner FXFormDesignerByFile(string fn)
+		{
+			foreach (DockContent dc in dockPanel.Documents)
+			{
+				if (!(dc is FXFormsDesigner)) continue;
+				FXFormsDesigner diw = dc as FXFormsDesigner;
+				if (diw.FileName == fn) return diw;
 			}
 			return null;
 		}
@@ -480,11 +478,11 @@ namespace D_IDE
 						exeProc = DBuilder.Exec(single_bin, "", Path.GetDirectoryName(single_bin), true);
 						exeProc.Exited += delegate(object se, EventArgs ev)
 						{
-							dbgStopButtonTS.Enabled = false;
+							toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = false;
 							Log("Process exited with code " + exeProc.ExitCode.ToString());
 						};
 						exeProc.EnableRaisingEvents = true;
-						dbgStopButtonTS.Enabled = true;
+						toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = true;
 						return true;
 					}
 				}
@@ -506,11 +504,11 @@ namespace D_IDE
 				exeProc = DBuilder.Exec(bin, prj.execargs, prj.basedir, true); //prj.type == DProject.PrjType.ConsoleApp
 				exeProc.Exited += delegate(object se, EventArgs ev)
 				{
-					dbgStopButtonTS.Enabled = false;
+					toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = false;
 					DBuilder_OnExit(se, ev);
 				};
 				exeProc.EnableRaisingEvents = true;
-				dbgStopButtonTS.Enabled = true;
+				toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = true;
 				return true;
 			}
 			else
@@ -518,6 +516,17 @@ namespace D_IDE
 				output.Log("File " + bin + " not exists!");
 			}
 			return false;
+		}
+
+		private void SendInputToExeProc(object sender, EventArgs e)
+		{
+			if (exeProc == null || exeProc.HasExited) return;
+
+			InputDlg dlg = new InputDlg();
+			if (dlg.ShowDialog() == DialogResult.OK)
+			{
+				exeProc.StandardInput.WriteLine(dlg.InputString);
+			}
 		}
 
 		private void buildToolStripMenuItem_Click(object sender, EventArgs e)
@@ -735,11 +744,33 @@ namespace D_IDE
 		private void SaveFile(object sender, EventArgs e)
 		{
 			DocumentInstanceWindow mtp = SelectedTabPage;
-			if (mtp == null) return;
+			if (mtp == null)
+			{
+				if (thisForm.dockPanel.ActiveDocument is FXFormsDesigner)
+				{
+					FXFormsDesigner fd = dockPanel.ActiveDocument as FXFormsDesigner;
+					if (!fd.Save()) return;
 
-			mtp.Save();
-			if (!mtp.fileData.IsParsable) return;
-			mtp.ParseFromText(); // Reparse after save
+					mtp = FileDataByFile(fd.FileName);
+					if (mtp != null) mtp.Reload();
+				}
+				else
+					return;
+			}
+			else
+			{
+				mtp.Save();
+				if (!mtp.fileData.IsParsable) return;
+				mtp.ParseFromText(); // Reparse after save
+
+				FXFormsDesigner fd = FXFormDesignerByFile(mtp.fileData.FileName);
+				if (fd != null)
+				{
+					fd.Reload();
+				}
+			}
+
+			if (mtp == null) return;
 
 			foreach (string dir in D_IDE_Properties.Default.parsedDirectories)
 			{
@@ -886,6 +917,29 @@ namespace D_IDE
 			}
 		}
 
+		public FXFormsDesigner OpenFormsDesigner(string file)
+		{
+			FXFormsDesigner ret = null;
+
+			foreach (DockContent dc in dockPanel.Documents)
+			{
+				if (!(dc is FXFormsDesigner)) continue;
+				FXFormsDesigner fd = dc as FXFormsDesigner;
+				if (fd.FileName == file) return fd;
+			}
+
+			if (!File.Exists(file))
+			{
+				Log(ProgressStatusLabel.Text = ("File " + file + " doesn't exist!"));
+				return null;
+			}
+
+			ret = new FXFormsDesigner(file);
+			ret.Show(dockPanel, DockState.Document);
+			if (this.dockPanel.ActiveDocumentPane != null) this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.contextMenuStrip1; // Set Tab selection bars context menu to ours
+			return ret;
+		}
+
 		#endregion
 
 		TreeNode GenerateHierarchyData(DataType env, DataType ch, TreeNode oldNode)
@@ -934,6 +988,18 @@ namespace D_IDE
 		}
 
 		#region GUI actions
+
+		private void setDefaultPanelLayoutToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			hierarchy.Show(dockPanel, DockState.DockRight);
+			prjexplorer.Show(dockPanel, DockState.DockLeft);
+			dbgwin.Show(dockPanel, DockState.DockBottomAutoHide);
+			bpw.Show(dockPanel, DockState.DockBottomAutoHide);
+			output.Show(dockPanel, DockState.DockBottomAutoHide);
+			errlog.Show(dockPanel, DockState.DockBottom);
+			callstackwin.Show(dockPanel, DockState.DockBottomAutoHide);
+			if (D_IDE_Properties.Default.EnableFXFormsDesigner) propView.Show(dockPanel,DockState.DockRight);
+		}
 
 		private void TabSelectionChanged(object sender, EventArgs e)
 		{
@@ -1269,14 +1335,9 @@ namespace D_IDE
 			output.Show(dockPanel);
 		}
 
-		private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
-		{
-			if (SelectedTabPage == null) e.Cancel = true;
-		}
-
 		private void testToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			SelectedTabPage.Close();
+			(dockPanel.ActiveDocument as DockContent).Close();
 		}
 
 		private void closeAllToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1393,6 +1454,5 @@ namespace D_IDE
 		{
 			prjexplorer.UpdateFiles();
 		}
-
 	}
 }

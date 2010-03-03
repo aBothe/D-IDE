@@ -73,6 +73,8 @@ namespace D_IDE
 		private Button button15;
 		private ToolTip toolTip1;
 		private System.ComponentModel.IContainer components;
+		private ComboBox ManifestCreation;
+		private GroupBox Subversioning;
 		public DProject project;
 
 		public new void Load(DProject prj)
@@ -97,6 +99,8 @@ namespace D_IDE
 			{
 				LastVersionCount.Text = prj.LastVersionCount.ToString();
 			}
+
+			ManifestCreation.SelectedIndex = (int)prj.ManifestCreation;
 
 			if (libs.Items.Count > 0)
 				libs.SelectedIndex = 0;
@@ -164,6 +168,8 @@ namespace D_IDE
 				}
 			}
 			catch { }
+
+			prj.ManifestCreation = (DProject.ManifestCreationType)ManifestCreation.SelectedIndex;
 
 			foreach (string lvi in FileDeps.Items)
 			{
@@ -367,6 +373,8 @@ namespace D_IDE
 			this.button11 = new System.Windows.Forms.Button();
 			this.button12 = new System.Windows.Forms.Button();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+			this.ManifestCreation = new System.Windows.Forms.ComboBox();
+			this.Subversioning = new System.Windows.Forms.GroupBox();
 			label3 = new System.Windows.Forms.Label();
 			label4 = new System.Windows.Forms.Label();
 			label2 = new System.Windows.Forms.Label();
@@ -382,6 +390,7 @@ namespace D_IDE
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.tabPage4.SuspendLayout();
+			this.Subversioning.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// label3
@@ -554,10 +563,8 @@ namespace D_IDE
 			// 
 			// tabPage2
 			// 
-			this.tabPage2.Controls.Add(this.label8);
-			this.tabPage2.Controls.Add(this.LastVersionCount);
-			this.tabPage2.Controls.Add(this.StoreLastSources);
-			this.tabPage2.Controls.Add(this.SubversioningEnabled);
+			this.tabPage2.Controls.Add(this.Subversioning);
+			this.tabPage2.Controls.Add(this.ManifestCreation);
 			this.tabPage2.Controls.Add(this.groupBox4);
 			this.tabPage2.Controls.Add(this.groupBox3);
 			this.tabPage2.Location = new System.Drawing.Point(4, 22);
@@ -571,7 +578,7 @@ namespace D_IDE
 			// label8
 			// 
 			this.label8.AutoSize = true;
-			this.label8.Location = new System.Drawing.Point(9, 237);
+			this.label8.Location = new System.Drawing.Point(6, 68);
 			this.label8.Name = "label8";
 			this.label8.Size = new System.Drawing.Size(200, 13);
 			this.label8.TabIndex = 15;
@@ -579,7 +586,8 @@ namespace D_IDE
 			// 
 			// LastVersionCount
 			// 
-			this.LastVersionCount.Location = new System.Drawing.Point(243, 237);
+			this.LastVersionCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.LastVersionCount.Location = new System.Drawing.Point(339, 65);
 			this.LastVersionCount.MaxLength = 10;
 			this.LastVersionCount.Name = "LastVersionCount";
 			this.LastVersionCount.Size = new System.Drawing.Size(80, 20);
@@ -589,7 +597,7 @@ namespace D_IDE
 			// StoreLastSources
 			// 
 			this.StoreLastSources.AutoSize = true;
-			this.StoreLastSources.Location = new System.Drawing.Point(12, 211);
+			this.StoreLastSources.Location = new System.Drawing.Point(9, 42);
 			this.StoreLastSources.Name = "StoreLastSources";
 			this.StoreLastSources.Size = new System.Drawing.Size(250, 17);
 			this.StoreLastSources.TabIndex = 13;
@@ -599,7 +607,7 @@ namespace D_IDE
 			// SubversioningEnabled
 			// 
 			this.SubversioningEnabled.AutoSize = true;
-			this.SubversioningEnabled.Location = new System.Drawing.Point(12, 188);
+			this.SubversioningEnabled.Location = new System.Drawing.Point(9, 19);
 			this.SubversioningEnabled.Name = "SubversioningEnabled";
 			this.SubversioningEnabled.Size = new System.Drawing.Size(229, 17);
 			this.SubversioningEnabled.TabIndex = 10;
@@ -944,6 +952,32 @@ namespace D_IDE
 			this.button12.UseVisualStyleBackColor = true;
 			this.button12.Click += new System.EventHandler(this.button12_Click);
 			// 
+			// ManifestCreation
+			// 
+			this.ManifestCreation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.ManifestCreation.FormattingEnabled = true;
+			this.ManifestCreation.Items.AddRange(new object[] {
+            "Don\'t create manifest file",
+            "Create a manifest with a resource file",
+            "Create and copy the manifest into the output dir."});
+			this.ManifestCreation.Location = new System.Drawing.Point(6, 294);
+			this.ManifestCreation.Name = "ManifestCreation";
+			this.ManifestCreation.Size = new System.Drawing.Size(425, 21);
+			this.ManifestCreation.TabIndex = 16;
+			// 
+			// Subversioning
+			// 
+			this.Subversioning.Controls.Add(this.SubversioningEnabled);
+			this.Subversioning.Controls.Add(this.StoreLastSources);
+			this.Subversioning.Controls.Add(this.label8);
+			this.Subversioning.Controls.Add(this.LastVersionCount);
+			this.Subversioning.Location = new System.Drawing.Point(6, 188);
+			this.Subversioning.Name = "Subversioning";
+			this.Subversioning.Size = new System.Drawing.Size(425, 100);
+			this.Subversioning.TabIndex = 17;
+			this.Subversioning.TabStop = false;
+			this.Subversioning.Text = "groupBox6";
+			// 
 			// ProjectPropertyPage
 			// 
 			this.AcceptButton = this.button1;
@@ -958,7 +992,6 @@ namespace D_IDE
 			this.tabPage1.ResumeLayout(false);
 			this.tabPage1.PerformLayout();
 			this.tabPage2.ResumeLayout(false);
-			this.tabPage2.PerformLayout();
 			this.groupBox4.ResumeLayout(false);
 			this.groupBox4.PerformLayout();
 			this.groupBox3.ResumeLayout(false);
@@ -969,6 +1002,8 @@ namespace D_IDE
 			this.groupBox2.ResumeLayout(false);
 			this.groupBox2.PerformLayout();
 			this.tabPage4.ResumeLayout(false);
+			this.Subversioning.ResumeLayout(false);
+			this.Subversioning.PerformLayout();
 			this.ResumeLayout(false);
 
 		}

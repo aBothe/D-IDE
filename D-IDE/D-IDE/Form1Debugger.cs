@@ -351,6 +351,17 @@ namespace D_IDE
 		{
 			if (dbg == null) return;
 
+			dbg.InputRequest += delegate(uint RequestLength)
+			{
+				InputDlg dlg = new InputDlg();
+				dlg.MaxInputLength = RequestLength;
+				if (dlg.ShowDialog() == DialogResult.OK)
+				{
+					return dlg.InputString;
+				}
+				return "";
+			};
+
 			dbg.Output += delegate(OutputFlags type, string msg)
 			{
 				if (!D_IDE_Properties.Default.VerboseDebugOutput && (type == OutputFlags.Verbose || type == OutputFlags.Normal)) return;

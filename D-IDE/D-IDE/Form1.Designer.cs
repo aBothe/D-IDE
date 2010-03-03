@@ -83,6 +83,7 @@
 			this.stepOverToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
 			this.toggleBreakpointToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
 			this.globalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.propertiesToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.updateCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -135,6 +136,8 @@
 			this.stepOutTS = new System.Windows.Forms.ToolStripButton();
 			this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
 			this.searchTool = new System.Windows.Forms.ToolStripTextBox();
+			this.setDefaultPanelLayoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator19 = new System.Windows.Forms.ToolStripSeparator();
 			this.menuStrip1.SuspendLayout();
 			this.contextMenuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
@@ -413,7 +416,9 @@
             this.errorLogToolStripMenuItem,
             this.debugOutputToolStripMenuItem,
             this.toolStripSeparator18,
-            this.reloadProjectTreeToolStripMenuItem});
+            this.reloadProjectTreeToolStripMenuItem,
+            this.toolStripSeparator19,
+            this.setDefaultPanelLayoutToolStripMenuItem});
 			this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
 			this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
 			this.viewToolStripMenuItem.Text = "View";
@@ -421,61 +426,61 @@
 			// projectExplorerToolStripMenuItem
 			// 
 			this.projectExplorerToolStripMenuItem.Name = "projectExplorerToolStripMenuItem";
-			this.projectExplorerToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.projectExplorerToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
 			this.projectExplorerToolStripMenuItem.Text = "Project Explorer";
 			this.projectExplorerToolStripMenuItem.Click += new System.EventHandler(this.projectExplorerToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem2
 			// 
 			this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-			this.toolStripMenuItem2.Size = new System.Drawing.Size(176, 22);
+			this.toolStripMenuItem2.Size = new System.Drawing.Size(202, 22);
 			this.toolStripMenuItem2.Text = "Class Hierarchy";
 			this.toolStripMenuItem2.Click += new System.EventHandler(this.toolStripMenuItem2_Click);
 			// 
 			// toggleBuildLogToolStripMenuItem
 			// 
 			this.toggleBuildLogToolStripMenuItem.Name = "toggleBuildLogToolStripMenuItem";
-			this.toggleBuildLogToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.toggleBuildLogToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
 			this.toggleBuildLogToolStripMenuItem.Text = "Build Log";
 			this.toggleBuildLogToolStripMenuItem.Click += new System.EventHandler(this.toggleBuildLogToolStripMenuItem_Click_1);
 			// 
 			// outputToolStripMenuItem
 			// 
 			this.outputToolStripMenuItem.Name = "outputToolStripMenuItem";
-			this.outputToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.outputToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
 			this.outputToolStripMenuItem.Text = "Output";
 			this.outputToolStripMenuItem.Click += new System.EventHandler(this.outputToolStripMenuItem_Click);
 			// 
 			// startPageToolStripMenuItem
 			// 
 			this.startPageToolStripMenuItem.Name = "startPageToolStripMenuItem";
-			this.startPageToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.startPageToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
 			this.startPageToolStripMenuItem.Text = "Start page";
 			this.startPageToolStripMenuItem.Click += new System.EventHandler(this.startPageToolStripMenuItem_Click);
 			// 
 			// errorLogToolStripMenuItem
 			// 
 			this.errorLogToolStripMenuItem.Name = "errorLogToolStripMenuItem";
-			this.errorLogToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.errorLogToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
 			this.errorLogToolStripMenuItem.Text = "Error Log";
 			this.errorLogToolStripMenuItem.Click += new System.EventHandler(this.errorLogToolStripMenuItem_Click);
 			// 
 			// debugOutputToolStripMenuItem
 			// 
 			this.debugOutputToolStripMenuItem.Name = "debugOutputToolStripMenuItem";
-			this.debugOutputToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.debugOutputToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
 			this.debugOutputToolStripMenuItem.Text = "Breakpoints";
 			this.debugOutputToolStripMenuItem.Click += new System.EventHandler(this.debugOutputToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator18
 			// 
 			this.toolStripSeparator18.Name = "toolStripSeparator18";
-			this.toolStripSeparator18.Size = new System.Drawing.Size(173, 6);
+			this.toolStripSeparator18.Size = new System.Drawing.Size(199, 6);
 			// 
 			// reloadProjectTreeToolStripMenuItem
 			// 
 			this.reloadProjectTreeToolStripMenuItem.Name = "reloadProjectTreeToolStripMenuItem";
-			this.reloadProjectTreeToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+			this.reloadProjectTreeToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
 			this.reloadProjectTreeToolStripMenuItem.Text = "Reload Project Tree";
 			this.reloadProjectTreeToolStripMenuItem.Click += new System.EventHandler(this.reloadProjectTreeToolStripMenuItem_Click);
 			// 
@@ -554,7 +559,8 @@
             this.singleSteptoolStripMenuItem3,
             this.stepOverToolStripMenuItem,
             this.toolStripSeparator16,
-            this.toggleBreakpointToolStripMenuItem});
+            this.toggleBreakpointToolStripMenuItem,
+            this.toolStripMenuItem3});
 			this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
 			this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
 			this.debuggingToolStripMenuItem.Text = "Debug";
@@ -622,6 +628,14 @@
 			this.toggleBreakpointToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
 			this.toggleBreakpointToolStripMenuItem.Text = "Toggle Breakpoint";
 			this.toggleBreakpointToolStripMenuItem.Click += new System.EventHandler(this.toggleBreakpointToolStripMenuItem_Click);
+			// 
+			// toolStripMenuItem3
+			// 
+			this.toolStripMenuItem3.Enabled = false;
+			this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+			this.toolStripMenuItem3.Size = new System.Drawing.Size(240, 22);
+			this.toolStripMenuItem3.Text = "Send input string";
+			this.toolStripMenuItem3.Click += new System.EventHandler(this.SendInputToExeProc);
 			// 
 			// globalToolStripMenuItem
 			// 
@@ -771,7 +785,6 @@
             this.closeAllOthersToolStripMenuItem});
 			this.contextMenuStrip1.Name = "contextMenuStrip1";
 			this.contextMenuStrip1.Size = new System.Drawing.Size(159, 70);
-			this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
 			// 
 			// testToolStripMenuItem
 			// 
@@ -1078,6 +1091,18 @@
 			this.searchTool.ToolTipText = "Press <Return> for search in current document";
 			this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
 			// 
+			// setDefaultPanelLayoutToolStripMenuItem
+			// 
+			this.setDefaultPanelLayoutToolStripMenuItem.Name = "setDefaultPanelLayoutToolStripMenuItem";
+			this.setDefaultPanelLayoutToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
+			this.setDefaultPanelLayoutToolStripMenuItem.Text = "Set Default Panel Layout";
+			this.setDefaultPanelLayoutToolStripMenuItem.Click += new System.EventHandler(this.setDefaultPanelLayoutToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator19
+			// 
+			this.toolStripSeparator19.Name = "toolStripSeparator19";
+			this.toolStripSeparator19.Size = new System.Drawing.Size(199, 6);
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1213,6 +1238,9 @@
 		private System.Windows.Forms.ToolStripMenuItem watchForUpdatesToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator18;
 		private System.Windows.Forms.ToolStripMenuItem reloadProjectTreeToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator19;
+		private System.Windows.Forms.ToolStripMenuItem setDefaultPanelLayoutToolStripMenuItem;
 	}
 }
 

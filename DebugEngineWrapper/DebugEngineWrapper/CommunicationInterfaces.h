@@ -10,7 +10,64 @@ namespace DebugEngineWrapper
 	ref class DBGEngine;
 
 
+		class InputClass : public  IDebugInputCallbacks
+	{
+	private:
+		LONG  m_refCount;
+		gcroot<DBGEngine^> dbg;
 
+	public:
+		InputClass(DBGEngine^ eng)
+		{
+			this->dbg=eng;
+		};
+		
+		HRESULT __stdcall EndInput()
+		{
+			return 0;
+		}
+
+		HRESULT __stdcall StartInput(
+			IN ULONG  ReqLength
+			)
+		{
+			dbg->ReqInput(ReqLength);
+			return 0;
+		}
+
+		STDMETHODIMP_(ULONG) AddRef(THIS) 
+		{
+			InterlockedIncrement(&m_refCount);
+			return m_refCount;
+		}
+
+		STDMETHODIMP_(ULONG) Release(THIS) 
+		{
+			LONG retVal;
+			InterlockedDecrement(&m_refCount);
+			retVal = m_refCount;
+			if (retVal == 0) 
+			{
+				delete this;
+			}
+			return retVal;
+		}
+
+		STDMETHODIMP QueryInterface(THIS_
+			IN REFIID interfaceId,
+			OUT PVOID* ppInterface) 
+		{
+			*ppInterface = 0;
+			HRESULT res = E_NOINTERFACE;
+			if (TRUE == IsEqualIID(interfaceId, __uuidof(IUnknown)) || TRUE == IsEqualIID(interfaceId, __uuidof(IDebugInputCallbacks))) 
+			{
+				*ppInterface = (IDebugInputCallbacks*) this;
+				AddRef();
+				res = S_OK;
+			}
+			return res;
+		}
+	};
 
 
 	class OutputClass : public  IDebugOutputCallbacksWide
@@ -275,10 +332,11 @@ namespace DebugEngineWrapper
 
 
 
-	// Debug engine ctor must be placed here because c++ wants OutputClass to be defined -.-
+	// Debug engine ctor must be placed here because c++ wants OutputClass to be defined
 	void DBGEngine::AssignCallbacks()
 	{
 		client->SetEventCallbacksWide((PDEBUG_EVENT_CALLBACKS_WIDE) new EventsClass(this));
+		client->SetInputCallbacks((PDEBUG_INPUT_CALLBACKS) new InputClass(this));
 		client->SetOutputCallbacksWide((PDEBUG_OUTPUT_CALLBACKS_WIDE) new OutputClass(this));
 	}
 

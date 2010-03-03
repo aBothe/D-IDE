@@ -410,7 +410,7 @@ namespace D_IDE
 			catch (Exception ex) { txt.Document.TextContent = File.ReadAllText(filename); throw ex; }
 			Modified = false;
 		}
-
+		
 		public DocumentInstanceWindow(string filename, string content, DProject prj)
 		{
 			this.project = prj;
@@ -419,6 +419,12 @@ namespace D_IDE
 			Modified = false;
 		}
 
+		public void Reload()
+		{
+			txt.LoadFile(fileData.FileName);
+			ParseFromText();
+		}
+		
 		public void Save()
 		{
 			if (fileData.mod_file == "" || fileData.mod_file == null || !Modified) return;
@@ -1124,6 +1130,7 @@ namespace D_IDE
 		public bool SkipUnknownCode = true;
 		#endregion
 
+		public bool EnableFXFormsDesigner = false; // For those who want to experiment a little bit ;-)
 		public bool RetrieveNews = true;
 		public bool SingleInstance = true;
 		public bool WatchForUpdates = true;

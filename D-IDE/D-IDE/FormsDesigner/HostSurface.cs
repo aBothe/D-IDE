@@ -36,7 +36,6 @@ namespace D_IDE.FormsDesigner
 
 		internal void Initialize()
 		{
-
 			Control control = null;
 			IDesignerHost host = (IDesignerHost)this.GetService(typeof(IDesignerHost));
 

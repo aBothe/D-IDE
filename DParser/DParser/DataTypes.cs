@@ -71,6 +71,32 @@ namespace D_Parser
 			set { if (children.Count > i) children[i] = value; }
         }
 
+		public DataType this[string name]
+		{
+			get
+			{
+				if (children.Count > 1)
+				{
+					foreach (INode n in Children)
+					{
+						if ((n as DataType).name == name) return (n as DataType);
+					}
+				}
+				return null;
+			}
+			set
+			{
+				if (children.Count > 1)
+				{
+					for (int i = 0; i < Count;i++ )
+					{
+						if(this[i].name == name) this[i]=value;
+					}
+				}
+			}
+		}
+
+
 		public override string ToString()
 		{
 			return "["+fieldtype.ToString()+"] "+type+" "+name;
