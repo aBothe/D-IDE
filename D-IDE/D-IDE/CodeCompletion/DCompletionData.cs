@@ -81,7 +81,11 @@ namespace D_IDE
 		/// <returns></returns>
 		public static string BuildDescriptionString(DataType data)
 		{
-			return BuildDescriptionString(data, true);
+			return BuildDescriptionString(data,null, true);
+		}
+		public static string BuildDescriptionString(DataType data_, DModule mod)
+		{
+			return BuildDescriptionString(data_, mod, true);
 		}
 		/// <summary>
 		/// Builds expression description string
@@ -89,7 +93,7 @@ namespace D_IDE
 		/// <param name="data"></param>
 		/// <param name="IncludeDesc"></param>
 		/// <returns></returns>
-		public static string BuildDescriptionString(DataType data_, bool IncludeDesc)
+		public static string BuildDescriptionString(DataType data_, DModule mod, bool IncludeDesc)
 		{
 			if(data_ == null) return "";
 			DataType data=(data_ as DataType);
@@ -99,9 +103,15 @@ namespace D_IDE
 				if(data.fieldtype == FieldType.Root)
 				{
 					if(data.name != "")
-						return data.name;
+						ret+=data.name;
 					else
-						return data.module;
+						ret+=data.module;
+
+					if (mod != null && IncludeDesc)
+					{
+						ret += "\r\n\r\n" + mod.FileName;
+					}
+					return ret;
 				}
 
 				string path = (data.module != null && data.module != "" ? (data.module + ".") : "");

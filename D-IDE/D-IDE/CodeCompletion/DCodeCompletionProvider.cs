@@ -188,13 +188,14 @@ namespace D_IDE
 
 							if (dmods2.Count < 1) { i--; continue; }
 							isNameSpace = true;
+
+							if (prj == null || (module = prj.FileDataByFile(modpath)) == null)
+								module = D_IDE_Properties.Default[modpath];
+
 							if (dmods2.Count == 1 && dmods2[0].ModuleName == modpath)
 							{
 								break;
 							}
-
-							if (prj==null || (module = prj.FileDataByFile(modpath)) == null)
-								module = D_IDE_Properties.Default[modpath];
 
 							//Create a synthetic node which only contains module names
 							seldt = new DataType(FieldType.Root);

@@ -372,7 +372,7 @@ namespace D_IDE
 			if (dt == null) return;
 
 			if (!ctor)
-				e.ShowToolTip(DCompletionData.BuildDescriptionString(dt));
+				e.ShowToolTip(DCompletionData.BuildDescriptionString(dt,gpf));
 			else
 			{
 				string tt = "";
