@@ -102,6 +102,7 @@ namespace D_IDE
 			this.tcCont = new System.Windows.Forms.ContextMenuStrip();
 			this.goToDefinitionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			createImportDirectiveItem = new ToolStripMenuItem();
+			this.Activated += new EventHandler(DocumentInstanceWindow_Activated);
 
 			ToolStripMenuItem tmi1 = new ToolStripMenuItem("Copy", global::D_IDE.Properties.Resources.copy, new EventHandler(delegate(object sender, EventArgs ea)
 				{
@@ -140,6 +141,11 @@ namespace D_IDE
 
 			this.tcCont.ResumeLayout(false);
 			txt.ContextMenuStrip = tcCont;
+		}
+
+		void DocumentInstanceWindow_Activated(object sender, EventArgs e)
+		{
+			this.txt.ActiveTextAreaControl.Focus();
 		}
 
 		void Document_DocumentChanged(object sender, DocumentEventArgs e)
@@ -1178,7 +1184,7 @@ namespace D_IDE
 		}
 		public static CodeLocation toCodeLocation(TextLocation Caret)
 		{
-			return new CodeLocation(Caret.Column, Caret.Line);
+			return new CodeLocation(Caret.Column+1, Caret.Line+1);
 		}
 	}
 

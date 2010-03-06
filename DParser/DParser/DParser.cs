@@ -422,7 +422,7 @@ namespace D_Parser
 			BlockModifiers.Clear();
 			BlockModifiers.Add(DTokens.Public);
             
-            Debug.Print("ParseBlock started ("+ret.name+")");
+            //Debug.Print("ParseBlock started ("+ret.name+")");
             
 			if(la != null) ret.startLoc = GetCodeLocation(la);
 
@@ -1026,7 +1026,7 @@ parseexpr:
 				}
 				#endregion
 			}
-            Debug.Print("ParseBlock ended (" + ret.name + ")");
+           // Debug.Print("ParseBlock ended (" + ret.name + ")");
 		}
 
 		/// <summary>
@@ -1716,7 +1716,9 @@ parseexpr:
 
 				if(la.Kind == DTokens.OpenCurlyBrace)// normal function void foo() >{<}
 				{
+					Location sloc= tv.StartLocation;
 					ParseBlock(ref tv, true);
+					tv.StartLocation = sloc;
 					goto expr_ret;
 				}
 
@@ -1734,7 +1736,9 @@ parseexpr:
 					}
 					lexer.NextToken(); // Skip "in"
 
+					Location sloc = tv.StartLocation;
 					ParseBlock(ref tv, true);
+					tv.StartLocation = sloc;
 
 					Token bpk = Peek(1);
 					if(bpk.Kind == DTokens.In || bpk.Kind == DTokens.Out || bpk.Kind == DTokens.Body)

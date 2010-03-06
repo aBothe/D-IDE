@@ -128,9 +128,10 @@ namespace D_IDE
 				else
 				{
 					// Search expression in all superior blocks
-					seldt = SearchExprInClassHierarchyBackward(GetBlockAt(local.dom, caretLocation), RemoveArrayOrTemplatePartFromDecl(expressions[0]));
+					DataType cblock = GetBlockAt(local.dom, caretLocation);
+					seldt = SearchExprInClassHierarchyBackward(cblock, RemoveArrayOrTemplatePartFromDecl(expressions[0]));
 					// Search expression in current module root first
-					if (seldt == null) seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
+					if (seldt == null)	seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
 					// If there wasn't found anything, search deeper and recursive
 					//if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom, GetBlockAt(local.dom, caretLocation), RemoveArrayOrTemplatePartFromDecl(expressions[0]));
 					// EDIT: Don't search recursively in all blocks of local.dom because you'd resolve something you couldn't access...
@@ -148,7 +149,7 @@ namespace D_IDE
 						string[] modpath_packages;
 						List<DModule> dmods = new List<DModule>(D_IDE_Properties.GlobalModules),
 							dmods2 = new List<DModule>();
-						dmods.AddRange(prj.files);// Very important: add the project's files to the search list
+						if(prj!=null)dmods.AddRange(prj.files);// Very important: add the project's files to the search list
 
 						i = expressions.Length;
 						/*
@@ -192,7 +193,7 @@ namespace D_IDE
 								break;
 							}
 
-							if ((module = prj.FileDataByFile(modpath)) == null)
+							if (prj==null || (module = prj.FileDataByFile(modpath)) == null)
 								module = D_IDE_Properties.Default[modpath];
 
 							//Create a synthetic node which only contains module names
