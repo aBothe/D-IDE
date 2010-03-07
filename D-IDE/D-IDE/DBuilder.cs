@@ -129,6 +129,7 @@ namespace D_IDE
 
 			if (prj.ManifestCreation == DProject.ManifestCreationType.IntegratedResource)
 			{
+				Form1.thisForm.BuildProgressBar.Maximum++;
 				string manifestFile = "Manifest.manifest";
 				string manifestRCFile = "Manifest.rc";
 				DProject.CreateManifestFile(manifestFile);
