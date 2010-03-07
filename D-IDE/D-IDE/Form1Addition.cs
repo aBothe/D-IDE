@@ -1227,8 +1227,8 @@ namespace D_IDE
 		public SyntaxFileProvider()
 		{
 			modes = new List<SyntaxMode>();
-			if(!D_IDE_Properties.Default.SyntaxHighlightingEntries.ContainsKey(".d"))modes.Add(new SyntaxMode("D.xshd", "D", ".d"));
-			if (!D_IDE_Properties.Default.SyntaxHighlightingEntries.ContainsKey(".rc")) modes.Add(new SyntaxMode("RC.xshd", "RC", ".rc"));
+			if(!D_IDE_Properties.Default.SyntaxHighlightingEntries.ContainsKey(".d"))modes.Add(new SyntaxMode(Application.StartupPath+ "\\D.xshd", "D", ".d"));
+			if (!D_IDE_Properties.Default.SyntaxHighlightingEntries.ContainsKey(".rc")) modes.Add(new SyntaxMode(Application.StartupPath + "\\RC.xshd", "RC", ".rc"));
 
 			foreach (string ext in D_IDE_Properties.Default.SyntaxHighlightingEntries.Keys)
 			{
