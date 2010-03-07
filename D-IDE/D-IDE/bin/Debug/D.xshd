@@ -4,7 +4,7 @@
 <SyntaxDefinition name = "D" extensions = ".d">
 
   <Environment>
-    <Default      color = "SystemColors.WindowText"    bgcolor = "SystemColors.Window"/>
+    <Default      color = "SystemColors.WindowText" bgcolor="SystemColors.Window"/>
     <Selection    color = "SystemColors.HighlightText" bgcolor = "SystemColors.Highlight"/>
     <!--		<Selection    bgcolor = "LightBlue"/> -->
     <VRuler       color = "SystemColors.ControlLight"/>

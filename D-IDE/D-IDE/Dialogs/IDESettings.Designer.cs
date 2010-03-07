@@ -65,6 +65,7 @@
 			this.parsedFiles = new System.Windows.Forms.ListBox();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.restoreLastSession = new System.Windows.Forms.CheckBox();
 			this.button6 = new System.Windows.Forms.Button();
 			this.button5 = new System.Windows.Forms.Button();
 			this.reopenLastPrj = new System.Windows.Forms.CheckBox();
@@ -76,13 +77,23 @@
 			this.tabPage4 = new System.Windows.Forms.TabPage();
 			this.AutoSkipUnknownCode = new System.Windows.Forms.CheckBox();
 			this.verbosedbgoutput = new System.Windows.Forms.CheckBox();
+			this.tabPage5 = new System.Windows.Forms.TabPage();
+			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.label10 = new System.Windows.Forms.Label();
+			this.HighLightingSearchXSHD = new System.Windows.Forms.Button();
+			this.HighLightingAssocXSHDFile = new System.Windows.Forms.TextBox();
+			this.HighLightingDelExt = new System.Windows.Forms.Button();
+			this.HighlightingAddExt = new System.Windows.Forms.Button();
+			this.HighLightingExt = new System.Windows.Forms.TextBox();
+			this.HighLightingExts = new System.Windows.Forms.ListBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.restoreLastSession = new System.Windows.Forms.CheckBox();
 			this.tabPage1.SuspendLayout();
 			this.tabPage3.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPage2.SuspendLayout();
 			this.tabPage4.SuspendLayout();
+			this.tabPage5.SuspendLayout();
+			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// button1
@@ -432,6 +443,7 @@
 			this.tabControl1.Controls.Add(this.tabPage3);
 			this.tabControl1.Controls.Add(this.tabPage1);
 			this.tabControl1.Controls.Add(this.tabPage4);
+			this.tabControl1.Controls.Add(this.tabPage5);
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
@@ -456,6 +468,16 @@
 			this.tabPage2.TabIndex = 2;
 			this.tabPage2.Text = "IDE";
 			this.tabPage2.UseVisualStyleBackColor = true;
+			// 
+			// restoreLastSession
+			// 
+			this.restoreLastSession.AutoSize = true;
+			this.restoreLastSession.Location = new System.Drawing.Point(8, 159);
+			this.restoreLastSession.Name = "restoreLastSession";
+			this.restoreLastSession.Size = new System.Drawing.Size(170, 17);
+			this.restoreLastSession.TabIndex = 8;
+			this.restoreLastSession.Text = "Restore last session on startup";
+			this.restoreLastSession.UseVisualStyleBackColor = true;
 			// 
 			// button6
 			// 
@@ -571,19 +593,107 @@
 			this.verbosedbgoutput.Text = "Verbose debug output";
 			this.verbosedbgoutput.UseVisualStyleBackColor = true;
 			// 
+			// tabPage5
+			// 
+			this.tabPage5.Controls.Add(this.groupBox1);
+			this.tabPage5.Location = new System.Drawing.Point(4, 22);
+			this.tabPage5.Name = "tabPage5";
+			this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPage5.Size = new System.Drawing.Size(618, 589);
+			this.tabPage5.TabIndex = 4;
+			this.tabPage5.Text = "Editor";
+			this.tabPage5.UseVisualStyleBackColor = true;
+			// 
+			// groupBox1
+			// 
+			this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBox1.Controls.Add(this.label10);
+			this.groupBox1.Controls.Add(this.HighLightingSearchXSHD);
+			this.groupBox1.Controls.Add(this.HighLightingAssocXSHDFile);
+			this.groupBox1.Controls.Add(this.HighLightingDelExt);
+			this.groupBox1.Controls.Add(this.HighlightingAddExt);
+			this.groupBox1.Controls.Add(this.HighLightingExt);
+			this.groupBox1.Controls.Add(this.HighLightingExts);
+			this.groupBox1.Location = new System.Drawing.Point(8, 6);
+			this.groupBox1.Name = "groupBox1";
+			this.groupBox1.Size = new System.Drawing.Size(607, 190);
+			this.groupBox1.TabIndex = 0;
+			this.groupBox1.TabStop = false;
+			this.groupBox1.Text = "Code highlighting (Changes require restart)";
+			// 
+			// label10
+			// 
+			this.label10.AutoSize = true;
+			this.label10.Location = new System.Drawing.Point(156, 74);
+			this.label10.Name = "label10";
+			this.label10.Size = new System.Drawing.Size(215, 52);
+			this.label10.TabIndex = 6;
+			this.label10.Text = "-Enter extension like .d in the upper left field \r\n-Select .xshd file via \"...\"-B" +
+				"utton\r\n-Click \"Add Extension\"\r\n-Restart D-IDE after editing your .xshd files";
+			// 
+			// HighLightingSearchXSHD
+			// 
+			this.HighLightingSearchXSHD.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.HighLightingSearchXSHD.Location = new System.Drawing.Point(577, 46);
+			this.HighLightingSearchXSHD.Name = "HighLightingSearchXSHD";
+			this.HighLightingSearchXSHD.Size = new System.Drawing.Size(27, 23);
+			this.HighLightingSearchXSHD.TabIndex = 5;
+			this.HighLightingSearchXSHD.Text = "...";
+			this.HighLightingSearchXSHD.UseVisualStyleBackColor = true;
+			this.HighLightingSearchXSHD.Click += new System.EventHandler(this.HighLightingSearchXSHD_Click);
+			// 
+			// HighLightingAssocXSHDFile
+			// 
+			this.HighLightingAssocXSHDFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.HighLightingAssocXSHDFile.BackColor = System.Drawing.Color.White;
+			this.HighLightingAssocXSHDFile.Location = new System.Drawing.Point(156, 48);
+			this.HighLightingAssocXSHDFile.Name = "HighLightingAssocXSHDFile";
+			this.HighLightingAssocXSHDFile.ReadOnly = true;
+			this.HighLightingAssocXSHDFile.Size = new System.Drawing.Size(415, 20);
+			this.HighLightingAssocXSHDFile.TabIndex = 4;
+			// 
+			// HighLightingDelExt
+			// 
+			this.HighLightingDelExt.Location = new System.Drawing.Point(100, 19);
+			this.HighLightingDelExt.Name = "HighLightingDelExt";
+			this.HighLightingDelExt.Size = new System.Drawing.Size(50, 23);
+			this.HighLightingDelExt.TabIndex = 3;
+			this.HighLightingDelExt.Text = "Delete";
+			this.HighLightingDelExt.UseVisualStyleBackColor = true;
+			this.HighLightingDelExt.Click += new System.EventHandler(this.HighLightingDelExt_Click);
+			// 
+			// HighlightingAddExt
+			// 
+			this.HighlightingAddExt.Location = new System.Drawing.Point(6, 19);
+			this.HighlightingAddExt.Name = "HighlightingAddExt";
+			this.HighlightingAddExt.Size = new System.Drawing.Size(88, 23);
+			this.HighlightingAddExt.TabIndex = 2;
+			this.HighlightingAddExt.Text = "Add Extension";
+			this.HighlightingAddExt.UseVisualStyleBackColor = true;
+			this.HighlightingAddExt.Click += new System.EventHandler(this.HighlightingAddExt_Click);
+			// 
+			// HighLightingExt
+			// 
+			this.HighLightingExt.Location = new System.Drawing.Point(6, 48);
+			this.HighLightingExt.Name = "HighLightingExt";
+			this.HighLightingExt.Size = new System.Drawing.Size(144, 20);
+			this.HighLightingExt.TabIndex = 1;
+			this.toolTip1.SetToolTip(this.HighLightingExt, "for example \".d\" or \".rc\" (no quotas!)");
+			// 
+			// HighLightingExts
+			// 
+			this.HighLightingExts.FormattingEnabled = true;
+			this.HighLightingExts.Location = new System.Drawing.Point(6, 74);
+			this.HighLightingExts.Name = "HighLightingExts";
+			this.HighLightingExts.Size = new System.Drawing.Size(144, 108);
+			this.HighLightingExts.TabIndex = 0;
+			this.HighLightingExts.SelectedIndexChanged += new System.EventHandler(this.HighLightingExts_SelectedIndexChanged);
+			// 
 			// toolTip1
 			// 
 			this.toolTip1.AutomaticDelay = 250;
-			// 
-			// restoreLastSession
-			// 
-			this.restoreLastSession.AutoSize = true;
-			this.restoreLastSession.Location = new System.Drawing.Point(8, 159);
-			this.restoreLastSession.Name = "restoreLastSession";
-			this.restoreLastSession.Size = new System.Drawing.Size(170, 17);
-			this.restoreLastSession.TabIndex = 8;
-			this.restoreLastSession.Text = "Restore last session on startup";
-			this.restoreLastSession.UseVisualStyleBackColor = true;
 			// 
 			// IDESettings
 			// 
@@ -607,6 +717,9 @@
 			this.tabPage2.PerformLayout();
 			this.tabPage4.ResumeLayout(false);
 			this.tabPage4.PerformLayout();
+			this.tabPage5.ResumeLayout(false);
+			this.groupBox1.ResumeLayout(false);
+			this.groupBox1.PerformLayout();
 			this.ResumeLayout(false);
 
 		}
@@ -661,5 +774,14 @@
 		private System.Windows.Forms.ToolTip toolTip1;
 		private System.Windows.Forms.CheckBox DoAutoSave;
 		private System.Windows.Forms.CheckBox restoreLastSession;
+		private System.Windows.Forms.TabPage tabPage5;
+		private System.Windows.Forms.GroupBox groupBox1;
+		private System.Windows.Forms.Button HighLightingSearchXSHD;
+		private System.Windows.Forms.TextBox HighLightingAssocXSHDFile;
+		private System.Windows.Forms.Button HighLightingDelExt;
+		private System.Windows.Forms.Button HighlightingAddExt;
+		private System.Windows.Forms.TextBox HighLightingExt;
+		private System.Windows.Forms.ListBox HighLightingExts;
+		private System.Windows.Forms.Label label10;
 	}
 }

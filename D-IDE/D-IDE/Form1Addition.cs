@@ -85,7 +85,11 @@ namespace D_IDE
 			txt.TextEditorProperties.ShowSpaces = true;
 			txt.TextEditorProperties.ShowVerticalRuler = false;
 
-			txt.SetHighlighting(Path.GetExtension(fn).TrimStart(new char[] { '.' }).ToUpper());
+			try
+			{
+				txt.SetHighlighting(Path.GetExtension(fn).TrimStart(new char[] { '.' }).ToUpper());
+			}
+			catch (Exception ex) { MessageBox.Show(ex.Message+" (File not found or wrong file format!)"); }
 			txt.ActiveTextAreaControl.Caret.PositionChanged += new EventHandler(Caret_PositionChanged);
 			txt.Document.DocumentChanged += new DocumentEventHandler(Document_DocumentChanged);
 
@@ -781,6 +785,23 @@ namespace D_IDE
 									p.DoAutoSaveOnBuilding = xr.Value == "1";
 								}
 								break;
+
+							case "highlightings":
+								if (xr.IsEmptyElement) break;
+								while (xr.Read())
+								{
+									if (xr.LocalName == "f")
+									{
+										try
+										{
+											string ext = xr.GetAttribute("ext");
+											p.SyntaxHighlightingEntries.Add(ext,xr.ReadString());
+										}
+										catch { }
+									}
+									else break;
+								}
+								break;
 						}
 					}
 				}
@@ -1041,6 +1062,17 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Default.DoAutoSaveOnBuilding ? "1" : "0");
 			xw.WriteEndElement();
 
+			xw.WriteStartElement("highlightings");
+			foreach (string ext in Default.SyntaxHighlightingEntries.Keys)
+			{
+				if (String.IsNullOrEmpty(Default.SyntaxHighlightingEntries[ext])) continue;
+				xw.WriteStartElement("f");
+				xw.WriteAttributeString("ext",ext);
+				xw.WriteCData(Default.SyntaxHighlightingEntries[ext]);
+				xw.WriteEndElement();
+			}
+			xw.WriteEndElement();
+
 			xw.WriteEndDocument();
 			xw.Close();
 		}
@@ -1125,6 +1157,7 @@ namespace D_IDE
 		public FormWindowState lastFormState = FormWindowState.Maximized;
 		public Point lastFormLocation;
 		public Size lastFormSize;
+		public Dictionary<string, string> SyntaxHighlightingEntries=new Dictionary<string,string>();
 
 		public bool LogBuildProgress = true;
 		public bool ShowBuildCommands = true;
@@ -1194,15 +1227,23 @@ namespace D_IDE
 		public SyntaxFileProvider()
 		{
 			modes = new List<SyntaxMode>();
-			modes.Add(new SyntaxMode("D.xshd", "D", ".d"));
-			modes.Add(new SyntaxMode("RC.xshd", "RC", ".rc"));
+			if(!D_IDE_Properties.Default.SyntaxHighlightingEntries.ContainsKey(".d"))modes.Add(new SyntaxMode("D.xshd", "D", ".d"));
+			if (!D_IDE_Properties.Default.SyntaxHighlightingEntries.ContainsKey(".rc")) modes.Add(new SyntaxMode("RC.xshd", "RC", ".rc"));
+
+			foreach (string ext in D_IDE_Properties.Default.SyntaxHighlightingEntries.Keys)
+			{
+				modes.Add(new SyntaxMode(D_IDE_Properties.Default.SyntaxHighlightingEntries[ext],ext.Trim('.').ToUpperInvariant(),ext));
+			}
 		}
 
 		#region ISyntaxModeFileProvider Member
 
 		public System.Xml.XmlTextReader GetSyntaxModeFile(SyntaxMode syntaxMode)
 		{
-			return new XmlTextReader(new StringReader(Resources.ResourceManager.GetString(syntaxMode.Name)));
+			if (File.Exists(syntaxMode.FileName))
+				return new XmlTextReader(new FileStream(syntaxMode.FileName,FileMode.Open,FileAccess.Read));
+			else
+				return new XmlTextReader(new StringReader(Resources.ResourceManager.GetString(syntaxMode.Name)));
 		}
 
 		public ICollection<SyntaxMode> SyntaxModes

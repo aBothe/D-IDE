@@ -58,6 +58,10 @@ namespace D_IDE
 
 			verbosedbgoutput.Checked = D_IDE_Properties.Default.VerboseDebugOutput;
 			AutoSkipUnknownCode.Checked = D_IDE_Properties.Default.SkipUnknownCode;
+
+			HighlightingEntries = D_IDE_Properties.Default.SyntaxHighlightingEntries;
+			foreach (string ext in HighlightingEntries.Keys)
+				HighLightingExts.Items.Add(ext);
 		}
 
 		private void button1_Click(object sender, EventArgs e)
@@ -99,6 +103,8 @@ namespace D_IDE
 
 			D_IDE_Properties.Default.VerboseDebugOutput = verbosedbgoutput.Checked;
 			D_IDE_Properties.Default.SkipUnknownCode = AutoSkipUnknownCode.Checked;
+
+			D_IDE_Properties.Default.SyntaxHighlightingEntries = HighlightingEntries;
 		}
 
 		private void button2_Click(object sender, EventArgs e)
@@ -185,5 +191,47 @@ namespace D_IDE
 			D_IDE_Properties.Default = new D_IDE_Properties();
 			ReadValues();
 		}
+
+		#region Highlighting
+		Dictionary<string, string> HighlightingEntries;
+		private void HighlightingAddExt_Click(object sender, EventArgs e)
+		{
+			if (HighLightingExt.Text != "" && !HighlightingEntries.ContainsKey(HighLightingExt.Text))
+			{
+				HighLightingExts.Items.Add(HighLightingExt.Text);
+				HighlightingEntries.Add(HighLightingExt.Text,HighLightingAssocXSHDFile.Text);
+			}
+		}
+		
+		private void HighLightingDelExt_Click(object sender, EventArgs e)
+		{
+			if (HighLightingExts.SelectedIndex >= 0)
+			{
+				HighlightingEntries.Remove((string)HighLightingExts.SelectedItem);
+				HighLightingExts.Items.RemoveAt(HighLightingExts.SelectedIndex);
+			}
+		}
+
+		private void HighLightingExts_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			if(HighLightingExts.SelectedItem!=null)
+				HighLightingAssocXSHDFile.Text = HighlightingEntries[(string)HighLightingExts.SelectedItem];
+		}
+
+		private void HighLightingSearchXSHD_Click(object sender, EventArgs e)
+		{
+			OpenFileDialog of = new OpenFileDialog();
+			of.Filter = "Highlighting style document (*.xshd)|*.xshd";
+			of.CheckFileExists = true;
+			of.FilterIndex = 0;
+			of.Title = "Select style info file";
+			if (of.ShowDialog() == DialogResult.OK)
+			{
+				HighLightingAssocXSHDFile.Text = of.FileName;
+				if (HighLightingExts.SelectedItem != null)
+					HighlightingEntries[(string)HighLightingExts.SelectedItem]=of.FileName;
+			}
+		}
+		#endregion
 	}
 }
