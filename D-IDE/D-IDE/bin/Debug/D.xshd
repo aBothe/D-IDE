@@ -199,6 +199,7 @@
         <Key word = "invariant" />
         <Key word = "ireal" />
         <Key word = "is" />
+				<Key word = "immutable" />
 
         <Key word = "lazy" />
         <Key word = "long" />

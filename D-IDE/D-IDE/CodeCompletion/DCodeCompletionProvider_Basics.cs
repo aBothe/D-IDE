@@ -12,7 +12,7 @@ namespace D_IDE
 	public partial class DCodeCompletionProvider
 	{
 		public ImageList icons;
-		public DProject prj;
+		//public DProject prj;
 
 		public static int ParseCurLevel(string t, int offset)
 		{
@@ -93,10 +93,10 @@ namespace D_IDE
 		}
 
 		#region Props
-		public DCodeCompletionProvider(ref DProject dprj, ImageList IconData)
+		public DCodeCompletionProvider(/*ref DProject dprj, */ImageList IconData)
 		{
 			presel = "";
-			this.prj = dprj;
+			//this.prj = dprj;
 			this.icons = IconData;
 		}
 

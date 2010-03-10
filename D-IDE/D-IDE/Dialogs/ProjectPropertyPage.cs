@@ -197,8 +197,7 @@ namespace D_IDE
 			project = prj;
 			prj.Save();
 
-			if (Form1.thisForm.prj.prjfn == prj.prjfn)
-				Form1.thisForm.prj = project;
+			D_IDE_Properties.Projects[prj.prjfn] = project;
 			Form1.thisForm.UpdateFiles();
 
 			return prj;

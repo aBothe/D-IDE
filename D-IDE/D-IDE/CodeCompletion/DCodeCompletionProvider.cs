@@ -325,7 +325,7 @@ namespace D_IDE
 					presel = null; // Important: After a typed dot ".", set previous selection string to null!
 					DModule gpf = null;
 
-					seldt = FindActualExpression(prj, pf, tl, expressions.ToArray(), ch == '.', out isSuper, out isInst, out isNameSpace, out gpf);
+					seldt = FindActualExpression(project, pf, tl, expressions.ToArray(), ch == '.', out isSuper, out isInst, out isNameSpace, out gpf);
 
 					if (seldt == null) return rl.ToArray();
 					//Debugger.Log(0,"parsing", DCompletionData.BuildDescriptionString(seldt.Parent) + " " + DCompletionData.BuildDescriptionString(seldt));

@@ -55,6 +55,7 @@ namespace D_IDE
 
 			logbuildprogress_chk.Checked = D_IDE_Properties.Default.LogBuildProgress;
 			showCompleteLog.Checked = D_IDE_Properties.Default.ShowBuildCommands;
+			CreatePDB.Checked=D_IDE_Properties.Default.CreatePDBOnBuild;
 
 			verbosedbgoutput.Checked = D_IDE_Properties.Default.VerboseDebugOutput;
 			AutoSkipUnknownCode.Checked = D_IDE_Properties.Default.SkipUnknownCode;
@@ -85,6 +86,7 @@ namespace D_IDE
 			D_IDE_Properties.Default.exe_res = exe_rc.Text;
 			D_IDE_Properties.Default.exe_dbg = dbg_exe.Text;
 			D_IDE_Properties.Default.UseExternalDebugger=UseIntegDbg.Checked;
+			D_IDE_Properties.Default.CreatePDBOnBuild = CreatePDB.Checked;
 
 			D_IDE_Properties.Default.cmp_obj = cmp_to_obj.Text;
 			D_IDE_Properties.Default.link_win_exe = link_win_exe.Text;

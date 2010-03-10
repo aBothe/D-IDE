@@ -32,7 +32,11 @@ namespace D_IDE
 		private System.Windows.Forms.ToolStripMenuItem goToDefinitionToolStripMenuItem, createImportDirectiveItem;
 
 		public DModule fileData;
-		public DProject project;
+		public string ProjectFile;
+		public DProject project
+		{
+			get { return D_IDE_Properties.GetProject(ProjectFile); }
+		}
 		bool modified = false;
 		public bool Modified
 		{
@@ -283,10 +287,8 @@ namespace D_IDE
 
 			ICompletionDataProvider dataProvider = null;
 
-			if (project == null)project = new DProject();
-
 			if (Char.IsLetterOrDigit(key) || key == '_' || key == '.' || key == ' ' || key == '\0')
-				dataProvider = new DCodeCompletionProvider(ref project, Form1.thisForm.icons);
+				dataProvider = new DCodeCompletionProvider(Form1.thisForm.icons);
 			else return false;
 
 			DCodeCompletionWindow.ShowCompletionWindow(
@@ -399,9 +401,9 @@ namespace D_IDE
 			IW.ShowInsightWindow();
 		}
 
-		public DocumentInstanceWindow(string filename, DProject prj)
+		public DocumentInstanceWindow(string filename, string prj)
 		{
-			this.project = prj;
+			this.ProjectFile = prj;
 			Init(filename);
 			try
 			{
@@ -421,9 +423,9 @@ namespace D_IDE
 			Modified = false;
 		}
 		
-		public DocumentInstanceWindow(string filename, string content, DProject prj)
+		public DocumentInstanceWindow(string filename, string content, string prj)
 		{
-			this.project = prj;
+			this.ProjectFile = prj;
 			Init(filename);
 			txt.Document.TextContent = content;
 			Modified = false;
@@ -786,6 +788,13 @@ namespace D_IDE
 								}
 								break;
 
+							case "createpdb":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.CreatePDBOnBuild = xr.Value == "1";
+								}
+								break;
+
 							case "highlightings":
 								if (xr.IsEmptyElement) break;
 								while (xr.Read())
@@ -1062,6 +1071,10 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Default.DoAutoSaveOnBuilding ? "1" : "0");
 			xw.WriteEndElement();
 
+			xw.WriteStartElement("createpdb");
+			xw.WriteAttributeString("value", Default.CreatePDBOnBuild ? "1" : "0");
+			xw.WriteEndElement();
+
 			xw.WriteStartElement("highlightings");
 			foreach (string ext in Default.SyntaxHighlightingEntries.Keys)
 			{
@@ -1152,6 +1165,18 @@ namespace D_IDE
 			lastProjects = new List<string>(),
 			lastFiles = new List<string>(), 
 			lastOpenFiles=new List<string>();
+
+		/// <summary>
+		/// Stores currently opened projects
+		/// </summary>
+		static public Dictionary<string, DProject> Projects=new Dictionary<string,DProject>();
+		static public DProject GetProject(string ProjectFile)
+		{
+			if (!Projects.ContainsKey(ProjectFile))
+				return null;
+			return Projects[ProjectFile];
+		}
+
 		public bool OpenLastPrj = true;
 		public bool OpenLastFiles = true;
 		public FormWindowState lastFormState = FormWindowState.Maximized;
@@ -1163,6 +1188,7 @@ namespace D_IDE
 		public bool ShowBuildCommands = true;
 		public bool UseExternalDebugger = false;
 		public bool DoAutoSaveOnBuilding = true;
+		public bool CreatePDBOnBuild = false; // Still inactive by default - this will be changed soon ;-)
 
 		#region Debugging
 		public bool VerboseDebugOutput = false;

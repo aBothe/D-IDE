@@ -87,6 +87,7 @@
 			this.HighLightingExt = new System.Windows.Forms.TextBox();
 			this.HighLightingExts = new System.Windows.Forms.ListBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+			this.CreatePDB = new System.Windows.Forms.CheckBox();
 			this.tabPage1.SuspendLayout();
 			this.tabPage3.SuspendLayout();
 			this.tabControl1.SuspendLayout();
@@ -109,6 +110,7 @@
 			// 
 			// tabPage1
 			// 
+			this.tabPage1.Controls.Add(this.CreatePDB);
 			this.tabPage1.Controls.Add(this.DoAutoSave);
 			this.tabPage1.Controls.Add(this.UseIntegDbg);
 			this.tabPage1.Controls.Add(this.showCompleteLog);
@@ -695,6 +697,16 @@
 			// 
 			this.toolTip1.AutomaticDelay = 250;
 			// 
+			// CreatePDB
+			// 
+			this.CreatePDB.AutoSize = true;
+			this.CreatePDB.Location = new System.Drawing.Point(104, 281);
+			this.CreatePDB.Name = "CreatePDB";
+			this.CreatePDB.Size = new System.Drawing.Size(160, 17);
+			this.CreatePDB.TabIndex = 25;
+			this.CreatePDB.Text = "Create .pdb file after building";
+			this.CreatePDB.UseVisualStyleBackColor = true;
+			// 
 			// IDESettings
 			// 
 			this.AcceptButton = this.button1;
@@ -783,5 +795,6 @@
 		private System.Windows.Forms.TextBox HighLightingExt;
 		private System.Windows.Forms.ListBox HighLightingExts;
 		private System.Windows.Forms.Label label10;
+		private System.Windows.Forms.CheckBox CreatePDB;
 	}
 }

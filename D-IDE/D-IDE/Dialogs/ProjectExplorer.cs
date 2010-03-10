@@ -83,7 +83,7 @@ namespace D_IDE
 			foreach (TreeNode tn in prjFiles.Nodes)
 			{
 				if (!(tn is ProjectNode)) continue;
-				if ((tn as ProjectNode).Project.prjfn == prj.prjfn)
+				if ((tn as ProjectNode).ProjectFile == prj.prjfn)
 				{
 					ttn = tn;
 					break;
@@ -93,7 +93,7 @@ namespace D_IDE
 			if (ttn == null) return;
 			if (ttn.Nodes.Count == 1 && ttn.Nodes[0].Text == "::Dummy")
 			{
-				ReadStructure(ref ttn, (ttn as ProjectNode).Project);
+				ReadStructure(ref ttn, D_IDE_Properties.GetProject((ttn as ProjectNode).ProjectFile));
 			}
 
 			foreach (string d in file.Split('\\'))
@@ -138,8 +138,9 @@ namespace D_IDE
 					}
 
 					// if the drawn project is the current one loaded in D-IDE take it then
-					DProject LoadedPrj = (Form1.thisForm.prj != null && Form1.thisForm.prj.prjfn == prjfn) ? Form1.thisForm.prj : DProject.LoadFrom(prjfn);
+					DProject LoadedPrj = Form1.thisForm.ProjectFile == prjfn ? Form1.thisForm.prj : DProject.LoadFrom(prjfn);
 					if (LoadedPrj == null) continue;
+					D_IDE_Properties.Projects[prjfn] = LoadedPrj;
 
 					TreeNode CurPrjNode = (TreeNode)new DedicatedProjectNode(LoadedPrj);
 					CurPrjNode.ImageKey = CurPrjNode.SelectedImageKey = ext;
@@ -172,13 +173,13 @@ namespace D_IDE
 
 			if (prjFiles.SelectedNode is DedicatedProjectNode)
 			{
-				DProject prj = (prjFiles.SelectedNode as ProjectNode).Project;
-				Form1.thisForm.Open(prj.prjfn);
+				Form1.thisForm.Open((prjFiles.SelectedNode as ProjectNode).ProjectFile);
 			}
 			else if (prjFiles.SelectedNode is FileTreeNode)
 			{
 				string fn = (prjFiles.SelectedNode as FileTreeNode).AbsolutePath;
-				DProject prj = (prjFiles.SelectedNode as FileTreeNode).Project;
+				DProject prj = D_IDE_Properties.GetProject((prjFiles.SelectedNode as FileTreeNode).ProjectFile);
+				if (prj == null) return;
 
 				if (!prj.FileExists(fn))
 				{
@@ -191,7 +192,7 @@ namespace D_IDE
 					else return;
 				}
 
-				Form1.thisForm.Open(fn, prj);
+				Form1.thisForm.Open(fn, prj.prjfn);
 			}
 		}
 
@@ -224,7 +225,10 @@ namespace D_IDE
 			string f = ((FileTreeNode)tn).FileOrPath;
 			string phys_f = ((FileTreeNode)tn).AbsolutePath;
 
-			if (((FileTreeNode)tn).Project.FileExists(f))
+			DProject tprj=D_IDE_Properties.GetProject((tn as FileTreeNode).ProjectFile);
+			if (tprj == null) return;
+
+			if (tprj.FileExists(f))
 			{
 				DialogResult dr = MessageBox.Show("Do you want to remove \"" + Path.GetFileName(f) + "\" physically?", "Remove File",
 				MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
@@ -249,8 +253,8 @@ namespace D_IDE
 				}
 			}
 
-			((FileTreeNode)tn).Project.resourceFiles.Remove(f);
-			((FileTreeNode)tn).Project.Save();
+			tprj.resourceFiles.Remove(f);
+			tprj.Save();
 			Form1.thisForm.UpdateFiles();
 		}
 
@@ -266,14 +270,17 @@ namespace D_IDE
 			TreeNode tn = prjFiles.GetNodeAt(tp);
 			if (tn == null) return;
 
-			Form1.thisForm.oF.InitialDirectory = ((ProjectNode)tn).Project.basedir;
+			DProject tprj = D_IDE_Properties.GetProject((tn as ProjectNode).ProjectFile);
+			if (tprj == null) return;
+
+			Form1.thisForm.oF.InitialDirectory = tprj.basedir;
 			if (Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
 			{
 				foreach (string file in Form1.thisForm.oF.FileNames)
 				{
 					if (Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
 
-					((ProjectNode)tn).Project.AddSrc(file);
+					tprj.AddSrc(file);
 				}
 				Form1.thisForm.UpdateFiles();
 			}
@@ -287,7 +294,7 @@ namespace D_IDE
 			if (tn == null) return;
 
 			if (tn is FileTreeNode)
-				Form1.thisForm.Open((tn as FileTreeNode).AbsolutePath, (tn as FileTreeNode).Project);
+				Form1.thisForm.Open((tn as FileTreeNode).AbsolutePath, (tn as FileTreeNode).ProjectFile);
 			else if (tn is ProjectNode)
 				Form1.thisForm.Open((tn as ProjectNode).FileOrPath);
 		}
@@ -521,7 +528,11 @@ namespace D_IDE
 	#region Nodes
 	public class ProjectNode : TreeNode
 	{
-		public DProject Project;
+		public string ProjectFile;
+		public DProject Project
+		{
+			get { return D_IDE_Properties.GetProject(ProjectFile); }
+		}
 		public string FileOrPath;
 		public string AbsolutePath
 		{
@@ -530,8 +541,7 @@ namespace D_IDE
 		public ProjectNode(DProject project)
 		{
 			if (!String.IsNullOrEmpty(project.name)) Text = project.name;
-			Project = project;
-			FileOrPath = Project.prjfn;
+			FileOrPath = ProjectFile = project.prjfn;
 			Tag = this;
 		}
 	}

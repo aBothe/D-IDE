@@ -109,14 +109,15 @@ namespace D_IDE
 			oF.InitialDirectory = sF.InitialDirectory = D_IDE_Properties.Default.DefaultProjectDirectory;
 
 			#region Open last files/projects
+
+			if (args.Length < 1 && D_IDE_Properties.Default.OpenLastPrj && D_IDE_Properties.Default.lastProjects.Count > 0 && File.Exists(D_IDE_Properties.Default.lastProjects[0]))
+				Open(D_IDE_Properties.Default.lastProjects[0]);
+
 			if (D_IDE_Properties.Default.OpenLastFiles)
 			{
 				foreach (string f in D_IDE_Properties.Default.lastOpenFiles)
 					if (File.Exists(f)) Open(f);
 			}
-
-			if (args.Length < 1 && D_IDE_Properties.Default.OpenLastPrj && D_IDE_Properties.Default.lastProjects.Count > 0 && File.Exists(D_IDE_Properties.Default.lastProjects[0]))
-				Open(D_IDE_Properties.Default.lastProjects[0]);
 
 			for (int i = 0; i < args.Length; i++)
 				Open(args[i]);
@@ -230,7 +231,24 @@ namespace D_IDE
 		public CallStackWin callstackwin = new CallStackWin();
 		public bool UseOutput = false;
 
-		public DProject prj;
+		public DProject prj
+		{
+			get
+			{
+				return D_IDE_Properties.GetProject(ProjectFile);
+			}
+			set
+			{
+				if (value == null)
+				{
+					ProjectFile = "";
+					return;
+				}
+				ProjectFile = value.prjfn;
+				D_IDE_Properties.Projects[value.prjfn] = value;
+			}
+		}
+		public string ProjectFile = "";
 		public SearchReplaceDlg searchDlg = new SearchReplaceDlg();
 		public GoToLineDlg gotoDlg = new GoToLineDlg();
 		public static Form1 thisForm;
@@ -506,8 +524,8 @@ namespace D_IDE
 
 				exeProc.Exited += delegate(object se, EventArgs ev)
 				{
-				toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = false;
-				DBuilder_OnExit(se, ev);
+					toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = false;
+					DBuilder_OnExit(se, ev);
 				};
 				exeProc.EnableRaisingEvents = true;
 				toolStripMenuItem3.Enabled = dbgStopButtonTS.Enabled = true;
@@ -705,7 +723,7 @@ namespace D_IDE
 
 			DocumentInstanceWindow mtp = new DocumentInstanceWindow(tfn,
 			DModule.Parsable(tfn) ? "import std.stdio;\r\n\r\nvoid main(string[] args)\r\n{\r\n\twriteln(\"Hello World\");\r\n}" : "",
-			add ? prj : null);
+			add ? prj.prjfn : "");
 			mtp.Modified = true;
 			mtp.Save();
 			if (add) prj.AddSrc(tfn);
@@ -732,13 +750,16 @@ namespace D_IDE
 			NewPrj np = new NewPrj();
 			if (np.ShowDialog() == DialogResult.OK)
 			{
-				prj = np.prj;
+				ProjectFile = np.prj.prjfn;
+				D_IDE_Properties.Projects[ProjectFile] = np.prj;
 				Text = prj.name + " - " + title;
 				SaveAllTabs();
 
-				if (D_IDE_Properties.Default.lastProjects.Contains(prj.prjfn)) { D_IDE_Properties.Default.lastProjects.Remove(prj.prjfn); }
-				D_IDE_Properties.Default.lastProjects.Insert(0, prj.prjfn);
-				if (D_IDE_Properties.Default.lastProjects.Count > 10) D_IDE_Properties.Default.lastProjects.RemoveAt(10);
+				if (D_IDE_Properties.Default.lastProjects.Contains(ProjectFile))
+					D_IDE_Properties.Default.lastProjects.Remove(ProjectFile);
+				D_IDE_Properties.Default.lastProjects.Insert(0, ProjectFile);
+				if (D_IDE_Properties.Default.lastProjects.Count > 10)
+					D_IDE_Properties.Default.lastProjects.RemoveAt(10);
 
 				UpdateLastFilesMenu();
 				UpdateFiles();
@@ -828,10 +849,10 @@ namespace D_IDE
 		public DocumentInstanceWindow Open(string file)
 		{
 			if (prj != null && prj.resourceFiles.Contains(prj.GetRelFilePath(file)))
-				return Open(prj.GetPhysFilePath(file), prj);
-			return Open(file, null);
+				return Open(prj.GetPhysFilePath(file), ProjectFile);
+			return Open(file, "");
 		}
-		public DocumentInstanceWindow Open(string file, DProject owner)
+		public DocumentInstanceWindow Open(string file, string owner)
 		{
 			if (prj != null && file == prj.prjfn) return null; // Don't reopen the current project
 
@@ -880,7 +901,7 @@ namespace D_IDE
 
 				foreach (string f in prj.lastopen)
 				{
-					Open(f, prj);
+					Open(f, ProjectFile);
 				}
 				prj.lastopen.Clear();
 				ret = SelectedTabPage;

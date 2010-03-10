@@ -193,6 +193,7 @@
         <Key word = "if" />
         <Key word = "ifloat" />
         <Key word = "import" />
+				<Key word = "immutable" />
 
         <Key word = "int" />
         <Key word = "interface" />

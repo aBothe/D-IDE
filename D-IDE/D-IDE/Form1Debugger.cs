@@ -223,7 +223,6 @@ namespace D_IDE
 		public DBGEngine dbg;
 		public Dictionary<string, ulong> LoadedModules = new Dictionary<string, ulong>();
 		internal bool StopWaitingForEvents;
-		SymbolExtracter se;
 		#endregion
 
 		public bool IsDebugging;/*{
@@ -261,9 +260,6 @@ namespace D_IDE
 			LoadedModules.Clear();
 			output.Clear();
 
-			//se = new SymbolExtracter();
-			//se.DoExtract(exe);
-			
 			DebugCreateProcessOptions opt = new DebugCreateProcessOptions();
 			opt.CreateFlags = CreateFlags.DebugOnlyThisProcess;
 			opt.EngCreateFlags = EngCreateFlags.Default;

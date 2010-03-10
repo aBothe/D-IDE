@@ -48,7 +48,7 @@ namespace D_IDE
 			try { prj.Save(); }
 			catch { }
 
-			OnMessage(prj,prj.prjfn,"Build "+prj.name+" project");
+			OnMessage(prj, prj.prjfn, "Build " + prj.name + " project");
 
 			prj.RefreshBuildDate();
 
@@ -70,6 +70,8 @@ namespace D_IDE
 					tdirs.Sort();
 					for (int i = 0; i < tdirs.Count - prj.LastVersionCount; i++)
 					{
+						if (!String.IsNullOrEmpty( prj.LastBuiltTarget) && tdirs[i].EndsWith(Path.GetDirectoryName(prj.LastBuiltTarget))) 
+							continue;
 						try
 						{
 							Directory.Delete(tdirs[i], true);
@@ -90,29 +92,30 @@ namespace D_IDE
 					if (File.Exists(depFile))
 						File.Copy(depFile, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depFile));
 				}
-				catch (Exception ex) { OnMessage(prj, depFile, "Couldn't copy "+depFile+": "+ex.Message); }
+				catch (Exception ex) { OnMessage(prj, depFile, "Couldn't copy " + depFile + ": " + ex.Message); }
 			}
 			#endregion
 
 			#region Project dependencies
 			foreach (string depFile in prj.ProjectDependencies)
 			{
-				if (!File.Exists(depFile) || depFile==prj.prjfn) continue;
+				if (!File.Exists(depFile) || depFile == prj.prjfn) continue;
 				try
 				{
 					DProject depProject = DProject.LoadFrom(depFile);
 					if (!BuildProject(depProject))
 					{
-						OnMessage(depProject, depFile, "Couldn't build "+depProject.name+" ... break main build process!");
+						OnMessage(depProject, depFile, "Couldn't build " + depProject.name + " ... break main build process!");
 						return false;
-					}else
+					}
+					else
 					{
-						OnMessage(depProject,depProject.LastBuiltTarget,"Copy "+depProject.LastBuiltTarget+" to "+prj.AbsoluteOutputDirectory);
+						OnMessage(depProject, depProject.LastBuiltTarget, "Copy " + depProject.LastBuiltTarget + " to " + prj.AbsoluteOutputDirectory);
 						File.Copy(depProject.LastBuiltTarget, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depProject.LastBuiltTarget));
 					}
 				}
-				catch (Exception ex) 
-				{ 
+				catch (Exception ex)
+				{
 					OnMessage(prj, depFile, "Couldn't build " + depFile + ": " + ex.Message);
 					return false;
 				}
@@ -133,19 +136,19 @@ namespace D_IDE
 				string manifestFile = "Manifest.manifest";
 				string manifestRCFile = "Manifest.rc";
 				DProject.CreateManifestFile(manifestFile);
-				DProject.CreateManifestImportingResourceFile(manifestRCFile,manifestFile);
+				DProject.CreateManifestImportingResourceFile(manifestRCFile, manifestFile);
 				FilesToCompile.Add(manifestRCFile);
 			}
 
 			foreach (string rc in FilesToCompile)
 			{
 				string phys_rc = prj.GetPhysFilePath(rc);
-				string tdirname = Path.GetDirectoryName(rc).Replace('\\', '_').Replace(":","")+"_";
+				string tdirname = Path.GetDirectoryName(rc).Replace('\\', '_').Replace(":", "") + "_";
 
 				#region Compile Resources
 				if (rc.EndsWith(".rc"))
 				{
-					string res = "obj\\"+tdirname + Path.GetFileNameWithoutExtension(rc) + ".res";
+					string res = "obj\\" + tdirname + Path.GetFileNameWithoutExtension(rc) + ".res";
 
 					if (prj.LastModifyingDates.ContainsKey(phys_rc) &&
 						prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
@@ -182,7 +185,7 @@ namespace D_IDE
 				#region Compile D Sources
 				else if (DModule.Parsable(rc))
 				{
-					string obj = "obj\\" + tdirname+ Path.GetFileNameWithoutExtension(rc) + ".obj";
+					string obj = "obj\\" + tdirname + Path.GetFileNameWithoutExtension(rc) + ".obj";
 
 					if (prj.LastModifyingDates.ContainsKey(phys_rc) &&
 						prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
@@ -288,9 +291,19 @@ namespace D_IDE
 			{
 				// This line of code is very important for debugging!
 				prj.LastBuiltTarget = target;
-				
+
 				// If enabled, create external manifest file now
 				if (prj.ManifestCreation == DProject.ManifestCreationType.External) prj.CreateExternalManifestFile();
+
+				#region cv2pdb
+				// Create program database (pdb) file from CodeView data from the target exe
+				if (D_IDE_Properties.Default.CreatePDBOnBuild)
+				{
+					string pdb = prj.basedir + "\\" + Path.GetFileNameWithoutExtension(target) + ".pdb";
+					OnMessage(prj,pdb,"Create debug information database "+pdb);
+					CodeViewToPDB.CodeViewToPDBConverter.DoConvert(target, pdb);
+				}
+				#endregion
 
 				Form1.thisForm.ProgressStatusLabel.Text = "Linking done!";
 				OnMessage(prj, target, "Linking done!");
