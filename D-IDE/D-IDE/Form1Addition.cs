@@ -1201,6 +1201,7 @@ namespace D_IDE
 		public bool DoAutoSaveOnBuilding = true;
 		public bool CreatePDBOnBuild = true;
 		public bool ShowDbgPanelsOnDebugging = true;
+		public bool StoreSettingsAtUserDocuments = true; // Not saved in the main config - the 'PropsAreLocatedHere' file will indicate its state
 
 		#region Debugging
 		public bool VerboseDebugOutput = false;

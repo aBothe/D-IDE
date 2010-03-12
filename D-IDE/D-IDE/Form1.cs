@@ -55,7 +55,7 @@ namespace D_IDE
 			try
 			{
 				if (File.Exists(Program.LayoutFile))
-					dockPanel.LoadFromXml(Program.LayoutFile, new DeserializeDockContent(delegate(string s)
+					dockPanel.LoadFromXml(Program.cfgDir + "\\" + Program.LayoutFile, new DeserializeDockContent(delegate(string s)
 					{
 						if (s == typeof(BuildProcessWin).ToString()) return bpw;
 						else if (s == typeof(OutputWin).ToString()) return output;
@@ -1025,7 +1025,7 @@ namespace D_IDE
 			output.Show(dockPanel, DockState.DockBottomAutoHide);
 			errlog.Show(dockPanel, DockState.DockBottom);
 			callstackwin.Show(dockPanel, DockState.DockBottomAutoHide);
-			dbgLocalswin.Show(dockPanel,DockState.DockBottomAutoHide);
+			dbgLocalswin.Show(dockPanel, DockState.DockBottomAutoHide);
 			if (D_IDE_Properties.Default.EnableFXFormsDesigner) propView.Show(dockPanel, DockState.DockRight);
 		}
 
@@ -1084,14 +1084,32 @@ namespace D_IDE
 			}
 			#endregion
 
-			dockPanel.SaveAsXml(Program.LayoutFile);
+			if (!D_IDE_Properties.Default.StoreSettingsAtUserDocuments)
+			{
+				if (!File.Exists(Program.ExternSettingStorageFile))
+					File.WriteAllText(Program.ExternSettingStorageFile,"");
+
+				Program.cfgDir = Application.StartupPath + "\\" + Program.cfgDirName;
+			}
+			else
+			{
+				if (File.Exists(Program.ExternSettingStorageFile))
+					File.Delete(Program.ExternSettingStorageFile);
+
+				Program.cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" +Program.cfgDirName;
+			}
+
+			if (!Directory.Exists(Program.cfgDir))
+				DBuilder.CreateDirectoryRecursively(Program.cfgDir);
+
+			dockPanel.SaveAsXml(Program.cfgDir + "\\"+Program.LayoutFile);
 
 			D_IDE_Properties.Default.lastFormState = this.WindowState;
 			D_IDE_Properties.Default.lastFormLocation = this.Location;
 			D_IDE_Properties.Default.lastFormSize = this.Size;
 
-			D_IDE_Properties.Save(Program.prop_file);
-			D_IDE_Properties.SaveGlobalCache(Program.ModuleCacheFile);
+			D_IDE_Properties.Save(Program.cfgDir + "\\" + Program.prop_file);
+			D_IDE_Properties.SaveGlobalCache(Program.cfgDir + "\\" + Program.ModuleCacheFile);
 		}
 
 		private void SaveAs(object sender, EventArgs e)

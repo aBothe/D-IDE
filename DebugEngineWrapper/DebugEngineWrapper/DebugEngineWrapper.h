@@ -44,19 +44,6 @@ namespace DebugEngineWrapper {
 			}
 		}
 
-		/*property void* ProcessHandle
-		{
-			void* get(){
-			void* ret=0;
-
-			DbgSystemObjects* so;
-			client->QueryInterface(__uuidof(DbgSystemObjects), (void**)&so);
-
-			so->GetEventProcessHandle((PULONG64)&ret);
-			return ret;
-			}
-		}*/
-
 		DebugSymbols^ Symbols;
 		DebugDataSpaces^ Memory;
 
@@ -353,32 +340,6 @@ namespace DebugEngineWrapper {
 			//    );
 			pin_ptr<const wchar_t> pCommand = PtrToStringChars(command);
 			this->control->ExecuteWide((ULONG)control, pCommand, (ULONG)flags);
-		}
-
-		Object^ Evaluate(String^ Name,DbgValueType Type)
-		{
-			pin_ptr<const wchar_t> s = PtrToStringChars(Name);
-			DEBUG_VALUE v;
-			ULONG Rem=0;
-			control->EvaluateWide(s,(ULONG)Type,&v,&Rem);
-
-			switch(Type)
-			{
-			case DEBUG_VALUE_INT8:
-				return gcnew System::Byte(v.I8);
-			case DEBUG_VALUE_INT16:
-				return gcnew System::Int16(v.I16);
-			case DEBUG_VALUE_INT32:
-				return gcnew System::Int32(v.I32);
-			case DEBUG_VALUE_INT64:
-				return gcnew System::Int64(v.I64);
-			case DEBUG_VALUE_FLOAT32:
-				return gcnew System::Single(v.F32);
-			case DEBUG_VALUE_FLOAT64:
-				return gcnew System::Double(v.F64);
-			default:
-				return nullptr;
-			}
 		}
 
 		void Execute(String^ command)

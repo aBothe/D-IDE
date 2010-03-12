@@ -90,6 +90,7 @@
 			this.HighLightingExts = new System.Windows.Forms.ListBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.ShowDbgPanelsOnDebugging = new System.Windows.Forms.CheckBox();
+			this.StoreSettingsAtUserDocs = new System.Windows.Forms.CheckBox();
 			this.tabPage1.SuspendLayout();
 			this.tabPage3.SuspendLayout();
 			this.tabControl1.SuspendLayout();
@@ -476,6 +477,7 @@
 			// 
 			// tabPage2
 			// 
+			this.tabPage2.Controls.Add(this.StoreSettingsAtUserDocs);
 			this.tabPage2.Controls.Add(this.restoreLastSession);
 			this.tabPage2.Controls.Add(this.button6);
 			this.tabPage2.Controls.Add(this.button5);
@@ -730,6 +732,16 @@
 			this.ShowDbgPanelsOnDebugging.Text = "Hide debug panels when finished debugging";
 			this.ShowDbgPanelsOnDebugging.UseVisualStyleBackColor = true;
 			// 
+			// StoreSettingsAtUserDocs
+			// 
+			this.StoreSettingsAtUserDocs.AutoSize = true;
+			this.StoreSettingsAtUserDocs.Location = new System.Drawing.Point(8, 182);
+			this.StoreSettingsAtUserDocs.Name = "StoreSettingsAtUserDocs";
+			this.StoreSettingsAtUserDocs.Size = new System.Drawing.Size(198, 17);
+			this.StoreSettingsAtUserDocs.TabIndex = 9;
+			this.StoreSettingsAtUserDocs.Text = "Store settings at the user documents";
+			this.StoreSettingsAtUserDocs.UseVisualStyleBackColor = true;
+			// 
 			// IDESettings
 			// 
 			this.AcceptButton = this.button1;
@@ -821,5 +833,6 @@
 		private System.Windows.Forms.CheckBox CreatePDB;
 		private System.Windows.Forms.Label label11;
 		private System.Windows.Forms.CheckBox ShowDbgPanelsOnDebugging;
+		private System.Windows.Forms.CheckBox StoreSettingsAtUserDocs;
 	}
 }

@@ -7,7 +7,9 @@ namespace D_IDE
 {
 	static class Program
 	{
-		public static string cfgDir = Application.StartupPath+"\\config";
+		public static string ExternSettingStorageFile = Application.StartupPath+"\\PropsAreLocatedHere";
+		public static string cfgDirName = "D-IDE.config";
+		public static string cfgDir;
 		public static string prop_file = "D-IDE.settings.xml";
 		public static string ModuleCacheFile = "D-IDE.cache.dat";
 		public static string LayoutFile = "D-IDE.layout.xml";
@@ -15,28 +17,31 @@ namespace D_IDE
 		public const string ver_txt = "http://d-ide.svn.sourceforge.net/viewvc/d-ide/ver.txt";
 		public static App app;
 		public static bool Parsing = false;
-		/// <summary>
-		/// Der Haupteinstiegspunkt für die Anwendung.
-		/// </summary>
+
 		[STAThread]
 		static void Main(string[] args)
 		{
 			//try			{
-				if(!Directory.Exists(Program.cfgDir))
-					Directory.CreateDirectory(Program.cfgDir);
 
 				Application.EnableVisualStyles();
 				Application.SetCompatibleTextRenderingDefault(false);
 				app = new App();
 
-				Program.prop_file = cfgDir + "\\" + Program.prop_file;
-				Program.ModuleCacheFile = cfgDir + "\\" + ModuleCacheFile;
-				Program.LayoutFile = cfgDir + "\\" + LayoutFile;
-				
+				if (File.Exists(ExternSettingStorageFile))
+				{
+					cfgDir = Application.StartupPath + "\\" + cfgDirName;
+					D_IDE_Properties.Default.StoreSettingsAtUserDocuments = false;
+				}
+				else
+					cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + cfgDirName;
+
+				if (!Directory.Exists(Program.cfgDir))
+					DBuilder.CreateDirectoryRecursively(Program.cfgDir);
+
 				try
 				{
-					D_IDE_Properties.Load(prop_file);
-					D_IDE_Properties.LoadGlobalCache(ModuleCacheFile);
+					D_IDE_Properties.Load(cfgDir + "\\" + prop_file);
+					D_IDE_Properties.LoadGlobalCache(cfgDir + "\\" + ModuleCacheFile);
 				}
 				catch(Exception ex)
 				{
