@@ -139,7 +139,6 @@
 			this.stepOutTS = new System.Windows.Forms.ToolStripButton();
 			this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
 			this.searchTool = new System.Windows.Forms.ToolStripTextBox();
-			this.executeDebugCommandToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			this.contextMenuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
@@ -582,8 +581,7 @@
             this.stepOverToolStripMenuItem,
             this.toolStripSeparator16,
             this.toggleBreakpointToolStripMenuItem,
-            this.toolStripMenuItem3,
-            this.executeDebugCommandToolStripMenuItem});
+            this.toolStripMenuItem3});
 			this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
 			this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
 			this.debuggingToolStripMenuItem.Text = "Debug";
@@ -1114,13 +1112,6 @@
 			this.searchTool.ToolTipText = "Press <Return> for search in current document";
 			this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
 			// 
-			// executeDebugCommandToolStripMenuItem
-			// 
-			this.executeDebugCommandToolStripMenuItem.Name = "executeDebugCommandToolStripMenuItem";
-			this.executeDebugCommandToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
-			this.executeDebugCommandToolStripMenuItem.Text = "Execute Debug Command";
-			this.executeDebugCommandToolStripMenuItem.Click += new System.EventHandler(this.executeDebugCommandToolStripMenuItem_Click);
-			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1260,7 +1251,6 @@
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator19;
 		private System.Windows.Forms.ToolStripMenuItem setDefaultPanelLayoutToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem localsToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem executeDebugCommandToolStripMenuItem;
 	}
 }
 
