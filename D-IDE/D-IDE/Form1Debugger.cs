@@ -43,7 +43,7 @@ namespace D_IDE
 					MessageBox.Show("Unable to execute a library!");
 					return;
 				}
-				
+
 				// Use the last built target file as executable - for going sure that this file exists
 				string bin = Path.ChangeExtension(prj.LastBuiltTarget, null) + ".exe";//prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null) + ".exe";
 
@@ -185,6 +185,40 @@ namespace D_IDE
 			RunDebugClick("untilmain", EventArgs.Empty);
 		}
 
+		void RefreshLocals()
+		{
+			if (!IsDebugging) return;
+
+			DebugSymbolGroup args = dbg.Symbols.ScopeArgumentSymbols, locals = dbg.Symbols.ScopeLocalSymbols;
+
+			dbgLocalswin.list.BeginUpdate();
+
+			dbgLocalswin.Clear();
+
+			/*for (uint i = 0; i < args.Count; i++)
+			{
+				ListViewItem lvi = new ListViewItem();
+				lvi.Text = args.SymbolName(i);
+				lvi.SubItems.Add(args.TypeName(i));
+				lvi.SubItems.Add(args.ValueText(i));
+				dbgLocalswin.list.Items.Add(lvi);
+			}*/
+
+			for (uint i = 0; i < locals.Count; i++)
+			{
+				ListViewItem lvi = new ListViewItem();
+				locals.ExpandChildren(i, true);
+				lvi.Text = locals.SymbolName(i);
+				string type = locals.TypeName(i);
+				lvi.SubItems.Add(type);
+				string v = locals.ValueText(i);
+				lvi.SubItems.Add(v);
+				dbgLocalswin.list.Items.Add(lvi);
+			}
+
+			dbgLocalswin.list.EndUpdate();
+		}
+
 		void GoToCurrentLocation()
 		{
 			string fn;
@@ -204,17 +238,9 @@ namespace D_IDE
 					goto cont;
 				}
 			}
-			//se.DoExtract(off);	if(se.Result!=null)MessageBox.Show(String.Join("; ", se.Result));
-			
-			/*string ts = "";
-			foreach (ulong toff in dbg.CurrentFrame.ArgumentOffsets)
-			{
-				ts+=dbg.Symbols.GetNameByOffset(toff)+" ";
-				if (dbg.Symbols.GetLineByOffset(toff, out fn, out ln))
-					ts+=fn+":" +((int)ln - 1).ToString()+"\n";
-			}
-			MessageBox.Show(ts);
-			*/
+
+			RefreshLocals();
+
 			callstackwin.Update();
 		}
 
@@ -247,6 +273,7 @@ namespace D_IDE
 			AllDocumentsReadOnly = true;
 			IsDebugging = true;
 
+			#region GUI changes when debugging
 			toggleBreakpointToolStripMenuItem.Enabled = false;
 
 			dbgPauseButtonTS.Enabled =
@@ -254,6 +281,15 @@ namespace D_IDE
 			stepOverToolStripMenuItem.Enabled =
 			singleSteptoolStripMenuItem3.Enabled =
 			stepInTS.Enabled = stepOutTS.Enabled = stepOverTS.Enabled = true;
+
+			if (D_IDE_Properties.Default.ShowDbgPanelsOnDebugging)
+			{
+				dbgLocalswin.Show();
+				callstackwin.Show();
+				dbgwin.Show();
+			}
+
+			#endregion
 
 			StopWaitingForEvents = false;
 
@@ -324,10 +360,6 @@ namespace D_IDE
 			ProgressStatusLabel.Text = "Debuggee broke into debugger...";
 		}
 
-		#region Expression resolving
-
-		#endregion
-
 		public bool AllDocumentsReadOnly
 		{
 			set
@@ -390,8 +422,6 @@ namespace D_IDE
 				string fn;
 				uint ln;
 
-				//se.DoExtract(off);		if (se.Result != null) MessageBox.Show(String.Join("; ", se.Result));
-
 				if (!dbg.Symbols.GetLineByOffset(off, out fn, out ln))
 				{
 					Log("No source data found!");
@@ -402,18 +432,7 @@ namespace D_IDE
 				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);
 				callstackwin.Update();
 
-				/*string ms = "";
-				DebugSymbolData[] sda = dbg.Symbols.GetSymbols("image00400000!*");
-				if (sda != null)
-				{
-					foreach (DebugSymbolData dsd in sda)
-					{
-						ms += dsd.Name + " (" + dsd.Offset.ToString() + ")\r\n";
-					}
-					File.WriteAllText("symbols.log",ms);
-				}*/
-
-				//MessageBox.Show(dbg.Symbols.ScopeLocalSymbols);
+				RefreshLocals();
 
 				return DebugStatus.Break;
 			};
@@ -438,6 +457,8 @@ namespace D_IDE
 				{
 					AddHighlightedBuildError(fn, (int)ln, "An exception occured: " + extype, Color.OrangeRed);
 				}
+
+				RefreshLocals();
 
 				return DebugStatus.Break;
 			};
@@ -488,6 +509,12 @@ namespace D_IDE
 				stepInTS.Enabled = stepOutTS.Enabled = stepOverTS.Enabled =
 			dbgPauseButtonTS.Enabled = dbgStopButtonTS.Enabled = false;
 
+				if (D_IDE_Properties.Default.ShowDbgPanelsOnDebugging)
+				{
+					dbgLocalswin.Hide();
+					callstackwin.Hide();
+					dbgwin.Hide();
+				}
 			}
 			catch { }
 

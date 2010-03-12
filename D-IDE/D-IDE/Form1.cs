@@ -64,12 +64,13 @@ namespace D_IDE
 						else if (s == typeof(ProjectExplorer).ToString()) return prjexplorer;
 						else if (s == typeof(CallStackWin).ToString()) return callstackwin;
 						else if (s == typeof(ErrorLog).ToString()) return errlog;
+						else if (s == typeof(DebugLocals).ToString()) return dbgLocalswin;
 						else if (s == typeof(PropertyView).ToString() && D_IDE_Properties.Default.EnableFXFormsDesigner) return propView;
 						return null;
 					}));
 				else
 				{
-					setDefaultPanelLayoutToolStripMenuItem_Click(null, EventArgs.Empty);
+					setDefaultPanelLayout(null, EventArgs.Empty);
 				}
 			}
 			catch (Exception ex) { MessageBox.Show(ex.Message); }
@@ -229,6 +230,7 @@ namespace D_IDE
 		public OutputWin output = new OutputWin();
 		public BreakpointWin dbgwin = new BreakpointWin();
 		public CallStackWin callstackwin = new CallStackWin();
+		public DebugLocals dbgLocalswin = new DebugLocals();
 		public bool UseOutput = false;
 
 		public DProject prj
@@ -1014,7 +1016,7 @@ namespace D_IDE
 
 		#region GUI actions
 
-		private void setDefaultPanelLayoutToolStripMenuItem_Click(object sender, EventArgs e)
+		private void setDefaultPanelLayout(object sender, EventArgs e)
 		{
 			hierarchy.Show(dockPanel, DockState.DockRight);
 			prjexplorer.Show(dockPanel, DockState.DockLeft);
@@ -1023,6 +1025,7 @@ namespace D_IDE
 			output.Show(dockPanel, DockState.DockBottomAutoHide);
 			errlog.Show(dockPanel, DockState.DockBottom);
 			callstackwin.Show(dockPanel, DockState.DockBottomAutoHide);
+			dbgLocalswin.Show(dockPanel,DockState.DockBottomAutoHide);
 			if (D_IDE_Properties.Default.EnableFXFormsDesigner) propView.Show(dockPanel, DockState.DockRight);
 		}
 
@@ -1478,6 +1481,22 @@ namespace D_IDE
 		private void reloadProjectTreeToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			prjexplorer.UpdateFiles();
+		}
+
+		private void localsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			dbgLocalswin.Show(dockPanel);
+		}
+
+		private void executeDebugCommandToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (!IsDebugging) return;
+			InputDlg id = new InputDlg();
+			if (id.ShowDialog() == DialogResult.OK)
+			{
+				dbg.Execute(id.InputString);
+				dbg.WaitForEvent(3000);
+			}
 		}
 	}
 }

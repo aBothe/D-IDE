@@ -63,9 +63,12 @@
 			this.outputToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.startPageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.errorLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.localsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.debugOutputToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator18 = new System.Windows.Forms.ToolStripSeparator();
 			this.reloadProjectTreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator19 = new System.Windows.Forms.ToolStripSeparator();
+			this.setDefaultPanelLayoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.projectToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildSingleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -136,8 +139,7 @@
 			this.stepOutTS = new System.Windows.Forms.ToolStripButton();
 			this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
 			this.searchTool = new System.Windows.Forms.ToolStripTextBox();
-			this.setDefaultPanelLayoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripSeparator19 = new System.Windows.Forms.ToolStripSeparator();
+			this.executeDebugCommandToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			this.contextMenuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
@@ -414,6 +416,7 @@
             this.outputToolStripMenuItem,
             this.startPageToolStripMenuItem,
             this.errorLogToolStripMenuItem,
+            this.localsToolStripMenuItem,
             this.debugOutputToolStripMenuItem,
             this.toolStripSeparator18,
             this.reloadProjectTreeToolStripMenuItem,
@@ -465,6 +468,13 @@
 			this.errorLogToolStripMenuItem.Text = "Error Log";
 			this.errorLogToolStripMenuItem.Click += new System.EventHandler(this.errorLogToolStripMenuItem_Click);
 			// 
+			// localsToolStripMenuItem
+			// 
+			this.localsToolStripMenuItem.Name = "localsToolStripMenuItem";
+			this.localsToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
+			this.localsToolStripMenuItem.Text = "Locals";
+			this.localsToolStripMenuItem.Click += new System.EventHandler(this.localsToolStripMenuItem_Click);
+			// 
 			// debugOutputToolStripMenuItem
 			// 
 			this.debugOutputToolStripMenuItem.Name = "debugOutputToolStripMenuItem";
@@ -483,6 +493,18 @@
 			this.reloadProjectTreeToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
 			this.reloadProjectTreeToolStripMenuItem.Text = "Reload Project Tree";
 			this.reloadProjectTreeToolStripMenuItem.Click += new System.EventHandler(this.reloadProjectTreeToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator19
+			// 
+			this.toolStripSeparator19.Name = "toolStripSeparator19";
+			this.toolStripSeparator19.Size = new System.Drawing.Size(199, 6);
+			// 
+			// setDefaultPanelLayoutToolStripMenuItem
+			// 
+			this.setDefaultPanelLayoutToolStripMenuItem.Name = "setDefaultPanelLayoutToolStripMenuItem";
+			this.setDefaultPanelLayoutToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
+			this.setDefaultPanelLayoutToolStripMenuItem.Text = "Set Default Panel Layout";
+			this.setDefaultPanelLayoutToolStripMenuItem.Click += new System.EventHandler(this.setDefaultPanelLayout);
 			// 
 			// projectToolStripMenuItem1
 			// 
@@ -560,7 +582,8 @@
             this.stepOverToolStripMenuItem,
             this.toolStripSeparator16,
             this.toggleBreakpointToolStripMenuItem,
-            this.toolStripMenuItem3});
+            this.toolStripMenuItem3,
+            this.executeDebugCommandToolStripMenuItem});
 			this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
 			this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
 			this.debuggingToolStripMenuItem.Text = "Debug";
@@ -1091,17 +1114,12 @@
 			this.searchTool.ToolTipText = "Press <Return> for search in current document";
 			this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
 			// 
-			// setDefaultPanelLayoutToolStripMenuItem
+			// executeDebugCommandToolStripMenuItem
 			// 
-			this.setDefaultPanelLayoutToolStripMenuItem.Name = "setDefaultPanelLayoutToolStripMenuItem";
-			this.setDefaultPanelLayoutToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
-			this.setDefaultPanelLayoutToolStripMenuItem.Text = "Set Default Panel Layout";
-			this.setDefaultPanelLayoutToolStripMenuItem.Click += new System.EventHandler(this.setDefaultPanelLayoutToolStripMenuItem_Click);
-			// 
-			// toolStripSeparator19
-			// 
-			this.toolStripSeparator19.Name = "toolStripSeparator19";
-			this.toolStripSeparator19.Size = new System.Drawing.Size(199, 6);
+			this.executeDebugCommandToolStripMenuItem.Name = "executeDebugCommandToolStripMenuItem";
+			this.executeDebugCommandToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+			this.executeDebugCommandToolStripMenuItem.Text = "Execute Debug Command";
+			this.executeDebugCommandToolStripMenuItem.Click += new System.EventHandler(this.executeDebugCommandToolStripMenuItem_Click);
 			// 
 			// Form1
 			// 
@@ -1241,6 +1259,8 @@
 		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator19;
 		private System.Windows.Forms.ToolStripMenuItem setDefaultPanelLayoutToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem localsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem executeDebugCommandToolStripMenuItem;
 	}
 }
 

@@ -163,6 +163,12 @@
     <Compile Include="Dialogs\CallStackWin.Designer.cs">
       <DependentUpon>CallStackWin.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\DebugLocals.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\DebugLocals.Designer.cs">
+      <DependentUpon>DebugLocals.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\NewPrj.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -262,6 +268,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\GoToLineDlg.resx">
       <DependentUpon>GoToLineDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\DebugLocals.resx">
+      <DependentUpon>DebugLocals.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\NewPrj.resx">

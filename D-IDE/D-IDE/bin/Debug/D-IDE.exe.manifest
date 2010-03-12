@@ -4,7 +4,7 @@
   <description asmv2:iconFile="d-ide.ico" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="D-IDE" version="1.0.3721.36095" language="neutral" processorArchitecture="x86" />
+    <assemblyIdentity name="D-IDE" version="1.0.3723.35888" language="neutral" processorArchitecture="x86" />
     <commandLine file="D-IDE.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -82,25 +82,25 @@
   </dependency>
   <dependency>
     <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="DebugEngineWrapper.dll" size="91648">
-      <assemblyIdentity name="DebugEngineWrapper" version="1.0.3719.11873" language="neutral" processorArchitecture="x86" />
+      <assemblyIdentity name="DebugEngineWrapper" version="1.0.3723.31622" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>xLC/tulPqmZUqUTVOo4c28icsUQ=</dsig:DigestValue>
+        <dsig:DigestValue>8z4qJnlB0cIDafSqT8VUtNb2/cw=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D-IDE.exe" size="720896">
-      <assemblyIdentity name="D-IDE" version="1.0.3721.36095" language="neutral" processorArchitecture="x86" />
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="D-IDE.exe" size="724480">
+      <assemblyIdentity name="D-IDE" version="1.0.3723.35888" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>/FWSpXt9rjNiKlXJtPutReqp34E=</dsig:DigestValue>
+        <dsig:DigestValue>oflo93Q7gGCc8geRRBEPPZLbSRY=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

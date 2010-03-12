@@ -32,6 +32,8 @@
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(IDESettings));
 			this.button1 = new System.Windows.Forms.Button();
 			this.tabPage1 = new System.Windows.Forms.TabPage();
+			this.label11 = new System.Windows.Forms.Label();
+			this.CreatePDB = new System.Windows.Forms.CheckBox();
 			this.DoAutoSave = new System.Windows.Forms.CheckBox();
 			this.UseIntegDbg = new System.Windows.Forms.CheckBox();
 			this.showCompleteLog = new System.Windows.Forms.CheckBox();
@@ -87,7 +89,7 @@
 			this.HighLightingExt = new System.Windows.Forms.TextBox();
 			this.HighLightingExts = new System.Windows.Forms.ListBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.CreatePDB = new System.Windows.Forms.CheckBox();
+			this.ShowDbgPanelsOnDebugging = new System.Windows.Forms.CheckBox();
 			this.tabPage1.SuspendLayout();
 			this.tabPage3.SuspendLayout();
 			this.tabControl1.SuspendLayout();
@@ -110,6 +112,7 @@
 			// 
 			// tabPage1
 			// 
+			this.tabPage1.Controls.Add(this.label11);
 			this.tabPage1.Controls.Add(this.CreatePDB);
 			this.tabPage1.Controls.Add(this.DoAutoSave);
 			this.tabPage1.Controls.Add(this.UseIntegDbg);
@@ -143,6 +146,25 @@
 			this.tabPage1.TabIndex = 1;
 			this.tabPage1.Text = "Build commands";
 			this.tabPage1.UseVisualStyleBackColor = true;
+			// 
+			// label11
+			// 
+			this.label11.AutoSize = true;
+			this.label11.Location = new System.Drawing.Point(119, 301);
+			this.label11.Name = "label11";
+			this.label11.Size = new System.Drawing.Size(135, 26);
+			this.label11.TabIndex = 26;
+			this.label11.Text = "Requires mspdb80.dll to be\r\ninstalled somewhere";
+			// 
+			// CreatePDB
+			// 
+			this.CreatePDB.AutoSize = true;
+			this.CreatePDB.Location = new System.Drawing.Point(104, 281);
+			this.CreatePDB.Name = "CreatePDB";
+			this.CreatePDB.Size = new System.Drawing.Size(160, 17);
+			this.CreatePDB.TabIndex = 25;
+			this.CreatePDB.Text = "Create .pdb file after building";
+			this.CreatePDB.UseVisualStyleBackColor = true;
 			// 
 			// DoAutoSave
 			// 
@@ -564,6 +586,7 @@
 			// 
 			// tabPage4
 			// 
+			this.tabPage4.Controls.Add(this.ShowDbgPanelsOnDebugging);
 			this.tabPage4.Controls.Add(this.AutoSkipUnknownCode);
 			this.tabPage4.Controls.Add(this.verbosedbgoutput);
 			this.tabPage4.Location = new System.Drawing.Point(4, 22);
@@ -697,15 +720,15 @@
 			// 
 			this.toolTip1.AutomaticDelay = 250;
 			// 
-			// CreatePDB
+			// ShowDbgPanelsOnDebugging
 			// 
-			this.CreatePDB.AutoSize = true;
-			this.CreatePDB.Location = new System.Drawing.Point(104, 281);
-			this.CreatePDB.Name = "CreatePDB";
-			this.CreatePDB.Size = new System.Drawing.Size(160, 17);
-			this.CreatePDB.TabIndex = 25;
-			this.CreatePDB.Text = "Create .pdb file after building";
-			this.CreatePDB.UseVisualStyleBackColor = true;
+			this.ShowDbgPanelsOnDebugging.AutoSize = true;
+			this.ShowDbgPanelsOnDebugging.Location = new System.Drawing.Point(8, 52);
+			this.ShowDbgPanelsOnDebugging.Name = "ShowDbgPanelsOnDebugging";
+			this.ShowDbgPanelsOnDebugging.Size = new System.Drawing.Size(236, 17);
+			this.ShowDbgPanelsOnDebugging.TabIndex = 27;
+			this.ShowDbgPanelsOnDebugging.Text = "Hide debug panels when finished debugging";
+			this.ShowDbgPanelsOnDebugging.UseVisualStyleBackColor = true;
 			// 
 			// IDESettings
 			// 
@@ -796,5 +819,7 @@
 		private System.Windows.Forms.ListBox HighLightingExts;
 		private System.Windows.Forms.Label label10;
 		private System.Windows.Forms.CheckBox CreatePDB;
+		private System.Windows.Forms.Label label11;
+		private System.Windows.Forms.CheckBox ShowDbgPanelsOnDebugging;
 	}
 }

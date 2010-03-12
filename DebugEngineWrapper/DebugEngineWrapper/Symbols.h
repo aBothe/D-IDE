@@ -23,6 +23,11 @@ namespace DebugEngineWrapper
 		{
 			sg->Release();
 		}
+		
+		bool ExpandChildren(ULONG Index,bool Expand)
+		{
+			return sg->ExpandSymbol(Index,Expand)==S_OK;
+		}
 
 		property ULONG Count
 		{

@@ -781,6 +781,13 @@ namespace D_IDE
 								}
 								break;
 
+							case "showdbgpanelswhendebugging":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.ShowDbgPanelsOnDebugging = xr.Value == "1";
+								}
+								break;
+
 							case "autosave":
 								if (xr.MoveToAttribute("value"))
 								{
@@ -1067,6 +1074,10 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Default.SkipUnknownCode ? "1" : "0");
 			xw.WriteEndElement();
 
+			xw.WriteStartElement("showdbgpanelswhendebugging");
+			xw.WriteAttributeString("value", Default.ShowDbgPanelsOnDebugging ? "1" : "0");
+			xw.WriteEndElement();
+
 			xw.WriteStartElement("autosave");
 			xw.WriteAttributeString("value", Default.DoAutoSaveOnBuilding ? "1" : "0");
 			xw.WriteEndElement();
@@ -1188,7 +1199,8 @@ namespace D_IDE
 		public bool ShowBuildCommands = true;
 		public bool UseExternalDebugger = false;
 		public bool DoAutoSaveOnBuilding = true;
-		public bool CreatePDBOnBuild = false; // Still inactive by default - this will be changed soon ;-)
+		public bool CreatePDBOnBuild = true;
+		public bool ShowDbgPanelsOnDebugging = true;
 
 		#region Debugging
 		public bool VerboseDebugOutput = false;
@@ -1213,7 +1225,7 @@ namespace D_IDE
 		public string exe_res = "rc.exe";
 		public string exe_dbg = "windbg.exe";
 
-		public string cmp_obj = "-c -O \"$src\" -of\"$obj\" -gc";
+		public string cmp_obj = "-c \"$src\" -of\"$obj\" -gc";
 		public string link_win_exe = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc";
 		public string link_to_exe = "$objs $libs -of\"$exe\" -gc";
 		public string link_to_dll = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
