@@ -205,7 +205,7 @@ namespace D_IDE
 				case "wstring":
 				case "wchar[]":
 					IsString = true;
-					t = typeof(char);
+					t = typeof(ushort);
 					size = 2;
 					break;
 				case "dstring":
@@ -282,7 +282,7 @@ namespace D_IDE
 					{
 						if (o is uint)
 							str += Char.ConvertFromUtf32((int)(uint)o);
-						else if (o is ushort)
+						else if (o is UInt16)
 							str += (char)(ushort)o;
 						else if (o is byte)
 							str += (char)(byte)o;
