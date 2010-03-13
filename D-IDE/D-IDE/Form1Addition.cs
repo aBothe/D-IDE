@@ -385,7 +385,7 @@ namespace D_IDE
 				}
 				if (desc != "" && cursym!=null)
 				{
-					e.ShowToolTip(cursym.TypeName+" "+desc.Trim('.')+" = "+cursym.TextValue);
+					e.ShowToolTip(cursym.TypeName + " " + desc.Trim('.') + " = " + Form1.thisForm.BuildSymbolValueString((uint)ta.Caret.Line-1, cursym));
 					return;
 				}
 			}

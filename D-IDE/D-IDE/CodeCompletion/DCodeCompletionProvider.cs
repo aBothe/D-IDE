@@ -129,9 +129,9 @@ namespace D_IDE
 				{
 					// Search expression in all superior blocks
 					DataType cblock = GetBlockAt(local.dom, caretLocation);
-					seldt = SearchExprInClassHierarchyBackward(cblock, RemoveArrayOrTemplatePartFromDecl(expressions[0]));
+					seldt = SearchExprInClassHierarchyBackward(cblock, RemoveTemplatePartFromDecl(expressions[0]));
 					// Search expression in current module root first
-					if (seldt == null)	seldt = SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(expressions[0]), true, out module);
+					if (seldt == null)	seldt = SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(expressions[0]), true, out module);
 					// If there wasn't found anything, search deeper and recursive
 					//if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom, GetBlockAt(local.dom, caretLocation), RemoveArrayOrTemplatePartFromDecl(expressions[0]));
 					// EDIT: Don't search recursively in all blocks of local.dom because you'd resolve something you couldn't access...
@@ -220,7 +220,7 @@ namespace D_IDE
 				for (; i < expressions.Length && seldt != null; i++)
 				{
 					isInstance = false;
-					seldt = SearchExprInClassHierarchy(seldt, null, RemoveArrayOrTemplatePartFromDecl(expressions[i]));
+					seldt = SearchExprInClassHierarchy(seldt, null, RemoveTemplatePartFromDecl(expressions[i]));
 					if (seldt == null) break;
 
 					seldd = seldt;
@@ -508,9 +508,9 @@ namespace D_IDE
 			DModule mod = null;
 			if ((!DTokens.BasicTypes[(int)owner.TypeToken] && owner.fieldtype == FieldType.Variable) || ((owner.fieldtype == FieldType.Function || owner.fieldtype == FieldType.AliasDecl) && !isLastInExpressionChain))
 			{
-				ret = DCodeCompletionProvider.SearchExprInClassHierarchy((DataType)owner.Parent, null, RemoveArrayOrTemplatePartFromDecl(owner.type));
+				ret = DCodeCompletionProvider.SearchExprInClassHierarchy((DataType)owner.Parent, null, RemoveTemplatePartFromDecl(owner.type));
 				if (ret == null)
-					ret = DCodeCompletionProvider.SearchGlobalExpr(prj, local, RemoveArrayOrTemplatePartFromDecl(owner.type), false, out mod);
+					ret = DCodeCompletionProvider.SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(owner.type), false, out mod);
 			}
 			return ret;
 		}

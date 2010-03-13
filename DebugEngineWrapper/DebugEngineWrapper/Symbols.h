@@ -3,38 +3,10 @@
 
 using namespace System;
 using namespace System::Collections;
+using namespace System::Text;
 
 namespace DebugEngineWrapper
 {
-	public enum class DebugSymbolFlags
-	{
-		IsExpanded=DEBUG_SYMBOL_EXPANDED,
-		IsReadonly=DEBUG_SYMBOL_READ_ONLY,
-		IsArray=DEBUG_SYMBOL_IS_ARRAY,
-		IsFloat=DEBUG_SYMBOL_IS_FLOAT,
-		IsArgument=DEBUG_SYMBOL_IS_ARGUMENT,
-		IsLocal=DEBUG_SYMBOL_IS_LOCAL,
-	};
-
-	public ref struct DebugScopedSymbol
-	{
-		internal:
-		DebugScopedSymbol()
-		{}
-		
-		public:
-		ULONG Depth;
-		ULONG ParentId;
-		DebugSymbolFlags^ Flags;
-		//DEBUG_SYMBOL_ENTRY* SymbolData;
-		ULONG Id;
-		String^ Name;
-		String^ TypeName;
-		String^ TextValue;
-		ULONG64 Offset;
-		ULONG Size;
-	};
-
 	public ref class DebugSymbolGroup
 	{
 	internal:
@@ -118,7 +90,10 @@ namespace DebugEngineWrapper
 	{
 	internal:
 		DbgSymbols *sym;
-		DebugSymbols(DbgSymbols *symb):sym(symb) {}
+		DbgDataSpaces* ds;
+		DebugSymbols(DbgSymbols *symb,DbgDataSpaces* datas):sym(symb) {
+			ds=datas;
+		}
 	private:
 		DebugSymbols(){}
 	public:
@@ -210,7 +185,6 @@ namespace DebugEngineWrapper
 					
 					ULONG c=10;
 					
-					//DEBUG_SYMBOL_PARAMETERS* params = (DEBUG_SYMBOL_PARAMETERS*) malloc(c*sizeof(DEBUG_SYMBOL_PARAMETERS));
 					DEBUG_SYMBOL_PARAMETERS prm;
 					dsg->sg->GetSymbolParameters(i,1,&prm);
 					s->ParentId=prm.ParentSymbol;
@@ -219,7 +193,8 @@ namespace DebugEngineWrapper
 					
 					ret->Add(s);
 					
-					dsg->ExpandChildren(i,true);
+					if(!s->TypeName->EndsWith("[]")) // An array isn't needed to get expanded
+						dsg->ExpandChildren(i,true);
 										
 					}
 					
@@ -229,39 +204,49 @@ namespace DebugEngineWrapper
 			}
 		}
 
-		property array<DebugScopedSymbol^>^ ScopeArgumentSymbols
+		
+		array<Object^>^ ReadArray(ULONG64 Offset,Type^ type,ULONG ElementSize)
 		{
-			array<DebugScopedSymbol^>^ get(){
-				DebugSymbolGroup^ dsg;
-				
-				DbgSymbolGroup* sg;
-				if(sym->GetScopeSymbolGroup(DEBUG_SCOPE_GROUP_ARGUMENTS,0,(PDEBUG_SYMBOL_GROUP*)&sg)==S_OK)
-				{
-					dsg=gcnew DebugSymbolGroup(sg);
-					
-					array<DebugScopedSymbol^>^ ret=gcnew array<DebugScopedSymbol^>(dsg->Count);
-					
-					for(UINT i=0;i<dsg->Count;i++)
-					{
-					ret[i]=gcnew DebugScopedSymbol();
-					ret[i]->Id=i;
-					ret[i]->Name=dsg->SymbolName(i);
-					ret[i]->Offset=dsg->SymbolOffset(i);
-					ret[i]->TextValue=dsg->ValueText(i);
-					ret[i]->TypeName=dsg->TypeName(i);
-					ret[i]->Size=dsg->SymbolSize(i);
-					
-					//DEBUG_SYMBOL_ENTRY  info;
-					//dsg->sg->GetSymbolEntryInformation(i,ret[i]->SymbolData);
-					//*ret[i]->SymbolData=info;
-					
-					}
-					
-					return ret;
-				}
-				return nullptr;
+			DArray str;
+			if(ds->ReadVirtual(Offset,&str,sizeof(str),nullptr)!=S_OK) return nullptr;
+			if(str.Length<1) return nullptr;
+			
+			UINT elsz=ElementSize;
+
+			UINT sz=elsz*(str.Length>1000?1000:str.Length);
+			if(sz<1) return nullptr;
+			BYTE* ptr=new BYTE[sz];
+			ULONG readb;
+			if(ds->ReadVirtual((ULONG64)str.Ptr,ptr,sz,&readb)!=S_OK) return nullptr;
+			ULONG Count=readb/elsz;
+			
+			array<Object^>^ ret= gcnew array<Object^>(Count);
+			for(UINT i=0;i<Count;i++)
+			{
+				ret[i]=Marshal::PtrToStructure(IntPtr(ptr),type);
+				ptr+=ElementSize;
 			}
+			return ret;
 		}
+		
+		array<Object^>^ ReadArrayArray(ULONG64 Offset,Type^ type,ULONG ElementSize)
+		{
+			DArray arr;
+			if(ds->ReadVirtual(Offset,&arr,sizeof(arr),nullptr)!=S_OK) return nullptr;
+			if(arr.Length<1) return nullptr;
+			
+			UINT c=arr.Length>10000?10000:arr.Length;
+			
+			array<Object^>^ ret= gcnew array<Object^>(c);
+			ULONG p=arr.Ptr;
+			for(UINT i=0;i<c;i++)
+			{
+				ret[i]=ReadArray(p,type,ElementSize);
+				p+=8;
+			}
+			return ret;
+		}
+		
 
 		property String^ SymbolPath
 		{

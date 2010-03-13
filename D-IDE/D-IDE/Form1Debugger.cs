@@ -9,6 +9,7 @@ using WeifenLuo.WinFormsUI.Docking;
 using System.Drawing;
 using System.Diagnostics;
 using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace D_IDE
 {
@@ -185,39 +186,188 @@ namespace D_IDE
 			RunDebugClick("untilmain", EventArgs.Empty);
 		}
 
-		void RefreshLocals()
+		#region Exression evaluation
+		public static Type DetermineArrayType(string type, out uint size, out bool IsString)
+		{
+			IsString = false;
+			Type t = typeof(int);
+			size = 4;
+			switch (type)
+			{
+				default:
+					break;
+				case "string":
+				case "char[]":
+					IsString = true;
+					t = typeof(byte);
+					size = 1;
+					break;
+				case "wstring":
+				case "wchar[]":
+					IsString = true;
+					t = typeof(char);
+					size = 2;
+					break;
+				case "dstring":
+				case "dchar[]":
+					IsString = true;
+					t = typeof(uint);
+					size = 4;
+					break;
+
+				case "ubyte[]":
+					t = typeof(byte); size = 1;
+					break;
+				case "ushort[]":
+					t = typeof(ushort); size = 2;
+					break;
+				case "uint[]":
+					t = typeof(uint); size = 4;
+					break;
+				case "int[]":
+					t = typeof(int); size = 4;
+					break;
+				case "short[]":
+					t = typeof(short); size = 2;
+					break;
+				case "byte[]":
+					t = typeof(sbyte); size = 1;
+					break;
+				case "float[]":
+					t = typeof(float); size = 4;
+					break;
+				case "double[]":
+					t = typeof(double); size = 8;
+					break;
+				case "ulong[]":
+					t = typeof(ulong); size = 8;
+					break;
+				case "long[]":
+					t = typeof(long); size = 8;
+					break;
+			}
+			return t;
+		}
+
+		public object[] ExtractArray(ulong Offset, string RawTypeExpression, out bool IsString)
+		{
+			string type = DCodeCompletionProvider.RemoveAttributeFromDecl(RawTypeExpression);
+
+			int DimCount = 0;
+			uint elsz = 4;
+			foreach (char c in RawTypeExpression) if (c == '[') DimCount++;
+
+			Type t = DetermineArrayType(type, out elsz, out IsString);
+			object[] ret = null;
+			if (!IsString) t = DetermineArrayType(DCodeCompletionProvider.RemoveArrayPartFromDecl(type), out elsz, out IsString);
+			if ((IsString && DimCount < 1) || (!IsString && DimCount < 2))
+				ret = dbg.Symbols.ReadArray(Offset, t, elsz);
+			else
+			{
+				ret = dbg.Symbols.ReadArrayArray(Offset, t, elsz);
+			}
+			return ret;
+		}
+
+		public string BuildArrayContentString(object[] marr, bool IsString)
+		{
+			string str = "";
+			if (marr != null)
+			{
+				Type t = marr[0].GetType();
+				if (IsString && !t.IsArray)
+				{
+					str = "\"";
+					foreach (object o in marr)
+					{
+						if (o is uint)
+							str += Char.ConvertFromUtf32((int)(uint)o);
+						else if (o is ushort)
+							str += (char)(ushort)o;
+						else if (o is byte)
+							str += (char)(byte)o;
+					}
+					str += "\"";
+				}
+				else
+				{
+					str = "{";
+					foreach (object o in marr)
+					{
+						if (t.IsArray)
+							str += BuildArrayContentString((object[])o, IsString) + "; ";
+						else
+							str += o.ToString() + "; ";
+					}
+					str = str.Trim().TrimEnd(';') + "}";
+				}
+			}
+			return str;
+		}
+
+		public string BuildArrayContentString(ulong Offset, string type)
+		{
+			bool IsString;
+			object[] marr = ExtractArray(Offset, type, out IsString);
+			return BuildArrayContentString(marr, IsString);
+		}
+
+		public string BuildSymbolValueString(uint ScopedSrcLine,DebugScopedSymbol sym)
+		{
+			if (sym.TypeName.EndsWith("[]")) // If it's an array
+			{
+				#region Search fitting node
+				DocumentInstanceWindow diw = Form1.SelectedTabPage;
+				DModule mod = null;
+
+				// Search expression in all superior blocks
+				DataType cblock = DCodeCompletionProvider.GetBlockAt(diw.fileData.dom, new CodeLocation(0, (int)ScopedSrcLine));
+				DataType symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(cblock, sym.Name);
+				// Search expression in current module root first
+				if (symNode == null) symNode = DCodeCompletionProvider.SearchGlobalExpr(diw.project, diw.fileData, sym.Name, true, out mod);
+				#endregion
+
+				if (symNode != null)
+				{
+					return BuildArrayContentString(sym.Offset, symNode.type);
+				}
+			}
+			return sym.TextValue;
+		}
+
+		public void RefreshLocals()
 		{
 			if (!IsDebugging) return;
 
-			DebugScopedSymbol[] args = dbg.Symbols.ScopeArgumentSymbols, locals = dbg.Symbols.ScopeLocalSymbols;
+			DebugScopedSymbol[] locals = dbg.Symbols.ScopeLocalSymbols;
 
 			dbgLocalswin.list.BeginUpdate();
 
 			dbgLocalswin.Clear();
 
-			/*for (uint i = 0; i < args.Count; i++)
+			string fn;
+			uint ln;
+			ulong off = dbg.CurrentFrame.InstructionOffset;
+			if (!dbg.Symbols.GetLineByOffset(off, out fn, out ln))
 			{
-				ListViewItem lvi = new ListViewItem();
-				lvi.Text = args.SymbolName(i);
-				lvi.SubItems.Add(args.TypeName(i));
-				lvi.SubItems.Add(args.ValueText(i));
-				dbgLocalswin.list.Items.Add(lvi);
-			}*/
+			}
 
-			foreach(DebugScopedSymbol sym in locals)
+			foreach (DebugScopedSymbol sym in locals)
 			{
 				ListViewItem lvi = new ListViewItem();
 				string n = "";
-				for (int i = 0; i < (int)sym.Depth;i++ )
-					n+="   ";
+				for (int i = 0; i < (int)sym.Depth; i++)
+					n += "   ";
 				n += sym.Name;
 				lvi.Text = n;
-				lvi.SubItems.Add(sym.TextValue);
+				lvi.Tag = sym;
+				lvi.SubItems.Add(BuildSymbolValueString(ln,sym));
 				dbgLocalswin.list.Items.Add(lvi);
 			}
 
 			dbgLocalswin.list.EndUpdate();
 		}
+		#endregion
 
 		void GoToCurrentLocation()
 		{

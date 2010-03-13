@@ -416,6 +416,12 @@ namespace DebugEngineWrapper
 		Unexpected=E_UNEXPECTED,
 		AlreadyWaiting=E_FAIL
 	};
+	
+	public struct DArray
+	{
+		DWORD Length;
+		DWORD Ptr;
+	};
 
 	public ref class CodeException
 	{
@@ -442,5 +448,32 @@ namespace DebugEngineWrapper
 		}	
 		String^ Name;
 		ULONG64 Offset;
+	};
+	
+	public enum class DebugSymbolFlags
+	{
+		IsExpanded=DEBUG_SYMBOL_EXPANDED,
+		IsReadonly=DEBUG_SYMBOL_READ_ONLY,
+		IsArray=DEBUG_SYMBOL_IS_ARRAY,
+		IsFloat=DEBUG_SYMBOL_IS_FLOAT,
+		IsArgument=DEBUG_SYMBOL_IS_ARGUMENT,
+		IsLocal=DEBUG_SYMBOL_IS_LOCAL,
+	};
+
+	public ref struct DebugScopedSymbol
+	{
+	public:
+		DebugScopedSymbol()
+		{}
+		ULONG Depth;
+		ULONG ParentId;
+		DebugSymbolFlags^ Flags;
+		//DEBUG_SYMBOL_ENTRY* SymbolData;
+		ULONG Id;
+		String^ Name;
+		String^ TypeName;
+		String^ TextValue;
+		ULONG64 Offset;
+		ULONG Size;
 	};
 }

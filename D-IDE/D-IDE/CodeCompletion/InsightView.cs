@@ -255,7 +255,7 @@ namespace D_IDE
 				{
 					if (i == expressions.Length - 1) // One before the last one
 					{
-						List<DataType> tt = DCodeCompletionProvider.SearchExprsInClassHierarchy(seldt, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[i]));
+						List<DataType> tt = DCodeCompletionProvider.SearchExprsInClassHierarchy(seldt, DCodeCompletionProvider.RemoveTemplatePartFromDecl(expressions[i]));
 						if (tt != null)
 							foreach (DataType dt in tt)
 							{
@@ -264,13 +264,13 @@ namespace D_IDE
 						break;
 					}
 
-					seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(seldt, null, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(expressions[i]));
+					seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(seldt, null, DCodeCompletionProvider.RemoveTemplatePartFromDecl(expressions[i]));
 					if (seldt == null) break;
 
 					if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))
 					{
 						DataType seldd = seldt;
-						seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, DCodeCompletionProvider.RemoveArrayOrTemplatePartFromDecl(seldt.type));
+						seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.type));
 						if (seldt == null) seldt = seldd;
 					}
 				}

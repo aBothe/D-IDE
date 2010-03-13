@@ -20,13 +20,15 @@ namespace DebugEngineWrapper {
 		{
 			DbgControl * ctrl;
 			DbgSymbols * sym;
+			DbgDataSpaces* datas;
 			
 			cl->QueryInterface(__uuidof(DbgControl), (void**)&ctrl);
 			cl->QueryInterface(__uuidof(DbgSymbols), (void**)&sym);
+			cl->QueryInterface(__uuidof(DbgDataSpaces), (void**)&datas);
 
 			this->client=cl;
 			this->control=ctrl;
-			this->Symbols=gcnew DebugSymbols(sym);
+			this->Symbols=gcnew DebugSymbols(sym,datas);
 
 			AssignCallbacks();
 		}
@@ -80,7 +82,7 @@ namespace DebugEngineWrapper {
 
 			this->client=cl;
 			this->control=ctrl;
-			this->Symbols=gcnew DebugSymbols(sym);
+			this->Symbols=gcnew DebugSymbols(sym,ds);
 			this->Memory=gcnew DebugDataSpaces(ds);
 
 			this->AssignCallbacks();

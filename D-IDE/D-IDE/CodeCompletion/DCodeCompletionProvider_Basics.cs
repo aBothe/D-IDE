@@ -571,7 +571,7 @@ namespace D_IDE
 			return true;
 		}
 
-		public static string RemoveArrayOrTemplatePartFromDecl(string expr)
+		public static string RemoveTemplatePartFromDecl(string expr)
 		{
 			string ret = expr;
 			int t = ret.IndexOf('!');
@@ -579,10 +579,39 @@ namespace D_IDE
 			{
 				ret = ret.Remove(t);
 			}
-			t = ret.IndexOf('[');
+			return ret;
+		}
+		/// <summary>
+		/// int[][] --->> int[]
+		/// </summary>
+		/// <param name="expr"></param>
+		/// <returns></returns>
+		public static string RemoveArrayPartFromDecl(string expr)
+		{
+			string ret = expr;
+			int t = ret.LastIndexOf('[');
 			if (t >= 0)
 			{
 				ret = ret.Remove(t);
+			}
+			return ret;
+		}
+
+		/// <summary>
+		/// immutable(char)[] --->> char[]
+		/// </summary>
+		/// <param name="expr"></param>
+		/// <returns></returns>
+		public static string RemoveAttributeFromDecl(string expr)
+		{
+			string ret = expr;
+			int t = ret.IndexOf('(');
+			if(t>0)
+			{
+				ret = ret.Remove(0,t+1);
+				t = ret.IndexOf(')');
+				if (t > 0)
+					ret = ret.Remove(t,1);
 			}
 			return ret;
 		}

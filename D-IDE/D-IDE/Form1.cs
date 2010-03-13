@@ -54,7 +54,7 @@ namespace D_IDE
 
 			try
 			{
-				if (File.Exists(Program.LayoutFile))
+				if (File.Exists(Program.cfgDir+"\\"+ Program.LayoutFile))
 					dockPanel.LoadFromXml(Program.cfgDir + "\\" + Program.LayoutFile, new DeserializeDockContent(delegate(string s)
 					{
 						if (s == typeof(BuildProcessWin).ToString()) return bpw;
