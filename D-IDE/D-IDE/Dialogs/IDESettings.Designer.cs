@@ -103,7 +103,7 @@
 			// button1
 			// 
 			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.button1.Location = new System.Drawing.Point(535, 621);
+			this.button1.Location = new System.Drawing.Point(566, 621);
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(75, 23);
 			this.button1.TabIndex = 1;
@@ -143,7 +143,7 @@
 			this.tabPage1.Controls.Add(this.label3);
 			this.tabPage1.Location = new System.Drawing.Point(4, 22);
 			this.tabPage1.Name = "tabPage1";
-			this.tabPage1.Size = new System.Drawing.Size(618, 589);
+			this.tabPage1.Size = new System.Drawing.Size(649, 589);
 			this.tabPage1.TabIndex = 1;
 			this.tabPage1.Text = "Build commands";
 			this.tabPage1.UseVisualStyleBackColor = true;
@@ -201,7 +201,7 @@
 			// 
 			this.label9.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.label9.AutoSize = true;
-			this.label9.Location = new System.Drawing.Point(295, 190);
+			this.label9.Location = new System.Drawing.Point(326, 190);
 			this.label9.Name = "label9";
 			this.label9.Size = new System.Drawing.Size(175, 117);
 			this.label9.TabIndex = 21;
@@ -223,13 +223,13 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.dbg_exe.Location = new System.Drawing.Point(104, 163);
 			this.dbg_exe.Name = "dbg_exe";
-			this.dbg_exe.Size = new System.Drawing.Size(188, 20);
+			this.dbg_exe.Size = new System.Drawing.Size(219, 20);
 			this.dbg_exe.TabIndex = 19;
 			// 
 			// dbg_args
 			// 
 			this.dbg_args.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.dbg_args.Location = new System.Drawing.Point(298, 163);
+			this.dbg_args.Location = new System.Drawing.Point(329, 163);
 			this.dbg_args.Name = "dbg_args";
 			this.dbg_args.Size = new System.Drawing.Size(318, 20);
 			this.dbg_args.TabIndex = 17;
@@ -249,7 +249,7 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.exe_win.Location = new System.Drawing.Point(104, 33);
 			this.exe_win.Name = "exe_win";
-			this.exe_win.Size = new System.Drawing.Size(188, 20);
+			this.exe_win.Size = new System.Drawing.Size(219, 20);
 			this.exe_win.TabIndex = 16;
 			// 
 			// exe_dll
@@ -258,7 +258,7 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.exe_dll.Location = new System.Drawing.Point(104, 85);
 			this.exe_dll.Name = "exe_dll";
-			this.exe_dll.Size = new System.Drawing.Size(188, 20);
+			this.exe_dll.Size = new System.Drawing.Size(219, 20);
 			this.exe_dll.TabIndex = 13;
 			// 
 			// exe_cmp
@@ -267,7 +267,7 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.exe_cmp.Location = new System.Drawing.Point(104, 7);
 			this.exe_cmp.Name = "exe_cmp";
-			this.exe_cmp.Size = new System.Drawing.Size(188, 20);
+			this.exe_cmp.Size = new System.Drawing.Size(219, 20);
 			this.exe_cmp.TabIndex = 11;
 			// 
 			// exe_console
@@ -276,7 +276,7 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.exe_console.Location = new System.Drawing.Point(104, 59);
 			this.exe_console.Name = "exe_console";
-			this.exe_console.Size = new System.Drawing.Size(188, 20);
+			this.exe_console.Size = new System.Drawing.Size(219, 20);
 			this.exe_console.TabIndex = 12;
 			// 
 			// exe_rc
@@ -285,7 +285,7 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.exe_rc.Location = new System.Drawing.Point(104, 137);
 			this.exe_rc.Name = "exe_rc";
-			this.exe_rc.Size = new System.Drawing.Size(188, 20);
+			this.exe_rc.Size = new System.Drawing.Size(219, 20);
 			this.exe_rc.TabIndex = 15;
 			// 
 			// exe_lib
@@ -294,13 +294,13 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.exe_lib.Location = new System.Drawing.Point(104, 111);
 			this.exe_lib.Name = "exe_lib";
-			this.exe_lib.Size = new System.Drawing.Size(372, 20);
+			this.exe_lib.Size = new System.Drawing.Size(219, 20);
 			this.exe_lib.TabIndex = 14;
 			// 
 			// link_win_exe
 			// 
 			this.link_win_exe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_win_exe.Location = new System.Drawing.Point(298, 33);
+			this.link_win_exe.Location = new System.Drawing.Point(329, 33);
 			this.link_win_exe.Name = "link_win_exe";
 			this.link_win_exe.Size = new System.Drawing.Size(318, 20);
 			this.link_win_exe.TabIndex = 10;
@@ -308,7 +308,7 @@
 			// link_to_dll
 			// 
 			this.link_to_dll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_to_dll.Location = new System.Drawing.Point(298, 85);
+			this.link_to_dll.Location = new System.Drawing.Point(329, 85);
 			this.link_to_dll.Name = "link_to_dll";
 			this.link_to_dll.Size = new System.Drawing.Size(318, 20);
 			this.link_to_dll.TabIndex = 3;
@@ -316,7 +316,7 @@
 			// cmp_to_obj
 			// 
 			this.cmp_to_obj.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.cmp_to_obj.Location = new System.Drawing.Point(298, 7);
+			this.cmp_to_obj.Location = new System.Drawing.Point(329, 7);
 			this.cmp_to_obj.Name = "cmp_to_obj";
 			this.cmp_to_obj.Size = new System.Drawing.Size(318, 20);
 			this.cmp_to_obj.TabIndex = 1;
@@ -324,7 +324,7 @@
 			// link_to_exe
 			// 
 			this.link_to_exe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_to_exe.Location = new System.Drawing.Point(298, 59);
+			this.link_to_exe.Location = new System.Drawing.Point(329, 59);
 			this.link_to_exe.Name = "link_to_exe";
 			this.link_to_exe.Size = new System.Drawing.Size(318, 20);
 			this.link_to_exe.TabIndex = 2;
@@ -332,7 +332,7 @@
 			// rc
 			// 
 			this.rc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.rc.Location = new System.Drawing.Point(298, 137);
+			this.rc.Location = new System.Drawing.Point(329, 137);
 			this.rc.Name = "rc";
 			this.rc.Size = new System.Drawing.Size(318, 20);
 			this.rc.TabIndex = 6;
@@ -340,7 +340,7 @@
 			// link_to_lib
 			// 
 			this.link_to_lib.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_to_lib.Location = new System.Drawing.Point(298, 111);
+			this.link_to_lib.Location = new System.Drawing.Point(329, 111);
 			this.link_to_lib.Name = "link_to_lib";
 			this.link_to_lib.Size = new System.Drawing.Size(318, 20);
 			this.link_to_lib.TabIndex = 4;
@@ -407,7 +407,7 @@
 			this.tabPage3.Controls.Add(this.parsedFiles);
 			this.tabPage3.Location = new System.Drawing.Point(4, 22);
 			this.tabPage3.Name = "tabPage3";
-			this.tabPage3.Size = new System.Drawing.Size(618, 589);
+			this.tabPage3.Size = new System.Drawing.Size(649, 589);
 			this.tabPage3.TabIndex = 0;
 			this.tabPage3.Text = "Global file parsing";
 			this.tabPage3.UseVisualStyleBackColor = true;
@@ -423,7 +423,7 @@
 			this.parsedFileList.MultiSelect = false;
 			this.parsedFileList.Name = "parsedFileList";
 			this.parsedFileList.ShowGroups = false;
-			this.parsedFileList.Size = new System.Drawing.Size(191, 583);
+			this.parsedFileList.Size = new System.Drawing.Size(222, 583);
 			this.parsedFileList.TabIndex = 3;
 			this.parsedFileList.UseCompatibleStateImageBehavior = false;
 			this.parsedFileList.View = System.Windows.Forms.View.List;
@@ -472,7 +472,7 @@
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
-			this.tabControl1.Size = new System.Drawing.Size(626, 615);
+			this.tabControl1.Size = new System.Drawing.Size(657, 615);
 			this.tabControl1.TabIndex = 3;
 			// 
 			// tabPage2
@@ -594,7 +594,7 @@
 			this.tabPage4.Location = new System.Drawing.Point(4, 22);
 			this.tabPage4.Name = "tabPage4";
 			this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage4.Size = new System.Drawing.Size(618, 589);
+			this.tabPage4.Size = new System.Drawing.Size(649, 589);
 			this.tabPage4.TabIndex = 3;
 			this.tabPage4.Text = "Debugging";
 			this.tabPage4.UseVisualStyleBackColor = true;
@@ -626,7 +626,7 @@
 			this.tabPage5.Location = new System.Drawing.Point(4, 22);
 			this.tabPage5.Name = "tabPage5";
 			this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage5.Size = new System.Drawing.Size(618, 589);
+			this.tabPage5.Size = new System.Drawing.Size(649, 589);
 			this.tabPage5.TabIndex = 4;
 			this.tabPage5.Text = "Editor";
 			this.tabPage5.UseVisualStyleBackColor = true;
@@ -644,7 +644,7 @@
 			this.groupBox1.Controls.Add(this.HighLightingExts);
 			this.groupBox1.Location = new System.Drawing.Point(8, 6);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(607, 190);
+			this.groupBox1.Size = new System.Drawing.Size(638, 190);
 			this.groupBox1.TabIndex = 0;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Code highlighting (Changes require restart)";
@@ -662,7 +662,7 @@
 			// HighLightingSearchXSHD
 			// 
 			this.HighLightingSearchXSHD.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.HighLightingSearchXSHD.Location = new System.Drawing.Point(577, 46);
+			this.HighLightingSearchXSHD.Location = new System.Drawing.Point(608, 46);
 			this.HighLightingSearchXSHD.Name = "HighLightingSearchXSHD";
 			this.HighLightingSearchXSHD.Size = new System.Drawing.Size(27, 23);
 			this.HighLightingSearchXSHD.TabIndex = 5;
@@ -678,7 +678,7 @@
 			this.HighLightingAssocXSHDFile.Location = new System.Drawing.Point(156, 48);
 			this.HighLightingAssocXSHDFile.Name = "HighLightingAssocXSHDFile";
 			this.HighLightingAssocXSHDFile.ReadOnly = true;
-			this.HighLightingAssocXSHDFile.Size = new System.Drawing.Size(415, 20);
+			this.HighLightingAssocXSHDFile.Size = new System.Drawing.Size(446, 20);
 			this.HighLightingAssocXSHDFile.TabIndex = 4;
 			// 
 			// HighLightingDelExt
@@ -747,7 +747,7 @@
 			this.AcceptButton = this.button1;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(626, 656);
+			this.ClientSize = new System.Drawing.Size(657, 656);
 			this.ControlBox = false;
 			this.Controls.Add(this.tabControl1);
 			this.Controls.Add(this.button1);

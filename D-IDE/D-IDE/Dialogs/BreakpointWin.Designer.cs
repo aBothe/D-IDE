@@ -66,6 +66,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(815, 277);
 			this.Controls.Add(this.list);
+			this.HideOnClose = true;
 			this.Name = "BreakpointWin";
 			this.TabText = "Breakpoints";
 			this.Text = "Breakpoints";

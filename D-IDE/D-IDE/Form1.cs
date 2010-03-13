@@ -1428,12 +1428,21 @@ namespace D_IDE
 			DocumentInstanceWindow diw = null;
 			if ((diw = SelectedTabPage) == null) return;
 
-			int line = diw.Caret.Line;
-			LineSegment ls = diw.txt.Document.GetLineSegmentForOffset(diw.CaretOffset);
-			diw.txt.Document.Insert(
-				diw.txt.Document.PositionToOffset(new TextLocation(0, line + 1)),
-				diw.txt.Document.TextContent.Substring(ls.Offset, ls.Length) + "\r\n"
-				);
+			string sel = diw.txt.ActiveTextAreaControl.SelectionManager.SelectedText;
+			if (String.IsNullOrEmpty(sel))
+			{
+				int line = diw.Caret.Line;
+				LineSegment ls = diw.txt.Document.GetLineSegmentForOffset(diw.CaretOffset);
+				diw.txt.Document.Insert(
+					diw.txt.Document.PositionToOffset(new TextLocation(0, line + 1)),
+					diw.txt.Document.TextContent.Substring(ls.Offset, ls.Length) + "\r\n"
+					);
+			}
+			else
+			{
+				ISelection isel = diw.txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
+				diw.txt.Document.Insert(isel.EndOffset,isel.SelectedText);
+			}
 			diw.Refresh();
 		}
 

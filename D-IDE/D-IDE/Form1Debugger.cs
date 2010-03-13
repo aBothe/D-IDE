@@ -189,7 +189,7 @@ namespace D_IDE
 		{
 			if (!IsDebugging) return;
 
-			DebugSymbolGroup args = dbg.Symbols.ScopeArgumentSymbols, locals = dbg.Symbols.ScopeLocalSymbols;
+			DebugScopedSymbol[] args = dbg.Symbols.ScopeArgumentSymbols, locals = dbg.Symbols.ScopeLocalSymbols;
 
 			dbgLocalswin.list.BeginUpdate();
 
@@ -204,15 +204,15 @@ namespace D_IDE
 				dbgLocalswin.list.Items.Add(lvi);
 			}*/
 
-			for (uint i = 0; i < locals.Count; i++)
+			foreach(DebugScopedSymbol sym in locals)
 			{
 				ListViewItem lvi = new ListViewItem();
-				locals.ExpandChildren(i, true);
-				lvi.Text = locals.SymbolName(i);
-				string type = locals.TypeName(i);
-				lvi.SubItems.Add(type);
-				string v = locals.ValueText(i);
-				lvi.SubItems.Add(v);
+				string n = "";
+				for (int i = 0; i < (int)sym.Depth;i++ )
+					n+="   ";
+				n += sym.Name;
+				lvi.Text = n;
+				lvi.SubItems.Add(sym.TextValue);
 				dbgLocalswin.list.Items.Add(lvi);
 			}
 
@@ -335,14 +335,6 @@ namespace D_IDE
 			if (runUntilMainOnly) dbg.Execute("g _Dmain");
 
 			WaitForEvent();
-
-			/*
-			foreach (DebugSymbolData sd in sda)
-			{
-				ms += sd.Name + " (" + sd.Offset.ToString() + ")\n";
-			}
-			MessageBox.Show(ms);
-			*/
 
 			return true;
 		}

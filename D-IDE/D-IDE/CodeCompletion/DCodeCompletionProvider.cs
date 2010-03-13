@@ -532,7 +532,7 @@ namespace D_IDE
 				tl.Add(parent);
 				return tl;
 			}
-			DModule mod = null;
+
 			foreach (DataType dt in GetExprsByName(parent, expressions[i], true))
 			{
 				DataType seldt = ResolveReturnOrBaseType(prj, local, dt, i >= expressions.Length - 1);

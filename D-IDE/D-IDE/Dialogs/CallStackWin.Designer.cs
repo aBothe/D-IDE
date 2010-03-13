@@ -29,12 +29,12 @@
         private void InitializeComponent()
         {
 			this.list = new System.Windows.Forms.ListView();
+			this.columnHeader4 = new System.Windows.Forms.ColumnHeader();
 			this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
 			this.columnHeader2 = new System.Windows.Forms.ColumnHeader();
 			this.columnHeader3 = new System.Windows.Forms.ColumnHeader();
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
 			this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.columnHeader4 = new System.Windows.Forms.ColumnHeader();
 			this.menuStrip1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -57,6 +57,11 @@
 			this.list.UseCompatibleStateImageBehavior = false;
 			this.list.View = System.Windows.Forms.View.Details;
 			this.list.DoubleClick += new System.EventHandler(this.list_DoubleClick);
+			// 
+			// columnHeader4
+			// 
+			this.columnHeader4.Text = "Module";
+			this.columnHeader4.Width = 110;
 			// 
 			// columnHeader1
 			// 
@@ -89,11 +94,6 @@
 			this.refreshToolStripMenuItem.Text = "Refresh";
 			this.refreshToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
 			// 
-			// columnHeader4
-			// 
-			this.columnHeader4.Text = "Module";
-			this.columnHeader4.Width = 110;
-			// 
 			// CallStackWin
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -101,6 +101,7 @@
 			this.ClientSize = new System.Drawing.Size(815, 277);
 			this.Controls.Add(this.list);
 			this.Controls.Add(this.menuStrip1);
+			this.HideOnClose = true;
 			this.MainMenuStrip = this.menuStrip1;
 			this.Name = "CallStackWin";
 			this.TabText = "Call Stack";

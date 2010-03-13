@@ -9,7 +9,6 @@ using System.Windows.Forms;
 using System.Xml;
 using D_IDE.CodeCompletion;
 using D_Parser;
-using D_IDE.CodeCompletion;
 using D_IDE.Properties;
 using ICSharpCode.NRefactory;
 using ICSharpCode.SharpDevelop.Dom;
@@ -21,6 +20,7 @@ using WeifenLuo.WinFormsUI.Docking;
 using System.Globalization;
 using System.Text;
 using ICSharpCode.NRefactory.Ast;
+using DebugEngineWrapper;
 
 namespace D_IDE
 {
@@ -362,6 +362,34 @@ namespace D_IDE
 				e.ShowToolTip(DTokens.GetDescription(key));
 				return;
 			}
+
+			#region If debugging, check if a local fits to one of the scoped symbols and show its value if possible
+			if (Form1.thisForm.IsDebugging)
+			{
+				DebugScopedSymbol[] syms = Form1.thisForm.dbg.Symbols.ScopeLocalSymbols;
+
+				DebugScopedSymbol cursym=null;
+				string desc="";
+				foreach (string exp in exprs)
+				{
+					foreach (DebugScopedSymbol sym in syms)
+					{
+						if (cursym != null && sym.ParentId != cursym.Id) continue;
+
+						if (sym.Name == exp)
+						{
+							desc += "." + sym.Name;
+							cursym = sym;
+						}
+					}
+				}
+				if (desc != "" && cursym!=null)
+				{
+					e.ShowToolTip(cursym.TypeName+" "+desc.Trim('.')+" = "+cursym.TextValue);
+					return;
+				}
+			}
+			#endregion
 
 			DataType dt =
 				DCodeCompletionProvider.FindActualExpression(project,
@@ -1200,7 +1228,7 @@ namespace D_IDE
 		public bool UseExternalDebugger = false;
 		public bool DoAutoSaveOnBuilding = true;
 		public bool CreatePDBOnBuild = true;
-		public bool ShowDbgPanelsOnDebugging = true;
+		public bool ShowDbgPanelsOnDebugging = false;
 		public bool StoreSettingsAtUserDocuments = true; // Not saved in the main config - the 'PropsAreLocatedHere' file will indicate its state
 
 		#region Debugging

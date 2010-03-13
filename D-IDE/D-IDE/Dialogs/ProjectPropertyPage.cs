@@ -9,7 +9,6 @@ using System.Windows.Forms;
 using System.Xml;
 using D_IDE.CodeCompletion;
 using D_Parser;
-using D_IDE.CodeCompletion;
 using D_IDE.Properties;
 using ICSharpCode.NRefactory;
 using ICSharpCode.SharpDevelop.Dom;
