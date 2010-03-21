@@ -160,9 +160,28 @@ namespace DebugEngineWrapper
 			mex->Type=/*(ExceptionType)*/ex->ExceptionCode;
 			mex->IsContinuable=ex->ExceptionFlags==0;
 			mex->Address=ex->ExceptionAddress;
-
-			mex->argc=ex->NumberParameters;
-			mex->argv=(ULONG64**)ex->ExceptionInformation;
+			mex->SourceLine=0;
+			mex->SourceFile="";
+			dbg->Symbols->GetLineByOffset(ex->ExceptionAddress,mex->SourceFile,mex->SourceLine);
+			
+			// This is the usually thrown exception in D - so parse it
+			if(mex->Type==(ULONG)ExceptionType::DException && ex->NumberParameters>0 && mex->IsFirstChance)
+			{
+				ULONG64 excobjptr=ex->ExceptionInformation[0];
+				try{
+					DClassInfo^ di=mex->TypeInfo=dbg->Symbols->RetrieveClassInfo(excobjptr);
+					while(di!=nullptr)
+					{
+						if(di->Name=="object.Throwable")
+						{
+							dbg->Symbols->ReadExceptionString(excobjptr,mex->Message,mex->SourceFile,mex->SourceLine);
+							break;
+						}
+						di=di->BaseClass;
+					}
+				}catch(...){}
+			}
+			
 			return (HRESULT)dbg->RaiseEx(mex);
 		}
 

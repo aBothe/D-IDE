@@ -74,6 +74,7 @@ namespace D_IDE
 
 		public static void OpenError(string file,int line,int col)
 		{
+			if (String.IsNullOrEmpty(file)) return;
 			DocumentInstanceWindow diw = Form1.thisForm.Open(file);
 			if (diw != null)
 			{

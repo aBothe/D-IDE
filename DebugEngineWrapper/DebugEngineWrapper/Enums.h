@@ -422,16 +422,35 @@ namespace DebugEngineWrapper
 		DWORD Length;
 		DWORD Ptr;
 	};
+	
+	ref class DebugSymbols;
+	
+	public ref struct DClassInfo
+		{
+		internal:
+			DebugSymbols^ ds;
+			DClassInfo(DebugSymbols^ dbgsym):ds(dbgsym)	{}
+		public:
+			String^ Name;
+			ULONG64 Base;
+			property DClassInfo^ BaseClass
+			{
+			public:
+				DClassInfo^ get();
+			}
+		};
 
 	public ref class CodeException
 	{
 	internal:
 		CodeException(){}
-		
-		ULONG argc;
-		ULONG64** argv;
 
 	public:
+		DClassInfo^ TypeInfo;
+		String^ Message;
+		String^ SourceFile;
+		ULONG SourceLine;
+		
 		bool IsFirstChance;
 		ULONG Type;
 		bool IsContinuable;

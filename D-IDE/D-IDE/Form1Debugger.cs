@@ -312,7 +312,7 @@ namespace D_IDE
 			return BuildArrayContentString(marr, IsString);
 		}
 
-		public string BuildSymbolValueString(uint ScopedSrcLine,DebugScopedSymbol sym)
+		public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym)
 		{
 			if (sym.TypeName.EndsWith("[]")) // If it's an array
 			{
@@ -361,7 +361,7 @@ namespace D_IDE
 				n += sym.Name;
 				lvi.Text = n;
 				lvi.Tag = sym;
-				lvi.SubItems.Add(BuildSymbolValueString(ln,sym));
+				lvi.SubItems.Add(BuildSymbolValueString(ln, sym));
 				dbgLocalswin.list.Items.Add(lvi);
 			}
 
@@ -582,6 +582,7 @@ namespace D_IDE
 			dbg.OnException += delegate(CodeException ex)
 			{
 				StopWaitingForEvents = true;
+
 				string extype = "";
 				try
 				{
@@ -591,13 +592,18 @@ namespace D_IDE
 				{
 					extype = "Unknown type (" + ex.Type.ToString() + ")";
 				}
-				Log("Exception: " + extype + " at " + ex.Address.ToString());
 				callstackwin.Update();
-				string fn;
-				uint ln;
-				if (dbg.Symbols.GetLineByOffset(ex.Address, out fn, out ln))
+
+
+				if (ExceptionType.DException == (ExceptionType)ex.Type)
 				{
-					AddHighlightedBuildError(fn, (int)ln, "An exception occured: " + extype, Color.OrangeRed);
+					Log(ex.TypeInfo.Name + ": " + ex.Message);
+					AddHighlightedBuildError(ex.SourceFile,(int)ex.SourceLine, ex.TypeInfo.Name+": " + ex.Message, Color.OrangeRed);
+				}
+				else
+				{
+					Log("Exception: " + extype + " at " + ex.Address.ToString());
+					AddHighlightedBuildError(ex.SourceFile, (int)ex.SourceLine, "An exception occured: " + extype, Color.OrangeRed);
 				}
 
 				RefreshLocals();
@@ -629,19 +635,18 @@ namespace D_IDE
 				{
 					exeProc.Kill();
 				}
-
-				if (dbg != null)
+				try
 				{
-					try
+					if (dbg != null)
 					{
 						dbg.EndPendingWaits();
 						dbg.Terminate();
 						dbg.MainProcess.Kill();
 						ProgressStatusLabel.Text = "Debuggee terminated";
-					}
-					catch { }
-				}
 
+					}
+				}
+				catch { }
 				IsDebugging = false;
 
 				toggleBreakpointToolStripMenuItem.Enabled = true;

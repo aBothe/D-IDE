@@ -24,7 +24,7 @@ namespace DebugEngineWrapper
 		{
 			sg->Release();
 		}
-		
+
 		bool ExpandChildren(ULONG Index,bool Expand)
 		{
 			return sg->ExpandSymbol(Index,Expand)==S_OK;
@@ -33,9 +33,9 @@ namespace DebugEngineWrapper
 		property ULONG Count
 		{
 			ULONG get(){
-			ULONG ret=0;
+				ULONG ret=0;
 				sg->GetNumberSymbols(&ret);
-			return ret;
+				return ret;
 			}
 		}
 
@@ -53,14 +53,14 @@ namespace DebugEngineWrapper
 		ULONG64 SymbolOffset(ULONG Index)
 		{
 			ULONG64 ret=0;
-				sg->GetSymbolOffset(Index,&ret);
+			sg->GetSymbolOffset(Index,&ret);
 			return ret;
 		}
-		
+
 		ULONG SymbolSize(ULONG Index)
 		{
 			ULONG ret=0;
-				sg->GetSymbolSize(Index,&ret);
+			sg->GetSymbolSize(Index,&ret);
 			return ret;
 		}
 
@@ -152,7 +152,7 @@ namespace DebugEngineWrapper
 
 			return ret2;
 		}
-		
+
 		property array<DebugSymbolData^>^ Symbols
 		{
 			array<DebugSymbolData^>^ get()
@@ -160,57 +160,101 @@ namespace DebugEngineWrapper
 				return this->GetSymbols("*");
 			}
 		}
-
+#pragma region Evaluation of local symbol contents
 		property array<DebugScopedSymbol^>^ ScopeLocalSymbols
 		{
 			array<DebugScopedSymbol^>^ get(){
 				DebugSymbolGroup^ dsg;
-				
+
 				DbgSymbolGroup* sg;
 				if(sym->GetScopeSymbolGroup(DEBUG_SCOPE_GROUP_LOCALS,0,(PDEBUG_SYMBOL_GROUP*)&sg)==S_OK)
 				{
 					dsg=gcnew DebugSymbolGroup(sg);
-					
+
 					List<DebugScopedSymbol^>^ ret=gcnew List<DebugScopedSymbol^>();
-					
+
 					for(UINT i=0;i<dsg->Count;i++)
 					{
-					DebugScopedSymbol^ s=gcnew DebugScopedSymbol();
-					s->Id=i;
-					s->Name=dsg->SymbolName(i);
-					s->Offset=dsg->SymbolOffset(i);
-					s->TextValue=dsg->ValueText(i);
-					s->TypeName=dsg->TypeName(i);
-					s->Size=dsg->SymbolSize(i);
-					
-					ULONG c=10;
-					
-					DEBUG_SYMBOL_PARAMETERS prm;
-					dsg->sg->GetSymbolParameters(i,1,&prm);
-					s->ParentId=prm.ParentSymbol;
-					s->Depth=prm.Flags & DEBUG_SYMBOL_EXPANSION_LEVEL_MASK;
-					s->Flags=(DebugSymbolFlags)(prm.Flags-s->Depth);
-					
-					ret->Add(s);
-					
-					if(!s->TypeName->EndsWith("[]")) // An array isn't needed to get expanded
-						dsg->ExpandChildren(i,true);
-										
+						DebugScopedSymbol^ s=gcnew DebugScopedSymbol();
+						s->Id=i;
+						s->Name=dsg->SymbolName(i);
+						s->Offset=dsg->SymbolOffset(i);
+						s->TextValue=dsg->ValueText(i);
+						s->TypeName=dsg->TypeName(i);
+						s->Size=dsg->SymbolSize(i);
+
+						ULONG c=10;
+
+						DEBUG_SYMBOL_PARAMETERS prm;
+						dsg->sg->GetSymbolParameters(i,1,&prm);
+						s->ParentId=prm.ParentSymbol;
+						s->Depth=prm.Flags & DEBUG_SYMBOL_EXPANSION_LEVEL_MASK;
+						s->Flags=(DebugSymbolFlags)(prm.Flags-s->Depth);
+
+						ret->Add(s);
+
+						if(!s->TypeName->EndsWith("[]")) // An array isn't needed to get expanded
+							dsg->ExpandChildren(i,true);
+
 					}
-					
+
 					return ret->ToArray();
 				}
 				return nullptr;
 			}
 		}
 
-		
+		DClassInfo^ RetrieveClassInfo(ULONG64 Offset)
+		{
+			DClassInfo^ di=gcnew DClassInfo(this);
+
+			UINT vtbl=0;
+			UINT classinfo=0;
+			if(ds->ReadVirtual(Offset,&vtbl,4,nullptr)!=S_OK) return di;
+			if(ds->ReadVirtual(vtbl,&classinfo,4,nullptr)!=S_OK) return di;
+
+			di->Base=classinfo;
+			return di->BaseClass;
+		}
+
+		void ReadExceptionString(ULONG64 Offset,[Runtime::InteropServices::Out] String^ %Message,[Runtime::InteropServices::Out] String^ %SrcFile,[Runtime::InteropServices::Out]ULONG %Line)
+		{
+			// See E:\dmd2\src\druntime\src\compiler\dmd\mars.h for internal structures of objects
+			UINT vtbl=0;
+			UINT classinfo=0;
+			if(ds->ReadVirtual(Offset,&vtbl,4,nullptr)!=S_OK) return;
+			if(ds->ReadVirtual(vtbl,&classinfo,4,nullptr)!=S_OK) return;
+
+			ULONG64 memberoffsets=Offset+8; // The first 8 bytes are filled with 'vtbl' and 'monitor' pointers
+
+			array<Object^>^ str=ReadArray(memberoffsets,BYTE::typeid,1);
+			Message="";
+			if(str!=nullptr)
+			{
+				for(int i=0;i<str->Length;i++)	Message+=Convert::ToChar((BYTE)str[i]);
+			}
+			
+			array<Object^>^ str2=ReadArray(memberoffsets+8,BYTE::typeid,1);
+			String^ src="";
+			if(str2!=nullptr)
+			{
+				for(int i=0;i<str2->Length;i++)
+					src+=Convert::ToChar((BYTE)str2[i]);
+				SrcFile=src;
+			}
+			
+			ULONG line=0;
+			if(ds->ReadVirtual(memberoffsets+16,&line,4,nullptr)==S_OK)
+				Line=line;
+		}
+
+
 		array<Object^>^ ReadArray(ULONG64 Offset,Type^ type,ULONG ElementSize)
 		{
 			DArray str;
 			if(ds->ReadVirtual(Offset,&str,sizeof(str),nullptr)!=S_OK) return nullptr;
 			if(str.Length<1) return nullptr;
-			
+
 			UINT elsz=ElementSize;
 
 			UINT sz=elsz*(str.Length>1000?1000:str.Length);
@@ -219,7 +263,7 @@ namespace DebugEngineWrapper
 			ULONG readb;
 			if(ds->ReadVirtual((ULONG64)str.Ptr,ptr,sz,&readb)!=S_OK) return nullptr;
 			ULONG Count=readb/elsz;
-			
+
 			array<Object^>^ ret= gcnew array<Object^>(Count);
 			for(UINT i=0;i<Count;i++)
 			{
@@ -228,15 +272,15 @@ namespace DebugEngineWrapper
 			}
 			return ret;
 		}
-		
+
 		array<Object^>^ ReadArrayArray(ULONG64 Offset,Type^ type,ULONG ElementSize)
 		{
 			DArray arr;
 			if(ds->ReadVirtual(Offset,&arr,sizeof(arr),nullptr)!=S_OK) return nullptr;
 			if(arr.Length<1) return nullptr;
-			
+
 			UINT c=arr.Length>10000?10000:arr.Length;
-			
+
 			array<Object^>^ ret= gcnew array<Object^>(c);
 			ULONG p=arr.Ptr;
 			for(UINT i=0;i<c;i++)
@@ -246,7 +290,10 @@ namespace DebugEngineWrapper
 			}
 			return ret;
 		}
-		
+
+
+
+#pragma endregion
 
 		property String^ SymbolPath
 		{
@@ -284,7 +331,7 @@ namespace DebugEngineWrapper
 				return v;
 			}
 		}
-		
+
 		bool GetLineByOffset(ULONG64 Offset,[Runtime::InteropServices::Out] String^ %File,[Runtime::InteropServices::Out] ULONG %Line)
 		{
 			ULONG64 disp;
@@ -311,7 +358,22 @@ namespace DebugEngineWrapper
 			Offset=ret;
 			return true;
 		}
-		
-		
+	};
+
+	DClassInfo^ DClassInfo::BaseClass::get()
+	{
+		if(Base==0) return nullptr;
+		// See E:\dmd2\src\druntime\src\compiler\dmd\mars.h for internal structures of objects
+		DClassInfo^ di=gcnew DClassInfo(ds);
+
+		array<Object^>^ str=ds->ReadArray(Base+16,BYTE::typeid,1);
+		if(str!=nullptr)
+			for(int i=0;i<str->Length;i++)	di->Name+=Convert::ToChar((BYTE)str[i]);
+
+		UINT base=0;
+		ds->ds->ReadVirtual(Base+40,&base,4,nullptr);
+		di->Base=base;
+
+		return di;
 	};
 }
