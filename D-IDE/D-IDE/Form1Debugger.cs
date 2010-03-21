@@ -277,17 +277,22 @@ namespace D_IDE
 				Type t = marr[0].GetType();
 				if (IsString && !t.IsArray)
 				{
-					str = "\"";
-					foreach (object o in marr)
+					try
 					{
-						if (o is uint)
-							str += Char.ConvertFromUtf32((int)(uint)o);
-						else if (o is UInt16)
-							str += (char)(ushort)o;
-						else if (o is byte)
-							str += (char)(byte)o;
+						str = "\"";
+						foreach (object o in marr)
+						{
+							if (o is uint)
+								str += Char.ConvertFromUtf32((int)(uint)o);
+							else if (o is UInt16)
+								str += (char)(ushort)o;
+							else if (o is byte)
+								str += (char)(byte)o;
+						}
+						str += "\"";
 					}
-					str += "\"";
+					catch { str="[Invalid / Not assigned]"; }
+					
 				}
 				else
 				{
@@ -312,7 +317,7 @@ namespace D_IDE
 			return BuildArrayContentString(marr, IsString);
 		}
 
-		public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym)
+		public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym, string[] SymbolExpressions)
 		{
 			if (sym.TypeName.EndsWith("[]")) // If it's an array
 			{
@@ -323,6 +328,11 @@ namespace D_IDE
 				// Search expression in all superior blocks
 				DataType cblock = DCodeCompletionProvider.GetBlockAt(diw.fileData.dom, new CodeLocation(0, (int)ScopedSrcLine));
 				DataType symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(cblock, sym.Name);
+				if (symNode == null)
+				{
+					bool b = false;
+					symNode = DCodeCompletionProvider.FindActualExpression(diw.project, diw.fileData, new CodeLocation(0, (int)ScopedSrcLine), SymbolExpressions, false, false, out b, out b, out b, out mod);
+				}
 				// Search expression in current module root first
 				if (symNode == null) symNode = DCodeCompletionProvider.SearchGlobalExpr(diw.project, diw.fileData, sym.Name, true, out mod);
 				#endregion
@@ -361,7 +371,18 @@ namespace D_IDE
 				n += sym.Name;
 				lvi.Text = n;
 				lvi.Tag = sym;
-				lvi.SubItems.Add(BuildSymbolValueString(ln, sym));
+
+				List<string> exprs = new List<string>();
+				if (sym.Depth > 0)
+				{
+					DebugScopedSymbol dss = sym;
+					while (dss != null)
+					{
+						exprs.Insert(0,dss.Name);
+						dss = dss.Parent;
+					}
+				}
+				lvi.SubItems.Add(BuildSymbolValueString(ln, sym,exprs.ToArray()));
 				dbgLocalswin.list.Items.Add(lvi);
 			}
 

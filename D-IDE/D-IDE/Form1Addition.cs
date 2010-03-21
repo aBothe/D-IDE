@@ -248,6 +248,7 @@ namespace D_IDE
 					D_IDE_Properties.toCodeLocation(Caret),
 					exprs,
 					false,
+					true,
 					out super,
 					out isInst,
 					out isNameSpace,
@@ -323,6 +324,7 @@ namespace D_IDE
 					D_IDE_Properties.toCodeLocation(Caret),
 					exprs,
 					false,
+					true,
 					out super,
 					out isInst,
 					out isNameSpace,
@@ -385,7 +387,7 @@ namespace D_IDE
 				}
 				if (desc != "" && cursym!=null)
 				{
-					e.ShowToolTip(cursym.TypeName + " " + desc.Trim('.') + " = " + Form1.thisForm.BuildSymbolValueString((uint)ta.Caret.Line-1, cursym));
+					e.ShowToolTip(cursym.TypeName + " " + desc.Trim('.') + " = " + Form1.thisForm.BuildSymbolValueString((uint)ta.Caret.Line-1, cursym,exprs));
 					return;
 				}
 			}
@@ -396,6 +398,7 @@ namespace D_IDE
 					fileData,
 					D_IDE_Properties.toCodeLocation(e.LogicalPosition),
 					exprs,
+					false,
 					false,
 					out super,
 					out isInst,

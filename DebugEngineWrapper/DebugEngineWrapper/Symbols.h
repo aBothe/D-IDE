@@ -9,17 +9,35 @@ namespace DebugEngineWrapper
 {
 	public ref class DebugSymbolGroup
 	{
+	protected:
+		List<DebugScopedSymbol^>^ symbols;
 	internal:
 		DbgSymbolGroup* sg;
-		DebugSymbolGroup(DbgSymbolGroup *symg):sg(symg) {}
+		DebugSymbolGroup(DbgSymbolGroup *symg):sg(symg)
+		{
+			symbols=gcnew List<DebugScopedSymbol^>;
+			
+			for(UINT i=0;i<Count;i++)
+					{
+						DebugScopedSymbol^ s=gcnew DebugScopedSymbol(this,i);
+						symbols->Add(s);
+
+						if(!s->TypeName->EndsWith("[]") && s->Name!="object.Object") // An array isn't needed to get expanded
+							ExpandChildren(i,true);
+
+					}
+		}
 	private:
-		DebugSymbolGroup(){}
+		DebugSymbolGroup()
+		{
+		
+		}
 	public:
 		~DebugSymbolGroup()
 		{
 			this->!DebugSymbolGroup();
 		}
-
+		
 		!DebugSymbolGroup()
 		{
 			sg->Release();
@@ -82,6 +100,23 @@ namespace DebugEngineWrapper
 			String^ v=gcnew String(buf);
 			delete [] buf;
 			return v;
+		}
+		
+		property array<DebugScopedSymbol^>^ Symbols
+		{
+			array<DebugScopedSymbol^>^ get()
+			{
+				return symbols->ToArray();
+			}
+		}
+		
+		DebugScopedSymbol^ operator[](ULONG Index)
+		{
+			for(UINT i=0;i<Count;i++)
+			{
+				if(Symbols[i]->Id==Index) return Symbols[i];
+			}
+			return nullptr;
 		}
 	};
 
@@ -170,35 +205,7 @@ namespace DebugEngineWrapper
 				if(sym->GetScopeSymbolGroup(DEBUG_SCOPE_GROUP_LOCALS,0,(PDEBUG_SYMBOL_GROUP*)&sg)==S_OK)
 				{
 					dsg=gcnew DebugSymbolGroup(sg);
-
-					List<DebugScopedSymbol^>^ ret=gcnew List<DebugScopedSymbol^>();
-
-					for(UINT i=0;i<dsg->Count;i++)
-					{
-						DebugScopedSymbol^ s=gcnew DebugScopedSymbol();
-						s->Id=i;
-						s->Name=dsg->SymbolName(i);
-						s->Offset=dsg->SymbolOffset(i);
-						s->TextValue=dsg->ValueText(i);
-						s->TypeName=dsg->TypeName(i);
-						s->Size=dsg->SymbolSize(i);
-
-						ULONG c=10;
-
-						DEBUG_SYMBOL_PARAMETERS prm;
-						dsg->sg->GetSymbolParameters(i,1,&prm);
-						s->ParentId=prm.ParentSymbol;
-						s->Depth=prm.Flags & DEBUG_SYMBOL_EXPANSION_LEVEL_MASK;
-						s->Flags=(DebugSymbolFlags)(prm.Flags-s->Depth);
-
-						ret->Add(s);
-
-						if(!s->TypeName->EndsWith("[]")) // An array isn't needed to get expanded
-							dsg->ExpandChildren(i,true);
-
-					}
-
-					return ret->ToArray();
+					return dsg->Symbols;
 				}
 				return nullptr;
 			}
@@ -375,5 +382,54 @@ namespace DebugEngineWrapper
 		di->Base=base;
 
 		return di;
+	};
+	
+	DebugScopedSymbol::DebugScopedSymbol(DebugSymbolGroup^ Owner,ULONG Index)
+	{
+		SymGroup=Owner;
+		Id=Index;
+		
+		ULONG i=Index;
+		Name=Owner->SymbolName(i)->Replace('@','.');
+		Offset=Owner->SymbolOffset(i);
+		TextValue=Owner->ValueText(i);
+		TypeName=Owner->TypeName(i);
+		Size=Owner->SymbolSize(i);
+
+		ULONG c=10;
+
+		DEBUG_SYMBOL_PARAMETERS prm;
+		Owner->sg->GetSymbolParameters(i,1,&prm);
+		ParentId=prm.ParentSymbol;
+		Depth=prm.Flags & DEBUG_SYMBOL_EXPANSION_LEVEL_MASK;
+		Flags=(DebugSymbolFlags)(prm.Flags-Depth);
+	};
+
+	array<DebugScopedSymbol^>^ DebugScopedSymbol::Children::get()
+	{	
+		List<DebugScopedSymbol^>^ ret=gcnew List<DebugScopedSymbol^>();
+		for(UINT i=0;i<SymGroup->Count;i++)
+		{
+			DebugScopedSymbol^ t=SymGroup[i];
+			if(t->ParentId==this->Id)
+				ret->Add(t);
+		}
+		return ret->ToArray();
+	};
+
+	ULONG DebugScopedSymbol::ChildrenCount::get()
+	{	
+	ULONG ret=0;
+		for(UINT i=0;i<SymGroup->Count;i++)
+		{
+			if(SymGroup[i]->ParentId==this->Id) ret++;
+		}
+		return ret;
+	};
+
+	DebugScopedSymbol^ DebugScopedSymbol::Parent::get()
+	{
+		if(ParentId>SymGroup->Count) return nullptr;
+		return SymGroup->Symbols[ParentId];
 	};
 }

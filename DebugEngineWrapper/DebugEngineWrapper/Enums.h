@@ -424,6 +424,7 @@ namespace DebugEngineWrapper
 	};
 	
 	ref class DebugSymbols;
+	ref class DebugSymbolGroup;
 	
 	public ref struct DClassInfo
 		{
@@ -482,8 +483,8 @@ namespace DebugEngineWrapper
 	public ref struct DebugScopedSymbol
 	{
 	public:
-		DebugScopedSymbol()
-		{}
+		DebugSymbolGroup^ SymGroup;
+		DebugScopedSymbol(DebugSymbolGroup^ Owner,ULONG Index);
 		ULONG Depth;
 		ULONG ParentId;
 		DebugSymbolFlags^ Flags;
@@ -494,5 +495,21 @@ namespace DebugEngineWrapper
 		String^ TextValue;
 		ULONG64 Offset;
 		ULONG Size;
+		property DebugScopedSymbol^ Parent
+		{
+		public:
+			DebugScopedSymbol^ get();
+		}
+		property ULONG ChildrenCount
+		{
+		public:
+			ULONG get();
+		}
+		
+		property array<DebugScopedSymbol^>^ Children
+		{
+		public:
+			array<DebugScopedSymbol^>^ get();
+		}
 	};
 }

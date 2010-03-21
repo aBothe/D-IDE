@@ -94,7 +94,7 @@ namespace D_IDE
 		/// <param name="local"></param>
 		/// <param name="expressions"></param>
 		/// <returns></returns>
-		public static DataType FindActualExpression(DProject prj, DModule local, CodeLocation caretLocation, string[] expressions, bool dotPressed, out bool isSuper, out bool isInstance, out bool isNameSpace, out DModule module)
+		public static DataType FindActualExpression(DProject prj, DModule local, CodeLocation caretLocation, string[] expressions, bool dotPressed, bool ResolveBaseType, out bool isSuper, out bool isInstance, out bool isNameSpace, out DModule module)
 		{
 			module = local;
 			isSuper = false;
@@ -137,10 +137,12 @@ namespace D_IDE
 					// EDIT: Don't search recursively in all blocks of local.dom because you'd resolve something you couldn't access...
 
 					// If seldt is a variable, resolve its basic type such as a class etc
-					if (seldt != null) i++;
+					
 					seldd = seldt;
-					seldt = ResolveReturnOrBaseType(prj, local, seldt, i >= expressions.Length - 1);
+					bool IsLastInChain = i >= expressions.Length - 1;
+					if ((ResolveBaseType && IsLastInChain) || !IsLastInChain) seldt = ResolveReturnOrBaseType(prj, local, seldt, IsLastInChain);
 					if (seldt != seldd) isInstance = true;
+					if (seldt != null) i++;
 
 					#region Seek in global and local(project) namespace names
 					if (seldt == null) // if there wasn't still anything found in global space
@@ -224,7 +226,8 @@ namespace D_IDE
 					if (seldt == null) break;
 
 					seldd = seldt;
-					seldt = ResolveReturnOrBaseType(prj, local, seldt, i == expressions.Length - 1);
+					bool IsLastInChain=i == expressions.Length - 1;
+					if((ResolveBaseType && IsLastInChain) || !IsLastInChain)seldt = ResolveReturnOrBaseType(prj, local, seldt, IsLastInChain);
 					if (seldt != seldd) isInstance = true;
 				}
 
@@ -325,7 +328,7 @@ namespace D_IDE
 					presel = null; // Important: After a typed dot ".", set previous selection string to null!
 					DModule gpf = null;
 
-					seldt = FindActualExpression(project, pf, tl, expressions.ToArray(), ch == '.', out isSuper, out isInst, out isNameSpace, out gpf);
+					seldt = FindActualExpression(project, pf, tl, expressions.ToArray(), ch == '.', true, out isSuper, out isInst, out isNameSpace, out gpf);
 
 					if (seldt == null) return rl.ToArray();
 					//Debugger.Log(0,"parsing", DCompletionData.BuildDescriptionString(seldt.Parent) + " " + DCompletionData.BuildDescriptionString(seldt));
