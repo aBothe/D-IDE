@@ -7,7 +7,7 @@ namespace D_IDE
 {
 	static class Program
 	{
-		public static string ExternSettingStorageFile = Application.StartupPath+"\\PropsAreLocatedHere";
+		public static string LocalSettingStorageFile = Application.StartupPath+"\\PropsAreLocatedHere";
 		public static string cfgDirName = "D-IDE.config";
 		public static string cfgDir;
 		public static string prop_file = "D-IDE.settings.xml";
@@ -27,7 +27,7 @@ namespace D_IDE
 				Application.SetCompatibleTextRenderingDefault(false);
 				app = new App();
 
-				if (File.Exists(ExternSettingStorageFile))
+				if (File.Exists(LocalSettingStorageFile))
 				{
 					cfgDir = Application.StartupPath + "\\" + cfgDirName;
 					D_IDE_Properties.Default.StoreSettingsAtUserDocuments = false;
@@ -87,7 +87,6 @@ namespace D_IDE
 
 		protected override void OnShutdown()
 		{
-			D_IDE_Properties.Save(Program.prop_file);
 			base.OnShutdown();
 		}
 

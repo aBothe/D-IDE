@@ -54,7 +54,7 @@ namespace D_IDE
 
 			try
 			{
-				if (File.Exists(Program.cfgDir+"\\"+ Program.LayoutFile))
+				if (File.Exists(Program.cfgDir + "\\" + Program.LayoutFile))
 					dockPanel.LoadFromXml(Program.cfgDir + "\\" + Program.LayoutFile, new DeserializeDockContent(delegate(string s)
 					{
 						if (s == typeof(BuildProcessWin).ToString()) return bpw;
@@ -123,11 +123,8 @@ namespace D_IDE
 			for (int i = 0; i < args.Length; i++)
 				Open(args[i]);
 
-			if (args.Length < 1)
-			{
-				UpdateLastFilesMenu();
-				UpdateFiles();
-			}
+			UpdateLastFilesMenu();
+			UpdateFiles();
 			#endregion
 
 			if (D_IDE_Properties.Default.WatchForUpdates)
@@ -1086,23 +1083,23 @@ namespace D_IDE
 
 			if (!D_IDE_Properties.Default.StoreSettingsAtUserDocuments)
 			{
-				if (!File.Exists(Program.ExternSettingStorageFile))
-					File.WriteAllText(Program.ExternSettingStorageFile,"");
+				if (!File.Exists(Program.LocalSettingStorageFile))
+					File.WriteAllText(Program.LocalSettingStorageFile, "Remove this file if settings are stored in the users documents directory");
 
 				Program.cfgDir = Application.StartupPath + "\\" + Program.cfgDirName;
 			}
 			else
 			{
-				if (File.Exists(Program.ExternSettingStorageFile))
-					File.Delete(Program.ExternSettingStorageFile);
+				if (File.Exists(Program.LocalSettingStorageFile))
+					File.Delete(Program.LocalSettingStorageFile);
 
-				Program.cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" +Program.cfgDirName;
+				Program.cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + Program.cfgDirName;
 			}
 
 			if (!Directory.Exists(Program.cfgDir))
 				DBuilder.CreateDirectoryRecursively(Program.cfgDir);
 
-			dockPanel.SaveAsXml(Program.cfgDir + "\\"+Program.LayoutFile);
+			dockPanel.SaveAsXml(Program.cfgDir + "\\" + Program.LayoutFile);
 
 			D_IDE_Properties.Default.lastFormState = this.WindowState;
 			D_IDE_Properties.Default.lastFormLocation = this.Location;
@@ -1441,7 +1438,7 @@ namespace D_IDE
 			else
 			{
 				ISelection isel = diw.txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
-				diw.txt.Document.Insert(isel.EndOffset,isel.SelectedText);
+				diw.txt.Document.Insert(isel.EndOffset, isel.SelectedText);
 			}
 			diw.Refresh();
 		}
