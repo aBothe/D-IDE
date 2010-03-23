@@ -22,9 +22,8 @@ namespace DebugEngineWrapper
 						DebugScopedSymbol^ s=gcnew DebugScopedSymbol(this,i);
 						symbols->Add(s);
 
-						if(!s->TypeName->EndsWith("[]") && s->Name!="object.Object") // An array isn't needed to get expanded
+						if(!s->TypeName->EndsWith("[]") && s->Name!="object.Object" && s->Offset>0) // An array isn't needed to get expanded
 							ExpandChildren(i,true);
-
 					}
 		}
 	private:

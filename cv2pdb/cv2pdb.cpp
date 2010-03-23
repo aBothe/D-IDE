@@ -56,8 +56,7 @@ bool CV2PDB::cleanup(bool commit)
 
 	if (dbi)
 		dbi->Close();
-	if (tpi)
-		tpi->Close();
+	//if (tpi)tpi->Close();
 	if (pdb)
 		pdb->Commit();
 	if (pdb)
