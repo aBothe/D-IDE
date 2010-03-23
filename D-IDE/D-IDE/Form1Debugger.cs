@@ -378,7 +378,12 @@ namespace D_IDE
 					DebugScopedSymbol dss = sym;
 					while (dss != null)
 					{
-						exprs.Insert(0,dss.Name);
+						if (!dss.Name.Contains(".")) // To get sure that just instance names and _not_ type names become inserted
+							exprs.Insert(0, dss.Name);
+						else
+						{
+
+						}
 						dss = dss.Parent;
 					}
 				}
@@ -618,8 +623,16 @@ namespace D_IDE
 
 				if (ExceptionType.DException == (ExceptionType)ex.Type)
 				{
-					Log(ex.TypeInfo.Name + ": " + ex.Message);
-					AddHighlightedBuildError(ex.SourceFile,(int)ex.SourceLine, ex.TypeInfo.Name+": " + ex.Message, Color.OrangeRed);
+					if (ex.TypeInfo == null)
+					{
+						Log(ex.Message);
+						AddHighlightedBuildError(ex.SourceFile, (int)ex.SourceLine, ex.Message, Color.OrangeRed);
+					}
+					else
+					{
+						Log(ex.TypeInfo.Name + ": " + ex.Message);
+						AddHighlightedBuildError(ex.SourceFile, (int)ex.SourceLine, ex.TypeInfo.Name + ": " + ex.Message, Color.OrangeRed);
+					}
 				}
 				else
 				{

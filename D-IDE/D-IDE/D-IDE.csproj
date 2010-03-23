@@ -449,6 +449,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="dproj.ico" />
+    <None Include="mspdb80.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="mspdbcore.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\paste.png" />
     <None Include="Resources\cut.png" />
     <None Include="Resources\copy.png" />

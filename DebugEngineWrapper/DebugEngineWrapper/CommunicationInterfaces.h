@@ -167,7 +167,7 @@ namespace DebugEngineWrapper
 			// This is the usually thrown exception in D - so parse it
 			if(mex->Type==(ULONG)ExceptionType::DException && ex->NumberParameters>0 && mex->IsFirstChance)
 			{
-				ULONG64 excobjptr=ex->ExceptionInformation[0];
+				ULONG64 excobjptr=mex->ExceptionObjectAddress=ex->ExceptionInformation[0];
 				try{
 					DClassInfo^ di=mex->TypeInfo=dbg->Symbols->RetrieveClassInfo(excobjptr);
 					while(di!=nullptr)

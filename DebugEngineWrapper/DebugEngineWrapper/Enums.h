@@ -456,6 +456,7 @@ namespace DebugEngineWrapper
 		ULONG Type;
 		bool IsContinuable;
 		ULONG64 Address;
+		ULONG64 ExceptionObjectAddress; // Just used when a DException is thrown
 	};
 
 	public ref struct DebugSymbolData
