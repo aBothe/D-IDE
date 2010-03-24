@@ -14,7 +14,7 @@ namespace D_Parser
 		public DataType dom;
 		public List<string> imports;
 
-		public Parser(ILexer lexer)
+		public Parser(DLexer lexer)
 		{
 			System.Windows.Forms.MessageBox.Show("Parser");
 			mp = new DParser(lexer);

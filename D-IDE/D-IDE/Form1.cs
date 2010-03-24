@@ -327,13 +327,9 @@ namespace D_IDE
 			}
 		}
 
-		private void clearParseChacheToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			D_IDE_Properties.GlobalModules.Clear();
-		}
-
 		private void UpdateChacheThread()
 		{
+			DModule.ClearErrorLogBeforeParsing = false;
 			List<DModule> ret = new List<DModule>();
 
 			stopParsingToolStripMenuItem.Enabled = true;
@@ -384,6 +380,7 @@ namespace D_IDE
 			Log(ProgressStatusLabel.Text = "Parsing done!");
 			BuildProgressBar.Value = 0;
 			stopParsingToolStripMenuItem.Enabled = false;
+			DModule.ClearErrorLogBeforeParsing = true;
 			lock (D_IDE_Properties.GlobalModules)
 			{
 				D_IDE_Properties.GlobalModules = ret;
@@ -408,6 +405,7 @@ namespace D_IDE
 			{
 				updateTh.Abort();
 				stopParsingToolStripMenuItem.Enabled = false;
+				DModule.ClearErrorLogBeforeParsing = true;
 			}
 		}
 
@@ -1041,6 +1039,9 @@ namespace D_IDE
 
 		private void CloseForm(object sender, FormClosingEventArgs e)
 		{
+			if(updateTh!=null && updateTh.IsAlive)
+				updateTh.Abort();
+
 			ForceExitDebugging();
 
 			if (!Directory.Exists(Program.cfgDir))

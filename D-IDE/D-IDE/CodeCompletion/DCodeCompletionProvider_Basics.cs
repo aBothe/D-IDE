@@ -62,7 +62,7 @@ namespace D_IDE
 		}
 		public static DataType GetBlockAt(DataType env, CodeLocation where)
 		{
-			if (where >= env.startLoc && where <= env.endLoc && env.Count > 0)
+			if (env!=null && where!=null && where >= env.startLoc && where <= env.endLoc && env.Count > 0)
 			{
 				foreach (DataType dt in env)
 				{

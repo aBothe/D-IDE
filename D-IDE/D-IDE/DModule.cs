@@ -19,6 +19,7 @@ namespace D_IDE
     [Serializable()]
     public class DModule
     {
+		public static bool ClearErrorLogBeforeParsing = true;
 		[NonSerialized()]
 		public DProject Project;
         public string ModuleName;
@@ -72,9 +73,11 @@ namespace D_IDE
         {
             if (!File.Exists(file) || !Parsable(file)) return;
 
-            Form1.thisForm.errlog.parserErrors.Clear();
-            Form1.thisForm.errlog.Update();
-
+			if (ClearErrorLogBeforeParsing)
+			{
+				Form1.thisForm.errlog.parserErrors.Clear();
+				Form1.thisForm.errlog.Update();
+			}
             mod_file = file;
 
             try { Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + ModuleName; }

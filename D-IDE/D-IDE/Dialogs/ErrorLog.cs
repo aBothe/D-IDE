@@ -60,7 +60,7 @@ namespace D_IDE
         {
             parserErrors.Add(new ErrorMessage(file, line,col, desc));
             Update();
-			OpenError(file, line, col);
+			//OpenError(file, line, col);
         }
 
         public ErrorMessage Selected
