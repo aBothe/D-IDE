@@ -321,6 +321,7 @@
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="D.xshd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Properties\app.manifest" />
     <Compile Include="DModule.cs" />
@@ -365,8 +366,6 @@
     <None Include="d-ide.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\Debug\D.xshd" />
-    <None Include="bin\Debug\RC.xshd" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -449,6 +448,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="dproj.ico" />
+    <None Include="RC.xshd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\paste.png" />
     <None Include="Resources\cut.png" />
     <None Include="Resources\copy.png" />
@@ -468,7 +470,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PreBuildEvent>xcopy $(ProjectDir)..\..\externalDeps\mspdb*.dll $(TargetDir)
+    <PreBuildEvent>xcopy $(ProjectDir)..\..\externalDeps\mspdb*.dll $(TargetDir) /c /q /i /y
 </PreBuildEvent>
   </PropertyGroup>
 </Project>
