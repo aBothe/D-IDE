@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{A4A1A638-CEC9-43C2-ABC0-033A755509AC}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -449,12 +449,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="dproj.ico" />
-    <None Include="mspdb80.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="mspdbcore.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="Resources\paste.png" />
     <None Include="Resources\cut.png" />
     <None Include="Resources\copy.png" />
@@ -473,4 +467,8 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <PreBuildEvent>xcopy $(ProjectDir)..\..\externalDeps\mspdb*.dll $(TargetDir)
+</PreBuildEvent>
+  </PropertyGroup>
 </Project>
