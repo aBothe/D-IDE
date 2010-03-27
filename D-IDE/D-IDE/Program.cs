@@ -30,7 +30,6 @@ namespace D_IDE
 				if (File.Exists(LocalSettingStorageFile))
 				{
 					cfgDir = Application.StartupPath + "\\" + cfgDirName;
-					D_IDE_Properties.Default.StoreSettingsAtUserDocuments = false;
 				}
 				else
 					cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + cfgDirName;

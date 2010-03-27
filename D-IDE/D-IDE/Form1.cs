@@ -1082,18 +1082,12 @@ namespace D_IDE
 			}
 			#endregion
 
-			if (!D_IDE_Properties.Default.StoreSettingsAtUserDocuments)
+			if (File.Exists(Program.LocalSettingStorageFile))
 			{
-				if (!File.Exists(Program.LocalSettingStorageFile))
-					File.WriteAllText(Program.LocalSettingStorageFile, "Remove this file if settings are stored in the users documents directory");
-
 				Program.cfgDir = Application.StartupPath + "\\" + Program.cfgDirName;
 			}
 			else
 			{
-				if (File.Exists(Program.LocalSettingStorageFile))
-					File.Delete(Program.LocalSettingStorageFile);
-
 				Program.cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + Program.cfgDirName;
 			}
 

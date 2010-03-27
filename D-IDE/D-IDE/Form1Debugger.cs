@@ -110,13 +110,6 @@ namespace D_IDE
 			/*dbg.ExecutionStatus = DebugStatus.Break;
 			dbg.Interrupt();
 			dbg.WaitForEvent(100);*/
-			/*
-			string fn;
-			uint ln;
-
-			Log(dbg.CurrentInstructionOffset.ToString());
-			if (dbg.Symbols.GetLineByOffset(dbg.CurrentInstructionOffset, out fn, out ln))
-				BreakpointWin.NavigateToPosition(fn, (int)ln - 1);*/
 		}
 
 		private void dbgStopButtonTS_Click(object sender, EventArgs e)
