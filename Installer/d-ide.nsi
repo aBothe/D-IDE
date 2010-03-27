@@ -140,24 +140,24 @@ Section "-Install Program Files" install_section_id
 	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.dll"
 
 	;Config files that should be merged through a seperate process - we need to copy them to a backup folder
-	IfFileExists "$INSTDIR\D-IDEIndexer.exe.config" 0 +4
-		CreateDirectory "$INSTDIR\ConfigBackup"
-		Rename "$INSTDIR\D-IDEIndexer.exe.config" "$INSTDIR\ConfigBackup\D-IDEIndexer.exe.config.${FILEDATE}"
-		Delete "$INSTDIR\D-IDEIndexer.exe.config"
+	;IfFileExists "$INSTDIR\D-IDEIndexer.exe.config" 0 +4
+	;	CreateDirectory "$INSTDIR\ConfigBackup"
+	;	Rename "$INSTDIR\D-IDEIndexer.exe.config" "$INSTDIR\ConfigBackup\D-IDEIndexer.exe.config.${FILEDATE}"
+	;	Delete "$INSTDIR\D-IDEIndexer.exe.config"
 
-	IfFileExists "$INSTDIR\D-IDEService.exe.config" 0 +4
-		CreateDirectory "$INSTDIR\ConfigBackup"
-		Rename "$INSTDIR\D-IDEService.exe.config" "$INSTDIR\ConfigBackup\D-IDEService.exe.config.${FILEDATE}"
-		Delete "$INSTDIR\D-IDEService.exe.config"
+	;IfFileExists "$INSTDIR\D-IDEService.exe.config" 0 +4
+	;	CreateDirectory "$INSTDIR\ConfigBackup"
+	;	Rename "$INSTDIR\D-IDEService.exe.config" "$INSTDIR\ConfigBackup\D-IDEService.exe.config.${FILEDATE}"
+	;	Delete "$INSTDIR\D-IDEService.exe.config"
 
-	IfFileExists "$INSTDIR\Quartz.xml" 0 +4
-		CreateDirectory "$INSTDIR\ConfigBackup"
-		Rename "$INSTDIR\Quartz.xml" "$INSTDIR\ConfigBackup\Quartz.xml.${FILEDATE}"
-		Delete "$INSTDIR\Quartz.xml"
+	;IfFileExists "$INSTDIR\Quartz.xml" 0 +4
+	;	CreateDirectory "$INSTDIR\ConfigBackup"
+	;	Rename "$INSTDIR\Quartz.xml" "$INSTDIR\ConfigBackup\Quartz.xml.${FILEDATE}"
+	;	Delete "$INSTDIR\Quartz.xml"
 
-	File /oname=D-IDEIndexer.exe.config "${BINARY_APPLICATION_FILES}\D-IDEIndexer.exe.config"
-	File /oname=D-IDEService.exe.config "${BINARY_APPLICATION_FILES}\D-IDEService.exe.config"
-	File /oname=Quartz.xml "${BINARY_APPLICATION_FILES}\Quartz.xml"
+	;File /oname=D-IDEIndexer.exe.config "${BINARY_APPLICATION_FILES}\D-IDEIndexer.exe.config"
+	;File /oname=D-IDEService.exe.config "${BINARY_APPLICATION_FILES}\D-IDEService.exe.config"
+	;File /oname=Quartz.xml "${BINARY_APPLICATION_FILES}\Quartz.xml"
 
 	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
 SectionEnd
