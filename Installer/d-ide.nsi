@@ -69,6 +69,11 @@ FunctionEnd
 ;--------------------------------------------------------
 ; (Installer) Show the install progress page
 ;--------------------------------------------------------
+!insertmacro MUI_PAGE_COMPONENTS
+
+;--------------------------------------------------------
+; (Installer) Show the install progress page
+;--------------------------------------------------------
 !insertmacro MUI_PAGE_INSTFILES
 
 ;--------------------------------------------------------
@@ -130,6 +135,26 @@ Section "-.Net Framework 3.5" net35_section_id
 SectionEnd
 
 ;--------------------------------------------------------
+; Download and install Digital Mars DMD
+;--------------------------------------------------------
+Section /o "Digital Mars DMD" dmd_section_id
+	StrCpy $1 "dinstaller.exe"
+	StrCpy $2 "$EXEDIR\$1"
+	IfFileExists $2 FileExistsAlready FileMissing
+		
+	FileMissing:
+		DetailPrint "Digital Mars DMD not installed... Downloading file."
+		StrCpy $2 "$TEMP\$1"
+		NSISdl::download "${DMD_URL}" $2
+
+	FileExistsAlready:
+		DetailPrint "Installing Digital Mars DMD."
+		ExecWait '"$2"'
+		
+	DMDDone:
+SectionEnd
+
+;--------------------------------------------------------
 ; Install the D-IDE program files
 ;--------------------------------------------------------
 Section "-Install Program Files" install_section_id
@@ -141,7 +166,6 @@ Section "-Install Program Files" install_section_id
 	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.dll"
 	File /nonfatal /x .svn "${PROJECT_FILES}\*.xshd"
 	
-	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.exe"
 	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
 
 	;Config files that should be merged through a seperate process - we need to copy them to a backup folder
