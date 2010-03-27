@@ -4,6 +4,7 @@
 ; Setting custom variables and constants
 ;--------------------------------------------------------
 !define BINARY_APPLICATION_FILES "..\D-IDE\D-IDE\bin\Release"
+!define PROJECT_FILES "..\D-IDE\D-IDE"
 !define THIRD_PARTY_FILES "..\externalDeps"
 
 !define DNF35_URL "http://download.microsoft.com/download/6/0/f/60fc5854-3cb8-4892-b6db-bd4f42510f28/dotnetfx35.exe"
@@ -138,6 +139,10 @@ Section "-Install Program Files" install_section_id
 	SetOverwrite on
 	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.exe"
 	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.dll"
+	File /nonfatal /x .svn "${PROJECT_FILES}\*.xshd"
+	
+	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.exe"
+	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
 
 	;Config files that should be merged through a seperate process - we need to copy them to a backup folder
 	;IfFileExists "$INSTDIR\D-IDEIndexer.exe.config" 0 +4
