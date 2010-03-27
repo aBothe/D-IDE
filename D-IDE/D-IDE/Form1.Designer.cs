@@ -1008,7 +1008,7 @@
 			this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.toolStripButton1.Name = "toolStripButton1";
 			this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
-			this.toolStripButton1.Text = "Build & Run";
+			this.toolStripButton1.Text = "Build & Run without debugger";
 			this.toolStripButton1.ToolTipText = "Build & Run";
 			this.toolStripButton1.Click += new System.EventHandler(this.buildRunToolStripMenuItem_Click);
 			// 
@@ -1034,7 +1034,7 @@
 			this.dbgContinueTS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.dbgContinueTS.Name = "dbgContinueTS";
 			this.dbgContinueTS.Size = new System.Drawing.Size(23, 22);
-			this.dbgContinueTS.Text = "toolStripButton3";
+			this.dbgContinueTS.Text = "Build & Run with debugger";
 			this.dbgContinueTS.ToolTipText = "Build and Debug application";
 			this.dbgContinueTS.Click += new System.EventHandler(this.dbgContinueClick);
 			// 
@@ -1046,7 +1046,7 @@
 			this.dbgPauseButtonTS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.dbgPauseButtonTS.Name = "dbgPauseButtonTS";
 			this.dbgPauseButtonTS.Size = new System.Drawing.Size(23, 22);
-			this.dbgPauseButtonTS.Text = "toolStripButton3";
+			this.dbgPauseButtonTS.Text = "Pause execution";
 			this.dbgPauseButtonTS.ToolTipText = "Pause execution";
 			this.dbgPauseButtonTS.Click += new System.EventHandler(this.dbgPauseButtonTS_Click);
 			// 
@@ -1058,7 +1058,7 @@
 			this.dbgStopButtonTS.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.dbgStopButtonTS.Name = "dbgStopButtonTS";
 			this.dbgStopButtonTS.Size = new System.Drawing.Size(23, 22);
-			this.dbgStopButtonTS.Text = "toolStripButton4";
+			this.dbgStopButtonTS.Text = "Terminate process";
 			this.dbgStopButtonTS.ToolTipText = "Stop Execution";
 			this.dbgStopButtonTS.Click += new System.EventHandler(this.dbgStopButtonTS_Click);
 			// 

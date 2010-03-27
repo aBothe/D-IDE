@@ -1039,7 +1039,7 @@ namespace D_IDE
 
 		private void CloseForm(object sender, FormClosingEventArgs e)
 		{
-			if(updateTh!=null && updateTh.IsAlive)
+			if (updateTh != null && updateTh.IsAlive)
 				updateTh.Abort();
 
 			ForceExitDebugging();
@@ -1268,7 +1268,11 @@ namespace D_IDE
 			if ((RevisionUpdateThread != null && RevisionUpdateThread.IsAlive) || webclient.IsBusy) return;
 			RevisionUpdateThread = new Thread(delegate()
 					{
-						webclient.DownloadStringAsync(new Uri(Program.ver_txt), Program.ver_txt);
+						try
+						{
+							webclient.DownloadStringAsync(new Uri(Program.ver_txt), Program.ver_txt);
+						}
+						catch (Exception ex) { MessageBox.Show(ex.Message); }
 					});
 			RevisionUpdateThread.Start();
 		}
@@ -1343,7 +1347,11 @@ namespace D_IDE
 			{
 				ProgressStatusLabel.Text = "Downloading D-IDE.tar.gz";
 				BuildProgressBar.Style = ProgressBarStyle.Marquee;
-				webclient.DownloadFileAsync(new Uri("http://d-ide.svn.sourceforge.net/viewvc/d-ide/D-IDE/D-IDE/bin/Debug.tar.gz?view=tar"), upd_sf.FileName, upd_sf.FileName);
+				try
+				{
+					webclient.DownloadFileAsync(new Uri("http://d-ide.svn.sourceforge.net/viewvc/d-ide/D-IDE/D-IDE/bin/Debug.tar.gz?view=tar"), upd_sf.FileName, upd_sf.FileName);
+				}
+				catch (Exception ex) { MessageBox.Show(ex.Message); }
 			}
 		}
 

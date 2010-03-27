@@ -67,6 +67,7 @@
 			this.parsedFiles = new System.Windows.Forms.ListBox();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.StoreSettingsAtUserDocs = new System.Windows.Forms.CheckBox();
 			this.restoreLastSession = new System.Windows.Forms.CheckBox();
 			this.button6 = new System.Windows.Forms.Button();
 			this.button5 = new System.Windows.Forms.Button();
@@ -77,6 +78,7 @@
 			this.defPrjDir = new System.Windows.Forms.TextBox();
 			this.singleInst = new System.Windows.Forms.CheckBox();
 			this.tabPage4 = new System.Windows.Forms.TabPage();
+			this.ShowDbgPanelsOnDebugging = new System.Windows.Forms.CheckBox();
 			this.AutoSkipUnknownCode = new System.Windows.Forms.CheckBox();
 			this.verbosedbgoutput = new System.Windows.Forms.CheckBox();
 			this.tabPage5 = new System.Windows.Forms.TabPage();
@@ -89,8 +91,6 @@
 			this.HighLightingExt = new System.Windows.Forms.TextBox();
 			this.HighLightingExts = new System.Windows.Forms.ListBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.ShowDbgPanelsOnDebugging = new System.Windows.Forms.CheckBox();
-			this.StoreSettingsAtUserDocs = new System.Windows.Forms.CheckBox();
 			this.tabPage1.SuspendLayout();
 			this.tabPage3.SuspendLayout();
 			this.tabControl1.SuspendLayout();
@@ -490,10 +490,20 @@
 			this.tabPage2.Location = new System.Drawing.Point(4, 22);
 			this.tabPage2.Name = "tabPage2";
 			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage2.Size = new System.Drawing.Size(618, 589);
+			this.tabPage2.Size = new System.Drawing.Size(649, 589);
 			this.tabPage2.TabIndex = 2;
 			this.tabPage2.Text = "IDE";
 			this.tabPage2.UseVisualStyleBackColor = true;
+			// 
+			// StoreSettingsAtUserDocs
+			// 
+			this.StoreSettingsAtUserDocs.AutoSize = true;
+			this.StoreSettingsAtUserDocs.Location = new System.Drawing.Point(8, 182);
+			this.StoreSettingsAtUserDocs.Name = "StoreSettingsAtUserDocs";
+			this.StoreSettingsAtUserDocs.Size = new System.Drawing.Size(198, 17);
+			this.StoreSettingsAtUserDocs.TabIndex = 9;
+			this.StoreSettingsAtUserDocs.Text = "Store settings at the user documents";
+			this.StoreSettingsAtUserDocs.UseVisualStyleBackColor = true;
 			// 
 			// restoreLastSession
 			// 
@@ -572,7 +582,6 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.defPrjDir.Location = new System.Drawing.Point(163, 52);
 			this.defPrjDir.Name = "defPrjDir";
-			this.defPrjDir.ReadOnly = true;
 			this.defPrjDir.Size = new System.Drawing.Size(417, 20);
 			this.defPrjDir.TabIndex = 1;
 			// 
@@ -598,6 +607,16 @@
 			this.tabPage4.TabIndex = 3;
 			this.tabPage4.Text = "Debugging";
 			this.tabPage4.UseVisualStyleBackColor = true;
+			// 
+			// ShowDbgPanelsOnDebugging
+			// 
+			this.ShowDbgPanelsOnDebugging.AutoSize = true;
+			this.ShowDbgPanelsOnDebugging.Location = new System.Drawing.Point(8, 52);
+			this.ShowDbgPanelsOnDebugging.Name = "ShowDbgPanelsOnDebugging";
+			this.ShowDbgPanelsOnDebugging.Size = new System.Drawing.Size(236, 17);
+			this.ShowDbgPanelsOnDebugging.TabIndex = 27;
+			this.ShowDbgPanelsOnDebugging.Text = "Hide debug panels when finished debugging";
+			this.ShowDbgPanelsOnDebugging.UseVisualStyleBackColor = true;
 			// 
 			// AutoSkipUnknownCode
 			// 
@@ -721,26 +740,6 @@
 			// toolTip1
 			// 
 			this.toolTip1.AutomaticDelay = 250;
-			// 
-			// ShowDbgPanelsOnDebugging
-			// 
-			this.ShowDbgPanelsOnDebugging.AutoSize = true;
-			this.ShowDbgPanelsOnDebugging.Location = new System.Drawing.Point(8, 52);
-			this.ShowDbgPanelsOnDebugging.Name = "ShowDbgPanelsOnDebugging";
-			this.ShowDbgPanelsOnDebugging.Size = new System.Drawing.Size(236, 17);
-			this.ShowDbgPanelsOnDebugging.TabIndex = 27;
-			this.ShowDbgPanelsOnDebugging.Text = "Hide debug panels when finished debugging";
-			this.ShowDbgPanelsOnDebugging.UseVisualStyleBackColor = true;
-			// 
-			// StoreSettingsAtUserDocs
-			// 
-			this.StoreSettingsAtUserDocs.AutoSize = true;
-			this.StoreSettingsAtUserDocs.Location = new System.Drawing.Point(8, 182);
-			this.StoreSettingsAtUserDocs.Name = "StoreSettingsAtUserDocs";
-			this.StoreSettingsAtUserDocs.Size = new System.Drawing.Size(198, 17);
-			this.StoreSettingsAtUserDocs.TabIndex = 9;
-			this.StoreSettingsAtUserDocs.Text = "Store settings at the user documents";
-			this.StoreSettingsAtUserDocs.UseVisualStyleBackColor = true;
 			// 
 			// IDESettings
 			// 

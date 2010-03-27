@@ -21,8 +21,11 @@ namespace D_IDE
 		{
 			if (tbox.TextLength < 1) tbox.Text = m;
 			if (!String.IsNullOrEmpty(m))
-				tbox.Text = m + (m.EndsWith("\r\n")?"":"\r\n") + tbox.Text;
-
+			{
+				tbox.Text += m + "\r\n"; //m + (m.EndsWith("\r\n")?"":"\r\n") + tbox.Text;
+				tbox.Select(tbox.TextLength - 1, 0);
+				tbox.ScrollToCaret();
+			}
 			tbox.Refresh();
 		}
 
