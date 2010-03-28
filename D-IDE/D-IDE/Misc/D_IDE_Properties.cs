@@ -364,29 +364,19 @@ namespace D_IDE
 
 			Program.Parsing = true;
 
-			List<DModule> tmods = new List<DModule>();
-
 			cacheTh = new Thread(delegate(object o)
 			{
 				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
 				cscr.Show();
-				/*BinaryFormatter formatter = new BinaryFormatter();
 
-				Stream stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+				BinaryDataTypeStorageReader bsr = new BinaryDataTypeStorageReader(file);
 				try
 				{
-					tmods.AddRange((DModule[])formatter.Deserialize(stream));
+					GlobalModules = bsr.ReadModules();
 				}
-				catch (Exception ex) { MessageBox.Show("Error loading " + file + ": " + ex.Message); }
-				stream.Close();
-				GlobalModules = tmods;*/
-
-				SQLNodeStorage sns = new SQLNodeStorage(file, true);
-				sns.UpdateRawNodes();
-				sns.UpdateRawModules();
-				GlobalModules = new List<DModule>(sns.Modules);
-				sns.Dispose();
-
+				catch (Exception ex) { MessageBox.Show(ex.Message); }
+				bsr.Close();
+				
 				cscr.Close();
 
 				// add all loaded data to the precached completion list
@@ -402,12 +392,11 @@ namespace D_IDE
 
 		static Thread cacheTh;
 		static CachingScreen cscr;
-		private static bool isDatabaseCreated = false;
 		public static void SaveGlobalCache(string file)
 		{
 			if (cacheTh != null && cacheTh.IsAlive) return;
 			int i = 0;
-			while (Program.Parsing && i < 500) { Thread.Sleep(100); i++; }
+			while (Program.Parsing && i < 500) { Thread.Sleep(50); i++; }
 
 			Program.Parsing = true;
 
@@ -415,27 +404,11 @@ namespace D_IDE
 			{
 				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
 				cscr.Show();
-				/*BinaryFormatter formatter = new BinaryFormatter();
 
-				Stream stream = File.Open(file, FileMode.Create, FileAccess.Write, FileShare.Read);
-				formatter.Serialize(stream, GlobalModules.ToArray()); // ((List<DModule>)arr)
-				stream.Close();
-				cscr.Close();*/
-				if(File.Exists(file))File.Delete(file);
-				SQLNodeStorage sns = new SQLNodeStorage(file, false);
-				sns.BeginTransaction();
-                if (!isDatabaseCreated)
-                {
-					sns.CreateModuleTable();
-					sns.CreateNodeTable();
-                }
+				BinaryDataTypeStorageWriter bsw = new BinaryDataTypeStorageWriter(file);
+				bsw.WriteModules(GlobalModules);
+				bsw.Close();
 
-				foreach (DModule dm in GlobalModules)
-				{
-					sns.InsertModule(dm);
-				}
-				sns.Commit();
-				sns.Dispose();
 				Program.Parsing = false;
 			});
 			cacheTh.Start();

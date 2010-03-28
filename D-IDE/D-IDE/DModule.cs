@@ -62,6 +62,11 @@ namespace D_IDE
             folds = new List<FoldMarker>();
         }
 
+		public DModule()
+		{
+			Init();
+		}
+
         public DModule(DProject Project,string file)
         {
 			this.Project = Project;
