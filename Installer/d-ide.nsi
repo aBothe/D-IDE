@@ -30,7 +30,7 @@ Var USER_PART
 ; Setting various predefined NSIS Variables
 ;--------------------------------------------------------
 Name "D-IDE"
-OutFile "${FILEDATE}_d-ide.exe"
+OutFile ".\Builds\${FILEDATE}_d-ide.exe"
 BrandingText "Alexander Bothe"
 InstallDir $PROGRAMFILES\D-IDE
 InstallDirRegKey HKLM "Software\D-IDE" "Install_Dir"
