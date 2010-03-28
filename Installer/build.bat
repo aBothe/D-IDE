@@ -1,4 +1,5 @@
-del ".\build.log"
+del ".\application_build.log"
+del ".\installer_build.log"
 
 if "%DEVENV%"=="" set DEVENV="%PROGRAMFILES%\Microsoft Visual Studio 9.0\Common7\IDE\devenv.exe"  /out ".\application_build.log" /rebuild release
 if "%MAKENSIS%"=="" set MAKENSIS=%PROGRAMFILES%\NSIS\makensis.exe

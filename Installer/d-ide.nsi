@@ -30,7 +30,7 @@ Var USER_PART
 ; Setting various predefined NSIS Variables
 ;--------------------------------------------------------
 Name "D-IDE"
-OutFile ".\Builds\${FILEDATE}_d-ide.exe"
+OutFile ".\Builds\D-IDE.${FILEDATE}.exe"
 BrandingText "Alexander Bothe"
 InstallDir $PROGRAMFILES\D-IDE
 InstallDirRegKey HKLM "Software\D-IDE" "Install_Dir"
@@ -65,8 +65,8 @@ ${UnPage} Welcome
 ;--------------------------------------------------------
 ; Setup Icons
 ;--------------------------------------------------------
-Icon ".\XPUI-install.ico"
-UninstallIcon ".\XPUI-uninstall.ico"
+Icon ".\install.ico"
+UninstallIcon ".\uninstall.ico"
 
 ;--------------------------------------------------------
 ; Download and install the .Net Framework 3.5
