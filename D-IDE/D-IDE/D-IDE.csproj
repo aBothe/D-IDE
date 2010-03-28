@@ -98,11 +98,6 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.SQLite, Version=1.0.65.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\externalDeps\System.Data.SQLite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Deployment" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
@@ -239,10 +234,6 @@
     </Compile>
     <Compile Include="Misc\BinaryDataTypeStorage.cs" />
     <Compile Include="Misc\D_IDE_Properties.cs" />
-    <Compile Include="Misc\SQLNodeStorage.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Misc\SQLNodeStorageEx.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Dialogs\ProjectExplorer.cs">
       <SubType>Form</SubType>

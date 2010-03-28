@@ -364,27 +364,26 @@ namespace D_IDE
 
 			Program.Parsing = true;
 
-			cacheTh = new Thread(delegate(object o)
+			cacheTh = new Thread(delegate(object o)	{
+			if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
+			cscr.Show();
+
+			BinaryDataTypeStorageReader bsr = new BinaryDataTypeStorageReader(file);
+			try
 			{
-				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
-				cscr.Show();
+				GlobalModules = bsr.ReadModules();
+			}
+			catch (Exception ex) { MessageBox.Show(ex.Message); }
+			bsr.Close();
 
-				BinaryDataTypeStorageReader bsr = new BinaryDataTypeStorageReader(file);
-				try
-				{
-					GlobalModules = bsr.ReadModules();
-				}
-				catch (Exception ex) { MessageBox.Show(ex.Message); }
-				bsr.Close();
-				
-				cscr.Close();
+			cscr.Close();
 
-				// add all loaded data to the precached completion list
-				D_IDE_Properties.GlobalCompletionList.Clear();
-				if (Form1.thisForm != null && Form1.thisForm.icons != null)
-					DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList, Form1.thisForm.icons);
+			// add all loaded data to the precached completion list
+			D_IDE_Properties.GlobalCompletionList.Clear();
+			if (Form1.thisForm != null && Form1.thisForm.icons != null)
+				DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList, Form1.thisForm.icons);
 
-				Program.Parsing = false;
+			Program.Parsing = false;
 			});
 			cacheTh.Start();
 
@@ -400,8 +399,7 @@ namespace D_IDE
 
 			Program.Parsing = true;
 
-			cacheTh = new Thread(delegate(object o)
-			{
+			cacheTh = new Thread(delegate(object o)			{
 				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
 				cscr.Show();
 
@@ -410,8 +408,7 @@ namespace D_IDE
 				bsw.Close();
 
 				Program.Parsing = false;
-			});
-			cacheTh.Start();
+			});			cacheTh.Start();
 		}
 		#endregion
 
