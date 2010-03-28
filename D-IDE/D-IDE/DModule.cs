@@ -36,7 +36,14 @@ namespace D_IDE
 					ModuleName = Path.GetFileNameWithoutExtension(value);
 			}
 		}
-        public List<INode> Children = new List<INode>();
+		public List<INode> Children
+		{
+			get {
+				if(dom!=null)
+					return dom.Children;
+				return new List<INode>();
+			}
+		}
 
         public bool IsParsable
         {

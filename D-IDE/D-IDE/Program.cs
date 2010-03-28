@@ -11,7 +11,7 @@ namespace D_IDE
 		public static string cfgDirName = "D-IDE.config";
 		public static string cfgDir;
 		public static string prop_file = "D-IDE.settings.xml";
-		public static string ModuleCacheFile = "D-IDE.cache.dat";
+		public static string ModuleCacheFile = "D-IDE.cache.db";
 		public static string LayoutFile = "D-IDE.layout.xml";
 		public const string news_php = "http://d-ide.sourceforge.net/classes/news.php";
 		public const string ver_txt = "http://d-ide.svn.sourceforge.net/viewvc/d-ide/ver.txt";
