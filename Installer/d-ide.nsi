@@ -20,12 +20,6 @@
 !define /date FILEDATE "%Y%m%d"
 !define /date DATE "%Y.%m.%d"
 
-Var INSTALLTYPE
-Var SERVICEUSERNAME
-Var SERVICEPASSWORD
-Var DOMAIN_PART
-Var USER_PART
-
 ;--------------------------------------------------------
 ; Setting various predefined NSIS Variables
 ;--------------------------------------------------------
@@ -102,7 +96,7 @@ Section "-.Net Framework 3.5" net35_section_id
 	SkipDotNet35:
 		DetailPrint ".Net Framework 3.5 found... Continuing."
 		
-	DotNet35Done:
+	;DotNet35Done:
 SectionEnd
 
 ;--------------------------------------------------------
