@@ -1,4 +1,11 @@
-!include "MUI2.nsh"
+;--------------------------------------------------------
+; Include ExperienceUI
+;--------------------------------------------------------
+!ifdef XPUI_SYSDIR
+	!include "${XPUI_SYSDIR}\XPUI.nsh"
+!else
+	!include "XPUI.nsh"
+!endif
 
 ;--------------------------------------------------------
 ; Setting custom variables and constants
@@ -18,18 +25,6 @@ Var SERVICEUSERNAME
 Var SERVICEPASSWORD
 Var DOMAIN_PART
 Var USER_PART
- 
-;--------------------------------------------------------
-; Setting up a macro for the IndexOf string function
-;--------------------------------------------------------
-!macro IndexOf Var Str Char
-	Push "${Char}"
-	Push "${Str}"
-	Call IndexOf
-	Pop "${Var}"
-!macroend
-
-!define IndexOf "!insertmacro IndexOf"
 
 ;--------------------------------------------------------
 ; Setting various predefined NSIS Variables
@@ -50,52 +45,28 @@ Function .onInit
 FunctionEnd
 
 ;--------------------------------------------------------
-; Custom MUI (Modern UI) Configuration
+; Custom Experience UI Configuration
 ;--------------------------------------------------------
-!define MUI_HEADERIMAGE
-!define MUI_HEADERIMAGE_BITMAP ".\D-IDE_Logo.bmp" ; optional
-!define MUI_ABORTWARNING
+!define XPUI_ABORTWARNING
 
-;--------------------------------------------------------
-; Show the license page with License.rtf
-;--------------------------------------------------------
-!insertmacro MUI_PAGE_LICENSE ".\License.rtf"
+${Page} Welcome
+${LicensePage} ".\License.rtf"
+${Page} Components
+${Page} Directory
+${Page} InstFiles
+${Page} Finish
 
-;--------------------------------------------------------
-; (Installer) Show the program files directory picker page
-;--------------------------------------------------------
-!insertmacro MUI_PAGE_DIRECTORY
-
-;--------------------------------------------------------
-; (Installer) Show the install progress page
-;--------------------------------------------------------
-!insertmacro MUI_PAGE_COMPONENTS
-
-;--------------------------------------------------------
-; (Installer) Show the install progress page
-;--------------------------------------------------------
-!insertmacro MUI_PAGE_INSTFILES
-
-;--------------------------------------------------------
-; (Uninstaller) Show the uninstaller confirmation page
-;--------------------------------------------------------
-!insertmacro MUI_UNPAGE_CONFIRM
-
-;--------------------------------------------------------
-; (Uninstaller) Show the uninstall progress page
-;--------------------------------------------------------
-!insertmacro MUI_UNPAGE_INSTFILES
-
-;--------------------------------------------------------
-; Add english language support
-;--------------------------------------------------------
-!insertmacro MUI_LANGUAGE "English"
+${UnPage} Welcome
+!insertmacro XPUI_PAGEMODE_UNINST
+!insertmacro XPUI_PAGE_UNINSTCONFIRM_NSIS
+!insertmacro XPUI_PAGE_INSTFILES
+!insertmacro XPUI_LANGUAGE "English"
 
 ;--------------------------------------------------------
 ; Setup Icons
 ;--------------------------------------------------------
-Icon "..\D-IDE\D-IDE\d-ide.ico"
-UninstallIcon "..\D-IDE\D-IDE\d-ide.ico"
+Icon ".\XPUI-install.ico"
+UninstallIcon ".\XPUI-uninstall.ico"
 
 ;--------------------------------------------------------
 ; Download and install the .Net Framework 3.5
@@ -184,10 +155,6 @@ Section "-Install Program Files" install_section_id
 	;	Rename "$INSTDIR\Quartz.xml" "$INSTDIR\ConfigBackup\Quartz.xml.${FILEDATE}"
 	;	Delete "$INSTDIR\Quartz.xml"
 
-	;File /oname=D-IDEIndexer.exe.config "${BINARY_APPLICATION_FILES}\D-IDEIndexer.exe.config"
-	;File /oname=D-IDEService.exe.config "${BINARY_APPLICATION_FILES}\D-IDEService.exe.config"
-	;File /oname=Quartz.xml "${BINARY_APPLICATION_FILES}\Quartz.xml"
-
 	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
 SectionEnd
 
@@ -224,7 +191,6 @@ Section
 	DontLaunchThingy:
 SectionEnd
 
-
 ;--------------------------------------------------------
 ; Uninstaller Section
 ;--------------------------------------------------------
@@ -243,31 +209,6 @@ Section "Uninstall"
 	DeleteRegKey /ifempty HKLM "Software\D-IDE"
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE"
 SectionEnd
-
-;--------------------------------------------------------
-; A custom string function (IndexOf)
-;--------------------------------------------------------
-Function IndexOf
-	Exch $R0
-	Exch
-	Exch $R1
-	Push $R2
-	Push $R3
-
-	StrCpy $R3 $R0
-	StrCpy $R0 -1
-	IntOp $R0 $R0 + 1
-	StrCpy $R2 $R3 1 $R0
-	StrCmp $R2 "" +2
-	StrCmp $R2 $R1 +2 -3
-
-	StrCpy $R0 -1
-
-	Pop $R3
-	Pop $R2
-	Pop $R1
-	Exch $R0
-FunctionEnd
 
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 3.5
