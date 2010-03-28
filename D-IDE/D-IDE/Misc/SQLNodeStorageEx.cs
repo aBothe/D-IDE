@@ -385,7 +385,7 @@ namespace D_IDE
             for (int i = 1; i <= sqlparams.Length; i++)
             {
                 if (i > 1) sqlb.Append(", ");
-                sqlb.Append("@p").Append(i + 1);
+                sqlb.Append("@p").Append(i);
             }
             sqlb.Append(");");
             return ExecuteNonQuery(sqlb.ToString(), sqlparams);
