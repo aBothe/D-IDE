@@ -104,6 +104,7 @@ namespace D_IDE
 			DBuilder.OnOutput += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnOutput);
 			DBuilder.OnError += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnError);
 			DBuilder.OnExit += new EventHandler(DBuilder_OnExit);
+			CodeViewToPDB.CodeViewToPDBConverter.Message += new CodeViewToPDB.CodeViewToPDBConverter.MsgHandler(CodeViewToPDBConverter_Message);
 			DBuilder.OnMessage += new DBuilder.OutputHandler(delegate(DProject p, string file, string m) { Log(m); });
 			#endregion
 
@@ -131,6 +132,11 @@ namespace D_IDE
 			{
 				CheckForUpdates();
 			}
+		}
+
+		void CodeViewToPDBConverter_Message(string Message)
+		{
+			Log("cv2pdb error: "+Message);
 		}
 
 		void DBuilder_OnExit(object sender, EventArgs e)
