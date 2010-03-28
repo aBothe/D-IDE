@@ -85,21 +85,18 @@ namespace D_IDE
 		}
 		#endregion
 
-
-		public void BeginTransAction()
+		public void BeginTransaction()
 		{
 			SQLiteCommand cmd = Connection.CreateCommand();
 			cmd.CommandText = "BEGIN TRANSACTION";
 			cmd.ExecuteNonQuery();
 		}
-
 		public void Commit()
 		{
 			SQLiteCommand cmd = Connection.CreateCommand();
 			cmd.CommandText = "COMMIT TRANSACTION";
 			cmd.ExecuteNonQuery();
 		}
-
 
 		#region Nodes
 		public long LastInsertedNodeId
@@ -251,8 +248,6 @@ namespace D_IDE
 			}
 		}
 		#endregion
-
-
 
 		#region Modules
 		public long LastInsertedModuleId

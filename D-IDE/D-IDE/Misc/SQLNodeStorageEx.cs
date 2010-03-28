@@ -50,10 +50,25 @@ namespace D_IDE
                 this.connection.Close();
             }
         }
- 
+
+		/*public void BeginTransaction()
+		{
+			SQLiteCommand cmd = connection.CreateCommand();
+			cmd.CommandText = "BEGIN TRANSACTION";
+			cmd.ExecuteNonQuery();
+		}
+
+		public void Commit()
+		{
+			SQLiteCommand cmd = connection.CreateCommand();
+			cmd.CommandText = "COMMIT TRANSACTION";
+			cmd.ExecuteNonQuery();
+		}*/
+		
 		public void BeginTransaction()
         {
             // Nesting transactions with a depth counter. If the connection is closed, we'll commit anyway.
+			// EDIT: Read the SQLite doc - there are no nested transactions ;-)
             if (transaction == null) 
                 this.transaction = connection.BeginTransaction();
             transactionDepth++;

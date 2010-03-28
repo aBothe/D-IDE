@@ -21,8 +21,6 @@ namespace D_IDE
 {
 	public class D_IDE_Properties
 	{
-        private static bool isDatabaseCreated = false;
-
 		public static void Load(string fn)
 		{
 			if (File.Exists(fn))
@@ -368,14 +366,6 @@ namespace D_IDE
 
 			List<DModule> tmods = new List<DModule>();
 
-            if (!isDatabaseCreated)
-            {
-                SQLNodeStorage sns = new SQLNodeStorage(file, false);
-                sns.CreateModuleTable();
-                sns.CreateNodeTable();
-                sns.Dispose();
-            }
-
 			cacheTh = new Thread(delegate(object o)
 			{
 				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
@@ -412,6 +402,7 @@ namespace D_IDE
 
 		static Thread cacheTh;
 		static CachingScreen cscr;
+		private static bool isDatabaseCreated = false;
 		public static void SaveGlobalCache(string file)
 		{
 			if (cacheTh != null && cacheTh.IsAlive) return;
@@ -432,13 +423,13 @@ namespace D_IDE
 				cscr.Close();*/
 				if(File.Exists(file))File.Delete(file);
 				SQLNodeStorage sns = new SQLNodeStorage(file, false);
+				sns.BeginTransaction();
                 if (!isDatabaseCreated)
                 {
-                    sns.CreateModuleTable();
-                    sns.CreateNodeTable();
+					sns.CreateModuleTable();
+					sns.CreateNodeTable();
                 }
 
-				sns.BeginTransAction();
 				foreach (DModule dm in GlobalModules)
 				{
 					sns.InsertModule(dm);

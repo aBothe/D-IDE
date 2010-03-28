@@ -1082,7 +1082,7 @@ namespace D_IDE
 			}
 			#endregion
 
-			if (File.Exists(Program.LocalSettingStorageFile))
+			if (!File.Exists(Program.UserDocStorageFile))
 			{
 				Program.cfgDir = Application.StartupPath + "\\" + Program.cfgDirName;
 			}

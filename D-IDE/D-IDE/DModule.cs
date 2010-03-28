@@ -87,11 +87,9 @@ namespace D_IDE
 			}
             mod_file = file;
 
-            try { Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + ModuleName; }
-            catch { }
+            // try { Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + ModuleName; } catch { } // Perhaps these things here take too much time - so comment it out
             dom = DParser.ParseFile(ModuleName, file, out import);
-            try { Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + ModuleName; }
-            catch { }
+            //try { Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + ModuleName; } catch { }
         }
 
         public DataType dom; // Contains entire data (recursive)
