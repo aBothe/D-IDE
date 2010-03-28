@@ -18,9 +18,13 @@ namespace D_IDE
 		public Dictionary<long, DataType> RootNodeCache = new Dictionary<long, DataType>();
 		public Dictionary<long, DModule> RootModuleCache = new Dictionary<long, DModule>();
 
-		public SQLNodeStorage(string DBFile)
-		{
-			Connection = new SQLiteConnection("Data Source=\"" + DBFile + "\"");
+        public SQLNodeStorage(string DBFile, bool readOnly)
+        {
+            StringBuilder connectionString = new StringBuilder();
+            connectionString.Append("Data Source=\"" + DBFile + "\"");
+            if (readOnly) connectionString.Append(";Read Only=True");
+
+            Connection = new SQLiteConnection(connectionString.ToString());
 			Connection.Open();
 		}
 

@@ -20,16 +20,23 @@ namespace D_IDE
 		private Dictionary<long, DataType> rootNodeCache = new Dictionary<long, DataType>();
 		private Dictionary<long, DModule> rootModuleCache = new Dictionary<long, DModule>();
 
-        public SQLNodeStorageEx(string fileName)
+        public SQLNodeStorageEx(string fileName, bool readOnly)
 		{
             this.fileName = fileName;
-            Open();
+            Open(readOnly, false, null);
 		}
 
-		public void Open()
+        public void Open(bool readOnly, bool disableSynchronous, long? cacheSize)
 		{
             this.Close();
-			this.connection = new SQLiteConnection("Data Source=\"" + fileName + "\"");
+
+            StringBuilder connectionString = new StringBuilder();
+            connectionString.Append("Data Source=\"" + fileName + "\"");
+            if (cacheSize.HasValue) connectionString.Append(";Cache Size=").Append(cacheSize.Value);
+            if (disableSynchronous) connectionString.Append(";Synchronous=Off");
+            if (readOnly) connectionString.Append(";Read Only=True");
+
+            this.connection = new SQLiteConnection(connectionString.ToString());
             this.connection.Open();
             transactionDepth = 0;
 		}
@@ -42,59 +49,8 @@ namespace D_IDE
                 this.Commit();
                 this.connection.Close();
             }
-		}
-
-		private void CreateModuleTable()
-		{
-			ExecuteNonQuery("CREATE TABLE IF NOT EXISTS " + MODULE_TABLE + " ( " +
-				"id INTEGER NULL PRIMARY KEY AUTOINCREMENT," +
-				"ModuleName varchar(256) NOT NULL," +
-				"ModuleFile varchar(256) NOT NULL," +
-				"DOMid INTEGER NOT NULL" +
-				");");
-		}
-
-		private void CreateNodeTable()
-		{
-			ExecuteNonQuery("CREATE TABLE IF NOT EXISTS " + NODE_TABLE + " ( " +
-				"id INTEGER NULL PRIMARY KEY AUTOINCREMENT," +
-				"fieldtype INTEGER NOT NULL," +
-				"name varchar(512) NOT NULL," +
-				"typetoken INTEGER NOT NULL," +
-				"type varchar(512) NOT NULL," +
-				"parent INTEGER NULL," +
-				"location varchar(512) NOT NULL," +
-				"endlocation varchar(512) NOT NULL," +
-
-				"modifiers varchar(512) NULL," +
-				"module varchar(512) NULL," +
-				"value varchar(2048) NULL," +
-				"param varchar(2048) NULL," +
-				"children varchar(4096) NULL," +
-				"super varchar(512) NULL," +
-				"interface varchar(512) NULL" +
-				");");
-		}
-
-		public void TruncateDatabase()
-		{
-            TruncateTable(NODE_TABLE);
-            TruncateTable(MODULE_TABLE);
-		}
-
-		public void TruncateTable(string table)
-		{
-            ExecuteNonQuery("delete from " + table + ";");
-		}
-
-        public void Dispose()
-        {
-            Close();
-            rootModuleCache.Clear();
-            rootNodeCache.Clear();
         }
  
-        
 		public void BeginTransaction()
         {
             // Nesting transactions with a depth counter. If the connection is closed, we'll commit anyway.
@@ -116,11 +72,68 @@ namespace D_IDE
 
                 transactionDepth--;
             }
-		}
+        }
 
+        public void TruncateDatabase()
+        {
+            TruncateTable(NODE_TABLE);
+            TruncateTable(MODULE_TABLE);
+        }
+
+        public void TruncateTable(string table)
+        {
+            ExecuteNonQuery("delete from " + table + ";");
+        }
+
+        public void Dispose()
+        {
+            Close();
+            rootModuleCache.Clear();
+            rootNodeCache.Clear();
+        }
+
+        #region Create Table Statements
+        public void InitializeDatabase()
+        {
+            CreateModuleTable();
+            CreateNodeTable();
+            CreateIndexOnField(NODE_TABLE, "parent");
+        }
+
+        private void CreateModuleTable()
+        {
+            ExecuteNonQuery("CREATE TABLE IF NOT EXISTS " + MODULE_TABLE + " ( " +
+                "id INTEGER NULL PRIMARY KEY AUTOINCREMENT," +
+                "ModuleName varchar(256) NOT NULL," +
+                "ModuleFile varchar(256) NOT NULL," +
+                "DOMid INTEGER NOT NULL" +
+                ");");
+        }
+
+        private void CreateNodeTable()
+        {
+            ExecuteNonQuery("CREATE TABLE IF NOT EXISTS " + NODE_TABLE + " ( " +
+                "id INTEGER NULL PRIMARY KEY AUTOINCREMENT," +
+                "fieldtype INTEGER NOT NULL," +
+                "name varchar(512) NOT NULL," +
+                "typetoken INTEGER NOT NULL," +
+                "type varchar(512) NOT NULL," +
+                "parent INTEGER NULL," +
+                "location varchar(512) NOT NULL," +
+                "endlocation varchar(512) NOT NULL," +
+
+                "modifiers varchar(512) NULL," +
+                "module varchar(512) NULL," +
+                "value varchar(2048) NULL," +
+                "param varchar(2048) NULL," +
+                "children varchar(4096) NULL," +
+                "super varchar(512) NULL," +
+                "interface varchar(512) NULL" +
+                ");");
+        }
+        #endregion
 
 		#region Nodes
-
 		public void UpdateRawNodes()
         {
             using (SQLiteDataReader dr = SelectByField(NODE_TABLE, "parent", 0))
@@ -342,6 +355,15 @@ namespace D_IDE
             return (o != null) ? (long)o : -1;
         }
 
+        private int CreateIndexOnField(string table, string field)
+        {
+            StringBuilder sqlb = new StringBuilder(127);
+            sqlb.Append("CREATE INDEX IF NOT EXISTS idx_").Append(table).Append("_").Append(field)
+                .Append(" ON ").Append(table).Append(" (").Append(field).Append(")");
+
+            return ExecuteNonQuery(sqlb.ToString());
+        }
+
         private SQLiteDataReader SelectByField(string table, string field, object fieldData)
         {
             StringBuilder sqlb = new StringBuilder(127);
@@ -371,6 +393,7 @@ namespace D_IDE
 
         private int ExecuteNonQuery(string sql, params object[] sqlparams)
         {
+            System.Diagnostics.Debug.WriteLine(sql);
             SQLiteCommand cmd = CreateCommand();
             cmd.CommandText = sql;
             AppendParameters(cmd, sqlparams);
@@ -380,6 +403,7 @@ namespace D_IDE
 
         private object ExecuteScalar(string sql, params object[] sqlparams)
         {
+            System.Diagnostics.Debug.WriteLine(sql);
             SQLiteCommand cmd = CreateCommand();
             cmd.CommandText = sql;
             AppendParameters(cmd, sqlparams);
@@ -389,6 +413,7 @@ namespace D_IDE
 
         private SQLiteDataReader ExecuteReader(string sql, params object[] sqlparams)
         {
+            System.Diagnostics.Debug.WriteLine(sql);
             SQLiteCommand cmd = CreateCommand();
             cmd.CommandText = sql;
             AppendParameters(cmd, sqlparams);

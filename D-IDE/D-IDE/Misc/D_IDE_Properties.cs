@@ -21,6 +21,8 @@ namespace D_IDE
 {
 	public class D_IDE_Properties
 	{
+        private static bool isDatabaseCreated = false;
+
 		public static void Load(string fn)
 		{
 			if (File.Exists(fn))
@@ -366,6 +368,14 @@ namespace D_IDE
 
 			List<DModule> tmods = new List<DModule>();
 
+            if (!isDatabaseCreated)
+            {
+                SQLNodeStorage sns = new SQLNodeStorage(file, false);
+                sns.CreateModuleTable();
+                sns.CreateNodeTable();
+                sns.Dispose();
+            }
+
 			cacheTh = new Thread(delegate(object o)
 			{
 				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
@@ -381,10 +391,7 @@ namespace D_IDE
 				stream.Close();
 				GlobalModules = tmods;*/
 
-				SQLNodeStorage sns = new SQLNodeStorage(file);
-				sns.CreateModuleTable();
-				sns.CreateNodeTable();
-
+				SQLNodeStorage sns = new SQLNodeStorage(file, true);
 				sns.UpdateRawNodes();
 				sns.UpdateRawModules();
 				GlobalModules = new List<DModule>(sns.Modules);
@@ -424,10 +431,13 @@ namespace D_IDE
 				stream.Close();
 				cscr.Close();*/
 				if(File.Exists(file))File.Delete(file);
-				SQLNodeStorage sns = new SQLNodeStorage(file);
-				sns.CreateModuleTable();
-				sns.CreateNodeTable();
-				
+				SQLNodeStorage sns = new SQLNodeStorage(file, false);
+                if (!isDatabaseCreated)
+                {
+                    sns.CreateModuleTable();
+                    sns.CreateNodeTable();
+                }
+
 				sns.BeginTransAction();
 				foreach (DModule dm in GlobalModules)
 				{
