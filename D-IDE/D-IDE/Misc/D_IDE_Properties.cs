@@ -396,8 +396,7 @@ namespace D_IDE
 
 				// add all loaded data to the precached completion list
 				D_IDE_Properties.GlobalCompletionList.Clear();
-				if (Form1.thisForm != null && Form1.thisForm.icons != null)
-					DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList, Form1.thisForm.icons);
+				DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList);
 
 				Program.Parsing = false;
 			});

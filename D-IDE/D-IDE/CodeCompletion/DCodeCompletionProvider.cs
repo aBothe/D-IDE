@@ -242,6 +242,8 @@ namespace D_IDE
 
 		public ICompletionData[] GenerateCompletionData(string fn, TextArea ta, char ch)
 		{
+			ImageList icons = Form1.icons;
+
 			List<ICompletionData> rl = new List<ICompletionData>();
 			List<string> expressions = new List<string>();
 			try
@@ -347,7 +349,7 @@ namespace D_IDE
 					{
 						if (expressions[0] == "this" && expressions.Count < 2) // this.
 						{
-							AddAllClassMembers(seldt, ref rl, true, icons);
+							AddAllClassMembers(seldt, ref rl, true);
 
 							foreach (DataType arg in seldt.param)
 							{
@@ -362,7 +364,7 @@ namespace D_IDE
 								seldd = SearchGlobalExpr(pf.dom, seldt.superClass);
 								if (seldd != null)
 								{
-									AddAllClassMembers(seldd, ref rl, true, icons);
+									AddAllClassMembers(seldd, ref rl, true);
 
 									foreach (DataType arg in seldd.param)
 									{
@@ -376,12 +378,12 @@ namespace D_IDE
 						{
 							foreach (DataType dt in seldt)
 							{
-								rl.Add(new DCompletionData(dt, seldt, icons));
+								rl.Add(new DCompletionData(dt, seldt));
 							}
 						}
 						else if (seldt.fieldtype == FieldType.Variable) // myVar.
 						{
-							AddAllClassMembers(seldt, ref rl, false, icons);
+							AddAllClassMembers(seldt, ref rl, false);
 							AddTypeStd(seldt, ref rl);
 
 							#region Add function which have seldt.name as first parameter
@@ -417,7 +419,7 @@ namespace D_IDE
 						{
 							if (isInst || isNameSpace)
 							{
-								AddAllClassMembers(seldt, ref rl, !isNameSpace, icons);
+								AddAllClassMembers(seldt, ref rl, !isNameSpace);
 							}
 							else
 							{
@@ -435,7 +437,7 @@ namespace D_IDE
 											|| dt.modifiers.Count < 2)
 										)
 										) // int a;
-										rl.Add(new DCompletionData(dt, seldt, icons));
+										rl.Add(new DCompletionData(dt, seldt));
 								}
 							}
 							if (!isNameSpace) AddTypeStd(seldt, ref rl);
@@ -458,8 +460,9 @@ namespace D_IDE
 			return rl.ToArray();
 		}
 
-		public static void AddGlobalSpaceContent(ref List<ICompletionData> rl, ImageList icons)
+		public static void AddGlobalSpaceContent(ref List<ICompletionData> rl)
 		{
+			ImageList icons = Form1.icons;
 			List<string> mods = new List<string>();
 			string[] tmods;
 			string tmod;
@@ -474,7 +477,7 @@ namespace D_IDE
 					if (!mods.Contains(tmod)) mods.Add(tmod);
 				}
 
-				AddAllClassMembers(gpf.dom, ref rl, false, icons);
+				AddAllClassMembers(gpf.dom, ref rl, false);
 			}
 
 			foreach (string mod in mods)
@@ -491,6 +494,7 @@ namespace D_IDE
 
 		private void AddTypeStd(DataType seldt, ref List<ICompletionData> rl)
 		{
+			ImageList icons = Form1.icons;
 			rl.Add(new DCompletionData("sizeof", "Yields the memory usage of a type in bytes", icons.Images.IndexOfKey("Icons.16x16.Literal.png")));
 			rl.Add(new DCompletionData("stringof", "Returns a string of the typename", icons.Images.IndexOfKey("Icons.16x16.Property.png")));
 			rl.Add(new DCompletionData("init", "Returns the default initializer of a type", icons.Images.IndexOfKey("Icons.16x16.Field.png")));

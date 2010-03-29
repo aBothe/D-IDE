@@ -19,13 +19,18 @@ namespace D_IDE
 		public static bool Parsing = false;
 
 		public static CachingScreen StartScreen;
+		public static DateTime tdate;
 
 		[STAThread]
 		static void Main(string[] args)
 		{
+			tdate = DateTime.Now;
+
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 			app = new App();
+
+			Form1.InitCodeCompletionIcons();
 
 			// Show startup popup
 			StartScreen = new CachingScreen();

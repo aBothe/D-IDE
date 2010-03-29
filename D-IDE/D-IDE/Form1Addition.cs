@@ -192,7 +192,7 @@ namespace D_IDE
 				CurrentCompletionData.Clear();
 				if (tv != null)
 				{
-					DCodeCompletionProvider.AddAllClassMembers(tv, ref CurrentCompletionData, true, Form1.thisForm.icons);
+					DCodeCompletionProvider.AddAllClassMembers(tv, ref CurrentCompletionData, true);
 				}
 
 				if (project != null)
@@ -208,16 +208,16 @@ namespace D_IDE
 							if (!mods.Contains(tmod)) mods.Add(tmod);
 						}
 						// Add the content of the module
-						DCodeCompletionProvider.AddAllClassMembers(ppf.dom, ref CurrentCompletionData, false, Form1.thisForm.icons);
+						DCodeCompletionProvider.AddAllClassMembers(ppf.dom, ref CurrentCompletionData, false);
 					}
 					// Add all local modules
 					foreach (string mod in mods)
 					{
-						CurrentCompletionData.Add(new DCompletionData(mod, "Project Module", Form1.thisForm.icons.Images.IndexOfKey("namespace")));
+						CurrentCompletionData.Add(new DCompletionData(mod, "Project Module", Form1.icons.Images.IndexOfKey("namespace")));
 					}
 				}
 				else // Add classes etc from current module
-					DCodeCompletionProvider.AddAllClassMembers(fileData.dom, ref CurrentCompletionData, true, Form1.thisForm.icons);
+					DCodeCompletionProvider.AddAllClassMembers(fileData.dom, ref CurrentCompletionData, true);
 				try
 				{
 					CurrentCompletionData.Capacity += D_IDE_Properties.GlobalCompletionList.Count;
@@ -289,7 +289,7 @@ namespace D_IDE
 			ICompletionDataProvider dataProvider = null;
 
 			if (Char.IsLetterOrDigit(key) || key == '_' || key == '.' || key == ' ' || key == '\0')
-				dataProvider = new DCodeCompletionProvider(Form1.thisForm.icons);
+				dataProvider = new DCodeCompletionProvider();
 			else return false;
 
 			DCodeCompletionWindow.ShowCompletionWindow(

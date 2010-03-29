@@ -11,9 +11,6 @@ namespace D_IDE
 {
 	public partial class DCodeCompletionProvider
 	{
-		public ImageList icons;
-		//public DProject prj;
-
 		public static int ParseCurLevel(string t, int offset)
 		{
 			int ret = 0;
@@ -93,18 +90,17 @@ namespace D_IDE
 		}
 
 		#region Props
-		public DCodeCompletionProvider(/*ref DProject dprj, */ImageList IconData)
+		public DCodeCompletionProvider(/*ref DProject dprj, */)
 		{
 			presel = "";
 			//this.prj = dprj;
-			this.icons = IconData;
 		}
 
 		public ImageList ImageList
 		{
 			get
 			{
-				return icons;
+				return Form1.icons;
 			}
 		}
 
@@ -476,15 +472,16 @@ namespace D_IDE
 		/// </summary>
 		/// <param name="selectedExpression"></param>
 		/// <param name="rl"></param>
-		public static void AddAllClassMembers(DataType selectedExpression, ref List<ICompletionData> rl, bool all, ImageList icons)
+		public static void AddAllClassMembers(DataType selectedExpression, ref List<ICompletionData> rl, bool all)
 		{
+			ImageList icons = Form1.icons;
 			if (selectedExpression != null)
 			{
 				foreach (DataType ch in selectedExpression)
 				{
 					ch.Parent = selectedExpression;
 					if ((!ch.modifiers.Contains(DTokens.Private) || all) && ch.fieldtype!=FieldType.Constructor) // Exlude ctors because they aren't needed
-						rl.Add(new DCompletionData(ch, selectedExpression, icons));
+						rl.Add(new DCompletionData(ch, selectedExpression));
 				}
 
 				foreach (DataType arg in selectedExpression.param)
@@ -497,24 +494,26 @@ namespace D_IDE
 					//TODO: Find out what gets affected by returning here
 					//return;
 					if (selectedExpression.fieldtype!=FieldType.Variable && !DTokens.ClassLike[selectedExpression.TypeToken] && selectedExpression.Parent != null && (selectedExpression.Parent as DataType).fieldtype != FieldType.Root)
-						AddAllClassMembers((DataType)selectedExpression.Parent, ref rl, all, icons);
+						AddAllClassMembers((DataType)selectedExpression.Parent, ref rl, all);
 				}
 				else
 				{
 					// if not, add items of all superior classes or interfaces
 					DataType dt = SearchGlobalExpr(null, selectedExpression.superClass); // Should be superior class
-					AddAllClassMembers(dt, ref rl, false, icons);
+					AddAllClassMembers(dt, ref rl, false);
 				}
 			}
 		}
 
-		public static void AddAllClassMembers(DataType selectedExpression, ref List<ICompletionData> rl, bool all, bool exact, string searchExpr, ImageList icons)
+		public static void AddAllClassMembers(DataType selectedExpression, ref List<ICompletionData> rl, bool all, bool exact, string searchExpr)
 		{
+			ImageList icons = Form1.icons;
+
 			if (selectedExpression != null)
 			{
 				foreach (DataType ch in selectedExpression)
 				{
-					DCompletionData cd = new DCompletionData(ch, selectedExpression, icons);
+					DCompletionData cd = new DCompletionData(ch, selectedExpression);
 					if (exact)
 					{
 						if (ch.name != searchExpr) continue;
@@ -544,7 +543,7 @@ namespace D_IDE
 				if ((selectedExpression as DataType).superClass == "") return;
 				DataType dt = SearchGlobalExpr(null, (selectedExpression as DataType).superClass); // Should be superior class
 				if (dt == null) return;
-				AddAllClassMembers(dt, ref rl, all, exact, searchExpr, icons);
+				AddAllClassMembers(dt, ref rl, all, exact, searchExpr);
 			}
 		}
 

@@ -30,7 +30,6 @@
 		{
 			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-			this.icons = new System.Windows.Forms.ImageList(this.components);
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -113,7 +112,6 @@
 			this.closeAllOthersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.LineLabel = new System.Windows.Forms.ToolStripStatusLabel();
-			this.BuildProgressBar = new System.Windows.Forms.ToolStripProgressBar();
 			this.ProgressStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
 			this.TBS = new System.Windows.Forms.ToolStrip();
 			this.newPrj_TBS = new System.Windows.Forms.ToolStripButton();
@@ -144,54 +142,6 @@
 			this.statusStrip1.SuspendLayout();
 			this.TBS.SuspendLayout();
 			this.SuspendLayout();
-			// 
-			// icons
-			// 
-			this.icons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("icons.ImageStream")));
-			this.icons.TransparentColor = System.Drawing.Color.Transparent;
-			this.icons.Images.SetKeyName(0, "Icons.16x16.Enum.png");
-			this.icons.Images.SetKeyName(1, "Icons.16x16.Field.png");
-			this.icons.Images.SetKeyName(2, "Icons.16x16.Interface.png");
-			this.icons.Images.SetKeyName(3, "Icons.16x16.InternalClass.png");
-			this.icons.Images.SetKeyName(4, "Icons.16x16.InternalDelegate.png");
-			this.icons.Images.SetKeyName(5, "Icons.16x16.InternalEnum.png");
-			this.icons.Images.SetKeyName(6, "Icons.16x16.InternalEvent.png");
-			this.icons.Images.SetKeyName(7, "Icons.16x16.InternalField.png");
-			this.icons.Images.SetKeyName(8, "Icons.16x16.InternalIndexer.png");
-			this.icons.Images.SetKeyName(9, "Icons.16x16.InternalInterface.png");
-			this.icons.Images.SetKeyName(10, "Icons.16x16.InternalMethod.png");
-			this.icons.Images.SetKeyName(11, "Icons.16x16.InternalProperty.png");
-			this.icons.Images.SetKeyName(12, "Icons.16x16.InternalStruct.png");
-			this.icons.Images.SetKeyName(13, "Icons.16x16.Literal.png");
-			this.icons.Images.SetKeyName(14, "Icons.16x16.Method.png");
-			this.icons.Images.SetKeyName(15, "Icons.16x16.Parameter.png");
-			this.icons.Images.SetKeyName(16, "Icons.16x16.PrivateClass.png");
-			this.icons.Images.SetKeyName(17, "Icons.16x16.PrivateDelegate.png");
-			this.icons.Images.SetKeyName(18, "Icons.16x16.PrivateEnum.png");
-			this.icons.Images.SetKeyName(19, "Icons.16x16.PrivateEvent.png");
-			this.icons.Images.SetKeyName(20, "Icons.16x16.PrivateField.png");
-			this.icons.Images.SetKeyName(21, "Icons.16x16.PrivateIndexer.png");
-			this.icons.Images.SetKeyName(22, "Icons.16x16.PrivateInterface.png");
-			this.icons.Images.SetKeyName(23, "Icons.16x16.PrivateMethod.png");
-			this.icons.Images.SetKeyName(24, "Icons.16x16.PrivateProperty.png");
-			this.icons.Images.SetKeyName(25, "Icons.16x16.PrivateStruct.png");
-			this.icons.Images.SetKeyName(26, "Icons.16x16.Property.png");
-			this.icons.Images.SetKeyName(27, "Icons.16x16.ProtectedClass.png");
-			this.icons.Images.SetKeyName(28, "Icons.16x16.ProtectedDelegate.png");
-			this.icons.Images.SetKeyName(29, "Icons.16x16.ProtectedEnum.png");
-			this.icons.Images.SetKeyName(30, "Icons.16x16.ProtectedEvent.png");
-			this.icons.Images.SetKeyName(31, "Icons.16x16.ProtectedField.png");
-			this.icons.Images.SetKeyName(32, "Icons.16x16.ProtectedIndexer.png");
-			this.icons.Images.SetKeyName(33, "Icons.16x16.ProtectedInterface.png");
-			this.icons.Images.SetKeyName(34, "Icons.16x16.ProtectedMethod.png");
-			this.icons.Images.SetKeyName(35, "Icons.16x16.ProtectedProperty.png");
-			this.icons.Images.SetKeyName(36, "Icons.16x16.ProtectedStruct.png");
-			this.icons.Images.SetKeyName(37, "Icons.16x16.Struct.png");
-			this.icons.Images.SetKeyName(38, "Icons.16x16.Local.png");
-			this.icons.Images.SetKeyName(39, "Icons.16x16.Class.png");
-			this.icons.Images.SetKeyName(40, "Icons.16x16.Delegate.png");
-			this.icons.Images.SetKeyName(41, "code");
-			this.icons.Images.SetKeyName(42, "namespace");
 			// 
 			// menuStrip1
 			// 
@@ -832,7 +782,6 @@
 			// 
 			this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.LineLabel,
-            this.BuildProgressBar,
             this.ProgressStatusLabel});
 			this.statusStrip1.Location = new System.Drawing.Point(0, 655);
 			this.statusStrip1.Name = "statusStrip1";
@@ -848,13 +797,6 @@
 			this.LineLabel.Size = new System.Drawing.Size(130, 17);
 			this.LineLabel.Text = "Line 999999";
 			this.LineLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// BuildProgressBar
-			// 
-			this.BuildProgressBar.Name = "BuildProgressBar";
-			this.BuildProgressBar.Size = new System.Drawing.Size(100, 16);
-			this.BuildProgressBar.Step = 1;
-			this.BuildProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
 			// 
 			// ProgressStatusLabel
 			// 
@@ -1148,7 +1090,7 @@
 		private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
-		public System.Windows.Forms.ImageList icons;
+		public static System.Windows.Forms.ImageList icons;
 		private System.Windows.Forms.ToolStripMenuItem projectToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem dSourceFileToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
@@ -1212,7 +1154,6 @@
         private System.Windows.Forms.ToolStripButton toolStripButton1;
 		private System.Windows.Forms.ToolStripSeparator sep_TBS2;
 		private System.Windows.Forms.ToolStripTextBox searchTool;
-		public System.Windows.Forms.ToolStripProgressBar BuildProgressBar;
 		private System.Windows.Forms.ToolStripButton toolStripButton2;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;
 		private System.Windows.Forms.ToolStripMenuItem openProjectDirectoryInExplorerToolStripMenuItem;

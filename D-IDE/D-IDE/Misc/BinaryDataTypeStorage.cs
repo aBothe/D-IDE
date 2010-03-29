@@ -99,11 +99,12 @@ namespace D_IDE
 				WriteString(dt.name);
 				bs.Write((int)dt.TypeToken);
 				WriteString(dt.type);
+				WriteString(dt.desc);
 				bs.Write(dt.StartLocation.X);
 				bs.Write(dt.StartLocation.Y);
 				bs.Write(dt.EndLocation.X);
 				bs.Write(dt.EndLocation.Y);
-
+				
 				bs.Write(dt.modifiers.Count);
 				foreach (int mod in dt.modifiers)
 					bs.Write(mod);
@@ -184,6 +185,8 @@ namespace D_IDE
 				DModule mod = new DModule();
 				mod.ModuleName = ReadString();
 				mod.mod_file = ReadString();
+				mod.dom.name = mod.ModuleName;
+				mod.dom.module = mod.ModuleName;
 				ReadNodes(ref mod.dom.children);
 				ret.Add(mod);
 			}
@@ -214,6 +217,7 @@ namespace D_IDE
 				dt.name = ReadString();
 				dt.TypeToken = bs.ReadInt32();
 				dt.type = ReadString();
+				dt.desc = ReadString();
 				Location startLoc = new Location();
 				startLoc.X = bs.ReadInt32();
 				startLoc.Y = bs.ReadInt32();

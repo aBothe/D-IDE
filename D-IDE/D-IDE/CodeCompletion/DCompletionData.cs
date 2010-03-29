@@ -66,11 +66,11 @@ namespace D_IDE
 			Init();
 		}
 
-		public DCompletionData(DataType data, DataType parent, ImageList icons)
+		public DCompletionData(DataType data, DataType parent)
 		{
 			this.data = data;
 			this.parent = parent;
-			this.ImageIndex = GetImageIndex(icons, parent, data);
+			this.ImageIndex = GetImageIndex(Form1.icons, parent, data);
 			Init();
 		}
 

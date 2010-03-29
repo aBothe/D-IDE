@@ -128,12 +128,8 @@ namespace D_IDE
 
 			if (!Directory.Exists("obj")) Directory.CreateDirectory("obj");
 
-			Form1.thisForm.BuildProgressBar.Value = 0;
-			Form1.thisForm.BuildProgressBar.Maximum = prj.resourceFiles.Count + 1;
-
 			if (prj.ManifestCreation == DProject.ManifestCreationType.IntegratedResource)
 			{
-				Form1.thisForm.BuildProgressBar.Maximum++;
 				string manifestFile = "Manifest.manifest";
 				string manifestRCFile = "Manifest.rc";
 				DProject.CreateManifestFile(manifestFile);
@@ -178,8 +174,6 @@ namespace D_IDE
 							catch { }
 						}
 					}
-					Form1.thisForm.BuildProgressBar.Value++;
-
 					builtfiles.Add(res);
 				}
 				#endregion
@@ -216,8 +210,6 @@ namespace D_IDE
 							catch { }
 						}
 					}
-
-					Form1.thisForm.BuildProgressBar.Value++;
 
 					builtfiles.Add(obj);
 				}
@@ -261,7 +253,6 @@ namespace D_IDE
 			if (!OneFileChanged && (File.Exists(target) || prj.EnableSubversioning))
 			{
 				OnMessage(prj, target, "Anything changed...no linking necessary!");
-				Form1.thisForm.BuildProgressBar.Value++;
 				try
 				{
 					if (prj.EnableSubversioning) Directory.Delete(prj.AbsoluteOutputDirectory, true);
@@ -283,11 +274,7 @@ namespace D_IDE
 
 			Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, true);
 			prc.WaitForExit(10000);
-			try
-			{
-				Form1.thisForm.BuildProgressBar.Value++;
-			}
-			catch { }
+
 			if (prc.ExitCode == 0)
 			{
 				// This line of code is very important for debugging!

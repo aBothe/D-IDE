@@ -97,7 +97,6 @@ namespace D_IDE
 			DParser.OnError += DParser_OnError;
 			DParser.OnSemanticError += DParser_OnSemanticError;
 
-			webclient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(wc_DownloadProgressChanged);
 			webclient.DownloadFileCompleted += new AsyncCompletedEventHandler(wc_DownloadFileCompleted);
 			webclient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(wc_DownloadStringCompleted);
 
@@ -128,8 +127,10 @@ namespace D_IDE
 			UpdateFiles();
 			#endregion
 
+			// After having loaded and shown everything, close the start screen
 			Program.StartScreen.Close();
-
+			TimeSpan tspan = DateTime.Now - Program.tdate;
+			ProgressStatusLabel.Text = "D-IDE launched in " + tspan.TotalSeconds.ToString() + " seconds";
 			if (D_IDE_Properties.Default.WatchForUpdates)
 			{
 				CheckForUpdates();
@@ -138,7 +139,7 @@ namespace D_IDE
 
 		void CodeViewToPDBConverter_Message(string Message)
 		{
-			Log("cv2pdb error: "+Message);
+			Log("cv2pdb error: " + Message);
 		}
 
 		void DBuilder_OnExit(object sender, EventArgs e)
@@ -343,8 +344,6 @@ namespace D_IDE
 			stopParsingToolStripMenuItem.Enabled = true;
 			bpw.Clear();
 			Log("Reparse all directories");
-			BuildProgressBar.Value = 0;
-			BuildProgressBar.Maximum = 0;
 
 			foreach (string dir in D_IDE_Properties.Default.parsedDirectories)
 			{
@@ -358,7 +357,6 @@ namespace D_IDE
 					continue;
 				}
 				string[] files = Directory.GetFiles(dir, "*.d?", SearchOption.AllDirectories);
-				BuildProgressBar.Maximum += files.Length;
 				foreach (string tf in files)
 				{
 					if (tf.EndsWith("phobos.d")) continue; // Skip phobos.d
@@ -372,10 +370,10 @@ namespace D_IDE
 						gpf.ModuleName = tmodule;
 
 						D_IDE_Properties.AddFileData(ret, gpf);
-						BuildProgressBar.Value++;
 					}
 					catch (Exception ex)
 					{
+						if (Debugger.IsAttached) throw ex;
 						Log(tf);
 						if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n\n\n" + ex.StackTrace, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
 						{
@@ -386,7 +384,6 @@ namespace D_IDE
 				}
 			}
 			Log(ProgressStatusLabel.Text = "Parsing done!");
-			BuildProgressBar.Value = 0;
 			stopParsingToolStripMenuItem.Enabled = false;
 			DModule.ClearErrorLogBeforeParsing = true;
 			lock (D_IDE_Properties.GlobalModules)
@@ -394,7 +391,7 @@ namespace D_IDE
 				D_IDE_Properties.GlobalModules = ret;
 
 				D_IDE_Properties.GlobalCompletionList.Clear();
-				DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList, icons);
+				DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList);
 			}
 		}
 
@@ -807,7 +804,7 @@ namespace D_IDE
 					D_IDE_Properties.AddFileData(mtp.fileData);
 
 					D_IDE_Properties.GlobalCompletionList.Clear();
-					DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList, icons);
+					DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList);
 
 					break;
 				}
@@ -1016,6 +1013,62 @@ namespace D_IDE
 		}
 
 		#region GUI actions
+
+		public static ImageList InitCodeCompletionIcons()
+		{
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+			icons = new ImageList();
+			// 
+			// icons
+			// 
+			icons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("icons.ImageStream")));
+			icons.TransparentColor = System.Drawing.Color.Transparent;
+			icons.Images.SetKeyName(0, "Icons.16x16.Enum.png");
+			icons.Images.SetKeyName(1, "Icons.16x16.Field.png");
+			icons.Images.SetKeyName(2, "Icons.16x16.Interface.png");
+			icons.Images.SetKeyName(3, "Icons.16x16.InternalClass.png");
+			icons.Images.SetKeyName(4, "Icons.16x16.InternalDelegate.png");
+			icons.Images.SetKeyName(5, "Icons.16x16.InternalEnum.png");
+			icons.Images.SetKeyName(6, "Icons.16x16.InternalEvent.png");
+			icons.Images.SetKeyName(7, "Icons.16x16.InternalField.png");
+			icons.Images.SetKeyName(8, "Icons.16x16.InternalIndexer.png");
+			icons.Images.SetKeyName(9, "Icons.16x16.InternalInterface.png");
+			icons.Images.SetKeyName(10, "Icons.16x16.InternalMethod.png");
+			icons.Images.SetKeyName(11, "Icons.16x16.InternalProperty.png");
+			icons.Images.SetKeyName(12, "Icons.16x16.InternalStruct.png");
+			icons.Images.SetKeyName(13, "Icons.16x16.Literal.png");
+			icons.Images.SetKeyName(14, "Icons.16x16.Method.png");
+			icons.Images.SetKeyName(15, "Icons.16x16.Parameter.png");
+			icons.Images.SetKeyName(16, "Icons.16x16.PrivateClass.png");
+			icons.Images.SetKeyName(17, "Icons.16x16.PrivateDelegate.png");
+			icons.Images.SetKeyName(18, "Icons.16x16.PrivateEnum.png");
+			icons.Images.SetKeyName(19, "Icons.16x16.PrivateEvent.png");
+			icons.Images.SetKeyName(20, "Icons.16x16.PrivateField.png");
+			icons.Images.SetKeyName(21, "Icons.16x16.PrivateIndexer.png");
+			icons.Images.SetKeyName(22, "Icons.16x16.PrivateInterface.png");
+			icons.Images.SetKeyName(23, "Icons.16x16.PrivateMethod.png");
+			icons.Images.SetKeyName(24, "Icons.16x16.PrivateProperty.png");
+			icons.Images.SetKeyName(25, "Icons.16x16.PrivateStruct.png");
+			icons.Images.SetKeyName(26, "Icons.16x16.Property.png");
+			icons.Images.SetKeyName(27, "Icons.16x16.ProtectedClass.png");
+			icons.Images.SetKeyName(28, "Icons.16x16.ProtectedDelegate.png");
+			icons.Images.SetKeyName(29, "Icons.16x16.ProtectedEnum.png");
+			icons.Images.SetKeyName(30, "Icons.16x16.ProtectedEvent.png");
+			icons.Images.SetKeyName(31, "Icons.16x16.ProtectedField.png");
+			icons.Images.SetKeyName(32, "Icons.16x16.ProtectedIndexer.png");
+			icons.Images.SetKeyName(33, "Icons.16x16.ProtectedInterface.png");
+			icons.Images.SetKeyName(34, "Icons.16x16.ProtectedMethod.png");
+			icons.Images.SetKeyName(35, "Icons.16x16.ProtectedProperty.png");
+			icons.Images.SetKeyName(36, "Icons.16x16.ProtectedStruct.png");
+			icons.Images.SetKeyName(37, "Icons.16x16.Struct.png");
+			icons.Images.SetKeyName(38, "Icons.16x16.Local.png");
+			icons.Images.SetKeyName(39, "Icons.16x16.Class.png");
+			icons.Images.SetKeyName(40, "Icons.16x16.Delegate.png");
+			icons.Images.SetKeyName(41, "code");
+			icons.Images.SetKeyName(42, "namespace");
+
+			return icons;
+		}
 
 		private void setDefaultPanelLayout(object sender, EventArgs e)
 		{
@@ -1307,7 +1360,6 @@ namespace D_IDE
 
 		void wc_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
 		{
-			BuildProgressBar.Style = ProgressBarStyle.Continuous;
 			if (e.Cancelled)
 			{
 				MessageBox.Show("Error: " + e.Error.Message);
@@ -1315,16 +1367,6 @@ namespace D_IDE
 			}
 			MessageBox.Show(Path.GetFileName((string)e.UserState) + " successfully downloaded!");
 			ProgressStatusLabel.Text = "Ready";
-		}
-
-		void wc_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
-		{
-			try
-			{
-				BuildProgressBar.Maximum = 100;
-				BuildProgressBar.Value = e.ProgressPercentage;
-			}
-			catch { }
 		}
 
 		private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1352,7 +1394,6 @@ namespace D_IDE
 			if (upd_sf.ShowDialog() == DialogResult.OK)
 			{
 				ProgressStatusLabel.Text = "Downloading D-IDE.tar.gz";
-				BuildProgressBar.Style = ProgressBarStyle.Marquee;
 				try
 				{
 					webclient.DownloadFileAsync(new Uri("http://d-ide.svn.sourceforge.net/viewvc/d-ide/D-IDE/D-IDE/bin/Debug.tar.gz?view=tar"), upd_sf.FileName, upd_sf.FileName);
