@@ -42,9 +42,10 @@
 			this.ShowIcon = false;
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "CachingScreen";
+			this.Text = "D-IDE Launch";
 			this.TopMost = true;
 			this.TransparencyKey = System.Drawing.Color.White;
+			this.Shown += new System.EventHandler(this.CachingScreen_Shown);
 			this.ResumeLayout(false);
 
 		}

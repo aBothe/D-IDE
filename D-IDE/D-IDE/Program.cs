@@ -7,7 +7,7 @@ namespace D_IDE
 {
 	static class Program
 	{
-		public static string UserDocStorageFile = Application.StartupPath+"\\SettingsAreAtUserDocs";
+		public static string UserDocStorageFile = Application.StartupPath + "\\SettingsAreAtUserDocs";
 		public static string cfgDirName = "D-IDE.config";
 		public static string cfgDir;
 		public static string prop_file = "D-IDE.settings.xml";
@@ -18,41 +18,40 @@ namespace D_IDE
 		public static App app;
 		public static bool Parsing = false;
 
+		public static CachingScreen StartScreen;
+
 		[STAThread]
 		static void Main(string[] args)
 		{
-			//try			{
+			Application.EnableVisualStyles();
+			Application.SetCompatibleTextRenderingDefault(false);
+			app = new App();
 
-				Application.EnableVisualStyles();
-				Application.SetCompatibleTextRenderingDefault(false);
-				app = new App();
+			// Show startup popup
+			StartScreen = new CachingScreen();
+			StartScreen.Show();
 
-				if (!File.Exists(UserDocStorageFile))
-				{
-					cfgDir = Application.StartupPath + "\\" + cfgDirName;
-				}
-				else
-					cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + cfgDirName;
-
-				if (!Directory.Exists(Program.cfgDir))
-					DBuilder.CreateDirectoryRecursively(Program.cfgDir);
-
-				try
-				{
-					D_IDE_Properties.Load(cfgDir + "\\" + prop_file);
-					D_IDE_Properties.LoadGlobalCache(cfgDir + "\\" + ModuleCacheFile);
-				}
-				catch(Exception ex)
-				{
-					MessageBox.Show(ex.Message + " (" + ex.Source + ")" + "\n\n" + ex.StackTrace, "Error while loading global settings");
-				}
-
-				app.Run(args);
-			/*}
-			catch(Exception ex)
+			if (!File.Exists(UserDocStorageFile))
 			{
-				MessageBox.Show(ex.Message + " (" + ex.Source + ")" + "\n\n" + ex.StackTrace, "Error while initalizing application");
-			}*/
+				cfgDir = Application.StartupPath + "\\" + cfgDirName;
+			}
+			else
+				cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + cfgDirName;
+
+			if (!Directory.Exists(Program.cfgDir))
+				DBuilder.CreateDirectoryRecursively(Program.cfgDir);
+
+			try
+			{
+				D_IDE_Properties.Load(cfgDir + "\\" + prop_file);
+				D_IDE_Properties.LoadGlobalCache(cfgDir + "\\" + ModuleCacheFile);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.Message + " (" + ex.Source + ")" + "\n\n" + ex.StackTrace, "Error while loading global settings");
+			}
+
+			app.Run(args);
 		}
 	}
 
@@ -99,7 +98,7 @@ namespace D_IDE
 			base.OnStartupNextInstance(e);
 
 			e.BringToForeground = true;
-			foreach(string file in e.CommandLine)
+			foreach (string file in e.CommandLine)
 				Form1.thisForm.Open(file);
 		}
 	}

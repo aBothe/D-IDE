@@ -128,6 +128,8 @@ namespace D_IDE
 			UpdateFiles();
 			#endregion
 
+			Program.StartScreen.Close();
+
 			if (D_IDE_Properties.Default.WatchForUpdates)
 			{
 				CheckForUpdates();

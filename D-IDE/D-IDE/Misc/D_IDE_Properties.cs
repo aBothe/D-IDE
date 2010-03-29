@@ -386,9 +386,6 @@ namespace D_IDE
 
 			cacheTh = new Thread(delegate(object o)
 			{
-				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
-				cscr.Show();
-
 				BinaryDataTypeStorageReader bsr = new BinaryDataTypeStorageReader(file);
 				try
 				{
@@ -396,8 +393,6 @@ namespace D_IDE
 				}
 				catch (Exception ex) { MessageBox.Show(ex.Message); }
 				bsr.Close();
-
-				cscr.Close();
 
 				// add all loaded data to the precached completion list
 				D_IDE_Properties.GlobalCompletionList.Clear();
@@ -411,7 +406,6 @@ namespace D_IDE
 		}
 
 		static Thread cacheTh;
-		static CachingScreen cscr;
 		public static void SaveGlobalCache(string file)
 		{
 			if (cacheTh != null && cacheTh.IsAlive) return;
@@ -422,15 +416,13 @@ namespace D_IDE
 
 			cacheTh = new Thread(delegate(object o)
 			{
-				if (cscr == null || cscr.IsDisposed) cscr = new CachingScreen();
-				cscr.Show();
-
 				BinaryDataTypeStorageWriter bsw = new BinaryDataTypeStorageWriter(file);
 				bsw.WriteModules(Default.parsedDirectories.ToArray(),GlobalModules);
 				bsw.Close();
 
 				Program.Parsing = false;
-			}); cacheTh.Start();
+			});
+			cacheTh.Start();
 		}
 		#endregion
 
