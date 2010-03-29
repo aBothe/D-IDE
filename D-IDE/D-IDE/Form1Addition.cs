@@ -358,6 +358,17 @@ namespace D_IDE
 			string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(ta.Document.TextContent, ref off, out ctor, false);
 			if (exprs == null || exprs.Length < 1) return;
 
+			if (exprs[0] == "__FILE__")
+			{
+				e.ShowToolTip(fileData.FileName);
+				return;
+			}
+			if (exprs[0] == "__LINE__")
+			{
+				e.ShowToolTip((e.LogicalPosition.Line+1).ToString());
+				return;
+			}
+
 			int key = DKeywords.GetToken(exprs[0]);
 			if (key != -1 && key != DTokens.This && key != DTokens.Super)
 			{
