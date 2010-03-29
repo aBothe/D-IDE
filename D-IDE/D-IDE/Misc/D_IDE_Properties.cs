@@ -392,7 +392,7 @@ namespace D_IDE
 				BinaryDataTypeStorageReader bsr = new BinaryDataTypeStorageReader(file);
 				try
 				{
-					GlobalModules = bsr.ReadModules();
+					GlobalModules = bsr.ReadModules(ref Default.parsedDirectories);
 				}
 				catch (Exception ex) { MessageBox.Show(ex.Message); }
 				bsr.Close();
@@ -426,7 +426,7 @@ namespace D_IDE
 				cscr.Show();
 
 				BinaryDataTypeStorageWriter bsw = new BinaryDataTypeStorageWriter(file);
-				bsw.WriteModules(GlobalModules);
+				bsw.WriteModules(Default.parsedDirectories.ToArray(),GlobalModules);
 				bsw.Close();
 
 				Program.Parsing = false;

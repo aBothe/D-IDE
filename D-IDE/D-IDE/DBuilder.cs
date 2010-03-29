@@ -300,7 +300,7 @@ namespace D_IDE
 				// Create program database (pdb) file from CodeView data from the target exe
 				if (IsDebug&&D_IDE_Properties.Default.CreatePDBOnBuild)
 				{
-					string pdb = prj.basedir + "\\" + Path.GetFileNameWithoutExtension(target) + ".pdb";
+					string pdb = Path.ChangeExtension(target,".pdb") ;
 					OnMessage(prj,pdb,"Create debug information database "+pdb);
 					CodeViewToPDB.CodeViewToPDBConverter.DoConvert(target, pdb);
 				}

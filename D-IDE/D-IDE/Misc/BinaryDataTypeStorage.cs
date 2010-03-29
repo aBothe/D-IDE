@@ -49,13 +49,21 @@ namespace D_IDE
 		#endregion
 
 		#region Modules
-		public void WriteModules(DModule[] Modules) { WriteModules(new List<DModule>(Modules)); }
+		public void WriteModules(string[] ParsedDirectories, DModule[] Modules) { WriteModules(ParsedDirectories,new List<DModule>(Modules)); }
 
-		public void WriteModules(List<DModule> Modules)
+		public void WriteModules(string[] ParsedDirectories,List<DModule> Modules)
 		{
 			BinaryWriter bs = BinStream;
 
 			bs.Write(Modules.Count); // To know how many modules we've saved
+
+			if (ParsedDirectories != null)
+			{
+				bs.Write((uint)ParsedDirectories.Length);
+				foreach (string dir in ParsedDirectories)
+					WriteString(dir);
+			}
+			else bs.Write((uint)0);
 
 			foreach (DModule mod in Modules)
 			{
@@ -144,12 +152,26 @@ namespace D_IDE
 		#endregion
 
 		#region Modules
-		public List<DModule> ReadModules()
+		public List<DModule> ReadModules(ref List<string> ParsedDirectories)
 		{
 			BinaryReader bs = BinStream;
 
 			int Count = bs.ReadInt32();
 			List<DModule> ret = new List<DModule>(Count); // Speed improvement caused by given number of modules
+
+			uint DirCount = bs.ReadUInt32();
+			if (DirCount == BinaryDataTypeStorageWriter.ModuleInitializer)
+			{
+				bs.BaseStream.Seek(-4,SeekOrigin.Current); // Go back to module initializer
+			}
+			else
+			{
+				for (int i = 0; i < DirCount; i++)
+				{
+					string dir = ReadString();
+					if(!ParsedDirectories.Contains(dir))ParsedDirectories.Add(dir);
+				}
+			}
 
 			for (int i = 0; i < Count;i++ )
 			{
