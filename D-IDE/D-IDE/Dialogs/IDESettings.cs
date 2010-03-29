@@ -40,11 +40,18 @@ namespace D_IDE
 			dbg_exe.Text = D_IDE_Properties.Default.exe_dbg;
 			UseIntegDbg.Checked = D_IDE_Properties.Default.UseExternalDebugger;
 
+			cmp_to_obj_dbg.Text = D_IDE_Properties.Default.cmp_obj_dbg;
+			link_win_exe_dbg.Text = D_IDE_Properties.Default.link_win_exe_dbg;
+			link_to_exe_dbg.Text = D_IDE_Properties.Default.link_to_exe_dbg;
+			link_to_dll_dbg.Text = D_IDE_Properties.Default.link_to_dll_dbg;
+			link_to_lib_dbg.Text = D_IDE_Properties.Default.link_to_lib_dbg;
+
 			cmp_to_obj.Text = D_IDE_Properties.Default.cmp_obj;
 			link_win_exe.Text = D_IDE_Properties.Default.link_win_exe;
 			link_to_exe.Text = D_IDE_Properties.Default.link_to_exe;
 			link_to_dll.Text = D_IDE_Properties.Default.link_to_dll;
 			link_to_lib.Text = D_IDE_Properties.Default.link_to_lib;
+
 			rc.Text = D_IDE_Properties.Default.cmp_res;
 			dbg_args.Text = D_IDE_Properties.Default.dbg_args;
 
@@ -100,11 +107,18 @@ namespace D_IDE
 				File.Delete(Program.UserDocStorageFile);
 			}
 
+			D_IDE_Properties.Default.cmp_obj_dbg = cmp_to_obj_dbg.Text;
+			D_IDE_Properties.Default.link_win_exe_dbg = link_win_exe_dbg.Text;
+			D_IDE_Properties.Default.link_to_exe_dbg = link_to_exe_dbg.Text;
+			D_IDE_Properties.Default.link_to_dll_dbg = link_to_dll_dbg.Text;
+			D_IDE_Properties.Default.link_to_lib_dbg = link_to_lib_dbg.Text;
+
 			D_IDE_Properties.Default.cmp_obj = cmp_to_obj.Text;
 			D_IDE_Properties.Default.link_win_exe = link_win_exe.Text;
 			D_IDE_Properties.Default.link_to_exe = link_to_exe.Text;
 			D_IDE_Properties.Default.link_to_dll = link_to_dll.Text;
 			D_IDE_Properties.Default.link_to_lib = link_to_lib.Text;
+
 			D_IDE_Properties.Default.cmp_res = rc.Text;
 			D_IDE_Properties.Default.dbg_args = dbg_args.Text;
 

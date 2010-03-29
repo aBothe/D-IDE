@@ -477,8 +477,6 @@ namespace D_IDE
 
 			if (D_IDE_Properties.Default.LogBuildProgress) bpw.Show();
 
-			Log("Build entire project now");
-
 			return DBuilder.BuildProject(prj);
 		}
 

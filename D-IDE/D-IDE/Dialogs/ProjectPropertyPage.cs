@@ -38,7 +38,7 @@ namespace D_IDE
 		private Label label6;
 		private Label label5;
 		private TextBox cpargs;
-		private CheckBox checkBox1;
+		private CheckBox IsReleaseBuild;
 		private GroupBox groupBox3;
 		private TextBox execargs;
 		private TabPage tabPage3;
@@ -60,7 +60,7 @@ namespace D_IDE
 		private Button button12;
 		public DProject lastProject;
 		private Button button13;
-		private TextBox OutputDir;
+		private TextBox OutputDir_dbg;
 		private ListBox FileDeps;
 		private CheckBox SubversioningEnabled;
 		private CheckBox StoreLastSources;
@@ -74,6 +74,9 @@ namespace D_IDE
 		private System.ComponentModel.IContainer components;
 		private ComboBox ManifestCreation;
 		private GroupBox Subversioning;
+		private Label label9;
+		private Button button16;
+		private TextBox OutputDir;
 		public DProject project;
 
 		public new void Load(DProject prj)
@@ -86,9 +89,10 @@ namespace D_IDE
 			prjtype.SelectedIndex = (int)prj.type;
 			tarfile.Text = prj.targetfilename;
 			prjdir.Text = prj.basedir;
+			OutputDir_dbg.Text = prj.OutputDirectory_dbg;
 			OutputDir.Text = prj.OutputDirectory;
 
-			checkBox1.Checked = prj.isRelease;
+			IsReleaseBuild.Checked = prj.isRelease;
 			cpargs.Text = prj.compileargs;
 			lnkargs.Text = prj.linkargs;
 
@@ -149,7 +153,8 @@ namespace D_IDE
 			prj.targetfilename = tarfile.Text;
 			prj.basedir = prjdir.Text;
 			prj.OutputDirectory = OutputDir.Text;
-			prj.isRelease = checkBox1.Checked;
+			prj.OutputDirectory_dbg = OutputDir_dbg.Text;
+			prj.isRelease = IsReleaseBuild.Checked;
 			prj.compileargs = cpargs.Text;
 			prj.linkargs = lnkargs.Text;
 
@@ -333,8 +338,11 @@ namespace D_IDE
 			this.button1 = new System.Windows.Forms.Button();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPage1 = new System.Windows.Forms.TabPage();
-			this.button13 = new System.Windows.Forms.Button();
+			this.label9 = new System.Windows.Forms.Label();
+			this.button16 = new System.Windows.Forms.Button();
 			this.OutputDir = new System.Windows.Forms.TextBox();
+			this.button13 = new System.Windows.Forms.Button();
+			this.OutputDir_dbg = new System.Windows.Forms.TextBox();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
 			this.Subversioning = new System.Windows.Forms.GroupBox();
 			this.SubversioningEnabled = new System.Windows.Forms.CheckBox();
@@ -347,7 +355,7 @@ namespace D_IDE
 			this.label6 = new System.Windows.Forms.Label();
 			this.label5 = new System.Windows.Forms.Label();
 			this.cpargs = new System.Windows.Forms.TextBox();
-			this.checkBox1 = new System.Windows.Forms.CheckBox();
+			this.IsReleaseBuild = new System.Windows.Forms.CheckBox();
 			this.groupBox3 = new System.Windows.Forms.GroupBox();
 			this.execargs = new System.Windows.Forms.TextBox();
 			this.tabPage3 = new System.Windows.Forms.TabPage();
@@ -432,9 +440,9 @@ namespace D_IDE
 			label7.AutoSize = true;
 			label7.Location = new System.Drawing.Point(6, 120);
 			label7.Name = "label7";
-			label7.Size = new System.Drawing.Size(84, 13);
+			label7.Size = new System.Drawing.Size(93, 13);
 			label7.TabIndex = 15;
-			label7.Text = "Output Directory";
+			label7.Text = "Debug Output Dir.";
 			// 
 			// button3
 			// 
@@ -519,9 +527,12 @@ namespace D_IDE
 			// 
 			// tabPage1
 			// 
+			this.tabPage1.Controls.Add(this.label9);
+			this.tabPage1.Controls.Add(this.button16);
+			this.tabPage1.Controls.Add(this.OutputDir);
 			this.tabPage1.Controls.Add(this.button13);
 			this.tabPage1.Controls.Add(label7);
-			this.tabPage1.Controls.Add(this.OutputDir);
+			this.tabPage1.Controls.Add(this.OutputDir_dbg);
 			this.tabPage1.Controls.Add(this.button3);
 			this.tabPage1.Controls.Add(label1);
 			this.tabPage1.Controls.Add(label3);
@@ -539,6 +550,35 @@ namespace D_IDE
 			this.tabPage1.Text = "General";
 			this.tabPage1.UseVisualStyleBackColor = true;
 			// 
+			// label9
+			// 
+			this.label9.AutoSize = true;
+			this.label9.Location = new System.Drawing.Point(6, 146);
+			this.label9.Name = "label9";
+			this.label9.Size = new System.Drawing.Size(100, 13);
+			this.label9.TabIndex = 19;
+			this.label9.Text = "Release Output Dir.";
+			// 
+			// button16
+			// 
+			this.button16.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.button16.Location = new System.Drawing.Point(639, 141);
+			this.button16.Name = "button16";
+			this.button16.Size = new System.Drawing.Size(26, 23);
+			this.button16.TabIndex = 18;
+			this.button16.Text = "...";
+			this.button16.UseVisualStyleBackColor = true;
+			this.button16.Click += new System.EventHandler(this.button16_Click);
+			// 
+			// OutputDir
+			// 
+			this.OutputDir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.OutputDir.Location = new System.Drawing.Point(132, 143);
+			this.OutputDir.Name = "OutputDir";
+			this.OutputDir.Size = new System.Drawing.Size(501, 20);
+			this.OutputDir.TabIndex = 17;
+			// 
 			// button13
 			// 
 			this.button13.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -550,14 +590,14 @@ namespace D_IDE
 			this.button13.UseVisualStyleBackColor = true;
 			this.button13.Click += new System.EventHandler(this.button13_Click);
 			// 
-			// OutputDir
+			// OutputDir_dbg
 			// 
-			this.OutputDir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+			this.OutputDir_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
-			this.OutputDir.Location = new System.Drawing.Point(132, 117);
-			this.OutputDir.Name = "OutputDir";
-			this.OutputDir.Size = new System.Drawing.Size(501, 20);
-			this.OutputDir.TabIndex = 14;
+			this.OutputDir_dbg.Location = new System.Drawing.Point(132, 117);
+			this.OutputDir_dbg.Name = "OutputDir_dbg";
+			this.OutputDir_dbg.Size = new System.Drawing.Size(501, 20);
+			this.OutputDir_dbg.TabIndex = 14;
 			// 
 			// tabPage2
 			// 
@@ -644,7 +684,7 @@ namespace D_IDE
 			this.groupBox4.Controls.Add(this.label6);
 			this.groupBox4.Controls.Add(this.label5);
 			this.groupBox4.Controls.Add(this.cpargs);
-			this.groupBox4.Controls.Add(this.checkBox1);
+			this.groupBox4.Controls.Add(this.IsReleaseBuild);
 			this.groupBox4.Location = new System.Drawing.Point(6, 60);
 			this.groupBox4.Name = "groupBox4";
 			this.groupBox4.Size = new System.Drawing.Size(425, 122);
@@ -688,15 +728,15 @@ namespace D_IDE
 			this.cpargs.Size = new System.Drawing.Size(413, 20);
 			this.cpargs.TabIndex = 6;
 			// 
-			// checkBox1
+			// IsReleaseBuild
 			// 
-			this.checkBox1.AutoSize = true;
-			this.checkBox1.Location = new System.Drawing.Point(6, 19);
-			this.checkBox1.Name = "checkBox1";
-			this.checkBox1.Size = new System.Drawing.Size(102, 17);
-			this.checkBox1.TabIndex = 5;
-			this.checkBox1.Text = "Is Release Build";
-			this.checkBox1.UseVisualStyleBackColor = true;
+			this.IsReleaseBuild.AutoSize = true;
+			this.IsReleaseBuild.Location = new System.Drawing.Point(6, 19);
+			this.IsReleaseBuild.Name = "IsReleaseBuild";
+			this.IsReleaseBuild.Size = new System.Drawing.Size(102, 17);
+			this.IsReleaseBuild.TabIndex = 5;
+			this.IsReleaseBuild.Text = "Is Release Build";
+			this.IsReleaseBuild.UseVisualStyleBackColor = true;
 			// 
 			// groupBox3
 			// 
@@ -1092,16 +1132,25 @@ namespace D_IDE
 
 		private void button13_Click(object sender, EventArgs e)
 		{
-			fD.SelectedPath = prjdir.Text;
+			fD.SelectedPath = Path.IsPathRooted( OutputDir_dbg.Text)?OutputDir_dbg.Text:(prjdir.Text+"\\"+OutputDir_dbg.Text);
 			if (fD.ShowDialog() == DialogResult.OK)
 			{
-				OutputDir.Text = GetRelativePath(fD.SelectedPath);
+				OutputDir_dbg.Text = GetRelativePath(fD.SelectedPath);
 			}
 		}
 
 		private void textBox1_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (!Char.IsDigit((char)e.KeyValue)) e.SuppressKeyPress = true;
+		}
+
+		private void button16_Click(object sender, EventArgs e)
+		{
+			fD.SelectedPath = Path.IsPathRooted(OutputDir.Text) ? OutputDir.Text : (prjdir.Text + "\\" + OutputDir.Text);
+			if (fD.ShowDialog() == DialogResult.OK)
+			{
+				OutputDir.Text = GetRelativePath(fD.SelectedPath);
+			}
 		}
 
 		

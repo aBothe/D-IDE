@@ -61,7 +61,7 @@ namespace D_IDE
 
 		public bool isRelease;
 
-		public bool EnableSubversioning = true;
+		public bool EnableSubversioning = false; // Shall this stay activated by default?
 		public bool AlsoStoreSources = true;
 		public int LastVersionCount = 10;
 		public string LastBuiltTarget = "";
@@ -79,26 +79,29 @@ namespace D_IDE
 		public PrjType type;
 		public string name;
 		public string targetfilename;
-		public string OutputDirectory = "bin";
+		public string OutputDirectory = "bin\\Release";
+		public string OutputDirectory_dbg = "bin\\Debug";
 		public string AbsoluteOutputDirectory
 		{
 			get
 			{
+				string od = isRelease ? OutputDirectory : OutputDirectory_dbg;
 				string add = "";
 				if (EnableSubversioning)
 				{
 					add = "\\" + LastBuildDate.ToString().Replace(':', '-').Replace('/','.');
 				}
-				if (Path.IsPathRooted(OutputDirectory)) return OutputDirectory + add;
-				return basedir + "\\" + OutputDirectory + add;
+				if (Path.IsPathRooted(od)) return od + add;
+				return basedir + "\\" + od + add;
 			}
 		}
 		public string AbsoluteOutputDirectoryWithoutSVN
 		{
 			get
 			{
-				if (Path.IsPathRooted(OutputDirectory)) return OutputDirectory;
-				return basedir + "\\" + OutputDirectory;
+				string od = isRelease ? OutputDirectory : OutputDirectory_dbg;
+				if (Path.IsPathRooted(od)) return od;
+				return basedir + "\\" + od;
 			}
 		}
 
@@ -352,6 +355,10 @@ namespace D_IDE
 								xr.Read();
 								ret.OutputDirectory = xr.ReadString();
 								break;
+							case "dbgoutputdirectory":
+								xr.Read();
+								ret.OutputDirectory_dbg = xr.ReadString();
+								break;
 
 							case "files":
 								if (ret.resourceFiles == null)
@@ -542,6 +549,13 @@ namespace D_IDE
 			{
 				xw.WriteStartElement("outputdirectory");
 				xw.WriteCData(OutputDirectory);
+				xw.WriteEndElement();
+			}
+
+			if (!String.IsNullOrEmpty(OutputDirectory_dbg))
+			{
+				xw.WriteStartElement("dbgoutputdirectory");
+				xw.WriteCData(OutputDirectory_dbg);
 				xw.WriteEndElement();
 			}
 

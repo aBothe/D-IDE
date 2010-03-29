@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data.SQLite;
@@ -147,7 +148,7 @@ namespace D_IDE
 			ret.TypeToken = (int)(long)dr["typetoken"];
 			ret.type = (string)dr["type"];
 			long parid = (long)dr["parent"];
-			ret.parent = parent;//RawNodes.ContainsKey(parid)?RawNodes[parid]:/*ReadNode(parid)*/;
+			ret.parent = parent;//RawNodes.ContainsKey(parid)?RawNodes[parid]:ReadNode(parid);
 
 			string[] ts = ((string)dr["location"]).Split(';');
 			ret.StartLocation = new Location(Convert.ToInt32(ts[0]), Convert.ToInt32(ts[1]));
@@ -324,3 +325,4 @@ namespace D_IDE
 		#endregion
 	}
 }
+*/

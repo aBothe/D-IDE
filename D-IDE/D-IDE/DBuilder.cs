@@ -53,6 +53,7 @@ namespace D_IDE
 			prj.RefreshBuildDate();
 
 			List<string> builtfiles = new List<string>();
+			bool IsDebug = !prj.isRelease;
 			string args = "";
 			bool OneFileChanged = String.IsNullOrEmpty(prj.LastBuiltTarget);
 
@@ -185,7 +186,7 @@ namespace D_IDE
 				#region Compile D Sources
 				else if (DModule.Parsable(rc))
 				{
-					string obj = "obj\\" + tdirname + Path.GetFileNameWithoutExtension(rc) + ".obj";
+					string obj = "obj\\" + tdirname + Path.GetFileNameWithoutExtension(rc)+ (IsDebug?"_dbg":String.Empty) + ".obj";
 
 					if (prj.LastModifyingDates.ContainsKey(phys_rc) &&
 						prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
@@ -199,7 +200,7 @@ namespace D_IDE
 						Form1.thisForm.ProgressStatusLabel.Text = "Compiling " + Path.GetFileName(rc);
 
 						OneFileChanged = true;
-						if (!BuildObjFile(rc, obj, prj.basedir, prj.compileargs)) return false;
+						if (!BuildObjFile(rc, obj, prj.basedir, prj.compileargs,IsDebug)) return false;
 
 						if (!prj.LastModifyingDates.ContainsKey(phys_rc))
 							prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
@@ -229,7 +230,7 @@ namespace D_IDE
 			string target = prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null);
 			string objs = "";
 			string libs = "";
-
+			
 			foreach (string f in builtfiles) objs += "\"" + f + "\" ";
 			foreach (string f in prj.libs) libs += "\"" + f + "\" ";
 
@@ -238,22 +239,22 @@ namespace D_IDE
 				case DProject.PrjType.WindowsApp:
 					exe = D_IDE_Properties.Default.exe_win;
 					target += ".exe";
-					args = D_IDE_Properties.Default.link_win_exe;
+					args = IsDebug?D_IDE_Properties.Default.link_win_exe_dbg: D_IDE_Properties.Default.link_win_exe;
 					break;
 				case DProject.PrjType.ConsoleApp:
 					exe = D_IDE_Properties.Default.exe_console;
 					target += ".exe";
-					args = D_IDE_Properties.Default.link_to_exe;
+					args = IsDebug?D_IDE_Properties.Default.link_to_exe_dbg: D_IDE_Properties.Default.link_to_exe;
 					break;
 				case DProject.PrjType.Dll:
 					exe = D_IDE_Properties.Default.exe_dll;
 					target += ".dll";
-					args = D_IDE_Properties.Default.link_to_dll;
+					args = IsDebug?D_IDE_Properties.Default.link_to_dll_dbg: D_IDE_Properties.Default.link_to_dll;
 					break;
 				case DProject.PrjType.StaticLib:
 					exe = D_IDE_Properties.Default.exe_lib;
 					target += ".lib";
-					args = D_IDE_Properties.Default.link_to_lib;
+					args = IsDebug?D_IDE_Properties.Default.link_to_lib_dbg: D_IDE_Properties.Default.link_to_lib;
 					break;
 			}
 
@@ -297,7 +298,7 @@ namespace D_IDE
 
 				#region cv2pdb
 				// Create program database (pdb) file from CodeView data from the target exe
-				if (D_IDE_Properties.Default.CreatePDBOnBuild)
+				if (IsDebug&&D_IDE_Properties.Default.CreatePDBOnBuild)
 				{
 					string pdb = prj.basedir + "\\" + Path.GetFileNameWithoutExtension(target) + ".pdb";
 					OnMessage(prj,pdb,"Create debug information database "+pdb);
@@ -313,11 +314,11 @@ namespace D_IDE
 			return false;
 		}
 
-		public static bool BuildObjFile(string file, string target, string exeDir, string additionalArgs)
+		public static bool BuildObjFile(string file, string target, string exeDir, string additionalArgs, bool IsDebug)
 		{
 			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
 
-			string args = D_IDE_Properties.Default.cmp_obj;
+			string args = IsDebug?D_IDE_Properties.Default.cmp_obj_dbg: D_IDE_Properties.Default.cmp_obj;
 			args = args.Replace("$src", file);
 			args = args.Replace("$obj", target);
 

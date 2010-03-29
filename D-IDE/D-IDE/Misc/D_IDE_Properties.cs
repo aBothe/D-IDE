@@ -188,6 +188,10 @@ namespace D_IDE
 									{
 										p.exe_cmp = xr.ReadString();
 									}
+									else if (xr.LocalName == "dbgargs")
+									{
+										p.cmp_obj_dbg = xr.ReadString();
+									}
 									else if (xr.LocalName == "args")
 									{
 										p.cmp_obj = xr.ReadString();
@@ -203,6 +207,10 @@ namespace D_IDE
 									if (xr.LocalName == "bin")
 									{
 										p.exe_win = xr.ReadString();
+									}
+									else if (xr.LocalName == "dbgargs")
+									{
+										p.link_win_exe_dbg = xr.ReadString();
 									}
 									else if (xr.LocalName == "args")
 									{
@@ -220,6 +228,10 @@ namespace D_IDE
 									{
 										p.exe_console = xr.ReadString();
 									}
+									else if (xr.LocalName == "dbgargs")
+									{
+										p.link_to_exe_dbg = xr.ReadString();
+									}
 									else if (xr.LocalName == "args")
 									{
 										p.link_to_exe = xr.ReadString();
@@ -236,6 +248,10 @@ namespace D_IDE
 									{
 										p.exe_dll = xr.ReadString();
 									}
+									else if (xr.LocalName == "dbgargs")
+									{
+										p.link_to_dll_dbg = xr.ReadString();
+									}
 									else if (xr.LocalName == "args")
 									{
 										p.link_to_dll = xr.ReadString();
@@ -251,6 +267,10 @@ namespace D_IDE
 									if (xr.LocalName == "bin")
 									{
 										p.exe_lib = xr.ReadString();
+									}
+									else if (xr.LocalName == "dbgargs")
+									{
+										p.link_to_lib_dbg = xr.ReadString();
 									}
 									else if (xr.LocalName == "args")
 									{
@@ -536,6 +556,9 @@ namespace D_IDE
 			xw.WriteStartElement("bin");
 			xw.WriteCData(Default.exe_win);
 			xw.WriteEndElement();
+			xw.WriteStartElement("dbgargs");
+			xw.WriteCData(Default.link_win_exe_dbg);
+			xw.WriteEndElement();
 			xw.WriteStartElement("args");
 			xw.WriteCData(Default.link_win_exe);
 			xw.WriteEndElement();
@@ -544,6 +567,9 @@ namespace D_IDE
 			xw.WriteStartElement("objtoexe");
 			xw.WriteStartElement("bin");
 			xw.WriteCData(Default.exe_console);
+			xw.WriteEndElement();
+			xw.WriteStartElement("dbgargs");
+			xw.WriteCData(Default.link_to_exe_dbg);
 			xw.WriteEndElement();
 			xw.WriteStartElement("args");
 			xw.WriteCData(Default.link_to_exe);
@@ -554,6 +580,9 @@ namespace D_IDE
 			xw.WriteStartElement("bin");
 			xw.WriteCData(Default.exe_dll);
 			xw.WriteEndElement();
+			xw.WriteStartElement("dbgargs");
+			xw.WriteCData(Default.link_to_dll_dbg);
+			xw.WriteEndElement();
 			xw.WriteStartElement("args");
 			xw.WriteCData(Default.link_to_dll);
 			xw.WriteEndElement();
@@ -562,6 +591,9 @@ namespace D_IDE
 			xw.WriteStartElement("objtolib");
 			xw.WriteStartElement("bin");
 			xw.WriteCData(Default.exe_lib);
+			xw.WriteEndElement();
+			xw.WriteStartElement("dbgargs");
+			xw.WriteCData(Default.link_to_lib_dbg);
 			xw.WriteEndElement();
 			xw.WriteStartElement("args");
 			xw.WriteCData(Default.link_to_lib);
@@ -749,11 +781,18 @@ namespace D_IDE
 		public string exe_res = "rc.exe";
 		public string exe_dbg = "windbg.exe";
 
-		public string cmp_obj = "-c \"$src\" -of\"$obj\" -gc";
-		public string link_win_exe = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc";
-		public string link_to_exe = "$objs $libs -of\"$exe\" -gc";
-		public string link_to_dll = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
+		public string cmp_obj_dbg = "-c \"$src\" -of\"$obj\" -gc";
+		public string link_win_exe_dbg = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc";
+		public string link_to_exe_dbg = "$objs $libs -of\"$exe\" -gc";
+		public string link_to_dll_dbg = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
+		public string link_to_lib_dbg = "$objs $libs -of\"$lib\"";
+
+		public string cmp_obj = "-c \"$src\" -of\"$obj\" -release";
+		public string link_win_exe = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -release";
+		public string link_to_exe = "$objs $libs -of\"$exe\" -release";
+		public string link_to_dll = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -release";
 		public string link_to_lib = "$objs $libs -of\"$lib\"";
+
 		public string cmp_res = "/fo\"$res\" \"$rc\"";
 		public string dbg_args = "\"$exe\"";
 

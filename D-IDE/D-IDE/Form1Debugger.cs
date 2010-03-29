@@ -30,6 +30,13 @@ namespace D_IDE
 		private void RunDebugClick(object sender, EventArgs e)
 		{
 			ForceExitDebugging();
+			bool before = false;
+			if (prj != null)
+			{
+				before = prj.isRelease;
+				prj.isRelease = false;
+			}
+
 			if (Build())
 			{
 				Log(ProgressStatusLabel.Text = "Start debugging...");
@@ -73,6 +80,7 @@ namespace D_IDE
 					dbgStopButtonTS.Enabled = true;
 				}
 			}
+			if (prj != null) prj.isRelease = before;
 		}
 
 		private void dbgContinueClick(object sender, EventArgs e)

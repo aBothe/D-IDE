@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data.SQLite;
@@ -50,20 +50,6 @@ namespace D_IDE
                 this.connection.Close();
             }
         }
-
-		/*public void BeginTransaction()
-		{
-			SQLiteCommand cmd = connection.CreateCommand();
-			cmd.CommandText = "BEGIN TRANSACTION";
-			cmd.ExecuteNonQuery();
-		}
-
-		public void Commit()
-		{
-			SQLiteCommand cmd = connection.CreateCommand();
-			cmd.CommandText = "COMMIT TRANSACTION";
-			cmd.ExecuteNonQuery();
-		}*/
 		
 		public void BeginTransaction()
         {
@@ -190,7 +176,7 @@ namespace D_IDE
 			ret.TypeToken = (int)(long)dr["typetoken"];
 			ret.type = dr["type"] as String;
 			long parid = (long)dr["parent"];
-			ret.parent = parent;//RawNodes.ContainsKey(parid)?RawNodes[parid]:/*ReadNode(parid)*/;
+			ret.parent = parent;//RawNodes.ContainsKey(parid)?RawNodes[parid]:ReadNode(parid);
 
 			string[] ts = ((string)dr["location"]).Split(';');
 			ret.StartLocation = new Location(Convert.ToInt32(ts[0]), Convert.ToInt32(ts[1]));
@@ -457,3 +443,4 @@ namespace D_IDE
         #endregion
 	}
 }
+*/
