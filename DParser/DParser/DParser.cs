@@ -145,7 +145,7 @@ namespace D_Parser
 				{
 					break;
 				}
-				if (ret.Length < 10000) ret += strVal;
+				if (ret.Length < 2000) ret += strVal;
 				lexer.NextToken();
 			}
 			return ret;
@@ -190,7 +190,7 @@ namespace D_Parser
 					round--;
 					if (mbrace < 1 && round < 1) { break; }
 				}
-				if (ret.Length < 10000) ret += strVal;
+				if (ret.Length < 2000) ret += strVal;
 				lexer.NextToken();
 			}
 			return ret;
@@ -216,7 +216,7 @@ namespace D_Parser
 					round--;
 					if (mbrace < 1 && round < 1) { break; }
 				}
-				if (ret.Length < 10000) ret += strVal;
+				if (ret.Length < 2000) ret += strVal;
 
 				lexer.NextToken();
 			}

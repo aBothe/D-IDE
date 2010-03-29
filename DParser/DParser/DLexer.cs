@@ -1084,12 +1084,6 @@ namespace D_Parser
 			OnError(Line, Col, String.Format("Reached EOF before the end of a multiline comment"));
 		}
 
-		/// <summary>
-		/// Skips to the end of the current code block.
-		/// For this, the lexer must have read the next token AFTER the token opening the
-		/// block (so that Lexer.Token is the block-opening token, not Lexer.LookAhead).
-		/// After the call, Lexer.LookAhead will be the block-closing token.
-		/// </summary>
 		public override void SkipCurrentBlock(int targetToken)
 		{
 			int braceCount = 0;
@@ -1106,11 +1100,33 @@ namespace D_Parser
 				}
 				NextToken();
 			}
+		}
+
+		/*
+		 * TODO: Fix it
+		 * public string SkipTo(char targetToken)
+		{
+			int tt = DTokens.GetTokenID(targetToken.ToString());
+			if (LookAhead.Kind == tt) return "";
+			StringBuilder sb = new StringBuilder(100);
+			int braceCount = 0, parenthesisCount=0;
+
 			int nextChar;
 			while((nextChar = ReaderRead()) != -1)
 			{
+				if (parenthesisCount < 1 && braceCount < 1 && (char)nextChar == targetToken)
+				{}
+				else if(sb.Length<10000)
+					sb.Append((char)nextChar);
+
 				switch(nextChar)
 				{
+					case '(':
+						parenthesisCount++;
+						break;
+					case ')':
+						parenthesisCount--;
+						break;
 					case '{':
 						braceCount++;
 						break;
@@ -1118,21 +1134,21 @@ namespace D_Parser
 						if(--braceCount < 0)
 						{
 							curToken = new Token(DTokens.CloseCurlyBrace, Col - 1, Line);
-							return;
+							return sb.ToString();
 						}
 						break;
 					case '/':
 						int peek = ReaderPeek();
-						if(peek == '/' || peek == '*')
+						if(peek == '/' || peek == '*' || peek=='+')
 						{
 							ReadComment();
 						}
 						break;
 					case '"':
-						ReadString();
+						if (sb.Length < 10000) sb.Append((string)ReadString().LiteralValue + "\"");
 						break;
 					case '\'':
-						ReadChar();
+						if (sb.Length < 10000) sb.Append(ReadChar().Value);
 						break;
 					case '\r':
 					case '\n':
@@ -1146,12 +1162,19 @@ namespace D_Parser
 						}
 						else if(next == '"')
 						{
-							ReadVerbatimString();
+							if (sb.Length < 10000) sb.Append("\"" + (string)ReadVerbatimString().LiteralValue + "\"");
 						}
 						break;
 				}
+
+				if (parenthesisCount<1 && braceCount<1 && (char)nextChar == targetToken)
+				{
+					curToken = new Token(tt, Col - 1, Line);
+					return sb.ToString();
+				}
 			}
 			curToken = new Token(DTokens.EOF, Col, Line);
-		}
+			return sb.ToString();
+		}*/
 	}
 }
