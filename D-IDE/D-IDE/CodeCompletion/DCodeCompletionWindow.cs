@@ -33,9 +33,22 @@ namespace D_IDE
 			codeCompletionWindow.ShowCompletionWindow();
 			return codeCompletionWindow;
 		}
+
+		public int MaxItemsVisible
+		{
+			get {
+				return (int)Math.Floor((double)codeCompletionListView.Size.Height/codeCompletionListView.ItemHeight);
+			}
+		}
 		
 		DCodeCompletionWindow(ICompletionDataProvider completionDataProvider, ICompletionData[] completionData, Form parentForm, TextEditorControl control) : base(parentForm, control)
-		{
+		{/*
+			this.FormBorderStyle = FormBorderStyle.Sizable;
+			this.Text = String.Empty;
+			this.ControlBox = false;
+			this.ShowIcon = false;
+			this.ResizeEnd += new EventHandler(DCodeCompletionWindow_SizeChanged);*/
+
 			this.dataProvider = completionDataProvider;
 			this.completionData = completionData;
 			this.document = control.Document;
@@ -55,26 +68,29 @@ namespace D_IDE
 			codeCompletionListView.DoubleClick += new EventHandler(CodeCompletionListViewDoubleClick);
 			codeCompletionListView.Click  += new EventHandler(CodeCompletionListViewClick);
 			Controls.Add(codeCompletionListView);
+
 			
-			const int MaxListLength = 15;
-			if (completionData.Length > MaxListLength) {
+			const int MaxItems = 15;
+			if (completionData.Length > MaxItems) {
 				vScrollBar.Dock = DockStyle.Right;
 				vScrollBar.Minimum = 0;
 				vScrollBar.Maximum = completionData.Length - 1;
 				vScrollBar.SmallChange = 1;
-				vScrollBar.LargeChange = MaxListLength;
+				vScrollBar.LargeChange = MaxItems;
 				codeCompletionListView.FirstItemChanged += new EventHandler(CodeCompletionListViewFirstItemChanged);
 				Controls.Add(vScrollBar);
 			}
 			
 			this.drawingSize = new Size(codeCompletionListView.ItemHeight * 10,
-			                            codeCompletionListView.ItemHeight * Math.Min(MaxListLength, completionData.Length));
+			                            codeCompletionListView.ItemHeight * Math.Min(MaxItems, completionData.Length));
+			//this.MinimumSize = MaximumSize = drawingSize;
+
 			SetLocation();
 			
 			if (declarationViewWindow == null) {
 				declarationViewWindow = new DeclarationViewWindow(parentForm);
 			}
-			SetDeclarationViewLocation();
+			
 			declarationViewWindow.ShowDeclarationViewWindow();
 			declarationViewWindow.MouseMove += ControlMouseMove;
 			control.Focus();
@@ -87,10 +103,18 @@ namespace D_IDE
 			if (completionDataProvider.PreSelection != null) {
 				CaretOffsetChanged(this, EventArgs.Empty);
 			}
+
+			SetDeclarationViewLocation();
 			
 			vScrollBar.ValueChanged += VScrollBarValueChanged;
 			document.DocumentAboutToBeChanged += DocumentAboutToBeChanged;
 			control.ActiveTextAreaControl.TextArea.KeyEventHandler += TextArea_KeyEventHandler;
+		}
+
+		void DCodeCompletionWindow_SizeChanged(object sender, EventArgs e)
+		{
+			vScrollBar.LargeChange = MaxItemsVisible;
+			codeCompletionListView.Refresh();
 		}
 
 		bool TextArea_KeyEventHandler(char ch)
@@ -128,12 +152,16 @@ namespace D_IDE
 			int leftSpace = Bounds.Left - workingScreen.Left;
 			int rightSpace = workingScreen.Right - Bounds.Right;
 			Point pos;
+			int y = Bounds.Top ;/*+ 5;
+			if(codeCompletionListView.SelectedIndex >= codeCompletionListView.FirstItem)y+=codeCompletionListView.ItemHeight * (codeCompletionListView.SelectedIndex - codeCompletionListView.FirstItem);*/
 			// The declaration view window has better line break when used on
 			// the right side, so prefer the right side to the left.
 			if (rightSpace * 2 > leftSpace)
-				pos = new Point(Bounds.Right, Bounds.Top);
+			{
+				pos = new Point(Bounds.Right,y);
+			}
 			else
-				pos = new Point(Bounds.Left - declarationViewWindow.Width, Bounds.Top);
+				pos = new Point(Bounds.Left - declarationViewWindow.Width, y);
 			if (declarationViewWindow.Location != pos) {
 				declarationViewWindow.Location = pos;
 			}

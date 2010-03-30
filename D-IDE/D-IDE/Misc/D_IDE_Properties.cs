@@ -757,7 +757,7 @@ namespace D_IDE
 		public bool EnableFXFormsDesigner = false; // For those who want to experiment a little bit ;-)
 		public bool RetrieveNews = true;
 		public bool SingleInstance = true;
-		public bool WatchForUpdates = true;
+		public bool WatchForUpdates = false;
 		public string DefaultProjectDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\D Projects";
 
 		public static List<DModule> GlobalModules = new List<DModule>();

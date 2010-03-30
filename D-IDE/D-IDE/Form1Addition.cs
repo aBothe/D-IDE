@@ -292,6 +292,12 @@ namespace D_IDE
 				dataProvider = new DCodeCompletionProvider();
 			else return false;
 
+			ICompletionData[] data = dataProvider.GenerateCompletionData(fileData.FileName, txt.ActiveTextAreaControl.TextArea, key);
+			if(data.Length<1) return false;
+			/*
+			D_IDE.CodeCompletion.CodeCompletionWindow ccw = new D_IDE.CodeCompletion.CodeCompletionWindow(data,Form1.icons);
+			ccw.Show();*/
+			
 			DCodeCompletionWindow.ShowCompletionWindow(
 				this,					// The parent window for the completion window
 				txt, 					// The text editor to show the window for

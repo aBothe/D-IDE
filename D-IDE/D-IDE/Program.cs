@@ -42,12 +42,12 @@ namespace D_IDE
 			}
 			else
 				cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + cfgDirName;
-
+try
+			{
 			if (!Directory.Exists(Program.cfgDir))
 				DBuilder.CreateDirectoryRecursively(Program.cfgDir);
 
-			try
-			{
+			
 				D_IDE_Properties.Load(cfgDir + "\\" + prop_file);
 				D_IDE_Properties.LoadGlobalCache(cfgDir + "\\" + ModuleCacheFile);
 			}

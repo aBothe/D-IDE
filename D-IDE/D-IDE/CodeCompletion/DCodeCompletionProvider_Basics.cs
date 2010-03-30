@@ -92,7 +92,7 @@ namespace D_IDE
 		#region Props
 		public DCodeCompletionProvider(/*ref DProject dprj, */)
 		{
-			presel = "";
+			presel = null;
 			//this.prj = dprj;
 		}
 
