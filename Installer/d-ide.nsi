@@ -96,7 +96,7 @@ Section "-.Net Framework 3.5" net35_section_id
 	SkipDotNet35:
 		DetailPrint ".Net Framework 3.5 found... Continuing."
 		
-	;DotNet35Done:
+	DotNet35Done:
 SectionEnd
 
 ;--------------------------------------------------------
@@ -116,7 +116,7 @@ Section /o "Digital Mars DMD" dmd_section_id
 		DetailPrint "Installing Digital Mars DMD."
 		ExecWait '"$2"'
 		
-	DMDDone:
+	;DMDDone:
 SectionEnd
 
 ;--------------------------------------------------------
