@@ -178,9 +178,9 @@ namespace D_IDE
 					}
 				}
 
-				if(IncludeDesc && data.desc.Length > 0)
+				if(IncludeDesc && !String.IsNullOrEmpty(data.desc))
 				{
-					ret += "\n\n" + data.desc;
+					ret += "\n" + data.desc;
 				}
 
 				if(ret.Length > 512) { ret = ret.Remove(509); ret += "..."; }

@@ -255,24 +255,27 @@ namespace D_Parser
 			}
 		}
 
-		public string CheckForExpressionComment()
+		int _lastcommentindex = 0;
+		public string CheckForExpressionComments()
 		{
-			/*for(int i = 0; i < lexer.Comments.Count; i++)
+			string ret = "";
+			for (int i = _lastcommentindex; i>=_lastcommentindex&& i < lexer.Comments.Count; i++)
 			{
 				Comment tc = lexer.Comments[i];
-				if(tc.EndPosition.Line + 1 == GetCodeLocation(la).Line) // Take the previous comment
+				if (tc.CommentType != CommentType.Documentation)
+					continue;
+
+				string t = tc.CommentText;
+				while (t.Trim() == "ditto" && i > 0)
 				{
-					string t = tc.CommentText;
-					int j = i;
-					while(t.Trim() == "ditto" && j > 0)
-					{
-						j--;
-						t = lexer.Comments[j].CommentText;
-					}
-					return t;
+					i--;
+					t = lexer.Comments[i].CommentText;
 				}
-			}*/
-			return "";
+				if (ret == "") ret = t;
+				else ret += "\n" + t;
+			}
+			_lastcommentindex = lexer.Comments.Count;
+			return ret;
 		}
 
 		/// <summary>
@@ -416,6 +419,7 @@ namespace D_Parser
 		void ParseBlock(ref DataType ret, bool isFunctionBody)
 		{
 			int curbrace = 0;
+			if(String.IsNullOrEmpty( ret.desc))ret.desc = CheckForExpressionComments();
 			List<int> prevBlockModifiers = new List<int>(BlockModifiers);
 			ExpressionModifiers.Clear();
 			BlockModifiers.Clear();
@@ -510,7 +514,7 @@ namespace D_Parser
 							pt = lexer.Peek();
 						}
 
-						if (!hasFollowingMods && la.Kind == DTokens.Const && pt2.Kind == DTokens.Identifier && pt.Kind==DTokens.Assign) // const >MyCnst2< = 2; // similar to enum MyCnst = 1;
+						if (!hasFollowingMods && la.Kind == DTokens.Const && pt2.Kind == DTokens.Identifier && pt.Kind == DTokens.Assign) // const >MyCnst2< = 2; // similar to enum MyCnst = 1;
 						{
 							DataType cdt = ParseEnum();
 							cdt.type = "int";
@@ -1574,7 +1578,7 @@ namespace D_Parser
 		DataType ParseExpression()
 		{
 			DataType tv = new DataType();
-			tv.desc = CheckForExpressionComment();
+			tv.desc = CheckForExpressionComments();
 			tv.startLoc = GetCodeLocation(la);
 			bool isCTor = la.Kind == DTokens.This;
 			tv.TypeToken = la.Kind;
@@ -1779,7 +1783,7 @@ namespace D_Parser
 		DataType ParseClass()
 		{
 			DataType myc = new DataType(FieldType.Class); // >class<
-			myc.desc = CheckForExpressionComment();
+			myc.desc = CheckForExpressionComments();
 			if (la.Kind == DTokens.Struct) myc.fieldtype = FieldType.Struct;
 			if (la.Kind == DTokens.Template) myc.fieldtype = FieldType.Template;
 			if (la.Kind == DTokens.Interface) myc.fieldtype = FieldType.Interface;
