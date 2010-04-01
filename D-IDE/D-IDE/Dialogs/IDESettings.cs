@@ -21,6 +21,74 @@ namespace D_IDE
 			ReadValues();
 		}
 
+		public CompilerConfiguration dmd1, dmd2;
+		public CompilerConfiguration.DVersion SelectedDVersion
+		{
+			get {
+				return (CompilerConfiguration.DVersion)(DVersionSelector.SelectedIndex + 1);
+			}
+			set
+			{
+				DVersionSelector.SelectedIndex=((int)value)-1;
+			}
+		}
+
+		public CompilerConfiguration CompilerConfiguration
+		{
+			get {
+				CompilerConfiguration cc = new CompilerConfiguration((CompilerConfiguration.DVersion)(DVersionSelector.SelectedIndex+1));
+				cc.BinDirectory = BinDirectory.Text;
+
+				cc.SoureCompiler = exe_cmp.Text;
+				cc.Win32ExeLinker = exe_win.Text;
+				cc.ExeLinker = exe_console.Text;
+				cc.DllLinker = exe_dll.Text;
+				cc.LibLinker = exe_lib.Text;
+				cc.ResourceCompiler = exe_rc.Text;
+
+				cc.SoureCompilerDebugArgs = cmp_to_obj_dbg.Text;
+				cc.Win32ExeLinkerDebugArgs = link_win_exe_dbg.Text;
+				cc.ExeLinkerDebugArgs = link_to_exe_dbg.Text;
+				cc.DllLinkerDebugArgs = link_to_dll_dbg.Text;
+				cc.LibLinkerDebugArgs = link_to_lib_dbg.Text;
+
+				cc.SoureCompilerArgs = cmp_to_obj.Text;
+				cc.Win32ExeLinkerArgs = link_win_exe.Text;
+				cc.ExeLinkerArgs= link_to_exe.Text;
+				cc.DllLinkerArgs = link_to_dll.Text;
+				cc.LibLinkerArgs = link_to_lib.Text;
+
+				cc.ResourceCompilerArgs = rc.Text;
+				return cc;
+			}
+			set
+			{
+				//DVersionSelector.SelectedIndex = (int)value.Version - 1;
+				BinDirectory.Text = value.BinDirectory;
+
+				exe_cmp.Text = value.SoureCompiler;
+				exe_win.Text = value.Win32ExeLinker;
+				exe_console.Text = value.ExeLinker;
+				exe_dll.Text = value.DllLinker;
+				exe_lib.Text = value.LibLinker;
+				exe_rc.Text = value.ResourceCompiler;
+
+				cmp_to_obj_dbg.Text = value.SoureCompilerDebugArgs;
+				link_win_exe_dbg.Text = value.Win32ExeLinkerDebugArgs;
+				link_to_exe_dbg.Text = value.ExeLinkerDebugArgs;
+				link_to_dll_dbg.Text = value.DllLinkerDebugArgs;
+				link_to_lib_dbg.Text = value.LibLinkerDebugArgs;
+
+				cmp_to_obj.Text = value.SoureCompilerArgs;
+				link_win_exe.Text =value.Win32ExeLinkerArgs;
+				link_to_exe.Text = value.ExeLinkerArgs;
+				link_to_dll.Text = value.DllLinkerArgs;
+				link_to_lib.Text = value.LibLinkerArgs;
+
+				rc.Text = value.ResourceCompilerArgs;
+			}
+		}
+
 		public void ReadValues()
 		{
 			singleInst.Checked = D_IDE_Properties.Default.SingleInstance;
@@ -31,28 +99,13 @@ namespace D_IDE
 
 			parsedFiles.Items.AddRange(D_IDE_Properties.Default.parsedDirectories.ToArray());
 
-			exe_cmp.Text = D_IDE_Properties.Default.exe_cmp;
-			exe_win.Text = D_IDE_Properties.Default.exe_win;
-			exe_console.Text = D_IDE_Properties.Default.exe_console;
-			exe_dll.Text = D_IDE_Properties.Default.exe_dll;
-			exe_lib.Text = D_IDE_Properties.Default.exe_lib;
-			exe_rc.Text = D_IDE_Properties.Default.exe_res;
 			dbg_exe.Text = D_IDE_Properties.Default.exe_dbg;
 			UseIntegDbg.Checked = D_IDE_Properties.Default.UseExternalDebugger;
 
-			cmp_to_obj_dbg.Text = D_IDE_Properties.Default.cmp_obj_dbg;
-			link_win_exe_dbg.Text = D_IDE_Properties.Default.link_win_exe_dbg;
-			link_to_exe_dbg.Text = D_IDE_Properties.Default.link_to_exe_dbg;
-			link_to_dll_dbg.Text = D_IDE_Properties.Default.link_to_dll_dbg;
-			link_to_lib_dbg.Text = D_IDE_Properties.Default.link_to_lib_dbg;
+			CompilerConfiguration=dmd1 = D_IDE_Properties.Default.dmd1;
+			dmd2 = D_IDE_Properties.Default.dmd2;
+			SelectedDVersion = CompilerConfiguration.DVersion.D2;
 
-			cmp_to_obj.Text = D_IDE_Properties.Default.cmp_obj;
-			link_win_exe.Text = D_IDE_Properties.Default.link_win_exe;
-			link_to_exe.Text = D_IDE_Properties.Default.link_to_exe;
-			link_to_dll.Text = D_IDE_Properties.Default.link_to_dll;
-			link_to_lib.Text = D_IDE_Properties.Default.link_to_lib;
-
-			rc.Text = D_IDE_Properties.Default.cmp_res;
 			dbg_args.Text = D_IDE_Properties.Default.dbg_args;
 
 			parsedFileList.Items.Clear();
@@ -87,13 +140,8 @@ namespace D_IDE
 			D_IDE_Properties.Default.WatchForUpdates = updates.Checked;
 			D_IDE_Properties.Default.OpenLastPrj = reopenLastPrj.Checked;
 			D_IDE_Properties.Default.OpenLastFiles = restoreLastSession.Checked;
-
-			D_IDE_Properties.Default.exe_cmp = exe_cmp.Text;
-			D_IDE_Properties.Default.exe_win = exe_win.Text;
-			D_IDE_Properties.Default.exe_console = exe_console.Text;
-			D_IDE_Properties.Default.exe_dll = exe_dll.Text;
-			D_IDE_Properties.Default.exe_lib = exe_lib.Text;
-			D_IDE_Properties.Default.exe_res = exe_rc.Text;
+			D_IDE_Properties.Default.Compiler = CompilerConfiguration;
+			
 			D_IDE_Properties.Default.exe_dbg = dbg_exe.Text;
 			D_IDE_Properties.Default.UseExternalDebugger=UseIntegDbg.Checked;
 			D_IDE_Properties.Default.CreatePDBOnBuild = CreatePDB.Checked;
@@ -107,19 +155,14 @@ namespace D_IDE
 				File.Delete(Program.UserDocStorageFile);
 			}
 
-			D_IDE_Properties.Default.cmp_obj_dbg = cmp_to_obj_dbg.Text;
-			D_IDE_Properties.Default.link_win_exe_dbg = link_win_exe_dbg.Text;
-			D_IDE_Properties.Default.link_to_exe_dbg = link_to_exe_dbg.Text;
-			D_IDE_Properties.Default.link_to_dll_dbg = link_to_dll_dbg.Text;
-			D_IDE_Properties.Default.link_to_lib_dbg = link_to_lib_dbg.Text;
+			if (SelectedDVersion == CompilerConfiguration.DVersion.D1)
+				dmd1 = CompilerConfiguration;// Previous configuration had been D2
+			else
+				dmd2 = CompilerConfiguration;// Vice versa
 
-			D_IDE_Properties.Default.cmp_obj = cmp_to_obj.Text;
-			D_IDE_Properties.Default.link_win_exe = link_win_exe.Text;
-			D_IDE_Properties.Default.link_to_exe = link_to_exe.Text;
-			D_IDE_Properties.Default.link_to_dll = link_to_dll.Text;
-			D_IDE_Properties.Default.link_to_lib = link_to_lib.Text;
+			D_IDE_Properties.Default.dmd1 = dmd1;
+			D_IDE_Properties.Default.dmd2 = dmd2;
 
-			D_IDE_Properties.Default.cmp_res = rc.Text;
 			D_IDE_Properties.Default.dbg_args = dbg_args.Text;
 
 			D_IDE_Properties.Default.parsedDirectories.Clear();
@@ -261,5 +304,32 @@ namespace D_IDE
 			}
 		}
 		#endregion
+
+		private void DVersionSelector_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			if (SelectedDVersion == CompilerConfiguration.DVersion.D1)
+			{
+				dmd2 = CompilerConfiguration;// Previous configuration had been D2
+				dmd2.Version = CompilerConfiguration.DVersion.D2;
+				CompilerConfiguration = dmd1;
+			}
+			else
+			{
+				dmd1 = CompilerConfiguration;// Vice versa
+				dmd1.Version = CompilerConfiguration.DVersion.D1;
+				CompilerConfiguration = dmd2;
+			}
+		}
+
+		private void button7_Click(object sender, EventArgs e)
+		{
+			FolderBrowserDialog fd = new FolderBrowserDialog();
+			fd.SelectedPath = BinDirectory.Text;
+
+			if (fd.ShowDialog() == DialogResult.OK)
+			{
+				BinDirectory.Text = fd.SelectedPath;
+			}
+		}
 	}
 }

@@ -77,7 +77,20 @@ namespace D_IDE
 		private Label label9;
 		private Button button16;
 		private TextBox OutputDir;
+		private ComboBox DVersionSelector;
 		public DProject project;
+
+		public CompilerConfiguration.DVersion SelectedDVersion
+		{
+			get
+			{
+				return (CompilerConfiguration.DVersion)(DVersionSelector.SelectedIndex + 1);
+			}
+			set
+			{
+				DVersionSelector.SelectedIndex = ((int)value) - 1;
+			}
+		}
 
 		public new void Load(DProject prj)
 		{
@@ -92,6 +105,7 @@ namespace D_IDE
 			OutputDir_dbg.Text = prj.OutputDirectory_dbg;
 			OutputDir.Text = prj.OutputDirectory;
 
+			SelectedDVersion = prj.CompilerVersion;
 			IsReleaseBuild.Checked = prj.isRelease;
 			cpargs.Text = prj.compileargs;
 			lnkargs.Text = prj.linkargs;
@@ -154,6 +168,7 @@ namespace D_IDE
 			prj.basedir = prjdir.Text;
 			prj.OutputDirectory = OutputDir.Text;
 			prj.OutputDirectory_dbg = OutputDir_dbg.Text;
+			prj.CompilerVersion = SelectedDVersion;
 			prj.isRelease = IsReleaseBuild.Checked;
 			prj.compileargs = cpargs.Text;
 			prj.linkargs = lnkargs.Text;
@@ -329,6 +344,7 @@ namespace D_IDE
 			System.Windows.Forms.Label label2;
 			System.Windows.Forms.Label label1;
 			System.Windows.Forms.Label label7;
+			System.Windows.Forms.Label label14;
 			this.button3 = new System.Windows.Forms.Button();
 			this.prjdir = new System.Windows.Forms.TextBox();
 			this.prjtype = new System.Windows.Forms.ComboBox();
@@ -381,11 +397,13 @@ namespace D_IDE
 			this.button11 = new System.Windows.Forms.Button();
 			this.button12 = new System.Windows.Forms.Button();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+			this.DVersionSelector = new System.Windows.Forms.ComboBox();
 			label3 = new System.Windows.Forms.Label();
 			label4 = new System.Windows.Forms.Label();
 			label2 = new System.Windows.Forms.Label();
 			label1 = new System.Windows.Forms.Label();
 			label7 = new System.Windows.Forms.Label();
+			label14 = new System.Windows.Forms.Label();
 			this.tabControl1.SuspendLayout();
 			this.tabPage1.SuspendLayout();
 			this.tabPage2.SuspendLayout();
@@ -619,7 +637,7 @@ namespace D_IDE
 			this.Subversioning.Controls.Add(this.StoreLastSources);
 			this.Subversioning.Controls.Add(this.label8);
 			this.Subversioning.Controls.Add(this.LastVersionCount);
-			this.Subversioning.Location = new System.Drawing.Point(6, 188);
+			this.Subversioning.Location = new System.Drawing.Point(6, 216);
 			this.Subversioning.Name = "Subversioning";
 			this.Subversioning.Size = new System.Drawing.Size(425, 100);
 			this.Subversioning.TabIndex = 17;
@@ -658,10 +676,10 @@ namespace D_IDE
 			// LastVersionCount
 			// 
 			this.LastVersionCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.LastVersionCount.Location = new System.Drawing.Point(339, 65);
+			this.LastVersionCount.Location = new System.Drawing.Point(262, 65);
 			this.LastVersionCount.MaxLength = 10;
 			this.LastVersionCount.Name = "LastVersionCount";
-			this.LastVersionCount.Size = new System.Drawing.Size(80, 20);
+			this.LastVersionCount.Size = new System.Drawing.Size(157, 20);
 			this.LastVersionCount.TabIndex = 14;
 			this.LastVersionCount.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox1_KeyDown);
 			// 
@@ -673,13 +691,15 @@ namespace D_IDE
             "Don\'t create manifest file",
             "Create a manifest with a resource file",
             "Create and copy the manifest into the output dir."});
-			this.ManifestCreation.Location = new System.Drawing.Point(6, 294);
+			this.ManifestCreation.Location = new System.Drawing.Point(6, 322);
 			this.ManifestCreation.Name = "ManifestCreation";
 			this.ManifestCreation.Size = new System.Drawing.Size(425, 21);
 			this.ManifestCreation.TabIndex = 16;
 			// 
 			// groupBox4
 			// 
+			this.groupBox4.Controls.Add(label14);
+			this.groupBox4.Controls.Add(this.DVersionSelector);
 			this.groupBox4.Controls.Add(this.lnkargs);
 			this.groupBox4.Controls.Add(this.label6);
 			this.groupBox4.Controls.Add(this.label5);
@@ -687,7 +707,7 @@ namespace D_IDE
 			this.groupBox4.Controls.Add(this.IsReleaseBuild);
 			this.groupBox4.Location = new System.Drawing.Point(6, 60);
 			this.groupBox4.Name = "groupBox4";
-			this.groupBox4.Size = new System.Drawing.Size(425, 122);
+			this.groupBox4.Size = new System.Drawing.Size(425, 150);
 			this.groupBox4.TabIndex = 12;
 			this.groupBox4.TabStop = false;
 			this.groupBox4.Text = "Build arguments";
@@ -696,7 +716,7 @@ namespace D_IDE
 			// 
 			this.lnkargs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
-			this.lnkargs.Location = new System.Drawing.Point(6, 94);
+			this.lnkargs.Location = new System.Drawing.Point(6, 121);
 			this.lnkargs.Name = "lnkargs";
 			this.lnkargs.Size = new System.Drawing.Size(413, 20);
 			this.lnkargs.TabIndex = 9;
@@ -704,7 +724,7 @@ namespace D_IDE
 			// label6
 			// 
 			this.label6.AutoSize = true;
-			this.label6.Location = new System.Drawing.Point(6, 78);
+			this.label6.Location = new System.Drawing.Point(6, 105);
 			this.label6.Name = "label6";
 			this.label6.Size = new System.Drawing.Size(116, 13);
 			this.label6.TabIndex = 8;
@@ -713,7 +733,7 @@ namespace D_IDE
 			// label5
 			// 
 			this.label5.AutoSize = true;
-			this.label5.Location = new System.Drawing.Point(6, 39);
+			this.label5.Location = new System.Drawing.Point(6, 66);
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(122, 13);
 			this.label5.TabIndex = 7;
@@ -723,7 +743,7 @@ namespace D_IDE
 			// 
 			this.cpargs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
-			this.cpargs.Location = new System.Drawing.Point(6, 55);
+			this.cpargs.Location = new System.Drawing.Point(6, 82);
 			this.cpargs.Name = "cpargs";
 			this.cpargs.Size = new System.Drawing.Size(413, 20);
 			this.cpargs.TabIndex = 6;
@@ -731,7 +751,7 @@ namespace D_IDE
 			// IsReleaseBuild
 			// 
 			this.IsReleaseBuild.AutoSize = true;
-			this.IsReleaseBuild.Location = new System.Drawing.Point(6, 19);
+			this.IsReleaseBuild.Location = new System.Drawing.Point(6, 46);
 			this.IsReleaseBuild.Name = "IsReleaseBuild";
 			this.IsReleaseBuild.Size = new System.Drawing.Size(102, 17);
 			this.IsReleaseBuild.TabIndex = 5;
@@ -1015,6 +1035,27 @@ namespace D_IDE
 			this.button12.Text = "Close";
 			this.button12.UseVisualStyleBackColor = true;
 			this.button12.Click += new System.EventHandler(this.button12_Click);
+			// 
+			// label14
+			// 
+			label14.AutoSize = true;
+			label14.Location = new System.Drawing.Point(6, 22);
+			label14.Name = "label14";
+			label14.Size = new System.Drawing.Size(53, 13);
+			label14.TabIndex = 41;
+			label14.Text = "D Version";
+			// 
+			// DVersionSelector
+			// 
+			this.DVersionSelector.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.DVersionSelector.FormattingEnabled = true;
+			this.DVersionSelector.Items.AddRange(new object[] {
+            "Version 1",
+            "Version 2"});
+			this.DVersionSelector.Location = new System.Drawing.Point(262, 19);
+			this.DVersionSelector.Name = "DVersionSelector";
+			this.DVersionSelector.Size = new System.Drawing.Size(157, 21);
+			this.DVersionSelector.TabIndex = 40;
 			// 
 			// ProjectPropertyPage
 			// 

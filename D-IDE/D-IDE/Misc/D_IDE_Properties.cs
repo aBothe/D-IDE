@@ -23,357 +23,246 @@ namespace D_IDE
 	{
 		public static void Load(string fn)
 		{
-			if (File.Exists(fn))
+			if (!File.Exists(fn)) return;
+
+			BinaryFormatter formatter = new BinaryFormatter();
+
+			Stream stream = File.Open(fn, FileMode.Open);
+
+			XmlTextReader xr = new XmlTextReader(stream);
+			D_IDE_Properties p = new D_IDE_Properties();
+
+			while (xr.Read())// now 'settings' should be the current node
 			{
-				BinaryFormatter formatter = new BinaryFormatter();
-
-				Stream stream = File.Open(fn, FileMode.Open);
-
-				XmlTextReader xr = new XmlTextReader(stream);
-				D_IDE_Properties p = new D_IDE_Properties();
-
-				while (xr.Read())// now 'settings' should be the current node
+				if (xr.NodeType == XmlNodeType.Element)
 				{
-					if (xr.NodeType == XmlNodeType.Element)
+					switch (xr.LocalName)
 					{
-						switch (xr.LocalName)
-						{
-							default: break;
+						default: break;
 
-							case "recentprojects":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
+						case "dmd":
+							CompilerConfiguration cc= CompilerConfiguration.ReadFromXML(xr);
+							if (cc.Version == CompilerConfiguration.DVersion.D1) p.dmd1 = cc;
+							else p.dmd2 = cc;
+							break;
+
+						case "recentprojects":
+							if (xr.IsEmptyElement) break;
+							while (xr.Read())
+							{
+								if (xr.LocalName == "f")
 								{
-									if (xr.LocalName == "f")
+									try
 									{
-										try
-										{
-											p.lastProjects.Add(xr.ReadString());
-										}
-										catch { }
+										p.lastProjects.Add(xr.ReadString());
 									}
-									else break;
-								}
-								break;
-
-							case "recentfiles":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "f")
-									{
-										try
-										{
-											p.lastFiles.Add(xr.ReadString());
-										}
-										catch { }
-									}
-									else break;
-								}
-								break;
-
-							case "lastopenedfiles":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "f")
-									{
-										try
-										{
-											p.lastOpenFiles.Add(xr.ReadString());
-										}
-										catch { }
-									}
-									else break;
-								}
-								break;
-
-
-							case "openlastprj":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.OpenLastPrj = xr.Value == "1";
-								}
-								break;
-
-							case "openlastfiles":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.OpenLastFiles = xr.Value == "1";
-								}
-								break;
-
-							case "windowstate":
-								if (xr.MoveToAttribute("value"))
-								{
-									try { p.lastFormState = (FormWindowState)Convert.ToInt32(xr.Value); }
 									catch { }
 								}
-								break;
+								else break;
+							}
+							break;
 
-							case "windowsize":
-								if (xr.MoveToAttribute("x"))
+						case "recentfiles":
+							if (xr.IsEmptyElement) break;
+							while (xr.Read())
+							{
+								if (xr.LocalName == "f")
 								{
-									try { p.lastFormSize.Width = Convert.ToInt32(xr.Value); }
+									try
+									{
+										p.lastFiles.Add(xr.ReadString());
+									}
 									catch { }
 								}
-								if (xr.MoveToAttribute("y"))
+								else break;
+							}
+							break;
+
+						case "lastopenedfiles":
+							if (xr.IsEmptyElement) break;
+							while (xr.Read())
+							{
+								if (xr.LocalName == "f")
 								{
-									try { p.lastFormSize.Height = Convert.ToInt32(xr.Value); }
+									try
+									{
+										p.lastOpenFiles.Add(xr.ReadString());
+									}
 									catch { }
 								}
-								break;
+								else break;
+							}
+							break;
 
-							case "retrievenews":
-								if (xr.MoveToAttribute("value"))
+
+						case "openlastprj":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.OpenLastPrj = xr.Value == "1";
+							}
+							break;
+
+						case "openlastfiles":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.OpenLastFiles = xr.Value == "1";
+							}
+							break;
+
+						case "windowstate":
+							if (xr.MoveToAttribute("value"))
+							{
+								try { p.lastFormState = (FormWindowState)Convert.ToInt32(xr.Value); }
+								catch { }
+							}
+							break;
+
+						case "windowsize":
+							if (xr.MoveToAttribute("x"))
+							{
+								try { p.lastFormSize.Width = Convert.ToInt32(xr.Value); }
+								catch { }
+							}
+							if (xr.MoveToAttribute("y"))
+							{
+								try { p.lastFormSize.Height = Convert.ToInt32(xr.Value); }
+								catch { }
+							}
+							break;
+
+						case "retrievenews":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.RetrieveNews = xr.Value == "1";
+							}
+							break;
+
+						case "logbuildstatus":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.LogBuildProgress = xr.Value == "1";
+							}
+							break;
+
+						case "showbuildcommands":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.ShowBuildCommands = xr.Value == "1";
+							}
+							break;
+
+						case "externaldbg":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.UseExternalDebugger = xr.Value == "1";
+							}
+							break;
+
+						case "singleinstance":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.SingleInstance = xr.Value == "1";
+							}
+							break;
+
+						case "watchforupdates":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.WatchForUpdates = xr.Value == "1";
+							}
+							break;
+
+						case "defprjdir":
+							p.DefaultProjectDirectory = xr.ReadString();
+							break;
+
+						case "parsedirectories":
+							if (xr.IsEmptyElement) break;
+							while (xr.Read())
+							{
+								if (xr.LocalName == "dir")
+									p.parsedDirectories.Add(xr.ReadString());
+								else break;
+							}
+							break;
+
+						case "debugger":
+							if (xr.IsEmptyElement) break;
+							while (xr.Read())
+							{
+								if (xr.LocalName == "bin")
 								{
-									p.RetrieveNews = xr.Value == "1";
+									p.exe_dbg = xr.ReadString();
 								}
-								break;
-
-							case "logbuildstatus":
-								if (xr.MoveToAttribute("value"))
+								else if (xr.LocalName == "args")
 								{
-									p.LogBuildProgress = xr.Value == "1";
+									p.dbg_args = xr.ReadString();
 								}
-								break;
+								else break;
+							}
+							break;
 
-							case "showbuildcommands":
-								if (xr.MoveToAttribute("value"))
+						case "lastsearchdir":
+							p.lastSearchDir = xr.ReadString();
+							break;
+
+						case "verbosedbgoutput":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.VerboseDebugOutput = xr.Value == "1";
+							}
+							break;
+
+						case "skipunknowncode":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.SkipUnknownCode = xr.Value == "1";
+							}
+							break;
+
+						case "showdbgpanelswhendebugging":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.ShowDbgPanelsOnDebugging = xr.Value == "1";
+							}
+							break;
+
+						case "autosave":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.DoAutoSaveOnBuilding = xr.Value == "1";
+							}
+							break;
+
+						case "createpdb":
+							if (xr.MoveToAttribute("value"))
+							{
+								p.CreatePDBOnBuild = xr.Value == "1";
+							}
+							break;
+
+						case "highlightings":
+							if (xr.IsEmptyElement) break;
+							while (xr.Read())
+							{
+								if (xr.LocalName == "f")
 								{
-									p.ShowBuildCommands = xr.Value == "1";
+									try
+									{
+										string ext = xr.GetAttribute("ext");
+										p.SyntaxHighlightingEntries.Add(ext, xr.ReadString());
+									}
+									catch { }
 								}
-								break;
-
-							case "externaldbg":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.UseExternalDebugger = xr.Value == "1";
-								}
-								break;
-
-							case "singleinstance":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.SingleInstance = xr.Value == "1";
-								}
-								break;
-
-							case "watchforupdates":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.WatchForUpdates = xr.Value == "1";
-								}
-								break;
-
-							case "defprjdir":
-								p.DefaultProjectDirectory = xr.ReadString();
-								break;
-
-							case "parsedirectories":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "dir")
-										p.parsedDirectories.Add(xr.ReadString());
-									else break;
-								}
-								break;
-
-							case "dtoobj":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "bin")
-									{
-										p.exe_cmp = xr.ReadString();
-									}
-									else if (xr.LocalName == "dbgargs")
-									{
-										p.cmp_obj_dbg = xr.ReadString();
-									}
-									else if (xr.LocalName == "args")
-									{
-										p.cmp_obj = xr.ReadString();
-									}
-									else break;
-								}
-								break;
-
-							case "objtowinexe":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "bin")
-									{
-										p.exe_win = xr.ReadString();
-									}
-									else if (xr.LocalName == "dbgargs")
-									{
-										p.link_win_exe_dbg = xr.ReadString();
-									}
-									else if (xr.LocalName == "args")
-									{
-										p.link_win_exe = xr.ReadString();
-									}
-									else break;
-								}
-								break;
-
-							case "objtoexe":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "bin")
-									{
-										p.exe_console = xr.ReadString();
-									}
-									else if (xr.LocalName == "dbgargs")
-									{
-										p.link_to_exe_dbg = xr.ReadString();
-									}
-									else if (xr.LocalName == "args")
-									{
-										p.link_to_exe = xr.ReadString();
-									}
-									else break;
-								}
-								break;
-
-							case "objtodll":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "bin")
-									{
-										p.exe_dll = xr.ReadString();
-									}
-									else if (xr.LocalName == "dbgargs")
-									{
-										p.link_to_dll_dbg = xr.ReadString();
-									}
-									else if (xr.LocalName == "args")
-									{
-										p.link_to_dll = xr.ReadString();
-									}
-									else break;
-								}
-								break;
-
-							case "objtolib":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "bin")
-									{
-										p.exe_lib = xr.ReadString();
-									}
-									else if (xr.LocalName == "dbgargs")
-									{
-										p.link_to_lib_dbg = xr.ReadString();
-									}
-									else if (xr.LocalName == "args")
-									{
-										p.link_to_lib = xr.ReadString();
-									}
-									else break;
-								}
-								break;
-
-							case "rctores":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "bin")
-									{
-										p.exe_res = xr.ReadString();
-									}
-									else if (xr.LocalName == "args")
-									{
-										p.cmp_res = xr.ReadString();
-									}
-									else break;
-								}
-								break;
-
-							case "debugger":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "bin")
-									{
-										p.exe_dbg = xr.ReadString();
-									}
-									else if (xr.LocalName == "args")
-									{
-										p.dbg_args = xr.ReadString();
-									}
-									else break;
-								}
-								break;
-
-							case "lastsearchdir":
-								p.lastSearchDir = xr.ReadString();
-								break;
-
-							case "verbosedbgoutput":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.VerboseDebugOutput = xr.Value == "1";
-								}
-								break;
-
-							case "skipunknowncode":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.SkipUnknownCode = xr.Value == "1";
-								}
-								break;
-
-							case "showdbgpanelswhendebugging":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.ShowDbgPanelsOnDebugging = xr.Value == "1";
-								}
-								break;
-
-							case "autosave":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.DoAutoSaveOnBuilding = xr.Value == "1";
-								}
-								break;
-
-							case "createpdb":
-								if (xr.MoveToAttribute("value"))
-								{
-									p.CreatePDBOnBuild = xr.Value == "1";
-								}
-								break;
-
-							case "highlightings":
-								if (xr.IsEmptyElement) break;
-								while (xr.Read())
-								{
-									if (xr.LocalName == "f")
-									{
-										try
-										{
-											string ext = xr.GetAttribute("ext");
-											p.SyntaxHighlightingEntries.Add(ext, xr.ReadString());
-										}
-										catch { }
-									}
-									else break;
-								}
-								break;
-						}
+								else break;
+							}
+							break;
 					}
 				}
-
-				xr.Close();
-				Default = p;
 			}
+
+			xr.Close();
+			Default = p;
 		}
 
 		#region Caching
@@ -416,7 +305,7 @@ namespace D_IDE
 			cacheTh = new Thread(delegate(object o)
 			{
 				BinaryDataTypeStorageWriter bsw = new BinaryDataTypeStorageWriter(file);
-				bsw.WriteModules(Default.parsedDirectories.ToArray(),GlobalModules);
+				bsw.WriteModules(Default.parsedDirectories.ToArray(), GlobalModules);
 				bsw.Close();
 
 				Program.Parsing = false;
@@ -533,72 +422,9 @@ namespace D_IDE
 			}
 			xw.WriteEndElement();
 
-			// d source to obj
-			xw.WriteStartElement("dtoobj");
-			xw.WriteStartElement("bin");
-			xw.WriteCData(Default.exe_cmp);
-			xw.WriteEndElement();
-			xw.WriteStartElement("args");
-			xw.WriteCData(Default.cmp_obj);
-			xw.WriteEndElement();
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("objtowinexe");
-			xw.WriteStartElement("bin");
-			xw.WriteCData(Default.exe_win);
-			xw.WriteEndElement();
-			xw.WriteStartElement("dbgargs");
-			xw.WriteCData(Default.link_win_exe_dbg);
-			xw.WriteEndElement();
-			xw.WriteStartElement("args");
-			xw.WriteCData(Default.link_win_exe);
-			xw.WriteEndElement();
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("objtoexe");
-			xw.WriteStartElement("bin");
-			xw.WriteCData(Default.exe_console);
-			xw.WriteEndElement();
-			xw.WriteStartElement("dbgargs");
-			xw.WriteCData(Default.link_to_exe_dbg);
-			xw.WriteEndElement();
-			xw.WriteStartElement("args");
-			xw.WriteCData(Default.link_to_exe);
-			xw.WriteEndElement();
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("objtodll");
-			xw.WriteStartElement("bin");
-			xw.WriteCData(Default.exe_dll);
-			xw.WriteEndElement();
-			xw.WriteStartElement("dbgargs");
-			xw.WriteCData(Default.link_to_dll_dbg);
-			xw.WriteEndElement();
-			xw.WriteStartElement("args");
-			xw.WriteCData(Default.link_to_dll);
-			xw.WriteEndElement();
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("objtolib");
-			xw.WriteStartElement("bin");
-			xw.WriteCData(Default.exe_lib);
-			xw.WriteEndElement();
-			xw.WriteStartElement("dbgargs");
-			xw.WriteCData(Default.link_to_lib_dbg);
-			xw.WriteEndElement();
-			xw.WriteStartElement("args");
-			xw.WriteCData(Default.link_to_lib);
-			xw.WriteEndElement();
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("rctores");
-			xw.WriteStartElement("bin");
-			xw.WriteCData(Default.exe_res);
-			xw.WriteEndElement();
-			xw.WriteStartElement("args");
-			xw.WriteCData(Default.cmp_res);
-			xw.WriteEndElement();
-			xw.WriteEndElement();
+			// DMD paths and args
+			CompilerConfiguration.SaveToXML(Default.dmd1, xw);
+			CompilerConfiguration.SaveToXML(Default.dmd2, xw);
 
 			xw.WriteStartElement("debugger");
 			xw.WriteStartElement("bin");
@@ -714,7 +540,6 @@ namespace D_IDE
 
 		public D_IDE_Properties()
 		{
-			exe_cmp = exe_console = exe_dll = exe_lib = exe_win = "dmd.exe";
 		}
 
 		public static D_IDE_Properties Default = new D_IDE_Properties();
@@ -764,27 +589,17 @@ namespace D_IDE
 		public static List<ICompletionData> GlobalCompletionList = new List<ICompletionData>();
 		public List<string> parsedDirectories = new List<string>();
 
-		public string exe_cmp;
-		public string exe_win;
-		public string exe_console;
-		public string exe_dll;
-		public string exe_lib;
-		public string exe_res = "rc.exe";
+		public CompilerConfiguration dmd1 = new CompilerConfiguration(CompilerConfiguration.DVersion.D1);
+		public CompilerConfiguration dmd2 = new CompilerConfiguration(CompilerConfiguration.DVersion.D2);
+		public CompilerConfiguration Compiler
+		{
+			set {
+				if (value.Version == CompilerConfiguration.DVersion.D1) dmd1 = value;
+				else dmd2 = value;
+			}
+		}
+
 		public string exe_dbg = "windbg.exe";
-
-		public string cmp_obj_dbg = "-c \"$src\" -of\"$obj\" -gc";
-		public string link_win_exe_dbg = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc";
-		public string link_to_exe_dbg = "$objs $libs -of\"$exe\" -gc";
-		public string link_to_dll_dbg = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
-		public string link_to_lib_dbg = "$objs $libs -of\"$lib\"";
-
-		public string cmp_obj = "-c \"$src\" -of\"$obj\" -release";
-		public string link_win_exe = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -release";
-		public string link_to_exe = "$objs $libs -of\"$exe\" -release";
-		public string link_to_dll = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -release";
-		public string link_to_lib = "$objs $libs -of\"$lib\"";
-
-		public string cmp_res = "/fo\"$res\" \"$rc\"";
 		public string dbg_args = "\"$exe\"";
 
 		public string lastSearchDir = Application.StartupPath;
@@ -810,6 +625,217 @@ namespace D_IDE
 		public static CodeLocation toCodeLocation(TextLocation Caret)
 		{
 			return new CodeLocation(Caret.Column + 1, Caret.Line + 1);
+		}
+	}
+
+	public class CompilerConfiguration
+	{
+		public string BinDirectory;
+		public DVersion Version = DVersion.D2;
+
+		public enum DVersion
+		{
+			D1 = 1,
+			D2 = 2,
+		}
+
+		public CompilerConfiguration(DVersion version)
+		{
+			Version = version;
+			if (Version == DVersion.D1) BinDirectory = "C:\\dmd\\windows\\bin";
+			else BinDirectory = "C:\\dmd2\\windows\\bin";
+		}
+
+		public string SoureCompiler = "dmd.exe";
+		public string ExeLinker = "dmd.exe";
+		public string Win32ExeLinker = "dmd.exe";
+		public string DllLinker = "dmd.exe";
+		public string LibLinker = "lib.exe";
+		public string ResourceCompiler = "rc.exe";
+
+		public string SoureCompilerDebugArgs = "-c \"$src\" -of\"$obj\" -gc";
+		public string ExeLinkerDebugArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc";
+		public string Win32ExeLinkerDebugArgs = "$objs $libs -of\"$exe\" -gc";
+		public string DllLinkerDebugArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
+		public string LibLinkerDebugArgs = "$objs $libs -of\"$lib\"";
+
+		public string SoureCompilerArgs = "-c \"$src\" -of\"$obj\" -release";
+		public string ExeLinkerArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -release";
+		public string Win32ExeLinkerArgs = "$objs $libs -of\"$exe\" -release";
+		public string DllLinkerArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -release";
+		public string LibLinkerArgs = "$objs $libs -of\"$lib\"";
+
+		public string ResourceCompilerArgs = "/fo\"$res\" \"$rc\"";
+
+		public static void SaveToXML(CompilerConfiguration cc, XmlWriter xml)
+		{
+			xml.WriteStartElement("dmd"); // <dmd>
+			xml.WriteAttributeString("version", ((int)cc.Version).ToString());
+
+			xml.WriteStartElement("binpath");
+			xml.WriteCData(cc.BinDirectory);
+			xml.WriteEndElement();
+
+			xml.WriteStartElement("dtoobj");
+			xml.WriteStartElement("bin");
+			xml.WriteCData(cc.SoureCompiler);
+			xml.WriteEndElement();
+			xml.WriteStartElement("args");
+			xml.WriteCData(cc.SoureCompilerArgs);
+			xml.WriteEndElement();
+			xml.WriteStartElement("dbgargs");
+			xml.WriteCData(cc.SoureCompilerDebugArgs);
+			xml.WriteEndElement();
+			xml.WriteEndElement();
+
+			xml.WriteStartElement("objtowinexe");
+			xml.WriteStartElement("bin");
+			xml.WriteCData(cc.Win32ExeLinker);
+			xml.WriteEndElement();
+			xml.WriteStartElement("dbgargs");
+			xml.WriteCData(cc.Win32ExeLinkerDebugArgs);
+			xml.WriteEndElement();
+			xml.WriteStartElement("args");
+			xml.WriteCData(cc.Win32ExeLinkerArgs);
+			xml.WriteEndElement();
+			xml.WriteEndElement();
+
+			xml.WriteStartElement("objtoexe");
+			xml.WriteStartElement("bin");
+			xml.WriteCData(cc.ExeLinker);
+			xml.WriteEndElement();
+			xml.WriteStartElement("dbgargs");
+			xml.WriteCData(cc.ExeLinkerDebugArgs);
+			xml.WriteEndElement();
+			xml.WriteStartElement("args");
+			xml.WriteCData(cc.ExeLinkerArgs);
+			xml.WriteEndElement();
+			xml.WriteEndElement();
+
+			xml.WriteStartElement("objtodll");
+			xml.WriteStartElement("bin");
+			xml.WriteCData(cc.DllLinker);
+			xml.WriteEndElement();
+			xml.WriteStartElement("dbgargs");
+			xml.WriteCData(cc.DllLinkerDebugArgs);
+			xml.WriteEndElement();
+			xml.WriteStartElement("args");
+			xml.WriteCData(cc.DllLinkerArgs);
+			xml.WriteEndElement();
+			xml.WriteEndElement();
+
+			xml.WriteStartElement("objtolib");
+			xml.WriteStartElement("bin");
+			xml.WriteCData(cc.LibLinker);
+			xml.WriteEndElement();
+			xml.WriteStartElement("dbgargs");
+			xml.WriteCData(cc.LibLinkerDebugArgs);
+			xml.WriteEndElement();
+			xml.WriteStartElement("args");
+			xml.WriteCData(cc.LibLinkerArgs);
+			xml.WriteEndElement();
+			xml.WriteEndElement();
+
+			xml.WriteStartElement("rctores");
+			xml.WriteStartElement("bin");
+			xml.WriteCData(cc.ResourceCompiler);
+			xml.WriteEndElement();
+			xml.WriteStartElement("args");
+			xml.WriteCData(cc.ResourceCompilerArgs);
+			xml.WriteEndElement();
+			xml.WriteEndElement();
+
+			xml.WriteEndElement(); // </dmd>
+		}
+
+		public static CompilerConfiguration ReadFromXML(XmlReader xr)
+		{
+			CompilerConfiguration cc = new CompilerConfiguration(DVersion.D2);
+
+			if (xr.LocalName != "dmd") return null;
+			cc.Version = (DVersion)Convert.ToInt32(xr.GetAttribute("version"));
+
+			while (xr.Read())// now 'settings' should be the current node
+			{
+				if (xr.LocalName == "dmd" && xr.NodeType == XmlNodeType.EndElement) break;
+				if (xr.NodeType == XmlNodeType.Element)
+				{
+					switch (xr.LocalName)
+					{
+						default: break;
+
+						case "binpath":
+							if (xr.IsEmptyElement) break;
+							cc.BinDirectory = xr.ReadString();
+							break;
+
+						case "dtoobj":
+						case "objtowinexe":
+						case "objtoexe":
+						case "objtodll":
+						case "objtolib":
+						case "rctores":
+							if (xr.IsEmptyElement) break;
+							string binname = xr.LocalName;
+							string bin=null, arg=null, dbgarg=null;
+							while (xr.Read())
+							{
+								if (xr.LocalName == "bin")
+								{
+									bin = xr.ReadString();
+								}
+								else if (xr.LocalName == "dbgargs")
+								{
+									dbgarg = xr.ReadString();
+								}
+								else if (xr.LocalName == "args")
+								{
+									arg = xr.ReadString();
+								}
+								else break;
+							}
+
+							switch (binname)
+							{
+								default: break;
+								case "dtoobj":
+									cc.SoureCompiler = bin;
+									cc.SoureCompilerArgs = arg;
+									cc.SoureCompilerDebugArgs = dbgarg;
+									break;
+								case "objtowinexe":
+									cc.Win32ExeLinker = bin;
+									cc.Win32ExeLinkerArgs = arg;
+									cc.Win32ExeLinkerDebugArgs = dbgarg;
+									break;
+								case "objtoexe":
+									cc.ExeLinker = bin;
+									cc.ExeLinkerArgs = arg;
+									cc.ExeLinkerDebugArgs = dbgarg;
+									break;
+								case "objtodll":
+									cc.DllLinker = bin;
+									cc.DllLinkerArgs = arg;
+									cc.DllLinkerDebugArgs = dbgarg;
+									break;
+								case "objtolib":
+									cc.LibLinker = bin;
+									cc.LibLinkerArgs = arg;
+									cc.LibLinkerDebugArgs = dbgarg;
+									break;
+								case "rctores":
+									cc.ResourceCompiler = bin;
+									cc.ResourceCompilerArgs = arg;
+									break;
+							}
+
+							break;
+					}
+				}
+			}
+
+
+			return cc;
 		}
 	}
 

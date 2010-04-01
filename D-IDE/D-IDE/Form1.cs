@@ -421,6 +421,7 @@ namespace D_IDE
 		public void BuildSingle(object sender, EventArgs e)
 		{
 			UseOutput = false;
+			CompilerConfiguration cc = D_IDE_Properties.Default.dmd2;
 			if (SelectedTabPage != null)
 			{
 				bpw.Show();
@@ -430,7 +431,7 @@ namespace D_IDE
 					if (tp.fileData.mod_file.EndsWith(".rc"))
 					{
 						DBuilder.BuildResFile(
-							tp.fileData.mod_file,
+							tp.fileData.mod_file,cc,
 							Path.ChangeExtension(tp.fileData.mod_file, ".res"),
 							Path.GetDirectoryName(tp.fileData.mod_file)
 							);
@@ -440,7 +441,7 @@ namespace D_IDE
 					return;
 				}
 				Log("Build single " + tp.fileData.mod_file + " to " + Path.ChangeExtension(tp.fileData.mod_file, ".exe"));
-				DBuilder.Exec(D_IDE_Properties.Default.exe_cmp, "\"" + tp.fileData.mod_file + "\" -O ", Path.GetDirectoryName(tp.fileData.mod_file), true).WaitForExit(10000);
+				DBuilder.Exec(cc.ExeLinker, "\"" + tp.fileData.mod_file + "\"", Path.GetDirectoryName(tp.fileData.mod_file), true).WaitForExit(10000);
 			}
 		}
 

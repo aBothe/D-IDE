@@ -19,6 +19,7 @@ namespace D_IDE.Dialogs
 
 			prjdir.Text = D_IDE_Properties.Default.DefaultProjectDirectory;
 			prjtype.SelectedIndex = 0;
+			SelectedDVersion = CompilerConfiguration.DVersion.D2;
 		}
 
 		public string GetExt()
@@ -35,6 +36,18 @@ namespace D_IDE.Dialogs
 					return ".lib";
 				default:
 					return ".exe";
+			}
+		}
+
+		public CompilerConfiguration.DVersion SelectedDVersion
+		{
+			get
+			{
+				return (CompilerConfiguration.DVersion)(DVersionSelector.SelectedIndex + 1);
+			}
+			set
+			{
+				DVersionSelector.SelectedIndex = ((int)value) - 1;
 			}
 		}
 
@@ -55,6 +68,7 @@ namespace D_IDE.Dialogs
 				return;
 			}
 			prj.name = prjname.Text;
+			prj.CompilerVersion = SelectedDVersion;
 
             switch (prjtype.SelectedIndex)
             {

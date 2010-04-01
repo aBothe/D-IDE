@@ -48,6 +48,8 @@ namespace D_IDE
 			try { prj.Save(); }
 			catch { }
 
+			CompilerConfiguration cc = prj.Compiler;
+
 			OnMessage(prj, prj.prjfn, "Build " + prj.name + " project");
 
 			prj.RefreshBuildDate();
@@ -158,7 +160,7 @@ namespace D_IDE
 						Form1.thisForm.ProgressStatusLabel.Text = "Compiling resource " + Path.GetFileName(rc);
 
 						OneFileChanged = true;
-						if (!BuildResFile(rc, res, prj.basedir)) return false;
+						if (!BuildResFile(rc,cc, res, prj.basedir)) return false;
 
 						if (!prj.LastModifyingDates.ContainsKey(phys_rc))
 							prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
@@ -194,7 +196,7 @@ namespace D_IDE
 						Form1.thisForm.ProgressStatusLabel.Text = "Compiling " + Path.GetFileName(rc);
 
 						OneFileChanged = true;
-						if (!BuildObjFile(rc, obj, prj.basedir, prj.compileargs,IsDebug)) return false;
+						if (!BuildObjFile(rc,cc, obj, prj.basedir, prj.compileargs,IsDebug)) return false;
 
 						if (!prj.LastModifyingDates.ContainsKey(phys_rc))
 							prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
@@ -229,24 +231,24 @@ namespace D_IDE
 			switch (prj.type)
 			{
 				case DProject.PrjType.WindowsApp:
-					exe = D_IDE_Properties.Default.exe_win;
+					exe = cc.Win32ExeLinker;
 					target += ".exe";
-					args = IsDebug?D_IDE_Properties.Default.link_win_exe_dbg: D_IDE_Properties.Default.link_win_exe;
+					args = IsDebug?cc.Win32ExeLinkerDebugArgs:cc.Win32ExeLinkerArgs;
 					break;
 				case DProject.PrjType.ConsoleApp:
-					exe = D_IDE_Properties.Default.exe_console;
+					exe = cc.ExeLinker;
 					target += ".exe";
-					args = IsDebug?D_IDE_Properties.Default.link_to_exe_dbg: D_IDE_Properties.Default.link_to_exe;
+					args = IsDebug?cc.ExeLinkerDebugArgs:cc.ExeLinkerArgs;
 					break;
 				case DProject.PrjType.Dll:
-					exe = D_IDE_Properties.Default.exe_dll;
+					exe = cc.DllLinker;
 					target += ".dll";
-					args = IsDebug?D_IDE_Properties.Default.link_to_dll_dbg: D_IDE_Properties.Default.link_to_dll;
+					args = IsDebug?cc.DllLinkerDebugArgs:cc.DllLinkerArgs;
 					break;
 				case DProject.PrjType.StaticLib:
-					exe = D_IDE_Properties.Default.exe_lib;
+					exe = cc.LibLinker;
 					target += ".lib";
-					args = IsDebug?D_IDE_Properties.Default.link_to_lib_dbg: D_IDE_Properties.Default.link_to_lib;
+					args = IsDebug?cc.LibLinkerDebugArgs:cc.LibLinkerArgs;
 					break;
 			}
 
@@ -301,29 +303,29 @@ namespace D_IDE
 			return false;
 		}
 
-		public static bool BuildObjFile(string file, string target, string exeDir, string additionalArgs, bool IsDebug)
+		public static bool BuildObjFile(string file, CompilerConfiguration cc, string target, string exeDir, string additionalArgs, bool IsDebug)
 		{
 			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
 
-			string args = IsDebug?D_IDE_Properties.Default.cmp_obj_dbg: D_IDE_Properties.Default.cmp_obj;
+			string args = IsDebug?cc.SoureCompilerDebugArgs:cc.SoureCompilerArgs;
 			args = args.Replace("$src", file);
 			args = args.Replace("$obj", target);
 
-			Process prc = DBuilder.Exec(D_IDE_Properties.Default.exe_cmp, args + " " + additionalArgs, exeDir, true);
+			Process prc = DBuilder.Exec(cc.SoureCompiler, args + " " + additionalArgs, exeDir, true);
 			prc.WaitForExit(10000);
 
 			return prc.ExitCode == 0;
 		}
 
-		public static bool BuildResFile(string file, string target, string exeDir)
+		public static bool BuildResFile(string file, CompilerConfiguration cc, string target, string exeDir)
 		{
 			if (!file.EndsWith(".rc")) { throw new Exception("Cannot build resource file of " + file); }
 
-			string args = D_IDE_Properties.Default.cmp_res;
+			string args = cc.ResourceCompilerArgs;
 			args = args.Replace("$rc", file);
 			args = args.Replace("$res", target);
 
-			Process prc = DBuilder.Exec(D_IDE_Properties.Default.exe_res, args, exeDir, true);
+			Process prc = DBuilder.Exec(cc.ResourceCompiler, args, exeDir, true);
 			prc.WaitForExit(10000);
 
 			return prc.ExitCode == 0;

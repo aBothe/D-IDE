@@ -60,6 +60,16 @@ namespace D_IDE
 		public ManifestCreationType ManifestCreation=ManifestCreationType.None;
 
 		public bool isRelease;
+		//public CompilerConfiguration Compiler=D_IDE_Properties.Default.dmd2;
+		public CompilerConfiguration.DVersion CompilerVersion=CompilerConfiguration.DVersion.D2;
+		public CompilerConfiguration Compiler
+		{
+			get {
+				if (CompilerVersion == CompilerConfiguration.DVersion.D1) 
+					return D_IDE_Properties.Default.dmd1;
+				return D_IDE_Properties.Default.dmd2;
+			}
+		}
 
 		public bool EnableSubversioning = false; // Shall this stay activated by default?
 		public bool AlsoStoreSources = true;
@@ -307,6 +317,9 @@ namespace D_IDE
 							case "manifestcreation":
 								ret.ManifestCreation = (ManifestCreationType)Convert.ToInt32(xr.GetAttribute("type"));
 								break;
+							case "dmd":
+								ret.CompilerVersion = (CompilerConfiguration.DVersion)Convert.ToInt32(xr.GetAttribute("version"));
+								break;
 							case "name":
 								xr.Read();
 								ret.name = xr.ReadString();
@@ -491,6 +504,10 @@ namespace D_IDE
 
 			xw.WriteStartElement("manifestcreation");
 			xw.WriteAttributeString("type", ((int)ManifestCreation).ToString());
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("dmd");
+			xw.WriteAttributeString("version",((int)CompilerVersion).ToString());
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("name");
