@@ -13,12 +13,16 @@
 !define BINARY_APPLICATION_FILES "..\D-IDE\D-IDE\bin\Release"
 !define PROJECT_FILES "..\D-IDE\D-IDE"
 !define THIRD_PARTY_FILES "..\externalDeps"
+!define CLR_INSTALLER_HELPER ".\"
 
 !define DNF35_URL "http://download.microsoft.com/download/6/0/f/60fc5854-3cb8-4892-b6db-bd4f42510f28/dotnetfx35.exe"
 !define DMD_URL "http://ftp.digitalmars.com/dinstaller.exe"
 
 !define /date FILEDATE "%Y%m%d"
 !define /date DATE "%Y.%m.%d"
+
+Var DMD1_BIN_PATH
+Var DMD2_BIN_PATH
 
 ;--------------------------------------------------------
 ; Setting various predefined NSIS Variables
@@ -36,6 +40,9 @@ RequestExecutionLevel highest
 ;--------------------------------------------------------
 Function .onInit
 	InitPluginsDir
+	
+	ReadRegStr $DMD1_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath"
+	ReadRegStr $DMD2_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath"
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -132,6 +139,7 @@ Section "-Install Program Files" install_section_id
 	File /nonfatal /x .svn "${PROJECT_FILES}\*.xshd"
 	
 	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
+	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
 
 	;Config files that should be merged through a seperate process - we need to copy them to a backup folder
 	;IfFileExists "$INSTDIR\D-IDEIndexer.exe.config" 0 +4
@@ -152,6 +160,15 @@ Section "-Install Program Files" install_section_id
 	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
 SectionEnd
 
+;--------------------------------------------------------
+; Configure DMD
+;--------------------------------------------------------
+Section "-Configure DMD" configure_dmd_section_id
+  CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Ping" 0 ; 5 "mystring1" "x" 10 15.8 false
+  pop $0  
+  MessageBox MB_OK "Result is: $0"
+  CLR::Destroy
+SectionEnd
 ;--------------------------------------------------------
 ; Write the unistaller
 ;--------------------------------------------------------
