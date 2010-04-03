@@ -41,7 +41,7 @@ namespace D_IDE
 						default: break;
 
 						case "dmd":
-							CompilerConfiguration cc= CompilerConfiguration.ReadFromXML(xr);
+							CompilerConfiguration cc = CompilerConfiguration.ReadFromXML(xr);
 							if (cc.Version == CompilerConfiguration.DVersion.D1) p.dmd1 = cc;
 							else p.dmd2 = cc;
 							break;
@@ -176,16 +176,6 @@ namespace D_IDE
 							p.DefaultProjectDirectory = xr.ReadString();
 							break;
 
-						case "parsedirectories":
-							if (xr.IsEmptyElement) break;
-							while (xr.Read())
-							{
-								if (xr.LocalName == "dir")
-									p.parsedDirectories.Add(xr.ReadString());
-								else break;
-							}
-							break;
-
 						case "debugger":
 							if (xr.IsEmptyElement) break;
 							while (xr.Read())
@@ -266,78 +256,63 @@ namespace D_IDE
 		}
 
 		#region Caching
-		public static void LoadGlobalCache(string file)
+		public static void LoadGlobalCache(CompilerConfiguration cc, string file)
 		{
 			if (!File.Exists(file)) return;
 			if (cacheTh != null && cacheTh.IsAlive) return;
 
 			Program.Parsing = true;
 
-			cacheTh = new Thread(delegate(object o)
+			//cacheTh = new Thread(delegate(object o)			{
+			BinaryDataTypeStorageReader bsr = new BinaryDataTypeStorageReader(file);
+			try
 			{
-				BinaryDataTypeStorageReader bsr = new BinaryDataTypeStorageReader(file);
-				try
-				{
-					GlobalModules = bsr.ReadModules(ref Default.parsedDirectories);
-				}
-				catch (Exception ex) { MessageBox.Show(ex.Message); }
-				bsr.Close();
+				cc.GlobalModules = bsr.ReadModules(ref cc.ImportDirectories);
+			}
+			catch (Exception ex) {
+                Program.StartScreen.Close();
+                if (System.Diagnostics.Debugger.IsAttached) throw ex;
+                MessageBox.Show(ex.Message); }
+			bsr.Close();
 
-				// add all loaded data to the precached completion list
-				D_IDE_Properties.GlobalCompletionList.Clear();
-				DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList);
+			// add all loaded data to the precached completion list
+			cc.GlobalCompletionList.Clear();
+			List<ICompletionData> ilist = new List<ICompletionData>();
+			DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
+			cc.GlobalCompletionList = ilist;
 
-				Program.Parsing = false;
-			});
-			cacheTh.Start();
-
+			Program.Parsing = false;
+			//});			cacheTh.Start();
 		}
 
 		static Thread cacheTh;
-		public static void SaveGlobalCache(string file)
+		public static void SaveGlobalCache(CompilerConfiguration cc, string file)
 		{
 			if (cacheTh != null && cacheTh.IsAlive) return;
 			int i = 0;
-			while (Program.Parsing && i < 500) { Thread.Sleep(50); i++; }
+			//while (Program.Parsing && i < 500) { Thread.Sleep(50); i++; }
 
 			Program.Parsing = true;
 
-			cacheTh = new Thread(delegate(object o)
-			{
-				BinaryDataTypeStorageWriter bsw = new BinaryDataTypeStorageWriter(file);
-				bsw.WriteModules(Default.parsedDirectories.ToArray(), GlobalModules);
-				bsw.Close();
-
-				Program.Parsing = false;
-			});
-			cacheTh.Start();
+			//cacheTh = new Thread(delegate(object o)			{
+            if (cc.GlobalModules != null && cc.GlobalModules.Count > 1)
+            {
+                BinaryDataTypeStorageWriter bsw = new BinaryDataTypeStorageWriter(file);
+                bsw.WriteModules(cc.ImportDirectories.ToArray(), cc.GlobalModules);
+                bsw.Close();
+            }
+			Program.Parsing = false;
+			//});			cacheTh.Start();
 		}
 		#endregion
 
-		public DModule this[string moduleName]
+		public DModule GetModule(CompilerConfiguration cc, string moduleName)
 		{
-			get
+			foreach (DModule dm in cc.GlobalModules)
 			{
-				foreach (DModule dm in GlobalModules)
-				{
-					if (dm.ModuleName == moduleName) return dm;
-				}
-				return null;
+				if (dm.ModuleName == moduleName) return dm;
 			}
-			set
-			{
-				int i = 0;
-				foreach (DModule dm in GlobalModules)
-				{
-					if (dm.ModuleName == moduleName)
-					{
-						GlobalModules[i] = value;
-						return;
-					}
-					i++;
-				}
-				AddFileData(value);
-			}
+			return null;
 		}
 
 		public static void Save(string fn)
@@ -415,13 +390,6 @@ namespace D_IDE
 			xw.WriteCData(Default.DefaultProjectDirectory);
 			xw.WriteEndElement();
 
-			xw.WriteStartElement("parsedirectories");
-			foreach (string dir in Default.parsedDirectories)
-			{
-				xw.WriteStartElement("dir"); xw.WriteCData(dir); xw.WriteEndElement();
-			}
-			xw.WriteEndElement();
-
 			// DMD paths and args
 			CompilerConfiguration.SaveToXML(Default.dmd1, xw);
 			CompilerConfiguration.SaveToXML(Default.dmd2, xw);
@@ -474,17 +442,6 @@ namespace D_IDE
 			xw.Close();
 		}
 
-		public static bool HasModule(string file)
-		{
-			foreach (DModule dpf in GlobalModules)
-			{
-				if (dpf.mod_file == file)
-				{
-					return true;
-				}
-			}
-			return false;
-		}
 		public static bool HasModule(List<DModule> modules, string file)
 		{
 			foreach (DModule dpf in modules)
@@ -496,27 +453,9 @@ namespace D_IDE
 			}
 			return false;
 		}
-		public static bool AddFileData(DModule pf)
+		public static bool AddFileData(CompilerConfiguration cc, DModule pf)
 		{
-			if (!pf.IsParsable) return false;
-
-
-
-			foreach (DModule dpf in GlobalModules)
-			{
-				if (dpf.FileName == pf.FileName)
-				{
-					dpf.dom = pf.dom;
-					dpf.folds = pf.folds;
-					dpf.ModuleName = pf.ModuleName;
-					dpf.import = pf.import;
-					return true;
-				}
-			}
-
-			GlobalModules.Add(pf);
-
-			return true;
+			return AddFileData(cc.GlobalModules, pf);
 		}
 		public static bool AddFileData(List<DModule> modules, DModule pf)
 		{
@@ -585,19 +524,28 @@ namespace D_IDE
 		public bool WatchForUpdates = false;
 		public string DefaultProjectDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\D Projects";
 
-		public static List<DModule> GlobalModules = new List<DModule>();
-		public static List<ICompletionData> GlobalCompletionList = new List<ICompletionData>();
-		public List<string> parsedDirectories = new List<string>();
+
 
 		public CompilerConfiguration dmd1 = new CompilerConfiguration(CompilerConfiguration.DVersion.D1);
 		public CompilerConfiguration dmd2 = new CompilerConfiguration(CompilerConfiguration.DVersion.D2);
+
+		public static List<DModule> D1GlobalModules = new List<DModule>();
+		public static List<ICompletionData> D1GlobalCompletionList = new List<ICompletionData>();
+		public static List<DModule> D2GlobalModules = new List<DModule>();
+		public static List<ICompletionData> D2GlobalCompletionList = new List<ICompletionData>();
+
 		public CompilerConfiguration Compiler
 		{
-			set {
+			set
+			{
 				if (value.Version == CompilerConfiguration.DVersion.D1) dmd1 = value;
 				else dmd2 = value;
 			}
 		}
+        public CompilerConfiguration DefaultCompiler
+        {
+            get { return dmd2; }
+        }
 
 		public string exe_dbg = "windbg.exe";
 		public string dbg_args = "\"$exe\"";
@@ -630,8 +578,34 @@ namespace D_IDE
 
 	public class CompilerConfiguration
 	{
-		public string BinDirectory;
 		public DVersion Version = DVersion.D2;
+
+		public string BinDirectory;
+		public List<DModule> GlobalModules
+		{
+			get {
+				if (Version == DVersion.D1) return D_IDE_Properties.D1GlobalModules;
+				else return D_IDE_Properties.D2GlobalModules;
+			}
+			set
+			{
+				if (Version == DVersion.D1) D_IDE_Properties.D1GlobalModules = value;
+				else D_IDE_Properties.D2GlobalModules = value;
+			}
+		}
+		public List<ICompletionData> GlobalCompletionList
+		{
+			get {
+				if (Version == DVersion.D1) return D_IDE_Properties.D1GlobalCompletionList;
+				else return D_IDE_Properties.D2GlobalCompletionList;
+			}
+			set
+			{
+				if (Version == DVersion.D1) D_IDE_Properties.D1GlobalCompletionList = value;
+				else D_IDE_Properties.D2GlobalCompletionList = value;
+			}
+		}
+		public List<string> ImportDirectories = new List<string>();
 
 		public enum DVersion
 		{
@@ -654,14 +628,14 @@ namespace D_IDE
 		public string ResourceCompiler = "rc.exe";
 
 		public string SoureCompilerDebugArgs = "-c \"$src\" -of\"$obj\" -gc";
-		public string ExeLinkerDebugArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc";
-		public string Win32ExeLinkerDebugArgs = "$objs $libs -of\"$exe\" -gc";
+        public string Win32ExeLinkerDebugArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc";
+		public string ExeLinkerDebugArgs = "$objs $libs -of\"$exe\" -gc";
 		public string DllLinkerDebugArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
 		public string LibLinkerDebugArgs = "$objs $libs -of\"$lib\"";
 
 		public string SoureCompilerArgs = "-c \"$src\" -of\"$obj\" -release";
-		public string ExeLinkerArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -release";
-		public string Win32ExeLinkerArgs = "$objs $libs -of\"$exe\" -release";
+        public string Win32ExeLinkerArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -release";
+		public string ExeLinkerArgs = "$objs $libs -of\"$exe\" -release";
 		public string DllLinkerArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -release";
 		public string LibLinkerArgs = "$objs $libs -of\"$lib\"";
 
@@ -674,6 +648,15 @@ namespace D_IDE
 
 			xml.WriteStartElement("binpath");
 			xml.WriteCData(cc.BinDirectory);
+			xml.WriteEndElement();
+
+			xml.WriteStartElement("imports");
+			foreach (string dir in cc.ImportDirectories)
+			{
+				xml.WriteStartElement("dir"); 
+				xml.WriteCData(dir); 
+				xml.WriteEndElement();
+			}
 			xml.WriteEndElement();
 
 			xml.WriteStartElement("dtoobj");
@@ -769,6 +752,17 @@ namespace D_IDE
 							cc.BinDirectory = xr.ReadString();
 							break;
 
+						case "parsedirectories":
+						case "imports":
+							if (xr.IsEmptyElement) break;
+							while (xr.Read())
+							{
+								if (xr.LocalName == "dir")
+									cc.ImportDirectories.Add(xr.ReadString());
+								else break;
+							}
+							break;
+
 						case "dtoobj":
 						case "objtowinexe":
 						case "objtoexe":
@@ -777,7 +771,7 @@ namespace D_IDE
 						case "rctores":
 							if (xr.IsEmptyElement) break;
 							string binname = xr.LocalName;
-							string bin=null, arg=null, dbgarg=null;
+							string bin = null, arg = null, dbgarg = null;
 							while (xr.Read())
 							{
 								if (xr.LocalName == "bin")

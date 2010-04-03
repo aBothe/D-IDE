@@ -59,6 +59,9 @@ namespace D_IDE
 				cc.LibLinkerArgs = link_to_lib.Text;
 
 				cc.ResourceCompilerArgs = rc.Text;
+
+				// Import paths get added somewhere else
+
 				return cc;
 			}
 			set
@@ -97,7 +100,8 @@ namespace D_IDE
 			reopenLastPrj.Checked = D_IDE_Properties.Default.OpenLastPrj;
 			restoreLastSession.Checked = D_IDE_Properties.Default.OpenLastFiles;
 
-			parsedFiles.Items.AddRange(D_IDE_Properties.Default.parsedDirectories.ToArray());
+			D1Imports.Items.AddRange(D_IDE_Properties.Default.dmd1.ImportDirectories.ToArray());
+			D2Imports.Items.AddRange(D_IDE_Properties.Default.dmd2.ImportDirectories.ToArray());
 
 			dbg_exe.Text = D_IDE_Properties.Default.exe_dbg;
 			UseIntegDbg.Checked = D_IDE_Properties.Default.UseExternalDebugger;
@@ -107,12 +111,12 @@ namespace D_IDE
 			SelectedDVersion = CompilerConfiguration.DVersion.D2;
 
 			dbg_args.Text = D_IDE_Properties.Default.dbg_args;
-
+			/*
 			parsedFileList.Items.Clear();
 			foreach (DModule gpf in D_IDE_Properties.GlobalModules)
 			{
 				parsedFileList.Items.Add(gpf.mod_file);
-			}
+			}*/
 
 			logbuildprogress_chk.Checked = D_IDE_Properties.Default.LogBuildProgress;
 			showCompleteLog.Checked = D_IDE_Properties.Default.ShowBuildCommands;
@@ -160,14 +164,15 @@ namespace D_IDE
 			else
 				dmd2 = CompilerConfiguration;// Vice versa
 
+			foreach (string dir in D1Imports.Items)
+				dmd1.ImportDirectories.Add(dir);
+			foreach (string dir in D2Imports.Items)
+				dmd2.ImportDirectories.Add(dir);
+
 			D_IDE_Properties.Default.dmd1 = dmd1;
 			D_IDE_Properties.Default.dmd2 = dmd2;
 
 			D_IDE_Properties.Default.dbg_args = dbg_args.Text;
-
-			D_IDE_Properties.Default.parsedDirectories.Clear();
-			foreach (string dir in parsedFiles.Items)
-				D_IDE_Properties.Default.parsedDirectories.Add(dir);
 
 			D_IDE_Properties.Default.LogBuildProgress = logbuildprogress_chk.Checked;
 			D_IDE_Properties.Default.ShowBuildCommands = showCompleteLog.Checked;
@@ -178,30 +183,49 @@ namespace D_IDE
 			D_IDE_Properties.Default.SyntaxHighlightingEntries = HighlightingEntries;
 		}
 
+		#region Import paths
 		private void button2_Click(object sender, EventArgs e)
 		{
-			if (parsedFiles.SelectedIndex >= 0)
-				parsedFiles.Items.RemoveAt(parsedFiles.SelectedIndex);
+			if (D1Imports.SelectedIndex >= 0)
+				D1Imports.Items.RemoveAt(D1Imports.SelectedIndex);
 		}
 
 		private void button3_Click(object sender, EventArgs e)
 		{
 			FolderBrowserDialog fd = new FolderBrowserDialog();
 			fd.SelectedPath = D_IDE_Properties.Default.lastSearchDir;
-			if (fd.ShowDialog() == DialogResult.OK && !parsedFiles.Items.Contains(fd.SelectedPath))
+			if (fd.ShowDialog() == DialogResult.OK && !D1Imports.Items.Contains(fd.SelectedPath))
 			{
-				parsedFiles.Items.Add(fd.SelectedPath);
+				D1Imports.Items.Add(fd.SelectedPath);
 				D_IDE_Properties.Default.lastSearchDir = fd.SelectedPath;
 			}
 		}
 
+		private void button9_Click(object sender, EventArgs e)
+		{
+			FolderBrowserDialog fd = new FolderBrowserDialog();
+			fd.SelectedPath = D_IDE_Properties.Default.lastSearchDir;
+			if (fd.ShowDialog() == DialogResult.OK && !D2Imports.Items.Contains(fd.SelectedPath))
+			{
+				D2Imports.Items.Add(fd.SelectedPath);
+				D_IDE_Properties.Default.lastSearchDir = fd.SelectedPath;
+			}
+		}
+
+		private void button8_Click(object sender, EventArgs e)
+		{
+			if (D2Imports.SelectedIndex >= 0)
+				D2Imports.Items.RemoveAt(D2Imports.SelectedIndex);
+		}
+		#endregion
+		/*
 		private void parsedFileList_MouseDoubleClick(object sender, MouseEventArgs e)
 		{
 			ListViewItem lvi = parsedFileList.GetItemAt(e.X, e.Y);
 			if (lvi == null) return;
 
 			Form1.thisForm.Open(lvi.Text);
-		}
+		}*/
 
 		private void button4_Click(object sender, EventArgs e)
 		{

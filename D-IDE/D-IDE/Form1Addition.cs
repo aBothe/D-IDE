@@ -181,6 +181,7 @@ namespace D_IDE
 		/// <param name="e"></param>
 		void Caret_PositionChanged(object sender, EventArgs e)
 		{
+            CompilerConfiguration cc=project!=null?project.Compiler:D_IDE_Properties.Default.dmd2;
 			Form1.thisForm.LineLabel.Text =
 				"Line " + (txt.ActiveTextAreaControl.Caret.Line + 1).ToString() +
 				" Col " + (txt.ActiveTextAreaControl.Caret.Column).ToString();
@@ -192,7 +193,7 @@ namespace D_IDE
 				CurrentCompletionData.Clear();
 				if (tv != null)
 				{
-					DCodeCompletionProvider.AddAllClassMembers(tv, ref CurrentCompletionData, true);
+					DCodeCompletionProvider.AddAllClassMembers(cc,tv, ref CurrentCompletionData, true);
 				}
 
 				if (project != null)
@@ -208,7 +209,7 @@ namespace D_IDE
 							if (!mods.Contains(tmod)) mods.Add(tmod);
 						}
 						// Add the content of the module
-						DCodeCompletionProvider.AddAllClassMembers(ppf.dom, ref CurrentCompletionData, false);
+						DCodeCompletionProvider.AddAllClassMembers(cc,ppf.dom, ref CurrentCompletionData, false);
 					}
 					// Add all local modules
 					foreach (string mod in mods)
@@ -217,11 +218,11 @@ namespace D_IDE
 					}
 				}
 				else // Add classes etc from current module
-					DCodeCompletionProvider.AddAllClassMembers(fileData.dom, ref CurrentCompletionData, true);
+                    DCodeCompletionProvider.AddAllClassMembers(cc, fileData.dom, ref CurrentCompletionData, true);
 				try
 				{
-					CurrentCompletionData.Capacity += D_IDE_Properties.GlobalCompletionList.Count;
-					CurrentCompletionData.AddRange(D_IDE_Properties.GlobalCompletionList);
+					CurrentCompletionData.Capacity += cc.GlobalCompletionList.Count;
+					CurrentCompletionData.AddRange(cc.GlobalCompletionList);
 				}
 				catch { }
 			}

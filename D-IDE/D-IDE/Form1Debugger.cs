@@ -36,39 +36,31 @@ namespace D_IDE
 				before = prj.isRelease;
 				prj.isRelease = false;
 			}
-
-			if (Build())
+            string targetbin = Build();
+			if (!String.IsNullOrEmpty(targetbin))
 			{
 				Log(ProgressStatusLabel.Text = "Start debugging...");
 				UseOutput = true;
-				if (prj == null)
+				if (Path.GetExtension(targetbin)!=".exe")
 				{
-					MessageBox.Show("Create project first!");
-					return;
-				}
-				if (prj.type != DProject.PrjType.ConsoleApp && prj.type != DProject.PrjType.WindowsApp)
-				{
-					MessageBox.Show("Unable to execute a library!");
+					MessageBox.Show("Unable to execute a non-executable file!");
 					return;
 				}
 
-				// Use the last built target file as executable - for going sure that this file exists
-				string bin = Path.ChangeExtension(prj.LastBuiltTarget, null) + ".exe";//prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null) + ".exe";
-
-				if (!File.Exists(bin))
+				if (!File.Exists(targetbin))
 				{
-					Log("File " + bin + " not exists!");
+					Log("File " + targetbin + " not exists!");
 					return;
 				}
 
 				if (!D_IDE_Properties.Default.UseExternalDebugger)
 				{
-					Debug(bin, sender is string && sender == (object)"untilmain");
+					Debug(targetbin, sender is string && sender == (object)"untilmain");
 				}
 				else
 				{
 					string dbgbin = D_IDE_Properties.Default.exe_dbg;
-					string dbgargs = D_IDE_Properties.Default.dbg_args.Replace("$exe", bin);
+					string dbgargs = D_IDE_Properties.Default.dbg_args.Replace("$exe", targetbin);
 
 					exeProc = Process.Start(dbgbin, dbgargs);
 					exeProc.Exited += delegate(object se, EventArgs ev)
@@ -328,7 +320,7 @@ namespace D_IDE
 
 				// Search expression in all superior blocks
 				DataType cblock = DCodeCompletionProvider.GetBlockAt(diw.fileData.dom, new CodeLocation(0, (int)ScopedSrcLine));
-				DataType symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(cblock, sym.Name);
+				DataType symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(diw.project!=null? diw.project.Compiler:D_IDE_Properties.Default.DefaultCompiler,cblock, sym.Name);
 				if (symNode == null)
 				{
 					bool b = false;
@@ -477,9 +469,9 @@ namespace D_IDE
 			opt.CreateFlags = CreateFlags.DebugOnlyThisProcess;
 			opt.EngCreateFlags = EngCreateFlags.Default;
 
-			dbg.CreateProcessAndAttach(0, exe + " " + prj.execargs, opt, Path.GetDirectoryName(exe), "", 0, 0);
+			dbg.CreateProcessAndAttach(0, exe + (prj!=null?(" " + prj.execargs):""), opt, Path.GetDirectoryName(exe), "", 0, 0);
 
-			dbg.Symbols.SourcePath = prj.basedir;
+			dbg.Symbols.SourcePath = prj!=null?prj.basedir:Path.GetDirectoryName(exe);
 			dbg.IsSourceCodeOrientedStepping = true;
 
 			IsInitDebugger = true;

@@ -13,6 +13,7 @@ namespace D_IDE
 	{
 		public List<string> data;
 		DocumentInstanceWindow diw;
+		CompilerConfiguration cc=D_IDE_Properties.Default.dmd2;
 		int initialOffset = 0;
 		char key;
 
@@ -21,6 +22,7 @@ namespace D_IDE
 			key = keyPressed;
 			diw = instWin;
 			data = new List<string>();
+			if (instWin.project != null) cc = instWin.project.Compiler;
 		}
 
 		#region IInsightDataProvider Member
@@ -158,7 +160,7 @@ namespace D_IDE
 					seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
 					if (seldt != null && seldt.superClass != "")
 					{
-						seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, seldt.superClass);
+						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.fileData.dom, seldt.superClass);
 						i++;
 						if (seldt != null && expressions.Length < 2)
 						{
@@ -186,7 +188,7 @@ namespace D_IDE
 				if (seldt == null) // if there wasn't still anything found in global space
 				{
 					string modpath = "";
-					List<DModule> dmods = new List<DModule>(D_IDE_Properties.GlobalModules),
+					List<DModule> dmods = new List<DModule>(cc.GlobalModules),
 						dmods2 = new List<DModule>();
 					if (diw.project != null) dmods.AddRange(diw.project.files);
 
@@ -231,7 +233,7 @@ namespace D_IDE
 						}
 
 						if ((module = diw.project.FileDataByFile(modpath)) == null)
-							module = D_IDE_Properties.Default[modpath];
+							module = D_IDE_Properties.Default.GetModule(D_IDE_Properties.Default.dmd2, modpath);
 
 						seldt = new DataType(FieldType.Root);
 						seldt.module = modpath;
@@ -255,7 +257,7 @@ namespace D_IDE
 				{
 					if (i == expressions.Length - 1) // One before the last one
 					{
-						List<DataType> tt = DCodeCompletionProvider.SearchExprsInClassHierarchy(seldt, DCodeCompletionProvider.RemoveTemplatePartFromDecl(expressions[i]));
+						List<DataType> tt = DCodeCompletionProvider.SearchExprsInClassHierarchy(cc,seldt, DCodeCompletionProvider.RemoveTemplatePartFromDecl(expressions[i]));
 						if (tt != null)
 							foreach (DataType dt in tt)
 							{
@@ -264,13 +266,13 @@ namespace D_IDE
 						break;
 					}
 
-					seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(seldt, null, DCodeCompletionProvider.RemoveTemplatePartFromDecl(expressions[i]));
+					seldt = DCodeCompletionProvider.SearchExprInClassHierarchy(cc,seldt, null, DCodeCompletionProvider.RemoveTemplatePartFromDecl(expressions[i]));
 					if (seldt == null) break;
 
 					if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))
 					{
 						DataType seldd = seldt;
-						seldt = DCodeCompletionProvider.SearchGlobalExpr(diw.fileData.dom, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.type));
+						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.fileData.dom, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.type));
 						if (seldt == null) seldt = seldd;
 					}
 				}

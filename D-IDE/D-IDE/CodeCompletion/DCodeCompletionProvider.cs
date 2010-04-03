@@ -18,6 +18,7 @@ namespace D_IDE
 {
 	public partial class DCodeCompletionProvider : ICompletionDataProvider
 	{
+		public CompilerConfiguration cc=D_IDE_Properties.Default.DefaultCompiler;
 		/// <summary>
 		/// classA.classB.memberC
 		/// </summary>
@@ -96,6 +97,7 @@ namespace D_IDE
 		/// <returns></returns>
 		public static DataType FindActualExpression(DProject prj, DModule local, CodeLocation caretLocation, string[] expressions, bool dotPressed, bool ResolveBaseType, out bool isSuper, out bool isInstance, out bool isNameSpace, out DModule module)
 		{
+            CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
 			module = local;
 			isSuper = false;
 			isInstance = false;
@@ -129,7 +131,7 @@ namespace D_IDE
 				{
 					// Search expression in all superior blocks
 					DataType cblock = GetBlockAt(local.dom, caretLocation);
-					seldt = SearchExprInClassHierarchyBackward(cblock, RemoveTemplatePartFromDecl(expressions[0]));
+					seldt = SearchExprInClassHierarchyBackward(cc,cblock, RemoveTemplatePartFromDecl(expressions[0]));
 					// Search expression in current module root first
 					if (seldt == null)	seldt = SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(expressions[0]), true, out module);
 					// If there wasn't found anything, search deeper and recursive
@@ -149,7 +151,7 @@ namespace D_IDE
 					{
 						string modpath = "";
 						string[] modpath_packages;
-						List<DModule> dmods = new List<DModule>(D_IDE_Properties.GlobalModules),
+						List<DModule> dmods = new List<DModule>(cc.GlobalModules),
 							dmods2 = new List<DModule>();
 						if(prj!=null)dmods.AddRange(prj.files);// Very important: add the project's files to the search list
 
@@ -192,7 +194,7 @@ namespace D_IDE
 							isNameSpace = true;
 
 							if (prj == null || (module = prj.FileDataByFile(modpath)) == null)
-								module = D_IDE_Properties.Default[modpath];
+								module = D_IDE_Properties.Default.GetModule(D_IDE_Properties.Default.DefaultCompiler,modpath);
 
 							if (dmods2.Count == 1 && dmods2[0].ModuleName == modpath)
 							{
@@ -222,7 +224,7 @@ namespace D_IDE
 				for (; i < expressions.Length && seldt != null; i++)
 				{
 					isInstance = false;
-					seldt = SearchExprInClassHierarchy(seldt, null, RemoveTemplatePartFromDecl(expressions[i]));
+					seldt = SearchExprInClassHierarchy(cc,seldt, null, RemoveTemplatePartFromDecl(expressions[i]));
 					if (seldt == null) break;
 
 					seldd = seldt;
@@ -250,6 +252,7 @@ namespace D_IDE
 			{
 				DocumentInstanceWindow diw = Form1.SelectedTabPage;
 				DProject project = diw.project;
+				if(project!=null)cc = project.Compiler;
 				DModule pf = diw.fileData;
 
 				CodeLocation tl = new CodeLocation(ta.Caret.Column + 1, ta.Caret.Line + 1);
@@ -298,7 +301,7 @@ namespace D_IDE
 
 				if (KeyWord == DTokens.New && expressions.Count < 1)
 				{
-					rl.AddRange(D_IDE_Properties.GlobalCompletionList);
+					rl.AddRange(cc.GlobalCompletionList);
 					presel = null;
 					return rl.ToArray();
 				}
@@ -341,7 +344,7 @@ namespace D_IDE
 					   )
 					{
 						seldd = seldt;
-						seldt = SearchGlobalExpr(pf.dom, seldt.type);
+						seldt = SearchGlobalExpr(cc,pf.dom, seldt.type);
 						isInst = true;
 					}
 
@@ -349,7 +352,7 @@ namespace D_IDE
 					{
 						if (expressions[0] == "this" && expressions.Count < 2) // this.
 						{
-							AddAllClassMembers(seldt, ref rl, true);
+							AddAllClassMembers(cc,seldt, ref rl, true);
 
 							foreach (DataType arg in seldt.param)
 							{
@@ -361,10 +364,10 @@ namespace D_IDE
 						{
 							if (seldt.superClass != "")
 							{
-								seldd = SearchGlobalExpr(pf.dom, seldt.superClass);
+								seldd = SearchGlobalExpr(cc,pf.dom, seldt.superClass);
 								if (seldd != null)
 								{
-									AddAllClassMembers(seldd, ref rl, true);
+									AddAllClassMembers(cc,seldd, ref rl, true);
 
 									foreach (DataType arg in seldd.param)
 									{
@@ -383,7 +386,7 @@ namespace D_IDE
 						}
 						else if (seldt.fieldtype == FieldType.Variable) // myVar.
 						{
-							AddAllClassMembers(seldt, ref rl, false);
+							AddAllClassMembers(cc,seldt, ref rl, false);
 							AddTypeStd(seldt, ref rl);
 
 							#region Add function which have seldt.name as first parameter
@@ -419,7 +422,7 @@ namespace D_IDE
 						{
 							if (isInst || isNameSpace)
 							{
-								AddAllClassMembers(seldt, ref rl, !isNameSpace);
+								AddAllClassMembers(cc,seldt, ref rl, !isNameSpace);
 							}
 							else
 							{
@@ -460,14 +463,14 @@ namespace D_IDE
 			return rl.ToArray();
 		}
 
-		public static void AddGlobalSpaceContent(ref List<ICompletionData> rl)
+		public static void AddGlobalSpaceContent(CompilerConfiguration cc,ref List<ICompletionData> rl)
 		{
 			ImageList icons = Form1.icons;
 			List<string> mods = new List<string>();
 			string[] tmods;
 			string tmod;
 
-			foreach (DModule gpf in D_IDE_Properties.GlobalModules)
+			foreach (DModule gpf in cc.GlobalModules)
 			{
 				if (!gpf.IsParsable) continue;
 				if (!String.IsNullOrEmpty(gpf.ModuleName))
@@ -477,7 +480,7 @@ namespace D_IDE
 					if (!mods.Contains(tmod)) mods.Add(tmod);
 				}
 
-				AddAllClassMembers(gpf.dom, ref rl, false);
+				AddAllClassMembers(cc,gpf.dom, ref rl, false);
 			}
 
 			foreach (string mod in mods)
@@ -511,11 +514,12 @@ namespace D_IDE
 		public static DataType ResolveReturnOrBaseType(DProject prj, DModule local, DataType owner, bool isLastInExpressionChain)
 		{
 			if (owner == null) return null;
+            CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
 			DataType ret = owner;
 			DModule mod = null;
 			if ((!DTokens.BasicTypes[(int)owner.TypeToken] && owner.fieldtype == FieldType.Variable) || ((owner.fieldtype == FieldType.Function || owner.fieldtype == FieldType.AliasDecl) && !isLastInExpressionChain))
 			{
-				ret = DCodeCompletionProvider.SearchExprInClassHierarchy((DataType)owner.Parent, null, RemoveTemplatePartFromDecl(owner.type));
+				ret = DCodeCompletionProvider.SearchExprInClassHierarchy(cc,(DataType)owner.Parent, null, RemoveTemplatePartFromDecl(owner.type));
 				if (ret == null)
 					ret = DCodeCompletionProvider.SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(owner.type), false, out mod);
 			}

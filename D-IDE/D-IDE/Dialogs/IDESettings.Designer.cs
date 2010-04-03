@@ -45,8 +45,14 @@
 			System.Windows.Forms.Label label14;
 			System.Windows.Forms.Button button7;
 			System.Windows.Forms.Label label15;
+			System.Windows.Forms.Button button3;
+			System.Windows.Forms.Button button2;
+			System.Windows.Forms.Button button8;
+			System.Windows.Forms.Button button9;
 			this.button1 = new System.Windows.Forms.Button();
 			this.tabPage1 = new System.Windows.Forms.TabPage();
+			this.BinDirectory = new System.Windows.Forms.TextBox();
+			this.DVersionSelector = new System.Windows.Forms.ComboBox();
 			this.link_win_exe = new System.Windows.Forms.TextBox();
 			this.link_to_dll = new System.Windows.Forms.TextBox();
 			this.cmp_to_obj = new System.Windows.Forms.TextBox();
@@ -72,10 +78,7 @@
 			this.rc = new System.Windows.Forms.TextBox();
 			this.link_to_lib_dbg = new System.Windows.Forms.TextBox();
 			this.tabPage3 = new System.Windows.Forms.TabPage();
-			this.parsedFileList = new System.Windows.Forms.ListView();
-			this.button3 = new System.Windows.Forms.Button();
-			this.button2 = new System.Windows.Forms.Button();
-			this.parsedFiles = new System.Windows.Forms.ListBox();
+			this.D1Imports = new System.Windows.Forms.ListBox();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
 			this.StoreSettingsAtUserDocs = new System.Windows.Forms.CheckBox();
@@ -101,8 +104,9 @@
 			this.HighLightingExt = new System.Windows.Forms.TextBox();
 			this.HighLightingExts = new System.Windows.Forms.ListBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-			this.DVersionSelector = new System.Windows.Forms.ComboBox();
-			this.BinDirectory = new System.Windows.Forms.TextBox();
+			this.groupBox2 = new System.Windows.Forms.GroupBox();
+			this.groupBox3 = new System.Windows.Forms.GroupBox();
+			this.D2Imports = new System.Windows.Forms.ListBox();
 			label13 = new System.Windows.Forms.Label();
 			label12 = new System.Windows.Forms.Label();
 			label11 = new System.Windows.Forms.Label();
@@ -118,6 +122,10 @@
 			label14 = new System.Windows.Forms.Label();
 			button7 = new System.Windows.Forms.Button();
 			label15 = new System.Windows.Forms.Label();
+			button3 = new System.Windows.Forms.Button();
+			button2 = new System.Windows.Forms.Button();
+			button8 = new System.Windows.Forms.Button();
+			button9 = new System.Windows.Forms.Button();
 			this.tabPage1.SuspendLayout();
 			this.tabPage3.SuspendLayout();
 			this.tabControl1.SuspendLayout();
@@ -125,73 +133,15 @@
 			this.tabPage4.SuspendLayout();
 			this.tabPage5.SuspendLayout();
 			this.groupBox1.SuspendLayout();
+			this.groupBox2.SuspendLayout();
+			this.groupBox3.SuspendLayout();
 			this.SuspendLayout();
-			// 
-			// button1
-			// 
-			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.button1.Location = new System.Drawing.Point(541, 621);
-			this.button1.Name = "button1";
-			this.button1.Size = new System.Drawing.Size(75, 23);
-			this.button1.TabIndex = 1;
-			this.button1.Text = "Close";
-			this.button1.UseVisualStyleBackColor = true;
-			this.button1.Click += new System.EventHandler(this.button1_Click);
-			// 
-			// tabPage1
-			// 
-			this.tabPage1.Controls.Add(label15);
-			this.tabPage1.Controls.Add(button7);
-			this.tabPage1.Controls.Add(this.BinDirectory);
-			this.tabPage1.Controls.Add(label14);
-			this.tabPage1.Controls.Add(this.DVersionSelector);
-			this.tabPage1.Controls.Add(label13);
-			this.tabPage1.Controls.Add(label12);
-			this.tabPage1.Controls.Add(this.link_win_exe);
-			this.tabPage1.Controls.Add(this.link_to_dll);
-			this.tabPage1.Controls.Add(this.cmp_to_obj);
-			this.tabPage1.Controls.Add(this.link_to_exe);
-			this.tabPage1.Controls.Add(this.link_to_lib);
-			this.tabPage1.Controls.Add(label11);
-			this.tabPage1.Controls.Add(this.CreatePDB);
-			this.tabPage1.Controls.Add(this.DoAutoSave);
-			this.tabPage1.Controls.Add(this.UseIntegDbg);
-			this.tabPage1.Controls.Add(this.showCompleteLog);
-			this.tabPage1.Controls.Add(label9);
-			this.tabPage1.Controls.Add(this.logbuildprogress_chk);
-			this.tabPage1.Controls.Add(this.dbg_exe);
-			this.tabPage1.Controls.Add(this.dbg_args);
-			this.tabPage1.Controls.Add(label8);
-			this.tabPage1.Controls.Add(this.exe_win);
-			this.tabPage1.Controls.Add(this.exe_dll);
-			this.tabPage1.Controls.Add(this.exe_cmp);
-			this.tabPage1.Controls.Add(this.exe_console);
-			this.tabPage1.Controls.Add(this.exe_rc);
-			this.tabPage1.Controls.Add(this.exe_lib);
-			this.tabPage1.Controls.Add(this.link_win_exe_dbg);
-			this.tabPage1.Controls.Add(this.link_to_dll_dbg);
-			this.tabPage1.Controls.Add(this.cmp_to_obj_dbg);
-			this.tabPage1.Controls.Add(this.link_to_exe_dbg);
-			this.tabPage1.Controls.Add(this.rc);
-			this.tabPage1.Controls.Add(this.link_to_lib_dbg);
-			this.tabPage1.Controls.Add(label6);
-			this.tabPage1.Controls.Add(label5);
-			this.tabPage1.Controls.Add(label1);
-			this.tabPage1.Controls.Add(label4);
-			this.tabPage1.Controls.Add(label2);
-			this.tabPage1.Controls.Add(label3);
-			this.tabPage1.Location = new System.Drawing.Point(4, 22);
-			this.tabPage1.Name = "tabPage1";
-			this.tabPage1.Size = new System.Drawing.Size(624, 589);
-			this.tabPage1.TabIndex = 1;
-			this.tabPage1.Text = "Build commands";
-			this.tabPage1.UseVisualStyleBackColor = true;
 			// 
 			// label13
 			// 
 			label13.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			label13.AutoSize = true;
-			label13.Location = new System.Drawing.Point(463, 62);
+			label13.Location = new System.Drawing.Point(524, 62);
 			label13.Name = "label13";
 			label13.Size = new System.Drawing.Size(46, 13);
 			label13.TabIndex = 33;
@@ -201,51 +151,11 @@
 			// 
 			label12.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			label12.AutoSize = true;
-			label12.Location = new System.Drawing.Point(307, 62);
+			label12.Location = new System.Drawing.Point(368, 62);
 			label12.Name = "label12";
 			label12.Size = new System.Drawing.Size(39, 13);
 			label12.TabIndex = 32;
 			label12.Text = "Debug";
-			// 
-			// link_win_exe
-			// 
-			this.link_win_exe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_win_exe.Location = new System.Drawing.Point(466, 104);
-			this.link_win_exe.Name = "link_win_exe";
-			this.link_win_exe.Size = new System.Drawing.Size(150, 20);
-			this.link_win_exe.TabIndex = 31;
-			// 
-			// link_to_dll
-			// 
-			this.link_to_dll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_to_dll.Location = new System.Drawing.Point(466, 156);
-			this.link_to_dll.Name = "link_to_dll";
-			this.link_to_dll.Size = new System.Drawing.Size(150, 20);
-			this.link_to_dll.TabIndex = 29;
-			// 
-			// cmp_to_obj
-			// 
-			this.cmp_to_obj.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.cmp_to_obj.Location = new System.Drawing.Point(466, 78);
-			this.cmp_to_obj.Name = "cmp_to_obj";
-			this.cmp_to_obj.Size = new System.Drawing.Size(150, 20);
-			this.cmp_to_obj.TabIndex = 27;
-			// 
-			// link_to_exe
-			// 
-			this.link_to_exe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_to_exe.Location = new System.Drawing.Point(466, 130);
-			this.link_to_exe.Name = "link_to_exe";
-			this.link_to_exe.Size = new System.Drawing.Size(150, 20);
-			this.link_to_exe.TabIndex = 28;
-			// 
-			// link_to_lib
-			// 
-			this.link_to_lib.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_to_lib.Location = new System.Drawing.Point(466, 182);
-			this.link_to_lib.Name = "link_to_lib";
-			this.link_to_lib.Size = new System.Drawing.Size(150, 20);
-			this.link_to_lib.TabIndex = 30;
 			// 
 			// label11
 			// 
@@ -256,82 +166,15 @@
 			label11.TabIndex = 26;
 			label11.Text = "Requires mspdb80.dll to be\r\ninstalled somewhere";
 			// 
-			// CreatePDB
-			// 
-			this.CreatePDB.AutoSize = true;
-			this.CreatePDB.Location = new System.Drawing.Point(110, 352);
-			this.CreatePDB.Name = "CreatePDB";
-			this.CreatePDB.Size = new System.Drawing.Size(160, 17);
-			this.CreatePDB.TabIndex = 25;
-			this.CreatePDB.Text = "Create .pdb file after building";
-			this.CreatePDB.UseVisualStyleBackColor = true;
-			// 
-			// DoAutoSave
-			// 
-			this.DoAutoSave.AutoSize = true;
-			this.DoAutoSave.Location = new System.Drawing.Point(110, 260);
-			this.DoAutoSave.Name = "DoAutoSave";
-			this.DoAutoSave.Size = new System.Drawing.Size(182, 17);
-			this.DoAutoSave.TabIndex = 24;
-			this.DoAutoSave.Text = "Auto-Save all files before building";
-			this.DoAutoSave.UseVisualStyleBackColor = true;
-			// 
-			// UseIntegDbg
-			// 
-			this.UseIntegDbg.AutoSize = true;
-			this.UseIntegDbg.Location = new System.Drawing.Point(110, 283);
-			this.UseIntegDbg.Name = "UseIntegDbg";
-			this.UseIntegDbg.Size = new System.Drawing.Size(133, 17);
-			this.UseIntegDbg.TabIndex = 23;
-			this.UseIntegDbg.Text = "Use external debugger";
-			this.UseIntegDbg.UseVisualStyleBackColor = true;
-			// 
-			// showCompleteLog
-			// 
-			this.showCompleteLog.AutoSize = true;
-			this.showCompleteLog.Location = new System.Drawing.Point(110, 329);
-			this.showCompleteLog.Name = "showCompleteLog";
-			this.showCompleteLog.Size = new System.Drawing.Size(132, 17);
-			this.showCompleteLog.TabIndex = 22;
-			this.showCompleteLog.Text = "Show build commands";
-			this.showCompleteLog.UseVisualStyleBackColor = true;
-			// 
 			// label9
 			// 
 			label9.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			label9.AutoSize = true;
-			label9.Location = new System.Drawing.Point(307, 261);
+			label9.Location = new System.Drawing.Point(368, 261);
 			label9.Name = "label9";
 			label9.Size = new System.Drawing.Size(175, 117);
 			label9.TabIndex = 21;
 			label9.Text = resources.GetString("label9.Text");
-			// 
-			// logbuildprogress_chk
-			// 
-			this.logbuildprogress_chk.AutoSize = true;
-			this.logbuildprogress_chk.Location = new System.Drawing.Point(110, 306);
-			this.logbuildprogress_chk.Name = "logbuildprogress_chk";
-			this.logbuildprogress_chk.Size = new System.Drawing.Size(149, 17);
-			this.logbuildprogress_chk.TabIndex = 20;
-			this.logbuildprogress_chk.Text = "Show build log on building";
-			this.logbuildprogress_chk.UseVisualStyleBackColor = true;
-			// 
-			// dbg_exe
-			// 
-			this.dbg_exe.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.dbg_exe.Location = new System.Drawing.Point(110, 234);
-			this.dbg_exe.Name = "dbg_exe";
-			this.dbg_exe.Size = new System.Drawing.Size(194, 20);
-			this.dbg_exe.TabIndex = 19;
-			// 
-			// dbg_args
-			// 
-			this.dbg_args.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.dbg_args.Location = new System.Drawing.Point(310, 234);
-			this.dbg_args.Name = "dbg_args";
-			this.dbg_args.Size = new System.Drawing.Size(306, 20);
-			this.dbg_args.TabIndex = 17;
 			// 
 			// label8
 			// 
@@ -341,108 +184,6 @@
 			label8.Size = new System.Drawing.Size(77, 13);
 			label8.TabIndex = 18;
 			label8.Text = "Start debugger";
-			// 
-			// exe_win
-			// 
-			this.exe_win.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.exe_win.Location = new System.Drawing.Point(110, 104);
-			this.exe_win.Name = "exe_win";
-			this.exe_win.Size = new System.Drawing.Size(194, 20);
-			this.exe_win.TabIndex = 16;
-			// 
-			// exe_dll
-			// 
-			this.exe_dll.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.exe_dll.Location = new System.Drawing.Point(110, 156);
-			this.exe_dll.Name = "exe_dll";
-			this.exe_dll.Size = new System.Drawing.Size(194, 20);
-			this.exe_dll.TabIndex = 13;
-			// 
-			// exe_cmp
-			// 
-			this.exe_cmp.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.exe_cmp.Location = new System.Drawing.Point(110, 78);
-			this.exe_cmp.Name = "exe_cmp";
-			this.exe_cmp.Size = new System.Drawing.Size(194, 20);
-			this.exe_cmp.TabIndex = 11;
-			// 
-			// exe_console
-			// 
-			this.exe_console.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.exe_console.Location = new System.Drawing.Point(110, 130);
-			this.exe_console.Name = "exe_console";
-			this.exe_console.Size = new System.Drawing.Size(194, 20);
-			this.exe_console.TabIndex = 12;
-			// 
-			// exe_rc
-			// 
-			this.exe_rc.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.exe_rc.Location = new System.Drawing.Point(110, 208);
-			this.exe_rc.Name = "exe_rc";
-			this.exe_rc.Size = new System.Drawing.Size(194, 20);
-			this.exe_rc.TabIndex = 15;
-			// 
-			// exe_lib
-			// 
-			this.exe_lib.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.exe_lib.Location = new System.Drawing.Point(110, 182);
-			this.exe_lib.Name = "exe_lib";
-			this.exe_lib.Size = new System.Drawing.Size(194, 20);
-			this.exe_lib.TabIndex = 14;
-			// 
-			// link_win_exe_dbg
-			// 
-			this.link_win_exe_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_win_exe_dbg.Location = new System.Drawing.Point(310, 104);
-			this.link_win_exe_dbg.Name = "link_win_exe_dbg";
-			this.link_win_exe_dbg.Size = new System.Drawing.Size(150, 20);
-			this.link_win_exe_dbg.TabIndex = 10;
-			// 
-			// link_to_dll_dbg
-			// 
-			this.link_to_dll_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_to_dll_dbg.Location = new System.Drawing.Point(310, 156);
-			this.link_to_dll_dbg.Name = "link_to_dll_dbg";
-			this.link_to_dll_dbg.Size = new System.Drawing.Size(150, 20);
-			this.link_to_dll_dbg.TabIndex = 3;
-			// 
-			// cmp_to_obj_dbg
-			// 
-			this.cmp_to_obj_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.cmp_to_obj_dbg.Location = new System.Drawing.Point(310, 78);
-			this.cmp_to_obj_dbg.Name = "cmp_to_obj_dbg";
-			this.cmp_to_obj_dbg.Size = new System.Drawing.Size(150, 20);
-			this.cmp_to_obj_dbg.TabIndex = 1;
-			// 
-			// link_to_exe_dbg
-			// 
-			this.link_to_exe_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_to_exe_dbg.Location = new System.Drawing.Point(310, 130);
-			this.link_to_exe_dbg.Name = "link_to_exe_dbg";
-			this.link_to_exe_dbg.Size = new System.Drawing.Size(150, 20);
-			this.link_to_exe_dbg.TabIndex = 2;
-			// 
-			// rc
-			// 
-			this.rc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.rc.Location = new System.Drawing.Point(310, 208);
-			this.rc.Name = "rc";
-			this.rc.Size = new System.Drawing.Size(306, 20);
-			this.rc.TabIndex = 6;
-			// 
-			// link_to_lib_dbg
-			// 
-			this.link_to_lib_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.link_to_lib_dbg.Location = new System.Drawing.Point(310, 182);
-			this.link_to_lib_dbg.Name = "link_to_lib_dbg";
-			this.link_to_lib_dbg.Size = new System.Drawing.Size(150, 20);
-			this.link_to_lib_dbg.TabIndex = 4;
 			// 
 			// label6
 			// 
@@ -498,65 +239,380 @@
 			label3.TabIndex = 5;
 			label3.Text = "Link to *.lib";
 			// 
+			// label10
+			// 
+			label10.AutoSize = true;
+			label10.Location = new System.Drawing.Point(156, 74);
+			label10.Name = "label10";
+			label10.Size = new System.Drawing.Size(215, 52);
+			label10.TabIndex = 6;
+			label10.Text = "-Enter extension like .d in the upper left field \r\n-Select .xshd file via \"...\"-B" +
+				"utton\r\n-Click \"Add Extension\"\r\n-Restart D-IDE after editing your .xshd files";
+			// 
+			// label14
+			// 
+			label14.AutoSize = true;
+			label14.Location = new System.Drawing.Point(9, 11);
+			label14.Name = "label14";
+			label14.Size = new System.Drawing.Size(53, 13);
+			label14.TabIndex = 35;
+			label14.Text = "D Version";
+			// 
+			// button7
+			// 
+			button7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			button7.Location = new System.Drawing.Point(650, 32);
+			button7.Name = "button7";
+			button7.Size = new System.Drawing.Size(27, 23);
+			button7.TabIndex = 37;
+			button7.Text = "...";
+			button7.UseVisualStyleBackColor = true;
+			button7.Click += new System.EventHandler(this.button7_Click);
+			// 
+			// label15
+			// 
+			label15.AutoSize = true;
+			label15.Location = new System.Drawing.Point(9, 37);
+			label15.Name = "label15";
+			label15.Size = new System.Drawing.Size(79, 13);
+			label15.TabIndex = 38;
+			label15.Text = "Binary directory";
+			// 
+			// button1
+			// 
+			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.button1.Location = new System.Drawing.Point(612, 445);
+			this.button1.Name = "button1";
+			this.button1.Size = new System.Drawing.Size(75, 23);
+			this.button1.TabIndex = 1;
+			this.button1.Text = "Close";
+			this.button1.UseVisualStyleBackColor = true;
+			this.button1.Click += new System.EventHandler(this.button1_Click);
+			// 
+			// tabPage1
+			// 
+			this.tabPage1.Controls.Add(label15);
+			this.tabPage1.Controls.Add(button7);
+			this.tabPage1.Controls.Add(this.BinDirectory);
+			this.tabPage1.Controls.Add(label14);
+			this.tabPage1.Controls.Add(this.DVersionSelector);
+			this.tabPage1.Controls.Add(label13);
+			this.tabPage1.Controls.Add(label12);
+			this.tabPage1.Controls.Add(this.link_win_exe);
+			this.tabPage1.Controls.Add(this.link_to_dll);
+			this.tabPage1.Controls.Add(this.cmp_to_obj);
+			this.tabPage1.Controls.Add(this.link_to_exe);
+			this.tabPage1.Controls.Add(this.link_to_lib);
+			this.tabPage1.Controls.Add(label11);
+			this.tabPage1.Controls.Add(this.CreatePDB);
+			this.tabPage1.Controls.Add(this.DoAutoSave);
+			this.tabPage1.Controls.Add(this.UseIntegDbg);
+			this.tabPage1.Controls.Add(this.showCompleteLog);
+			this.tabPage1.Controls.Add(label9);
+			this.tabPage1.Controls.Add(this.logbuildprogress_chk);
+			this.tabPage1.Controls.Add(this.dbg_exe);
+			this.tabPage1.Controls.Add(this.dbg_args);
+			this.tabPage1.Controls.Add(label8);
+			this.tabPage1.Controls.Add(this.exe_win);
+			this.tabPage1.Controls.Add(this.exe_dll);
+			this.tabPage1.Controls.Add(this.exe_cmp);
+			this.tabPage1.Controls.Add(this.exe_console);
+			this.tabPage1.Controls.Add(this.exe_rc);
+			this.tabPage1.Controls.Add(this.exe_lib);
+			this.tabPage1.Controls.Add(this.link_win_exe_dbg);
+			this.tabPage1.Controls.Add(this.link_to_dll_dbg);
+			this.tabPage1.Controls.Add(this.cmp_to_obj_dbg);
+			this.tabPage1.Controls.Add(this.link_to_exe_dbg);
+			this.tabPage1.Controls.Add(this.rc);
+			this.tabPage1.Controls.Add(this.link_to_lib_dbg);
+			this.tabPage1.Controls.Add(label6);
+			this.tabPage1.Controls.Add(label5);
+			this.tabPage1.Controls.Add(label1);
+			this.tabPage1.Controls.Add(label4);
+			this.tabPage1.Controls.Add(label2);
+			this.tabPage1.Controls.Add(label3);
+			this.tabPage1.Location = new System.Drawing.Point(4, 22);
+			this.tabPage1.Name = "tabPage1";
+			this.tabPage1.Size = new System.Drawing.Size(685, 407);
+			this.tabPage1.TabIndex = 1;
+			this.tabPage1.Text = "Build commands";
+			this.tabPage1.UseVisualStyleBackColor = true;
+			// 
+			// BinDirectory
+			// 
+			this.BinDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.BinDirectory.Location = new System.Drawing.Point(110, 35);
+			this.BinDirectory.Name = "BinDirectory";
+			this.BinDirectory.Size = new System.Drawing.Size(534, 20);
+			this.BinDirectory.TabIndex = 36;
+			// 
+			// DVersionSelector
+			// 
+			this.DVersionSelector.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.DVersionSelector.FormattingEnabled = true;
+			this.DVersionSelector.Items.AddRange(new object[] {
+            "D1",
+            "D2"});
+			this.DVersionSelector.Location = new System.Drawing.Point(110, 8);
+			this.DVersionSelector.Name = "DVersionSelector";
+			this.DVersionSelector.Size = new System.Drawing.Size(45, 21);
+			this.DVersionSelector.TabIndex = 34;
+			this.DVersionSelector.SelectedIndexChanged += new System.EventHandler(this.DVersionSelector_SelectedIndexChanged);
+			// 
+			// link_win_exe
+			// 
+			this.link_win_exe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.link_win_exe.Location = new System.Drawing.Point(527, 104);
+			this.link_win_exe.Name = "link_win_exe";
+			this.link_win_exe.Size = new System.Drawing.Size(150, 20);
+			this.link_win_exe.TabIndex = 31;
+			// 
+			// link_to_dll
+			// 
+			this.link_to_dll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.link_to_dll.Location = new System.Drawing.Point(527, 156);
+			this.link_to_dll.Name = "link_to_dll";
+			this.link_to_dll.Size = new System.Drawing.Size(150, 20);
+			this.link_to_dll.TabIndex = 29;
+			// 
+			// cmp_to_obj
+			// 
+			this.cmp_to_obj.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.cmp_to_obj.Location = new System.Drawing.Point(527, 78);
+			this.cmp_to_obj.Name = "cmp_to_obj";
+			this.cmp_to_obj.Size = new System.Drawing.Size(150, 20);
+			this.cmp_to_obj.TabIndex = 27;
+			// 
+			// link_to_exe
+			// 
+			this.link_to_exe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.link_to_exe.Location = new System.Drawing.Point(527, 130);
+			this.link_to_exe.Name = "link_to_exe";
+			this.link_to_exe.Size = new System.Drawing.Size(150, 20);
+			this.link_to_exe.TabIndex = 28;
+			// 
+			// link_to_lib
+			// 
+			this.link_to_lib.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.link_to_lib.Location = new System.Drawing.Point(527, 182);
+			this.link_to_lib.Name = "link_to_lib";
+			this.link_to_lib.Size = new System.Drawing.Size(150, 20);
+			this.link_to_lib.TabIndex = 30;
+			// 
+			// CreatePDB
+			// 
+			this.CreatePDB.AutoSize = true;
+			this.CreatePDB.Location = new System.Drawing.Point(110, 352);
+			this.CreatePDB.Name = "CreatePDB";
+			this.CreatePDB.Size = new System.Drawing.Size(160, 17);
+			this.CreatePDB.TabIndex = 25;
+			this.CreatePDB.Text = "Create .pdb file after building";
+			this.CreatePDB.UseVisualStyleBackColor = true;
+			// 
+			// DoAutoSave
+			// 
+			this.DoAutoSave.AutoSize = true;
+			this.DoAutoSave.Location = new System.Drawing.Point(110, 260);
+			this.DoAutoSave.Name = "DoAutoSave";
+			this.DoAutoSave.Size = new System.Drawing.Size(182, 17);
+			this.DoAutoSave.TabIndex = 24;
+			this.DoAutoSave.Text = "Auto-Save all files before building";
+			this.DoAutoSave.UseVisualStyleBackColor = true;
+			// 
+			// UseIntegDbg
+			// 
+			this.UseIntegDbg.AutoSize = true;
+			this.UseIntegDbg.Location = new System.Drawing.Point(110, 283);
+			this.UseIntegDbg.Name = "UseIntegDbg";
+			this.UseIntegDbg.Size = new System.Drawing.Size(133, 17);
+			this.UseIntegDbg.TabIndex = 23;
+			this.UseIntegDbg.Text = "Use external debugger";
+			this.UseIntegDbg.UseVisualStyleBackColor = true;
+			// 
+			// showCompleteLog
+			// 
+			this.showCompleteLog.AutoSize = true;
+			this.showCompleteLog.Location = new System.Drawing.Point(110, 329);
+			this.showCompleteLog.Name = "showCompleteLog";
+			this.showCompleteLog.Size = new System.Drawing.Size(132, 17);
+			this.showCompleteLog.TabIndex = 22;
+			this.showCompleteLog.Text = "Show build commands";
+			this.showCompleteLog.UseVisualStyleBackColor = true;
+			// 
+			// logbuildprogress_chk
+			// 
+			this.logbuildprogress_chk.AutoSize = true;
+			this.logbuildprogress_chk.Location = new System.Drawing.Point(110, 306);
+			this.logbuildprogress_chk.Name = "logbuildprogress_chk";
+			this.logbuildprogress_chk.Size = new System.Drawing.Size(149, 17);
+			this.logbuildprogress_chk.TabIndex = 20;
+			this.logbuildprogress_chk.Text = "Show build log on building";
+			this.logbuildprogress_chk.UseVisualStyleBackColor = true;
+			// 
+			// dbg_exe
+			// 
+			this.dbg_exe.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.dbg_exe.Location = new System.Drawing.Point(110, 234);
+			this.dbg_exe.Name = "dbg_exe";
+			this.dbg_exe.Size = new System.Drawing.Size(255, 20);
+			this.dbg_exe.TabIndex = 19;
+			// 
+			// dbg_args
+			// 
+			this.dbg_args.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.dbg_args.Location = new System.Drawing.Point(371, 234);
+			this.dbg_args.Name = "dbg_args";
+			this.dbg_args.Size = new System.Drawing.Size(306, 20);
+			this.dbg_args.TabIndex = 17;
+			// 
+			// exe_win
+			// 
+			this.exe_win.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.exe_win.Location = new System.Drawing.Point(110, 104);
+			this.exe_win.Name = "exe_win";
+			this.exe_win.Size = new System.Drawing.Size(255, 20);
+			this.exe_win.TabIndex = 16;
+			// 
+			// exe_dll
+			// 
+			this.exe_dll.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.exe_dll.Location = new System.Drawing.Point(110, 156);
+			this.exe_dll.Name = "exe_dll";
+			this.exe_dll.Size = new System.Drawing.Size(255, 20);
+			this.exe_dll.TabIndex = 13;
+			// 
+			// exe_cmp
+			// 
+			this.exe_cmp.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.exe_cmp.Location = new System.Drawing.Point(110, 78);
+			this.exe_cmp.Name = "exe_cmp";
+			this.exe_cmp.Size = new System.Drawing.Size(255, 20);
+			this.exe_cmp.TabIndex = 11;
+			// 
+			// exe_console
+			// 
+			this.exe_console.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.exe_console.Location = new System.Drawing.Point(110, 130);
+			this.exe_console.Name = "exe_console";
+			this.exe_console.Size = new System.Drawing.Size(255, 20);
+			this.exe_console.TabIndex = 12;
+			// 
+			// exe_rc
+			// 
+			this.exe_rc.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.exe_rc.Location = new System.Drawing.Point(110, 208);
+			this.exe_rc.Name = "exe_rc";
+			this.exe_rc.Size = new System.Drawing.Size(255, 20);
+			this.exe_rc.TabIndex = 15;
+			// 
+			// exe_lib
+			// 
+			this.exe_lib.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.exe_lib.Location = new System.Drawing.Point(110, 182);
+			this.exe_lib.Name = "exe_lib";
+			this.exe_lib.Size = new System.Drawing.Size(255, 20);
+			this.exe_lib.TabIndex = 14;
+			// 
+			// link_win_exe_dbg
+			// 
+			this.link_win_exe_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.link_win_exe_dbg.Location = new System.Drawing.Point(371, 104);
+			this.link_win_exe_dbg.Name = "link_win_exe_dbg";
+			this.link_win_exe_dbg.Size = new System.Drawing.Size(150, 20);
+			this.link_win_exe_dbg.TabIndex = 10;
+			// 
+			// link_to_dll_dbg
+			// 
+			this.link_to_dll_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.link_to_dll_dbg.Location = new System.Drawing.Point(371, 156);
+			this.link_to_dll_dbg.Name = "link_to_dll_dbg";
+			this.link_to_dll_dbg.Size = new System.Drawing.Size(150, 20);
+			this.link_to_dll_dbg.TabIndex = 3;
+			// 
+			// cmp_to_obj_dbg
+			// 
+			this.cmp_to_obj_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.cmp_to_obj_dbg.Location = new System.Drawing.Point(371, 78);
+			this.cmp_to_obj_dbg.Name = "cmp_to_obj_dbg";
+			this.cmp_to_obj_dbg.Size = new System.Drawing.Size(150, 20);
+			this.cmp_to_obj_dbg.TabIndex = 1;
+			// 
+			// link_to_exe_dbg
+			// 
+			this.link_to_exe_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.link_to_exe_dbg.Location = new System.Drawing.Point(371, 130);
+			this.link_to_exe_dbg.Name = "link_to_exe_dbg";
+			this.link_to_exe_dbg.Size = new System.Drawing.Size(150, 20);
+			this.link_to_exe_dbg.TabIndex = 2;
+			// 
+			// rc
+			// 
+			this.rc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.rc.Location = new System.Drawing.Point(371, 208);
+			this.rc.Name = "rc";
+			this.rc.Size = new System.Drawing.Size(306, 20);
+			this.rc.TabIndex = 6;
+			// 
+			// link_to_lib_dbg
+			// 
+			this.link_to_lib_dbg.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.link_to_lib_dbg.Location = new System.Drawing.Point(371, 182);
+			this.link_to_lib_dbg.Name = "link_to_lib_dbg";
+			this.link_to_lib_dbg.Size = new System.Drawing.Size(150, 20);
+			this.link_to_lib_dbg.TabIndex = 4;
+			// 
 			// tabPage3
 			// 
-			this.tabPage3.Controls.Add(this.parsedFileList);
-			this.tabPage3.Controls.Add(this.button3);
-			this.tabPage3.Controls.Add(this.button2);
-			this.tabPage3.Controls.Add(this.parsedFiles);
+			this.tabPage3.Controls.Add(this.groupBox3);
+			this.tabPage3.Controls.Add(this.groupBox2);
 			this.tabPage3.Location = new System.Drawing.Point(4, 22);
 			this.tabPage3.Name = "tabPage3";
-			this.tabPage3.Size = new System.Drawing.Size(682, 589);
+			this.tabPage3.Size = new System.Drawing.Size(695, 413);
 			this.tabPage3.TabIndex = 0;
-			this.tabPage3.Text = "Global file parsing";
+			this.tabPage3.Text = "Import paths";
 			this.tabPage3.UseVisualStyleBackColor = true;
-			// 
-			// parsedFileList
-			// 
-			this.parsedFileList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.parsedFileList.BackColor = System.Drawing.Color.White;
-			this.parsedFileList.FullRowSelect = true;
-			this.parsedFileList.Location = new System.Drawing.Point(424, 3);
-			this.parsedFileList.MultiSelect = false;
-			this.parsedFileList.Name = "parsedFileList";
-			this.parsedFileList.ShowGroups = false;
-			this.parsedFileList.Size = new System.Drawing.Size(255, 583);
-			this.parsedFileList.TabIndex = 3;
-			this.parsedFileList.UseCompatibleStateImageBehavior = false;
-			this.parsedFileList.View = System.Windows.Forms.View.List;
-			this.parsedFileList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.parsedFileList_MouseDoubleClick);
 			// 
 			// button3
 			// 
-			this.button3.Location = new System.Drawing.Point(3, 3);
-			this.button3.Name = "button3";
-			this.button3.Size = new System.Drawing.Size(160, 23);
-			this.button3.TabIndex = 2;
-			this.button3.Text = "Add Directory";
-			this.button3.UseVisualStyleBackColor = true;
-			this.button3.Click += new System.EventHandler(this.button3_Click);
+			button3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			button3.Location = new System.Drawing.Point(6, 19);
+			button3.Name = "button3";
+			button3.Size = new System.Drawing.Size(112, 23);
+			button3.TabIndex = 2;
+			button3.Text = "Add";
+			button3.UseVisualStyleBackColor = true;
+			button3.Click += new System.EventHandler(this.button3_Click);
 			// 
 			// button2
 			// 
-			this.button2.Location = new System.Drawing.Point(169, 3);
-			this.button2.Name = "button2";
-			this.button2.Size = new System.Drawing.Size(249, 23);
-			this.button2.TabIndex = 1;
-			this.button2.Text = "Remove selected directory from list";
-			this.button2.UseVisualStyleBackColor = true;
-			this.button2.Click += new System.EventHandler(this.button2_Click);
+			button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			button2.Location = new System.Drawing.Point(123, 19);
+			button2.Name = "button2";
+			button2.Size = new System.Drawing.Size(123, 23);
+			button2.TabIndex = 1;
+			button2.Text = "Remove selected";
+			button2.UseVisualStyleBackColor = true;
+			button2.Click += new System.EventHandler(this.button2_Click);
 			// 
-			// parsedFiles
+			// D1Imports
 			// 
-			this.parsedFiles.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)));
-			this.parsedFiles.FormattingEnabled = true;
-			this.parsedFiles.Location = new System.Drawing.Point(3, 39);
-			this.parsedFiles.Name = "parsedFiles";
-			this.parsedFiles.Size = new System.Drawing.Size(415, 537);
-			this.parsedFiles.TabIndex = 0;
+			this.D1Imports.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.D1Imports.FormattingEnabled = true;
+			this.D1Imports.Location = new System.Drawing.Point(6, 52);
+			this.D1Imports.Name = "D1Imports";
+			this.D1Imports.Size = new System.Drawing.Size(240, 342);
+			this.D1Imports.TabIndex = 0;
 			// 
 			// tabControl1
 			// 
@@ -571,7 +627,7 @@
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
-			this.tabControl1.Size = new System.Drawing.Size(632, 615);
+			this.tabControl1.Size = new System.Drawing.Size(703, 439);
 			this.tabControl1.TabIndex = 3;
 			// 
 			// tabPage2
@@ -589,7 +645,7 @@
 			this.tabPage2.Location = new System.Drawing.Point(4, 22);
 			this.tabPage2.Name = "tabPage2";
 			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage2.Size = new System.Drawing.Size(682, 589);
+			this.tabPage2.Size = new System.Drawing.Size(752, 407);
 			this.tabPage2.TabIndex = 2;
 			this.tabPage2.Text = "IDE";
 			this.tabPage2.UseVisualStyleBackColor = true;
@@ -667,7 +723,7 @@
 			// button4
 			// 
 			this.button4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.button4.Location = new System.Drawing.Point(650, 50);
+			this.button4.Location = new System.Drawing.Point(778, 50);
 			this.button4.Name = "button4";
 			this.button4.Size = new System.Drawing.Size(26, 22);
 			this.button4.TabIndex = 2;
@@ -681,7 +737,7 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.defPrjDir.Location = new System.Drawing.Point(163, 52);
 			this.defPrjDir.Name = "defPrjDir";
-			this.defPrjDir.Size = new System.Drawing.Size(481, 20);
+			this.defPrjDir.Size = new System.Drawing.Size(583, 20);
 			this.defPrjDir.TabIndex = 1;
 			// 
 			// singleInst
@@ -702,7 +758,7 @@
 			this.tabPage4.Location = new System.Drawing.Point(4, 22);
 			this.tabPage4.Name = "tabPage4";
 			this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage4.Size = new System.Drawing.Size(682, 589);
+			this.tabPage4.Size = new System.Drawing.Size(688, 407);
 			this.tabPage4.TabIndex = 3;
 			this.tabPage4.Text = "Debugging";
 			this.tabPage4.UseVisualStyleBackColor = true;
@@ -744,7 +800,7 @@
 			this.tabPage5.Location = new System.Drawing.Point(4, 22);
 			this.tabPage5.Name = "tabPage5";
 			this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage5.Size = new System.Drawing.Size(682, 589);
+			this.tabPage5.Size = new System.Drawing.Size(685, 407);
 			this.tabPage5.TabIndex = 4;
 			this.tabPage5.Text = "Editor";
 			this.tabPage5.UseVisualStyleBackColor = true;
@@ -762,25 +818,15 @@
 			this.groupBox1.Controls.Add(this.HighLightingExts);
 			this.groupBox1.Location = new System.Drawing.Point(8, 6);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(632, 190);
+			this.groupBox1.Size = new System.Drawing.Size(674, 190);
 			this.groupBox1.TabIndex = 0;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Code highlighting (Changes require restart)";
 			// 
-			// label10
-			// 
-			label10.AutoSize = true;
-			label10.Location = new System.Drawing.Point(156, 74);
-			label10.Name = "label10";
-			label10.Size = new System.Drawing.Size(215, 52);
-			label10.TabIndex = 6;
-			label10.Text = "-Enter extension like .d in the upper left field \r\n-Select .xshd file via \"...\"-B" +
-				"utton\r\n-Click \"Add Extension\"\r\n-Restart D-IDE after editing your .xshd files";
-			// 
 			// HighLightingSearchXSHD
 			// 
 			this.HighLightingSearchXSHD.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.HighLightingSearchXSHD.Location = new System.Drawing.Point(602, 46);
+			this.HighLightingSearchXSHD.Location = new System.Drawing.Point(644, 46);
 			this.HighLightingSearchXSHD.Name = "HighLightingSearchXSHD";
 			this.HighLightingSearchXSHD.Size = new System.Drawing.Size(27, 23);
 			this.HighLightingSearchXSHD.TabIndex = 5;
@@ -796,7 +842,7 @@
 			this.HighLightingAssocXSHDFile.Location = new System.Drawing.Point(156, 48);
 			this.HighLightingAssocXSHDFile.Name = "HighLightingAssocXSHDFile";
 			this.HighLightingAssocXSHDFile.ReadOnly = true;
-			this.HighLightingAssocXSHDFile.Size = new System.Drawing.Size(440, 20);
+			this.HighLightingAssocXSHDFile.Size = new System.Drawing.Size(482, 20);
 			this.HighLightingAssocXSHDFile.TabIndex = 4;
 			// 
 			// HighLightingDelExt
@@ -840,63 +886,75 @@
 			// 
 			this.toolTip1.AutomaticDelay = 250;
 			// 
-			// DVersionSelector
+			// groupBox2
 			// 
-			this.DVersionSelector.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.DVersionSelector.FormattingEnabled = true;
-			this.DVersionSelector.Items.AddRange(new object[] {
-            "D1",
-            "D2"});
-			this.DVersionSelector.Location = new System.Drawing.Point(110, 8);
-			this.DVersionSelector.Name = "DVersionSelector";
-			this.DVersionSelector.Size = new System.Drawing.Size(45, 21);
-			this.DVersionSelector.TabIndex = 34;
-			this.DVersionSelector.SelectedIndexChanged += new System.EventHandler(this.DVersionSelector_SelectedIndexChanged);
+			this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)));
+			this.groupBox2.Controls.Add(this.D1Imports);
+			this.groupBox2.Controls.Add(button2);
+			this.groupBox2.Controls.Add(button3);
+			this.groupBox2.Location = new System.Drawing.Point(8, 3);
+			this.groupBox2.Name = "groupBox2";
+			this.groupBox2.Size = new System.Drawing.Size(252, 401);
+			this.groupBox2.TabIndex = 3;
+			this.groupBox2.TabStop = false;
+			this.groupBox2.Text = "D1 Import paths";
 			// 
-			// label14
+			// groupBox3
 			// 
-			label14.AutoSize = true;
-			label14.Location = new System.Drawing.Point(9, 11);
-			label14.Name = "label14";
-			label14.Size = new System.Drawing.Size(53, 13);
-			label14.TabIndex = 35;
-			label14.Text = "D Version";
-			// 
-			// BinDirectory
-			// 
-			this.BinDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+			this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
-			this.BinDirectory.Location = new System.Drawing.Point(110, 35);
-			this.BinDirectory.Name = "BinDirectory";
-			this.BinDirectory.Size = new System.Drawing.Size(473, 20);
-			this.BinDirectory.TabIndex = 36;
+			this.groupBox3.Controls.Add(this.D2Imports);
+			this.groupBox3.Controls.Add(button8);
+			this.groupBox3.Controls.Add(button9);
+			this.groupBox3.Location = new System.Drawing.Point(266, 3);
+			this.groupBox3.Name = "groupBox3";
+			this.groupBox3.Size = new System.Drawing.Size(417, 401);
+			this.groupBox3.TabIndex = 4;
+			this.groupBox3.TabStop = false;
+			this.groupBox3.Text = "D2 Import paths";
 			// 
-			// button7
+			// D2Imports
 			// 
-			button7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			button7.Location = new System.Drawing.Point(589, 32);
-			button7.Name = "button7";
-			button7.Size = new System.Drawing.Size(27, 23);
-			button7.TabIndex = 37;
-			button7.Text = "...";
-			button7.UseVisualStyleBackColor = true;
-			button7.Click += new System.EventHandler(this.button7_Click);
+			this.D2Imports.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.D2Imports.FormattingEnabled = true;
+			this.D2Imports.Location = new System.Drawing.Point(6, 52);
+			this.D2Imports.Name = "D2Imports";
+			this.D2Imports.Size = new System.Drawing.Size(405, 342);
+			this.D2Imports.TabIndex = 0;
 			// 
-			// label15
+			// button8
 			// 
-			label15.AutoSize = true;
-			label15.Location = new System.Drawing.Point(9, 37);
-			label15.Name = "label15";
-			label15.Size = new System.Drawing.Size(79, 13);
-			label15.TabIndex = 38;
-			label15.Text = "Binary directory";
+			button8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			button8.Location = new System.Drawing.Point(288, 19);
+			button8.Name = "button8";
+			button8.Size = new System.Drawing.Size(123, 23);
+			button8.TabIndex = 1;
+			button8.Text = "Remove selected";
+			button8.UseVisualStyleBackColor = true;
+			button8.Click += new System.EventHandler(this.button8_Click);
+			// 
+			// button9
+			// 
+			button9.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			button9.Location = new System.Drawing.Point(6, 19);
+			button9.Name = "button9";
+			button9.Size = new System.Drawing.Size(277, 23);
+			button9.TabIndex = 2;
+			button9.Text = "Add";
+			button9.UseVisualStyleBackColor = true;
+			button9.Click += new System.EventHandler(this.button9_Click);
 			// 
 			// IDESettings
 			// 
 			this.AcceptButton = this.button1;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(632, 656);
+			this.ClientSize = new System.Drawing.Size(703, 480);
 			this.ControlBox = false;
 			this.Controls.Add(this.tabControl1);
 			this.Controls.Add(this.button1);
@@ -916,6 +974,8 @@
 			this.tabPage5.ResumeLayout(false);
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox1.PerformLayout();
+			this.groupBox2.ResumeLayout(false);
+			this.groupBox3.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
@@ -937,10 +997,7 @@
 		private System.Windows.Forms.TextBox rc;
 		private System.Windows.Forms.TextBox link_to_lib_dbg;
 		private System.Windows.Forms.TabPage tabPage3;
-		private System.Windows.Forms.ListView parsedFileList;
-		private System.Windows.Forms.Button button3;
-		private System.Windows.Forms.Button button2;
-		private System.Windows.Forms.ListBox parsedFiles;
+		private System.Windows.Forms.ListBox D1Imports;
 		private System.Windows.Forms.TabControl tabControl1;
 		private System.Windows.Forms.TabPage tabPage2;
 		private System.Windows.Forms.CheckBox singleInst;
@@ -980,5 +1037,8 @@
 		private System.Windows.Forms.TextBox link_to_lib;
 		private System.Windows.Forms.ComboBox DVersionSelector;
 		private System.Windows.Forms.TextBox BinDirectory;
+		private System.Windows.Forms.GroupBox groupBox2;
+		private System.Windows.Forms.GroupBox groupBox3;
+		private System.Windows.Forms.ListBox D2Imports;
 	}
 }

@@ -336,16 +336,16 @@ namespace D_IDE
 			}
 		}
 
-		private void UpdateChacheThread()
+		private void UpdateChacheThread(CompilerConfiguration cc)
 		{
 			DModule.ClearErrorLogBeforeParsing = false;
 			List<DModule> ret = new List<DModule>();
 
 			stopParsingToolStripMenuItem.Enabled = true;
-			bpw.Clear();
+			//bpw.Clear();
 			Log("Reparse all directories");
 
-			foreach (string dir in D_IDE_Properties.Default.parsedDirectories)
+			foreach (string dir in cc.ImportDirectories)
 			{
 				DProject dirProject = new DProject();
 				dirProject.basedir = dir;
@@ -386,21 +386,27 @@ namespace D_IDE
 			Log(ProgressStatusLabel.Text = "Parsing done!");
 			stopParsingToolStripMenuItem.Enabled = false;
 			DModule.ClearErrorLogBeforeParsing = true;
-			lock (D_IDE_Properties.GlobalModules)
+			lock (cc.GlobalModules)
 			{
-				D_IDE_Properties.GlobalModules = ret;
+				cc.GlobalModules = ret;
 
-				D_IDE_Properties.GlobalCompletionList.Clear();
-				DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList);
+				List<ICompletionData> ilist = new List<ICompletionData>();
+				DCodeCompletionProvider.AddGlobalSpaceContent(cc,ref ilist);
+				cc.GlobalCompletionList = ilist;
 			}
 		}
 
 		Thread updateTh;
 		private void updateCacheToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			D_IDE_Properties.GlobalModules.Clear();
+			D_IDE_Properties.Default.dmd1.GlobalModules.Clear();
+			D_IDE_Properties.Default.dmd2.GlobalModules.Clear();
 			if (updateTh != null && updateTh.ThreadState == System.Threading.ThreadState.Running) return;
-			updateTh = new Thread(UpdateChacheThread);
+			updateTh = new Thread(delegate()
+			{
+				UpdateChacheThread(D_IDE_Properties.Default.dmd1);
+				UpdateChacheThread(D_IDE_Properties.Default.dmd2);
+			});
 			updateTh.Start();
 		}
 
@@ -418,34 +424,53 @@ namespace D_IDE
 
 		#region Building Procedures
 
-		public void BuildSingle(object sender, EventArgs e)
+		void BuildSingle(object sender, EventArgs e)
 		{
-			UseOutput = false;
-			CompilerConfiguration cc = D_IDE_Properties.Default.dmd2;
-			if (SelectedTabPage != null)
-			{
-				bpw.Show();
-				DocumentInstanceWindow tp = SelectedTabPage;
-				if (!DModule.Parsable(tp.fileData.mod_file))
-				{
-					if (tp.fileData.mod_file.EndsWith(".rc"))
-					{
-						DBuilder.BuildResFile(
-							tp.fileData.mod_file,cc,
-							Path.ChangeExtension(tp.fileData.mod_file, ".res"),
-							Path.GetDirectoryName(tp.fileData.mod_file)
-							);
-						return;
-					}
-					MessageBox.Show("Can only build .d or .rc source files!");
-					return;
-				}
-				Log("Build single " + tp.fileData.mod_file + " to " + Path.ChangeExtension(tp.fileData.mod_file, ".exe"));
-				DBuilder.Exec(cc.ExeLinker, "\"" + tp.fileData.mod_file + "\"", Path.GetDirectoryName(tp.fileData.mod_file), true).WaitForExit(10000);
-			}
+            BuildSingle();
 		}
 
-		public bool Build()
+        public string BuildSingle()
+        {
+            UseOutput = false;
+            CompilerConfiguration cc = D_IDE_Properties.Default.DefaultCompiler;
+            if (SelectedTabPage != null)
+            {
+                bpw.Show();
+                DocumentInstanceWindow tp = SelectedTabPage;
+                if (!DModule.Parsable(tp.fileData.mod_file))
+                {
+                    if (tp.fileData.mod_file.EndsWith(".rc"))
+                    {
+                        DBuilder.BuildResFile(
+                            tp.fileData.mod_file, cc,
+                            Path.ChangeExtension(tp.fileData.mod_file, ".res"),
+                            Path.GetDirectoryName(tp.fileData.mod_file)
+                            );
+                        return Path.ChangeExtension(tp.fileData.mod_file, ".res");
+                    }
+                    MessageBox.Show("Can only build .d or .rc source files!");
+                    return null;
+                }
+                string exe = Path.ChangeExtension(tp.fileData.mod_file, ".exe");
+                
+                Log("Build single " + tp.fileData.mod_file + " to " + exe);
+                string args = D_IDE_Properties.Default.DefaultCompiler.ExeLinkerDebugArgs;
+                args = args.Replace("$objs", tp.fileData.mod_file);
+                args=args.Replace("$libs","");
+                args = args.Replace("$exe",exe);
+                DBuilder.Exec(cc.ExeLinker, args, Path.GetDirectoryName(tp.fileData.mod_file), true).WaitForExit(10000);
+
+                DBuilder.CreatePDBFromExe(null,exe);
+                return exe;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Builds the current project and returns the path of the target file
+        /// </summary>
+        /// <returns></returns>
+		public string Build()
 		{
 			bpw.Clear();
 			errlog.buildErrors.Clear();
@@ -466,13 +491,12 @@ namespace D_IDE
 
 			if (SelectedTabPage != null && (prj == null || prj.prjfn == ""))
 			{
-				BuildSingle(this, EventArgs.Empty);
-				return true;
+                return BuildSingle();
 			}
 			if (prj == null)
 			{
 				MessageBox.Show("Create project first!");
-				return false;
+				return null;
 			}
 
 			if (D_IDE_Properties.Default.LogBuildProgress) bpw.Show();
@@ -569,7 +593,7 @@ namespace D_IDE
 
 		private void buildRunToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			if (Build())
+			if (!String.IsNullOrEmpty( Build()))
 				Run();
 		}
 
@@ -798,18 +822,24 @@ namespace D_IDE
 
 			if (mtp == null) return;
 
-			foreach (string dir in D_IDE_Properties.Default.parsedDirectories)
+			CompilerConfiguration cc = D_IDE_Properties.Default.dmd1;
+			goonwithcc:
+			foreach (string dir in cc.ImportDirectories)
 			{
 				if (mtp.fileData.mod_file.StartsWith(dir))
 				{
-					D_IDE_Properties.AddFileData(mtp.fileData);
+					D_IDE_Properties.AddFileData(cc,mtp.fileData);
 
-					D_IDE_Properties.GlobalCompletionList.Clear();
-					DCodeCompletionProvider.AddGlobalSpaceContent(ref D_IDE_Properties.GlobalCompletionList);
+					List<ICompletionData> ilist = new List<ICompletionData>();
+					DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
+					cc.GlobalCompletionList = ilist;
 
 					break;
 				}
 			}
+			bool tb = cc == D_IDE_Properties.Default.dmd2;
+			cc = D_IDE_Properties.Default.dmd2;
+			if (!tb) goto goonwithcc;
 
 			RefreshClassHierarchy();
 		}
@@ -1161,7 +1191,8 @@ namespace D_IDE
 			D_IDE_Properties.Default.lastFormSize = this.Size;
 
 			D_IDE_Properties.Save(Program.cfgDir + "\\" + Program.prop_file);
-			D_IDE_Properties.SaveGlobalCache(Program.cfgDir + "\\" + Program.ModuleCacheFile);
+			D_IDE_Properties.SaveGlobalCache(D_IDE_Properties.Default.dmd1,Program.cfgDir + "\\" + Program.D1ModuleCacheFile);
+			D_IDE_Properties.SaveGlobalCache(D_IDE_Properties.Default.dmd2, Program.cfgDir + "\\" + Program.D2ModuleCacheFile);
 		}
 
 		private void SaveAs(object sender, EventArgs e)

@@ -269,7 +269,7 @@ namespace D_IDE
 			return ret;
 		}
 
-		public static DataType SearchExprInClassHierarchy(DataType env, DataType currentLevelNode, string name)
+		public static DataType SearchExprInClassHierarchy(CompilerConfiguration cc,DataType env, DataType currentLevelNode, string name)
 		{
 			if (env == null) return null;
 
@@ -301,14 +301,14 @@ namespace D_IDE
 			}*/
 			if (super != "")
 			{
-				DataType dt = SearchGlobalExpr(null, super);
+				DataType dt = SearchGlobalExpr(cc,null, super);
 				if (dt == null) return null;
-				return SearchExprInClassHierarchy(dt,currentLevelNode, name);
+				return SearchExprInClassHierarchy(cc,dt,currentLevelNode, name);
 			}
 
 			return null;
 		}
-		public static List<DataType> SearchExprsInClassHierarchy(DataType env, string name)
+		public static List<DataType> SearchExprsInClassHierarchy(CompilerConfiguration cc, DataType env, string name)
 		{
 			List<DataType> ret = new List<DataType>();
 			if (env == null) return ret;
@@ -342,14 +342,14 @@ namespace D_IDE
 			string super = env.superClass;// Should be superior class
 			if (super != "")
 			{
-				DataType dt = SearchGlobalExpr(null, super);
+				DataType dt = SearchGlobalExpr(cc,null, super);
 				if (dt == null) return null;
-				ret.AddRange(SearchExprsInClassHierarchy(dt, name));
+				ret.AddRange(SearchExprsInClassHierarchy(cc,dt, name));
 			}
 
 			return ret;
 		}
-		public static DataType SearchExprInClassHierarchyBackward(DataType node, string name)
+		public static DataType SearchExprInClassHierarchyBackward(CompilerConfiguration cc, DataType node, string name)
 		{
 			if (node == null) return null;
 
@@ -365,28 +365,28 @@ namespace D_IDE
 			}*/
 			if (super != "")
 			{
-				dt = SearchGlobalExpr(null, super);
+				dt = SearchGlobalExpr(cc,null, super);
 				if (dt != null)
 				{
-					return SearchExprInClassHierarchyBackward(dt, name);
+					return SearchExprInClassHierarchyBackward(cc,dt, name);
 				}
 			}
 
-			return SearchExprInClassHierarchyBackward((DataType)node.Parent,name);
+			return SearchExprInClassHierarchyBackward(cc,(DataType)node.Parent,name);
 		}
 
-		public static DataType SearchGlobalExpr(DataType local, string expr)
+		public static DataType SearchGlobalExpr(CompilerConfiguration cc,DataType local, string expr)
 		{
-			return SearchGlobalExpr(local, expr, false);
+			return SearchGlobalExpr(cc,local, expr, false);
 		}
-		public static DataType SearchGlobalExpr(DataType local, string expr, bool RootOnly)
+		public static DataType SearchGlobalExpr(CompilerConfiguration cc, DataType local, string expr, bool RootOnly)
 		{
 			DataType ret = null;
 
 			if (local != null) ret = GetExprByName(local, expr, RootOnly);
 			if (ret != null) return ret;
 
-			foreach (DModule gpf in D_IDE_Properties.GlobalModules)
+			foreach (DModule gpf in cc.GlobalModules)
 			{
 				ret = GetExprByName(gpf.dom, expr, RootOnly);
 				if (ret != null) return ret;
@@ -395,6 +395,7 @@ namespace D_IDE
 		}
 		public static DataType SearchGlobalExpr(DProject prj, DModule local, string expr, bool RootOnly, out DModule module)
 		{
+            CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
 			module = null;
 			DataType ret = null;
 
@@ -413,7 +414,7 @@ namespace D_IDE
 					}
 				}
 
-			foreach (DModule gpf in D_IDE_Properties.GlobalModules)
+			foreach (DModule gpf in cc.GlobalModules)
 			{
 				ret = GetExprByName(gpf.dom, expr, RootOnly);
 				if (ret != null)
@@ -439,6 +440,7 @@ namespace D_IDE
 		///<see cref="SearchGlobalExprs"/>
 		public static List<DataType> SearchGlobalExprs(DProject prj, DataType local, string expr, bool RootOnly)
 		{
+            CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
 			List<DataType> ret = new List<DataType>();
 
 			if (local != null) ret.AddRange(GetExprsByName(local, expr, RootOnly));
@@ -449,7 +451,7 @@ namespace D_IDE
 					ret.AddRange(GetExprsByName(ppf.dom, expr, RootOnly));
 				}
 
-			foreach (DModule gpf in D_IDE_Properties.GlobalModules)
+			foreach (DModule gpf in cc.GlobalModules)
 			{
 				ret.AddRange(GetExprsByName(gpf.dom, expr, RootOnly));
 			}
@@ -472,7 +474,7 @@ namespace D_IDE
 		/// </summary>
 		/// <param name="selectedExpression"></param>
 		/// <param name="rl"></param>
-		public static void AddAllClassMembers(DataType selectedExpression, ref List<ICompletionData> rl, bool all)
+		public static void AddAllClassMembers(CompilerConfiguration cc,DataType selectedExpression, ref List<ICompletionData> rl, bool all)
 		{
 			ImageList icons = Form1.icons;
 			if (selectedExpression != null)
@@ -494,18 +496,18 @@ namespace D_IDE
 					//TODO: Find out what gets affected by returning here
 					//return;
 					if (selectedExpression.fieldtype!=FieldType.Variable && !DTokens.ClassLike[selectedExpression.TypeToken] && selectedExpression.Parent != null && (selectedExpression.Parent as DataType).fieldtype != FieldType.Root)
-						AddAllClassMembers((DataType)selectedExpression.Parent, ref rl, all);
+						AddAllClassMembers(cc,(DataType)selectedExpression.Parent, ref rl, all);
 				}
 				else
 				{
 					// if not, add items of all superior classes or interfaces
-					DataType dt = SearchGlobalExpr(null, selectedExpression.superClass); // Should be superior class
-					AddAllClassMembers(dt, ref rl, false);
+					DataType dt = SearchGlobalExpr(cc,null, selectedExpression.superClass); // Should be superior class
+					AddAllClassMembers(cc,dt, ref rl, false);
 				}
 			}
 		}
 
-		public static void AddAllClassMembers(DataType selectedExpression, ref List<ICompletionData> rl, bool all, bool exact, string searchExpr)
+		public static void AddAllClassMembers(CompilerConfiguration cc,DataType selectedExpression, ref List<ICompletionData> rl, bool all, bool exact, string searchExpr)
 		{
 			ImageList icons = Form1.icons;
 
@@ -541,9 +543,9 @@ namespace D_IDE
 					rl.Add(new DCompletionData(arg, selectedExpression, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
 				}
 				if ((selectedExpression as DataType).superClass == "") return;
-				DataType dt = SearchGlobalExpr(null, (selectedExpression as DataType).superClass); // Should be superior class
+				DataType dt = SearchGlobalExpr(cc,null, (selectedExpression as DataType).superClass); // Should be superior class
 				if (dt == null) return;
-				AddAllClassMembers(dt, ref rl, all, exact, searchExpr);
+				AddAllClassMembers(cc,dt, ref rl, all, exact, searchExpr);
 			}
 		}
 

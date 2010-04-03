@@ -10,238 +10,257 @@ using ICSharpCode.NRefactory;
 
 namespace D_IDE
 {
-	class BinaryDataTypeStorageWriter
-	{
-		#region General
-		public BinaryWriter BinStream;
-		public const uint ModuleInitializer=(uint)('D')|('M'<<8)|('o'<<16)|('d'<<24);
-		public const uint NodeInitializer = (uint)('N') | ('o' << 8) | ('d' << 16) | ('e'<<24);
-		public BinaryDataTypeStorageWriter(string file)
-		{
-			FileStream fs=new FileStream(file,FileMode.Create,FileAccess.Write);
-			BinStream = new BinaryWriter(fs);
-		}
+    class BinaryDataTypeStorageWriter
+    {
+        #region General
+        public BinaryWriter BinStream;
+        public const uint ModuleInitializer = (uint)('D') | ('M' << 8) | ('o' << 16) | ('d' << 24);
+        public const uint NodeInitializer = (uint)('N') | ('o' << 8) | ('d' << 16) | ('e' << 24);
+        public BinaryDataTypeStorageWriter(string file)
+        {
+            FileStream fs = new FileStream(file, FileMode.Create, FileAccess.Write);
+            BinStream = new BinaryWriter(fs);
+        }
 
-		public void Close()
-		{
-			if (BinStream != null)
-			{
-				BinStream.Flush();
-				BinStream.Close();
-			}
-		}
+        public void Close()
+        {
+            if (BinStream != null)
+            {
+                BinStream.Flush();
+                BinStream.Close();
+            }
+        }
 
-		/// <summary>
-		/// This special method is needed because Stream.Write("testString") limits the string length to 128 (7-bit ASCII) although we want to have at least 255
-		/// </summary>
-		/// <param name="s"></param>
-		void WriteString(string s)
-		{
-			if (String.IsNullOrEmpty(s))
-			{
-				BinStream.Write((ushort)0);
-				return;
-			}
-			if (s.Length >= ushort.MaxValue) s = s.Remove(ushort.MaxValue-1);
-			BinStream.Write((ushort)s.Length); // short = 2 bytes; byte = 1 byte
-			BinStream.Write(Encoding.UTF8.GetBytes(s));
-		}
-		#endregion
+        void WriteString(string s) { WriteString(s,false); }
 
-		#region Modules
-		public void WriteModules(string[] ParsedDirectories, DModule[] Modules) { WriteModules(ParsedDirectories,new List<DModule>(Modules)); }
+        /// <summary>
+        /// This special method is needed because Stream.Write("testString") limits the string length to 128 (7-bit ASCII) although we want to have at least 255
+        /// </summary>
+        /// <param name="s"></param>
+        void WriteString(string s, bool IsUnicode)
+        {
+            if (String.IsNullOrEmpty(s))
+            {
+                if (IsUnicode)
+                    BinStream.Write((int)0);
+                else
+                    BinStream.Write((ushort)0);
+                return;
+            }
+            if (IsUnicode)
+            {
+                byte[] tb = Encoding.Unicode.GetBytes(s);
+                BinStream.Write(tb.Length);
+                BinStream.Write(tb);
+            }
+            else
+            {
+                if (s.Length >= ushort.MaxValue - 1)
+                    s = s.Remove(ushort.MaxValue - 1);
+                BinStream.Write((ushort)s.Length); // short = 2 bytes; byte = 1 byte
+                BinStream.Write(Encoding.UTF8.GetBytes(s));
+            }
+        }
+        #endregion
 
-		public void WriteModules(string[] ParsedDirectories,List<DModule> Modules)
-		{
-			BinaryWriter bs = BinStream;
+        #region Modules
+        public void WriteModules(string[] ParsedDirectories, DModule[] Modules) { WriteModules(ParsedDirectories, new List<DModule>(Modules)); }
 
-			bs.Write(Modules.Count); // To know how many modules we've saved
+        public void WriteModules(string[] ParsedDirectories, List<DModule> Modules)
+        {
+            BinaryWriter bs = BinStream;
 
-			if (ParsedDirectories != null)
-			{
-				bs.Write((uint)ParsedDirectories.Length);
-				foreach (string dir in ParsedDirectories)
-					WriteString(dir);
-			}
-			else bs.Write((uint)0);
+            bs.Write(Modules.Count); // To know how many modules we've saved
 
-			foreach (DModule mod in Modules)
-			{
-				bs.Write(ModuleInitializer);
-				WriteString(mod.ModuleName);
-				WriteString(mod.mod_file);
-				WriteNodes(mod.Children);
-				bs.Flush();
-			}
-		}
-		#endregion
+            if (ParsedDirectories != null)
+            {
+                bs.Write((uint)ParsedDirectories.Length);
+                foreach (string dir in ParsedDirectories)
+                    WriteString(dir,true);
+            }
+            else bs.Write((uint)0);
 
-		#region Nodes
-		void WriteNodes(List<INode> Nodes)
-		{
-			BinaryWriter bs = BinStream;
+            foreach (DModule mod in Modules)
+            {
+                bs.Write(ModuleInitializer);
+                WriteString(mod.ModuleName);
+                WriteString(mod.mod_file,true);
+                WriteNodes(mod.Children);
+                bs.Flush();
+            }
+        }
+        #endregion
 
-			if (Nodes == null || Nodes.Count < 1)
-			{
-				bs.Write((int)0);
-				bs.Flush();
-				return;
-			}
+        #region Nodes
+        void WriteNodes(List<INode> Nodes)
+        {
+            BinaryWriter bs = BinStream;
 
-			bs.Write(Nodes.Count);
+            if (Nodes == null || Nodes.Count < 1)
+            {
+                bs.Write((int)0);
+                bs.Flush();
+                return;
+            }
 
-			foreach (INode n in Nodes)
-			{
-				DataType dt = n as DataType;
-				bs.Write(NodeInitializer);
+            bs.Write(Nodes.Count);
 
-				bs.Write((int)dt.fieldtype);
-				WriteString(dt.name);
-				bs.Write((int)dt.TypeToken);
-				WriteString(dt.type);
-				WriteString(dt.desc);
-				bs.Write(dt.StartLocation.X);
-				bs.Write(dt.StartLocation.Y);
-				bs.Write(dt.EndLocation.X);
-				bs.Write(dt.EndLocation.Y);
-				
-				bs.Write(dt.modifiers.Count);
-				foreach (int mod in dt.modifiers)
-					bs.Write(mod);
+            foreach (INode n in Nodes)
+            {
+                DataType dt = n as DataType;
+                bs.Write(NodeInitializer);
 
-				WriteString(dt.module);
-				WriteString(dt.value);
-				WriteString(dt.superClass);
-				WriteString(dt.implementedInterface);
+                bs.Write((int)dt.fieldtype);
+                WriteString(dt.name);
+                bs.Write((int)dt.TypeToken);
+                WriteString(dt.type);
+                WriteString(dt.desc,true);
+                bs.Write(dt.StartLocation.X);
+                bs.Write(dt.StartLocation.Y);
+                bs.Write(dt.EndLocation.X);
+                bs.Write(dt.EndLocation.Y);
 
-				WriteNodes(dt.param);
-				WriteNodes(dt.Children);
-			}
+                bs.Write(dt.modifiers.Count);
+                foreach (int mod in dt.modifiers)
+                    bs.Write(mod);
 
-			bs.Flush();
-		}
-		#endregion
-	}
+                WriteString(dt.module);
+                WriteString(dt.value,true);
+                WriteString(dt.superClass);
+                WriteString(dt.implementedInterface);
+
+                WriteNodes(dt.param);
+                WriteNodes(dt.Children);
+            }
+
+            bs.Flush();
+        }
+        #endregion
+    }
 
 
 
-	class BinaryDataTypeStorageReader
-	{
-		#region General
-		public BinaryReader BinStream;
-		public BinaryDataTypeStorageReader(string file)
-		{
-			FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read);
-			BinStream = new BinaryReader(fs);
-		}
+    class BinaryDataTypeStorageReader
+    {
+        #region General
+        public BinaryReader BinStream;
+        public BinaryDataTypeStorageReader(string file)
+        {
+            FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read);
+            BinStream = new BinaryReader(fs);
+        }
 
-		string ReadString()
-		{
-			int len = (int) BinStream.ReadUInt16();
-			if (len < 1) return String.Empty;
-			byte[] t = BinStream.ReadBytes(len);
-			return Encoding.UTF8.GetString(t);
-		}
+        string ReadString() { return ReadString(false); }
 
-		public void Close()
-		{
-			if (BinStream != null)
-			{
-				BinStream.Close();
-			}
-		}
-		#endregion
+        string ReadString(bool IsUnicode)
+        {
+            if (IsUnicode)
+            {
+                int len = BinStream.ReadInt32();
+                byte[] t = BinStream.ReadBytes(len);
+                return Encoding.Unicode.GetString(t);
+            }
+            else
+            {
+                int len = (int)BinStream.ReadUInt16();
+                if (len < 1) return String.Empty;
+                byte[] t = BinStream.ReadBytes(len);
+                return Encoding.UTF8.GetString(t);
+            }
+        }
 
-		#region Modules
-		public List<DModule> ReadModules(ref List<string> ParsedDirectories)
-		{
-			BinaryReader bs = BinStream;
+        public void Close()
+        {
+            if (BinStream != null)
+            {
+                BinStream.Close();
+            }
+        }
+        #endregion
 
-			int Count = bs.ReadInt32();
-			List<DModule> ret = new List<DModule>(Count); // Speed improvement caused by given number of modules
+        #region Modules
+        public List<DModule> ReadModules(ref List<string> ParsedDirectories)
+        {
+            BinaryReader bs = BinStream;
 
-			uint DirCount = bs.ReadUInt32();
-			if (DirCount == BinaryDataTypeStorageWriter.ModuleInitializer)
-			{
-				bs.BaseStream.Seek(-4,SeekOrigin.Current); // Go back to module initializer
-			}
-			else
-			{
-				for (int i = 0; i < DirCount; i++)
-				{
-					string dir = ReadString();
-					if(!ParsedDirectories.Contains(dir))ParsedDirectories.Add(dir);
-				}
-			}
+            int Count = bs.ReadInt32();
+            List<DModule> ret = new List<DModule>(Count); // Speed improvement caused by given number of modules
 
-			for (int i = 0; i < Count;i++ )
-			{
-				uint mi=bs.ReadUInt32();
-				if (mi != BinaryDataTypeStorageWriter.ModuleInitializer)
-				{
-					throw new Exception("Wrong format!");
-				}
+            uint DirCount = bs.ReadUInt32();
+            for (int i = 0; i < DirCount; i++)
+            {
+                string dir = ReadString(true);
+                if (!ParsedDirectories.Contains(dir)) ParsedDirectories.Add(dir);
+            }
 
-				DModule mod = new DModule();
-				mod.ModuleName = ReadString();
-				mod.mod_file = ReadString();
-				mod.dom.name = mod.ModuleName;
-				mod.dom.module = mod.ModuleName;
-				ReadNodes(ref mod.dom.children);
-				ret.Add(mod);
-			}
-			return ret;
-		}
-		#endregion
+            for (int i = 0; i < Count; i++)
+            {
+                uint mi = bs.ReadUInt32();
+                if (mi != BinaryDataTypeStorageWriter.ModuleInitializer)
+                {
+                    throw new Exception("Wrong module definition format!");
+                }
 
-		#region Nodes
-		void ReadNodes(ref List<INode> Nodes)
-		{
-			BinaryReader bs = BinStream;
+                DModule mod = new DModule();
+                mod.ModuleName = ReadString();
+                mod.mod_file = ReadString(true);
+                mod.dom.name = mod.ModuleName;
+                mod.dom.module = mod.ModuleName;
+                ReadNodes(ref mod.dom.children);
+                ret.Add(mod);
+            }
+            return ret;
+        }
+        #endregion
 
-			int Count = bs.ReadInt32();
-			Nodes.Capacity = Count;
-			Nodes.Clear();
+        #region Nodes
+        void ReadNodes(ref List<INode> Nodes)
+        {
+            BinaryReader bs = BinStream;
 
-			for (int i = 0; i < Count;i++ )
-			{
-				uint ni = bs.ReadUInt32();
-				if (ni != BinaryDataTypeStorageWriter.NodeInitializer)
-				{
-					throw new Exception("Wrong format!");
-				}
+            int Count = bs.ReadInt32();
+            Nodes.Capacity = Count;
+            Nodes.Clear();
 
-				DataType dt = new DataType();
+            for (int i = 0; i < Count; i++)
+            {
+                uint ni = bs.ReadUInt32();
+                if (ni != BinaryDataTypeStorageWriter.NodeInitializer)
+                {
+                    throw new Exception("Wrong node definition format!");
+                }
 
-				dt.fieldtype = (FieldType)bs.ReadInt32();
-				dt.name = ReadString();
-				dt.TypeToken = bs.ReadInt32();
-				dt.type = ReadString();
-				dt.desc = ReadString();
-				Location startLoc = new Location();
-				startLoc.X = bs.ReadInt32();
-				startLoc.Y = bs.ReadInt32();
-				dt.StartLocation = startLoc;
-				Location endLoc = new Location();
-				endLoc.X = bs.ReadInt32();
-				endLoc.Y = bs.ReadInt32();
-				dt.EndLocation = endLoc;
+                DataType dt = new DataType();
 
-				int modCount = bs.ReadInt32();
-				for (int j = 0; j < modCount; j++)
-					dt.modifiers.Add(bs.ReadInt32());
+                dt.fieldtype = (FieldType)bs.ReadInt32();
+                dt.name = ReadString();
+                dt.TypeToken = bs.ReadInt32();
+                dt.type = ReadString();
+                dt.desc = ReadString(true);
+                Location startLoc = new Location();
+                startLoc.X = bs.ReadInt32();
+                startLoc.Y = bs.ReadInt32();
+                dt.StartLocation = startLoc;
+                Location endLoc = new Location();
+                endLoc.X = bs.ReadInt32();
+                endLoc.Y = bs.ReadInt32();
+                dt.EndLocation = endLoc;
 
-				dt.module = ReadString();
-				dt.value = ReadString();
-				dt.superClass = ReadString();
-				dt.implementedInterface = ReadString();
+                int modCount = bs.ReadInt32();
+                for (int j = 0; j < modCount; j++)
+                    dt.modifiers.Add(bs.ReadInt32());
 
-				ReadNodes(ref dt.param);
-				ReadNodes(ref dt.children);
+                dt.module = ReadString();
+                dt.value = ReadString(true);
+                dt.superClass = ReadString();
+                dt.implementedInterface = ReadString();
 
-				Nodes.Add(dt);
-			}
-		}
-		#endregion
-	}
+                ReadNodes(ref dt.param);
+                ReadNodes(ref dt.children);
+
+                Nodes.Add(dt);
+            }
+        }
+        #endregion
+    }
 }

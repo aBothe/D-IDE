@@ -621,22 +621,22 @@
 			// propertiesToolStripMenuItem1
 			// 
 			this.propertiesToolStripMenuItem1.Name = "propertiesToolStripMenuItem1";
-			this.propertiesToolStripMenuItem1.Size = new System.Drawing.Size(188, 22);
+			this.propertiesToolStripMenuItem1.Size = new System.Drawing.Size(227, 22);
 			this.propertiesToolStripMenuItem1.Text = "Settings";
 			this.propertiesToolStripMenuItem1.Click += new System.EventHandler(this.propertiesToolStripMenuItem1_Click);
 			// 
 			// updateCacheToolStripMenuItem
 			// 
 			this.updateCacheToolStripMenuItem.Name = "updateCacheToolStripMenuItem";
-			this.updateCacheToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
-			this.updateCacheToolStripMenuItem.Text = "Reparse all directories";
+			this.updateCacheToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
+			this.updateCacheToolStripMenuItem.Text = "Reparse all import directories";
 			this.updateCacheToolStripMenuItem.Click += new System.EventHandler(this.updateCacheToolStripMenuItem_Click);
 			// 
 			// stopParsingToolStripMenuItem
 			// 
 			this.stopParsingToolStripMenuItem.Enabled = false;
 			this.stopParsingToolStripMenuItem.Name = "stopParsingToolStripMenuItem";
-			this.stopParsingToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+			this.stopParsingToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
 			this.stopParsingToolStripMenuItem.Text = "Stop parsing";
 			this.stopParsingToolStripMenuItem.Click += new System.EventHandler(this.stopParsingToolStripMenuItem_Click);
 			// 

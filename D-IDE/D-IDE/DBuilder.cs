@@ -10,394 +10,399 @@ using Microsoft.Win32;
 
 namespace D_IDE
 {
-	/// <summary>
-	/// Main class for building D projects
-	/// </summary>
-	public class DBuilder
-	{
-		/// <summary>
-		/// Helper function to check if directory exists
-		/// </summary>
-		/// <param name="dir"></param>
-		public static void CreateDirectoryRecursively(string dir)
-		{
-			if (Directory.Exists(dir)) return;
+    /// <summary>
+    /// Main class for building D projects
+    /// </summary>
+    public class DBuilder
+    {
+        /// <summary>
+        /// Helper function to check if directory exists
+        /// </summary>
+        /// <param name="dir"></param>
+        public static void CreateDirectoryRecursively(string dir)
+        {
+            if (Directory.Exists(dir)) return;
 
-			string tdir = "";
-			foreach (string d in dir.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries))
-			{
-				tdir += d + "\\";
-				if (!Directory.Exists(tdir))
-				{
-					try
-					{
-						Directory.CreateDirectory(tdir);
-					}
-					catch { return; }
-				}
-			}
-		}
+            string tdir = "";
+            foreach (string d in dir.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                tdir += d + "\\";
+                if (!Directory.Exists(tdir))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(tdir);
+                    }
+                    catch { return; }
+                }
+            }
+        }
 
-		/// <summary>
-		/// Build a project. Also cares about the last versions and additional file and project dependencies
-		/// </summary>
-		/// <param name="prj"></param>
-		/// <returns></returns>
-		public static bool BuildProject(DProject prj)
-		{
-			try { prj.Save(); }
-			catch { }
+        /// <summary>
+        /// Build a project. Also cares about the last versions and additional file and project dependencies
+        /// </summary>
+        /// <param name="prj"></param>
+        /// <returns></returns>
+        public static string BuildProject(DProject prj)
+        {
+            try { prj.Save(); }
+            catch { }
 
-			CompilerConfiguration cc = prj.Compiler;
+            CompilerConfiguration cc = prj.Compiler;
 
-			OnMessage(prj, prj.prjfn, "Build " + prj.name + " project");
+            OnMessage(prj, prj.prjfn, "Build " + prj.name + " project");
 
-			prj.RefreshBuildDate();
+            prj.RefreshBuildDate();
 
-			List<string> builtfiles = new List<string>();
-			bool IsDebug = !prj.isRelease;
-			string args = "";
-			bool OneFileChanged = String.IsNullOrEmpty(prj.LastBuiltTarget);
+            List<string> builtfiles = new List<string>();
+            bool IsDebug = !prj.isRelease;
+            string args = "";
+            bool OneFileChanged = String.IsNullOrEmpty(prj.LastBuiltTarget);
 
-			Directory.SetCurrentDirectory(prj.basedir);
+            Directory.SetCurrentDirectory(prj.basedir);
 
-			CreateDirectoryRecursively(prj.AbsoluteOutputDirectory);
+            CreateDirectoryRecursively(prj.AbsoluteOutputDirectory);
 
-			#region Last version storing
-			if (prj.LastVersionCount > 0)
-			{
-				List<string> tdirs = new List<string>(Directory.GetDirectories(prj.AbsoluteOutputDirectoryWithoutSVN));
-				if (tdirs.Count > prj.LastVersionCount)
-				{
-					// Very important: Sort array to ensure the descending order of dates/times
-					tdirs.Sort();
-					for (int i = 0; i < tdirs.Count - prj.LastVersionCount; i++)
-					{
-						if (!String.IsNullOrEmpty( prj.LastBuiltTarget) && tdirs[i].EndsWith(Path.GetDirectoryName(prj.LastBuiltTarget))) 
-							continue;
-						try
-						{
-							Directory.Delete(tdirs[i], true);
-						}
-						catch { }
-					}
-				}
-			}
-			if (prj.EnableSubversioning && prj.AlsoStoreSources)
-				CreateDirectoryRecursively(prj.AbsoluteOutputDirectory + "\\src");
-			#endregion
+            #region Last version storing
+            if (prj.LastVersionCount > 0)
+            {
+                List<string> tdirs = new List<string>(Directory.GetDirectories(prj.AbsoluteOutputDirectoryWithoutSVN));
+                if (tdirs.Count > prj.LastVersionCount)
+                {
+                    // Very important: Sort array to ensure the descending order of dates/times
+                    tdirs.Sort();
+                    for (int i = 0; i < tdirs.Count - prj.LastVersionCount; i++)
+                    {
+                        if (!String.IsNullOrEmpty(prj.LastBuiltTarget) && tdirs[i].EndsWith(Path.GetDirectoryName(prj.LastBuiltTarget)))
+                            continue;
+                        try
+                        {
+                            Directory.Delete(tdirs[i], true);
+                        }
+                        catch { }
+                    }
+                }
+            }
+            if (prj.EnableSubversioning && prj.AlsoStoreSources)
+                CreateDirectoryRecursively(prj.AbsoluteOutputDirectory + "\\src");
+            #endregion
 
-			#region File dependencies
-			foreach (string depFile in prj.FileDependencies)
-			{
-				try
-				{
-					if (File.Exists(depFile))
-						File.Copy(depFile, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depFile));
-				}
-				catch (Exception ex) { OnMessage(prj, depFile, "Couldn't copy " + depFile + ": " + ex.Message); }
-			}
-			#endregion
+            #region File dependencies
+            foreach (string depFile in prj.FileDependencies)
+            {
+                try
+                {
+                    if (File.Exists(depFile))
+                        File.Copy(depFile, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depFile));
+                }
+                catch (Exception ex) { OnMessage(prj, depFile, "Couldn't copy " + depFile + ": " + ex.Message); }
+            }
+            #endregion
 
-			#region Project dependencies
-			foreach (string depFile in prj.ProjectDependencies)
-			{
-				if (!File.Exists(depFile) || depFile == prj.prjfn) continue;
-				try
-				{
-					DProject depProject = DProject.LoadFrom(depFile);
-					if (!BuildProject(depProject))
-					{
-						OnMessage(depProject, depFile, "Couldn't build " + depProject.name + " ... break main build process!");
-						return false;
-					}
-					else
-					{
-						OnMessage(depProject, depProject.LastBuiltTarget, "Copy " + depProject.LastBuiltTarget + " to " + prj.AbsoluteOutputDirectory);
-						File.Copy(depProject.LastBuiltTarget, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depProject.LastBuiltTarget));
-					}
-				}
-				catch (Exception ex)
-				{
-					OnMessage(prj, depFile, "Couldn't build " + depFile + ": " + ex.Message);
-					return false;
-				}
-			}
-			#endregion
+            #region Project dependencies
+            foreach (string depFile in prj.ProjectDependencies)
+            {
+                if (!File.Exists(depFile) || depFile == prj.prjfn) continue;
+                try
+                {
+                    DProject depProject = DProject.LoadFrom(depFile);
+                    if (String.IsNullOrEmpty(BuildProject(depProject)))
+                    {
+                        OnMessage(depProject, depFile, "Couldn't build " + depProject.name + " ... break main build process!");
+                        return null;
+                    }
+                    else
+                    {
+                        OnMessage(depProject, depProject.LastBuiltTarget, "Copy " + depProject.LastBuiltTarget + " to " + prj.AbsoluteOutputDirectory);
+                        File.Copy(depProject.LastBuiltTarget, prj.AbsoluteOutputDirectory + "\\" + Path.GetFileName(depProject.LastBuiltTarget));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnMessage(prj, depFile, "Couldn't build " + depFile + ": " + ex.Message);
+                    return null;
+                }
+            }
+            #endregion
 
-			#region Compile all sources
-			List<string> FilesToCompile = new List<string>(prj.resourceFiles);
+            #region Compile all sources
+            List<string> FilesToCompile = new List<string>(prj.resourceFiles);
 
-			if (!Directory.Exists("obj")) Directory.CreateDirectory("obj");
+            if (!Directory.Exists("obj")) Directory.CreateDirectory("obj");
 
-			if (prj.ManifestCreation == DProject.ManifestCreationType.IntegratedResource)
-			{
-				string manifestFile = "Manifest.manifest";
-				string manifestRCFile = "Manifest.rc";
-				DProject.CreateManifestFile(manifestFile);
-				DProject.CreateManifestImportingResourceFile(manifestRCFile, manifestFile);
-				FilesToCompile.Add(manifestRCFile);
-			}
+            if (prj.ManifestCreation == DProject.ManifestCreationType.IntegratedResource)
+            {
+                string manifestFile = "Manifest.manifest";
+                string manifestRCFile = "Manifest.rc";
+                DProject.CreateManifestFile(manifestFile);
+                DProject.CreateManifestImportingResourceFile(manifestRCFile, manifestFile);
+                FilesToCompile.Add(manifestRCFile);
+            }
 
-			foreach (string rc in FilesToCompile)
-			{
-				string phys_rc = prj.GetPhysFilePath(rc);
-				string tdirname = Path.GetDirectoryName(rc).Replace('\\', '_').Replace(":", "") + "_";
+            foreach (string rc in FilesToCompile)
+            {
+                string phys_rc = prj.GetPhysFilePath(rc);
+                string tdirname = Path.GetDirectoryName(rc).Replace('\\', '_').Replace(":", "") + "_";
 
-				#region Compile Resources
-				if (rc.EndsWith(".rc"))
-				{
-					string res = "obj\\" + tdirname + Path.GetFileNameWithoutExtension(rc) + ".res";
+                #region Compile Resources
+                if (rc.EndsWith(".rc"))
+                {
+                    string res = "obj\\" + tdirname + Path.GetFileNameWithoutExtension(rc) + ".res";
 
-					if (prj.LastModifyingDates.ContainsKey(phys_rc) &&
-						prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
-						File.Exists(res))
-					{
-					}
-					else
-					{
-						OnMessage(prj, rc, "Compile resource " + Path.GetFileName(rc));
-						Form1.thisForm.ProgressStatusLabel.Text = "Compiling resource " + Path.GetFileName(rc);
+                    if (prj.LastModifyingDates.ContainsKey(phys_rc) &&
+                        prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
+                        File.Exists(res))
+                    {
+                    }
+                    else
+                    {
+                        OnMessage(prj, rc, "Compile resource " + Path.GetFileName(rc));
+                        Form1.thisForm.ProgressStatusLabel.Text = "Compiling resource " + Path.GetFileName(rc);
 
-						OneFileChanged = true;
-						if (!BuildResFile(rc,cc, res, prj.basedir)) return false;
+                        OneFileChanged = true;
+                        if (!BuildResFile(rc, cc, res, prj.basedir)) return null;
 
-						if (!prj.LastModifyingDates.ContainsKey(phys_rc))
-							prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
-						else
-							prj.LastModifyingDates[phys_rc] = File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc();
+                        if (!prj.LastModifyingDates.ContainsKey(phys_rc))
+                            prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
+                        else
+                            prj.LastModifyingDates[phys_rc] = File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc();
 
-						if (prj.EnableSubversioning && prj.AlsoStoreSources)
-						{
-							try
-							{
-								File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + tdirname + Path.GetFileName(rc));
-							}
-							catch { }
-						}
-					}
-					builtfiles.Add(res);
-				}
-				#endregion
-				#region Compile D Sources
-				else if (DModule.Parsable(rc))
-				{
-					string obj = "obj\\" + tdirname + Path.GetFileNameWithoutExtension(rc)+ (IsDebug?"_dbg":String.Empty) + ".obj";
+                        if (prj.EnableSubversioning && prj.AlsoStoreSources)
+                        {
+                            try
+                            {
+                                File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + tdirname + Path.GetFileName(rc));
+                            }
+                            catch { }
+                        }
+                    }
+                    builtfiles.Add(res);
+                }
+                #endregion
+                #region Compile D Sources
+                else if (DModule.Parsable(rc))
+                {
+                    string obj = "obj\\" + tdirname + Path.GetFileNameWithoutExtension(rc) + (IsDebug ? "_dbg" : String.Empty) + ".obj";
 
-					if (prj.LastModifyingDates.ContainsKey(phys_rc) &&
-						prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
-						File.Exists(obj))
-					{
-						// Do nothing because targeted obj file is already existing in its latest version
-					}
-					else
-					{
-						OnMessage(prj, rc, "Compile " + Path.GetFileName(rc));
-						Form1.thisForm.ProgressStatusLabel.Text = "Compiling " + Path.GetFileName(rc);
+                    if (prj.LastModifyingDates.ContainsKey(phys_rc) &&
+                        prj.LastModifyingDates[phys_rc] == File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc() &&
+                        File.Exists(obj))
+                    {
+                        // Do nothing because targeted obj file is already existing in its latest version
+                    }
+                    else
+                    {
+                        OnMessage(prj, rc, "Compile " + Path.GetFileName(rc));
+                        Form1.thisForm.ProgressStatusLabel.Text = "Compiling " + Path.GetFileName(rc);
 
-						OneFileChanged = true;
-						if (!BuildObjFile(rc,cc, obj, prj.basedir, prj.compileargs,IsDebug)) return false;
+                        OneFileChanged = true;
+                        if (!BuildObjFile(rc, cc, obj, prj.basedir, prj.compileargs, IsDebug)) return null;
 
-						if (!prj.LastModifyingDates.ContainsKey(phys_rc))
-							prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
-						else
-							prj.LastModifyingDates[phys_rc] = File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc();
+                        if (!prj.LastModifyingDates.ContainsKey(phys_rc))
+                            prj.LastModifyingDates.Add(phys_rc, File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc());
+                        else
+                            prj.LastModifyingDates[phys_rc] = File.GetLastWriteTimeUtc(phys_rc).ToFileTimeUtc();
 
-						if (prj.EnableSubversioning && prj.AlsoStoreSources)
-						{
-							try
-							{
-								File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + tdirname + Path.GetFileName(rc));
-							}
-							catch { }
-						}
-					}
+                        if (prj.EnableSubversioning && prj.AlsoStoreSources)
+                        {
+                            try
+                            {
+                                File.Copy(phys_rc, prj.AbsoluteOutputDirectory + "\\src\\" + tdirname + Path.GetFileName(rc));
+                            }
+                            catch { }
+                        }
+                    }
 
-					builtfiles.Add(obj);
-				}
-				#endregion
-			}
-			#endregion
+                    builtfiles.Add(obj);
+                }
+                #endregion
+            }
+            #endregion
 
-			#region Linking
-			string exe = "dmd.exe";
-			string target = prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null);
-			string objs = "";
-			string libs = "";
-			
-			foreach (string f in builtfiles) objs += "\"" + f + "\" ";
-			foreach (string f in prj.libs) libs += "\"" + f + "\" ";
+            #region Linking
+            string exe = "dmd.exe";
+            string target = prj.AbsoluteOutputDirectory + "\\" + Path.ChangeExtension(prj.targetfilename, null);
+            string objs = "";
+            string libs = "";
 
-			switch (prj.type)
-			{
-				case DProject.PrjType.WindowsApp:
-					exe = cc.Win32ExeLinker;
-					target += ".exe";
-					args = IsDebug?cc.Win32ExeLinkerDebugArgs:cc.Win32ExeLinkerArgs;
-					break;
-				case DProject.PrjType.ConsoleApp:
-					exe = cc.ExeLinker;
-					target += ".exe";
-					args = IsDebug?cc.ExeLinkerDebugArgs:cc.ExeLinkerArgs;
-					break;
-				case DProject.PrjType.Dll:
-					exe = cc.DllLinker;
-					target += ".dll";
-					args = IsDebug?cc.DllLinkerDebugArgs:cc.DllLinkerArgs;
-					break;
-				case DProject.PrjType.StaticLib:
-					exe = cc.LibLinker;
-					target += ".lib";
-					args = IsDebug?cc.LibLinkerDebugArgs:cc.LibLinkerArgs;
-					break;
-			}
+            foreach (string f in builtfiles) objs += "\"" + f + "\" ";
+            foreach (string f in prj.libs) libs += "\"" + f + "\" ";
 
-			if (!OneFileChanged && (File.Exists(target) || prj.EnableSubversioning))
-			{
-				OnMessage(prj, target, "Anything changed...no linking necessary!");
-				try
-				{
-					if (prj.EnableSubversioning) Directory.Delete(prj.AbsoluteOutputDirectory, true);
-				}
-				catch { }
-				return true;
-			}
+            switch (prj.type)
+            {
+                case DProject.PrjType.WindowsApp:
+                    exe = cc.Win32ExeLinker;
+                    target += ".exe";
+                    args = IsDebug ? cc.Win32ExeLinkerDebugArgs : cc.Win32ExeLinkerArgs;
+                    break;
+                case DProject.PrjType.ConsoleApp:
+                    exe = cc.ExeLinker;
+                    target += ".exe";
+                    args = IsDebug ? cc.ExeLinkerDebugArgs : cc.ExeLinkerArgs;
+                    break;
+                case DProject.PrjType.Dll:
+                    exe = cc.DllLinker;
+                    target += ".dll";
+                    args = IsDebug ? cc.DllLinkerDebugArgs : cc.DllLinkerArgs;
+                    break;
+                case DProject.PrjType.StaticLib:
+                    exe = cc.LibLinker;
+                    target += ".lib";
+                    args = IsDebug ? cc.LibLinkerDebugArgs : cc.LibLinkerArgs;
+                    break;
+            }
 
-			args = args.Replace("$target", target);
-			args = args.Replace("$exe", Path.ChangeExtension(target, ".exe"));
-			args = args.Replace("$dll", Path.ChangeExtension(target, ".dll"));
-			args = args.Replace("$def", Path.ChangeExtension(target, ".def"));
-			args = args.Replace("$libs", libs);
-			args = args.Replace("$lib", Path.ChangeExtension(target, ".lib"));
-			args = args.Replace("$objs", objs);
+            if (!OneFileChanged && (File.Exists(target) || prj.EnableSubversioning))
+            {
+                OnMessage(prj, target, "Anything changed...no linking necessary!");
+                try
+                {
+                    if (prj.EnableSubversioning) Directory.Delete(prj.AbsoluteOutputDirectory, true);
+                }
+                catch { }
+                return prj.LastBuiltTarget;
+            }
 
-			OnMessage(prj, target, "Link file to " + target);
-			Form1.thisForm.ProgressStatusLabel.Text = "Link file to " + target;
+            args = args.Replace("$target", target);
+            args = args.Replace("$exe", Path.ChangeExtension(target, ".exe"));
+            args = args.Replace("$dll", Path.ChangeExtension(target, ".dll"));
+            args = args.Replace("$def", Path.ChangeExtension(target, ".def"));
+            args = args.Replace("$libs", libs);
+            args = args.Replace("$lib", Path.ChangeExtension(target, ".lib"));
+            args = args.Replace("$objs", objs);
 
-			Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, true);
-			prc.WaitForExit(10000);
+            OnMessage(prj, target, "Link file to " + target);
+            Form1.thisForm.ProgressStatusLabel.Text = "Link file to " + target;
 
-			if (prc.ExitCode == 0)
-			{
-				// This line of code is very important for debugging!
-				prj.LastBuiltTarget = target;
+            Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, true);
+            prc.WaitForExit(10000);
 
-				// If enabled, create external manifest file now
-				if (prj.ManifestCreation == DProject.ManifestCreationType.External) prj.CreateExternalManifestFile();
+            if (prc.ExitCode == 0)
+            {
+                // This line of code is very important for debugging!
+                prj.LastBuiltTarget = target;
 
-				#region cv2pdb
-				// Create program database (pdb) file from CodeView data from the target exe
-				if (IsDebug&&D_IDE_Properties.Default.CreatePDBOnBuild)
-				{
-					string pdb = Path.ChangeExtension(target,".pdb") ;
-					OnMessage(prj,pdb,"Create debug information database "+pdb);
-					CodeViewToPDB.CodeViewToPDBConverter.DoConvert(target, pdb);
-				}
-				#endregion
+                // If enabled, create external manifest file now
+                if (prj.ManifestCreation == DProject.ManifestCreationType.External) prj.CreateExternalManifestFile();
 
-				Form1.thisForm.ProgressStatusLabel.Text = "Linking done!";
-				OnMessage(prj, target, "Linking done!");
-				return true;
-			}
-			#endregion
-			return false;
-		}
+                #region cv2pdb
+                // Create program database (pdb) file from CodeView data from the target exe
+                if (IsDebug && D_IDE_Properties.Default.CreatePDBOnBuild)
+                {
+                    CreatePDBFromExe(prj,target);
+                }
+                #endregion
 
-		public static bool BuildObjFile(string file, CompilerConfiguration cc, string target, string exeDir, string additionalArgs, bool IsDebug)
-		{
-			if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
+                Form1.thisForm.ProgressStatusLabel.Text = "Linking done!";
+                OnMessage(prj, target, "Linking done!");
+                return target;
+            }
+            #endregion
+            return null;
+        }
 
-			string args = IsDebug?cc.SoureCompilerDebugArgs:cc.SoureCompilerArgs;
-			args = args.Replace("$src", file);
-			args = args.Replace("$obj", target);
+        public static void CreatePDBFromExe(DProject prj,string exe)
+        {
+            string pdb = Path.ChangeExtension(exe, ".pdb");
+            OnMessage(prj, pdb, "Create debug information database " + pdb);
+            CodeViewToPDB.CodeViewToPDBConverter.DoConvert(exe, pdb);
+        }
 
-			Process prc = DBuilder.Exec(cc.SoureCompiler, args + " " + additionalArgs, exeDir, true);
-			prc.WaitForExit(10000);
+        public static bool BuildObjFile(string file, CompilerConfiguration cc, string target, string exeDir, string additionalArgs, bool IsDebug)
+        {
+            if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
 
-			return prc.ExitCode == 0;
-		}
+            string args = IsDebug ? cc.SoureCompilerDebugArgs : cc.SoureCompilerArgs;
+            args = args.Replace("$src", file);
+            args = args.Replace("$obj", target);
 
-		public static bool BuildResFile(string file, CompilerConfiguration cc, string target, string exeDir)
-		{
-			if (!file.EndsWith(".rc")) { throw new Exception("Cannot build resource file of " + file); }
+            Process prc = DBuilder.Exec(cc.SoureCompiler, args + " " + additionalArgs, exeDir, true);
+            prc.WaitForExit(10000);
 
-			string args = cc.ResourceCompilerArgs;
-			args = args.Replace("$rc", file);
-			args = args.Replace("$res", target);
+            return prc.ExitCode == 0;
+        }
 
-			Process prc = DBuilder.Exec(cc.ResourceCompiler, args, exeDir, true);
-			prc.WaitForExit(10000);
+        public static bool BuildResFile(string file, CompilerConfiguration cc, string target, string exeDir)
+        {
+            if (!file.EndsWith(".rc")) { throw new Exception("Cannot build resource file of " + file); }
 
-			return prc.ExitCode == 0;
-		}
+            string args = cc.ResourceCompilerArgs;
+            args = args.Replace("$rc", file);
+            args = args.Replace("$res", target);
 
-		/// <summary>
-		/// Wrapper for executing compilers, linkers and other processes
-		/// </summary>
-		/// <param name="cmd"></param>
-		/// <param name="args"></param>
-		/// <param name="execdir"></param>
-		/// <param name="showConsole"></param>
-		/// <returns></returns>
-		public static Process Exec(string cmd, string args, string execdir, bool showConsole)
-		{
-			ProcessStartInfo psi = new ProcessStartInfo();
-			psi.CreateNoWindow = showConsole;
-			psi.RedirectStandardError = true;
-			psi.RedirectStandardInput = showConsole;
-			psi.RedirectStandardOutput = showConsole;
-			psi.UseShellExecute = false;
-			psi.WorkingDirectory = execdir;
+            Process prc = DBuilder.Exec(cc.ResourceCompiler, args, exeDir, true);
+            prc.WaitForExit(10000);
 
-			psi.FileName = cmd;
-			psi.Arguments = args;
+            return prc.ExitCode == 0;
+        }
 
-			Process proc = new Process();
+        /// <summary>
+        /// Wrapper for executing compilers, linkers and other processes
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="args"></param>
+        /// <param name="execdir"></param>
+        /// <param name="showConsole"></param>
+        /// <returns></returns>
+        public static Process Exec(string cmd, string args, string execdir, bool showConsole)
+        {
+            ProcessStartInfo psi = new ProcessStartInfo();
+            psi.CreateNoWindow = showConsole;
+            psi.RedirectStandardError = true;
+            psi.RedirectStandardInput = showConsole;
+            psi.RedirectStandardOutput = showConsole;
+            psi.UseShellExecute = false;
+            psi.WorkingDirectory = execdir;
 
-			proc.StartInfo = psi;
-			proc.ErrorDataReceived += new DataReceivedEventHandler(p_ErrorDataReceived);
-			if (showConsole) proc.OutputDataReceived += new DataReceivedEventHandler(p_OutputDataReceived);
-			if (D_IDE_Properties.Default.ShowBuildCommands) OnMessage(null, cmd, cmd + " " + args);
-			proc.Exited += new EventHandler(running_Exited);
+            psi.FileName = cmd;
+            psi.Arguments = args;
 
-			try
-			{
-				proc.Start();
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Error executing " + cmd + ":\n\n" + ex.Message);
-				return null;
-			}
+            Process proc = new Process();
 
-			if (showConsole) proc.BeginOutputReadLine();
-			proc.BeginErrorReadLine();
-			return proc;
-		}
+            proc.StartInfo = psi;
+            proc.ErrorDataReceived += new DataReceivedEventHandler(p_ErrorDataReceived);
+            if (showConsole) proc.OutputDataReceived += new DataReceivedEventHandler(p_OutputDataReceived);
+            if (D_IDE_Properties.Default.ShowBuildCommands) OnMessage(null, cmd, cmd + " " + args);
+            proc.Exited += new EventHandler(running_Exited);
 
-		#region Error Handlers
-		public delegate void OutputHandler(DProject project, string file, string message);
-		static public event OutputHandler OnMessage;
-		public static event DataReceivedEventHandler OnError;
-		public static event DataReceivedEventHandler OnOutput;
-		public static event EventHandler OnExit;
+            try
+            {
+                proc.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error executing " + cmd + ":\n\n" + ex.Message);
+                return null;
+            }
 
-		static void running_Exited(object sender, EventArgs e)
-		{
-			OnExit(sender, e);
-		}
+            if (showConsole) proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+            return proc;
+        }
 
-		static void p_ErrorDataReceived(object sender, DataReceivedEventArgs e)
-		{
-			if (e.Data != null)
-				OnError(sender, e);
-		}
+        #region Error Handlers
+        public delegate void OutputHandler(DProject project, string file, string message);
+        static public event OutputHandler OnMessage;
+        public static event DataReceivedEventHandler OnError;
+        public static event DataReceivedEventHandler OnOutput;
+        public static event EventHandler OnExit;
 
-		static void p_OutputDataReceived(object sender, DataReceivedEventArgs e)
-		{
-			if (e.Data != null)
-				OnOutput(sender, e);
-		}
-		#endregion
-	}
+        static void running_Exited(object sender, EventArgs e)
+        {
+            OnExit(sender, e);
+        }
+
+        static void p_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data != null)
+                OnError(sender, e);
+        }
+
+        static void p_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data != null)
+                OnOutput(sender, e);
+        }
+        #endregion
+    }
 }

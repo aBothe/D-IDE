@@ -259,18 +259,20 @@ namespace D_Parser
 		public string CheckForExpressionComments()
 		{
 			string ret = "";
-			for (int i = _lastcommentindex; i>=_lastcommentindex&& i < lexer.Comments.Count; i++)
+			for (int i = _lastcommentindex; ret.Length<512&&i>=_lastcommentindex&& i < lexer.Comments.Count; i++)
 			{
 				Comment tc = lexer.Comments[i];
 				if (tc.CommentType != CommentType.Documentation)
 					continue;
 
-				string t = tc.CommentText;
-				while (t.Trim() == "ditto" && i > 0)
-				{
-					i--;
-					t = lexer.Comments[i].CommentText;
-				}
+                string t = tc.CommentText.Trim();
+                for (int j = i; t == "ditto" && j > 0;j-- )
+                {
+                    tc = lexer.Comments[j];
+                    if (tc.CommentType != CommentType.Documentation)
+                        continue;
+                    t = tc.CommentText;
+                }
 				if (ret == "") ret = t;
 				else ret += "\n" + t;
 			}
