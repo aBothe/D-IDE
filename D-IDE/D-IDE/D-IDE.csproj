@@ -472,7 +472,7 @@
   -->
   <PropertyGroup>
     <PreBuildEvent>xcopy "$(ProjectDir)..\..\externalDeps\DebugEngineWrapper.dll" "$(TargetDir)" /c /q /i /y
-xcopy "$(ProjectDir)..\..\externalDeps\cv2pdb.dll" "$(TargetDir)" /c /q /i /y
-</PreBuildEvent>
+xcopy "$(ProjectDir)..\..\externalDeps\Rc.Exe" "$(TargetDir)" /c /q /i /y
+xcopy "$(ProjectDir)..\..\externalDeps\RcDll.Dll" "$(TargetDir)" /c /q /i /y</PreBuildEvent>
   </PropertyGroup>
 </Project>
