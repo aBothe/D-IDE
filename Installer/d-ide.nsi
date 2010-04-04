@@ -164,9 +164,9 @@ SectionEnd
 ; Configure DMD
 ;--------------------------------------------------------
 Section "-Configure DMD" configure_dmd_section_id
-  CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Ping" 0 ; 5 "mystring1" "x" 10 15.8 false
+  CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Url" 0 ; 5 "mystring1" "x" 10 15.8 false
   pop $0  
-  MessageBox MB_OK "Result is: $0"
+  MessageBox MB_OK "Latest DMD 2 URL is: $0"
   CLR::Destroy
 SectionEnd
 ;--------------------------------------------------------

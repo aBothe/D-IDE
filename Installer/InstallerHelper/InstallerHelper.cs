@@ -7,9 +7,30 @@ namespace DIDE.Installer
 {
     public class InstallerHelper
     {
-        public static string Ping()
+        public static string GetLatestDMD1Url()
         {
-            return "Pong";
+            int ver;
+            return DigitalMars.GetLatestDMDInfo(1, out ver);
+        }
+
+        public static string GetLatestDMD2Url()
+        {
+            int ver;
+            return DigitalMars.GetLatestDMDInfo(2, out ver);
+        }
+
+        public static int GetLatestDMD1Version()
+        {
+            int ver;
+            DigitalMars.GetLatestDMDInfo(1, out ver);
+            return ver;
+        }
+
+        public static int GetLatestDMD2Version()
+        {
+            int ver;
+            DigitalMars.GetLatestDMDInfo(2, out ver);
+            return ver;
         }
     }
 }
