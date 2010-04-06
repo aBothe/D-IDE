@@ -21,238 +21,245 @@ namespace D_IDE
 {
 	public class D_IDE_Properties
 	{
-		public static void Load(string fn)
+		public static bool Load(string fn)
 		{
-			if (!File.Exists(fn)) return;
+			if (!File.Exists(fn)) return false;
 
-			BinaryFormatter formatter = new BinaryFormatter();
+            try
+            {
 
-			Stream stream = File.Open(fn, FileMode.Open);
+                BinaryFormatter formatter = new BinaryFormatter();
 
-			XmlTextReader xr = new XmlTextReader(stream);
-			D_IDE_Properties p = new D_IDE_Properties();
+                Stream stream = File.Open(fn, FileMode.Open);
 
-			while (xr.Read())// now 'settings' should be the current node
-			{
-				if (xr.NodeType == XmlNodeType.Element)
-				{
-					switch (xr.LocalName)
-					{
-						default: break;
+                XmlTextReader xr = new XmlTextReader(stream);
+                D_IDE_Properties p = new D_IDE_Properties();
 
-						case "dmd":
-							CompilerConfiguration cc = CompilerConfiguration.ReadFromXML(xr);
-							if (cc.Version == CompilerConfiguration.DVersion.D1) p.dmd1 = cc;
-							else p.dmd2 = cc;
-							break;
+                while (xr.Read())// now 'settings' should be the current node
+                {
+                    if (xr.NodeType == XmlNodeType.Element)
+                    {
+                        switch (xr.LocalName)
+                        {
+                            default: break;
 
-						case "recentprojects":
-							if (xr.IsEmptyElement) break;
-							while (xr.Read())
-							{
-								if (xr.LocalName == "f")
-								{
-									try
-									{
-										p.lastProjects.Add(xr.ReadString());
-									}
-									catch { }
-								}
-								else break;
-							}
-							break;
+                            case "dmd":
+                                CompilerConfiguration cc = CompilerConfiguration.ReadFromXML(xr);
+                                if (cc.Version == CompilerConfiguration.DVersion.D1) p.dmd1 = cc;
+                                else p.dmd2 = cc;
+                                break;
 
-						case "recentfiles":
-							if (xr.IsEmptyElement) break;
-							while (xr.Read())
-							{
-								if (xr.LocalName == "f")
-								{
-									try
-									{
-										p.lastFiles.Add(xr.ReadString());
-									}
-									catch { }
-								}
-								else break;
-							}
-							break;
+                            case "recentprojects":
+                                if (xr.IsEmptyElement) break;
+                                while (xr.Read())
+                                {
+                                    if (xr.LocalName == "f")
+                                    {
+                                        try
+                                        {
+                                            p.lastProjects.Add(xr.ReadString());
+                                        }
+                                        catch { }
+                                    }
+                                    else break;
+                                }
+                                break;
 
-						case "lastopenedfiles":
-							if (xr.IsEmptyElement) break;
-							while (xr.Read())
-							{
-								if (xr.LocalName == "f")
-								{
-									try
-									{
-										p.lastOpenFiles.Add(xr.ReadString());
-									}
-									catch { }
-								}
-								else break;
-							}
-							break;
+                            case "recentfiles":
+                                if (xr.IsEmptyElement) break;
+                                while (xr.Read())
+                                {
+                                    if (xr.LocalName == "f")
+                                    {
+                                        try
+                                        {
+                                            p.lastFiles.Add(xr.ReadString());
+                                        }
+                                        catch { }
+                                    }
+                                    else break;
+                                }
+                                break;
+
+                            case "lastopenedfiles":
+                                if (xr.IsEmptyElement) break;
+                                while (xr.Read())
+                                {
+                                    if (xr.LocalName == "f")
+                                    {
+                                        try
+                                        {
+                                            p.lastOpenFiles.Add(xr.ReadString());
+                                        }
+                                        catch { }
+                                    }
+                                    else break;
+                                }
+                                break;
 
 
-						case "openlastprj":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.OpenLastPrj = xr.Value == "1";
-							}
-							break;
+                            case "openlastprj":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.OpenLastPrj = xr.Value == "1";
+                                }
+                                break;
 
-						case "openlastfiles":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.OpenLastFiles = xr.Value == "1";
-							}
-							break;
+                            case "openlastfiles":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.OpenLastFiles = xr.Value == "1";
+                                }
+                                break;
 
-						case "windowstate":
-							if (xr.MoveToAttribute("value"))
-							{
-								try { p.lastFormState = (FormWindowState)Convert.ToInt32(xr.Value); }
-								catch { }
-							}
-							break;
+                            case "windowstate":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    try { p.lastFormState = (FormWindowState)Convert.ToInt32(xr.Value); }
+                                    catch { }
+                                }
+                                break;
 
-						case "windowsize":
-							if (xr.MoveToAttribute("x"))
-							{
-								try { p.lastFormSize.Width = Convert.ToInt32(xr.Value); }
-								catch { }
-							}
-							if (xr.MoveToAttribute("y"))
-							{
-								try { p.lastFormSize.Height = Convert.ToInt32(xr.Value); }
-								catch { }
-							}
-							break;
+                            case "windowsize":
+                                if (xr.MoveToAttribute("x"))
+                                {
+                                    try { p.lastFormSize.Width = Convert.ToInt32(xr.Value); }
+                                    catch { }
+                                }
+                                if (xr.MoveToAttribute("y"))
+                                {
+                                    try { p.lastFormSize.Height = Convert.ToInt32(xr.Value); }
+                                    catch { }
+                                }
+                                break;
 
-						case "retrievenews":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.RetrieveNews = xr.Value == "1";
-							}
-							break;
+                            case "retrievenews":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.RetrieveNews = xr.Value == "1";
+                                }
+                                break;
 
-						case "logbuildstatus":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.LogBuildProgress = xr.Value == "1";
-							}
-							break;
+                            case "logbuildstatus":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.LogBuildProgress = xr.Value == "1";
+                                }
+                                break;
 
-						case "showbuildcommands":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.ShowBuildCommands = xr.Value == "1";
-							}
-							break;
+                            case "showbuildcommands":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.ShowBuildCommands = xr.Value == "1";
+                                }
+                                break;
 
-						case "externaldbg":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.UseExternalDebugger = xr.Value == "1";
-							}
-							break;
+                            case "externaldbg":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.UseExternalDebugger = xr.Value == "1";
+                                }
+                                break;
 
-						case "singleinstance":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.SingleInstance = xr.Value == "1";
-							}
-							break;
+                            case "singleinstance":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.SingleInstance = xr.Value == "1";
+                                }
+                                break;
 
-						case "watchforupdates":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.WatchForUpdates = xr.Value == "1";
-							}
-							break;
+                            case "watchforupdates":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.WatchForUpdates = xr.Value == "1";
+                                }
+                                break;
 
-						case "defprjdir":
-							p.DefaultProjectDirectory = xr.ReadString();
-							break;
+                            case "defprjdir":
+                                p.DefaultProjectDirectory = xr.ReadString();
+                                break;
 
-						case "debugger":
-							if (xr.IsEmptyElement) break;
-							while (xr.Read())
-							{
-								if (xr.LocalName == "bin")
-								{
-									p.exe_dbg = xr.ReadString();
-								}
-								else if (xr.LocalName == "args")
-								{
-									p.dbg_args = xr.ReadString();
-								}
-								else break;
-							}
-							break;
+                            case "debugger":
+                                if (xr.IsEmptyElement) break;
+                                while (xr.Read())
+                                {
+                                    if (xr.LocalName == "bin")
+                                    {
+                                        p.exe_dbg = xr.ReadString();
+                                    }
+                                    else if (xr.LocalName == "args")
+                                    {
+                                        p.dbg_args = xr.ReadString();
+                                    }
+                                    else break;
+                                }
+                                break;
 
-						case "lastsearchdir":
-							p.lastSearchDir = xr.ReadString();
-							break;
+                            case "lastsearchdir":
+                                p.lastSearchDir = xr.ReadString();
+                                break;
 
-						case "verbosedbgoutput":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.VerboseDebugOutput = xr.Value == "1";
-							}
-							break;
+                            case "verbosedbgoutput":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.VerboseDebugOutput = xr.Value == "1";
+                                }
+                                break;
 
-						case "skipunknowncode":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.SkipUnknownCode = xr.Value == "1";
-							}
-							break;
+                            case "skipunknowncode":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.SkipUnknownCode = xr.Value == "1";
+                                }
+                                break;
 
-						case "showdbgpanelswhendebugging":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.ShowDbgPanelsOnDebugging = xr.Value == "1";
-							}
-							break;
+                            case "showdbgpanelswhendebugging":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.ShowDbgPanelsOnDebugging = xr.Value == "1";
+                                }
+                                break;
 
-						case "autosave":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.DoAutoSaveOnBuilding = xr.Value == "1";
-							}
-							break;
+                            case "autosave":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.DoAutoSaveOnBuilding = xr.Value == "1";
+                                }
+                                break;
 
-						case "createpdb":
-							if (xr.MoveToAttribute("value"))
-							{
-								p.CreatePDBOnBuild = xr.Value == "1";
-							}
-							break;
+                            case "createpdb":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.CreatePDBOnBuild = xr.Value == "1";
+                                }
+                                break;
 
-						case "highlightings":
-							if (xr.IsEmptyElement) break;
-							while (xr.Read())
-							{
-								if (xr.LocalName == "f")
-								{
-									try
-									{
-										string ext = xr.GetAttribute("ext");
-										p.SyntaxHighlightingEntries.Add(ext, xr.ReadString());
-									}
-									catch { }
-								}
-								else break;
-							}
-							break;
-					}
-				}
-			}
+                            case "highlightings":
+                                if (xr.IsEmptyElement) break;
+                                while (xr.Read())
+                                {
+                                    if (xr.LocalName == "f")
+                                    {
+                                        try
+                                        {
+                                            string ext = xr.GetAttribute("ext");
+                                            p.SyntaxHighlightingEntries.Add(ext, xr.ReadString());
+                                        }
+                                        catch { }
+                                    }
+                                    else break;
+                                }
+                                break;
+                        }
+                    }
+                }
 
-			xr.Close();
-			Default = p;
+                xr.Close();
+                Default = p;
+
+            }
+            catch {  }
+            return true;
 		}
 
 		#region Caching
@@ -580,7 +587,7 @@ namespace D_IDE
 	{
 		public DVersion Version = DVersion.D2;
 
-		public string BinDirectory;
+		public string BinDirectory=".";
 		public List<DModule> GlobalModules
 		{
 			get {

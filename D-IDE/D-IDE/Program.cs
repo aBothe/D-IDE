@@ -48,7 +48,20 @@ namespace D_IDE
                 if (!Directory.Exists(Program.cfgDir))
                     DBuilder.CreateDirectoryRecursively(Program.cfgDir);
 
-                D_IDE_Properties.Load(cfgDir + "\\" + prop_file);
+                if (!D_IDE_Properties.Load(cfgDir + "\\" + prop_file))
+                {
+                    StartScreen.Close();
+                    Misc.SetupWizardDialog swd = new D_IDE.Misc.SetupWizardDialog(CompilerConfiguration.DVersion.D2);
+                    if (swd.ShowDialog() == DialogResult.OK)
+                    {
+                        D_IDE_Properties.Default.dmd2 = swd.CompilerConfiguration;
+
+                        if (!File.Exists(cfgDir + "\\" + Program.D2ModuleCacheFile) && MessageBox.Show(this,"Do you want to parse all of the import directories?","Parse Imports",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button1)==DialogResult.Yes)
+                        {
+                            Form1.UpdateChacheThread(D_IDE_Properties.Default.dmd2);
+                        }
+                    }
+                }
                 D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd1, cfgDir + "\\" + Program.D1ModuleCacheFile);
                 D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd2, cfgDir + "\\" + Program.D2ModuleCacheFile);
             }

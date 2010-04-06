@@ -274,6 +274,9 @@ namespace D_IDE
             OnMessage(prj, target, "Link file to " + target);
             Form1.thisForm.ProgressStatusLabel.Text = "Link file to " + target;
 
+            if(!Path.IsPathRooted(exe))
+                exe=cc.BinDirectory + "\\" + exe;
+
             Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, true);
             prc.WaitForExit(10000);
 
@@ -316,7 +319,7 @@ namespace D_IDE
             args = args.Replace("$src", file);
             args = args.Replace("$obj", target);
 
-            Process prc = DBuilder.Exec(cc.SoureCompiler, args + " " + additionalArgs, exeDir, true);
+            Process prc = DBuilder.Exec(Path.IsPathRooted(cc.SoureCompiler) ? cc.SoureCompiler : (cc.BinDirectory + "\\" + cc.SoureCompiler), args + " " + additionalArgs, exeDir, true);
             while (!prc.HasExited)
             {
                 Application.DoEvents();
@@ -333,7 +336,7 @@ namespace D_IDE
             args = args.Replace("$rc", file);
             args = args.Replace("$res", target);
 
-            Process prc = DBuilder.Exec(cc.ResourceCompiler, args, exeDir, true);
+            Process prc = DBuilder.Exec(Path.IsPathRooted(cc.ResourceCompiler)? cc.ResourceCompiler:(cc.BinDirectory+"\\"+cc.ResourceCompiler), args, exeDir, true);
             prc.WaitForExit(10000);
 
             return prc.ExitCode == 0;
