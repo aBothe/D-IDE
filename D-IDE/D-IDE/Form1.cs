@@ -627,7 +627,10 @@ namespace D_IDE
 				int lineNumber = Convert.ToInt32(e.Data.Substring(to, to2 - to));
 				string errmsg = e.Data.Substring(to2 + 2);
 
-				AddHighlightedBuildError(mod_file, lineNumber, errmsg, Color.LightPink);
+                Invoke(new EventHandler(delegate(object o, EventArgs ea)
+                    {
+                        AddHighlightedBuildError(mod_file, lineNumber, errmsg, Color.LightPink);
+                    }),null,EventArgs.Empty);
 			}
 		}
 
