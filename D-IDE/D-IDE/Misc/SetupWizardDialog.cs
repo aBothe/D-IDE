@@ -34,14 +34,15 @@ namespace D_IDE.Misc
 
         private void GuessImpPaths(object sender, EventArgs e)
         {
-            if (!Directory.Exists(BinPath.Text)) return;
+            string bin = BinPath.Text;
+            if (!Directory.Exists(Path.IsPathRooted(bin)?bin:(Application.StartupPath+"\\"+bin))) return;
 
             int i = 0;
-            if (Version == CompilerConfiguration.DVersion.D2 && (i = BinPath.Text.IndexOf("dmd2")) > 0)
+            if (Version == CompilerConfiguration.DVersion.D2 && (i = bin.IndexOf("dmd2")) > 0)
             {
                 ImportPaths.Items.Clear();
-                ImportPaths.Items.Add(BinPath.Text.Substring(0, i + 4) + "\\src\\druntime\\import");
-                ImportPaths.Items.Add(BinPath.Text.Substring(0, i + 4) + "\\src\\phobos");
+                ImportPaths.Items.Add(bin.Substring(0, i + 4) + "\\src\\druntime\\import");
+                ImportPaths.Items.Add(bin.Substring(0, i + 4) + "\\src\\phobos");
             }
         }
 
