@@ -317,7 +317,10 @@ namespace D_IDE
             args = args.Replace("$obj", target);
 
             Process prc = DBuilder.Exec(cc.SoureCompiler, args + " " + additionalArgs, exeDir, true);
-            prc.WaitForExit(10000);
+            while (!prc.HasExited)
+            {
+                Application.DoEvents();
+            }
 
             return prc.ExitCode == 0;
         }

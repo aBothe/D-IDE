@@ -32,9 +32,12 @@ using DebugEngineWrapper;
 namespace D_IDE
 {
 	partial class Form1 : Form
-	{
+    {
+        public delegate void BuildErrorDelegate(string file, int lineNumber, string errmsg, Color color);
+
 		public Form1(string[] args)
 		{
+
 			thisForm = this;
 
 			Form.CheckForIllegalCrossThreadCalls = false;
@@ -627,12 +630,13 @@ namespace D_IDE
 				int lineNumber = Convert.ToInt32(e.Data.Substring(to, to2 - to));
 				string errmsg = e.Data.Substring(to2 + 2);
 
-                Invoke(new EventHandler(delegate(object o, EventArgs ea)
-                    {
-                        AddHighlightedBuildError(mod_file, lineNumber, errmsg, Color.LightPink);
-                    }),null,EventArgs.Empty);
-			}
-		}
+                Invoke(
+                    new BuildErrorDelegate(
+                        AddHighlightedBuildError), 
+                        new Object[] { mod_file, lineNumber, errmsg, Color.LightPink });
+            }
+        }
+
 
 		/// <summary>
 		/// Add an error notification to the error list and set this to the current selection in the editor. If needed, the specific file gets opened automatically
