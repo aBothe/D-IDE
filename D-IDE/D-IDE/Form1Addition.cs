@@ -116,7 +116,9 @@ namespace D_IDE
             ToolStripMenuItem
                 tmi1, tmi2, tmi3,
                 GotoDef, CreateImportDirective,
-                CommentBlock, UnCommentBlock;
+                CommentBlock, UnCommentBlock,
+                OutlineMenu,
+                ShowDefsOnly,ExpandAll,CollapseAll;
 
             tmi1 = new ToolStripMenuItem("Copy", global::D_IDE.Properties.Resources.copy, new EventHandler(delegate(object sender, EventArgs ea)
                 {
@@ -136,6 +138,12 @@ namespace D_IDE
             CommentBlock = new ToolStripMenuItem("Comment out block", null, CommentOutBlock);
             UnCommentBlock = new ToolStripMenuItem("Uncomment block", null, UncommentBlock);
 
+            // Outline Folding Submenu
+            ExpandAll = new ToolStripMenuItem("Expand all",null,this.ExpandAllFolds);
+            CollapseAll = new ToolStripMenuItem("Collapse all",null,this.CollapseAllFolds);
+            ShowDefsOnly = new ToolStripMenuItem("Show Definitions only",null,this.ShowDefsOnly);
+            OutlineMenu = new ToolStripMenuItem("Outlining", null, ExpandAll, CollapseAll, ShowDefsOnly);
+
             this.tcCont.SuspendLayout();
             // 
             // tcCont
@@ -147,7 +155,9 @@ namespace D_IDE
                 GotoDef,
                 CreateImportDirective,
                 new ToolStripSeparator(),
-                CommentBlock,UnCommentBlock
+                CommentBlock,UnCommentBlock,
+                new ToolStripSeparator(),
+                OutlineMenu
             });
             this.tcCont.Name = "tcCont";
             this.tcCont.ResumeLayout(false);
@@ -587,6 +597,7 @@ namespace D_IDE
             ParseFolds(fileData.dom);
         }
 
+        #region Folding
         public List<FoldMarker> ParseFolds(DataType env)
         {
             List<FoldMarker> ret = new List<FoldMarker>();
@@ -598,9 +609,9 @@ namespace D_IDE
                     {
                         FoldMarker fm = new FoldMarker(
                             txt.Document,
-                            ch.startLoc.Line - 1, ch.startLoc.Column - 1,
+                            ch.BlockStartLocation.Line - 1, ch.BlockStartLocation.Column - 1,
                             ch.endLoc.Line - 1, ch.endLoc.Column);
-                        fm.IsFolded=!txt.Document.FoldingManager.IsLineVisible(ch.startLoc.Line);
+                        fm.IsFolded=!txt.Document.FoldingManager.IsLineVisible(ch.BlockStartLocation.Line);
                         ret.Add(fm);
                         ret.AddRange(ParseFolds(ch));
                     }
@@ -609,5 +620,34 @@ namespace D_IDE
             
             return ret;
         }
+
+        public void ExpandAllFolds(object o, EventArgs ea)
+        {
+            foreach (FoldMarker fm in txt.Document.FoldingManager.FoldMarker)
+                fm.IsFolded = false;
+            Refresh();
+        }
+
+        public void CollapseAllFolds(object o, EventArgs ea)
+        {
+            foreach (FoldMarker fm in txt.Document.FoldingManager.FoldMarker)
+                fm.IsFolded = true;
+            Refresh();
+        }
+
+        public void ShowDefsOnly(object o, EventArgs ea)
+        {
+            foreach (FoldMarker fm in txt.Document.FoldingManager.FoldMarker)
+            {
+                if (CaretOffset > fm.Offset && (fm.Offset + fm.Length) > CaretOffset)
+                {
+                    fm.IsFolded = false;
+                    continue;
+                }
+                fm.IsFolded = true;
+            }
+            Refresh();
+        }
+        #endregion
     }
 }

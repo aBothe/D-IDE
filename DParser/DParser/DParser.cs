@@ -429,7 +429,7 @@ namespace D_Parser
 
 			//Debug.Print("ParseBlock started ("+ret.name+")");
 
-			if (la != null) ret.startLoc = GetCodeLocation(la);
+			if (la != null) ret.startLoc= ret.BlockStartLocation = GetCodeLocation(la);
 
 			while (la == null || la.Kind != DTokens.EOF)
 			{

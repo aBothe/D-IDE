@@ -27,7 +27,7 @@ namespace D_Parser
         public List<int> modifiers;
 
         [NonSerialized()]
-		public CodeLocation startLoc, endLoc;
+		public CodeLocation startLoc, BlockStartLocation, endLoc;
 
         public DataType(FieldType ftype)
         {
@@ -51,6 +51,7 @@ namespace D_Parser
             modifiers = new List<int>();
             
             startLoc = new CodeLocation();
+            BlockStartLocation = new CodeLocation();
             endLoc = new CodeLocation();
         }
 
