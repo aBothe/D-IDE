@@ -378,7 +378,7 @@ namespace D_IDE
             catch (Exception ex)
             {
                 MessageBox.Show("Error executing " + cmd + ":\n\n" + ex.Message);
-                return null;
+                return proc;
             }
 
             if (showConsole) proc.BeginOutputReadLine();

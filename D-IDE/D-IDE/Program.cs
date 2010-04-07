@@ -56,7 +56,7 @@ namespace D_IDE
                     {
                         D_IDE_Properties.Default.dmd2 = swd.CompilerConfiguration;
 
-                        if (!File.Exists(cfgDir + "\\" + Program.D2ModuleCacheFile) && MessageBox.Show(this,"Do you want to parse all of the import directories?","Parse Imports",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button1)==DialogResult.Yes)
+                        if (!File.Exists(cfgDir + "\\" + Program.D2ModuleCacheFile) && MessageBox.Show("Do you want to parse all of the import directories?","Parse Imports",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button1)==DialogResult.Yes)
                         {
                             Form1.UpdateChacheThread(D_IDE_Properties.Default.dmd2);
                         }

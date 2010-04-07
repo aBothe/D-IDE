@@ -344,19 +344,19 @@ namespace D_IDE
 			DModule.ClearErrorLogBeforeParsing = false;
 			List<DModule> ret = new List<DModule>();
 
-			stopParsingToolStripMenuItem.Enabled = true;
+            if (Form1.thisForm != null) Form1.thisForm.stopParsingToolStripMenuItem.Enabled = true;
 			//bpw.Clear();
-			if(Form1.thisForm!=null) Log("Reparse all directories");
+			if(Form1.thisForm!=null) Form1.thisForm.Log("Reparse all directories");
 
 			foreach (string dir in cc.ImportDirectories)
 			{
 				DProject dirProject = new DProject();
 				dirProject.basedir = dir;
 
-                if (Form1.thisForm != null) Log("Parse directory " + dir);
+                if (Form1.thisForm != null) Form1.thisForm.Log("Parse directory " + dir);
 				if (!Directory.Exists(dir))
 				{
-                    if (Form1.thisForm != null) Log("Directory \"" + dir + "\" does not exist!");
+                    if (Form1.thisForm != null) Form1.thisForm.Log("Directory \"" + dir + "\" does not exist!");
 					continue;
 				}
 				string[] files = Directory.GetFiles(dir, "*.d?", SearchOption.AllDirectories);
@@ -364,7 +364,7 @@ namespace D_IDE
 				{
 					if (tf.EndsWith("phobos.d")) continue; // Skip phobos.d
 
-                    if (D_IDE_Properties.HasModule(ret, tf)) { if (Form1.thisForm != null)Log(tf + " already parsed!"); continue; }
+                    if (D_IDE_Properties.HasModule(ret, tf)) { if (Form1.thisForm != null)Form1.thisForm.Log(tf + " already parsed!"); continue; }
 
 					try
 					{
@@ -377,17 +377,20 @@ namespace D_IDE
 					catch (Exception ex)
 					{
 						if (Debugger.IsAttached) throw ex;
-                        if (Form1.thisForm != null) Log(tf);
+                        if (Form1.thisForm != null) Form1.thisForm.Log(tf);
 						if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n\n\n" + ex.StackTrace, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
 						{
-							stopParsingToolStripMenuItem.Enabled = false;
+                            if(Form1.thisForm!=null)Form1.thisForm.stopParsingToolStripMenuItem.Enabled = false;
 							return;
 						}
 					}
 				}
 			}
-            if (Form1.thisForm != null) Log(ProgressStatusLabel.Text = "Parsing done!");
-			stopParsingToolStripMenuItem.Enabled = false;
+            if (Form1.thisForm != null)
+            {
+                Form1.thisForm.Log(Form1.thisForm.ProgressStatusLabel.Text = "Parsing done!");
+                Form1.thisForm.stopParsingToolStripMenuItem.Enabled = false;
+            }
 			DModule.ClearErrorLogBeforeParsing = true;
 			lock (cc.GlobalModules)
 			{
