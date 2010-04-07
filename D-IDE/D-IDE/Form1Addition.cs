@@ -29,7 +29,6 @@ namespace D_IDE
         public TextEditorControl txt;
 
         private System.Windows.Forms.ContextMenuStrip tcCont;
-        private System.Windows.Forms.ToolStripMenuItem goToDefinitionToolStripMenuItem, createImportDirectiveItem;
 
         public DModule fileData;
         public string ProjectFile;
@@ -108,46 +107,49 @@ namespace D_IDE
             txt.TextEditorProperties.AutoInsertCurlyBracket = true;
             txt.TextEditorProperties.IndentStyle = IndentStyle.Smart;
 
+            // Additional GUI settings
+
+            // Context menu
             this.tcCont = new System.Windows.Forms.ContextMenuStrip();
-            this.goToDefinitionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            createImportDirectiveItem = new ToolStripMenuItem();
             this.Activated += new EventHandler(DocumentInstanceWindow_Activated);
 
-            ToolStripMenuItem tmi1 = new ToolStripMenuItem("Copy", global::D_IDE.Properties.Resources.copy, new EventHandler(delegate(object sender, EventArgs ea)
+            ToolStripMenuItem
+                tmi1, tmi2, tmi3,
+                GotoDef, CreateImportDirective,
+                CommentBlock, UnCommentBlock;
+
+            tmi1 = new ToolStripMenuItem("Copy", global::D_IDE.Properties.Resources.copy, new EventHandler(delegate(object sender, EventArgs ea)
                 {
                     EmulateCopy();
                 }));
-            ToolStripMenuItem tmi2 = new ToolStripMenuItem("Cut", global::D_IDE.Properties.Resources.cut, new EventHandler(delegate(object sender, EventArgs ea)
+            tmi2 = new ToolStripMenuItem("Cut", global::D_IDE.Properties.Resources.cut, new EventHandler(delegate(object sender, EventArgs ea)
             {
                 EmulateCut();
             }));
-            ToolStripMenuItem tmi3 = new ToolStripMenuItem("Paste", global::D_IDE.Properties.Resources.paste, new EventHandler(delegate(object sender, EventArgs ea)
+            tmi3 = new ToolStripMenuItem("Paste", global::D_IDE.Properties.Resources.paste, new EventHandler(delegate(object sender, EventArgs ea)
             {
                 EmulatePaste();
             }));
+
+            GotoDef = new ToolStripMenuItem("Go to definition", null, goToDefinitionToolStripMenuItem_Click);
+            CreateImportDirective = new ToolStripMenuItem("Create import directive", null, createImportDirectiveItem_Click);
+            CommentBlock = new ToolStripMenuItem("Comment out block", null, CommentOutBlock);
+            UnCommentBlock = new ToolStripMenuItem("Uncomment block", null, UncommentBlock);
 
             this.tcCont.SuspendLayout();
             // 
             // tcCont
             // 
-            this.tcCont.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tmi1, tmi2, tmi3, new ToolStripSeparator(), this.goToDefinitionToolStripMenuItem, createImportDirectiveItem });
+            this.tcCont.Items.AddRange(new System.Windows.Forms.ToolStripItem[] 
+            { 
+                tmi1, tmi2, tmi3, 
+                new ToolStripSeparator(),
+                GotoDef,
+                CreateImportDirective,
+                new ToolStripSeparator(),
+                CommentBlock,UnCommentBlock
+            });
             this.tcCont.Name = "tcCont";
-            this.tcCont.Size = new System.Drawing.Size(158, 120);
-            // 
-            // goToDefinitionToolStripMenuItem
-            // 
-            this.goToDefinitionToolStripMenuItem.Name = "goToDefinitionToolStripMenuItem";
-            this.goToDefinitionToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.goToDefinitionToolStripMenuItem.Text = "Go to definition";
-            this.goToDefinitionToolStripMenuItem.Click += goToDefinitionToolStripMenuItem_Click;
-            // 
-            // createImportDirectiveItem
-            // 
-            createImportDirectiveItem.Name = "createImportDirectiveItem";
-            createImportDirectiveItem.Size = new System.Drawing.Size(170, 22);
-            createImportDirectiveItem.Text = "Create import directive";
-            createImportDirectiveItem.Click += new EventHandler(createImportDirectiveItem_Click);
-
             this.tcCont.ResumeLayout(false);
             txt.ContextMenuStrip = tcCont;
         }
@@ -449,6 +451,72 @@ namespace D_IDE
             IW = new InsightWindow(Form1.thisForm, txt);
             IW.AddInsightDataProvider(new InsightWindowProvider(this, key), fileData.mod_file);
             IW.ShowInsightWindow();
+        }
+
+        public void CommentOutBlock(object o, EventArgs ea)
+        {
+            string sel = txt.ActiveTextAreaControl.SelectionManager.SelectedText;
+            if (String.IsNullOrEmpty(sel))
+            {
+                int line = Caret.Line;
+                txt.Document.Insert(
+                    txt.Document.PositionToOffset(new TextLocation(0, line)),
+                    "//"
+                    );
+            }
+            else
+            {
+                ISelection isel = txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
+                txt.Document.UndoStack.StartUndoGroup();
+                txt.Document.Insert(isel.EndOffset, "*/");
+                txt.Document.Insert(isel.Offset, "/*");
+                txt.ActiveTextAreaControl.SelectionManager.SetSelection(
+                    new TextLocation(isel.StartPosition.X + 2, isel.StartPosition.Y),
+                    new TextLocation(isel.EndPosition.X + 2, isel.EndPosition.Y)
+                    );
+                txt.Document.UndoStack.EndUndoGroup();
+            }
+            Refresh();
+        }
+
+        public void UncommentBlock(object o, EventArgs ea)
+        {
+            #region Remove line comments first
+            LineSegment ls = txt.Document.LineSegmentCollection[Caret.Line];
+            int commStart = CaretOffset;
+            for (; commStart > ls.Offset; commStart--)
+            {
+                if (txt.Document.TextBufferStrategy.GetCharAt(commStart) == '/' && commStart > 0 &&
+                    txt.Document.TextBufferStrategy.GetCharAt(commStart - 1) == '/')
+                {
+                    txt.Document.Remove(commStart - 1, 2);
+                    Refresh();
+                    return;
+                }
+            }
+            #endregion
+            #region If no single-line comment was removed, delete multi-line comment block tags
+            int off = CaretOffset;
+            commStart = off;
+            for (; commStart > 0; commStart--)
+            {
+                if (txt.Document.TextBufferStrategy.GetCharAt(commStart) == '*' && commStart > 0 &&
+                    txt.Document.TextBufferStrategy.GetCharAt(commStart - 1) == '/')
+                {
+                    commStart--;
+                    break;
+                }
+            }
+            if (commStart < 0) return;
+            int commEnd = txt.Text.IndexOf("*/", off);
+            if (commEnd < 0) return;
+
+            txt.Document.UndoStack.StartUndoGroup();
+            txt.Document.Remove(commEnd, 2);
+            txt.Document.Remove(commStart, 2);
+            txt.Document.UndoStack.EndUndoGroup();
+            #endregion
+            Refresh();
         }
 
         public DocumentInstanceWindow(string filename, string prj)

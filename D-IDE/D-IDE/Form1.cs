@@ -1613,6 +1613,20 @@ namespace D_IDE
 				dbg.Execute(id.InputString);
 				dbg.WaitForEvent(3000);
 			}
-		}
-	}
+        }
+
+        #region Commenting
+        private void commentOutBlockToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DocumentInstanceWindow diw=SelectedTabPage;
+            if (diw != null) diw.CommentOutBlock(sender, e);
+        }
+
+        private void uncommentBlocklineToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DocumentInstanceWindow diw = SelectedTabPage;
+            if (diw != null) diw.UncommentBlock(sender, e);
+        }
+        #endregion
+    }
 }
