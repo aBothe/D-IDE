@@ -517,6 +517,7 @@ namespace D_IDE
             txt.Document.UndoStack.EndUndoGroup();
             #endregion
             Refresh();
+
         }
 
         public DocumentInstanceWindow(string filename, string prj)
@@ -590,20 +591,22 @@ namespace D_IDE
         {
             List<FoldMarker> ret = new List<FoldMarker>();
 
-            if (env.Count > 1)
+            if (env.Count >= 1)
                 foreach (DataType ch in env)
                 {
                     if (DTokens.ClassLike[(int)ch.TypeToken] || ch.fieldtype == FieldType.Function || ch.fieldtype == FieldType.Constructor)
                     {
-                        ret.Add(new FoldMarker(
+                        FoldMarker fm = new FoldMarker(
                             txt.Document,
                             ch.startLoc.Line - 1, ch.startLoc.Column - 1,
-                            ch.endLoc.Line - 1, ch.endLoc.Column)
-                            );
+                            ch.endLoc.Line - 1, ch.endLoc.Column);
+                        fm.IsFolded=!txt.Document.FoldingManager.IsLineVisible(ch.startLoc.Line);
+                        ret.Add(fm);
                         ret.AddRange(ParseFolds(ch));
                     }
                 }
             txt.Document.FoldingManager.UpdateFoldings(ret);
+            
             return ret;
         }
     }
