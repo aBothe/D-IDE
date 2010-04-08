@@ -594,35 +594,10 @@ namespace D_IDE
                 project.files.Add(fileData);
             }
 
-            ParseFolds(fileData.dom);
+            ParseFolds();
         }
 
         #region Folding
-        public List<FoldMarker> ParseFolds(DataType env)
-        {
-            List<FoldMarker> ret = new List<FoldMarker>();
-            //int end = 0;
-            ret = ParseFolds();
-
-            /*if (env.Count >= 1)
-                foreach (DataType ch in env)
-                {
-                    if (DTokens.ClassLike[(int)ch.TypeToken] || ch.fieldtype == FieldType.Function || ch.fieldtype == FieldType.Constructor)
-                    {
-                        FoldMarker fm = new FoldMarker(
-                            txt.Document,
-                            ch.BlockStartLocation.Line - 1, ch.BlockStartLocation.Column - 1,
-                            ch.endLoc.Line - 1, ch.endLoc.Column);
-                        fm.IsFolded=!txt.Document.FoldingManager.IsLineVisible(ch.BlockStartLocation.Line);
-                        ret.Add(fm);
-                        ret.AddRange(ParseFolds(ch));
-                    }
-                }*/
-            txt.Document.FoldingManager.UpdateFoldings(ret);
-
-            return ret;
-        }
-
         public List<FoldMarker> ParseFolds()
         {
             char cur = '\0', peekChar='\0';
@@ -680,6 +655,8 @@ namespace D_IDE
                 #endregion
                 off++;
             }
+
+            txt.Document.FoldingManager.UpdateFoldings(ret);
             return ret;
         }
 

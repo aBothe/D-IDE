@@ -1133,7 +1133,7 @@ namespace D_IDE
 				return;
 			}
 			searchDlg.currentOffset = 0;
-			mtp.ParseFolds(SelectedTabPage.fileData.dom);
+			mtp.ParseFolds();
 			RefreshClassHierarchy();
 		}
 
@@ -1356,7 +1356,7 @@ namespace D_IDE
 			for (int i = 1; i < SelectedTabPage.txt.Document.TotalNumberOfLines; i++)
 				SelectedTabPage.txt.Document.FormattingStrategy.IndentLine(SelectedTabPage.txt.ActiveTextAreaControl.TextArea, i);
 
-			SelectedTabPage.ParseFolds(SelectedTabPage.fileData.dom);
+			SelectedTabPage.ParseFolds();
 		}
 		#endregion
 
