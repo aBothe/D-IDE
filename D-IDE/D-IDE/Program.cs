@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.IO;
+using System.Diagnostics;
 
 namespace D_IDE
 {
@@ -35,7 +36,7 @@ namespace D_IDE
 
             // Show startup popup
             StartScreen = new CachingScreen();
-            StartScreen.Show();
+            if(!Debugger.IsAttached)StartScreen.Show();
 
             if (!File.Exists(UserDocStorageFile))
             {

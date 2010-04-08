@@ -118,7 +118,7 @@ namespace D_IDE
                 GotoDef, CreateImportDirective,
                 CommentBlock, UnCommentBlock,
                 OutlineMenu,
-                ShowDefsOnly,ExpandAll,CollapseAll;
+                ShowDefsOnly, ExpandAll, CollapseAll;
 
             tmi1 = new ToolStripMenuItem("Copy", global::D_IDE.Properties.Resources.copy, new EventHandler(delegate(object sender, EventArgs ea)
                 {
@@ -139,9 +139,9 @@ namespace D_IDE
             UnCommentBlock = new ToolStripMenuItem("Uncomment block", null, UncommentBlock);
 
             // Outline Folding Submenu
-            ExpandAll = new ToolStripMenuItem("Expand all",null,this.ExpandAllFolds);
-            CollapseAll = new ToolStripMenuItem("Collapse all",null,this.CollapseAllFolds);
-            ShowDefsOnly = new ToolStripMenuItem("Show Definitions only",null,this.ShowDefsOnly);
+            ExpandAll = new ToolStripMenuItem("Expand all", null, this.ExpandAllFolds);
+            CollapseAll = new ToolStripMenuItem("Collapse all", null, this.CollapseAllFolds);
+            ShowDefsOnly = new ToolStripMenuItem("Show Definitions only", null, this.ShowDefsOnly);
             OutlineMenu = new ToolStripMenuItem("Outlining", null, ExpandAll, CollapseAll, ShowDefsOnly);
 
             this.tcCont.SuspendLayout();
@@ -601,8 +601,10 @@ namespace D_IDE
         public List<FoldMarker> ParseFolds(DataType env)
         {
             List<FoldMarker> ret = new List<FoldMarker>();
+            //int end = 0;
+            ret = ParseFolds();
 
-            if (env.Count >= 1)
+            /*if (env.Count >= 1)
                 foreach (DataType ch in env)
                 {
                     if (DTokens.ClassLike[(int)ch.TypeToken] || ch.fieldtype == FieldType.Function || ch.fieldtype == FieldType.Constructor)
@@ -615,9 +617,69 @@ namespace D_IDE
                         ret.Add(fm);
                         ret.AddRange(ParseFolds(ch));
                     }
-                }
+                }*/
             txt.Document.FoldingManager.UpdateFoldings(ret);
-            
+
+            return ret;
+        }
+
+        public List<FoldMarker> ParseFolds()
+        {
+            char cur = '\0', peekChar='\0';
+            int off = 0;
+            List<FoldMarker> ret = new List<FoldMarker>();
+
+            Stack<int> FMStack = new Stack<int>();
+            bool IsInString = false, IsInLineComment = false, IsInBlockComment=false;
+            while (off < txt.Document.TextLength)
+            {
+                cur = txt.Document.TextBufferStrategy.GetCharAt(off);
+                #region Non-parsed file sections
+                if (off < txt.Document.TextLength - 1) peekChar = txt.Document.TextBufferStrategy.GetCharAt(off + 1);
+
+                if (!IsInBlockComment && !IsInLineComment &&cur == '\"' && (off < 1 || txt.Document.TextBufferStrategy.GetCharAt(off - 1) != '\\'))
+                    IsInString = !IsInString;
+
+                if (!IsInBlockComment && !IsInString && cur == '/' && peekChar == '/')
+                    IsInLineComment = true;
+                if (!IsInBlockComment && !IsInString && IsInLineComment && cur == '\n')
+                    IsInLineComment = false;
+
+                if (!IsInLineComment && !IsInString && cur == '/' && peekChar == '*')
+                    IsInBlockComment = true;
+                if (!IsInLineComment && !IsInString && IsInBlockComment && cur == '*' && peekChar == '/')
+                    IsInBlockComment = false;
+                #endregion
+                #region Main part
+                if (!IsInString && !IsInLineComment && !IsInBlockComment)
+                {
+                    if (cur == '{')
+                    {
+                        FMStack.Push(off);
+                    }
+
+                    if (cur == '}')
+                    {
+                        int start = FMStack.Pop();
+                        int end = off + 1;
+
+                        TextLocation startLoc = txt.Document.OffsetToPosition(start);
+                        TextLocation endLoc = txt.Document.OffsetToPosition(end);
+
+                        if (endLoc.Line != startLoc.Line)
+                        {
+                            FoldMarker fm = new FoldMarker(
+                                        txt.Document,
+                                        startLoc.Line, startLoc.Column,
+                                        endLoc.Line, endLoc.Column);
+                            fm.IsFolded = !txt.Document.FoldingManager.IsLineVisible(startLoc.Line);
+                            ret.Add(fm);
+                        }
+                    }
+                }
+                #endregion
+                off++;
+            }
             return ret;
         }
 
