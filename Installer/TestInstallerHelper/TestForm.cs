@@ -27,6 +27,13 @@ namespace TestInstallerHelper
             System.Console.WriteLine(u2);
             System.Console.WriteLine(v1);
             System.Console.WriteLine(v2);
+
+            System.Console.WriteLine(DIDE.Installer.LocalCompiler.InstallPathDMD1);
+            System.Console.WriteLine(DIDE.Installer.LocalCompiler.InstallPathDMD1Version);
+            System.Console.WriteLine(DIDE.Installer.LocalCompiler.InstallPathDMD2);
+            System.Console.WriteLine(DIDE.Installer.LocalCompiler.InstallPathDMD2Version);
+
+            DIDE.Installer.InstallerHelper.CreateConfigurationFile(@".\D-IDE.settings.xml");
         }
     }
 }

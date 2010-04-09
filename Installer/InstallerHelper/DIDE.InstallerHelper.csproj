@@ -45,6 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration.cs" />
+    <Compile Include="LocalCompiler.cs" />
     <Compile Include="DigitalMars.cs" />
     <Compile Include="InstallerHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
