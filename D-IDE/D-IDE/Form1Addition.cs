@@ -620,9 +620,9 @@ namespace D_IDE
                 if (!IsInBlockComment && !IsInString && IsInLineComment && cur == '\n')
                     IsInLineComment = false;
 
-                if (!IsInLineComment && !IsInString && cur == '/' && peekChar == '*')
+                if (!IsInLineComment && !IsInString && cur == '/' && (peekChar == '*' || peekChar=='+'))
                     IsInBlockComment = true;
-                if (!IsInLineComment && !IsInString && IsInBlockComment && cur == '*' && peekChar == '/')
+                if (!IsInLineComment && !IsInString && IsInBlockComment && (cur == '*' || cur=='+') && peekChar == '/')
                     IsInBlockComment = false;
                 #endregion
                 #region Main part
