@@ -290,7 +290,7 @@ namespace D_IDE
         public bool TextAreaKeyEventHandler(char key)
         {
             if (Program.Parsing ||
-                DCodeCompletionProvider.isInCommentAreaOrString(txt.Document.TextContent, txt.ActiveTextAreaControl.Caret.Offset))
+                DCodeCompletionProvider.IsInCommentAreaOrString(txt.Document.TextContent, txt.ActiveTextAreaControl.Caret.Offset))
                 return false;
 
             //if (key == '(')txt.Document.Insert(CaretOffset, ")");
@@ -358,7 +358,7 @@ namespace D_IDE
 
         void TextArea_ToolTipRequest(object sender, ToolTipRequestEventArgs e)
         {
-            if (!e.InDocument || Program.Parsing) return;
+			if (!e.InDocument || Program.Parsing) return;
             TextArea ta = (TextArea)sender;
             if (ta == null || !fileData.IsParsable) return;
 
@@ -371,7 +371,7 @@ namespace D_IDE
             {
                 return;
             }
-            if (mouseOffset < 1) return;
+			if (mouseOffset < 1 || DCodeCompletionProvider.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
             bool ctor, super, isInst, isNameSpace;
             DModule gpf = null;
             int off = mouseOffset;

@@ -23,34 +23,34 @@ namespace D_IDE
 			}
 			return ret;
 		}
-		public static bool isInCommentAreaOrString(string t, int offset)
+		public static bool IsInCommentAreaOrString(string Text, int Offset)
 		{
-			bool commenting = false, multicomm = false, inString=false;
-			for (int i = 0; i < offset; i++)
+			char cur = '\0', peekChar = '\0';
+			int off = 0;
+			bool IsInString = false, IsInLineComment = false, IsInBlockComment = false;
+
+			while (off <= Offset)
 			{
-				char c = t[i];
+				cur = Text[off];
+				#region Non-parsed file sections
+				if (off < Text.Length - 1) peekChar = Text[off + 1];
 
-				if (c == '"' && t[i > 0 ? (i - 1) : 0] != '\\') inString = !inString;
+				if (!IsInBlockComment && !IsInLineComment && cur == '\"' && (off < 1 || Text[off - 1] != '\\'))
+					IsInString = !IsInString;
 
-				if (i >= 1)
-				{
-					if (t[i - 1] == '/' && (c == '/' || c == '+')) { commenting = true; }
-					if (c == '*' && t[i - 1] == '/') { multicomm = true; }
+				if (!IsInBlockComment && !IsInString && cur == '/' && peekChar == '/')
+					IsInLineComment = true;
+				if (!IsInBlockComment && !IsInString && IsInLineComment && cur == '\n')
+					IsInLineComment = false;
 
-
-					if (multicomm && (t[i - 1] == '*' && c == '/'))
-					{
-						multicomm = false; continue;
-					}
-
-					if (commenting)
-						if ((t[i - 1] == '+' && c == '/') || c == '\n')
-						{
-							commenting = false; continue;
-						}
-				}
+				if (!IsInLineComment && !IsInString && cur == '/' && (peekChar == '*' || peekChar == '+'))
+					IsInBlockComment = true;
+				if (!IsInLineComment && !IsInString && IsInBlockComment && (cur == '*' || cur == '+') && peekChar == '/')
+					IsInBlockComment = false;
+				#endregion
+				off++;
 			}
-			return (commenting || multicomm || inString);
+			return IsInBlockComment || IsInLineComment || IsInString;
 		}
 
 		public static DataType GetBlockAt(DataType dataType, TextLocation textLocation)
