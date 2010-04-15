@@ -54,6 +54,7 @@
             this.formatFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.doubleLineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.commentOutBlockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.uncommentBlocklineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
             this.showCompletionWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -138,7 +139,6 @@
             this.stepOutTS = new System.Windows.Forms.ToolStripButton();
             this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
             this.searchTool = new System.Windows.Forms.ToolStripTextBox();
-            this.uncommentBlocklineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -242,7 +242,7 @@
             this.saveAllToolStripMenuItem.Name = "saveAllToolStripMenuItem";
             this.saveAllToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
             this.saveAllToolStripMenuItem.Text = "Save All";
-            this.saveAllToolStripMenuItem.Click += new System.EventHandler(this.saveAllToolStripMenuItem_Click);
+            this.saveAllToolStripMenuItem.Click += new System.EventHandler(this.SaveAll);
             // 
             // addExistingToolStripMenuItem
             // 
@@ -323,7 +323,7 @@
             this.toolStripMenuItem1.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.G)));
             this.toolStripMenuItem1.Size = new System.Drawing.Size(281, 22);
             this.toolStripMenuItem1.Text = "Go to Line";
-            this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
+            this.toolStripMenuItem1.Click += new System.EventHandler(this.GotoLine);
             // 
             // toolStripSeparator5
             // 
@@ -354,6 +354,15 @@
             this.commentOutBlockToolStripMenuItem.Size = new System.Drawing.Size(281, 22);
             this.commentOutBlockToolStripMenuItem.Text = "Comment out block";
             this.commentOutBlockToolStripMenuItem.Click += new System.EventHandler(this.commentOutBlockToolStripMenuItem_Click);
+            // 
+            // uncommentBlocklineToolStripMenuItem
+            // 
+            this.uncommentBlocklineToolStripMenuItem.Name = "uncommentBlocklineToolStripMenuItem";
+            this.uncommentBlocklineToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+U";
+            this.uncommentBlocklineToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.U)));
+            this.uncommentBlocklineToolStripMenuItem.Size = new System.Drawing.Size(281, 22);
+            this.uncommentBlocklineToolStripMenuItem.Text = "Uncomment block/line";
+            this.uncommentBlocklineToolStripMenuItem.Click += new System.EventHandler(this.uncommentBlocklineToolStripMenuItem_Click);
             // 
             // toolStripSeparator10
             // 
@@ -611,7 +620,7 @@
             this.toggleBreakpointToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F9;
             this.toggleBreakpointToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
             this.toggleBreakpointToolStripMenuItem.Text = "Toggle Breakpoint";
-            this.toggleBreakpointToolStripMenuItem.Click += new System.EventHandler(this.toggleBreakpointToolStripMenuItem_Click);
+            this.toggleBreakpointToolStripMenuItem.Click += new System.EventHandler(this.ToggleBreakPoint);
             // 
             // toolStripMenuItem3
             // 
@@ -748,6 +757,7 @@
             this.dockPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.dockPanel.DefaultFloatWindowSize = new System.Drawing.Size(400, 300);
             this.dockPanel.DockLeftPortion = 0.15;
             this.dockPanel.DockRightPortion = 0.15;
             this.dockPanel.DockTopPortion = 0.2;
@@ -755,7 +765,7 @@
             this.dockPanel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.World);
             this.dockPanel.Location = new System.Drawing.Point(0, 52);
             this.dockPanel.Name = "dockPanel";
-            this.dockPanel.Size = new System.Drawing.Size(1015, 602);
+            this.dockPanel.Size = new System.Drawing.Size(1015, 510);
             this.dockPanel.TabIndex = 2;
             this.dockPanel.DragOver += new System.Windows.Forms.DragEventHandler(this.tc_DragOver);
             this.dockPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.tc_DragDrop);
@@ -901,7 +911,7 @@
             this.saveAll_TBS.Name = "saveAll_TBS";
             this.saveAll_TBS.Size = new System.Drawing.Size(23, 22);
             this.saveAll_TBS.Text = "Save all";
-            this.saveAll_TBS.Click += new System.EventHandler(this.saveAllToolStripMenuItem_Click);
+            this.saveAll_TBS.Click += new System.EventHandler(this.SaveAll);
             // 
             // toolStripSeparator17
             // 
@@ -939,7 +949,7 @@
             this.pasteTBSButton.Size = new System.Drawing.Size(23, 22);
             this.pasteTBSButton.Text = "toolStripButton5";
             this.pasteTBSButton.ToolTipText = "Paste";
-            this.pasteTBSButton.Click += new System.EventHandler(this.toolStripButton5_Click);
+            this.pasteTBSButton.Click += new System.EventHandler(this.pasteTBSButton_Click);
             // 
             // sep_TBS1
             // 
@@ -1066,15 +1076,6 @@
             this.searchTool.Size = new System.Drawing.Size(170, 25);
             this.searchTool.ToolTipText = "Press <Return> for search in current document";
             this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
-            // 
-            // uncommentBlocklineToolStripMenuItem
-            // 
-            this.uncommentBlocklineToolStripMenuItem.Name = "uncommentBlocklineToolStripMenuItem";
-            this.uncommentBlocklineToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+U";
-            this.uncommentBlocklineToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.U)));
-            this.uncommentBlocklineToolStripMenuItem.Size = new System.Drawing.Size(281, 22);
-            this.uncommentBlocklineToolStripMenuItem.Text = "Uncomment block/line";
-            this.uncommentBlocklineToolStripMenuItem.Click += new System.EventHandler(this.uncommentBlocklineToolStripMenuItem_Click);
             // 
             // Form1
             // 

@@ -166,6 +166,7 @@ namespace D_IDE
 
         void DocumentInstanceWindow_Activated(object sender, EventArgs e)
         {
+            Form1.thisForm.UpdateBreakPointsForDocWin(this);
             this.txt.ActiveTextAreaControl.Focus();
         }
 
@@ -395,7 +396,7 @@ namespace D_IDE
                 e.ShowToolTip(DTokens.GetDescription(key));
                 return;
             }
-
+            
             #region If debugging, check if a local fits to one of the scoped symbols and show its value if possible
             if (Form1.thisForm.IsDebugging)
             {

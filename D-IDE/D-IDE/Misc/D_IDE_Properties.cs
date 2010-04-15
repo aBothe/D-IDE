@@ -512,6 +512,7 @@ namespace D_IDE
 		public Point lastFormLocation;
 		public Size lastFormSize;
 		public Dictionary<string, string> SyntaxHighlightingEntries = new Dictionary<string, string>();
+        public bool UseRibbonMenu = false;
 
 		public bool LogBuildProgress = true;
 		public bool ShowBuildCommands = true;

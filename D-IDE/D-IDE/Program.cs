@@ -36,7 +36,7 @@ namespace D_IDE
 
             // Show startup popup
             StartScreen = new CachingScreen();
-            if(!Debugger.IsAttached)StartScreen.Show();
+            if (!Debugger.IsAttached) StartScreen.Show();
 
             if (!File.Exists(UserDocStorageFile))
             {
@@ -57,14 +57,18 @@ namespace D_IDE
                     {
                         D_IDE_Properties.Default.dmd2 = swd.CompilerConfiguration;
 
-                        if (!File.Exists(cfgDir + "\\" + Program.D2ModuleCacheFile) && MessageBox.Show("Do you want to parse all of the import directories?","Parse Imports",MessageBoxButtons.YesNo,MessageBoxIcon.Question,MessageBoxDefaultButton.Button1)==DialogResult.Yes)
+                        if (!File.Exists(cfgDir + "\\" + Program.D2ModuleCacheFile) && MessageBox.Show("Do you want to parse all of the import directories?", "Parse Imports", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
                         {
                             Form1.UpdateChacheThread(D_IDE_Properties.Default.dmd2);
                         }
                     }
                 }
-                D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd1, cfgDir + "\\" + Program.D1ModuleCacheFile);
-                D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd2, cfgDir + "\\" + Program.D2ModuleCacheFile);
+                
+                if (!Debugger.IsAttached)
+                {
+                    D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd1, cfgDir + "\\" + Program.D1ModuleCacheFile);
+                    D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd2, cfgDir + "\\" + Program.D2ModuleCacheFile);
+                }
             }
             catch (Exception ex)
             {

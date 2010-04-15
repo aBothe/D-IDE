@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -20,6 +20,14 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <StartupObject>D_IDE.Program</StartupObject>
     <ApplicationIcon>d-ide.ico</ApplicationIcon>
+    <PlatformTarget>x86</PlatformTarget>
+    <Win32Resource>
+    </Win32Resource>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
     <PublishUrl>C:\Users\Alexander\Desktop\D-IDE\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -32,7 +40,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <SupportUrl>http://www.alexanderbothe.com/</SupportUrl>
     <TargetCulture>en</TargetCulture>
-    <PlatformTarget>x86</PlatformTarget>
     <ProductName>D-IDE</ProductName>
     <PublisherName>Alexander Bothe</PublisherName>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
@@ -40,8 +47,8 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <Win32Resource>
-    </Win32Resource>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -66,11 +73,12 @@
   <ItemGroup>
     <Reference Include="cv2pdb, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\cv2pdb\bin\cv2pdb.dll</HintPath>
+      <HintPath>..\..\externalDeps\cv2pdb.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="DebugEngineWrapper, Version=1.0.3685.35871, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="DebugEngineWrapper, Version=1.0.3756.38153, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\DebugEngineWrapper\Release\DebugEngineWrapper.dll</HintPath>
+      <HintPath>..\..\externalDeps\DebugEngineWrapper.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.Core, Version=3.1.1.5327, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -106,6 +114,8 @@
     <Reference Include="WeifenLuo.WinFormsUI.Docking, Version=2.2.3633.27487, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\externalDeps\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
+      <Private>True</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -233,6 +243,11 @@
     </Compile>
     <Compile Include="Misc\BinaryDataTypeStorage.cs" />
     <Compile Include="Misc\D_IDE_Properties.cs" />
+    <Compile Include="Misc\MenuIcons.Designer.cs">
+      <DependentUpon>MenuIcons.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
     <Compile Include="Misc\SetupWizardDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -317,6 +332,10 @@
       <DependentUpon>ProjectExplorer.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Misc\MenuIcons.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>MenuIcons.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Misc\SetupWizardDialog.resx">
       <DependentUpon>SetupWizardDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -356,6 +375,11 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
       <Visible>False</Visible>
       <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
@@ -370,6 +394,11 @@
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5</ProductName>
       <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
@@ -458,6 +487,24 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="dproj.ico" />
+    <None Include="Resources\Undo_48x48.png" />
+    <None Include="Resources\Stop_48x48.png" />
+    <None Include="Resources\Settings_48x48.png" />
+    <None Include="Resources\Search_48x48.png" />
+    <None Include="Resources\Save_48x48.png" />
+    <None Include="Resources\Refresh_48x48.png" />
+    <None Include="Resources\Redo_48x48.png" />
+    <None Include="Resources\Properties_48x48.png" />
+    <None Include="Resources\Play_48x48.png" />
+    <None Include="Resources\Paste_48x48.png" />
+    <None Include="Resources\Open_48x48.png" />
+    <None Include="Resources\New_48x48.png" />
+    <None Include="Resources\Information_48x48.png" />
+    <None Include="Resources\Download_48x48.png" />
+    <None Include="Resources\Cut_48x48.png" />
+    <None Include="Resources\Copy_48x48.png" />
+    <None Include="Resources\Add_48x48.png" />
+    <None Include="Resources\dprj.png" />
     <None Include="RC.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

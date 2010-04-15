@@ -306,6 +306,20 @@ namespace DebugEngineWrapper {
 				return ret;
 			}
 		}
+
+		property array<BreakPoint^>^ Breakpoints
+		{
+			array<BreakPoint^>^ get()
+			{
+				ULONG c=BreakpointCount;
+				List<BreakPoint^>^ ret=gcnew List<BreakPoint^>(c);
+
+				for(ULONG i=0;i<c;i++)
+					ret->Add(GetBreakPointByIndex(i));
+
+				return ret->ToArray();
+			}
+		}
 #pragma endregion
 
 		property DebugStatus ExecutionStatus

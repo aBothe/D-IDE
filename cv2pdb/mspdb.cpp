@@ -14,6 +14,7 @@ HMODULE modMsPdb;
 mspdb::fnPDBOpen2W *pPDBOpen2W;
 
 char* mspdb_dll = "mspdb80.dll";
+char* mspdb10_dll = "mspdb100.dll";
 
 bool getInstallDir(const char* version, char* installDir, DWORD size)
 {

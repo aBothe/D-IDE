@@ -28,6 +28,7 @@ using WeifenLuo.WinFormsUI;
 using WeifenLuo.WinFormsUI.Docking;
 using System.Runtime.InteropServices;
 using DebugEngineWrapper;
+using D_IDE.Misc;
 
 namespace D_IDE
 {
@@ -37,11 +38,18 @@ namespace D_IDE
 
 		public Form1(string[] args)
 		{
-
 			thisForm = this;
 
 			Form.CheckForIllegalCrossThreadCalls = false;
 			InitializeComponent();
+
+            /*if (D_IDE_Properties.Default.UseRibbonMenu)
+            {
+                this.MainMenuStrip.Visible = false;
+                this.TBS.Visible = false;
+                this.dockPanel.Top = 0;
+                RibbonSetup=new RibbonSetup(this);
+            }*/
 
 			this.WindowState = D_IDE_Properties.Default.lastFormState;
 			if (D_IDE_Properties.Default.lastFormState != FormWindowState.Maximized)
@@ -160,6 +168,10 @@ namespace D_IDE
 
 		public void UpdateLastFilesMenu()
 		{
+            /*if (RibbonSetup != null)
+            {
+                RibbonSetup.LastFiles.DropDownItems.Clear();
+            }*/
 			lastOpenProjects.DropDownItems.Clear();
 			lastOpenFiles.DropDownItems.Clear();
 			if (D_IDE_Properties.Default.lastProjects == null) D_IDE_Properties.Default.lastProjects = new List<string>();
@@ -169,13 +181,15 @@ namespace D_IDE
 			foreach (string prjfile in D_IDE_Properties.Default.lastProjects)
 			{
 				if (File.Exists(prjfile))
-				{/*
-					RibbonItem ri=new RibbonOrbRecentItem();
-					ri.Tag = prjfile;
-					ri.Text = Path.GetFileName(prjfile);
-					ri.Click += new EventHandler(LastProjectsItemClick);
-					
-					RibbonMenu.OrbDropDown.RecentItems.Add(ri);*/
+				{
+                    /*if (RibbonSetup != null)
+                    {
+                        RibbonButton tb = new RibbonButton();
+                        tb.Tag = prjfile;
+                        tb.Text = Path.GetFileName(prjfile);
+                        tb.Click += new EventHandler(LastProjectsItemClick);
+                        RibbonSetup.LastFiles.DropDownItems.Add(tb);
+                    }*/
 
 					ToolStripMenuItem tsm = new ToolStripMenuItem();
 					tsm.Tag = prjfile;
@@ -185,11 +199,20 @@ namespace D_IDE
 					startpage.lastProjects.Items.Add(tsm.Text);
 				}
 			}
-
+            //if(RibbonSetup!=null) RibbonSetup.LastFiles.DropDownItems.Add(new RibbonSeparator());
 			foreach (string file in D_IDE_Properties.Default.lastFiles)
 			{
 				if (File.Exists(file))
 				{
+                    /*if (RibbonSetup != null)
+                    {
+                        RibbonButton tb = new RibbonButton();
+                        tb.Tag = file;
+                        tb.Text = Path.GetFileName(file);
+                        tb.Click += new EventHandler(LastProjectsItemClick);
+                        RibbonSetup.LastFiles.DropDownItems.Add(tb);
+                    }*/
+
 					ToolStripMenuItem tsm = new ToolStripMenuItem();
 					tsm.Tag = file;
 					tsm.Text = Path.GetFileName(file);
@@ -226,6 +249,8 @@ namespace D_IDE
 			string file = "";
 			if (sender is ToolStripMenuItem)
 				file = (string)((ToolStripMenuItem)sender).Tag;
+            /*else if (sender is RibbonButton)
+                file = (string)((RibbonButton)sender).Tag;*/
 			Open(file);
 		}
 
@@ -241,6 +266,7 @@ namespace D_IDE
 		public CallStackWin callstackwin = new CallStackWin();
 		public DebugLocals dbgLocalswin = new DebugLocals();
 		public bool UseOutput = false;
+        //public RibbonSetup RibbonSetup;
 
 		public DProject prj
 		{
@@ -430,7 +456,7 @@ namespace D_IDE
 
 		#region Building Procedures
 
-		void BuildSingle(object sender, EventArgs e)
+		public void BuildSingle(object sender, EventArgs e)
 		{
             BuildSingle();
 		}
@@ -582,7 +608,7 @@ namespace D_IDE
 			}
 		}
 
-		private void buildToolStripMenuItem_Click(object sender, EventArgs e)
+		public void buildToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			if (prj != null)
 			{
@@ -597,13 +623,13 @@ namespace D_IDE
 			else bpw.Visible = false;
 		}
 
-		private void buildRunToolStripMenuItem_Click(object sender, EventArgs e)
+		public void buildRunToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			if (!String.IsNullOrEmpty( Build()))
 				Run();
 		}
 
-		private void runToolStripMenuItem_Click(object sender, EventArgs e)
+		public void runToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			Run();
 		}
@@ -801,7 +827,7 @@ namespace D_IDE
 			}
 		}
 
-		private void SaveFile(object sender, EventArgs e)
+		public void SaveFile(object sender, EventArgs e)
 		{
 			DocumentInstanceWindow mtp = SelectedTabPage;
 			if (mtp == null)
@@ -972,7 +998,7 @@ namespace D_IDE
 			return ret;
 		}
 
-		private void OpenFile(object sender, EventArgs e)
+		public void OpenFile(object sender, EventArgs e)
 		{
 			SaveAllTabs();
 
@@ -1205,7 +1231,7 @@ namespace D_IDE
 			D_IDE_Properties.SaveGlobalCache(D_IDE_Properties.Default.dmd2, Program.cfgDir + "\\" + Program.D2ModuleCacheFile);
 		}
 
-		private void SaveAs(object sender, EventArgs e)
+		public void SaveAs(object sender, EventArgs e)
 		{
 			DocumentInstanceWindow tp = SelectedTabPage;
 			if (tp == null) return;
@@ -1307,7 +1333,7 @@ namespace D_IDE
 		}
 
 		#region Search & Replace
-		private void searchReplaceToolStripMenuItem_Click(object sender, EventArgs e)
+		public void searchReplaceToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			if (SelectedTabPage != null)
 			{
@@ -1317,12 +1343,12 @@ namespace D_IDE
 			}
 		}
 
-		private void findNextToolStripMenuItem_Click(object sender, EventArgs e)
+		public void findNextToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			searchDlg.FindNextClick(sender, e);
 		}
 
-		private void searchTool_KeyDown(object sender, KeyEventArgs e)
+		public void searchTool_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.KeyCode == Keys.Return && SelectedTabPage != null && searchTool.TextBox.Text.Length > 0)
 			{
@@ -1331,7 +1357,7 @@ namespace D_IDE
 		}
 		#endregion
 
-		private void toolStripMenuItem1_Click(object sender, EventArgs e)
+		public void GotoLine(object sender, EventArgs e)
 		{
 			if (SelectedTabPage != null) gotoDlg.Visible = true;
 		}
@@ -1497,7 +1523,7 @@ namespace D_IDE
 			MessageBox.Show("This software is freeware\nand is written by Alexander Bothe.", title);
 		}
 
-		private void saveAllToolStripMenuItem_Click(object sender, EventArgs e)
+		public void SaveAll(object sender, EventArgs e)
 		{
 			SaveAllTabs();
 		}
@@ -1556,7 +1582,7 @@ namespace D_IDE
 			dbgwin.Show();
 		}
 		#region Basics
-		private void cutTBSButton_Click(object sender, EventArgs e)
+		public void cutTBSButton_Click(object sender, EventArgs e)
 		{
 			try
 			{
@@ -1565,7 +1591,7 @@ namespace D_IDE
 			catch { }
 		}
 
-		private void copyTBSButton_Click(object sender, EventArgs e)
+        public void copyTBSButton_Click(object sender, EventArgs e)
 		{
 			try
 			{
@@ -1574,7 +1600,7 @@ namespace D_IDE
 			catch { }
 		}
 
-		private void toolStripButton5_Click(object sender, EventArgs e)
+        public void pasteTBSButton_Click(object sender, EventArgs e)
 		{
 			try
 			{
