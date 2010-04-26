@@ -94,8 +94,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory=".\bin"
+			IntermediateDirectory=".\bin\obj"
 			ConfigurationType="2"
 			CharacterSet="1"
 			ManagedExtensions="1"
