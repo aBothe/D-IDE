@@ -473,7 +473,7 @@ namespace D_IDE
                     if (diw.fileData.FileName == file)
                     {
                         LineSegment ls = diw.txt.Document.GetLineSegment((int)line);
-                        TextMarker tm = new TextMarker(ls.Offset, ls.Length, TextMarkerType.SolidBlock, Color.DarkRed,Color.White);
+                        TextMarker tm = new TextMarker(ls.Offset, ls.Length, TextMarkerType.SolidBlock, Color.DarkRed);
 
                         diw.txt.Document.MarkerStrategy.AddMarker(tm);
                     }

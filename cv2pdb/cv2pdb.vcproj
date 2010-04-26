@@ -98,8 +98,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\bin\$(ConfigurationName)"
-			IntermediateDirectory="..\bin\$(ConfigurationName)\$(ProjectName)"
+			OutputDirectory=".\bin"
+			IntermediateDirectory=".\bin"
 			ConfigurationType="2"
 			CharacterSet="2"
 			ManagedExtensions="1"
