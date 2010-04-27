@@ -87,7 +87,7 @@
             this.stepOverToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
             this.toggleBreakpointToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.refreshBreakpointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.globalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.propertiesToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.updateCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -193,7 +193,7 @@
             // 
             this.projectToolStripMenuItem.Image = global::D_IDE.Properties.Resources.new_prj;
             this.projectToolStripMenuItem.Name = "projectToolStripMenuItem";
-            this.projectToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.projectToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
             this.projectToolStripMenuItem.Text = "Project";
             this.projectToolStripMenuItem.Click += new System.EventHandler(this.NewProject);
             // 
@@ -202,7 +202,7 @@
             this.dSourceFileToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("dSourceFileToolStripMenuItem.Image")));
             this.dSourceFileToolStripMenuItem.Name = "dSourceFileToolStripMenuItem";
             this.dSourceFileToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
-            this.dSourceFileToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.dSourceFileToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
             this.dSourceFileToolStripMenuItem.Text = "File";
             this.dSourceFileToolStripMenuItem.Click += new System.EventHandler(this.NewSourceFile);
             // 
@@ -553,7 +553,7 @@
             this.stepOverToolStripMenuItem,
             this.toolStripSeparator16,
             this.toggleBreakpointToolStripMenuItem,
-            this.toolStripMenuItem3});
+            this.refreshBreakpointsToolStripMenuItem});
             this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
             this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
             this.debuggingToolStripMenuItem.Text = "Debug";
@@ -622,13 +622,12 @@
             this.toggleBreakpointToolStripMenuItem.Text = "Toggle Breakpoint";
             this.toggleBreakpointToolStripMenuItem.Click += new System.EventHandler(this.ToggleBreakPoint);
             // 
-            // toolStripMenuItem3
+            // refreshBreakpointsToolStripMenuItem
             // 
-            this.toolStripMenuItem3.Enabled = false;
-            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(240, 22);
-            this.toolStripMenuItem3.Text = "Send input string";
-            this.toolStripMenuItem3.Click += new System.EventHandler(this.SendInputToExeProc);
+            this.refreshBreakpointsToolStripMenuItem.Name = "refreshBreakpointsToolStripMenuItem";
+            this.refreshBreakpointsToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.refreshBreakpointsToolStripMenuItem.Text = "Refresh Breakpoints";
+            this.refreshBreakpointsToolStripMenuItem.Click += new System.EventHandler(this.refreshBreakpointsToolStripMenuItem_Click);
             // 
             // globalToolStripMenuItem
             // 
@@ -1210,13 +1209,13 @@
 		private System.Windows.Forms.ToolStripMenuItem showCompletionWindowToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem watchForUpdatesToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator18;
-		private System.Windows.Forms.ToolStripMenuItem reloadProjectTreeToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem reloadProjectTreeToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator19;
 		private System.Windows.Forms.ToolStripMenuItem setDefaultPanelLayoutToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem localsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem commentOutBlockToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uncommentBlocklineToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem refreshBreakpointsToolStripMenuItem;
 	}
 }
 

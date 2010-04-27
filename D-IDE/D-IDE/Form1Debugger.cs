@@ -449,8 +449,9 @@ namespace D_IDE
 
         public void UpdateBreakPointsForDocWin(DocumentInstanceWindow diw)
         {
+        if(diw==null)return;
             diw.txt.Document.MarkerStrategy.RemoveAll(RemoveMarkerMatch);
-
+            diw.Refresh();
             if (IsDebugging)
             {
                 BreakPoint[] bps = dbg.Breakpoints;
@@ -462,7 +463,11 @@ namespace D_IDE
                     string file = "";
                     uint line = 0;
                     if (!dbg.Symbols.GetLineByOffset(bp.Offset, out file, out line)) continue;
-                    line++; // Set line to 1-based
+
+                    if (!Path.IsPathRooted(file))
+                        file = prj.basedir + "\\" + file;
+
+                    //line++; // Set line to 1-based
                     DIDEBreakpoint dbp = new DIDEBreakpoint(file, (int)line);
                     dbp.bp = bp;
 
@@ -470,29 +475,32 @@ namespace D_IDE
                         dbgwin.Breakpoints.Add(file, new List<DIDEBreakpoint>());
                     dbgwin.Breakpoints[file].Add(dbp);
 
-                    if (diw.fileData.FileName == file)
+                    if (diw.fileData.mod_file==file)
                     {
-                        LineSegment ls = diw.txt.Document.GetLineSegment((int)line);
-                        TextMarker tm = new TextMarker(ls.Offset, ls.Length, TextMarkerType.SolidBlock, Color.DarkRed);
+                        LineSegment ls = diw.txt.Document.GetLineSegment((int)line-1);
+                        TextMarker tm = new TextMarker(ls.Offset, ls.Length, TextMarkerType.SolidBlock, Color.DarkRed,Color.White);
 
                         diw.txt.Document.MarkerStrategy.AddMarker(tm);
                     }
                 }
-
                 dbgwin.Update();
-                diw.Refresh();
             }
             else if (dbgwin.Breakpoints.ContainsKey(diw.fileData.mod_file))
             {
                 foreach (DIDEBreakpoint dbp in dbgwin.Breakpoints[diw.fileData.mod_file])
                 {
-                    LineSegment ls = diw.txt.Document.GetLineSegment(diw.Caret.Line);
-                    TextMarker tm = new TextMarker(ls.Offset, ls.Length, TextMarkerType.SolidBlock, Color.DarkRed);
+                    LineSegment ls = diw.txt.Document.GetLineSegment(dbp.line-1);
+                    TextMarker tm = new TextMarker(ls.Offset, ls.Length, TextMarkerType.SolidBlock, Color.DarkRed,Color.White);
 
                     diw.txt.Document.MarkerStrategy.AddMarker(tm);
                 }
-                diw.Refresh();
             }
+            diw.Refresh();
+        }
+
+        private void refreshBreakpointsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UpdateBreakPointMarkers();
         }
 
         /// <summary>

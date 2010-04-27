@@ -29,7 +29,7 @@ namespace D_IDE
 			int off = 0;
 			bool IsInString = false, IsInLineComment = false, IsInBlockComment = false;
 
-			while (off <= Offset)
+			while (off < Offset)
 			{
 				cur = Text[off];
 				#region Non-parsed file sections
