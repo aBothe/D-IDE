@@ -1,89 +1,109 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using System.Text;
-using System.Net;
 using System.IO;
-using System.Xml;
+using System.Diagnostics;
 
 namespace DIDE.Installer
 {
     public class Configuration
     {
-        public static void CreateConfigurationFile(string filePath, Dictionary<string, string[]> nodeHash)
+        private const string ERROR_PREFIX = "[ERROR] ";
+        private const string RELATIVE_COMPILER_PATH = @"\windows\bin\dmd.exe";
+        private static string[] POSSIBLE_LOCATIONS = new string[]{ @"\d\dmd", @"\d\dmd2", @"\dmd2", @"\dmd", @"\dmd", @"%PF%\dmd", @"%PF%\d\dmd", @"%PF%\d\dmd2" };
+
+        /*public static List<string> FindLocalDMDPath(int version)
         {
-            XmlDocument xmlDoc = new XmlDocument();
-            foreach (string nodePath in nodeHash.Keys)
+            string programFiles = Environment.GetEnvironmentVariable("PROGRAMFILES");
+            DriveInfo[] drives = DriveInfo.GetDrives();
+            foreach (DriveInfo drive in (drives))
             {
-                string[] nodeNames = nodePath.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                XmlNode xmlParent = xmlDoc;
-                XmlNodeList searchResult = null;
-                string[] values = nodeHash[nodePath];
-                string xpath = "//";
-
-                for (int i = 0; i < nodeNames.Length; i++)
+                if (drive.DriveType == DriveType.Fixed ||
+                    drive.DriveType == DriveType.Removable)
                 {
-                    XmlElement childNode = null;
-                    bool lastNode = (nodeNames.Length == (i + 1));
-                    string nodeName = nodeNames[i];
-                    xpath += nodeName;
-                    searchResult = xmlDoc.SelectNodes(xpath);
-
-                    if (searchResult.Count > 0) childNode = searchResult[0] as XmlElement;
-
-                    string[] pieces = nodeName.Split(new char[] { '[', ']', '=', ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (childNode == null)
+                    foreach (string possibleLocation in POSSIBLE_LOCATIONS)
                     {
-                        if (pieces.Length >= 3)
+                        string path = possibleLocation.Replace("%PF%", programFiles) + RELATIVE_COMPILER_PATH;
+                        if (path[1] != ':') path = drive.Name.TrimEnd('\\') + path;
+                        if (File.Exists(path))
                         {
-                            childNode = xmlDoc.CreateElement(pieces[0].Trim());
-
-                            for (int j = 2; j < pieces.Length; j += 2)
-                            {
-                                XmlAttribute attr = xmlDoc.CreateAttribute(pieces[j-1].TrimStart('@').Trim());
-                                attr.Value = pieces[j].Trim().Trim('\'', '"');
-                                childNode.Attributes.Append(attr);
-                            }
-                        }
-                        else
-                        {
-                            childNode = xmlDoc.CreateElement(nodeName);
+                            FileInfo fi = new FileInfo(path);
+                            string s = GetVersion(fi);
+                            System.Diagnostics.Debug.WriteLine(path);
+                            System.Diagnostics.Debug.WriteLine(s);
                         }
                     }
-
-                    if (lastNode)
-                    {
-                        if (values.Length > 1)
-                        {
-                            foreach (string value in values)
-                            {
-                                XmlElement clone = childNode.Clone() as XmlElement;
-                                clone.InnerText = value;
-                                xmlParent.AppendChild(clone);
-                            }
-                        }
-                        else
-                        {
-                            if (values.Length == 1) childNode.InnerText = values[0];
-                            xmlParent.AppendChild(childNode);
-                        }
-                    }
-                    else
-                    {
-                        xmlParent.AppendChild(childNode);
-                    }
-
-                    xmlParent = childNode;
-                    xpath += "/";
                 }
+            }
+            return "";
+        }*/
 
+        public static List<CompilerInstallInfo> FindLocalDMDPath(int version)
+        {
+            List<CompilerInstallInfo> compilers = new List<CompilerInstallInfo>();
+            string programFiles = Environment.GetEnvironmentVariable("PROGRAMFILES");
+            DriveInfo[] drives = DriveInfo.GetDrives();
+            foreach (DriveInfo drive in (drives)) 
+            {
+                if (drive.DriveType == DriveType.Fixed || 
+                    drive.DriveType == DriveType.Removable) 
+                {
+                    foreach (string possibleLocation in POSSIBLE_LOCATIONS) 
+                    {
+                        string path = possibleLocation.Replace("%PF%", programFiles) + RELATIVE_COMPILER_PATH;
+                        if (path[1] != ':') path = drive.Name.TrimEnd('\\') + path;
+                        if (File.Exists(path))
+                        {
+                            FileInfo fi = new FileInfo(path);
+                            string s = GetVersion(fi);
+                            System.Diagnostics.Debug.WriteLine(path);
+                            System.Diagnostics.Debug.WriteLine(s);
+                        }
+                    }
+                }
             }
 
-            XmlElement root = xmlDoc.DocumentElement;
-            XmlDeclaration xmlDecl = xmlDoc.CreateXmlDeclaration("1.0", "utf-8", string.Empty); //<?xml version="1.0" encoding="utf-8"?>
-            xmlDoc.InsertBefore(xmlDecl, root);
+            return compilers;
+        }
 
-            xmlDoc.Save(filePath);
+        public static string GetVersion(FileInfo fi)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = fi.FullName;
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardOutput = true;
+            Process process = Process.Start(startInfo);
+            string s = process.StandardOutput.ReadLine();
+            process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            return s;
+        }
+
+        public class CompilerInstallInfo
+        {
+            private FileInfo executablePath;
+            private Version versionInfo;
+            private string compilerString;
+
+            public string CompilerString
+            {
+                get { return compilerString; }
+                set { compilerString = value; }
+            }
+
+            public Version VersionInfo
+            {
+                get { return versionInfo; }
+                set { versionInfo = value; }
+            }
+
+            public FileInfo ExecutablePath
+            {
+                get { return executablePath; }
+                set { executablePath = value; }
+            }
         }
     }
 }

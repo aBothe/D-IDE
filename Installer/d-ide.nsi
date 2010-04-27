@@ -21,6 +21,9 @@
 !define /date FILEDATE "%Y%m%d"
 !define /date DATE "%Y.%m.%d"
 
+!define TEXT_DMD_CONFIG_TITLE "Digital Marse D Compiler"
+!define TEXT_DMD_CONFIG_SUBTITLE "Choose your installation type."
+
 Var DMD1_BIN_PATH
 Var DMD2_BIN_PATH
 
@@ -40,6 +43,7 @@ RequestExecutionLevel highest
 ;--------------------------------------------------------
 Function .onInit
 	InitPluginsDir
+	!insertmacro XPUI_INSTALLOPTIONS_EXTRACT "dmd-config.ini"
 	
 	ReadRegStr $DMD1_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath"
 	ReadRegStr $DMD2_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath"
@@ -54,7 +58,8 @@ ${Page} Welcome
 ${LicensePage} ".\License.rtf"
 ${Page} Components
 ${Page} Directory
-${Page} InstFiles
+Page custom DmdConfigPage DmdConfigPageValidation
+
 ${Page} Finish
 
 ${UnPage} Welcome
@@ -63,11 +68,29 @@ ${UnPage} Welcome
 !insertmacro XPUI_PAGE_INSTFILES
 !insertmacro XPUI_LANGUAGE "English"
 
+ReserveFile "dmd-config.ini"
+!insertmacro XPUI_RESERVEFILE_INSTALLOPTIONS
+
 ;--------------------------------------------------------
 ; Setup Icons
 ;--------------------------------------------------------
 Icon ".\install.ico"
 UninstallIcon ".\uninstall.ico"
+
+;------------------------------------------------------------------------
+; In this section, we shall use a custom configuration page.
+;------------------------------------------------------------------------
+Function DmdConfigPage
+	!insertmacro XPUI_HEADER_TEXT "$(TEXT_DMD_CONFIG_TITLE)" "$(TEXT_DMD_CONFIG_SUBTITLE)"
+	!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config.ini"
+FunctionEnd
+
+Function DmdConfigPageValidation
+  CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Url" 0 ; 5 "mystring1" "x" 10 15.8 false
+  pop $0  
+  MessageBox MB_OK "Latest DMD 2 URL is: $0"
+  CLR::Destroy
+FunctionEnd
 
 ;--------------------------------------------------------
 ; Download and install the .Net Framework 3.5
@@ -226,7 +249,7 @@ SectionEnd
 ;--------------------------------------------------------
 Function DotNet35Exists
 	ClearErrors
-	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5" "Version"
+	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5" "Vecrsion"
 	IfErrors MDNFNotFound MDNFFound
 
 	MDNFFound:

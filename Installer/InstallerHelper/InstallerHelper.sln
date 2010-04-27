@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DIDE.InstallerHelper", "DIDE.InstallerHelper.csproj", "{C3893C81-DF21-4CFC-8A09-D15E10D322EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestInstallerHelper", "..\TestInstallerHelper\TestInstallerHelper.csproj", "{B1612B74-3DBF-4174-8048-D184994CB305}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "testStuff", "..\TestInstallerHelper\TestInstallerHelper.csproj", "{B1612B74-3DBF-4174-8048-D184994CB305}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

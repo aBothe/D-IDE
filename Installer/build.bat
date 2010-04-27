@@ -17,6 +17,7 @@ goto :x64
 %DEVENV% "..\D-IDE\D-IDE.sln"
 
 copy CLR.dll "%MAKENSIS%\Plugins\"
+copy nsisunz.dll "%MAKENSIS%\Plugins\"
 
 "%MAKENSIS%\makensis.exe" ".\d-ide.nsi" > ".\installer_build.log"
 

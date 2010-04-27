@@ -212,15 +212,17 @@ namespace DIDE.Installer
             {
                 get
                 {
-                    DirectoryInfo 
-                        dir = executableFile.Directory.Parent.Parent,
-                        druntime = new DirectoryInfo(dir.FullName + @"\src\druntime"),
-                        phobos = new DirectoryInfo(dir.FullName + @"\src\phobos");
-
                     List<string> dirs = new List<string>();
-                    if (druntime.Exists) dirs.Add(druntime.FullName);
-                    if (phobos.Exists) dirs.Add(phobos.FullName);
+                    if (executableFile.Exists)
+                    {
+                        DirectoryInfo
+                            dir = executableFile.Directory.Parent.Parent,
+                            druntime = new DirectoryInfo(dir.FullName + @"\src\druntime"),
+                            phobos = new DirectoryInfo(dir.FullName + @"\src\phobos");
 
+                        if (druntime.Exists) dirs.Add(druntime.FullName);
+                        if (phobos.Exists) dirs.Add(phobos.FullName);
+                    }
                     return dirs.ToArray();
                 }
             }
