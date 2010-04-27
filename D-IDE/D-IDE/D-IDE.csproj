@@ -240,11 +240,6 @@
     </Compile>
     <Compile Include="Misc\BinaryDataTypeStorage.cs" />
     <Compile Include="Misc\D_IDE_Properties.cs" />
-    <Compile Include="Misc\MenuIcons.Designer.cs">
-      <DependentUpon>MenuIcons.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
     <Compile Include="Misc\SetupWizardDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -328,10 +323,6 @@
     <EmbeddedResource Include="Dialogs\ProjectExplorer.resx">
       <DependentUpon>ProjectExplorer.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Misc\MenuIcons.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>MenuIcons.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Misc\SetupWizardDialog.resx">
       <DependentUpon>SetupWizardDialog.cs</DependentUpon>
