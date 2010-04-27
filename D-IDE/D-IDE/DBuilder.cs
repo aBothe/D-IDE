@@ -38,6 +38,9 @@ namespace D_IDE
             }
         }
 
+        const string ProcessTimeExceededMsg = "Process time exceeded 10 seconds - Exit process now";
+        const int ProcessExecutionTimeLimit = 10 * 1000;
+
         /// <summary>
         /// Build a project. Also cares about the last versions and additional file and project dependencies
         /// </summary>
@@ -278,7 +281,11 @@ namespace D_IDE
                 exe=cc.BinDirectory + "\\" + exe;
 
             Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, true);
-            prc.WaitForExit(10000);
+            if (!prc.WaitForExit(10 * 1000))
+            {
+                OnMessage(prj,exe,ProcessTimeExceededMsg);
+                prc.Kill();
+            }
 
             if (prc.ExitCode == 0)
             {
@@ -320,9 +327,10 @@ namespace D_IDE
             args = args.Replace("$obj", target);
 
             Process prc = DBuilder.Exec(Path.IsPathRooted(cc.SoureCompiler) ? cc.SoureCompiler : (cc.BinDirectory + "\\" + cc.SoureCompiler), args + " " + additionalArgs, exeDir, true);
-            while (!prc.HasExited)
+            if (!prc.WaitForExit(ProcessExecutionTimeLimit))
             {
-                Application.DoEvents();
+                OnMessage(null, file, ProcessTimeExceededMsg);
+                prc.Kill();
             }
 
             return prc.ExitCode == 0;
@@ -337,7 +345,11 @@ namespace D_IDE
             args = args.Replace("$res", target);
 
             Process prc = DBuilder.Exec(Path.IsPathRooted(cc.ResourceCompiler)? cc.ResourceCompiler:(cc.BinDirectory+"\\"+cc.ResourceCompiler), args, exeDir, true);
-            prc.WaitForExit(10000);
+            if (!prc.WaitForExit(10 * 1000))
+            {
+                OnMessage(null, file, ProcessTimeExceededMsg);
+                prc.Kill();
+            }
 
             return prc.ExitCode == 0;
         }
