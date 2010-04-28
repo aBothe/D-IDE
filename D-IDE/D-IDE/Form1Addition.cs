@@ -401,26 +401,28 @@ namespace D_IDE
             if (Form1.thisForm.IsDebugging)
             {
                 DebugScopedSymbol[] syms = Form1.thisForm.dbg.Symbols.ScopeLocalSymbols;
-
-                DebugScopedSymbol cursym = null;
-                string desc = "";
-                foreach (string exp in exprs)
+                if (syms != null)
                 {
-                    foreach (DebugScopedSymbol sym in syms)
+                    DebugScopedSymbol cursym = null;
+                    string desc = "";
+                    foreach (string exp in exprs)
                     {
-                        if (cursym != null && sym.ParentId != cursym.Id) continue;
-
-                        if (sym.Name == exp)
+                        foreach (DebugScopedSymbol sym in syms)
                         {
-                            desc += "." + sym.Name;
-                            cursym = sym;
+                            if (cursym != null && sym.ParentId != cursym.Id) continue;
+
+                            if (sym.Name == exp)
+                            {
+                                desc += "." + sym.Name;
+                                cursym = sym;
+                            }
                         }
                     }
-                }
-                if (desc != "" && cursym != null)
-                {
-                    e.ShowToolTip(cursym.TypeName + " " + desc.Trim('.') + " = " + Form1.thisForm.BuildSymbolValueString((uint)ta.Caret.Line - 1, cursym, exprs));
-                    return;
+                    if (desc != "" && cursym != null)
+                    {
+                        e.ShowToolTip(cursym.TypeName + " " + desc.Trim('.') + " = " + Form1.thisForm.BuildSymbolValueString((uint)ta.Caret.Line - 1, cursym, exprs));
+                        return;
+                    }
                 }
             }
             #endregion

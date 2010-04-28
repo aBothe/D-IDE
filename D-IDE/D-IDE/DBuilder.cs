@@ -281,6 +281,7 @@ namespace D_IDE
                 exe=cc.BinDirectory + "\\" + exe;
 
             Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, true);
+            if (prc == null) return null;
             if (!prc.WaitForExit(10 * 1000))
             {
                 OnMessage(prj,exe,ProcessTimeExceededMsg);
@@ -327,6 +328,7 @@ namespace D_IDE
             args = args.Replace("$obj", target);
 
             Process prc = DBuilder.Exec(Path.IsPathRooted(cc.SoureCompiler) ? cc.SoureCompiler : (cc.BinDirectory + "\\" + cc.SoureCompiler), args + " " + additionalArgs, exeDir, true);
+            if (prc == null) return false;
             if (!prc.WaitForExit(ProcessExecutionTimeLimit))
             {
                 OnMessage(null, file, ProcessTimeExceededMsg);
@@ -345,6 +347,7 @@ namespace D_IDE
             args = args.Replace("$res", target);
 
             Process prc = DBuilder.Exec(Path.IsPathRooted(cc.ResourceCompiler)? cc.ResourceCompiler:(cc.BinDirectory+"\\"+cc.ResourceCompiler), args, exeDir, true);
+            if (prc == null) return false;
             if (!prc.WaitForExit(10 * 1000))
             {
                 OnMessage(null, file, ProcessTimeExceededMsg);
@@ -390,7 +393,7 @@ namespace D_IDE
             catch (Exception ex)
             {
                 MessageBox.Show("Error executing " + cmd + ":\n\n" + ex.Message);
-                return proc;
+                return null;
             }
 
             if (showConsole) proc.BeginOutputReadLine();
