@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
@@ -81,19 +80,26 @@ namespace DIDE.Installer
             }
         }
 
-        public static void AddPath(string path)
+        public static CompilerInstallInfo AddPath(string path)
         {
-            if (string.IsNullOrEmpty(path)) return;
+            CompilerInstallInfo cinf = null;
+            if (!string.IsNullOrEmpty(path))
+            {
+                FileInfo fi = new FileInfo(path);
+                if (fi.Exists) path = fi.Directory.FullName;
+                if (path.IndexOf(':') == 1) path = path.Substring(2);
+                if (path.EndsWith(".exe")) path = path.Substring(0, path.LastIndexOf('\\'));
+                path = path.TrimEnd('\\');
+                if (!paths.Contains(path)) paths.Add(path.TrimEnd('\\'));
 
-            FileInfo fi = new FileInfo(path);
-            if (fi.Exists) path = fi.Directory.FullName;
-            if (path.IndexOf(':') == 1) path = path.Substring(2);
-            if (path.EndsWith(".exe")) path = path.Substring(0, path.LastIndexOf('\\'));
-            path = path.TrimEnd('\\');
-            if (!paths.Contains(path)) paths.Add(path.TrimEnd('\\'));
-
-            localDMDInstallations = null;
-            GetLocalDMDInstallations();
+                cinf = GetLocalDMDInstallation(path);
+                if (cinf != null)
+                {
+                    localDMDInstallations = null;
+                    GetLocalDMDInstallations();
+                }
+            }
+            return cinf;
         }
 
         public static List<CompilerInstallInfo> LocalDMDInstallations
@@ -135,12 +141,15 @@ namespace DIDE.Installer
                                 foreach (string dir in dirs)
                                 {
                                     string envPath = path.Replace("%ENV%", dir);
-                                    GetLocalDMDInstallation(envPath, ref v1, ref v2);
+                                    CompilerInstallInfo inf = GetLocalDMDInstallation(envPath, ref v1, ref v2);
+                                    if (inf != null) localDMDInstallations.Add(inf);
                                 }
                             }
                             else
                             {
                                 GetLocalDMDInstallation(path, ref v1, ref v2);
+                                CompilerInstallInfo inf = GetLocalDMDInstallation(path, ref v1, ref v2);
+                                if (inf != null) localDMDInstallations.Add(inf);
                             }
                         }
                     }
@@ -148,12 +157,20 @@ namespace DIDE.Installer
             }
         }
 
-        private static void GetLocalDMDInstallation(string path, ref Version v1, ref Version v2)
+        private static CompilerInstallInfo GetLocalDMDInstallation(string possibleLocation)
         {
+            Version v1 = new Version(), v2 = new Version();
+            string path = possibleLocation + RELATIVE_COMPILER_PATH;
+
+            return GetLocalDMDInstallation(path, ref v1, ref v2);
+        }
+
+        private static CompilerInstallInfo GetLocalDMDInstallation(string path, ref Version v1, ref Version v2)
+        {
+            CompilerInstallInfo cii = null;
             if (File.Exists(path))
             {
-                CompilerInstallInfo cii = new CompilerInstallInfo(new FileInfo(path));
-                localDMDInstallations.Add(cii);
+                cii = new CompilerInstallInfo(new FileInfo(path));
 
                 if ((cii.VersionInfo.Major == 1) &&
                     ((v1 == null) || (v1 > cii.VersionInfo)))
@@ -169,95 +186,7 @@ namespace DIDE.Installer
                     latest2x = cii;
                 }
             }
-        }
-
-        public class CompilerInstallInfo
-        {
-            private FileInfo executableFile;
-            private Version versionInfo = new Version();
-            private string compilerString = string.Empty;
-            private string versionString = string.Empty;
-
-            public CompilerInstallInfo(FileInfo executableFile)
-            {
-                this.executableFile = executableFile;
-                GetVersion();
-            }
-
-            public string CompilerString
-            {
-                get { return compilerString; }
-                set { compilerString = value; }
-            }
-
-            public Version VersionInfo
-            {
-                get { return versionInfo; }
-                set { versionInfo = value; }
-            }
-
-            public string VersionString
-            {
-                get { return versionString; }
-                set { versionString = value; }
-            }
-
-            public FileInfo ExecutableFile
-            {
-                get { return executableFile; }
-                set { executableFile = value; }
-            }
-
-            public string[] LibraryPaths
-            {
-                get
-                {
-                    List<string> dirs = new List<string>();
-                    if (executableFile.Exists)
-                    {
-                        DirectoryInfo
-                            dir = executableFile.Directory.Parent.Parent,
-                            druntime = new DirectoryInfo(dir.FullName + @"\src\druntime"),
-                            phobos = new DirectoryInfo(dir.FullName + @"\src\phobos");
-
-                        if (druntime.Exists) dirs.Add(druntime.FullName);
-                        if (phobos.Exists) dirs.Add(phobos.FullName);
-                    }
-                    return dirs.ToArray();
-                }
-            }
-
-            public override string ToString()
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine(this.ExecutableFile.ToString());
-                sb.AppendLine(this.CompilerString);
-                sb.AppendLine(this.VersionInfo.ToString());
-                return sb.ToString();
-            }
-
-            private void GetVersion()
-            {
-                ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.FileName = executableFile.FullName;
-                startInfo.UseShellExecute = false;
-                startInfo.CreateNoWindow = true;
-                startInfo.RedirectStandardOutput = true;
-                using (Process process = Process.Start(startInfo))
-                {
-                    this.compilerString = process.StandardOutput.ReadLine();
-                    process.StandardOutput.ReadToEnd();
-                    process.WaitForExit();
-                    process.Close();
-
-                    int idx = this.compilerString.LastIndexOf('v');
-                    if (idx > 0)
-                    {
-                        versionString = this.CompilerString.Substring(idx + 1).Trim();
-                        versionInfo = new Version(versionString);
-                    }
-                }
-            }
+            return cii;
         }
     }
 }

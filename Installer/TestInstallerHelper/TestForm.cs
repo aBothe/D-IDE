@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using DIDE.Installer;
@@ -18,22 +19,34 @@ namespace TestInstallerHelper
 
         private void button1_Click(object sender, EventArgs e)
         {
-            List<Configuration.CompilerInstallInfo> v = Configuration.FindLocalDMDPath(1);
+            string file = @".\D-IDE.settings.xml";
+            if (File.Exists(file)) File.Delete(file);
+            InstallerHelper.CreateConfigurationFile(file);
 
-            string u1 = DIDE.Installer.InstallerHelper.GetLatestDMD1Url(),
-                u2 = DIDE.Installer.InstallerHelper.GetLatestDMD2Url();
-            int v1 = DIDE.Installer.InstallerHelper.GetLatestDMD1Version(),
-                v2 = DIDE.Installer.InstallerHelper.GetLatestDMD2Version();
-
-            System.Console.WriteLine(u1);
-            System.Console.WriteLine(u2);
-            System.Console.WriteLine(v1);
-            System.Console.WriteLine(v2);
+            WriteLine("Latest (online) DMD 1 Url       --> " + InstallerHelper.GetLatestDMD1Url());
+            WriteLine("Latest (online) DMD 1 Version   --> " + InstallerHelper.GetLatestDMD1Version());
+            WriteLine("Local (installed) DMD 1 Path    --> " + InstallerHelper.GetLocalDMD1Path());
+            WriteLine("Local (installed) DMD 1 Version --> " + InstallerHelper.GetLocalDMD1Version());
+            WriteLine("Latest (online) DMD 2 Url       --> " + InstallerHelper.GetLatestDMD2Url());
+            WriteLine("Latest (online) DMD 2 Version   --> " + InstallerHelper.GetLatestDMD2Version());
+            WriteLine("Local (installed) DMD 2 Path    --> " + InstallerHelper.GetLocalDMD2Path());
+            WriteLine("Local (installed) DMD 2 Version --> " + InstallerHelper.GetLocalDMD2Version());
+            WriteLine("Generated Config File           --> " + file);
+            WriteLine("----------------------------------------------------------------------------------");
+            WriteLine(File.ReadAllText(file));
+            WriteLine("----------------------------------------------------------------------------------");
         }
 
         private void TestForm_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void WriteLine(string s, params object[] args) 
+        {
+            if (args.Length > 0) textBox1.AppendText(string.Format(s, args));
+            else textBox1.AppendText(s);
+            textBox1.AppendText(Environment.NewLine);
         }
     }
 }
