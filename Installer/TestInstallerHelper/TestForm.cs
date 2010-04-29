@@ -31,6 +31,8 @@ namespace TestInstallerHelper
             WriteLine("Latest (online) DMD 2 Version   --> " + InstallerHelper.GetLatestDMD2Version());
             WriteLine("Local (installed) DMD 2 Path    --> " + InstallerHelper.GetLocalDMD2Path());
             WriteLine("Local (installed) DMD 2 Version --> " + InstallerHelper.GetLocalDMD2Version());
+            WriteLine("Local Path Valid DMD 1          --> " + InstallerHelper.IsValidDMDInstallForVersion(1, InstallerHelper.GetLocalDMD1Path()));
+            WriteLine("Local Path Valid DMD 2          --> " + InstallerHelper.IsValidDMDInstallForVersion(2, InstallerHelper.GetLocalDMD2Path()));
             WriteLine("Generated Config File           --> " + file);
             WriteLine("----------------------------------------------------------------------------------");
             WriteLine(File.ReadAllText(file));

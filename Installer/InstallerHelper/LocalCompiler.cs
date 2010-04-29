@@ -9,7 +9,8 @@ namespace DIDE.Installer
     public class LocalCompiler
     {
         private const string ERROR_PREFIX = "[ERROR] ";
-        private const string RELATIVE_COMPILER_PATH = @"\windows\bin\dmd.exe";
+        private const string RELATIVE_COMPILER_PATH = @"\windows\bin";
+        private const string COMPILER_EXE = @"\dmd.exe";
         private static string[] POSSIBLE_LOCATIONS = new string[] { 
             @"\d\dmd", @"\d\dmd2", 
             @"\dmd2", @"\dmd",
@@ -133,7 +134,7 @@ namespace DIDE.Installer
                     {
                         foreach (string possibleLocation in paths)
                         {
-                            string path = possibleLocation + RELATIVE_COMPILER_PATH;
+                            string path = possibleLocation + RELATIVE_COMPILER_PATH + COMPILER_EXE;
                             if (path[1] != ':') path = drive.Name.TrimEnd('\\') + path;
 
                             if (possibleLocation.IndexOf("%ENV%") >= 0)
@@ -160,7 +161,10 @@ namespace DIDE.Installer
         private static CompilerInstallInfo GetLocalDMDInstallation(string possibleLocation)
         {
             Version v1 = new Version(), v2 = new Version();
-            string path = possibleLocation + RELATIVE_COMPILER_PATH;
+            string path = possibleLocation.TrimEnd('\\');
+            if (!path.EndsWith(RELATIVE_COMPILER_PATH, StringComparison.CurrentCultureIgnoreCase))
+                path += RELATIVE_COMPILER_PATH;
+            path += COMPILER_EXE;
 
             return GetLocalDMDInstallation(path, ref v1, ref v2);
         }
