@@ -69,10 +69,6 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="cv2pdb, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\externalDeps\cv2pdb.dll</HintPath>
-    </Reference>
     <Reference Include="DebugEngineWrapper, Version=1.0.3768.32488, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\externalDeps\DebugEngineWrapper.dll</HintPath>

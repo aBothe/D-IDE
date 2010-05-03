@@ -523,6 +523,29 @@ namespace D_IDE
 			if (tn is FileTreeNode)
 				Form1.thisForm.OpenFormsDesigner((tn as FileTreeNode).AbsolutePath);
 		}
+
+        private void directoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Point tp = (Point)ProjectMenu.Tag;
+            if (tp == null) return;
+            TreeNode tn = prjFiles.GetNodeAt(tp);
+            if (tn == null) return;
+
+            DProject tprj = D_IDE_Properties.GetProject((tn as ProjectNode).ProjectFile);
+            if (tprj == null) return;
+
+            FolderBrowserDialog fb = new FolderBrowserDialog();
+            fb.SelectedPath = tprj.basedir;
+            if (fb.ShowDialog() == DialogResult.OK)
+            {
+                DialogResult dr = MessageBox.Show("Also scan subdirectories?", "Add folder", MessageBoxButtons.YesNoCancel);
+
+                if (dr == DialogResult.Cancel)
+                    return;
+
+                tprj.AddDirectory(fb.SelectedPath,dr==DialogResult.Yes);
+            }
+        }
 	}
 
 	#region Nodes

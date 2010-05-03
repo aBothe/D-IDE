@@ -221,6 +221,18 @@ namespace D_IDE
 			return true;
 		}
 
+        public void AddDirectory(string Path, bool AlsoScanSubdirectories)
+        {
+            string[] Files = Directory.GetFiles(Path, "*", AlsoScanSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            if (Files == null || Files.Length < 1)
+                return;
+
+            foreach (string file in Files)
+                AddSrc(file);
+
+            Save();
+        }
+
 		/*public void RemoveNonExisting()
 		{
 			List<string> newRC = new List<string>(resourceFiles);

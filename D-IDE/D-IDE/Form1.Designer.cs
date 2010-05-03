@@ -139,6 +139,8 @@
             this.stepOutTS = new System.Windows.Forms.ToolStripButton();
             this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
             this.searchTool = new System.Windows.Forms.ToolStripTextBox();
+            this.fileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.directoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -246,10 +248,12 @@
             // 
             // addExistingToolStripMenuItem
             // 
+            this.addExistingToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem1,
+            this.directoryToolStripMenuItem});
             this.addExistingToolStripMenuItem.Name = "addExistingToolStripMenuItem";
             this.addExistingToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
             this.addExistingToolStripMenuItem.Text = "Add existing";
-            this.addExistingToolStripMenuItem.Click += new System.EventHandler(this.AddExistingFile);
             // 
             // toolStripSeparator8
             // 
@@ -1076,6 +1080,20 @@
             this.searchTool.ToolTipText = "Press <Return> for search in current document";
             this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
             // 
+            // fileToolStripMenuItem1
+            // 
+            this.fileToolStripMenuItem1.Name = "fileToolStripMenuItem1";
+            this.fileToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.fileToolStripMenuItem1.Text = "File";
+            this.fileToolStripMenuItem1.Click += new System.EventHandler(this.AddExistingFile);
+            // 
+            // directoryToolStripMenuItem
+            // 
+            this.directoryToolStripMenuItem.Name = "directoryToolStripMenuItem";
+            this.directoryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.directoryToolStripMenuItem.Text = "Directory";
+            this.directoryToolStripMenuItem.Click += new System.EventHandler(this.AddExistingDirectory);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1216,6 +1234,8 @@
         private System.Windows.Forms.ToolStripMenuItem commentOutBlockToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uncommentBlocklineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refreshBreakpointsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem directoryToolStripMenuItem;
 	}
 }
 

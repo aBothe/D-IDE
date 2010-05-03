@@ -1296,6 +1296,23 @@ namespace D_IDE
             }
         }
 
+        private void AddExistingDirectory(object sender, EventArgs e)
+        {
+            if (prj == null) return;
+
+            FolderBrowserDialog fb = new FolderBrowserDialog();
+            fb.SelectedPath = prj.basedir;
+            if (fb.ShowDialog() == DialogResult.OK)
+            {
+                DialogResult dr = MessageBox.Show("Also scan subdirectories?", "Add folder", MessageBoxButtons.YesNoCancel);
+
+                if (dr == DialogResult.Cancel) 
+                    return;
+
+                prj.AddDirectory(fb.SelectedPath, dr == DialogResult.Yes);
+            }
+        }
+
         private void CloseTab(object sender, EventArgs e)
         {
             DocumentInstanceWindow mtp = SelectedTabPage;
@@ -1411,6 +1428,11 @@ namespace D_IDE
         void wc_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
         {
             if (e.Cancelled || Program.ver_txt != (string)e.UserState) return;
+            if (e.Error != null)
+            {
+                MessageBox.Show(e.Error.Message);
+                return;
+            }
             try
             {
                 if (new Version(Application.ProductVersion) < new Version(e.Result))
