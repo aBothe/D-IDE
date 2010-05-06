@@ -64,7 +64,7 @@ namespace D_IDE
                     }
                 }
                 
-                if (!Debugger.IsAttached)
+                if (true || !Debugger.IsAttached)
                 {
                     D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd1, cfgDir + "\\" + Program.D1ModuleCacheFile);
                     D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd2, cfgDir + "\\" + Program.D2ModuleCacheFile);

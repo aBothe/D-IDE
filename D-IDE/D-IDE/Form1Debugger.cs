@@ -335,7 +335,10 @@ namespace D_IDE
 
         public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym, string[] SymbolExpressions)
         {
-            if (sym.TypeName.EndsWith("[]")) // If it's an array
+            if (sym.TypeName == "class string" ||
+                sym.TypeName == "class wstring" ||
+                sym.TypeName == "class dstring" ||
+                sym.TypeName.EndsWith("[]")) // If it's an array
             {
                 #region Search fitting node
                 DocumentInstanceWindow diw = Form1.SelectedTabPage;
@@ -380,6 +383,11 @@ namespace D_IDE
 
             foreach (DebugScopedSymbol sym in locals)
             {
+                if (sym.Parent != null &&
+                    (sym.Parent.TypeName == "class string" ||
+                    sym.Parent.TypeName == "class wstring" ||
+                    sym.Parent.TypeName == "class dstring")) continue;
+
                 ListViewItem lvi = new ListViewItem();
                 string n = "";
                 for (int i = 0; i < (int)sym.Depth; i++)

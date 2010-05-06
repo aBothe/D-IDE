@@ -16,6 +16,7 @@ using System.Threading;
 using ICSharpCode.TextEditor;
 using D_IDE.Properties;
 using ICSharpCode.SharpDevelop.Dom;
+using System.Diagnostics;
 
 namespace D_IDE
 {
@@ -295,10 +296,6 @@ namespace D_IDE
 		static Thread cacheTh;
 		public static void SaveGlobalCache(CompilerConfiguration cc, string file)
 		{
-			if (cacheTh != null && cacheTh.IsAlive) return;
-			int i = 0;
-			//while (Program.Parsing && i < 500) { Thread.Sleep(50); i++; }
-
 			Program.Parsing = true;
 
 			//cacheTh = new Thread(delegate(object o)			{
@@ -583,6 +580,31 @@ namespace D_IDE
 			return new CodeLocation(Caret.Column + 1, Caret.Line + 1);
 		}
 	}
+
+    /*public class CodeViewToPDBConverter
+    { 
+        public delegate void MsgHandler(string message);
+        static public event MsgHandler Message;
+
+        static public bool DoConvert(bool isD2,string exe,string pdb)
+        {
+            try
+            {
+                Process p = DBuilder.Exec("cv2pdb.exe", (!isD2 ? "-D2 " : "-D1 ") +""+ exe + " " + pdb, Path.GetDirectoryName(exe), true);
+                if (!p.WaitForExit(10000))
+                {
+                    p.Kill();
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Message(ex.Message);
+                return false;
+            }
+            return true;
+        }
+    }*/
 
 	public class CompilerConfiguration
 	{
