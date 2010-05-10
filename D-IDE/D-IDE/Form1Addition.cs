@@ -86,7 +86,7 @@ namespace D_IDE
             txt.TextEditorProperties.ShowLineNumbers = true;
             txt.TextEditorProperties.ShowMatchingBracket = true;
             txt.TextEditorProperties.ShowTabs = false;
-            txt.TextEditorProperties.ShowSpaces = true;
+            txt.TextEditorProperties.ShowSpaces = false;
             txt.TextEditorProperties.ShowVerticalRuler = false;
 
             try

@@ -490,7 +490,16 @@ namespace D_IDE
                 args = args.Replace("$objs", tp.fileData.mod_file);
                 args = args.Replace("$libs", "");
                 args = args.Replace("$exe", exe);
-                DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.fileData.mod_file), true).WaitForExit(10000);
+                
+				try{
+				Process p= DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.fileData.mod_file), true);
+				if (p != null && !p.WaitForExit(10000))
+				{
+					Log("Execeeded 10 seconds execution time!");
+					p.Kill();
+					return null;
+				}
+				}catch(Exception ex){Log(ex.Message);}
 
                 DBuilder.CreatePDBFromExe(null, exe);
                 return exe;
