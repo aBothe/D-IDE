@@ -106,7 +106,7 @@ UninstallIcon ".\uninstall.ico"
 ; In this section, we shall use a custom configuration page.
 ;------------------------------------------------------------------------
 Function DmdConfigPage 
-	StrCmp $DMD1_BIN_VERSION "" 0 +3
+	;StrCmp $DMD1_BIN_VERSION "" 0 +3
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
 		pop $DMD1_BIN_VERSION 
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Version" 0
@@ -114,19 +114,19 @@ Function DmdConfigPage
 		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 6" "Text" "Version 1.$DMD1_BIN_VERSION Installed (Latest is 1.$DMD1_LATEST_VERSION)"
 
 	
-    StrCmp $DMD1_BIN_PATH "" 0 +3
+    ;StrCmp $DMD1_BIN_PATH "" 0 +3
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Path" 0
 		pop $DMD1_BIN_PATH
 		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 7" "State" $DMD1_BIN_PATH
 
-    StrCmp $DMD2_BIN_VERSION "" 0 +3
+    ;StrCmp $DMD2_BIN_VERSION "" 0 +3
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Version" 0
 		pop $DMD2_BIN_VERSION 
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Version" 0
 		pop $DMD2_LATEST_VERSION 
 		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 9" "Text" "Version 2.$DMD2_BIN_VERSION Installed (Latest is 2.$DMD2_LATEST_VERSION)"
 		
-    StrCmp $DMD2_BIN_PATH "" 0 +3
+    ;StrCmp $DMD2_BIN_PATH "" 0 +3
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Path" 0
 		pop $DMD2_BIN_PATH 
 		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 10" "State" $DMD2_BIN_PATH
@@ -292,8 +292,10 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			
 		Dmd1FileExists:
 			RMDir /r "$DMD1_BIN_PATH"
-			CreateDirectory "$DMD1_BIN_PATH"
-			nsisunz::Unzip "$2" "$DMD1_BIN_PATH"
+			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "FixDmdInstallPath" 1 "$DMD1_BIN_PATH"
+			Pop $3
+			CreateDirectory "$3"
+			nsisunz::Unzip "$2" "$3"
 			
 			DetailPrint "Downloading and instaling DMD 2.x to target location."
 			StrCpy $1 "dmd2.$DMD2_LATEST_VERSION.zip"
@@ -308,8 +310,10 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			
 		Dmd2FileExists:
 			RMDir /r "$DMD2_BIN_PATH"
-			CreateDirectory "$DMD2_BIN_PATH"
-			nsisunz::Unzip "$2" "$DMD2_BIN_PATH"
+			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "FixDmdInstallPath" 1 "$DMD2_BIN_PATH"
+			Pop $3
+			CreateDirectory "$3"
+			nsisunz::Unzip "$2" "$3"
 			
 			Goto ConfigureDMD
 	

@@ -188,7 +188,7 @@ namespace DIDE.Installer
                             foreach (string possibleLocation in paths)
                             {
                                 string path = possibleLocation + RELATIVE_COMPILER_PATH + COMPILER_EXE;
-                                if (path[1] != ':') path = drive.Name.TrimEnd('\\') + path;
+                                if (path[1] != ':' && path[0] != '%') path = drive.Name.TrimEnd('\\') + path;
 
                                 if (possibleLocation.IndexOf("%ENV%") >= 0)
                                 {
