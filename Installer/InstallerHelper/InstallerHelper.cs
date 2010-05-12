@@ -22,6 +22,7 @@ namespace DIDE.Installer
         {
             try
             {
+                LocalCompiler.Refresh();
                 DigitalMars.Preload();
                 LocalCompiler.Preload();
             }

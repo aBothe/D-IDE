@@ -4,11 +4,15 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using System.Reflection;
+using Microsoft.Win32;      
 
 namespace DIDE.Installer
 {
     public class LocalCompiler
     {
+        private const string BASE_REG_KEY = @"SOFTWARE\D-IDE";
+        private const string DMD1_PATH_REG_KEY = @"Dmd1xBinPath";
+        private const string DMD2_PATH_REG_KEY = @"Dmd2xBinPath";
         private const string ERROR_PREFIX = "[ERROR] ";
         private const string RELATIVE_COMPILER_PATH = @"\windows\bin";
         private const string COMPILER_EXE = @"\dmd.exe";
@@ -25,7 +29,7 @@ namespace DIDE.Installer
 
         public static void Refresh()
         {
-            localDMDInstallations.Clear();
+            if (localDMDInstallations != null) localDMDInstallations.Clear();
             if (DataFile.Exists) DataFile.Delete();
         }
         private static FileInfo fi = null;
@@ -163,6 +167,12 @@ namespace DIDE.Installer
                 {
                     Version v1 = null, v2 = null;
 
+                    string reg1 = ReadRegKey(DMD1_PATH_REG_KEY),
+                        reg2 = ReadRegKey(DMD2_PATH_REG_KEY);
+
+                    if (reg1 != null) paths.Add(reg1);
+                    if (reg2 != null) paths.Add(reg2);
+
                     string[] dirs = new string[] { 
                         Environment.GetEnvironmentVariable("PROGRAMFILES"),
                         Environment.GetEnvironmentVariable("PROGRAMFILES(X86)"),
@@ -241,6 +251,23 @@ namespace DIDE.Installer
                 }
             }
             return cii;
+        }
+
+        private static string ReadRegKey(string key)
+        {
+            RegistryKey baseKey = Registry.LocalMachine.CreateSubKey(BASE_REG_KEY);
+            if (baseKey == null)  return null;
+            else
+            {
+                try
+                {
+                    return (string)baseKey.GetValue(key);
+                }
+                catch (Exception e)
+                {
+                    return null;
+                }
+            }
         }
     }
 }

@@ -215,6 +215,46 @@ Section "-.Net Framework 3.5" net35_section_id
 SectionEnd
 
 ;--------------------------------------------------------
+; Install the D-IDE program files
+;--------------------------------------------------------
+Section "-Install Program Files" install_section_id
+	CreateDirectory "$INSTDIR"
+	SetOutPath "$INSTDIR"
+
+	SetOverwrite on
+	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.exe"
+	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.dll"
+	File /nonfatal /x .svn "${PROJECT_FILES}\*.xshd"
+	
+	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
+	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
+
+	;Config files that should be merged through a seperate process - we need to copy them to a backup folder
+	;IfFileExists "$INSTDIR\D-IDEIndexer.exe.config" 0 +4
+	;	CreateDirectory "$INSTDIR\ConfigBackup"
+	;	Rename "$INSTDIR\D-IDEIndexer.exe.config" "$INSTDIR\ConfigBackup\D-IDEIndexer.exe.config.${FILEDATE}"
+	;	Delete "$INSTDIR\D-IDEIndexer.exe.config"
+
+	;IfFileExists "$INSTDIR\D-IDEService.exe.config" 0 +4
+	;	CreateDirectory "$INSTDIR\ConfigBackup"
+	;	Rename "$INSTDIR\D-IDEService.exe.config" "$INSTDIR\ConfigBackup\D-IDEService.exe.config.${FILEDATE}"
+	;	Delete "$INSTDIR\D-IDEService.exe.config"
+
+	;IfFileExists "$INSTDIR\Quartz.xml" 0 +4
+	;	CreateDirectory "$INSTDIR\ConfigBackup"
+	;	Rename "$INSTDIR\Quartz.xml" "$INSTDIR\ConfigBackup\Quartz.xml.${FILEDATE}"
+	;	Delete "$INSTDIR\Quartz.xml"
+
+	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
+	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath" $DMD1_BIN_PATH
+	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath" $DMD2_BIN_PATH
+	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinVersion" $DMD1_BIN_VERSION
+	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion" $DMD2_BIN_VERSION
+SectionEnd
+
+
+
+;--------------------------------------------------------
 ; Download and install Digital-Mars DMD
 ;--------------------------------------------------------
 Section "-Digital-Mars DMD Install/Update" dmd_section_id
@@ -278,62 +318,6 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 
 SectionEnd
 
-;--------------------------------------------------------
-; Install the D-IDE program files
-;--------------------------------------------------------
-Section "-Install Program Files" install_section_id
-	CreateDirectory "$INSTDIR"
-	SetOutPath "$INSTDIR"
-
-	SetOverwrite on
-	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.exe"
-	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.dll"
-	File /nonfatal /x .svn "${PROJECT_FILES}\*.xshd"
-	
-	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
-	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
-
-	;Config files that should be merged through a seperate process - we need to copy them to a backup folder
-	;IfFileExists "$INSTDIR\D-IDEIndexer.exe.config" 0 +4
-	;	CreateDirectory "$INSTDIR\ConfigBackup"
-	;	Rename "$INSTDIR\D-IDEIndexer.exe.config" "$INSTDIR\ConfigBackup\D-IDEIndexer.exe.config.${FILEDATE}"
-	;	Delete "$INSTDIR\D-IDEIndexer.exe.config"
-
-	;IfFileExists "$INSTDIR\D-IDEService.exe.config" 0 +4
-	;	CreateDirectory "$INSTDIR\ConfigBackup"
-	;	Rename "$INSTDIR\D-IDEService.exe.config" "$INSTDIR\ConfigBackup\D-IDEService.exe.config.${FILEDATE}"
-	;	Delete "$INSTDIR\D-IDEService.exe.config"
-
-	;IfFileExists "$INSTDIR\Quartz.xml" 0 +4
-	;	CreateDirectory "$INSTDIR\ConfigBackup"
-	;	Rename "$INSTDIR\Quartz.xml" "$INSTDIR\ConfigBackup\Quartz.xml.${FILEDATE}"
-	;	Delete "$INSTDIR\Quartz.xml"
-
-	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
-	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath" $DMD1_BIN_PATH
-	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath" $DMD2_BIN_PATH
-	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinVersion" $DMD1_BIN_VERSION
-	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion" $DMD2_BIN_VERSION
-SectionEnd
-
-
-            ;WriteLine("Latest (online) DMD 1 Url       --> " + InstallerHelper.GetLatestDMD1Url());
-            ;WriteLine("Latest (online) DMD 1 Version   --> " + InstallerHelper.GetLatestDMD1Version());
-            ;WriteLine("Local (installed) DMD 1 Path    --> " + InstallerHelper.GetLocalDMD1Path());
-            ;WriteLine("Local (installed) DMD 1 Version --> " + InstallerHelper.GetLocalDMD1Version());
-            ;WriteLine("Latest (online) DMD 2 Url       --> " + InstallerHelper.GetLatestDMD2Url());
-            ;WriteLine("Latest (online) DMD 2 Version   --> " + InstallerHelper.GetLatestDMD2Version());
-            ;WriteLine("Local (installed) DMD 2 Path    --> " + InstallerHelper.GetLocalDMD2Path());
-            ;WriteLine("Local (installed) DMD 2 Version --> " + InstallerHelper.GetLocalDMD2Version());
-
-;--------------------------------------------------------
-; Configure DMD
-;--------------------------------------------------------
-Section "-Configure DMD" configure_dmd_section_id
-  CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Url" 0 ; 5 "mystring1" "x" 10 15.8 false
-  pop $0  
-  MessageBox MB_OK "Latest DMD 2 URL is: $0"
-SectionEnd
 ;--------------------------------------------------------
 ; Write the unistaller
 ;--------------------------------------------------------
