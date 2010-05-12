@@ -36,7 +36,9 @@ namespace DIDE.Installer
                 if (fi == null)
                 {
                     DateTime now = DateTime.Now;
-                    fi = new FileInfo(Directory.GetCurrentDirectory() + "\\LocalDmdInstall." + now.Year + "." + now.Month + "." + now.Day + ".txt");
+                    
+                    DirectoryInfo d = new DirectoryInfo(Path.GetTempPath());
+                    fi = new FileInfo(d.FullName + "\\LocalDmdInstall." + now.Year + "." + now.Month + "." + now.Day + ".txt");
                 }
                 else fi.Refresh();
 

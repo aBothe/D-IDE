@@ -26,8 +26,8 @@ namespace DIDE.Installer
                 if (fi == null)
                 {
                     DateTime now = DateTime.Now;
-                    FileInfo f = new FileInfo(Assembly.GetExecutingAssembly().Location);
-                    fi = new FileInfo(Directory.GetCurrentDirectory() + "\\DigitalMars." + now.Year + "." + now.Month + "." + now.Day + ".txt");
+                    DirectoryInfo d = new DirectoryInfo(Path.GetTempPath());
+                    fi = new FileInfo(d.FullName + "\\DigitalMars." + now.Year + "." + now.Month + "." + now.Day + ".txt");
                 }
                 else fi.Refresh();
 

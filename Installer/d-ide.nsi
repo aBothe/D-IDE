@@ -161,18 +161,20 @@ Function DmdConfigPageValidation
         Abort ; Return to the page
     
     dmd1PathChanged:
-		;ReadINIStr $0 "$PLUGINSDIR\dmd-config.ini" "Field 7" "State"
+		ReadINIStr $DMD1_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 7" "State"
 		;CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "IsValidDMDInstallForVersion" 2 1 $0 
 		;Pop $1
         Abort ; Return to the page
     
     dmd2PathChanged:
-		;ReadINIStr $0 "$PLUGINSDIR\dmd-config.ini" "Field 10" "State"
+		ReadINIStr $DMD2_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 10" "State"
 		;CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "IsValidDMDInstallForVersion" 2 1 $0 
 		;Pop $1
         Abort ; Return to the page
     
     done:
+		ReadINIStr $DMD1_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 7" "State"
+		ReadINIStr $DMD2_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 10" "State"
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -227,7 +229,7 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			
 		FileMissing:
 			DetailPrint "Digital Mars DMD not installed... Downloading file."
-			StrCpy $2 "$TEMP\$1"
+			StrCpy $2 "$EXEDIR\$1"
 			NSISdl::download "${DMD_URL}" $2
 
 		FileExists:
@@ -237,14 +239,43 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		Goto ConfigureDMD
 		
 	DownloadAndUnzip:
-		DetailPrint "Downloading and instaling DMD to target location."
+		DetailPrint "Downloading and instaling DMD 1.x to target location."
+		StrCpy $1 "dmd1.$DMD1_LATEST_VERSION.zip"
+		StrCpy $2 "$EXEDIR\$1"
+		IfFileExists $2 Dmd1FileExists Dmd1FileMissing
 			
-		Goto ConfigureDMD
+		Dmd1FileMissing:
+			StrCpy $2 "$EXEDIR\$1"
+			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Url" 0
+			Pop $0
+			NSISdl::download "$0" $2
+			
+		Dmd1FileExists:
+			RMDir /r "$DMD1_BIN_PATH"
+			CreateDirectory "$DMD1_BIN_PATH"
+			nsisunz::Unzip "$2" "$DMD1_BIN_PATH"
+			
+			DetailPrint "Downloading and instaling DMD 2.x to target location."
+			StrCpy $1 "dmd2.$DMD2_LATEST_VERSION.zip"
+			StrCpy $2 "$EXEDIR\$1"
+			IfFileExists $2 Dmd2FileExists Dmd2FileMissing
+		
+		Dmd2FileMissing:
+			StrCpy $2 "$EXEDIR\$1"
+			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Url" 0
+			Pop $0
+			NSISdl::download "$0" $2
+			
+		Dmd2FileExists:
+			RMDir /r "$DMD2_BIN_PATH"
+			CreateDirectory "$DMD2_BIN_PATH"
+			nsisunz::Unzip "$2" "$DMD2_BIN_PATH"
+			
+			Goto ConfigureDMD
 	
 	ConfigureDMD:
-	
 		DetailPrint "Configuring DMD and D-IDE."
-		
+
 SectionEnd
 
 ;--------------------------------------------------------

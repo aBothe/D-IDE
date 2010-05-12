@@ -93,13 +93,15 @@ namespace DIDE.Installer
         public static string GetLocalDMD1Path()
         {
             CheckThread();
-            return (LocalCompiler.DMD1Info != null) ? LocalCompiler.DMD1Info.ExecutableFile.Directory.FullName : string.Empty;
+            return (LocalCompiler.DMD1Info != null) ? 
+                LocalCompiler.DMD1Info.ExecutableFile.Directory.Parent.Parent.FullName : @"C:\d\dmd1";
         }
 
         public static string GetLocalDMD2Path()
         {
             CheckThread();
-            return (LocalCompiler.DMD2Info != null) ? LocalCompiler.DMD2Info.ExecutableFile.Directory.FullName : string.Empty;
+            return (LocalCompiler.DMD2Info != null && LocalCompiler.DMD2Info.ExecutableFile.Exists) ? 
+                LocalCompiler.DMD2Info.ExecutableFile.Directory.Parent.Parent.FullName : @"C:\d\dmd2";
         }
 
         public static bool IsValidDMDInstallForVersion(int majorVersion, string path)
