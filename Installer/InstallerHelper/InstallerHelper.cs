@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 using System.IO;
 
@@ -8,20 +9,62 @@ namespace DIDE.Installer
 {
     public class InstallerHelper
     {
+        private static Thread t;
+
+        public static void Initialize()
+        {
+            ThreadStart ts = new ThreadStart(Preload);
+            t = new Thread(ts);
+            t.Start();
+        }
+
+        private static void Preload()
+        {
+            try
+            {
+                DigitalMars.Preload();
+                LocalCompiler.Preload();
+            }
+            catch (ThreadAbortException)
+            {
+                //do nothing now - just return
+            }
+        }
+
+        public static bool IsThreadActive
+        {
+            get
+            {
+                return (t != null) && (t.ThreadState == ThreadState.Running);
+            }
+        }
+
+        private static void CheckThread()
+        {
+            if (t != null)
+            {
+                if (t.ThreadState == ThreadState.Running) t.Join(30);
+                t = null;
+            }
+        }
+
         public static string GetLatestDMD1Url()
         {
+            CheckThread();
             int ver;
             return DigitalMars.GetLatestDMDInfo(1, out ver);
         }
 
         public static string GetLatestDMD2Url()
         {
+            CheckThread();
             int ver;
             return DigitalMars.GetLatestDMDInfo(2, out ver);
         }
 
         public static int GetLatestDMD1Version()
         {
+            CheckThread();
             int ver;
             DigitalMars.GetLatestDMDInfo(1, out ver);
             return ver;
@@ -29,6 +72,7 @@ namespace DIDE.Installer
 
         public static int GetLatestDMD2Version()
         {
+            CheckThread();
             int ver;
             DigitalMars.GetLatestDMDInfo(2, out ver);
             return ver;
@@ -36,21 +80,25 @@ namespace DIDE.Installer
 
         public static int GetLocalDMD1Version()
         {
+            CheckThread();
             return (LocalCompiler.DMD1Info != null) ? LocalCompiler.DMD1Info.VersionInfo.Minor : -1;
         }
 
         public static int GetLocalDMD2Version()
         {
+            CheckThread();
             return (LocalCompiler.DMD2Info != null) ? LocalCompiler.DMD2Info.VersionInfo.Minor : -1;
         }
 
         public static string GetLocalDMD1Path()
         {
+            CheckThread();
             return (LocalCompiler.DMD1Info != null) ? LocalCompiler.DMD1Info.ExecutableFile.Directory.FullName : string.Empty;
         }
 
         public static string GetLocalDMD2Path()
         {
+            CheckThread();
             return (LocalCompiler.DMD2Info != null) ? LocalCompiler.DMD2Info.ExecutableFile.Directory.FullName : string.Empty;
         }
 

@@ -32,6 +32,8 @@ Var DMD1_BIN_PATH
 Var DMD2_BIN_PATH
 Var DMD1_BIN_VERSION
 Var DMD2_BIN_VERSION
+Var DMD1_LATEST_VERSION
+Var DMD2_LATEST_VERSION
 
 ;--------------------------------------------------------
 ; Setting various predefined NSIS Variables
@@ -57,6 +59,8 @@ Function .onInit
 	ReadRegStr $DMD2_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath"
 	ReadRegStr $DMD1_BIN_VERSION HKLM "SOFTWARE\D-IDE" "Dmd1xBinVersion"
 	ReadRegStr $DMD2_BIN_VERSION HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion"
+	
+	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -104,8 +108,11 @@ UninstallIcon ".\uninstall.ico"
 Function DmdConfigPage 
 	StrCmp $DMD1_BIN_VERSION "" 0 +3
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
-		pop $DMD1_BIN_VERSION
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 6" "Text" "(Version 1.$DMD1_BIN_VERSION Installed)"
+		pop $DMD1_BIN_VERSION 
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Version" 0
+		pop $DMD1_LATEST_VERSION
+		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 6" "Text" "Version 1.$DMD1_BIN_VERSION Installed (Latest is 1.$DMD1_LATEST_VERSION)"
+
 	
     StrCmp $DMD1_BIN_PATH "" 0 +3
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Path" 0
@@ -115,7 +122,9 @@ Function DmdConfigPage
     StrCmp $DMD2_BIN_VERSION "" 0 +3
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Version" 0
 		pop $DMD2_BIN_VERSION 
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 9" "Text" "(Version 2.$DMD2_BIN_VERSION Installed)"
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Version" 0
+		pop $DMD2_LATEST_VERSION 
+		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 9" "Text" "Version 2.$DMD2_BIN_VERSION Installed (Latest is 2.$DMD2_LATEST_VERSION)"
 		
     StrCmp $DMD2_BIN_PATH "" 0 +3
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Path" 0
@@ -135,7 +144,6 @@ Function DmdConfigPageValidation
     StrCmp $0 3 unzipOption 
     StrCmp $0 7 dmd1PathChanged
     StrCmp $0 10 dmd2PathChanged
-    StrCmp $0 11 queryVersions
     
     Goto done 
     ;Abort ; Return to the page
@@ -163,16 +171,6 @@ Function DmdConfigPageValidation
 		;CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "IsValidDMDInstallForVersion" 2 1 $0 
 		;Pop $1
         Abort ; Return to the page
-    
-    queryVersions:
-		;ReadINIStr $0 "$PLUGINSDIR\dmd-config.ini" "Field 10" "State"
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Version" 0
-		Pop $0
-		MessageBox MB_OK "Version 1.$0"
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Version" 0
-		Pop $0
-        MessageBox MB_OK "Version 2.$0"
-		Abort ; Return to the page
     
     done:
 FunctionEnd

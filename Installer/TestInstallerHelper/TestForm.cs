@@ -23,6 +23,14 @@ namespace TestInstallerHelper
             if (File.Exists(file)) File.Delete(file);
             InstallerHelper.CreateConfigurationFile(file);
 
+            InstallerHelper.Initialize();
+            while (InstallerHelper.IsThreadActive)
+            {
+                Write(".");
+                Application.DoEvents();
+                Refresh();
+            } WriteLine("DONE");
+
             WriteLine("Latest (online) DMD 1 Url       --> " + InstallerHelper.GetLatestDMD1Url());
             WriteLine("Latest (online) DMD 1 Version   --> " + InstallerHelper.GetLatestDMD1Version());
             WriteLine("Local (installed) DMD 1 Path    --> " + InstallerHelper.GetLocalDMD1Path());
@@ -44,10 +52,15 @@ namespace TestInstallerHelper
 
         }
 
-        private void WriteLine(string s, params object[] args) 
+        private void Write(string s, params object[] args)
         {
             if (args.Length > 0) textBox1.AppendText(string.Format(s, args));
             else textBox1.AppendText(s);
+        }
+
+        private void WriteLine(string s, params object[] args) 
+        {
+            Write(s, args);
             textBox1.AppendText(Environment.NewLine);
         }
     }

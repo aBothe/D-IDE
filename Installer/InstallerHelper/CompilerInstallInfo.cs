@@ -19,6 +19,8 @@ public class CompilerInstallInfo
                 GetVersion();
             }
 
+            public CompilerInstallInfo() {}
+
             public string CompilerString
             {
                 get { return compilerString; }
@@ -62,14 +64,14 @@ public class CompilerInstallInfo
                 }
             }
 
-            public override string ToString()
+            /*public override string ToString()
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine(this.ExecutableFile.ToString());
                 sb.AppendLine(this.CompilerString);
                 sb.AppendLine(this.VersionInfo.ToString());
                 return sb.ToString();
-            }
+            }*/
 
             private void GetVersion()
             {
@@ -92,6 +94,29 @@ public class CompilerInstallInfo
                         versionInfo = new Version(versionString);
                     }
                 }
+            }
+
+            public bool FromString(string s)
+            {
+                string[] items = s.Split('\t');
+                if (items.Length == 3)
+                {
+                    ExecutableFile = new FileInfo(items[0]);
+                    CompilerString = items[1];
+                    VersionInfo = new Version(items[2]);
+                    VersionString = items[2];
+                    return true;
+                }
+                return false;
+            }
+
+            public override string ToString()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.Append(this.ExecutableFile.ToString()).Append("\t")
+                    .Append(this.CompilerString).Append("\t")
+                    .Append(this.VersionString);
+                return sb.ToString();
             }
         }
 	}

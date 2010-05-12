@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace DIDE.Installer
 {
@@ -25,6 +26,22 @@ namespace DIDE.Installer
         public static void Refresh()
         {
             localDMDInstallations.Clear();
+            if (DataFile.Exists) DataFile.Delete();
+        }
+        private static FileInfo fi = null;
+        private static FileInfo DataFile
+        {
+            get
+            {
+                if (fi == null)
+                {
+                    DateTime now = DateTime.Now;
+                    fi = new FileInfo(Directory.GetCurrentDirectory() + "\\LocalDmdInstall." + now.Year + "." + now.Month + "." + now.Day + ".txt");
+                }
+                else fi.Refresh();
+
+                return fi;
+            }
         }
 
         public static CompilerInstallInfo DMD1Info
@@ -112,48 +129,79 @@ namespace DIDE.Installer
             }
         }
 
+        public static void Preload()
+        {
+            GetLocalDMDInstallations();
+        }
+
         private static void GetLocalDMDInstallations()
         {
-            if (localDMDInstallations == null) 
+            if (localDMDInstallations == null)
             {
-                Version v1 = null, v2 = null;
                 paths = new List<string>(POSSIBLE_LOCATIONS);
                 localDMDInstallations = new List<CompilerInstallInfo>();
 
-                string[] dirs = new string[] { 
-                    Environment.GetEnvironmentVariable("PROGRAMFILES"),
-                    Environment.GetEnvironmentVariable("PROGRAMFILES(X86)"),
-                    Environment.GetEnvironmentVariable("APPDATA"),
-                    Environment.GetEnvironmentVariable("USERPROFILE") };
-
-                DriveInfo[] drives = DriveInfo.GetDrives();
-                foreach (DriveInfo drive in drives)
+                if (DataFile.Exists)
                 {
-                    if (drive.DriveType == DriveType.Fixed ||
-                        drive.DriveType == DriveType.Removable)
+                    string[] lines = File.ReadAllLines(DataFile.FullName);
+                    CompilerInstallInfo cii;
+                    for (int i = 0; i < lines.Length; i++)
                     {
-                        foreach (string possibleLocation in paths)
+                        cii = new CompilerInstallInfo();
+                        if (cii.FromString(lines[i]))
                         {
-                            string path = possibleLocation + RELATIVE_COMPILER_PATH + COMPILER_EXE;
-                            if (path[1] != ':') path = drive.Name.TrimEnd('\\') + path;
+                            if ((cii.VersionInfo.Major == 1) && (latest1x == null || latest1x.VersionInfo < cii.VersionInfo)) latest1x = cii; 
+                            else if ((cii.VersionInfo.Major == 2) && (latest2x == null || latest2x.VersionInfo < cii.VersionInfo)) latest2x = cii; 
 
-                            if (possibleLocation.IndexOf("%ENV%") >= 0)
+                            localDMDInstallations.Add(cii);
+                        }
+                    }
+                }
+                else
+                {
+                    Version v1 = null, v2 = null;
+
+                    string[] dirs = new string[] { 
+                        Environment.GetEnvironmentVariable("PROGRAMFILES"),
+                        Environment.GetEnvironmentVariable("PROGRAMFILES(X86)"),
+                        Environment.GetEnvironmentVariable("APPDATA"),
+                        Environment.GetEnvironmentVariable("USERPROFILE") };
+
+                    DriveInfo[] drives = DriveInfo.GetDrives();
+                    foreach (DriveInfo drive in drives)
+                    {
+                        if (drive.DriveType == DriveType.Fixed ||
+                            drive.DriveType == DriveType.Removable)
+                        {
+                            foreach (string possibleLocation in paths)
                             {
-                                foreach (string dir in dirs)
+                                string path = possibleLocation + RELATIVE_COMPILER_PATH + COMPILER_EXE;
+                                if (path[1] != ':') path = drive.Name.TrimEnd('\\') + path;
+
+                                if (possibleLocation.IndexOf("%ENV%") >= 0)
                                 {
-                                    string envPath = path.Replace("%ENV%", dir);
-                                    CompilerInstallInfo inf = GetLocalDMDInstallation(envPath, ref v1, ref v2);
+                                    foreach (string dir in dirs)
+                                    {
+                                        string envPath = path.Replace("%ENV%", dir);
+                                        CompilerInstallInfo inf = GetLocalDMDInstallation(envPath, ref v1, ref v2);
+                                        if (inf != null) localDMDInstallations.Add(inf);
+                                    }
+                                }
+                                else
+                                {
+                                    GetLocalDMDInstallation(path, ref v1, ref v2);
+                                    CompilerInstallInfo inf = GetLocalDMDInstallation(path, ref v1, ref v2);
                                     if (inf != null) localDMDInstallations.Add(inf);
                                 }
                             }
-                            else
-                            {
-                                GetLocalDMDInstallation(path, ref v1, ref v2);
-                                CompilerInstallInfo inf = GetLocalDMDInstallation(path, ref v1, ref v2);
-                                if (inf != null) localDMDInstallations.Add(inf);
-                            }
                         }
                     }
+
+
+                    StringBuilder sb = new StringBuilder();
+                    foreach (CompilerInstallInfo cii in localDMDInstallations) sb.Append(cii.ToString()).Append("\r\n");
+                    File.WriteAllText(DataFile.FullName, sb.ToString());
+                    //File.WriteAllText(@"C:\Users\Justin\Desktop\LocalInit_" + DateTime.Now.Ticks + ".txt", DateTime.Now.ToLongDateString());
                 }
             }
         }

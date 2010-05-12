@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.IO;
+using System.Reflection;
 
 namespace DIDE.Installer
 {
@@ -15,49 +16,144 @@ namespace DIDE.Installer
         private const string DIGITAL_MARS_DMD_1 = "ftp://ftp.digitalmars.com/dmd.1.056.zip";
         private const string DIGITAL_MARS_DMD_2 = "ftp://ftp.digitalmars.com/dmd.2.041.zip";
 
+        private static Dictionary<int, CompilerVersion> versions = new Dictionary<int, CompilerVersion>();
+
+        private static FileInfo fi = null;
+        private static FileInfo DataFile
+        {
+            get
+            {
+                if (fi == null)
+                {
+                    DateTime now = DateTime.Now;
+                    FileInfo f = new FileInfo(Assembly.GetExecutingAssembly().Location);
+                    fi = new FileInfo(Directory.GetCurrentDirectory() + "\\DigitalMars." + now.Year + "." + now.Month + "." + now.Day + ".txt");
+                }
+                else fi.Refresh();
+
+                return fi;
+            }
+        }
         public static string GetLatestDMDInfo(int version, out int subVersion)
         {
-            string url = (version == 1) ? DIGITAL_MARS_DMD_1 : DIGITAL_MARS_DMD_2;
-            int latestVersion = (version == 1) ? 56 : 41;
-            subVersion = latestVersion;
-            try
+            GetDMDInfo();
+            subVersion = (version == 1) ? versions[1].SubVersion : versions[2].SubVersion;
+            return (version == 1) ? versions[1].Url : versions[2].Url;
+        }
+
+        public static void Preload()
+        {
+            GetDMDInfo();
+        }
+
+        private static void GetDMDInfo()
+        {
+            if (versions.Count == 0)
             {
-                FtpWebRequest request = WebRequest.Create(DIGITAL_MARS_FTP) as FtpWebRequest;
-                request.Method = WebRequestMethods.Ftp.ListDirectory;
-
-                using (FtpWebResponse response = request.GetResponse() as FtpWebResponse)
+                if (DataFile.Exists)
                 {
-                    Console.WriteLine(response.StatusDescription);
-                    using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+                    string[] lines = File.ReadAllLines(DataFile.FullName);
+                    CompilerVersion ver;
+                    for (int i = 0; i < lines.Length; i++)
                     {
-                        while (!reader.EndOfStream)
-                        {
-                            string line = reader.ReadLine();
-                            if (line.StartsWith("dmd." + version + "."))
-                            {
-                                string[] tokens = line.Split('.');
-                                if (tokens.Length > 2 && !int.TryParse(tokens[2], out subVersion)) subVersion = latestVersion;
+                        ver = new CompilerVersion();
+                        if (ver.FromString(lines[i]))
+                            versions[ver.Version] = ver;
+                    }
+                }
+                else
+                {
+                    CompilerVersion ver1 = new CompilerVersion(), ver2 = new CompilerVersion();
+                    int latestVer1 = 56, latestVer2 = 41, subVersion = 0;
+                    string url1 = "", url2 = "";
+                    ver1.Version = 1;
+                    ver2.Version = 2;
+                    try
+                    {
+                        FtpWebRequest request = WebRequest.Create(DIGITAL_MARS_FTP) as FtpWebRequest;
+                        request.Method = WebRequestMethods.Ftp.ListDirectory;
 
-                                if (tokens[tokens.Length - 1].Equals("zip", StringComparison.CurrentCultureIgnoreCase))
+                        using (FtpWebResponse response = request.GetResponse() as FtpWebResponse)
+                        {
+                            Console.WriteLine(response.StatusDescription);
+                            using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+                            {
+                                while (!reader.EndOfStream)
                                 {
-                                    if (latestVersion < subVersion)
+                                    string line = reader.ReadLine();
+                                    if (line.StartsWith("dmd.1."))
                                     {
-                                        latestVersion = subVersion;
-                                        url = DIGITAL_MARS_HTTP + line;
+                                        string[] tokens = line.Split('.');
+                                        if (tokens.Length > 2 && !int.TryParse(tokens[2], out subVersion)) subVersion = latestVer1;
+
+                                        if (tokens[tokens.Length - 1].Equals("zip", StringComparison.CurrentCultureIgnoreCase))
+                                        {
+                                            if (latestVer1 < subVersion)
+                                            {
+                                                latestVer1 = subVersion;
+                                                url1 = DIGITAL_MARS_HTTP + line;
+                                            }
+                                        }
+                                    }
+                                    else if (line.StartsWith("dmd.2."))
+                                    {
+                                        string[] tokens = line.Split('.');
+                                        if (tokens.Length > 2 && !int.TryParse(tokens[2], out subVersion)) subVersion = latestVer2;
+
+                                        if (tokens[tokens.Length - 1].Equals("zip", StringComparison.CurrentCultureIgnoreCase))
+                                        {
+                                            if (latestVer2 < subVersion)
+                                            {
+                                                latestVer2 = subVersion;
+                                                url2 = DIGITAL_MARS_HTTP + line;
+                                            }
+                                        }
                                     }
                                 }
                             }
+                            response.Close();
                         }
+                        ver1.SubVersion = latestVer1;
+                        ver1.Url = url1;
+                        ver2.SubVersion = latestVer2;
+                        ver2.Url = url2;
                     }
-                    response.Close();
+                    catch (Exception ex)
+                    {
+                        ver1.Url = ERROR_PREFIX + ex.Message + Environment.NewLine + ex.StackTrace;
+                        ver2.Url = ERROR_PREFIX + ex.Message + Environment.NewLine + ex.StackTrace;
+                    }
+                    versions[1] = ver1;
+                    versions[2] = ver2;
+
+                    StringBuilder sb = new StringBuilder();
+                    foreach (CompilerVersion ver in versions.Values) sb.Append(ver.ToString()).Append("\r\n");
+                    File.WriteAllText(DataFile.FullName, sb.ToString());
                 }
             }
-            catch (Exception ex)
-            {
-                url = ERROR_PREFIX + ex.Message + Environment.NewLine + ex.StackTrace;
-            }
+        }
 
-            return url;
+        private class CompilerVersion
+        {
+            public string Url { get; set; }
+            public int Version { get; set; }
+            public int SubVersion { get; set; }
+            public bool FromString(string s)
+            {
+                string[] items = s.Split('\t');
+                if (items.Length == 3)
+                {
+                    Version = Convert.ToInt32(items[0]);
+                    SubVersion = Convert.ToInt32(items[1]);
+                    Url = items[2];
+                    return true;
+                }
+                return false;
+            }
+            public override string ToString()
+            {
+                return Version.ToString() + "\t" + SubVersion.ToString() + "\t" + Url;
+            }
         }
     }
 }
