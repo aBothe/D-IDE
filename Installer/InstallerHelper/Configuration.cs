@@ -11,7 +11,15 @@ namespace DIDE.Installer
     {
         public static void CreateConfigurationFile(string filePath, Dictionary<string, string[]> nodeHash)
         {
+            FileInfo file = new FileInfo(filePath);
+
+            bool isNew = true;
             XmlDocument xmlDoc = new XmlDocument();
+            if (file.Exists)
+            {
+                isNew = false;
+                xmlDoc.Load(file.FullName);
+            }
             foreach (string nodePath in nodeHash.Keys)
             {
                 string[] nodeNames = nodePath.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -78,10 +86,12 @@ namespace DIDE.Installer
 
             }
 
-            XmlElement root = xmlDoc.DocumentElement;
-            XmlDeclaration xmlDecl = xmlDoc.CreateXmlDeclaration("1.0", "utf-8", string.Empty); //<?xml version="1.0" encoding="utf-8"?>
-            xmlDoc.InsertBefore(xmlDecl, root);
-
+            if (isNew)
+            {
+                XmlElement root = xmlDoc.DocumentElement;
+                XmlDeclaration xmlDecl = xmlDoc.CreateXmlDeclaration("1.0", "utf-8", string.Empty);
+                xmlDoc.InsertBefore(xmlDecl, root);
+            }
             xmlDoc.Save(filePath);
         }
     }
