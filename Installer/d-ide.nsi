@@ -225,6 +225,7 @@ SectionEnd
 ;--------------------------------------------------------
 Section "-Install Program Files" install_section_id
 	CreateDirectory "$INSTDIR"
+	CreateDirectory "$INSTDIR\D-IDE.config"
 	SetOutPath "$INSTDIR"
 
 	SetOverwrite on
@@ -327,6 +328,8 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 	
 	ConfigureDMD:
 		DetailPrint "Configuring DMD and D-IDE."
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
 
 SectionEnd
 
