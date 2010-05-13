@@ -23,6 +23,7 @@ namespace TestInstallerHelper
             if (File.Exists(file)) File.Delete(file);
             InstallerHelper.CreateConfigurationFile(file);
 
+            InstallerHelper.Refresh();
             InstallerHelper.Initialize();
             while (InstallerHelper.IsThreadActive)
             {

@@ -18,15 +18,28 @@ namespace DIDE.Installer
             t.Start();
         }
 
-        private static string FixDmdInstallPath(string s)
+        public static string FixDmdInstallPath(string s)
         {
-            DirectoryInfo d = new DirectoryInfo(s);
-            if (d.Name.Equals("dmd", StringComparison.CurrentCultureIgnoreCase) || 
-                d.Name.Equals("dmd1", StringComparison.CurrentCultureIgnoreCase) || 
-                d.Name.Equals("dmd2", StringComparison.CurrentCultureIgnoreCase))
-                return d.Parent.FullName;
-            else 
-                return d.FullName;
+            try
+            {
+                DirectoryInfo d = new DirectoryInfo(s);
+                if (d.Name.Equals("dmd", StringComparison.CurrentCultureIgnoreCase) ||
+                    d.Name.Equals("dmd1", StringComparison.CurrentCultureIgnoreCase) ||
+                    d.Name.Equals("dmd2", StringComparison.CurrentCultureIgnoreCase))
+                    return d.Parent.FullName;
+                else
+                    return d.FullName;
+            }
+            catch
+            {
+                s = s.TrimEnd('\\');
+                if (s.IndexOf("dmd") >= s.Length - 5)
+                {
+                    int i = s.LastIndexOf("\\");
+                    if (i > 0) s = s.Substring(i);
+                }
+                return s;
+            }
         }
 
         private static void Preload()
