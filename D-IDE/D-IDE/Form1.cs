@@ -487,9 +487,9 @@ namespace D_IDE
 
                 Log("Build single " + tp.fileData.mod_file + " to " + exe);
                 string args = D_IDE_Properties.Default.DefaultCompiler.ExeLinkerDebugArgs;
-                args = args.Replace("$objs", tp.fileData.mod_file);
+                args = args.Replace("$objs", "\""+tp.fileData.mod_file+"\"");
                 args = args.Replace("$libs", "");
-                args = args.Replace("$exe", exe);
+                args = args.Replace("$exe", "\""+exe+"\"");
                 
 				try{
 				Process p= DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.fileData.mod_file), true);
