@@ -286,9 +286,10 @@ namespace D_IDE
             {
                 OnMessage(prj,exe,ProcessTimeExceededMsg);
                 prc.Kill();
+                prc.WaitForExit();
             }
 
-            if (prc.ExitCode == 0)
+            if (prc.HasExited && prc.ExitCode == 0)
             {
                 // This line of code is very important for debugging!
                 prj.LastBuiltTarget = target;
@@ -333,9 +334,10 @@ namespace D_IDE
             {
                 OnMessage(null, file, ProcessTimeExceededMsg);
                 prc.Kill();
+                prc.WaitForExit();
             }
 
-            return prc.ExitCode == 0;
+            return prc.HasExited && prc.ExitCode == 0;
         }
 
         public static bool BuildResFile(string file, CompilerConfiguration cc, string target, string exeDir)
@@ -352,9 +354,10 @@ namespace D_IDE
             {
                 OnMessage(null, file, ProcessTimeExceededMsg);
                 prc.Kill();
+                prc.WaitForExit();
             }
 
-            return prc.ExitCode == 0;
+            return prc.HasExited && prc.ExitCode == 0;
         }
 
         /// <summary>
