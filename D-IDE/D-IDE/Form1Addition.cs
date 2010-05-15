@@ -636,7 +636,7 @@ namespace D_IDE
                         FMStack.Push(off);
                     }
 
-                    if (cur == '}')
+                    if (cur == '}' && FMStack.Count>0)
                     {
                         int start = FMStack.Pop();
                         int end = off + 1;
