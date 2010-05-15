@@ -225,7 +225,7 @@ namespace D_IDE
 			string f = ((FileTreeNode)tn).FileOrPath;
 			string phys_f = ((FileTreeNode)tn).AbsolutePath;
 
-			DProject tprj=D_IDE_Properties.GetProject((tn as FileTreeNode).ProjectFile);
+			DProject tprj = D_IDE_Properties.GetProject((tn as FileTreeNode).ProjectFile);
 			if (tprj == null) return;
 
 			if (tprj.FileExists(f))
@@ -421,7 +421,7 @@ namespace D_IDE
 								try
 								{
 									// Update tab that may contains moved file
-									Form1.thisForm.FileDataByFile(file).fileData.mod_file=tar;
+									Form1.thisForm.FileDataByFile(file).fileData.mod_file = tar;
 								}
 								catch { }
 
@@ -524,28 +524,71 @@ namespace D_IDE
 				Form1.thisForm.OpenFormsDesigner((tn as FileTreeNode).AbsolutePath);
 		}
 
-        private void directoryToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Point tp = (Point)ProjectMenu.Tag;
-            if (tp == null) return;
-            TreeNode tn = prjFiles.GetNodeAt(tp);
-            if (tn == null) return;
+		private void directoryToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Point tp = (Point)ProjectMenu.Tag;
+			if (tp == null) return;
+			TreeNode tn = prjFiles.GetNodeAt(tp);
+			if (tn == null) return;
 
-            DProject tprj = D_IDE_Properties.GetProject((tn as ProjectNode).ProjectFile);
-            if (tprj == null) return;
+			DProject tprj = D_IDE_Properties.GetProject((tn as ProjectNode).ProjectFile);
+			if (tprj == null) return;
 
-            FolderBrowserDialog fb = new FolderBrowserDialog();
-            fb.SelectedPath = tprj.basedir;
-            if (fb.ShowDialog() == DialogResult.OK)
-            {
-                DialogResult dr = MessageBox.Show("Also scan subdirectories?", "Add folder", MessageBoxButtons.YesNoCancel);
+			FolderBrowserDialog fb = new FolderBrowserDialog();
+			fb.SelectedPath = tprj.basedir;
+			if (fb.ShowDialog() == DialogResult.OK)
+			{
+				DialogResult dr = MessageBox.Show("Also scan subdirectories?", "Add folder", MessageBoxButtons.YesNoCancel);
 
-                if (dr == DialogResult.Cancel)
-                    return;
+				if (dr == DialogResult.Cancel)
+					return;
 
-                tprj.AddDirectory(fb.SelectedPath,dr==DialogResult.Yes);
-            }
-        }
+				tprj.AddDirectory(fb.SelectedPath, dr == DialogResult.Yes);
+			}
+		}
+
+		private void removeProjectToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Point tp = (Point)ProjectMenu.Tag;
+			if (tp == null) return;
+			TreeNode tn = prjFiles.GetNodeAt(tp);
+			if (tn == null) return;
+
+			string fn = (tn as ProjectNode).ProjectFile;
+
+			DialogResult dr = MessageBox.Show("Remove project directory?", "Remove project", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+			if (dr == DialogResult.Cancel) return;
+
+			if (dr == DialogResult.Yes)
+			{
+				DProject tprj = D_IDE_Properties.Projects[fn];
+				if (tprj == null) return;
+
+				foreach (DockContent dc in Form1.thisForm.dockPanel.Documents)
+				{
+					if (!(dc is DocumentInstanceWindow)) continue;
+
+					DocumentInstanceWindow diw = dc as DocumentInstanceWindow;
+					if (diw.ProjectFile == fn) diw.Close();
+				}
+
+				try
+				{
+					Directory.Delete(tprj.basedir, true);
+				}
+				catch (Exception ex) { MessageBox.Show(ex.Message); }
+			}
+
+			try
+			{
+				if (File.Exists(fn))
+					File.Delete(fn);
+				D_IDE_Properties.Projects.Remove(fn);
+			}
+			catch (Exception ex) { MessageBox.Show(ex.Message); }
+
+			UpdateFiles();
+		}
 	}
 
 	#region Nodes
