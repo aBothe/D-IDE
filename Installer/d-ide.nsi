@@ -72,6 +72,7 @@ Function .onInit
 	Pop $PERFORM_CLR_FEATURES
 	IntCmp $PERFORM_CLR_FEATURES 1 0 +2 +2
 	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
+		
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -142,7 +143,7 @@ Function DmdConfigChoicePageValidation
 		Abort ; Return to the page
 		
     unzipOption:
-		IntCmp $PERFORM_CLR_FEATURES 0 0 +2 +2
+		IntCmp $PERFORM_CLR_FEATURES 1 +2
 		MessageBox MB_OK "This feature requires the .Net Framework 2.0."
 		
 		StrCpy $DMD_INSTALL_ACTION "${DMD_UNZIP_AND_COPY}"
@@ -159,7 +160,7 @@ Function DmdConfigPage
 	Abort
 	
 	DownloadAndUnzip:
-		IntCmp $PERFORM_CLR_FEATURES 0 0 +2 +2
+		IntCmp $PERFORM_CLR_FEATURES 1 +2
 		Abort
 
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
@@ -266,22 +267,6 @@ Section "-Install Program Files" install_section_id
 	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
 	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
 
-	;Config files that should be merged through a seperate process - we need to copy them to a backup folder
-	;IfFileExists "$INSTDIR\D-IDEIndexer.exe.config" 0 +4
-	;	CreateDirectory "$INSTDIR\ConfigBackup"
-	;	Rename "$INSTDIR\D-IDEIndexer.exe.config" "$INSTDIR\ConfigBackup\D-IDEIndexer.exe.config.${FILEDATE}"
-	;	Delete "$INSTDIR\D-IDEIndexer.exe.config"
-
-	;IfFileExists "$INSTDIR\D-IDEService.exe.config" 0 +4
-	;	CreateDirectory "$INSTDIR\ConfigBackup"
-	;	Rename "$INSTDIR\D-IDEService.exe.config" "$INSTDIR\ConfigBackup\D-IDEService.exe.config.${FILEDATE}"
-	;	Delete "$INSTDIR\D-IDEService.exe.config"
-
-	;IfFileExists "$INSTDIR\Quartz.xml" 0 +4
-	;	CreateDirectory "$INSTDIR\ConfigBackup"
-	;	Rename "$INSTDIR\Quartz.xml" "$INSTDIR\ConfigBackup\Quartz.xml.${FILEDATE}"
-	;	Delete "$INSTDIR\Quartz.xml"
-
 	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
 	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath" $DMD1_BIN_PATH
 	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath" $DMD2_BIN_PATH
@@ -295,6 +280,8 @@ SectionEnd
 ; Download and install Digital-Mars DMD
 ;--------------------------------------------------------
 Section "-Digital-Mars DMD Install/Update" dmd_section_id
+	DetailPrint "Internet? $IS_CONNECTED, .Net 2.0? $PERFORM_CLR_FEATURES"
+	
 	StrCmp $DMD_INSTALL_ACTION "${DMD_WEB_INSTALLER}" WebInstall 0
 	StrCmp $DMD_INSTALL_ACTION "${DMD_UNZIP_AND_COPY}" DownloadAndUnzip ConfigureDMD
 	
