@@ -36,7 +36,24 @@ namespace DIDE.Installer
                     xpath += nodeName;
                     searchResult = xmlDoc.SelectNodes(xpath);
 
-                    if (searchResult.Count > 0) childNode = searchResult[0] as XmlElement;
+                    if (searchResult.Count == 1)
+                    {
+                        childNode = searchResult[0] as XmlElement;
+                    }
+                    else if ((searchResult.Count > 1) && (i == nodeNames.Length - 1))
+                    {
+                        foreach (string val in values)
+                        {
+                            for (int j=searchResult.Count-1; j>=0; j--)
+                            {
+                                if (searchResult[j].InnerText != null &&
+                                    searchResult[j].InnerText.Equals(val, StringComparison.CurrentCultureIgnoreCase))
+                                {
+                                    searchResult[j].ParentNode.RemoveChild(searchResult[j]);
+                                }
+                            }
+                        }
+                    }
 
                     string[] pieces = nodeName.Split(new char[] { '[', ']', '=', ',' }, StringSplitOptions.RemoveEmptyEntries);
                     if (childNode == null)

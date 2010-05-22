@@ -34,6 +34,8 @@ Var DMD1_BIN_VERSION
 Var DMD2_BIN_VERSION
 Var DMD1_LATEST_VERSION
 Var DMD2_LATEST_VERSION
+Var D_WEB_INSTALL_PATH
+Var PERFORM_CLR_FEATURES
 
 ;--------------------------------------------------------
 ; Setting various predefined NSIS Variables
@@ -51,6 +53,7 @@ RequestExecutionLevel highest
 ;--------------------------------------------------------
 Function .onInit
 	InitPluginsDir
+	!insertmacro XPUI_INSTALLOPTIONS_EXTRACT "dmd-config-choice.ini"
 	!insertmacro XPUI_INSTALLOPTIONS_EXTRACT "dmd-config.ini"
 	SetOutPath $PLUGINSDIR
 	File "DIDE.Installer.dll"
@@ -59,8 +62,13 @@ Function .onInit
 	ReadRegStr $DMD2_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath"
 	ReadRegStr $DMD1_BIN_VERSION HKLM "SOFTWARE\D-IDE" "Dmd1xBinVersion"
 	ReadRegStr $DMD2_BIN_VERSION HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion"
+	ReadRegStr $D_WEB_INSTALL_PATH HKLM "SOFTWARE\D" "Install_Dir"
 	
+	Call DotNet20Exists
+	Pop $PERFORM_CLR_FEATURES
+	IntCmp $PERFORM_CLR_FEATURES 1 0 +2 +2
 	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
+	
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -82,6 +90,7 @@ FunctionEnd
 ${Page} Welcome
 ${LicensePage} ".\License.rtf"
 ${Page} Directory
+Page custom DmdConfigChoicePage DmdConfigChoicePageValidation 
 Page custom DmdConfigPage DmdConfigPageValidation 
 ;${Page} Components
 ${Page} InstFiles
@@ -93,6 +102,7 @@ ${UnPage} Welcome
 !insertmacro XPUI_PAGE_INSTFILES
 !insertmacro XPUI_LANGUAGE "English"
 
+ReserveFile "dmd-config-choice.ini"
 ReserveFile "dmd-config.ini"
 !insertmacro XPUI_RESERVEFILE_INSTALLOPTIONS
 
@@ -105,54 +115,20 @@ UninstallIcon ".\uninstall.ico"
 ;------------------------------------------------------------------------
 ; In this section, we shall use a custom configuration page.
 ;------------------------------------------------------------------------
-Function DmdConfigPage 
-	;StrCmp $DMD1_BIN_VERSION "" 0 +3
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
-		pop $DMD1_BIN_VERSION 
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Version" 0
-		pop $DMD1_LATEST_VERSION
-	IntCmp $DMD1_BIN_VERSION -1 +3 0
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 6" "Text" "Version 1.$DMD1_BIN_VERSION Installed (Latest is 1.$DMD1_LATEST_VERSION)"
-	Goto +2
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 6" "Text" "(Latest is 1.$DMD1_LATEST_VERSION)"
-
-	
-    ;StrCmp $DMD1_BIN_PATH "" 0 +3
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Path" 0
-		pop $DMD1_BIN_PATH
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 7" "State" $DMD1_BIN_PATH
-
-    ;StrCmp $DMD2_BIN_VERSION "" 0 +3
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Version" 0
-		pop $DMD2_BIN_VERSION 
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Version" 0
-		pop $DMD2_LATEST_VERSION 
-	IntCmp $DMD2_BIN_VERSION -1 +3 0
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 9" "Text" "Version 2.$DMD2_BIN_VERSION Installed (Latest is 2.$DMD2_LATEST_VERSION)"
-	Goto +2
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 9" "Text" "(Latest is 2.$DMD2_LATEST_VERSION)"
-		
-    ;StrCmp $DMD2_BIN_PATH "" 0 +3
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Path" 0
-		pop $DMD2_BIN_PATH 
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 10" "State" $DMD2_BIN_PATH
-
+Function DmdConfigChoicePage
 	!insertmacro XPUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
-	!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config.ini"
+	!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config-choice.ini"
 FunctionEnd
 
-Function DmdConfigPageValidation
+Function DmdConfigChoicePageValidation
     ; At this point the user has either pressed Next or one of our custom buttons
     ; We find out which by reading from the INI file
-    ReadINIStr $0 "$PLUGINSDIR\dmd-config.ini" "Settings" "State"
+    ReadINIStr $0 "$PLUGINSDIR\dmd-config-choice.ini" "Settings" "State"
     StrCmp $0 1 doNothingOption
     StrCmp $0 2 webInstallerOption
-    StrCmp $0 3 unzipOption 
-    StrCmp $0 7 dmd1PathChanged
-    StrCmp $0 10 dmd2PathChanged
-    
+    StrCmp $0 3 unzipOption
+  
     Goto done 
-    ;Abort ; Return to the page
     
     doNothingOption:
 		StrCpy $DMD_INSTALL_ACTION ""
@@ -160,27 +136,78 @@ Function DmdConfigPageValidation
     
     webInstallerOption:
 		StrCpy $DMD_INSTALL_ACTION "${DMD_WEB_INSTALLER}"
-		Abort
+		Abort ; Return to the page
 		
     unzipOption:
+		IntCmp $PERFORM_CLR_FEATURES 0 0 +2 +2
+		MessageBox MB_OK "This feature requires the .Net Framework 2.0."
+		
 		StrCpy $DMD_INSTALL_ACTION "${DMD_UNZIP_AND_COPY}"
         Abort ; Return to the page
-    
+		
+	done:
+FunctionEnd
+
+;------------------------------------------------------------------------
+; In this section, we shall use a custom configuration page.
+;------------------------------------------------------------------------
+Function DmdConfigPage
+	StrCmp $DMD_INSTALL_ACTION "${DMD_UNZIP_AND_COPY}" DownloadAndUnzip
+	Abort
+	
+	DownloadAndUnzip:
+		IntCmp $PERFORM_CLR_FEATURES 0 0 +2 +2
+		Abort
+
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
+		pop $DMD1_BIN_VERSION 
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Version" 0
+		pop $DMD1_LATEST_VERSION
+		IntCmp $DMD1_BIN_VERSION -1 +3 0
+			WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 3" "Text" "Version 1.$DMD1_BIN_VERSION Installed (Latest is 1.$DMD1_LATEST_VERSION)"
+		Goto +2
+			WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 3" "Text" "(Latest is 1.$DMD1_LATEST_VERSION)"
+
+		
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Path" 0
+		pop $DMD1_BIN_PATH
+		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 4" "State" $DMD1_BIN_PATH
+
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Version" 0
+		pop $DMD2_BIN_VERSION 
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Version" 0
+		pop $DMD2_LATEST_VERSION 
+		IntCmp $DMD2_BIN_VERSION -1 +3 0
+			WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 6" "Text" "Version 2.$DMD2_BIN_VERSION Installed (Latest is 2.$DMD2_LATEST_VERSION)"
+		Goto +2
+			WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 6" "Text" "(Latest is 2.$DMD2_LATEST_VERSION)"
+			
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Path" 0
+		pop $DMD2_BIN_PATH 
+		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 7" "State" $DMD2_BIN_PATH
+
+		!insertmacro XPUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
+		!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config.ini"
+FunctionEnd
+
+Function DmdConfigPageValidation
+    ; At this point the user has either pressed Next or one of our custom buttons
+    ; We find out which by reading from the INI file
+    ReadINIStr $0 "$PLUGINSDIR\dmd-config.ini" "Settings" "State"
+    StrCmp $0 4 dmd1PathChanged
+    StrCmp $0 7 dmd2PathChanged done
+	
     dmd1PathChanged:
-		ReadINIStr $DMD1_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 7" "State"
-		;CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "IsValidDMDInstallForVersion" 2 1 $0 
-		;Pop $1
+		ReadINIStr $DMD1_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 4" "State"
         Abort ; Return to the page
     
     dmd2PathChanged:
-		ReadINIStr $DMD2_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 10" "State"
-		;CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "IsValidDMDInstallForVersion" 2 1 $0 
-		;Pop $1
+		ReadINIStr $DMD2_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 7" "State"
         Abort ; Return to the page
     
     done:
-		ReadINIStr $DMD1_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 7" "State"
-		ReadINIStr $DMD2_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 10" "State"
+		ReadINIStr $DMD1_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 4" "State"
+		ReadINIStr $DMD2_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 7" "State"
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -282,10 +309,20 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		FileExists:
 			DetailPrint "Installing Digital Mars DMD."
 			ExecWait '"$2"'
-			
+		
+		;get the latest install location from the registry!
+		ReadRegStr $D_WEB_INSTALL_PATH HKLM "SOFTWARE\D" "Install_Dir"
+		StrCpy $DMD1_BIN_PATH "$D_WEB_INSTALL_PATH\dmd"
+		StrCpy $DMD2_BIN_PATH "$D_WEB_INSTALL_PATH\dmd2"
+		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath" $DMD1_BIN_PATH
+		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath" $DMD2_BIN_PATH
+		
 		Goto ConfigureDMD
 		
 	DownloadAndUnzip:
+		
+		IntCmp $PERFORM_CLR_FEATURES 0 Finished
+		
 		DetailPrint "Downloading and instaling DMD 1.$DMD1_LATEST_VERSION to target location."
 		StrCpy $1 "dmd1.$DMD1_LATEST_VERSION.zip"
 		StrCpy $2 "$EXEDIR\$1"
@@ -296,8 +333,10 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Url" 0
 			Pop $0
 			NSISdl::download "$0" $2
+			IfFileExists $2 Dmd1FileExists Dmd2FileMissing
 			
 		Dmd1FileExists:
+			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD1_BIN_PATH) and unzip the new DMD 1 Compiler into it?" IDYES +1 IDNO Dmd2FileMissing
 			RMDir /r "$DMD1_BIN_PATH"
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "FixDmdInstallPath" 1 "$DMD1_BIN_PATH"
 			Pop $3
@@ -315,8 +354,10 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Url" 0
 			Pop $0
 			NSISdl::download "$0" $2
+			IfFileExists $2 Dmd2FileExists ConfigureDMD
 			
 		Dmd2FileExists:
+			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD1_BIN_PATH) and unzip the new DMD 2 Compiler into it?" IDYES +1 IDNO ConfigureDMD
 			RMDir /r "$DMD2_BIN_PATH"
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "FixDmdInstallPath" 1 "$DMD2_BIN_PATH"
 			Pop $3
@@ -327,10 +368,14 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			Goto ConfigureDMD
 	
 	ConfigureDMD:
+		IntCmp $PERFORM_CLR_FEATURES 0 Finished
+		
 		DetailPrint "Configuring DMD and D-IDE."
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
 
+	Finished:
+	
 SectionEnd
 
 ;--------------------------------------------------------
@@ -384,6 +429,25 @@ Section "Uninstall"
 	DeleteRegKey /ifempty HKLM "Software\D-IDE"
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE"
 SectionEnd
+
+;--------------------------------------------------------
+; Detects Microsoft .Net Framework 2.0
+;--------------------------------------------------------
+Function DotNet20Exists
+	ClearErrors
+	ReadRegStr $1 HKLM "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v2.0.50727" "Version"
+	IfErrors MDNFNotFound MDNFFound
+
+	MDNFFound:
+		Push 0
+		Goto ExitFunction
+
+	MDNFNotFound:
+		Push 1
+		Goto ExitFunction
+
+	ExitFunction:
+FunctionEnd
 
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 3.5

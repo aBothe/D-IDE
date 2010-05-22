@@ -55,7 +55,7 @@
 
 
 
-      <Span name = "STRING" bold = "false" italic = "false" color = "Red" stopateol = "false" noescapesequences="false">
+      <Span name = "STRING" bold = "false" italic = "false" color = "Red" stopateol = "false" noescapesequences="true">
         <Begin bold = "false" italic = "false" color = "Brown">"</Begin>
         <End bold = "false" italic = "false" color = "Brown">"</End>
       </Span>

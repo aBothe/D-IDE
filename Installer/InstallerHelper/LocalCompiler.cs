@@ -10,6 +10,8 @@ namespace DIDE.Installer
 {
     public class LocalCompiler
     {
+        private const string D_BASE_REG_KEY = @"SOFTWARE\D";
+        private const string D_INSTALL_PATH_REG_KEY = @"Install_Dir";
         private const string BASE_REG_KEY = @"SOFTWARE\D-IDE";
         private const string DMD1_PATH_REG_KEY = @"Dmd1xBinPath";
         private const string DMD2_PATH_REG_KEY = @"Dmd2xBinPath";
@@ -167,11 +169,13 @@ namespace DIDE.Installer
                 {
                     Version v1 = null, v2 = null;
 
-                    string reg1 = ReadRegKey(DMD1_PATH_REG_KEY),
-                        reg2 = ReadRegKey(DMD2_PATH_REG_KEY);
+                    string reg1 = ReadRegKey(BASE_REG_KEY, DMD1_PATH_REG_KEY),
+                        reg2 = ReadRegKey(BASE_REG_KEY, DMD2_PATH_REG_KEY),
+                        reg3 = ReadRegKey(D_BASE_REG_KEY, D_INSTALL_PATH_REG_KEY);
 
                     if (reg1 != null) paths.Add(reg1);
                     if (reg2 != null) paths.Add(reg2);
+                    if (reg3 != null) paths.Add(reg3);
 
                     string[] dirs = new string[] { 
                         Environment.GetEnvironmentVariable("PROGRAMFILES"),
@@ -196,14 +200,20 @@ namespace DIDE.Installer
                                     {
                                         string envPath = path.Replace("%ENV%", dir);
                                         CompilerInstallInfo inf = GetLocalDMDInstallation(envPath, ref v1, ref v2);
-                                        if (inf != null) localDMDInstallations.Add(inf);
+                                        if (inf != null)
+                                        {
+                                            localDMDInstallations.Add(inf);
+                                        }
                                     }
                                 }
                                 else
                                 {
                                     GetLocalDMDInstallation(path, ref v1, ref v2);
                                     CompilerInstallInfo inf = GetLocalDMDInstallation(path, ref v1, ref v2);
-                                    if (inf != null) localDMDInstallations.Add(inf);
+                                    if (inf != null)
+                                    {
+                                        localDMDInstallations.Add(inf);
+                                    }
                                 }
                             }
                         }
@@ -253,9 +263,9 @@ namespace DIDE.Installer
             return cii;
         }
 
-        private static string ReadRegKey(string key)
+        private static string ReadRegKey(string basePath, string key)
         {
-            RegistryKey baseKey = Registry.LocalMachine.CreateSubKey(BASE_REG_KEY);
+            RegistryKey baseKey = Registry.LocalMachine.CreateSubKey(basePath);
             if (baseKey == null)  return null;
             else
             {
