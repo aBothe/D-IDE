@@ -36,6 +36,7 @@ Var DMD1_LATEST_VERSION
 Var DMD2_LATEST_VERSION
 Var D_WEB_INSTALL_PATH
 Var PERFORM_CLR_FEATURES
+Var IS_CONNECTED
 
 ;--------------------------------------------------------
 ; Setting various predefined NSIS Variables
@@ -64,11 +65,13 @@ Function .onInit
 	ReadRegStr $DMD2_BIN_VERSION HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion"
 	ReadRegStr $D_WEB_INSTALL_PATH HKLM "SOFTWARE\D" "Install_Dir"
 	
+	Call IsConnected  
+	Pop $IS_CONNECTED
+	
 	Call DotNet20Exists
 	Pop $PERFORM_CLR_FEATURES
 	IntCmp $PERFORM_CLR_FEATURES 1 0 +2 +2
 	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
-	
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -216,7 +219,7 @@ FunctionEnd
 Section "-.Net Framework 3.5" net35_section_id
 	Call DotNet35Exists
 	Pop $1
-	IntCmp $1 0 SkipDotNet35
+	IntCmp $1 1 SkipDotNet35
 	
 	StrCpy $1 "dotnetfx35.exe"
 	StrCpy $2 "$EXEDIR\$1"
@@ -234,7 +237,7 @@ Section "-.Net Framework 3.5" net35_section_id
 
 		Call DotNet35Exists
 		Pop $1
-		IntCmp $1 0 DotNet35Done DotNet35Failed
+		IntCmp $1 1 DotNet35Done DotNet35Failed
 
 	DotNet35Failed:
 		DetailPrint ".Net Framework 3.5 install failed... Aborting Install"
@@ -296,6 +299,10 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 	StrCmp $DMD_INSTALL_ACTION "${DMD_UNZIP_AND_COPY}" DownloadAndUnzip ConfigureDMD
 	
 	WebInstall:
+	
+		IntCmp $IS_CONNECTED 1 +2
+			MessageBox MB_OK "It seems that you are not connected to the internet. Please connect now if you wish to download the Digital Mars compilers."
+	
 		DetailPrint "Installing DMD with the official DMD Web Installer."
 		StrCpy $1 "dinstaller.exe"
 		StrCpy $2 "$EXEDIR\$1"
@@ -323,6 +330,9 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		
 		IntCmp $PERFORM_CLR_FEATURES 0 Finished
 		
+		IntCmp $IS_CONNECTED 1 +2
+			MessageBox MB_OK "It seems that you are not connected to the internet. Please connect now if you wish to download the Digital Mars compilers."
+			
 		DetailPrint "Downloading and instaling DMD 1.$DMD1_LATEST_VERSION to target location."
 		StrCpy $1 "dmd1.$DMD1_LATEST_VERSION.zip"
 		StrCpy $2 "$EXEDIR\$1"
@@ -357,7 +367,7 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			IfFileExists $2 Dmd2FileExists ConfigureDMD
 			
 		Dmd2FileExists:
-			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD1_BIN_PATH) and unzip the new DMD 2 Compiler into it?" IDYES +1 IDNO ConfigureDMD
+			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD2_BIN_PATH) and unzip the new DMD 2 Compiler into it?" IDYES +1 IDNO ConfigureDMD
 			RMDir /r "$DMD2_BIN_PATH"
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "FixDmdInstallPath" 1 "$DMD2_BIN_PATH"
 			Pop $3
@@ -371,6 +381,17 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		IntCmp $PERFORM_CLR_FEATURES 0 Finished
 		
 		DetailPrint "Configuring DMD and D-IDE."
+		
+		IntCmp $DMD1_BIN_VERSION -1 0 +4 +4
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
+		pop $DMD1_BIN_VERSION 
+		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinVersion" $DMD1_BIN_VERSION
+		
+		IntCmp $DMD2_BIN_VERSION -1 0 +4 +4
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Version" 0
+		pop $DMD2_BIN_VERSION 
+		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion" $DMD2_BIN_VERSION
+		
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
 
@@ -435,15 +456,15 @@ SectionEnd
 ;--------------------------------------------------------
 Function DotNet20Exists
 	ClearErrors
-	ReadRegStr $1 HKLM "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v2.0.50727" "Version"
+	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v2.0.50727" "Version"
 	IfErrors MDNFNotFound MDNFFound
 
 	MDNFFound:
-		Push 0
+		Push 1
 		Goto ExitFunction
 
 	MDNFNotFound:
-		Push 1
+		Push 0
 		Goto ExitFunction
 
 	ExitFunction:
@@ -458,13 +479,43 @@ Function DotNet35Exists
 	IfErrors MDNFNotFound MDNFFound
 
 	MDNFFound:
-		Push 0
+		Push 1
 		Goto ExitFunction
 
 	MDNFNotFound:
-		Push 1
+		Push 0
 		Goto ExitFunction
 
 	ExitFunction:
 FunctionEnd
 
+;--------------------------------------------------------
+; Detects tbe internet
+;--------------------------------------------------------
+Function IsConnected 
+	Push $R0 
+	ClearErrors 
+	Dialer::AttemptConnect 
+	IfErrors noie3 
+	Pop $R0 
+
+	StrCmp $R0 "online" maybeConnected 
+		Push 0
+		Goto exitFunction
+
+	noie3:  ; IE3 not installed 
+		Push 0
+		Goto exitFunction
+
+	maybeConnected: 
+		Dialer::GetConnectedState 
+		Pop $R0
+		StrCmp $R0 "online" connected
+		Push 0 
+		Goto exitFunction
+		
+	connected: 
+		Push 1
+		
+	exitFunction:
+FunctionEnd 
