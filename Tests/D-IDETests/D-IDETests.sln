@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D-IDETests", "D-IDETests\D-IDETests.csproj", "{07CE14B6-77B1-41D9-AFE9-DD63DC95900F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DParser", "..\..\DParser\DParser\DParser.csproj", "{0290A229-9AA1-41C3-B525-CAFB86D8BC42}"
