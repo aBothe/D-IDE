@@ -16,6 +16,7 @@
 !define CLR_INSTALLER_HELPER ".\"
 
 !define DNF35_URL "http://download.microsoft.com/download/6/0/f/60fc5854-3cb8-4892-b6db-bd4f42510f28/dotnetfx35.exe"
+!define VCPPR2008_URL "http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
 !define DMD_URL "http://ftp.digitalmars.com/dinstaller.exe"
 
 !define /date FILEDATE "%Y%m%d"
@@ -252,6 +253,42 @@ Section "-.Net Framework 3.5" net35_section_id
 SectionEnd
 
 ;--------------------------------------------------------
+; Download and install the Visual C++ 7.0 Runtime
+;--------------------------------------------------------
+Section "-Visual C++ 2008 Runtime" vcpp2008runtime_section_id
+	Call VisualCPP2008RuntimeExists
+	Pop $1
+	IntCmp $1 0 SkipVCPP2008Runtime
+
+	StrCpy $1 "vcredist_x86.exe"
+	StrCpy $2 "$EXEDIR\$1"
+	IfFileExists $2 FileExistsAlready FileMissing
+		
+	FileMissing:
+		DetailPrint "Visual C++ 2008 Runtime not installed... Downloading file."
+		StrCpy $2 "$TEMP\$1"
+		NSISdl::download "${VCPPR2008_URL}" $2
+
+	FileExistsAlready:
+		DetailPrint "Installing the Visual C++ 2008 Runtime."
+		ExecWait "$2 /q"
+
+		Call VisualCPP2008RuntimeExists
+		Pop $1
+		IntCmp $1 0 VCPP2008RuntimeDone VCPP2008RuntimeFailed
+
+	VCPP2008RuntimeFailed:
+		DetailPrint "Visual C++ 2008 Runtime install failed... Aborting Install"
+		MessageBox MB_OK "Visual C++ 2008 Runtime install failed... Aborting Install"
+		Abort
+		
+	SkipVCPP2008Runtime:
+		DetailPrint "Visual C++ 2008 Runtime found... Continuing."
+		
+	VCPP2008RuntimeDone:
+SectionEnd
+
+;--------------------------------------------------------
 ; Install the D-IDE program files
 ;--------------------------------------------------------
 Section "-Install Program Files" install_section_id
@@ -471,6 +508,28 @@ Function DotNet35Exists
 
 	MDNFNotFound:
 		Push 0
+		Goto ExitFunction
+
+	ExitFunction:
+FunctionEnd
+
+;--------------------------------------------------------
+; Detects Visual C++ 2008 Runtime
+;--------------------------------------------------------
+Function VisualCPP2008RuntimeExists
+	ClearErrors
+	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{FF66E9F6-83E7-3A3E-AF14-8DE9A809A6A4}" "DisplayVersion"
+	IfErrors VCPP2008TryAgain VCPP2008Found
+	VCPP2008TryAgain:
+		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3C3D696B-0DB7-3C6D-A356-3DB8CE541918}" "DisplayVersion"
+		IfErrors VCPP2008NotFound VCPP2008Found
+
+	VCPP2008Found:
+		Push 0
+		Goto ExitFunction
+
+	VCPP2008NotFound:
+		Push 1
 		Goto ExitFunction
 
 	ExitFunction:
