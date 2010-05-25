@@ -1,5 +1,5 @@
 
-copy ".\TestInstallerHelper\bin\Release\DIDE.Installer.dll" .
+REM copy ".\TestInstallerHelper\bin\Release\DIDE.Installer.dll" .
 if "%PROGRAMFILES(X86)%"=="" goto :x86
 goto :x64
 :x86

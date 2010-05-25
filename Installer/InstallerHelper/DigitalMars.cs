@@ -50,6 +50,7 @@ namespace DIDE.Installer
         {
             if (versions.Count == 0)
             {
+                bool hasError = false;
                 if (DataFile.Exists)
                 {
                     string[] lines = File.ReadAllLines(DataFile.FullName);
@@ -59,9 +60,20 @@ namespace DIDE.Installer
                         ver = new CompilerVersion();
                         if (ver.FromString(lines[i]))
                             versions[ver.Version] = ver;
+                        else
+                            hasError = true;
+                        if (ver.HasError) hasError = true;
+                    }
+
+                    if (hasError)
+                    {
+                        DataFile.CopyTo(DataFile.FullName + "." + DateTime.Now.ToBinary() + ".log");
+                        DataFile.Delete();
+                        DataFile.Refresh();
                     }
                 }
-                else
+
+                if (!DataFile.Exists)
                 {
                     CompilerVersion ver1 = new CompilerVersion(), ver2 = new CompilerVersion();
                     int latestVer1 = 56, latestVer2 = 41, subVersion = 0;
@@ -120,8 +132,8 @@ namespace DIDE.Installer
                     }
                     catch (Exception ex)
                     {
-                        ver1.Url = ERROR_PREFIX + ex.Message + Environment.NewLine + ex.StackTrace;
-                        ver2.Url = ERROR_PREFIX + ex.Message + Environment.NewLine + ex.StackTrace;
+                        ver1.Error = ERROR_PREFIX + ex.Message + Environment.NewLine + ex.StackTrace;
+                        ver2.Error = ERROR_PREFIX + ex.Message + Environment.NewLine + ex.StackTrace;
                     }
                     versions[1] = ver1;
                     versions[2] = ver2;
@@ -135,24 +147,35 @@ namespace DIDE.Installer
 
         private class CompilerVersion
         {
+            public string Error { get; set; }
             public string Url { get; set; }
             public int Version { get; set; }
             public int SubVersion { get; set; }
             public bool FromString(string s)
             {
                 string[] items = s.Split('\t');
-                if (items.Length == 3)
+                if (items.Length == 4)
                 {
                     Version = Convert.ToInt32(items[0]);
                     SubVersion = Convert.ToInt32(items[1]);
-                    Url = items[2];
+                    Url = items[2].Trim();
+                    Error = items[3].Trim();
                     return true;
                 }
                 return false;
             }
+
+            public bool HasError
+            {
+                get { return !string.IsNullOrEmpty(Error); }
+            }
+
             public override string ToString()
             {
-                return Version.ToString() + "\t" + SubVersion.ToString() + "\t" + Url;
+                return Version.ToString() + "\t" + 
+                    SubVersion.ToString() + "\t" + 
+                    (string.IsNullOrEmpty(Url) ? " " : Url) + "\t" + 
+                    (string.IsNullOrEmpty(Error) ? " " : Error.Replace('\t', ' '));
             }
         }
     }

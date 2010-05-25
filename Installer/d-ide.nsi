@@ -163,7 +163,7 @@ Function DmdConfigPage
 	DownloadAndUnzip:
 		IntCmp $PERFORM_CLR_FEATURES 1 +2
 		Abort
-
+		
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
 		pop $DMD1_BIN_VERSION 
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Version" 0
@@ -193,6 +193,7 @@ Function DmdConfigPage
 
 		!insertmacro XPUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
 		!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config.ini"
+		
 FunctionEnd
 
 Function DmdConfigPageValidation

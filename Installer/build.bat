@@ -16,7 +16,7 @@ goto :x64
 
 %DEVENV% "..\D-IDE\D-IDE.sln"
 
-copy ".\TestInstallerHelper\bin\Release\DIDE.Installer.dll" .
+REM copy ".\TestInstallerHelper\bin\Release\DIDE.Installer.dll" .
 copy CLR.dll "%MAKENSIS%\Plugins\"
 copy nsisunz.dll "%MAKENSIS%\Plugins\"
 
