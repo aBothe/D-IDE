@@ -371,12 +371,12 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			IfFileExists $2 Dmd1FileExists Dmd2FileMissing
 			
 		Dmd1FileExists:
-			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD1_BIN_PATH) and unzip the new DMD 1 Compiler into it?" IDYES +1 IDNO Dmd2FileMissing
+			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD1_BIN_PATH) and unzip the new DMD 1 Compiler into it?" IDYES 0 IDNO Dmd2FileMissing
 			RMDir /r "$DMD1_BIN_PATH"
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "FixDmdInstallPath" 1 "$DMD1_BIN_PATH"
 			Pop $3
 			CreateDirectory "$3"
-			DetailPrint "Unzipping DMD 1.$DMD1_LATEST_VERSION."
+			DetailPrint "Unzipping DMD 1.$DMD1_LATEST_VERSION to $3."
 			nsisunz::Unzip "$2" "$3"
 			
 			DetailPrint "Downloading and instaling DMD 2.$DMD2_LATEST_VERSION to target location."
@@ -385,6 +385,7 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			IfFileExists $2 Dmd2FileExists Dmd2FileMissing
 		
 		Dmd2FileMissing:
+			StrCpy $1 "dmd2.$DMD2_LATEST_VERSION.zip"
 			StrCpy $2 "$EXEDIR\$1"
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Url" 0
 			Pop $0
@@ -392,12 +393,12 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 			IfFileExists $2 Dmd2FileExists ConfigureDMD
 			
 		Dmd2FileExists:
-			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD2_BIN_PATH) and unzip the new DMD 2 Compiler into it?" IDYES +1 IDNO ConfigureDMD
+			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD2_BIN_PATH) and unzip the new DMD 2 Compiler into it?" IDYES 0 IDNO ConfigureDMD
 			RMDir /r "$DMD2_BIN_PATH"
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "FixDmdInstallPath" 1 "$DMD2_BIN_PATH"
 			Pop $3
 			CreateDirectory "$3"
-			DetailPrint "Unzipping DMD 2.$DMD2_LATEST_VERSION."
+			DetailPrint "Unzipping DMD 2.$DMD2_LATEST_VERSION to $3."
 			nsisunz::Unzip "$2" "$3"
 			
 			Goto ConfigureDMD
@@ -419,7 +420,10 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
-
+		pop $1 
+		;StrCmp $1 "" +2 0
+			MessageBox MB_YESNO $1
+		
 	Finished:
 	
 SectionEnd
