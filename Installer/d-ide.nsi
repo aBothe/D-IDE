@@ -421,8 +421,8 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
 		pop $1 
-		;StrCmp $1 "" +2 0
-			MessageBox MB_YESNO $1
+		StrCmp $1 "" +2 0
+		DetailPrint $1
 		
 	Finished:
 	
