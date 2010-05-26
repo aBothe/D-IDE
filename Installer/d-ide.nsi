@@ -1,11 +1,12 @@
 ;--------------------------------------------------------
 ; Include ExperienceUI
 ;--------------------------------------------------------
-!ifdef XPUI_SYSDIR
-	!include "${XPUI_SYSDIR}\XPUI.nsh"
-!else
-	!include "XPUI.nsh"
-!endif
+;!ifdef XPUI_SYSDIR
+;	!include "${XPUI_SYSDIR}\XPUI.nsh"
+;!else
+;	!include "XPUI.nsh"
+;!endif
+!include MUI2.nsh
 
 ;--------------------------------------------------------
 ; Setting custom variables and constants
@@ -18,6 +19,7 @@
 !define DNF35_URL "http://download.microsoft.com/download/6/0/f/60fc5854-3cb8-4892-b6db-bd4f42510f28/dotnetfx35.exe"
 !define VCPPR2008_URL "http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
 !define DMD_URL "http://ftp.digitalmars.com/dinstaller.exe"
+!define DMD_FILE_LIST_URL "http://ftp.digitalmars.com/"
 
 !define /date FILEDATE "%Y%m%d"
 !define /date DATE "%Y.%m.%d"
@@ -55,8 +57,11 @@ RequestExecutionLevel highest
 ;--------------------------------------------------------
 Function .onInit
 	InitPluginsDir
-	!insertmacro XPUI_INSTALLOPTIONS_EXTRACT "dmd-config-choice.ini"
-	!insertmacro XPUI_INSTALLOPTIONS_EXTRACT "dmd-config.ini"
+	;!insertmacro XPUI_INSTALLOPTIONS_EXTRACT "dmd-config-choice.ini"
+	;!insertmacro XPUI_INSTALLOPTIONS_EXTRACT "dmd-config.ini"
+	File /oname=$PLUGINSDIR\dmd-config-choice.ini "dmd-config-choice.ini"
+	File /oname=$PLUGINSDIR\dmd-config.ini "dmd-config.ini"
+	
 	SetOutPath $PLUGINSDIR
 	File "DIDE.Installer.dll"
 	
@@ -73,7 +78,12 @@ Function .onInit
 	Pop $PERFORM_CLR_FEATURES
 	IntCmp $PERFORM_CLR_FEATURES 1 0 +2 +2
 	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
-		
+	
+	
+	;NSISdl::download "${DMD_FILE_LIST_URL}" $2
+	;pop $3
+	MessageBox MB_OK "$3 $2"
+	
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -86,30 +96,52 @@ FunctionEnd
 Function .onInstSuccess
     CLR::Destroy
 FunctionEnd
+ 
+;--------------------------------------------------------
+; Modern UI Configuration 
+;--------------------------------------------------------
+!define MUI_HEADERIMAGE
+!define MUI_HEADERIMAGE_BITMAP ".\d-ide-logo.bmp";
+!define MUI_ABORTWARNING
+
+;Installer Pages
+!insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_LICENSE "License.rtf"
+!insertmacro MUI_PAGE_DIRECTORY
+Page custom DmdConfigChoicePage DmdConfigChoicePageValidation 
+Page custom DmdConfigPage DmdConfigPageValidation 
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
+
+;Uninstaller Pages
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES
+
+!insertmacro MUI_LANGUAGE "English"
 
 ;--------------------------------------------------------
 ; Custom Experience UI Configuration
 ;--------------------------------------------------------
-!define XPUI_ABORTWARNING
+;!define XPUI_ABORTWARNING
 
-${Page} Welcome
-${LicensePage} ".\License.rtf"
-${Page} Directory
-Page custom DmdConfigChoicePage DmdConfigChoicePageValidation 
-Page custom DmdConfigPage DmdConfigPageValidation 
+;${Page} Welcome
+;${LicensePage} ".\License.rtf"
+;${Page} Directory
+;Page custom DmdConfigChoicePage DmdConfigChoicePageValidation 
+;Page custom DmdConfigPage DmdConfigPageValidation 
 ;${Page} Components
-${Page} InstFiles
-${Page} Finish
+;${Page} InstFiles
+;${Page} Finish
 
-${UnPage} Welcome
-!insertmacro XPUI_PAGEMODE_UNINST
-!insertmacro XPUI_PAGE_UNINSTCONFIRM_NSIS
-!insertmacro XPUI_PAGE_INSTFILES
-!insertmacro XPUI_LANGUAGE "English"
+;${UnPage} Welcome
+;!insertmacro XPUI_PAGEMODE_UNINST
+;!insertmacro XPUI_PAGE_UNINSTCONFIRM_NSIS
+;!insertmacro XPUI_PAGE_INSTFILES
+;!insertmacro XPUI_LANGUAGE "English"
 
 ReserveFile "dmd-config-choice.ini"
 ReserveFile "dmd-config.ini"
-!insertmacro XPUI_RESERVEFILE_INSTALLOPTIONS
+;!insertmacro XPUI_RESERVEFILE_INSTALLOPTIONS
 
 ;--------------------------------------------------------
 ; Setup Icons
@@ -121,8 +153,11 @@ UninstallIcon ".\uninstall.ico"
 ; In this section, we shall use a custom configuration page.
 ;------------------------------------------------------------------------
 Function DmdConfigChoicePage
-	!insertmacro XPUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
-	!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config-choice.ini"
+	;!insertmacro XPUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
+	;!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config-choice.ini"
+	
+	!insertmacro MUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
+	InstallOptions::dialog "$PLUGINSDIR\dmd-config-choice.ini"
 FunctionEnd
 
 Function DmdConfigChoicePageValidation
@@ -163,7 +198,7 @@ Function DmdConfigPage
 	DownloadAndUnzip:
 		IntCmp $PERFORM_CLR_FEATURES 1 +2
 		Abort
-		
+
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
 		pop $DMD1_BIN_VERSION 
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Version" 0
@@ -191,9 +226,11 @@ Function DmdConfigPage
 		pop $DMD2_BIN_PATH 
 		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 7" "State" $DMD2_BIN_PATH
 
-		!insertmacro XPUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
-		!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config.ini"
+	;!insertmacro XPUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
+	;!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config.ini"
 		
+	!insertmacro MUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
+	InstallOptions::dialog "$PLUGINSDIR\dmd-config.ini"
 FunctionEnd
 
 Function DmdConfigPageValidation
