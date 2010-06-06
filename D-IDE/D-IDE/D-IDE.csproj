@@ -68,12 +68,13 @@
     <UseVSHostingProcess>true</UseVSHostingProcess>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
+  <PropertyGroup />
   <ItemGroup>
     <Reference Include="cv2pdb, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\externalDeps\cv2pdb.dll</HintPath>
     </Reference>
-    <Reference Include="DebugEngineWrapper, Version=1.0.3768.32488, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="DebugEngineWrapper, Version=1.0.3797.25975, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\externalDeps\DebugEngineWrapper.dll</HintPath>
     </Reference>
@@ -106,6 +107,7 @@
     <Reference Include="System.Deployment" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="WeifenLuo.WinFormsUI.Docking, Version=2.2.3633.27487, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
