@@ -402,7 +402,7 @@ namespace D_IDE
                     }
                     catch (Exception ex)
                     {
-                        if (Debugger.IsAttached) throw ex;
+                        //if (Debugger.IsAttached) throw ex;
                         if (Form1.thisForm != null) Form1.thisForm.Log(tf);
                         if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n\n\n" + ex.StackTrace, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {

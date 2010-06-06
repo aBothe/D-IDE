@@ -301,8 +301,11 @@ namespace D_IDE
 			//cacheTh = new Thread(delegate(object o)			{
             if (cc.GlobalModules != null && cc.GlobalModules.Count > 1)
             {
-                BinaryDataTypeStorageWriter bsw = new BinaryDataTypeStorageWriter(file);
+                BinaryDataTypeStorageWriter bsw = new BinaryDataTypeStorageWriter();
                 bsw.WriteModules(cc.ImportDirectories.ToArray(), cc.GlobalModules);
+                MemoryStream ms = (MemoryStream)bsw.BinStream.BaseStream;
+                File.WriteAllBytes(file,ms.ToArray());
+                ms.Close();
                 bsw.Close();
             }
 			Program.Parsing = false;

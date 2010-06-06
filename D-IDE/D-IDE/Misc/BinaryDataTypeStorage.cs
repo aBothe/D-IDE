@@ -16,6 +16,12 @@ namespace D_IDE
         public BinaryWriter BinStream;
         public const uint ModuleInitializer = (uint)('D') | ('M' << 8) | ('o' << 16) | ('d' << 24);
         public const uint NodeInitializer = (uint)('N') | ('o' << 8) | ('d' << 16) | ('e' << 24);
+
+        public BinaryDataTypeStorageWriter()
+        {
+            BinStream = new BinaryWriter(new MemoryStream());
+        }
+
         public BinaryDataTypeStorageWriter(string file)
         {
             FileStream fs = new FileStream(file, FileMode.Create, FileAccess.Write);
