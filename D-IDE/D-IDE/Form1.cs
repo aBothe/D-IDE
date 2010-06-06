@@ -107,10 +107,10 @@ namespace D_IDE
 
             DParser.OnError += DParser_OnError;
             DParser.OnSemanticError += DParser_OnSemanticError;
-
+            /*
             webclient.DownloadFileCompleted += new AsyncCompletedEventHandler(wc_DownloadFileCompleted);
             webclient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(wc_DownloadStringCompleted);
-
+            */
             DBuilder.OnOutput += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnOutput);
             DBuilder.OnError += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnError);
             DBuilder.OnExit += new EventHandler(DBuilder_OnExit);
@@ -144,7 +144,7 @@ namespace D_IDE
             ProgressStatusLabel.Text = "D-IDE launched in " + tspan.TotalSeconds.ToString() + " seconds";
             if (D_IDE_Properties.Default.WatchForUpdates)
             {
-                CheckForUpdates();
+                //CheckForUpdates();
             }
         }
 
@@ -1096,12 +1096,13 @@ namespace D_IDE
 
         public static ImageList InitCodeCompletionIcons()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            
+            System.Resources.ResourceManager rm=new System.Resources.ResourceManager("D_IDE.Icons",Assembly.GetAssembly(typeof(Form1)));
             icons = new ImageList();
             // 
             // icons
             // 
-            icons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("icons.ImageStream")));
+            icons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(rm.GetObject("icons.ImageStream")));
             icons.TransparentColor = System.Drawing.Color.Transparent;
             icons.Images.SetKeyName(0, "Icons.16x16.Enum.png");
             icons.Images.SetKeyName(1, "Icons.16x16.Field.png");
@@ -1418,7 +1419,7 @@ namespace D_IDE
 
         #region Updates
 
-        public static WebClient webclient = new WebClient();
+        /*public static WebClient webclient = new WebClient();
         public Thread RevisionUpdateThread;
         public void CheckForUpdates()
         {
@@ -1503,7 +1504,7 @@ namespace D_IDE
                 }
                 catch (Exception ex) { MessageBox.Show(ex.Message); }
             }
-        }
+        }*/
 
         private void visitAlexanderbothecomToolStripMenuItem_Click(object sender, EventArgs e)
         {

@@ -81,6 +81,7 @@
             this.BinPath.Name = "BinPath";
             this.BinPath.Size = new System.Drawing.Size(378, 20);
             this.BinPath.TabIndex = 0;
+            this.BinPath.Text = "C:\\dmd2\\windows\\bin";
             // 
             // groupBox2
             // 

@@ -41,6 +41,8 @@
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addExistingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.directoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             this.lastOpenFiles = new System.Windows.Forms.ToolStripMenuItem();
             this.lastOpenProjects = new System.Windows.Forms.ToolStripMenuItem();
@@ -93,8 +95,6 @@
             this.updateCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stopParsingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.watchForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.visitDidesourceforgenetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.visitAlexanderbothecomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
@@ -139,8 +139,6 @@
             this.stepOutTS = new System.Windows.Forms.ToolStripButton();
             this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
             this.searchTool = new System.Windows.Forms.ToolStripTextBox();
-            this.fileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.directoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -254,6 +252,20 @@
             this.addExistingToolStripMenuItem.Name = "addExistingToolStripMenuItem";
             this.addExistingToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
             this.addExistingToolStripMenuItem.Text = "Add existing";
+            // 
+            // fileToolStripMenuItem1
+            // 
+            this.fileToolStripMenuItem1.Name = "fileToolStripMenuItem1";
+            this.fileToolStripMenuItem1.Size = new System.Drawing.Size(122, 22);
+            this.fileToolStripMenuItem1.Text = "File";
+            this.fileToolStripMenuItem1.Click += new System.EventHandler(this.AddExistingFile);
+            // 
+            // directoryToolStripMenuItem
+            // 
+            this.directoryToolStripMenuItem.Name = "directoryToolStripMenuItem";
+            this.directoryToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.directoryToolStripMenuItem.Text = "Directory";
+            this.directoryToolStripMenuItem.Click += new System.EventHandler(this.AddExistingDirectory);
             // 
             // toolStripSeparator8
             // 
@@ -668,8 +680,6 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.watchForUpdatesToolStripMenuItem,
-            this.checkForUpdatesToolStripMenuItem,
             this.visitDidesourceforgenetToolStripMenuItem,
             this.visitAlexanderbothecomToolStripMenuItem,
             this.toolStripSeparator4,
@@ -680,55 +690,41 @@
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
             this.aboutToolStripMenuItem.Text = "About";
             // 
-            // watchForUpdatesToolStripMenuItem
-            // 
-            this.watchForUpdatesToolStripMenuItem.Name = "watchForUpdatesToolStripMenuItem";
-            this.watchForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
-            this.watchForUpdatesToolStripMenuItem.Text = "Watch for updates";
-            this.watchForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
-            // 
-            // checkForUpdatesToolStripMenuItem
-            // 
-            this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
-            this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
-            this.checkForUpdatesToolStripMenuItem.Text = "Download latest D-IDE revision";
-            this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.DownloadLatestRevision);
-            // 
             // visitDidesourceforgenetToolStripMenuItem
             // 
             this.visitDidesourceforgenetToolStripMenuItem.Name = "visitDidesourceforgenetToolStripMenuItem";
-            this.visitDidesourceforgenetToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+            this.visitDidesourceforgenetToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.visitDidesourceforgenetToolStripMenuItem.Text = "Visit d-ide.sourceforge.net";
             this.visitDidesourceforgenetToolStripMenuItem.Click += new System.EventHandler(this.visitDidesourceforgenetToolStripMenuItem_Click);
             // 
             // visitAlexanderbothecomToolStripMenuItem
             // 
             this.visitAlexanderbothecomToolStripMenuItem.Name = "visitAlexanderbothecomToolStripMenuItem";
-            this.visitAlexanderbothecomToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+            this.visitAlexanderbothecomToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.visitAlexanderbothecomToolStripMenuItem.Text = "Visit alexanderbothe.com";
             this.visitAlexanderbothecomToolStripMenuItem.Click += new System.EventHandler(this.visitAlexanderbothecomToolStripMenuItem_Click);
             // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(233, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(227, 6);
             // 
             // aboutDIDEToolStripMenuItem
             // 
             this.aboutDIDEToolStripMenuItem.Name = "aboutDIDEToolStripMenuItem";
-            this.aboutDIDEToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+            this.aboutDIDEToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.aboutDIDEToolStripMenuItem.Text = "About D-IDE";
             this.aboutDIDEToolStripMenuItem.Click += new System.EventHandler(this.aboutDIDEToolStripMenuItem_Click);
             // 
             // toolStripSeparator12
             // 
             this.toolStripSeparator12.Name = "toolStripSeparator12";
-            this.toolStripSeparator12.Size = new System.Drawing.Size(233, 6);
+            this.toolStripSeparator12.Size = new System.Drawing.Size(227, 6);
             // 
             // howToDebugDExecutablesToolStripMenuItem
             // 
             this.howToDebugDExecutablesToolStripMenuItem.Name = "howToDebugDExecutablesToolStripMenuItem";
-            this.howToDebugDExecutablesToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+            this.howToDebugDExecutablesToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.howToDebugDExecutablesToolStripMenuItem.Text = "How to debug D executables?";
             this.howToDebugDExecutablesToolStripMenuItem.Click += new System.EventHandler(this.howToDebugDExecutablesToolStripMenuItem_Click);
             // 
@@ -761,18 +757,18 @@
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.dockPanel.DefaultFloatWindowSize = new System.Drawing.Size(400, 300);
-            this.dockPanel.DockLeftPortion = 0.15;
-            this.dockPanel.DockRightPortion = 0.15;
-            this.dockPanel.DockTopPortion = 0.2;
+            this.dockPanel.DockLeftPortion = 0.15D;
+            this.dockPanel.DockRightPortion = 0.15D;
+            this.dockPanel.DockTopPortion = 0.2D;
             this.dockPanel.DocumentStyle = WeifenLuo.WinFormsUI.Docking.DocumentStyle.DockingSdi;
             this.dockPanel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.World);
             this.dockPanel.Location = new System.Drawing.Point(0, 52);
             this.dockPanel.Name = "dockPanel";
             this.dockPanel.Size = new System.Drawing.Size(1015, 510);
             this.dockPanel.TabIndex = 2;
-            this.dockPanel.DragOver += new System.Windows.Forms.DragEventHandler(this.tc_DragOver);
-            this.dockPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.tc_DragDrop);
             this.dockPanel.ActiveDocumentChanged += new System.EventHandler(this.TabSelectionChanged);
+            this.dockPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.tc_DragDrop);
+            this.dockPanel.DragOver += new System.Windows.Forms.DragEventHandler(this.tc_DragOver);
             // 
             // contextMenuStrip1
             // 
@@ -1080,20 +1076,6 @@
             this.searchTool.ToolTipText = "Press <Return> for search in current document";
             this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
             // 
-            // fileToolStripMenuItem1
-            // 
-            this.fileToolStripMenuItem1.Name = "fileToolStripMenuItem1";
-            this.fileToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
-            this.fileToolStripMenuItem1.Text = "File";
-            this.fileToolStripMenuItem1.Click += new System.EventHandler(this.AddExistingFile);
-            // 
-            // directoryToolStripMenuItem
-            // 
-            this.directoryToolStripMenuItem.Name = "directoryToolStripMenuItem";
-            this.directoryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.directoryToolStripMenuItem.Text = "Directory";
-            this.directoryToolStripMenuItem.Click += new System.EventHandler(this.AddExistingDirectory);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1150,8 +1132,7 @@
 		private System.Windows.Forms.ToolStripMenuItem searchReplaceToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem findNextToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
-		private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem checkForUpdatesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem visitAlexanderbothecomToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
 		private System.Windows.Forms.ToolStripMenuItem formatFileToolStripMenuItem;
@@ -1224,8 +1205,7 @@
 		private System.Windows.Forms.ToolStripMenuItem visitDidesourceforgenetToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem runUntilMainToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator10;
-		private System.Windows.Forms.ToolStripMenuItem showCompletionWindowToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem watchForUpdatesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showCompletionWindowToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator18;
         private System.Windows.Forms.ToolStripMenuItem reloadProjectTreeToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator19;

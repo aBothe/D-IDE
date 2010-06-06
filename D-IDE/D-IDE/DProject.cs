@@ -170,6 +170,7 @@ namespace D_IDE
 		{
 			isRelease = false;
 			libs = new List<string>();
+
 			execargs = "";
 			linkargs = "";
 			compileargs = "";
