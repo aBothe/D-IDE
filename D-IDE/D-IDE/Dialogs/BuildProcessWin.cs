@@ -19,8 +19,8 @@ namespace D_IDE
 
 		public void Log(string m)
 		{
-			if (tbox.TextLength < 1) tbox.Text = m;
-			if (!String.IsNullOrEmpty(m))
+			if (tbox.TextLength < 1) tbox.Text = m+"\r\n";
+			else if (!String.IsNullOrEmpty(m))
 			{
 				tbox.Text += m + "\r\n"; //m + (m.EndsWith("\r\n")?"":"\r\n") + tbox.Text;
 				tbox.Select(tbox.TextLength - 1, 0);

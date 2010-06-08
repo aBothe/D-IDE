@@ -248,6 +248,7 @@
     <Compile Include="Misc\SetupWizardDialog.Designer.cs">
       <DependentUpon>SetupWizardDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Misc\Util.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Dialogs\ProjectExplorer.cs">
       <SubType>Form</SubType>
