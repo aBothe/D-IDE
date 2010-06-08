@@ -138,6 +138,7 @@ namespace D_IDE.Dialogs
 
 		private void button3_Click(object sender, EventArgs e)
 		{
+            
 			fD.SelectedPath = prjdir.Text;
 			if(fD.ShowDialog() == DialogResult.OK)
 			{

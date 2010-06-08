@@ -578,7 +578,7 @@ namespace D_IDE
             output.Clear();
 
             DebugCreateProcessOptions opt = new DebugCreateProcessOptions();
-            opt.CreateFlags = CreateFlags.DebugOnlyThisProcess;
+            opt.CreateFlags = CreateFlags.DebugOnlyThisProcess|(D_IDE_Properties.Default.ShowExternalConsoleWhenExecuting?CreateFlags.CreateNewConsole:0);
             opt.EngCreateFlags = EngCreateFlags.Default;
 
             dbg.CreateProcessAndAttach(0, exe + (prj != null ? (" " + prj.execargs) : ""), opt, Path.GetDirectoryName(exe), "", 0, 0);
@@ -630,7 +630,7 @@ namespace D_IDE
                 if (wr == WaitResult.Unexpected) break;
                 Application.DoEvents();
             }
-            ProgressStatusLabel.Text = "Debuggee broke into debugger...";
+            if(wr!=WaitResult.Unexpected)ProgressStatusLabel.Text = "Debuggee broke into debugger...";
         }
 
         public bool AllDocumentsReadOnly

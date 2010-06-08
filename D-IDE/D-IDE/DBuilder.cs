@@ -7,6 +7,7 @@ using System.Threading;
 using System.Diagnostics;
 using D_Parser;
 using Microsoft.Win32;
+using System.Runtime.InteropServices;
 
 namespace D_IDE
 {
@@ -280,7 +281,7 @@ namespace D_IDE
             if(!Path.IsPathRooted(exe))
                 exe=cc.BinDirectory + "\\" + exe;
 
-            Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, true);
+            Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, false);
             if (prc == null) return null;
             if (!prc.WaitForExit(10 * 1000))
             {
@@ -328,7 +329,7 @@ namespace D_IDE
             args = args.Replace("$src", file);
             args = args.Replace("$obj", target);
 
-            Process prc = DBuilder.Exec(Path.IsPathRooted(cc.SoureCompiler) ? cc.SoureCompiler : (cc.BinDirectory + "\\" + cc.SoureCompiler), args + " " + additionalArgs, exeDir, true);
+            Process prc = DBuilder.Exec(Path.IsPathRooted(cc.SoureCompiler) ? cc.SoureCompiler : (cc.BinDirectory + "\\" + cc.SoureCompiler), args + " " + additionalArgs, exeDir, false);
             if (prc == null) return false;
             if (!prc.WaitForExit(ProcessExecutionTimeLimit))
             {
@@ -348,7 +349,7 @@ namespace D_IDE
             args = args.Replace("$rc", file);
             args = args.Replace("$res", target);
 
-            Process prc = DBuilder.Exec(Path.IsPathRooted(cc.ResourceCompiler)? cc.ResourceCompiler:(cc.BinDirectory+"\\"+cc.ResourceCompiler), args, exeDir, true);
+            Process prc = DBuilder.Exec(Path.IsPathRooted(cc.ResourceCompiler)? cc.ResourceCompiler:(cc.BinDirectory+"\\"+cc.ResourceCompiler), args, exeDir, false);
             if (prc == null) return false;
             if (!prc.WaitForExit(10 * 1000))
             {
@@ -371,11 +372,11 @@ namespace D_IDE
         public static Process Exec(string cmd, string args, string execdir, bool showConsole)
         {
             ProcessStartInfo psi = new ProcessStartInfo();
-            psi.CreateNoWindow = showConsole;
-            psi.RedirectStandardError = true;
-            psi.RedirectStandardInput = showConsole;
-            psi.RedirectStandardOutput = showConsole;
-            psi.UseShellExecute = false;
+            psi.CreateNoWindow = !showConsole;
+            psi.RedirectStandardError = !showConsole;
+            psi.RedirectStandardInput = !showConsole;
+            psi.RedirectStandardOutput = !showConsole;
+            psi.UseShellExecute = showConsole;
             psi.WorkingDirectory = execdir;
 
             psi.FileName = cmd;
@@ -385,7 +386,7 @@ namespace D_IDE
 
             proc.StartInfo = psi;
             proc.ErrorDataReceived += new DataReceivedEventHandler(p_ErrorDataReceived);
-            if (showConsole) proc.OutputDataReceived += new DataReceivedEventHandler(p_OutputDataReceived);
+            if (!showConsole) proc.OutputDataReceived += new DataReceivedEventHandler(p_OutputDataReceived);
             if (D_IDE_Properties.Default.ShowBuildCommands) OnMessage(null, cmd, cmd + " " + args);
             proc.Exited += new EventHandler(running_Exited);
 
@@ -399,8 +400,11 @@ namespace D_IDE
                 return null;
             }
 
-            if (showConsole) proc.BeginOutputReadLine();
-            proc.BeginErrorReadLine();
+            if (!showConsole)
+            {
+                proc.BeginOutputReadLine();
+                proc.BeginErrorReadLine();
+            }
             return proc;
         }
 

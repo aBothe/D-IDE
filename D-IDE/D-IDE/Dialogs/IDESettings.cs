@@ -126,6 +126,7 @@ namespace D_IDE
 
 			verbosedbgoutput.Checked = D_IDE_Properties.Default.VerboseDebugOutput;
 			AutoSkipUnknownCode.Checked = D_IDE_Properties.Default.SkipUnknownCode;
+            ShowNewProgramConsole.Checked = D_IDE_Properties.Default.ShowExternalConsoleWhenExecuting;
 
 			HighlightingEntries = D_IDE_Properties.Default.SyntaxHighlightingEntries;
 			foreach (string ext in HighlightingEntries.Keys)
@@ -179,6 +180,7 @@ namespace D_IDE
 
 			D_IDE_Properties.Default.VerboseDebugOutput = verbosedbgoutput.Checked;
 			D_IDE_Properties.Default.SkipUnknownCode = AutoSkipUnknownCode.Checked;
+            D_IDE_Properties.Default.ShowExternalConsoleWhenExecuting = ShowNewProgramConsole.Checked;
 
 			D_IDE_Properties.Default.SyntaxHighlightingEntries = HighlightingEntries;
 		}

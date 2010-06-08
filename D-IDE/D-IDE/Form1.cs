@@ -559,7 +559,7 @@ namespace D_IDE
                     if (File.Exists(single_bin))
                     {
                         output.Show();
-                        exeProc = DBuilder.Exec(single_bin, "", Path.GetDirectoryName(single_bin), true);
+                        exeProc = DBuilder.Exec(single_bin, "", Path.GetDirectoryName(single_bin), D_IDE_Properties.Default.ShowExternalConsoleWhenExecuting);
                         exeProc.Exited += delegate(object se, EventArgs ev)
                         {
                             dbgStopButtonTS.Enabled = false;
@@ -585,7 +585,7 @@ namespace D_IDE
                 if (prj.type == DProject.PrjType.ConsoleApp) output.Show();
 
                 output.Log("Executing " + prj.targetfilename);
-                exeProc = DBuilder.Exec(bin, prj.execargs, prj.basedir, true); //prj.type == DProject.PrjType.ConsoleApp
+                exeProc = DBuilder.Exec(bin, prj.execargs, prj.basedir, D_IDE_Properties.Default.ShowExternalConsoleWhenExecuting); //prj.type == DProject.PrjType.ConsoleApp
                 if (exeProc == null) return false;
 
                 exeProc.Exited += delegate(object se, EventArgs ev)
@@ -1153,6 +1153,16 @@ namespace D_IDE
 
         private void setDefaultPanelLayout(object sender, EventArgs e)
         {
+            hierarchy.Close();
+            prjexplorer.Close();
+            dbgwin.Close();
+            bpw.Close();
+            output.Close();
+            errlog.Close();
+            callstackwin.Close();
+            dbgLocalswin.Close();
+            propView.Close();
+
             hierarchy.Show(dockPanel, DockState.DockRight);
             prjexplorer.Show(dockPanel, DockState.DockLeft);
             dbgwin.Show(dockPanel, DockState.DockBottomAutoHide);

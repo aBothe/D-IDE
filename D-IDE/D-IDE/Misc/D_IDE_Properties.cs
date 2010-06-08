@@ -251,6 +251,13 @@ namespace D_IDE
                                     else break;
                                 }
                                 break;
+
+                            case "shownewconsolewhenexecuting":
+                                if (xr.MoveToAttribute("value"))
+                                {
+                                    p.ShowExternalConsoleWhenExecuting = xr.Value == "1";
+                                }
+                                break;
                         }
                     }
                 }
@@ -445,6 +452,10 @@ namespace D_IDE
 			}
 			xw.WriteEndElement();
 
+            xw.WriteStartElement("shownewconsolewhenexecuting");
+            xw.WriteAttributeString("value", Default.ShowExternalConsoleWhenExecuting ? "1" : "0");
+            xw.WriteEndElement();
+
 			xw.WriteEndDocument();
 			xw.Close();
 		}
@@ -524,6 +535,7 @@ namespace D_IDE
 		#region Debugging
 		public bool VerboseDebugOutput = false;
 		public bool SkipUnknownCode = true;
+        public bool ShowExternalConsoleWhenExecuting = true;
 		#endregion
 
 		public bool EnableFXFormsDesigner = false; // For those who want to experiment a little bit ;-)

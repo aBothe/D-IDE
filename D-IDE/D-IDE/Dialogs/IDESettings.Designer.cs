@@ -31,7 +31,6 @@
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.Label label13;
             System.Windows.Forms.Label label12;
-            System.Windows.Forms.Label label11;
             System.Windows.Forms.Label label9;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(IDESettings));
             System.Windows.Forms.Label label8;
@@ -49,6 +48,7 @@
             System.Windows.Forms.Button button2;
             System.Windows.Forms.Button button8;
             System.Windows.Forms.Button button9;
+            System.Windows.Forms.Label label11;
             this.button1 = new System.Windows.Forms.Button();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.BinDirectory = new System.Windows.Forms.TextBox();
@@ -58,7 +58,6 @@
             this.cmp_to_obj = new System.Windows.Forms.TextBox();
             this.link_to_exe = new System.Windows.Forms.TextBox();
             this.link_to_lib = new System.Windows.Forms.TextBox();
-            this.CreatePDB = new System.Windows.Forms.CheckBox();
             this.DoAutoSave = new System.Windows.Forms.CheckBox();
             this.UseIntegDbg = new System.Windows.Forms.CheckBox();
             this.showCompleteLog = new System.Windows.Forms.CheckBox();
@@ -107,9 +106,10 @@
             this.HighLightingExt = new System.Windows.Forms.TextBox();
             this.HighLightingExts = new System.Windows.Forms.ListBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.CreatePDB = new System.Windows.Forms.CheckBox();
+            this.ShowNewProgramConsole = new System.Windows.Forms.CheckBox();
             label13 = new System.Windows.Forms.Label();
             label12 = new System.Windows.Forms.Label();
-            label11 = new System.Windows.Forms.Label();
             label9 = new System.Windows.Forms.Label();
             label8 = new System.Windows.Forms.Label();
             label6 = new System.Windows.Forms.Label();
@@ -126,6 +126,7 @@
             button2 = new System.Windows.Forms.Button();
             button8 = new System.Windows.Forms.Button();
             button9 = new System.Windows.Forms.Button();
+            label11 = new System.Windows.Forms.Label();
             this.tabPage1.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -156,15 +157,6 @@
             label12.Size = new System.Drawing.Size(39, 13);
             label12.TabIndex = 32;
             label12.Text = "Debug";
-            // 
-            // label11
-            // 
-            label11.AutoSize = true;
-            label11.Location = new System.Drawing.Point(125, 372);
-            label11.Name = "label11";
-            label11.Size = new System.Drawing.Size(135, 26);
-            label11.TabIndex = 26;
-            label11.Text = "Requires mspdb80.dll to be\r\ninstalled somewhere";
             // 
             // label9
             // 
@@ -446,16 +438,6 @@
             this.link_to_lib.Name = "link_to_lib";
             this.link_to_lib.Size = new System.Drawing.Size(150, 20);
             this.link_to_lib.TabIndex = 30;
-            // 
-            // CreatePDB
-            // 
-            this.CreatePDB.AutoSize = true;
-            this.CreatePDB.Location = new System.Drawing.Point(110, 352);
-            this.CreatePDB.Name = "CreatePDB";
-            this.CreatePDB.Size = new System.Drawing.Size(160, 17);
-            this.CreatePDB.TabIndex = 25;
-            this.CreatePDB.Text = "Create .pdb file after building";
-            this.CreatePDB.UseVisualStyleBackColor = true;
             // 
             // DoAutoSave
             // 
@@ -817,6 +799,7 @@
             // 
             // tabPage4
             // 
+            this.tabPage4.Controls.Add(this.ShowNewProgramConsole);
             this.tabPage4.Controls.Add(this.ShowDbgPanelsOnDebugging);
             this.tabPage4.Controls.Add(this.AutoSkipUnknownCode);
             this.tabPage4.Controls.Add(this.verbosedbgoutput);
@@ -951,6 +934,35 @@
             // 
             this.toolTip1.AutomaticDelay = 250;
             // 
+            // label11
+            // 
+            label11.AutoSize = true;
+            label11.Location = new System.Drawing.Point(125, 372);
+            label11.Name = "label11";
+            label11.Size = new System.Drawing.Size(135, 26);
+            label11.TabIndex = 26;
+            label11.Text = "Requires mspdb80.dll to be\r\ninstalled somewhere";
+            // 
+            // CreatePDB
+            // 
+            this.CreatePDB.AutoSize = true;
+            this.CreatePDB.Location = new System.Drawing.Point(110, 352);
+            this.CreatePDB.Name = "CreatePDB";
+            this.CreatePDB.Size = new System.Drawing.Size(160, 17);
+            this.CreatePDB.TabIndex = 25;
+            this.CreatePDB.Text = "Create .pdb file after building";
+            this.CreatePDB.UseVisualStyleBackColor = true;
+            // 
+            // ShowNewProgramConsole
+            // 
+            this.ShowNewProgramConsole.AutoSize = true;
+            this.ShowNewProgramConsole.Location = new System.Drawing.Point(8, 75);
+            this.ShowNewProgramConsole.Name = "ShowNewProgramConsole";
+            this.ShowNewProgramConsole.Size = new System.Drawing.Size(238, 17);
+            this.ShowNewProgramConsole.TabIndex = 28;
+            this.ShowNewProgramConsole.Text = "Show executed programs in an extra console";
+            this.ShowNewProgramConsole.UseVisualStyleBackColor = true;
+            // 
             // IDESettings
             // 
             this.AcceptButton = this.button1;
@@ -1028,8 +1040,7 @@
 		private System.Windows.Forms.Button HighLightingDelExt;
 		private System.Windows.Forms.Button HighlightingAddExt;
 		private System.Windows.Forms.TextBox HighLightingExt;
-		private System.Windows.Forms.ListBox HighLightingExts;
-		private System.Windows.Forms.CheckBox CreatePDB;
+        private System.Windows.Forms.ListBox HighLightingExts;
 		private System.Windows.Forms.CheckBox ShowDbgPanelsOnDebugging;
 		private System.Windows.Forms.CheckBox StoreSettingsAtUserDocs;
 		private System.Windows.Forms.TextBox link_win_exe;
@@ -1042,5 +1053,7 @@
 		private System.Windows.Forms.GroupBox groupBox2;
 		private System.Windows.Forms.GroupBox groupBox3;
 		private System.Windows.Forms.ListBox D2Imports;
+        private System.Windows.Forms.CheckBox CreatePDB;
+        private System.Windows.Forms.CheckBox ShowNewProgramConsole;
 	}
 }
