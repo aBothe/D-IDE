@@ -591,7 +591,6 @@ namespace D_IDE
                 exeProc.Exited += delegate(object se, EventArgs ev)
                 {
                     dbgStopButtonTS.Enabled = false;
-                    DBuilder_OnExit(se, ev);
                 };
                 exeProc.EnableRaisingEvents = true;
                 dbgStopButtonTS.Enabled = true;
