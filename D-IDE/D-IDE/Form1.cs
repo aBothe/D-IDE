@@ -1152,15 +1152,15 @@ namespace D_IDE
 
         private void setDefaultPanelLayout(object sender, EventArgs e)
         {
-            hierarchy.Close();
-            prjexplorer.Close();
-            dbgwin.Close();
-            bpw.Close();
-            output.Close();
-            errlog.Close();
-            callstackwin.Close();
-            dbgLocalswin.Close();
-            propView.Close();
+            hierarchy.Hide();
+            prjexplorer.Hide();
+            dbgwin.Hide();
+            bpw.Hide();
+            output.Hide();
+            errlog.Hide();
+            callstackwin.Hide();
+            dbgLocalswin.Hide();
+            propView.Hide();
 
             hierarchy.Show(dockPanel, DockState.DockRight);
             prjexplorer.Show(dockPanel, DockState.DockLeft);
