@@ -676,13 +676,13 @@ namespace D_IDE
         public string Win32ExeLinkerDebugArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc";
 		public string ExeLinkerDebugArgs = "$objs $libs -of\"$exe\" -gc";
 		public string DllLinkerDebugArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
-		public string LibLinkerDebugArgs = "$objs $libs -of\"$lib\"";
+		public string LibLinkerDebugArgs = "-c -n \"$lib\" $objs";
 
 		public string SoureCompilerArgs = "-c \"$src\" -of\"$obj\" -release";
         public string Win32ExeLinkerArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -release";
 		public string ExeLinkerArgs = "$objs $libs -of\"$exe\" -release";
 		public string DllLinkerArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -release";
-		public string LibLinkerArgs = "$objs $libs -of\"$lib\"";
+        public string LibLinkerArgs = "-c -n \"$lib\" $objs";
 
 		public string ResourceCompilerArgs = "/fo\"$res\" \"$rc\"";
 

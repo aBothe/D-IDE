@@ -300,7 +300,7 @@ namespace D_IDE
 
                 #region cv2pdb
                 // Create program database (pdb) file from CodeView data from the target exe
-                if (IsDebug && D_IDE_Properties.Default.CreatePDBOnBuild)
+                if (IsDebug && D_IDE_Properties.Default.CreatePDBOnBuild && prj.type!=DProject.PrjType.StaticLib)
                 {
                     CreatePDBFromExe(prj,target);
                 }
