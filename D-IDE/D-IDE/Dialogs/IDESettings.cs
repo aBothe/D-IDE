@@ -8,6 +8,8 @@ using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 using Microsoft.Win32;
 using System.IO;
+using System.Security.AccessControl;
+using System.Security.Principal;
 
 namespace D_IDE
 {

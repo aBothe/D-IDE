@@ -318,7 +318,9 @@ namespace D_IDE
         {
             string pdb = Path.ChangeExtension(exe, ".pdb");
             OnMessage(prj, pdb, "Create debug information database " + pdb);
-            CodeViewToPDB.CodeViewToPDBConverter.DoConvert(/*prj.CompilerVersion==CompilerConfiguration.DVersion.D2,*/exe, pdb);
+            //CodeViewToPDB.CodeViewToPDBConverter.DoConvert(exe, pdb);
+            Process cv2pdb= Exec("cv2pdb.exe","\""+exe+"\"",Path.GetDirectoryName(exe),false);
+            if(cv2pdb!=null && !cv2pdb.HasExited)cv2pdb.WaitForExit(10000);
         }
 
         public static bool BuildObjFile(string file, CompilerConfiguration cc, string target, string exeDir, string additionalArgs, bool IsDebug)

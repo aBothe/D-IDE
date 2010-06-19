@@ -333,29 +333,40 @@ namespace D_IDE
             return BuildArrayContentString(marr, IsString);
         }
 
+        public Dictionary<object, object> ExtractAssocArray(ulong Offset, string type)
+        {
+            Dictionary<object, object> ret = new Dictionary<object, object>();
+            //TODO
+            return ret;
+        }
+
         public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym, string[] SymbolExpressions)
         {
-            if (sym.Size==8 && sym.TextValue.IndexOfAny("`".ToCharArray())>0) // If it's an array
+            #region Search fitting node
+            DocumentInstanceWindow diw = Form1.SelectedTabPage;
+            DModule mod = null;
+
+            // Search expression in all superior blocks
+            DataType cblock = DCodeCompletionProvider.GetBlockAt(diw.fileData.dom, new CodeLocation(0, (int)ScopedSrcLine));
+            DataType symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(diw.project != null ? diw.project.Compiler : D_IDE_Properties.Default.DefaultCompiler, cblock, sym.Name);
+            if (symNode == null)
             {
-                #region Search fitting node
-                DocumentInstanceWindow diw = Form1.SelectedTabPage;
-                DModule mod = null;
+                bool b = false;
+                symNode = DCodeCompletionProvider.FindActualExpression(diw.project, diw.fileData, new CodeLocation(0, (int)ScopedSrcLine), SymbolExpressions, false, false, out b, out b, out b, out mod);
+            }
+            // Search expression in current module root first
+            if (symNode == null) symNode = DCodeCompletionProvider.SearchGlobalExpr(diw.project, diw.fileData, sym.Name, true, out mod);
+            #endregion
 
-                // Search expression in all superior blocks
-                DataType cblock = DCodeCompletionProvider.GetBlockAt(diw.fileData.dom, new CodeLocation(0, (int)ScopedSrcLine));
-                DataType symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(diw.project != null ? diw.project.Compiler : D_IDE_Properties.Default.DefaultCompiler, cblock, sym.Name);
-                if (symNode == null)
-                {
-                    bool b = false;
-                    symNode = DCodeCompletionProvider.FindActualExpression(diw.project, diw.fileData, new CodeLocation(0, (int)ScopedSrcLine), SymbolExpressions, false, false, out b, out b, out b, out mod);
-                }
-                // Search expression in current module root first
-                if (symNode == null) symNode = DCodeCompletionProvider.SearchGlobalExpr(diw.project, diw.fileData, sym.Name, true, out mod);
-                #endregion
-
-                if (symNode != null)
+            if (symNode != null)
+            {
+                if (sym.Size == 8 && sym.TextValue.IndexOfAny("`".ToCharArray()) > 0) // If it's an array
                 {
                     return BuildArrayContentString(sym.Offset, symNode.type);
+                }else if(symNode.type.IndexOf('[')>0)
+                {
+                    int i = symNode.type.IndexOf('[');
+                    
                 }
             }
             return sym.TextValue;
@@ -380,10 +391,6 @@ namespace D_IDE
 
             foreach (DebugScopedSymbol sym in locals)
             {
-                /*if (sym.Parent != null &&
-                    (sym.Parent.TypeName == "class string" ||
-                    sym.Parent.TypeName == "class wstring" ||
-                    sym.Parent.TypeName == "class dstring")) continue;*/
 
                 ListViewItem lvi = new ListViewItem();
                 string n = "";
