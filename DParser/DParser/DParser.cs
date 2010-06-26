@@ -1604,24 +1604,40 @@ namespace D_Parser
 				{
 					lexer.NextToken(); // Skip last ID parsed by ParseTypeIdent();
 					lexer.NextToken(); // Skip "delegate" or "function"
-					if (Expect(DTokens.OpenParenthesis, "Failed to parse delegate declaration - \"(\" missing!"))
-					{
-						tv.fieldtype = FieldType.Delegate;
-						ParseFunctionArguments(ref tv);
-						if (Expect(DTokens.CloseParenthesis, "Failed to parse delegate declaration - \")\" missing!"))
-						{
-							tv.name = strVal;
-							tv.endLoc = GetCodeLocation(la);
+                    if (Expect(DTokens.OpenParenthesis, "Failed to parse delegate declaration - \"(\" missing!"))
+                    {
+                        tv.fieldtype = FieldType.Delegate;
+                        ParseFunctionArguments(ref tv);
+                        if (Expect(DTokens.CloseParenthesis, "Failed to parse delegate declaration - \")\" missing!"))
+                        {
+                            if (la.Kind != DTokens.Identifier)
+                            {
+                                SynErr(DTokens.Identifier, "Missing Identifier!");
+                                return null;
+                            }
+                            tv.name = strVal; // Assign delegate name
 
-							if (Peek(1).Kind == DTokens.Assign) // int delegate(bool b) foo = (bool b) {...};
-							{
-								lexer.NextToken(); // Skip last ID
-								ParseAssignIdent(ref tv);
-							}
+                            // New: Also parse possible arguments that are written after the delegate name
+                            // @property void function() ctor>()<;
+                            if (Peek(1).Kind == DTokens.OpenParenthesis)
+                            {
+                                lexer.NextToken(); // Skip delegate id
+                                lexer.NextToken(); // Skip opening parenthesis
+                                ParseFunctionArguments(ref tv);
+                                Expect(DTokens.CloseParenthesis, "Failed to parse delegate declaration - \")\" missing!");
+                            }
 
-							return tv;
-						}
-					}
+                            tv.endLoc = GetCodeLocation(la);
+
+                            if (Peek(1).Kind == DTokens.Assign) // int delegate(bool b) foo = (bool b) {...};
+                            {
+                                lexer.NextToken(); // Skip last ID
+                                ParseAssignIdent(ref tv);
+                            }
+
+                            return tv;
+                        }
+                    }
 				}
 			}
 
@@ -1919,7 +1935,7 @@ namespace D_Parser
 				{
 					break;
 				}
-				if (psb < 1 && pk.Kind == DTokens.Semicolon) // enum Type Name=Value;
+				if (psb < 1 && (pk.Kind == DTokens.Semicolon || pk.Kind==DTokens.Assign)) // enum Type Name=Value;
 				{
 					int cbrace = 0;
 					mye.fieldtype = FieldType.Variable;
@@ -1937,21 +1953,15 @@ namespace D_Parser
 						{
 							mye.name = strVal;
 							lexer.NextToken(); // Skip ID
-							if (la.Kind == DTokens.Assign)
-								while (!EOF) // assign value
-								{
-									lexer.NextToken();
-									if (la.Kind == DTokens.OpenCurlyBrace) cbrace++;
-									if (la.Kind == DTokens.CloseCurlyBrace) cbrace--;
-
-									if (cbrace < 1 && la.Kind == DTokens.Semicolon) goto enum_end;
-									mye.value += strVal;
-								}
+                            if (la.Kind == DTokens.Assign) {
+                                lexer.NextToken();
+                                mye.value = SkipToSemicolon();
+                            }
 							break;
-						}
+						}else
 						mye.type += strVal;
 					}
-				enum_end:
+
 					if (mye.type == "")
 					{
 						mye.type = "int";
@@ -2055,43 +2065,43 @@ namespace D_Parser
 		void SynErr(int n, int col, int ln)
 		{
 			OnError(PhysFileName, Document.module, ln, col, n, "");
-			errors.SynErr(ln, col, n);
+			//errors.SynErr(ln, col, n);
 		}
 		void SynErr(int n, int col, int ln, string msg)
 		{
 			OnError(PhysFileName, Document.module, ln, col, n, msg);
-			errors.Error(ln, col, msg);
+			//errors.Error(ln, col, msg);
 		}
 		void SynErr(int n, string msg)
 		{
 			OnError(PhysFileName, Document.module, la.Location.Line, la.Location.Column, n, msg);
-			errors.Error(la.Location.Line, la.Location.Column, msg);
+			//errors.Error(la.Location.Line, la.Location.Column, msg);
 		}
 		void SynErr(int n)
 		{
 			OnError(PhysFileName, Document != null ? Document.module : null, la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n, "");
-			errors.SynErr(la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n);
+			//errors.SynErr(la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n);
 		}
 
 		void SemErr(int n, int col, int ln)
 		{
 			OnSemanticError(PhysFileName, Document.module, ln, col, n, "");
-			errors.SemErr(ln, col, n);
+			//errors.SemErr(ln, col, n);
 		}
 		void SemErr(int n, int col, int ln, string msg)
 		{
 			OnSemanticError(PhysFileName, Document.module, ln, col, n, msg);
-			errors.Error(ln, col, msg);
+			//errors.Error(ln, col, msg);
 		}
 		void SemErr(int n, string msg)
 		{
 			OnSemanticError(PhysFileName, Document.module, la.Location.Line, la.Location.Column, n, msg);
-			errors.Error(la.Location.Line, la.Location.Column, msg);
+			//errors.Error(la.Location.Line, la.Location.Column, msg);
 		}
 		void SemErr(int n)
 		{
 			OnSemanticError(PhysFileName, Document != null ? Document.module : null, la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n, "");
-			errors.SemErr(la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n);
+			//errors.SemErr(la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n);
 		}
 		#endregion
 	}

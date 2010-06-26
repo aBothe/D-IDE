@@ -900,6 +900,7 @@ namespace D_IDE
             TreeNode tn = new TreeNode(mtp.fileData.ModuleName);
             tn.SelectedImageKey = tn.ImageKey = "namespace";
             int i = 0;
+            if(mtp.fileData.dom!=null)
             foreach (DataType ch in mtp.fileData.dom)
             {
                 TreeNode ctn = GenerateHierarchyData(mtp.fileData.dom, ch,
