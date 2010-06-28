@@ -335,7 +335,7 @@ Section "-Install Program Files" install_section_id
 	SetOutPath "$INSTDIR"
 
 	SetOverwrite on
-	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.exe"
+	File /nonfatal /x .svn /x *.vshost* "${BINARY_APPLICATION_FILES}\*.exe"
 	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.dll"
 	File /nonfatal /x .svn "${PROJECT_FILES}\*.xshd"
 
