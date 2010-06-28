@@ -83,7 +83,7 @@ namespace D_IDE
 
 		public static void NavigateToPosition(string file, int line)
 		{
-			DocumentInstanceWindow diw = Form1.thisForm.Open(file);
+			DocumentInstanceWindow diw = D_IDEForm.thisForm.Open(file);
 			if (diw != null)
 			{
 				diw.txt.ActiveTextAreaControl.Caret.Position = new ICSharpCode.TextEditor.TextLocation(0, line);

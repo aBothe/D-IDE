@@ -24,7 +24,7 @@ using DebugEngineWrapper;
 
 namespace D_IDE
 {
-    class DocumentInstanceWindow : DockContent
+    public class DocumentInstanceWindow : DockContent
     {
         public TextEditorControl txt;
 
@@ -166,7 +166,7 @@ namespace D_IDE
 
         void DocumentInstanceWindow_Activated(object sender, EventArgs e)
         {
-            Form1.thisForm.UpdateBreakPointsForDocWin(this);
+            D_IDEForm.thisForm.UpdateBreakPointsForDocWin(this);
             this.txt.ActiveTextAreaControl.Focus();
         }
 
@@ -196,7 +196,7 @@ namespace D_IDE
         void Caret_PositionChanged(object sender, EventArgs e)
         {
             CompilerConfiguration cc = project != null ? project.Compiler : D_IDE_Properties.Default.dmd2;
-            Form1.thisForm.LineLabel.Text =
+            D_IDEForm.thisForm.LineLabel.Text =
                 "Line " + (txt.ActiveTextAreaControl.Caret.Line + 1).ToString() +
                 " Col " + (txt.ActiveTextAreaControl.Caret.Column).ToString();
             DataType tv = DCodeCompletionProvider.GetBlockAt(fileData.dom, Caret);
@@ -228,7 +228,7 @@ namespace D_IDE
                     // Add all local modules
                     foreach (string mod in mods)
                     {
-                        CurrentCompletionData.Add(new DCompletionData(mod, "Project Module", Form1.icons.Images.IndexOfKey("namespace")));
+                        CurrentCompletionData.Add(new DCompletionData(mod, "Project Module", D_IDEForm.icons.Images.IndexOfKey("namespace")));
                     }
                 }
                 else // Add classes etc from current module
@@ -398,9 +398,9 @@ namespace D_IDE
             }
             
             #region If debugging, check if a local fits to one of the scoped symbols and show its value if possible
-            if (Form1.thisForm.IsDebugging)
+            if (D_IDEForm.thisForm.IsDebugging)
             {
-                DebugScopedSymbol[] syms = Form1.thisForm.dbg.Symbols.ScopeLocalSymbols;
+                DebugScopedSymbol[] syms = D_IDEForm.thisForm.dbg.Symbols.ScopeLocalSymbols;
                 if (syms != null)
                 {
                     DebugScopedSymbol cursym = null;
@@ -420,7 +420,7 @@ namespace D_IDE
                     }
                     if (desc != "" && cursym != null)
                     {
-                        e.ShowToolTip(cursym.TypeName + " " + desc.Trim('.') + " = " + Form1.thisForm.BuildSymbolValueString((uint)ta.Caret.Line - 1, cursym, exprs));
+                        e.ShowToolTip(cursym.TypeName + " " + desc.Trim('.') + " = " + D_IDEForm.thisForm.BuildSymbolValueString((uint)ta.Caret.Line - 1, cursym, exprs));
                         return;
                     }
                 }
@@ -461,7 +461,7 @@ namespace D_IDE
         public void ShowFunctionParameterToolTip(char key)
         {
             IW = null;
-            IW = new InsightWindow(Form1.thisForm, txt);
+            IW = new InsightWindow(D_IDEForm.thisForm, txt);
             IW.AddInsightDataProvider(new InsightWindowProvider(this, key), fileData.mod_file);
             IW.ShowInsightWindow();
         }
@@ -579,16 +579,16 @@ namespace D_IDE
 
         public void ParseFromText()
         {
-            Form1.thisForm.errlog.parserErrors.Clear();
-            Form1.thisForm.errlog.Update();
+            D_IDEForm.thisForm.errlog.parserErrors.Clear();
+            D_IDEForm.thisForm.errlog.Update();
 
             txt.Document.MarkerStrategy.RemoveAll(new Predicate<TextMarker>(delegate(TextMarker tm)
             {
                 return true;
             }));
-            Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + fileData.ModuleName;
+            D_IDEForm.thisForm.ProgressStatusLabel.Text = "Parsing " + fileData.ModuleName;
             fileData.dom = DParser.ParseText(fileData.mod_file, fileData.ModuleName, txt.Text, out fileData.import);
-            Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + fileData.ModuleName;
+            D_IDEForm.thisForm.ProgressStatusLabel.Text = "Done parsing " + fileData.ModuleName;
 
             if (project != null)
             {

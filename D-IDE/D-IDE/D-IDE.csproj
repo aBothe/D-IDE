@@ -70,7 +70,7 @@
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
-    <Reference Include="DebugEngineWrapper, Version=1.0.3797.25975, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="DebugEngineWrapper, Version=1.0.3831.24408, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\externalDeps\DebugEngineWrapper.dll</HintPath>
     </Reference>
@@ -109,8 +109,6 @@
     <Reference Include="WeifenLuo.WinFormsUI.Docking, Version=2.2.3633.27487, Culture=neutral, PublicKeyToken=f829da5c02be14ee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\externalDeps\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
-      <Private>True</Private>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -207,6 +205,9 @@
     <Compile Include="Form1Debugger.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Form1Impl.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FormsDesigner\FXFormsDesigner.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -265,6 +266,9 @@
       <DependentUpon>BuildProcessWin.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ProjectExplorer.resx">
+      <DependentUpon>ProjectExplorer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\StartupScreen.resx">
       <DependentUpon>StartupScreen.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -317,10 +321,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormsDesigner\PropertyView.resx">
       <DependentUpon>PropertyView.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Dialogs\ProjectExplorer.resx">
-      <DependentUpon>ProjectExplorer.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Icons.resx">

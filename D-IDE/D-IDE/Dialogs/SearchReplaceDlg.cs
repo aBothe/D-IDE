@@ -42,9 +42,9 @@ namespace D_IDE
 				MessageBox.Show("Enter search string first!");
 				return;
 			}
-			currentOffset = Form1.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Offset;
+			currentOffset = D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Offset;
 
-			string text = Form1.SelectedTabPage.txt.Text;
+			string text = D_IDEForm.SelectedTabPage.txt.Text;
 
 			currentOffset = text.IndexOf(stext,
 				currentOffset,
@@ -57,10 +57,10 @@ namespace D_IDE
 			}
 			currentOffset += stext.Length;
 
-			Form1.SelectedTabPage.txt.ActiveTextAreaControl.TextArea.Focus();
-			Form1.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Position =
-				Form1.SelectedTabPage.txt.ActiveTextAreaControl.Document.OffsetToPosition(currentOffset);
-			Form1.SelectedTabPage.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
+			D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.TextArea.Focus();
+			D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Position =
+				D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Document.OffsetToPosition(currentOffset);
+			D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
 		}
 
 		public void FindNextClick(object sender, EventArgs e)
@@ -77,9 +77,9 @@ namespace D_IDE
 				return;
 			}
 			string replacement = replace.Text;
-			currentOffset = Form1.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Offset;
+			currentOffset = D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Offset;
 
-			string text = Form1.SelectedTabPage.txt.Text;
+			string text = D_IDEForm.SelectedTabPage.txt.Text;
 
 			currentOffset = text.IndexOf(stext,
 				currentOffset,
@@ -93,15 +93,15 @@ namespace D_IDE
 
 			text = text.Remove(currentOffset, stext.Length);
 			text = text.Insert(currentOffset, replacement);
-			Form1.SelectedTabPage.txt.Text = text;
+			D_IDEForm.SelectedTabPage.txt.Text = text;
 
 			currentOffset += replacement.Length;
 
-			Form1.SelectedTabPage.txt.ActiveTextAreaControl.TextArea.Focus();
-			if(currentOffset < Form1.SelectedTabPage.txt.Text.Length)
-				Form1.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Position =
-					Form1.SelectedTabPage.txt.ActiveTextAreaControl.Document.OffsetToPosition(currentOffset);
-			Form1.SelectedTabPage.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
+			D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.TextArea.Focus();
+			if(currentOffset < D_IDEForm.SelectedTabPage.txt.Text.Length)
+				D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Position =
+					D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Document.OffsetToPosition(currentOffset);
+			D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
 		}
 
 		private void ReplaceAllClick(object sender, EventArgs e)
@@ -114,7 +114,7 @@ namespace D_IDE
 			}
 			string replacement = replace.Text;
 			currentOffset = 0;
-			string text = Form1.SelectedTabPage.txt.Text;
+			string text = D_IDEForm.SelectedTabPage.txt.Text;
 
 			while(currentOffset > -1)
 			{
@@ -130,9 +130,9 @@ namespace D_IDE
 				currentOffset += replacement.Length;
 			}
 			currentOffset = 0;
-			Form1.SelectedTabPage.txt.Text = text;
+			D_IDEForm.SelectedTabPage.txt.Text = text;
 
-			Form1.SelectedTabPage.txt.ActiveTextAreaControl.TextArea.Focus();
+			D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.TextArea.Focus();
 		}
 	}
 }

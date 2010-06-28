@@ -986,7 +986,7 @@ namespace D_IDE
 					ref shinfo, (uint)Marshal.SizeOf(shinfo),
 					Win32.SHGFI_ICON | Win32.SHGFI_LARGEICON | Win32.SHGFI_USEFILEATTRIBUTES);
 			}
-			if (shinfo.hIcon == null) return Form1.thisForm.Icon;
+			if (shinfo.hIcon == null) return D_IDEForm.thisForm.Icon;
 			try
 			{
 				Icon ret = (System.Drawing.Icon.FromHandle(shinfo.hIcon));
@@ -995,7 +995,7 @@ namespace D_IDE
 			catch (Exception ex)
 			{
 				MessageBox.Show(ex.Message + "\n\n" + ex.StackTrace, FilePath);
-				return Form1.thisForm.Icon;
+				return D_IDEForm.thisForm.Icon;
 			}
 		}
 	}

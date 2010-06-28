@@ -41,7 +41,7 @@ namespace D_IDE
 		bool hadClicked = false;
 		private void hierarchy_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
 		{
-			DocumentInstanceWindow diw = Form1.SelectedTabPage;
+			DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
 			if(e.Node.Tag==null || diw == null) return;
 			DataType dt = (DataType)e.Node.Tag;
 			

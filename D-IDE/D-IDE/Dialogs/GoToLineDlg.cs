@@ -23,14 +23,14 @@ namespace D_IDE
 
 		private void button1_Click(object sender, EventArgs e)
 		{
-			if(Form1.SelectedTabPage == null || textBox1.Text.Length<1) return;
+			if(D_IDEForm.SelectedTabPage == null || textBox1.Text.Length<1) return;
 
 			try
 			{
-				Form1.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Line = Convert.ToInt32(textBox1.Text) - 1;
+				D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Caret.Line = Convert.ToInt32(textBox1.Text) - 1;
 			}
 			catch { }
-			Form1.SelectedTabPage.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
+			D_IDEForm.SelectedTabPage.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
 		}
 
 		private void GoToLineDlg_Enter(object sender, EventArgs e)

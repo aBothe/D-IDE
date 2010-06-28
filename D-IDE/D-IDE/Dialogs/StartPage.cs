@@ -54,7 +54,7 @@ namespace D_IDE
 				}
 				News = nl;
 			}
-			catch (Exception ex) { Form1.thisForm.Log(ex.Message); }
+			catch (Exception ex) { D_IDEForm.thisForm.Log(ex.Message); }
 		}
 
 
@@ -79,13 +79,13 @@ namespace D_IDE
 		private void lastProjects_DoubleClick(object sender, EventArgs e)
 		{
 			if (lastProjects.SelectedItems.Count > 0)
-				Form1.thisForm.Open(D_IDE_Properties.Default.lastProjects[lastProjects.SelectedIndex]);
+				D_IDEForm.thisForm.Open(D_IDE_Properties.Default.lastProjects[lastProjects.SelectedIndex]);
 		}
 
 		private void lastFiles_DoubleClick(object sender, EventArgs e)
 		{
 			if (lastFiles.SelectedItems.Count > 0)
-				Form1.thisForm.Open(D_IDE_Properties.Default.lastFiles[lastFiles.SelectedIndex]);
+				D_IDEForm.thisForm.Open(D_IDE_Properties.Default.lastFiles[lastFiles.SelectedIndex]);
 		}
 
 		private void chTimer_Tick(object sender, EventArgs e)
@@ -112,7 +112,7 @@ namespace D_IDE
 
 		private void button1_Click_1(object sender, EventArgs e)
 		{
-			Form1.thisForm.NewProject(sender, e);
+			D_IDEForm.thisForm.NewProject(sender, e);
 		}
 
 		private void StartPage_Shown(object sender, EventArgs e)

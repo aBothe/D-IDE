@@ -32,7 +32,7 @@ namespace D_IDE
             Application.SetCompatibleTextRenderingDefault(false);
             app = new App();
 
-            Form1.InitCodeCompletionIcons();
+            D_IDEForm.InitCodeCompletionIcons();
 
             // Show startup popup
             StartScreen = new CachingScreen();
@@ -59,7 +59,7 @@ namespace D_IDE
 
                         if (!File.Exists(cfgDir + "\\" + Program.D2ModuleCacheFile) && MessageBox.Show("Do you want to parse all of the import directories?", "Parse Imports", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
                         {
-                            Form1.UpdateChacheThread(D_IDE_Properties.Default.dmd2);
+                            D_IDEForm.UpdateChacheThread(D_IDE_Properties.Default.dmd2);
                         }
                     }
                 }
@@ -106,7 +106,7 @@ namespace D_IDE
         {
             List<string> args = new List<string>();
             args.AddRange(CommandLineArgs);
-            this.MainForm = new Form1(args.ToArray());
+            this.MainForm = new D_IDEForm(args.ToArray());
         }
 
         protected override void OnShutdown()
@@ -125,7 +125,7 @@ namespace D_IDE
 
             e.BringToForeground = true;
             foreach (string file in e.CommandLine)
-                Form1.thisForm.Open(file);
+                D_IDEForm.thisForm.Open(file);
         }
     }
 }

@@ -87,8 +87,8 @@ namespace D_IDE
 
 			if (ClearErrorLogBeforeParsing)
 			{
-				Form1.thisForm.errlog.parserErrors.Clear();
-				Form1.thisForm.errlog.Update();
+				D_IDEForm.thisForm.errlog.parserErrors.Clear();
+				D_IDEForm.thisForm.errlog.Update();
 			}
             mod_file = file;
 

@@ -32,11 +32,11 @@ using D_IDE.Misc;
 
 namespace D_IDE
 {
-    partial class Form1 : Form
+    partial class D_IDEForm : Form
     {
         public delegate void BuildErrorDelegate(string file, int lineNumber, string errmsg, Color color);
 
-        public Form1(string[] args)
+        public D_IDEForm(string[] args)
         {
             thisForm = this;
 
@@ -164,86 +164,6 @@ namespace D_IDE
             //Log("Text Error in Line "+line.ToString()+", Col "+col.ToString()+": "+message);
         }
 
-        public static string title = "D-IDE " + Application.ProductVersion;
-
-        public void UpdateLastFilesMenu()
-        {
-            /*if (RibbonSetup != null)
-            {
-                RibbonSetup.LastFiles.DropDownItems.Clear();
-            }*/
-            lastOpenProjects.DropDownItems.Clear();
-            lastOpenFiles.DropDownItems.Clear();
-            if (D_IDE_Properties.Default.lastProjects == null) D_IDE_Properties.Default.lastProjects = new List<string>();
-            if (D_IDE_Properties.Default.lastFiles == null) D_IDE_Properties.Default.lastFiles = new List<string>();
-            startpage.lastProjects.Items.Clear();
-            startpage.lastFiles.Items.Clear();
-            foreach (string prjfile in D_IDE_Properties.Default.lastProjects)
-            {
-                if (File.Exists(prjfile))
-                {
-                    /*if (RibbonSetup != null)
-                    {
-                        RibbonButton tb = new RibbonButton();
-                        tb.Tag = prjfile;
-                        tb.Text = Path.GetFileName(prjfile);
-                        tb.Click += new EventHandler(LastProjectsItemClick);
-                        RibbonSetup.LastFiles.DropDownItems.Add(tb);
-                    }*/
-
-                    ToolStripMenuItem tsm = new ToolStripMenuItem();
-                    tsm.Tag = prjfile;
-                    tsm.Text = Path.GetFileName(prjfile);
-                    tsm.Click += new EventHandler(LastProjectsItemClick);
-                    lastOpenProjects.DropDownItems.Add(tsm);
-                    startpage.lastProjects.Items.Add(tsm.Text);
-                }
-            }
-            //if(RibbonSetup!=null) RibbonSetup.LastFiles.DropDownItems.Add(new RibbonSeparator());
-            foreach (string file in D_IDE_Properties.Default.lastFiles)
-            {
-                if (File.Exists(file))
-                {
-                    /*if (RibbonSetup != null)
-                    {
-                        RibbonButton tb = new RibbonButton();
-                        tb.Tag = file;
-                        tb.Text = Path.GetFileName(file);
-                        tb.Click += new EventHandler(LastProjectsItemClick);
-                        RibbonSetup.LastFiles.DropDownItems.Add(tb);
-                    }*/
-
-                    ToolStripMenuItem tsm = new ToolStripMenuItem();
-                    tsm.Tag = file;
-                    tsm.Text = Path.GetFileName(file);
-                    tsm.Click += new EventHandler(LastProjectsItemClick);
-                    lastOpenFiles.DropDownItems.Add(tsm);
-                    startpage.lastFiles.Items.Add(Path.GetFileName(file));
-                }
-            }
-        }
-
-        public DocumentInstanceWindow FileDataByFile(string fn)
-        {
-            foreach (DockContent dc in dockPanel.Documents)
-            {
-                if (!(dc is DocumentInstanceWindow)) continue;
-                DocumentInstanceWindow diw = dc as DocumentInstanceWindow;
-                if (diw.fileData.mod_file == fn) return diw;
-            }
-            return null;
-        }
-        public FXFormsDesigner FXFormDesignerByFile(string fn)
-        {
-            foreach (DockContent dc in dockPanel.Documents)
-            {
-                if (!(dc is FXFormsDesigner)) continue;
-                FXFormsDesigner diw = dc as FXFormsDesigner;
-                if (diw.FileName == fn) return diw;
-            }
-            return null;
-        }
-
         void LastProjectsItemClick(object sender, EventArgs e)
         {
             string file = "";
@@ -253,53 +173,6 @@ namespace D_IDE
                 file = (string)((RibbonButton)sender).Tag;*/
             Open(file);
         }
-
-        #region Properties
-        public StartPage startpage = new StartPage();
-        public PropertyView propView = new PropertyView();
-        public ProjectExplorer prjexplorer = new ProjectExplorer();
-        public ClassHierarchy hierarchy = new ClassHierarchy();
-        public BuildProcessWin bpw = new BuildProcessWin();
-        public ErrorLog errlog = new ErrorLog();
-        public OutputWin output = new OutputWin();
-        public BreakpointWin dbgwin = new BreakpointWin();
-        public CallStackWin callstackwin = new CallStackWin();
-        public DebugLocals dbgLocalswin = new DebugLocals();
-        public bool UseOutput = false;
-        //public RibbonSetup RibbonSetup;
-
-        public DProject prj
-        {
-            get
-            {
-                return D_IDE_Properties.GetProject(ProjectFile);
-            }
-            set
-            {
-                if (value == null)
-                {
-                    ProjectFile = "";
-                    return;
-                }
-                ProjectFile = value.prjfn;
-                D_IDE_Properties.Projects[value.prjfn] = value;
-            }
-        }
-        public string ProjectFile = "";
-        public SearchReplaceDlg searchDlg = new SearchReplaceDlg();
-        public GoToLineDlg gotoDlg = new GoToLineDlg();
-        public static Form1 thisForm;
-        protected Process exeProc;
-        public static DocumentInstanceWindow SelectedTabPage
-        {
-            get
-            {
-                if (thisForm.dockPanel.ActiveDocument is DocumentInstanceWindow)
-                    return (DocumentInstanceWindow)thisForm.dockPanel.ActiveDocument;
-                else return null;
-            }
-        }
-        #endregion
 
         #region Parsing Procedures
 
@@ -351,84 +224,7 @@ namespace D_IDE
             catch { }
         }
 
-        void SaveAllTabs()
-        {
-            if (prj != null) prj.Save();
-            foreach (DockContent tp in dockPanel.Documents)
-            {
-                if (tp is DocumentInstanceWindow)
-                {
-                    DocumentInstanceWindow mtp = (DocumentInstanceWindow)tp;
-                    //mtp.txt.Document.CustomLineManager.Clear();
-                    mtp.Save();
-                }
-            }
-        }
-
-        public static void UpdateChacheThread(CompilerConfiguration cc)
-        {
-            DModule.ClearErrorLogBeforeParsing = false;
-            List<DModule> ret = new List<DModule>();
-
-            if (Form1.thisForm != null) Form1.thisForm.stopParsingToolStripMenuItem.Enabled = true;
-            //bpw.Clear();
-            if (Form1.thisForm != null) Form1.thisForm.Log("Reparse all directories");
-
-            foreach (string dir in cc.ImportDirectories)
-            {
-                DProject dirProject = new DProject();
-                dirProject.basedir = dir;
-
-                if (Form1.thisForm != null) Form1.thisForm.Log("Parse directory " + dir);
-                if (!Directory.Exists(dir))
-                {
-                    if (Form1.thisForm != null) Form1.thisForm.Log("Directory \"" + dir + "\" does not exist!");
-                    continue;
-                }
-                string[] files = Directory.GetFiles(dir, "*.d?", SearchOption.AllDirectories);
-                foreach (string tf in files)
-                {
-                    if (tf.EndsWith("phobos.d")) continue; // Skip phobos.d
-
-                    if (D_IDE_Properties.HasModule(ret, tf)) { if (Form1.thisForm != null)Form1.thisForm.Log(tf + " already parsed!"); continue; }
-
-                    try
-                    {
-                        string tmodule = Path.ChangeExtension(tf, null).Remove(0, dir.Length + 1).Replace('\\', '.');
-                        DModule gpf = new DModule(dirProject, tf);
-                        gpf.ModuleName = tmodule;
-
-                        D_IDE_Properties.AddFileData(ret, gpf);
-                    }
-                    catch (Exception ex)
-                    {
-                        //if (Debugger.IsAttached) throw ex;
-                        if (Form1.thisForm != null) Form1.thisForm.Log(tf);
-                        if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n\n\n" + ex.StackTrace, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        {
-                            if (Form1.thisForm != null) Form1.thisForm.stopParsingToolStripMenuItem.Enabled = false;
-                            return;
-                        }
-                    }
-                }
-            }
-            if (Form1.thisForm != null)
-            {
-                Form1.thisForm.Log(Form1.thisForm.ProgressStatusLabel.Text = "Parsing done!");
-                Form1.thisForm.stopParsingToolStripMenuItem.Enabled = false;
-            }
-            DModule.ClearErrorLogBeforeParsing = true;
-            lock (cc.GlobalModules)
-            {
-                cc.GlobalModules = ret;
-
-                List<ICompletionData> ilist = new List<ICompletionData>();
-                DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
-                cc.GlobalCompletionList = ilist;
-            }
-        }
-
-        Thread updateTh;
+        
         private void updateCacheToolStripMenuItem_Click(object sender, EventArgs e)
         {
             D_IDE_Properties.Default.dmd1.GlobalModules.Clear();
@@ -700,116 +496,9 @@ namespace D_IDE
 
         #endregion
 
-        #region Project relevated things
-        /*
-		/// <summary>
-		/// TODO: Fix this
-		/// </summary>
-		/// <param name="file"></param>
-		/// <param name="newfile"></param>
-		/// <returns></returns>
-		public bool RenameFile(string file, string newfile)
-		{
-			if (prj == null || String.IsNullOrEmpty(file) || String.IsNullOrEmpty(newfile)) return false;
-
-			DocumentInstanceWindow diw = null;
-			// Update current tab view
-			if (dockPanel.DocumentsCount > 0)
-				foreach (DockContent dc in dockPanel.Documents)
-				{
-					if (dc is DocumentInstanceWindow)
-					{
-						diw = (DocumentInstanceWindow)dc;
-						if (diw.fileData.mod_file == file)
-						{
-							return false;
-						}
-					}
-				}
-
-			// Update project
-			if (DModule.Parsable(file) && DModule.Parsable(newfile))
-			{
-				if (diw == null)
-				{
-					prj.files.Remove(prj.FileDataByFile(file));
-					prj.AddSrc(newfile);
-				}
-				else
-				{
-					prj.files.Remove(diw.fileData);
-					prj.files.Add(diw.fileData);
-				}
-			}
-			else if (DModule.Parsable(file) && !DModule.Parsable(newfile))
-			{
-				prj.files.Remove(prj.FileDataByFile(file));
-				prj.resourceFiles.Add(newfile);
-			}
-			else if (!DModule.Parsable(file) && !DModule.Parsable(newfile))
-			{
-				prj.resourceFiles.Remove(file);
-				prj.resourceFiles.Add(newfile);
-			}
-			else if (!DModule.Parsable(file) && DModule.Parsable(newfile))
-			{
-				prj.resourceFiles.Remove(file);
-				prj.files.Add(new DModule(newfile));
-			}
-
-			try
-			{
-				// Move physical file AFTER saving it
-				File.Move(file, newfile);
-			}
-			catch { }
-
-			UpdateFiles();
-			return true;
-		}*/
-
-        public void UpdateFiles()
-        {
-            if (prj != null) Text = prj.name + " - " + title;
-            prjexplorer.UpdateFiles();
-        }
-
         public void NewSourceFile(object sender, EventArgs e)
         {
-            string tfn = "Untitled.d";
-            bool add = sender is ProjectExplorer || (prj != null ? (MessageBox.Show("Do you want to add the file to the current project?", "New File",
-            MessageBoxButtons.YesNo, MessageBoxIcon.Question)
-            == DialogResult.Yes) : false);
-
-            sF.Filter = "All Files (*.*)|*.*";
-            sF.FileName = tfn;
-            if (prj != null && add) sF.InitialDirectory = prj.basedir;
-            if (sF.ShowDialog() == DialogResult.OK)
-            {
-                tfn = sF.FileName;
-            }
-            else return;
-
-            DocumentInstanceWindow mtp = new DocumentInstanceWindow(tfn,
-            DModule.Parsable(tfn) ? "import std.stdio;\r\n\r\nvoid main(string[] args)\r\n{\r\n\twriteln(\"Hello World\");\r\n}" : "",
-            add ? prj.prjfn : "");
-            mtp.Modified = true;
-            mtp.Save();
-            if (add) prj.AddSrc(tfn);
-
-            mtp.Show(dockPanel);
-
-            if (D_IDE_Properties.Default.lastFiles.Contains(tfn))
-            {
-                D_IDE_Properties.Default.lastFiles.Remove(tfn);
-            }
-            D_IDE_Properties.Default.lastFiles.Insert(0, tfn);
-            if (D_IDE_Properties.Default.lastFiles.Count > 10) D_IDE_Properties.Default.lastFiles.RemoveAt(10);
-
-            if (prj != null) prj.Save();
-            UpdateLastFilesMenu();
-            UpdateFiles();
-            prjexplorer.Refresh();
+            CreateNewSourceFile(true);
         }
 
         public void NewProject(object sender, EventArgs e)
@@ -832,6 +521,17 @@ namespace D_IDE
 
                 UpdateLastFilesMenu();
                 UpdateFiles();
+
+                string main = prj.basedir + "\\main.d";
+
+                if (!File.Exists(main))
+                {
+                    File.WriteAllText(main, "import std.stdio, std.cstream;\r\n\r\nvoid main(string[] args)\r\n{\r\n\twriteln(\"Hello World\");\r\n\tdin.getc();\r\n}");
+
+                    prj.AddSrc(main);
+                    prj.Save();
+                    Open(main);
+                }
             }
         }
 
@@ -916,101 +616,6 @@ namespace D_IDE
             hierarchy.hierarchy.EndUpdate();
         }
 
-        /// <summary>
-        /// Central accessing method to open files or projects. Use this method only to open files!
-        /// </summary>
-        /// <param name="file"></param>
-        /// <returns></returns>
-        [DebuggerStepThrough()]
-        public DocumentInstanceWindow Open(string file)
-        {
-            if (prj != null && prj.resourceFiles.Contains(prj.GetRelFilePath(file)))
-                return Open(prj.GetPhysFilePath(file), ProjectFile);
-            return Open(file, "");
-        }
-        public DocumentInstanceWindow Open(string file, string owner)
-        {
-            if (prj != null && file == prj.prjfn) return null; // Don't reopen the current project
-
-            DocumentInstanceWindow ret = null;
-
-            foreach (DockContent dc in dockPanel.Documents)
-            {
-                if (!(dc is DocumentInstanceWindow)) continue;
-                DocumentInstanceWindow diw = (DocumentInstanceWindow)dc;
-                if (diw.fileData.FileName == file)
-                {
-                    diw.Activate();
-                    Application.DoEvents();
-                    return diw;
-                }
-            }
-
-            if (!File.Exists(file))
-            {
-                Log(ProgressStatusLabel.Text = ("File " + file + " doesn't exist!"));
-                return null;
-            }
-
-            if (Path.GetExtension(file) == DProject.prjext)
-            {
-                if (prj != null)
-                {
-                    if (MessageBox.Show("Do you want to open another project?", "Open new project", MessageBoxButtons.YesNo) == DialogResult.No) return null;
-                }
-                prj = DProject.LoadFrom(file);
-                if (prj == null) { MessageBox.Show("Failed to load project! Perhaps the projects version differs from the current version."); return null; }
-
-                if (D_IDE_Properties.Default.lastProjects.Contains(file)) D_IDE_Properties.Default.lastProjects.Remove(file);
-                D_IDE_Properties.Default.lastProjects.Insert(0, file);
-                if (D_IDE_Properties.Default.lastProjects.Count > 10) D_IDE_Properties.Default.lastProjects.RemoveAt(10);
-
-                if (prj.basedir == ".") prj.basedir = Path.GetDirectoryName(file);
-
-                if (String.IsNullOrEmpty(prj.basedir) || !Directory.Exists(prj.basedir))
-                {
-                    if (MessageBox.Show("The projects base directory doesn't exist anymore! Shall D-IDE set it to the project file path?", "Notice", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        prj.basedir = Path.GetDirectoryName(file);
-                }
-
-                prj.ParseAll();
-
-                foreach (string f in prj.lastopen)
-                {
-                    Open(f, ProjectFile);
-                }
-                prj.lastopen.Clear();
-                ret = SelectedTabPage;
-                UpdateFiles();
-            }
-            else
-            {
-                DocumentInstanceWindow mtp = new DocumentInstanceWindow(file, owner);
-
-                if (D_IDE_Properties.Default.lastFiles.Contains(file))
-                {
-                    D_IDE_Properties.Default.lastFiles.Remove(file);
-                }
-                D_IDE_Properties.Default.lastFiles.Insert(0, file);
-                if (D_IDE_Properties.Default.lastFiles.Count > 10) D_IDE_Properties.Default.lastFiles.RemoveAt(10);
-
-                mtp.Show(dockPanel);
-                ret = mtp;
-            }
-            RefreshClassHierarchy();
-            UpdateLastFilesMenu();
-            if (this.dockPanel.ActiveDocumentPane != null)
-                this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.contextMenuStrip1; // Set Tab selection bars context menu to ours
-
-            // Important: set Read-Only flag if Debugger is running currently
-            if (ret != null && ret.txt != null)
-                ret.txt.IsReadOnly = IsDebugging;
-
-            UpdateBreakPointsForDocWin(ret);
-
-            return ret;
-        }
-
         public void OpenFile(object sender, EventArgs e)
         {
             SaveAllTabs();
@@ -1045,7 +650,6 @@ namespace D_IDE
             return ret;
         }
 
-        #endregion
 
         TreeNode GenerateHierarchyData(DataType env, DataType ch, TreeNode oldNode)
         {
@@ -1097,7 +701,7 @@ namespace D_IDE
         public static ImageList InitCodeCompletionIcons()
         {
             
-            System.Resources.ResourceManager rm=new System.Resources.ResourceManager("D_IDE.Icons",Assembly.GetAssembly(typeof(Form1)));
+            System.Resources.ResourceManager rm=new System.Resources.ResourceManager("D_IDE.Icons",Assembly.GetAssembly(typeof(D_IDEForm)));
             icons = new ImageList();
             // 
             // icons
@@ -1152,7 +756,7 @@ namespace D_IDE
         }
 
         private void setDefaultPanelLayout(object sender, EventArgs e)
-        {
+        {/*
             hierarchy.Hide();
             prjexplorer.Hide();
             dbgwin.Hide();
@@ -1161,7 +765,7 @@ namespace D_IDE
             errlog.Hide();
             callstackwin.Hide();
             dbgLocalswin.Hide();
-            propView.Hide();
+            propView.Hide();*/
 
             hierarchy.Show(dockPanel, DockState.DockRight);
             prjexplorer.Show(dockPanel, DockState.DockLeft);

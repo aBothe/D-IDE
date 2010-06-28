@@ -237,20 +237,20 @@ namespace D_IDE
 			}
 			catch (Exception ex)
 			{
-				Form1.thisForm.Log(ex.Message);
+				D_IDEForm.thisForm.Log(ex.Message);
 			}
 			return null;
 		}
 
 		public ICompletionData[] GenerateCompletionData(string fn, TextArea ta, char ch)
 		{
-			ImageList icons = Form1.icons;
+			ImageList icons = D_IDEForm.icons;
 
 			List<ICompletionData> rl = new List<ICompletionData>();
 			List<string> expressions = new List<string>();
 			try
 			{
-				DocumentInstanceWindow diw = Form1.SelectedTabPage;
+				DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
 				DProject project = diw.project;
 				if(project!=null)cc = project.Compiler;
 				DModule pf = diw.fileData;
@@ -457,7 +457,7 @@ namespace D_IDE
 			}
 			catch (Exception ex)
 			{
-				Form1.thisForm.Log(ex.Message);
+				D_IDEForm.thisForm.Log(ex.Message);
 			}
 			//rl.Sort();
 			return rl.ToArray();
@@ -465,7 +465,7 @@ namespace D_IDE
 
 		public static void AddGlobalSpaceContent(CompilerConfiguration cc,ref List<ICompletionData> rl)
 		{
-			ImageList icons = Form1.icons;
+			ImageList icons = D_IDEForm.icons;
 			List<string> mods = new List<string>();
 			string[] tmods;
 			string tmod;
@@ -497,7 +497,7 @@ namespace D_IDE
 
 		private void AddTypeStd(DataType seldt, ref List<ICompletionData> rl)
 		{
-			ImageList icons = Form1.icons;
+			ImageList icons = D_IDEForm.icons;
 			rl.Add(new DCompletionData("sizeof", "Yields the memory usage of a type in bytes", icons.Images.IndexOfKey("Icons.16x16.Literal.png")));
 			rl.Add(new DCompletionData("stringof", "Returns a string of the typename", icons.Images.IndexOfKey("Icons.16x16.Property.png")));
 			rl.Add(new DCompletionData("init", "Returns the default initializer of a type", icons.Images.IndexOfKey("Icons.16x16.Field.png")));

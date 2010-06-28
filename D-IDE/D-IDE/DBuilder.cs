@@ -161,7 +161,7 @@ namespace D_IDE
                     else
                     {
                         OnMessage(prj, rc, "Compile resource " + Path.GetFileName(rc));
-                        Form1.thisForm.ProgressStatusLabel.Text = "Compiling resource " + Path.GetFileName(rc);
+                        D_IDEForm.thisForm.ProgressStatusLabel.Text = "Compiling resource " + Path.GetFileName(rc);
 
                         OneFileChanged = true;
                         if (!BuildResFile(rc, cc, res, prj.basedir)) return null;
@@ -197,7 +197,7 @@ namespace D_IDE
                     else
                     {
                         OnMessage(prj, rc, "Compile " + Path.GetFileName(rc));
-                        Form1.thisForm.ProgressStatusLabel.Text = "Compiling " + Path.GetFileName(rc);
+                        D_IDEForm.thisForm.ProgressStatusLabel.Text = "Compiling " + Path.GetFileName(rc);
 
                         OneFileChanged = true;
                         if (!BuildObjFile(rc, cc, obj, prj.basedir, prj.compileargs, IsDebug)) return null;
@@ -276,7 +276,7 @@ namespace D_IDE
             args = args.Replace("$objs", objs);
 
             OnMessage(prj, target, "Link file to " + target);
-            Form1.thisForm.ProgressStatusLabel.Text = "Link file to " + target;
+            D_IDEForm.thisForm.ProgressStatusLabel.Text = "Link file to " + target;
 
             if(!Path.IsPathRooted(exe))
                 exe=cc.BinDirectory + "\\" + exe;
@@ -306,7 +306,7 @@ namespace D_IDE
                 }
                 #endregion
 
-                Form1.thisForm.ProgressStatusLabel.Text = "Linking done!";
+                D_IDEForm.thisForm.ProgressStatusLabel.Text = "Linking done!";
                 OnMessage(prj, target, "Linking done!");
                 return target;
             }

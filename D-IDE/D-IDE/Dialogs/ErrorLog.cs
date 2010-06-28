@@ -75,7 +75,7 @@ namespace D_IDE
 		public static void OpenError(string file,int line,int col)
 		{
 			if (String.IsNullOrEmpty(file)) return;
-			DocumentInstanceWindow diw = Form1.thisForm.Open(file);
+			DocumentInstanceWindow diw = D_IDEForm.thisForm.Open(file);
 			if (diw != null)
 			{
 				diw.txt.ActiveTextAreaControl.Caret.Position = new ICSharpCode.TextEditor.TextLocation(col - 1, line - 1);
@@ -86,7 +86,7 @@ namespace D_IDE
         private void list_DoubleClick(object sender, EventArgs e)
         {
             ErrorMessage em = Selected;
-            DocumentInstanceWindow diw = Form1.thisForm.Open(em.file);
+            DocumentInstanceWindow diw = D_IDEForm.thisForm.Open(em.file);
             if (diw != null)
             {
                 diw.txt.ActiveTextAreaControl.Caret.Position = new ICSharpCode.TextEditor.TextLocation(em.col-1, em.line-1);

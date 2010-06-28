@@ -100,7 +100,7 @@ namespace D_IDE
 		{
 			get
 			{
-				return Form1.icons;
+				return D_IDEForm.icons;
 			}
 		}
 
@@ -476,7 +476,7 @@ namespace D_IDE
 		/// <param name="rl"></param>
 		public static void AddAllClassMembers(CompilerConfiguration cc,DataType selectedExpression, ref List<ICompletionData> rl, bool all)
 		{
-			ImageList icons = Form1.icons;
+			ImageList icons = D_IDEForm.icons;
 			if (selectedExpression != null)
 			{
 				foreach (DataType ch in selectedExpression)
@@ -509,7 +509,7 @@ namespace D_IDE
 
 		public static void AddAllClassMembers(CompilerConfiguration cc,DataType selectedExpression, ref List<ICompletionData> rl, bool all, bool exact, string searchExpr)
 		{
-			ImageList icons = Form1.icons;
+			ImageList icons = D_IDEForm.icons;
 
 			if (selectedExpression != null)
 			{

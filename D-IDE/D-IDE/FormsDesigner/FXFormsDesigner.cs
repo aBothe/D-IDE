@@ -22,7 +22,7 @@ namespace D_IDE
 		}
 	}
 
-	class FXFormsDesigner : DockContent
+	public class FXFormsDesigner : DockContent
 	{
 		public HostSurfaceManager surMgr=new HostSurfaceManager();
 		public string FileName;
@@ -308,7 +308,7 @@ namespace D_IDE
 
 		public FXFormsDesigner(string file) : base()
 		{
-			surMgr.AddService(typeof(System.Windows.Forms.PropertyGrid),Form1.thisForm.propView.propertyGrid);
+			surMgr.AddService(typeof(System.Windows.Forms.PropertyGrid),D_IDEForm.thisForm.propView.propertyGrid);
 			try
 			{
 				Control hsc = surMgr.GetNewHost(typeof(Form));

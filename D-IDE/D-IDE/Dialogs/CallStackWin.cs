@@ -28,11 +28,11 @@ namespace D_IDE
 			Clear();
 			try
 			{
-				if (Form1.thisForm.IsDebugging)
-					foreach (StackFrame sf in Form1.thisForm.dbg.CallStack)
+				if (D_IDEForm.thisForm.IsDebugging)
+					foreach (StackFrame sf in D_IDEForm.thisForm.dbg.CallStack)
 					{
 						
-						string n = Form1.thisForm.dbg.Symbols.GetNameByOffset(sf.InstructionOffset);
+						string n = D_IDEForm.thisForm.dbg.Symbols.GetNameByOffset(sf.InstructionOffset);
 						if (n == String.Empty) continue;
 						int i = n.LastIndexOf("!");
 
@@ -41,7 +41,7 @@ namespace D_IDE
 						lvi.SubItems.Add(n.Substring(i + 1));
 						string fn;
 						uint ln;
-						if (Form1.thisForm.dbg.Symbols.GetLineByOffset(sf.InstructionOffset, out fn, out ln))
+						if (D_IDEForm.thisForm.dbg.Symbols.GetLineByOffset(sf.InstructionOffset, out fn, out ln))
 						{
 							lvi.SubItems.Add(fn);
 							lvi.SubItems.Add((ln).ToString());

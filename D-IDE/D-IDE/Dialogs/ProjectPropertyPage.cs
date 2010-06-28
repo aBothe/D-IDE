@@ -217,7 +217,7 @@ namespace D_IDE
 			prj.Save();
 
 			D_IDE_Properties.Projects[prj.prjfn] = project;
-			Form1.thisForm.UpdateFiles();
+			D_IDEForm.thisForm.UpdateFiles();
 
 			return prj;
 		}
@@ -288,10 +288,10 @@ namespace D_IDE
 
 		private void button7_Click(object sender, EventArgs e)
 		{
-			Form1.thisForm.oF.InitialDirectory = prjdir.Text;
-			if (Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
+			D_IDEForm.thisForm.oF.InitialDirectory = prjdir.Text;
+			if (D_IDEForm.thisForm.oF.ShowDialog() == DialogResult.OK)
 			{
-				foreach (string file in Form1.thisForm.oF.FileNames)
+				foreach (string file in D_IDEForm.thisForm.oF.FileNames)
 				{
 					if (Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
 
@@ -324,9 +324,9 @@ namespace D_IDE
 			}
 
 			Save();
-			if (project.prjfn == Form1.thisForm.prj.prjfn)
+			if (project.prjfn == D_IDEForm.thisForm.prj.prjfn)
 			{
-				Form1.thisForm.prj = project;
+				D_IDEForm.thisForm.prj = project;
 				//Form1.thisForm.UpdateFiles();
 			}
 		}
@@ -1096,10 +1096,10 @@ namespace D_IDE
 		#region Filedependencies
 		private void button8_Click(object sender, EventArgs e)
 		{
-			Form1.thisForm.oF.InitialDirectory = prjdir.Text;
-			if (Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
+			D_IDEForm.thisForm.oF.InitialDirectory = prjdir.Text;
+			if (D_IDEForm.thisForm.oF.ShowDialog() == DialogResult.OK)
 			{
-				foreach (string file in Form1.thisForm.oF.FileNames)
+				foreach (string file in D_IDEForm.thisForm.oF.FileNames)
 				{
 					if (Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
 
@@ -1128,12 +1128,12 @@ namespace D_IDE
 		#region Project deps
 		private void button15_Click(object sender, EventArgs e)
 		{
-			Form1.thisForm.oF.InitialDirectory = prjdir.Text;
-			string filterBefore = Form1.thisForm.oF.Filter;
-			Form1.thisForm.oF.Filter = "D Projects (*"+DProject.prjext+")|*"+DProject.prjext;
-			if (Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
+			D_IDEForm.thisForm.oF.InitialDirectory = prjdir.Text;
+			string filterBefore = D_IDEForm.thisForm.oF.Filter;
+			D_IDEForm.thisForm.oF.Filter = "D Projects (*"+DProject.prjext+")|*"+DProject.prjext;
+			if (D_IDEForm.thisForm.oF.ShowDialog() == DialogResult.OK)
 			{
-				foreach (string file in Form1.thisForm.oF.FileNames)
+				foreach (string file in D_IDEForm.thisForm.oF.FileNames)
 				{
 					if (Path.GetExtension(file) != DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
 
@@ -1143,7 +1143,7 @@ namespace D_IDE
 				}
 				ProjectDeps.Refresh();
 			}
-			Form1.thisForm.oF.Filter = filterBefore;
+			D_IDEForm.thisForm.oF.Filter = filterBefore;
 		}
 
 		private void button14_Click(object sender, EventArgs e)

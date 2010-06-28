@@ -26,7 +26,7 @@ namespace D_IDE
         public BreakPoint bp;
     }
 
-    partial class Form1
+    partial class D_IDEForm
     {
         public void RunDebugClick(object sender, EventArgs e)
         {
@@ -343,7 +343,7 @@ namespace D_IDE
         public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym, string[] SymbolExpressions)
         {
             #region Search fitting node
-            DocumentInstanceWindow diw = Form1.SelectedTabPage;
+            DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
             DModule mod = null;
 
             // Search expression in all superior blocks

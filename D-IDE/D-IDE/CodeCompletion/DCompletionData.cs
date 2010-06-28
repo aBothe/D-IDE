@@ -70,7 +70,7 @@ namespace D_IDE
 		{
 			this.data = data;
 			this.parent = parent;
-			this.ImageIndex = GetImageIndex(Form1.icons, parent, data);
+			this.ImageIndex = GetImageIndex(D_IDEForm.icons, parent, data);
 			Init();
 		}
 

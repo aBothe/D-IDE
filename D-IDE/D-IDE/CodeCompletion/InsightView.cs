@@ -278,7 +278,7 @@ namespace D_IDE
 				}
 
 			}
-			catch (Exception ex) { Form1.thisForm.Log(ex.Message+ " ("+ex.Source+")"); }
+			catch (Exception ex) { D_IDEForm.thisForm.Log(ex.Message+ " ("+ex.Source+")"); }
 		}
 
 		#endregion

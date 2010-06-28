@@ -114,7 +114,7 @@ namespace D_IDE
 
 		public void ExpandToCurrentFile()
 		{
-			DocumentInstanceWindow diw = Form1.SelectedTabPage;
+			DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
 			if (diw != null)
 			{
 				ExpandToFile(diw.project, diw.fileData.mod_file);
@@ -138,7 +138,7 @@ namespace D_IDE
 					}
 
 					// if the drawn project is the current one loaded in D-IDE take it then
-					DProject LoadedPrj = Form1.thisForm.ProjectFile == prjfn ? Form1.thisForm.prj : DProject.LoadFrom(prjfn);
+					DProject LoadedPrj = D_IDEForm.thisForm.ProjectFile == prjfn ? D_IDEForm.thisForm.prj : DProject.LoadFrom(prjfn);
 					if (LoadedPrj == null) continue;
 					D_IDE_Properties.Projects[prjfn] = LoadedPrj;
 
@@ -150,7 +150,7 @@ namespace D_IDE
 					ReadStructure(ref CurPrjNode, LoadedPrj);
 
 					// if this project is the currently open one paint the font bold
-					if (Form1.thisForm.prj != null && prjfn == Form1.thisForm.prj.prjfn)
+					if (D_IDEForm.thisForm.prj != null && prjfn == D_IDEForm.thisForm.prj.prjfn)
 					{
 						CurPrjNode.NodeFont = new Font(DefaultFont, FontStyle.Bold);
 						CurPrjNode.ExpandAll();
@@ -173,7 +173,7 @@ namespace D_IDE
 
 			if (prjFiles.SelectedNode is DedicatedProjectNode)
 			{
-				Form1.thisForm.Open((prjFiles.SelectedNode as ProjectNode).ProjectFile);
+				D_IDEForm.thisForm.Open((prjFiles.SelectedNode as ProjectNode).ProjectFile);
 			}
 			else if (prjFiles.SelectedNode is FileTreeNode)
 			{
@@ -192,7 +192,7 @@ namespace D_IDE
 					else return;
 				}
 
-				Form1.thisForm.Open(fn, prj.prjfn);
+				D_IDEForm.thisForm.Open(fn, prj.prjfn);
 			}
 		}
 
@@ -236,7 +236,7 @@ namespace D_IDE
 				try
 				{
 					// Close tab that may contains deleted file
-					Form1.thisForm.FileDataByFile(phys_f).Close();
+					D_IDEForm.thisForm.FileDataByFile(phys_f).Close();
 				}
 				catch { }
 
@@ -255,12 +255,20 @@ namespace D_IDE
 
 			tprj.resourceFiles.Remove(f);
 			tprj.Save();
-			Form1.thisForm.UpdateFiles();
+			D_IDEForm.thisForm.UpdateFiles();
 		}
 
 		private void addNewFileToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			Form1.thisForm.NewSourceFile(this, e);
+            Point tp = (Point)ProjectMenu.Tag;
+			if (tp == null) return;
+			TreeNode tn = prjFiles.GetNodeAt(tp);
+			if (tn == null) return;
+
+			DProject tprj = D_IDE_Properties.GetProject((tn as ProjectNode).ProjectFile);
+			if (tprj == null) return;
+
+            D_IDEForm.thisForm.CreateNewSourceFile(tprj, true);
 		}
 
 		private void addExistingToolStripMenuItem_Click(object sender, EventArgs e)
@@ -273,18 +281,35 @@ namespace D_IDE
 			DProject tprj = D_IDE_Properties.GetProject((tn as ProjectNode).ProjectFile);
 			if (tprj == null) return;
 
-			Form1.thisForm.oF.InitialDirectory = tprj.basedir;
-			if (Form1.thisForm.oF.ShowDialog() == DialogResult.OK)
+			D_IDEForm.thisForm.oF.InitialDirectory = tprj.basedir;
+			if (D_IDEForm.thisForm.oF.ShowDialog() == DialogResult.OK)
 			{
-				foreach (string file in Form1.thisForm.oF.FileNames)
+				foreach (string file in D_IDEForm.thisForm.oF.FileNames)
 				{
 					if (Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
 
 					tprj.AddSrc(file);
 				}
-				Form1.thisForm.UpdateFiles();
+				D_IDEForm.thisForm.UpdateFiles();
 			}
 		}
+
+        private void addDClassToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Point tp = (Point)ProjectMenu.Tag;
+            if (tp == null) return;
+            TreeNode tn = prjFiles.GetNodeAt(tp);
+            if (tn == null) return;
+
+            DProject tprj = D_IDE_Properties.GetProject((tn as ProjectNode).ProjectFile);
+            if (tprj == null) return;
+
+            string fn = D_IDEForm.thisForm.CreateNewSourceFile(tprj,false);
+
+            File.WriteAllText(fn,"\r\nclass "+Path.GetFileNameWithoutExtension(fn)+"\r\n{\r\n\r\n}");
+
+            D_IDEForm.thisForm.Open(fn);
+        }
 
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
@@ -294,9 +319,9 @@ namespace D_IDE
 			if (tn == null) return;
 
 			if (tn is FileTreeNode)
-				Form1.thisForm.Open((tn as FileTreeNode).AbsolutePath, (tn as FileTreeNode).ProjectFile);
+				D_IDEForm.thisForm.Open((tn as FileTreeNode).AbsolutePath, (tn as FileTreeNode).ProjectFile);
 			else if (tn is ProjectNode)
-				Form1.thisForm.Open((tn as ProjectNode).FileOrPath);
+				D_IDEForm.thisForm.Open((tn as ProjectNode).FileOrPath);
 		}
 
 		private void AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
@@ -346,7 +371,7 @@ namespace D_IDE
 
 				mpr.name = e.Label;
 				mpr.Save();
-				Form1.thisForm.UpdateLastFilesMenu();
+				D_IDEForm.thisForm.UpdateLastFilesMenu();
 			}
 
 			e.CancelEdit = true;
@@ -359,7 +384,7 @@ namespace D_IDE
 			TreeNode tn = prjFiles.GetNodeAt(tp);
 			if (!(tn is ProjectNode)) return;
 
-			Form1.thisForm.Open(((ProjectNode)tn).Project.prjfn);
+			D_IDEForm.thisForm.Open(((ProjectNode)tn).Project.prjfn);
 		}
 
 		private void createNewDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
@@ -397,7 +422,7 @@ namespace D_IDE
 				TreeNode tn = prjFiles.GetNodeAt(prjFiles.PointToClient(new Point(e.X, e.Y)));
 				if (tn == null)
 				{
-					foreach (string file in files) Form1.thisForm.Open(file);
+					foreach (string file in files) D_IDEForm.thisForm.Open(file);
 				}
 				else if (tn.Tag is ProjectNode) // Take the tag because the node data is stored there
 				{
@@ -421,7 +446,7 @@ namespace D_IDE
 								try
 								{
 									// Update tab that may contains moved file
-									Form1.thisForm.FileDataByFile(file).fileData.mod_file = tar;
+									D_IDEForm.thisForm.FileDataByFile(file).fileData.mod_file = tar;
 								}
 								catch { }
 
@@ -479,7 +504,7 @@ namespace D_IDE
 			TreeNode tn = prjFiles.GetNodeAt(tp);
 			if (tn == null || !(tn is ProjectNode)) return;
 			DProject prj = (tn as ProjectNode).Project;
-			foreach (DockContent dc in Form1.thisForm.dockPanel.Documents)
+			foreach (DockContent dc in D_IDEForm.thisForm.dockPanel.Documents)
 			{
 				if (dc is ProjectPropertyPage)
 				{
@@ -488,7 +513,7 @@ namespace D_IDE
 			}
 			ProjectPropertyPage ppp = new ProjectPropertyPage(prj);
 			if (ppp != null)
-				ppp.Show(Form1.thisForm.dockPanel);
+				ppp.Show(D_IDEForm.thisForm.dockPanel);
 		}
 
 		private void prjFiles_ItemDrag(object sender, ItemDragEventArgs e)
@@ -521,7 +546,7 @@ namespace D_IDE
 			if (tn == null) return;
 
 			if (tn is FileTreeNode)
-				Form1.thisForm.OpenFormsDesigner((tn as FileTreeNode).AbsolutePath);
+				D_IDEForm.thisForm.OpenFormsDesigner((tn as FileTreeNode).AbsolutePath);
 		}
 
 		private void directoryToolStripMenuItem_Click(object sender, EventArgs e)
@@ -564,7 +589,7 @@ namespace D_IDE
 				DProject tprj = D_IDE_Properties.Projects[fn];
 				if (tprj == null) return;
 
-				foreach (DockContent dc in Form1.thisForm.dockPanel.Documents)
+				foreach (DockContent dc in D_IDEForm.thisForm.dockPanel.Documents)
 				{
 					if (!(dc is DocumentInstanceWindow)) continue;
 
@@ -589,6 +614,8 @@ namespace D_IDE
 
 			UpdateFiles();
 		}
+
+        
 	}
 
 	#region Nodes
