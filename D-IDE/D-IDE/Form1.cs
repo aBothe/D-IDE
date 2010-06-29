@@ -1058,7 +1058,8 @@ namespace D_IDE
         #region Document Window Context menu
         private void CloseDocWinClick(object sender, EventArgs e)
         {
-            (dockPanel.ActiveDocument as DockContent).Close();
+            if(dockPanel.DocumentsCount>=3)dockPanel.DocumentsToArray()[dockPanel.DocumentsCount - 2].DockHandler.Activate();
+            (dockPanel.DocumentsToArray()[dockPanel.DocumentsCount-1] as DockContent).Close();
         }
 
         private void closeAllToolStripMenuItem_Click(object sender, EventArgs e)
