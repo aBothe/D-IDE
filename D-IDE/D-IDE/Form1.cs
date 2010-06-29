@@ -34,8 +34,6 @@ namespace D_IDE
 {
     partial class D_IDEForm : Form
     {
-        public delegate void BuildErrorDelegate(string file, int lineNumber, string errmsg, Color color);
-
         public D_IDEForm(string[] args)
         {
             thisForm = this;
@@ -148,115 +146,7 @@ namespace D_IDE
             }
         }
 
-        void CodeViewToPDBConverter_Message(string Message)
-        {
-            Log("cv2pdb error: " + Message);
-        }
-
-        void DBuilder_OnExit(object sender, EventArgs e)
-        {
-            Process proc = (Process)sender;
-            Log(ProgressStatusLabel.Text = "Process exited with code " + proc.ExitCode.ToString());
-        }
-
-        void DLexer_OnError(int line, int col, string message)
-        {
-            //Log("Text Error in Line "+line.ToString()+", Col "+col.ToString()+": "+message);
-        }
-
-        void LastProjectsItemClick(object sender, EventArgs e)
-        {
-            string file = "";
-            if (sender is ToolStripMenuItem)
-                file = (string)((ToolStripMenuItem)sender).Tag;
-            /*else if (sender is RibbonButton)
-                file = (string)((RibbonButton)sender).Tag;*/
-            Open(file);
-        }
-
-        #region Parsing Procedures
-
-        void DParser_OnError(string file, string module, int line, int col, int kindOf, string msg)
-        {
-            try
-            {
-                errlog.AddParserError(file, line, col, msg);
-                DocumentInstanceWindow mtp;
-                foreach (IDockContent dc in dockPanel.Documents)
-                {
-                    if (dc is DocumentInstanceWindow)
-                    {
-                        mtp = (DocumentInstanceWindow)dc;
-                        if (mtp.fileData.ModuleName == module || mtp.fileData.mod_file == file)
-                        {
-                            int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
-                            mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Red));
-                            mtp.txt.ActiveTextAreaControl.Refresh();
-                            break;
-                        }
-
-                    }
-                }
-            }
-            catch { }
-        }
-        void DParser_OnSemanticError(string file, string module, int line, int col, int kindOf, string msg)
-        {
-            try
-            {
-                errlog.AddParserError(file, line, col, msg);
-                DocumentInstanceWindow mtp;
-                foreach (IDockContent dc in dockPanel.Documents)
-                {
-                    if (dc is DocumentInstanceWindow)
-                    {
-                        mtp = (DocumentInstanceWindow)dc;
-                        if (mtp.fileData.ModuleName == module)
-                        {
-                            int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
-                            mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Blue));
-                            mtp.txt.ActiveTextAreaControl.Refresh();
-                            break;
-                        }
-                    }
-                }
-            }
-            catch { }
-        }
-
-        
-        private void updateCacheToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            D_IDE_Properties.Default.dmd1.GlobalModules.Clear();
-            D_IDE_Properties.Default.dmd2.GlobalModules.Clear();
-            if (updateTh != null && updateTh.ThreadState == System.Threading.ThreadState.Running) return;
-            updateTh = new Thread(delegate()
-            {
-                UpdateChacheThread(D_IDE_Properties.Default.dmd1);
-                UpdateChacheThread(D_IDE_Properties.Default.dmd2);
-            });
-            updateTh.Start();
-        }
-
-        private void stopParsingToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (updateTh != null && updateTh.IsAlive == true)
-            {
-                updateTh.Abort();
-                stopParsingToolStripMenuItem.Enabled = false;
-                DModule.ClearErrorLogBeforeParsing = true;
-            }
-        }
-
-        #endregion
-
         #region Building Procedures
-
-        public void BuildSingle(object sender, EventArgs e)
-        {
-            BuildSingle();
-        }
-
         public string BuildSingle()
         {
             UseOutput = false;
@@ -401,43 +291,6 @@ namespace D_IDE
             return false;
         }
 
-        private void SendInputToExeProc(object sender, EventArgs e)
-        {
-            if (exeProc == null || exeProc.HasExited) return;
-
-            InputDlg dlg = new InputDlg();
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                exeProc.StandardInput.WriteLine(dlg.InputString);
-            }
-        }
-
-        public void buildToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (prj != null)
-            {
-                prj.LastModifyingDates.Clear();
-            }
-            Build();
-        }
-
-        private void toggleBuildLogToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!bpw.Visible) bpw.Show();
-            else bpw.Visible = false;
-        }
-
-        public void buildRunToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!String.IsNullOrEmpty(Build()))
-                Run();
-        }
-
-        public void runToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Run();
-        }
-
         void DBuilder_OnOutput(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
             Log(e.Data);
@@ -469,32 +322,9 @@ namespace D_IDE
                         new Object[] { mod_file, lineNumber, errmsg, Color.LightPink });
             }
         }
-
-
-        /// <summary>
-        /// Add an error notification to the error list and set this to the current selection in the editor. If needed, the specific file gets opened automatically
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="lineNumber"></param>
-        void AddHighlightedBuildError(string file, int lineNumber, string errmsg, Color color)
-        {
-            /*if (SelectedTabPage != null)
-            {
-                foreach (DockContent tp in dockPanel.Documents)
-                {
-                    if (tp is DocumentInstanceWindow)
-                    {
-                        DocumentInstanceWindow mtp = (DocumentInstanceWindow)tp;
-                        if (mtp.fileData.mod_file != file) continue;
-                        //mtp.txt.Document.CustomLineManager.AddCustomLine(lineNumber - 1, lineNumber - 1, color, false);
-                        mtp.txt.ActiveTextAreaControl.Refresh();
-                    }
-                }
-            }*/
-            errlog.AddBuildError(file, lineNumber, errmsg);
-        }
-
         #endregion
+
+        #region File menu
 
         public void NewSourceFile(object sender, EventArgs e)
         {
@@ -532,6 +362,17 @@ namespace D_IDE
                     prj.Save();
                     Open(main);
                 }
+            }
+        }
+
+        public void OpenFile(object sender, EventArgs e)
+        {
+            SaveAllTabs();
+
+            if (oF.ShowDialog() == DialogResult.OK)
+            {
+                foreach (string fn in oF.FileNames) Open(fn);
+                UpdateFiles();
             }
         }
 
@@ -588,185 +429,248 @@ namespace D_IDE
             RefreshClassHierarchy();
         }
 
-        private void RefreshClassHierarchy()
+        public void SaveAs(object sender, EventArgs e)
         {
-            DocumentInstanceWindow mtp = SelectedTabPage;
-            if (mtp == null) return;
-            TreeNode oldNode = null;
-            if (hierarchy.hierarchy.Nodes.Count > 0) oldNode = hierarchy.hierarchy.Nodes[0];
-            hierarchy.hierarchy.Nodes.Clear();
+            DocumentInstanceWindow tp = SelectedTabPage;
+            if (tp == null) return;
+            string bef = tp.fileData.FileName;
+            sF.FileName = bef;
 
-            hierarchy.hierarchy.BeginUpdate();
-            TreeNode tn = new TreeNode(mtp.fileData.ModuleName);
-            tn.SelectedImageKey = tn.ImageKey = "namespace";
-            int i = 0;
-            if(mtp.fileData.dom!=null)
-            foreach (DataType ch in mtp.fileData.dom)
+            if (sF.ShowDialog() == DialogResult.OK)
             {
-                TreeNode ctn = GenerateHierarchyData(mtp.fileData.dom, ch,
-                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == ch.name) ?
-                    oldNode.Nodes[i] : null);
-                ctn.ToolTipText = DCompletionData.BuildDescriptionString(ch);
-                ctn.Tag = ch;
-                tn.Nodes.Add(ctn);
-                i++;
+                if (prj != null)
+                {
+                    if (DModule.Parsable(tp.fileData.FileName))
+                    {
+                        if (prj.files.Contains(tp.fileData))
+                            prj.files.Remove(tp.fileData);
+                    }
+
+                    prj.resourceFiles.Remove(prj.GetRelFilePath(tp.fileData.FileName));
+                    prj.AddSrc(sF.FileName);
+                }
+                tp.fileData.FileName = sF.FileName;
+                tp.Update();
+                tp.Save();
             }
-            tn.Expand();
-            hierarchy.hierarchy.Nodes.Add(tn);
-            hierarchy.hierarchy.EndUpdate();
         }
 
-        public void OpenFile(object sender, EventArgs e)
+        public void SaveAll(object sender, EventArgs e)
         {
             SaveAllTabs();
+        }
+
+        private void ExitProgramClick(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void AddExistingFile(object sender, EventArgs e)
+        {
+            if (prj == null) return;
 
             if (oF.ShowDialog() == DialogResult.OK)
             {
-                foreach (string fn in oF.FileNames) Open(fn);
+                foreach (string file in oF.FileNames)
+                {
+                    if (Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
+
+                    prj.AddSrc(file);
+                }
                 UpdateFiles();
             }
         }
 
-        public FXFormsDesigner OpenFormsDesigner(string file)
+        private void AddExistingDirectory(object sender, EventArgs e)
         {
-            FXFormsDesigner ret = null;
+            if (prj == null) return;
 
-            foreach (DockContent dc in dockPanel.Documents)
+            FolderBrowserDialog fb = new FolderBrowserDialog();
+            fb.SelectedPath = prj.basedir;
+            if (fb.ShowDialog() == DialogResult.OK)
             {
-                if (!(dc is FXFormsDesigner)) continue;
-                FXFormsDesigner fd = dc as FXFormsDesigner;
-                if (fd.FileName == file) return fd;
-            }
+                DialogResult dr = MessageBox.Show("Also scan subdirectories?", "Add folder", MessageBoxButtons.YesNoCancel);
 
-            if (!File.Exists(file))
-            {
-                Log(ProgressStatusLabel.Text = ("File " + file + " doesn't exist!"));
-                return null;
-            }
+                if (dr == DialogResult.Cancel)
+                    return;
 
-            ret = new FXFormsDesigner(file);
-            ret.Show(dockPanel, DockState.Document);
-            if (this.dockPanel.ActiveDocumentPane != null) this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.contextMenuStrip1; // Set Tab selection bars context menu to ours
-            return ret;
+                prj.AddDirectory(fb.SelectedPath, dr == DialogResult.Yes);
+            }
         }
 
-
-        TreeNode GenerateHierarchyData(DataType env, DataType ch, TreeNode oldNode)
+        private void LastProjectsItemClick(object sender, EventArgs e)
         {
-            if (ch == null) return null;
-            int ii = DCompletionData.GetImageIndex(icons, env, ch);
-
-            TreeNode ret = new TreeNode(ch.name, ii, ii);
-            ret.Tag = ch;
-            ret.SelectedImageIndex = ret.ImageIndex = ii;
-
-            ii = icons.Images.IndexOfKey("Icons.16x16.Parameter.png");
-            int i = 0;
-            foreach (DataType dt in ch.param)
-            {
-                TreeNode tn = GenerateHierarchyData(ch, dt,
-                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
-                    oldNode.Nodes[i] : null);
-                tn.SelectedImageIndex = tn.ImageIndex = ii;
-                tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
-
-                ret.Nodes.Add(tn);
-                i++;
-            }
-            i = 0;
-            foreach (DataType dt in ch)
-            {
-                ii = DCompletionData.GetImageIndex(icons, ch, dt);
-                TreeNode tn = GenerateHierarchyData(ch, dt,
-                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
-                    oldNode.Nodes[i] : null);
-
-                tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
-                ret.Nodes.Add(tn);
-                i++;
-            }
-            if (oldNode != null && oldNode.IsExpanded && oldNode.Text == ch.name)
-                ret.Expand();
-            return ret;
+            string file = "";
+            if (sender is ToolStripMenuItem)
+                file = (string)((ToolStripMenuItem)sender).Tag;
+            /*else if (sender is RibbonButton)
+                file = (string)((RibbonButton)sender).Tag;*/
+            Open(file);
         }
 
-        public void Log(string m)
+        #endregion
+
+        #region Edit menu
+        #region Search & Replace
+        public void searchReplaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!UseOutput) bpw.Log(m);
-            else output.Log(m);
+            if (SelectedTabPage != null)
+            {
+                if (SelectedTabPage.txt.ActiveTextAreaControl.SelectionManager.SelectedText.Length > 0)
+                    searchDlg.searchText = SelectedTabPage.txt.ActiveTextAreaControl.SelectionManager.SelectedText;
+                searchDlg.Visible = true;
+            }
         }
 
-        #region GUI actions
-
-        public static ImageList InitCodeCompletionIcons()
+        public void findNextToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            
-            System.Resources.ResourceManager rm=new System.Resources.ResourceManager("D_IDE.Icons",Assembly.GetAssembly(typeof(D_IDEForm)));
-            icons = new ImageList();
-            // 
-            // icons
-            // 
-            icons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(rm.GetObject("icons.ImageStream")));
-            icons.TransparentColor = System.Drawing.Color.Transparent;
-            icons.Images.SetKeyName(0, "Icons.16x16.Enum.png");
-            icons.Images.SetKeyName(1, "Icons.16x16.Field.png");
-            icons.Images.SetKeyName(2, "Icons.16x16.Interface.png");
-            icons.Images.SetKeyName(3, "Icons.16x16.InternalClass.png");
-            icons.Images.SetKeyName(4, "Icons.16x16.InternalDelegate.png");
-            icons.Images.SetKeyName(5, "Icons.16x16.InternalEnum.png");
-            icons.Images.SetKeyName(6, "Icons.16x16.InternalEvent.png");
-            icons.Images.SetKeyName(7, "Icons.16x16.InternalField.png");
-            icons.Images.SetKeyName(8, "Icons.16x16.InternalIndexer.png");
-            icons.Images.SetKeyName(9, "Icons.16x16.InternalInterface.png");
-            icons.Images.SetKeyName(10, "Icons.16x16.InternalMethod.png");
-            icons.Images.SetKeyName(11, "Icons.16x16.InternalProperty.png");
-            icons.Images.SetKeyName(12, "Icons.16x16.InternalStruct.png");
-            icons.Images.SetKeyName(13, "Icons.16x16.Literal.png");
-            icons.Images.SetKeyName(14, "Icons.16x16.Method.png");
-            icons.Images.SetKeyName(15, "Icons.16x16.Parameter.png");
-            icons.Images.SetKeyName(16, "Icons.16x16.PrivateClass.png");
-            icons.Images.SetKeyName(17, "Icons.16x16.PrivateDelegate.png");
-            icons.Images.SetKeyName(18, "Icons.16x16.PrivateEnum.png");
-            icons.Images.SetKeyName(19, "Icons.16x16.PrivateEvent.png");
-            icons.Images.SetKeyName(20, "Icons.16x16.PrivateField.png");
-            icons.Images.SetKeyName(21, "Icons.16x16.PrivateIndexer.png");
-            icons.Images.SetKeyName(22, "Icons.16x16.PrivateInterface.png");
-            icons.Images.SetKeyName(23, "Icons.16x16.PrivateMethod.png");
-            icons.Images.SetKeyName(24, "Icons.16x16.PrivateProperty.png");
-            icons.Images.SetKeyName(25, "Icons.16x16.PrivateStruct.png");
-            icons.Images.SetKeyName(26, "Icons.16x16.Property.png");
-            icons.Images.SetKeyName(27, "Icons.16x16.ProtectedClass.png");
-            icons.Images.SetKeyName(28, "Icons.16x16.ProtectedDelegate.png");
-            icons.Images.SetKeyName(29, "Icons.16x16.ProtectedEnum.png");
-            icons.Images.SetKeyName(30, "Icons.16x16.ProtectedEvent.png");
-            icons.Images.SetKeyName(31, "Icons.16x16.ProtectedField.png");
-            icons.Images.SetKeyName(32, "Icons.16x16.ProtectedIndexer.png");
-            icons.Images.SetKeyName(33, "Icons.16x16.ProtectedInterface.png");
-            icons.Images.SetKeyName(34, "Icons.16x16.ProtectedMethod.png");
-            icons.Images.SetKeyName(35, "Icons.16x16.ProtectedProperty.png");
-            icons.Images.SetKeyName(36, "Icons.16x16.ProtectedStruct.png");
-            icons.Images.SetKeyName(37, "Icons.16x16.Struct.png");
-            icons.Images.SetKeyName(38, "Icons.16x16.Local.png");
-            icons.Images.SetKeyName(39, "Icons.16x16.Class.png");
-            icons.Images.SetKeyName(40, "Icons.16x16.Delegate.png");
-            icons.Images.SetKeyName(41, "code");
-            icons.Images.SetKeyName(42, "namespace");
+            searchDlg.FindNextClick(sender, e);
+        }
 
-            return icons;
+        public void searchTool_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Return && SelectedTabPage != null && searchTool.TextBox.Text.Length > 0)
+            {
+                searchDlg.Search(searchTool.TextBox.Text);
+            }
+        }
+        #endregion
+
+        #region Basics
+        public void cutTBSButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                SelectedTabPage.EmulateCut();
+            }
+            catch { }
+        }
+
+        public void copyTBSButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                SelectedTabPage.EmulateCopy();
+            }
+            catch { }
+        }
+
+        public void pasteTBSButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                SelectedTabPage.EmulatePaste();
+            }
+            catch { }
+        }
+        #endregion
+
+        public void GotoLine(object sender, EventArgs e)
+        {
+            if (SelectedTabPage != null) gotoDlg.Visible = true;
+        }
+
+        private void formatFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (SelectedTabPage == null) return;
+            for (int i = 1; i < SelectedTabPage.txt.Document.TotalNumberOfLines; i++)
+                SelectedTabPage.txt.Document.FormattingStrategy.IndentLine(SelectedTabPage.txt.ActiveTextAreaControl.TextArea, i);
+
+            SelectedTabPage.ParseFolds();
+        }
+
+        private void doubleLineToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DocumentInstanceWindow diw = null;
+            if ((diw = SelectedTabPage) == null) return;
+
+            string sel = diw.txt.ActiveTextAreaControl.SelectionManager.SelectedText;
+            if (String.IsNullOrEmpty(sel))
+            {
+                int line = diw.Caret.Line;
+                LineSegment ls = diw.txt.Document.GetLineSegmentForOffset(diw.CaretOffset);
+                diw.txt.Document.Insert(
+                    diw.txt.Document.PositionToOffset(new TextLocation(0, line + 1)),
+                    diw.txt.Document.TextContent.Substring(ls.Offset, ls.Length) + "\r\n"
+                    );
+            }
+            else
+            {
+                ISelection isel = diw.txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
+                diw.txt.Document.Insert(isel.EndOffset, isel.SelectedText);
+            }
+            diw.Refresh();
+        }
+
+        #region Commenting
+        private void commentOutBlockToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DocumentInstanceWindow diw = SelectedTabPage;
+            if (diw != null) diw.CommentOutBlock(sender, e);
+        }
+
+        private void uncommentBlocklineToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DocumentInstanceWindow diw = SelectedTabPage;
+            if (diw != null) diw.UncommentBlock(sender, e);
+        }
+        #endregion
+
+        private void showCompletionWindowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (SelectedTabPage != null) SelectedTabPage.TextAreaKeyEventHandler('\0');
+        }
+        #endregion
+
+        #region View menu
+
+        private void projectExplorerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            prjexplorer.Show(dockPanel);
+        }
+
+        private void toolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+            hierarchy.Show(dockPanel);
+        }
+
+        private void toggleBuildLogToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            bpw.Show(dockPanel);
+        }
+
+        private void outputToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            output.Show(dockPanel);
+        }
+
+        private void startPageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            startpage.Show();
+        }
+
+        private void errorLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            errlog.Show();
+        }
+
+        private void debugOutputToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            dbgwin.Show();
+        }
+
+        private void localsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            dbgLocalswin.Show(dockPanel);
+        }
+
+        private void reloadProjectTreeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            prjexplorer.UpdateFiles();
         }
 
         private void setDefaultPanelLayout(object sender, EventArgs e)
-        {/*
-            hierarchy.Hide();
-            prjexplorer.Hide();
-            dbgwin.Hide();
-            bpw.Hide();
-            output.Hide();
-            errlog.Hide();
-            callstackwin.Hide();
-            dbgLocalswin.Hide();
-            propView.Hide();*/
-
+        {
             hierarchy.Show(dockPanel, DockState.DockRight);
             prjexplorer.Show(dockPanel, DockState.DockLeft);
             dbgwin.Show(dockPanel, DockState.DockBottomAutoHide);
@@ -776,6 +680,174 @@ namespace D_IDE
             callstackwin.Show(dockPanel, DockState.DockBottomAutoHide);
             dbgLocalswin.Show(dockPanel, DockState.DockBottomAutoHide);
             if (D_IDE_Properties.Default.EnableFXFormsDesigner) propView.Show(dockPanel, DockState.DockRight);
+        }
+        #endregion
+
+        #region Project menu
+        public void BuildProjectClick(object sender, EventArgs e)
+        {
+            if (prj != null)
+            {
+                prj.LastModifyingDates.Clear();
+            }
+            Build();
+        }
+
+        public void BuildSingleClick(object sender, EventArgs e)
+        {
+            BuildSingle();
+        }
+
+        public void RunClick(object sender, EventArgs e)
+        {
+            Run();
+        }
+
+        private void OpenProjectDirectoryInExplorerClick(object sender, EventArgs e)
+        {
+            if (prj != null)
+                Process.Start("explorer.exe", prj.basedir);
+        }
+
+        private void ShowProjectProperties(object sender, EventArgs e)
+        {
+            if (prj == null)
+            {
+                MessageBox.Show("Create project first!");
+                return;
+            }
+            foreach (DockContent dc in dockPanel.Documents)
+            {
+                if (dc is ProjectPropertyPage)
+                {
+                    if ((dc as ProjectPropertyPage).project.prjfn == prj.prjfn) return;
+                }
+            }
+            ProjectPropertyPage ppp = new ProjectPropertyPage(prj);
+            if (ppp != null)
+                ppp.Show(dockPanel);
+        }
+        #endregion
+
+        // Debug menu is implemented in Form1Debugger.cs
+
+        #region Global menu
+        private void GlobalSettingsClick(object sender, EventArgs e)
+        {
+            if (dockPanel.DocumentsCount > 0)
+                foreach (DockContent dc in dockPanel.Documents)
+                    if (dc is IDESettings)
+                    {
+                        dc.Activate();
+                        return;
+                    }
+            (new IDESettings()).Show(dockPanel);
+        }
+
+        private void ReparseCacheClick(object sender, EventArgs e)
+        {
+            D_IDE_Properties.Default.dmd1.GlobalModules.Clear();
+            D_IDE_Properties.Default.dmd2.GlobalModules.Clear();
+            if (updateTh != null && updateTh.ThreadState == System.Threading.ThreadState.Running) return;
+            updateTh = new Thread(delegate()
+            {
+                UpdateChacheThread(D_IDE_Properties.Default.dmd1);
+                UpdateChacheThread(D_IDE_Properties.Default.dmd2);
+            });
+            updateTh.Start();
+        }
+
+        private void StopReparsingCacheClick(object sender, EventArgs e)
+        {
+            if (updateTh != null && updateTh.IsAlive == true)
+            {
+                updateTh.Abort();
+                stopParsingToolStripMenuItem.Enabled = false;
+                DModule.ClearErrorLogBeforeParsing = true;
+            }
+        }
+        #endregion
+
+        #region About menu
+        private void visitDidesourceforgenetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://d-ide.sourceforge.net");
+        }
+
+        private void visitAlexanderbothecomToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://www.alexanderbothe.com");
+        }
+
+        private void aboutDIDEToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("This software is freeware\nand is written by Alexander Bothe.", title);
+        }
+
+        private void howToDebugDExecutablesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://digitalmars.com/d/2.0/windbg.html");
+        }
+        #endregion
+
+        #region GUI events and other procs
+        public delegate void BuildErrorDelegate(string file, int lineNumber, string errmsg, Color color);
+
+        void DBuilder_OnExit(object sender, EventArgs e)
+        {
+            Process proc = (Process)sender;
+            Log(ProgressStatusLabel.Text = "Process exited with code " + proc.ExitCode.ToString());
+        }
+        void DLexer_OnError(int line, int col, string message)
+        {
+            //Log("Text Error in Line "+line.ToString()+", Col "+col.ToString()+": "+message);
+        }
+        void DParser_OnError(string file, string module, int line, int col, int kindOf, string msg)
+        {
+            try
+            {
+                errlog.AddParserError(file, line, col, msg);
+                DocumentInstanceWindow mtp;
+                foreach (IDockContent dc in dockPanel.Documents)
+                {
+                    if (dc is DocumentInstanceWindow)
+                    {
+                        mtp = (DocumentInstanceWindow)dc;
+                        if (mtp.fileData.ModuleName == module || mtp.fileData.mod_file == file)
+                        {
+                            int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
+                            mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Red));
+                            mtp.txt.ActiveTextAreaControl.Refresh();
+                            break;
+                        }
+
+                    }
+                }
+            }
+            catch { }
+        }
+        void DParser_OnSemanticError(string file, string module, int line, int col, int kindOf, string msg)
+        {
+            try
+            {
+                errlog.AddParserError(file, line, col, msg);
+                DocumentInstanceWindow mtp;
+                foreach (IDockContent dc in dockPanel.Documents)
+                {
+                    if (dc is DocumentInstanceWindow)
+                    {
+                        mtp = (DocumentInstanceWindow)dc;
+                        if (mtp.fileData.ModuleName == module)
+                        {
+                            int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
+                            mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Blue));
+                            mtp.txt.ActiveTextAreaControl.Refresh();
+                            break;
+                        }
+                    }
+                }
+            }
+            catch { }
         }
 
         private void TabSelectionChanged(object sender, EventArgs e)
@@ -859,84 +931,6 @@ namespace D_IDE
             D_IDE_Properties.SaveGlobalCache(D_IDE_Properties.Default.dmd2, Program.cfgDir + "\\" + Program.D2ModuleCacheFile);
         }
 
-        public void SaveAs(object sender, EventArgs e)
-        {
-            DocumentInstanceWindow tp = SelectedTabPage;
-            if (tp == null) return;
-            string bef = tp.fileData.FileName;
-            sF.FileName = bef;
-
-            if (sF.ShowDialog() == DialogResult.OK)
-            {
-                if (prj != null)
-                {
-                    if (DModule.Parsable(tp.fileData.FileName))
-                    {
-                        if (prj.files.Contains(tp.fileData))
-                            prj.files.Remove(tp.fileData);
-                    }
-
-                    prj.resourceFiles.Remove(prj.GetRelFilePath(tp.fileData.FileName));
-                    prj.AddSrc(sF.FileName);
-                }
-                tp.fileData.FileName = sF.FileName;
-                tp.Update();
-                tp.Save();
-            }
-        }
-
-        private void ShowProjectProperties(object sender, EventArgs e)
-        {
-            if (prj == null)
-            {
-                MessageBox.Show("Create project first!");
-                return;
-            }
-            foreach (DockContent dc in dockPanel.Documents)
-            {
-                if (dc is ProjectPropertyPage)
-                {
-                    if ((dc as ProjectPropertyPage).project.prjfn == prj.prjfn) return;
-                }
-            }
-            ProjectPropertyPage ppp = new ProjectPropertyPage(prj);
-            if (ppp != null)
-                ppp.Show(dockPanel);
-        }
-
-        public void AddExistingFile(object sender, EventArgs e)
-        {
-            if (prj == null) return;
-
-            if (oF.ShowDialog() == DialogResult.OK)
-            {
-                foreach (string file in oF.FileNames)
-                {
-                    if (Path.GetExtension(file) == DProject.prjext) { MessageBox.Show("Cannot add " + file + " !"); continue; }
-
-                    prj.AddSrc(file);
-                }
-                UpdateFiles();
-            }
-        }
-
-        private void AddExistingDirectory(object sender, EventArgs e)
-        {
-            if (prj == null) return;
-
-            FolderBrowserDialog fb = new FolderBrowserDialog();
-            fb.SelectedPath = prj.basedir;
-            if (fb.ShowDialog() == DialogResult.OK)
-            {
-                DialogResult dr = MessageBox.Show("Also scan subdirectories?", "Add folder", MessageBoxButtons.YesNoCancel);
-
-                if (dr == DialogResult.Cancel) 
-                    return;
-
-                prj.AddDirectory(fb.SelectedPath, dr == DialogResult.Yes);
-            }
-        }
-
         private void CloseTab(object sender, EventArgs e)
         {
             DocumentInstanceWindow mtp = SelectedTabPage;
@@ -956,57 +950,6 @@ namespace D_IDE
             }
         }
 
-        private void propertiesToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            if (dockPanel.DocumentsCount > 0)
-                foreach (DockContent dc in dockPanel.Documents)
-                    if (dc is IDESettings)
-                    {
-                        dc.Activate();
-                        return;
-                    }
-            (new IDESettings()).Show(dockPanel);
-        }
-
-        public void RemoveFileFromPrj(string file)
-        {
-            if (prj == null) return;
-
-            prj.resourceFiles.Remove(file);
-
-            UpdateFiles();
-        }
-
-        #region Search & Replace
-        public void searchReplaceToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (SelectedTabPage != null)
-            {
-                if (SelectedTabPage.txt.ActiveTextAreaControl.SelectionManager.SelectedText.Length > 0)
-                    searchDlg.searchText = SelectedTabPage.txt.ActiveTextAreaControl.SelectionManager.SelectedText;
-                searchDlg.Visible = true;
-            }
-        }
-
-        public void findNextToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            searchDlg.FindNextClick(sender, e);
-        }
-
-        public void searchTool_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Return && SelectedTabPage != null && searchTool.TextBox.Text.Length > 0)
-            {
-                searchDlg.Search(searchTool.TextBox.Text);
-            }
-        }
-        #endregion
-
-        public void GotoLine(object sender, EventArgs e)
-        {
-            if (SelectedTabPage != null) gotoDlg.Visible = true;
-        }
-
         private void tc_DragDrop(object sender, DragEventArgs e)
         {
             foreach (string file in (string[])e.Data.GetData(DataFormats.FileDrop))
@@ -1020,20 +963,11 @@ namespace D_IDE
             else
                 e.Effect = DragDropEffects.None;
         }
-
-        private void formatFileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (SelectedTabPage == null) return;
-            for (int i = 1; i < SelectedTabPage.txt.Document.TotalNumberOfLines; i++)
-                SelectedTabPage.txt.Document.FormattingStrategy.IndentLine(SelectedTabPage.txt.ActiveTextAreaControl.TextArea, i);
-
-            SelectedTabPage.ParseFolds();
-        }
         #endregion
 
         #region Updates
-
-        /*public static WebClient webclient = new WebClient();
+/*
+        public static WebClient webclient = new WebClient();
         public Thread RevisionUpdateThread;
         public void CheckForUpdates()
         {
@@ -1119,34 +1053,10 @@ namespace D_IDE
                 catch (Exception ex) { MessageBox.Show(ex.Message); }
             }
         }*/
-
-        private void visitAlexanderbothecomToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Process.Start("http://www.alexanderbothe.com");
-        }
         #endregion
 
-        private void projectExplorerToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            prjexplorer.Show(dockPanel);
-        }
-
-        private void toolStripMenuItem2_Click(object sender, EventArgs e)
-        {
-            hierarchy.Show(dockPanel);
-        }
-
-        private void toggleBuildLogToolStripMenuItem_Click_1(object sender, EventArgs e)
-        {
-            bpw.Show(dockPanel);
-        }
-
-        private void outputToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            output.Show(dockPanel);
-        }
-
-        private void testToolStripMenuItem_Click(object sender, EventArgs e)
+        #region Document Window Context menu
+        private void CloseDocWinClick(object sender, EventArgs e)
         {
             (dockPanel.ActiveDocument as DockContent).Close();
         }
@@ -1166,142 +1076,6 @@ namespace D_IDE
                 if (dcs[i] == dockPanel.ActiveDocument) continue;
                 (dcs[i] as DockContent).Close();
             }
-        }
-
-        private void aboutDIDEToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("This software is freeware\nand is written by Alexander Bothe.", title);
-        }
-
-        public void SaveAll(object sender, EventArgs e)
-        {
-            SaveAllTabs();
-        }
-
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        private void startPageToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            startpage.Show();
-        }
-
-        private void doubleLineToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DocumentInstanceWindow diw = null;
-            if ((diw = SelectedTabPage) == null) return;
-
-            string sel = diw.txt.ActiveTextAreaControl.SelectionManager.SelectedText;
-            if (String.IsNullOrEmpty(sel))
-            {
-                int line = diw.Caret.Line;
-                LineSegment ls = diw.txt.Document.GetLineSegmentForOffset(diw.CaretOffset);
-                diw.txt.Document.Insert(
-                    diw.txt.Document.PositionToOffset(new TextLocation(0, line + 1)),
-                    diw.txt.Document.TextContent.Substring(ls.Offset, ls.Length) + "\r\n"
-                    );
-            }
-            else
-            {
-                ISelection isel = diw.txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
-                diw.txt.Document.Insert(isel.EndOffset, isel.SelectedText);
-            }
-            diw.Refresh();
-        }
-
-        private void openProjectDirectoryInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (prj != null)
-                Process.Start("explorer.exe", prj.basedir);
-        }
-
-        private void errorLogToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            errlog.Show();
-        }
-
-        private void howToDebugDExecutablesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Process.Start("http://digitalmars.com/d/2.0/windbg.html");
-        }
-
-        private void debugOutputToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            dbgwin.Show();
-        }
-        #region Basics
-        public void cutTBSButton_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                SelectedTabPage.EmulateCut();
-            }
-            catch { }
-        }
-
-        public void copyTBSButton_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                SelectedTabPage.EmulateCopy();
-            }
-            catch { }
-        }
-
-        public void pasteTBSButton_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                SelectedTabPage.EmulatePaste();
-            }
-            catch { }
-        }
-        #endregion
-
-        private void visitDidesourceforgenetToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Process.Start("http://d-ide.sourceforge.net");
-        }
-
-        private void showCompletionWindowToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (SelectedTabPage != null) SelectedTabPage.TextAreaKeyEventHandler('\0');
-        }
-
-        private void reloadProjectTreeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            prjexplorer.UpdateFiles();
-        }
-
-        private void localsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            dbgLocalswin.Show(dockPanel);
-        }
-
-        private void executeDebugCommandToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!IsDebugging) return;
-            InputDlg id = new InputDlg();
-            if (id.ShowDialog() == DialogResult.OK)
-            {
-                dbg.Execute(id.InputString);
-                dbg.WaitForEvent(3000);
-            }
-        }
-
-        #region Commenting
-        private void commentOutBlockToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DocumentInstanceWindow diw = SelectedTabPage;
-            if (diw != null) diw.CommentOutBlock(sender, e);
-        }
-
-        private void uncommentBlocklineToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DocumentInstanceWindow diw = SelectedTabPage;
-            if (diw != null) diw.UncommentBlock(sender, e);
         }
         #endregion
     }

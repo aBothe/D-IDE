@@ -28,6 +28,8 @@ namespace D_IDE
 
     partial class D_IDEForm
     {
+        #region Debug menu
+
         public void RunDebugClick(object sender, EventArgs e)
         {
             ForceExitDebugging();
@@ -76,46 +78,33 @@ namespace D_IDE
             if (prj != null) prj.isRelease = before;
         }
 
-        public void dbgContinueClick(object sender, EventArgs e)
+        public void BuildAndRunClick(object sender, EventArgs e)
         {
-            if (!IsDebugging)
-            {
-                RunDebugClick(sender, e);
-            }
-            else if (dbg != null)
-            {
-                dbg.Execute("gh");
-                WaitForEvent();
-            }
+            if (!String.IsNullOrEmpty(Build()))
+                Run();
         }
 
-        public void dbgPauseButtonTS_Click(object sender, EventArgs e)
+        private void RunUntilMainClick(object sender, EventArgs e)
         {
-            if (dbg == null) return;
-            StopWaitingForEvents = true;
-            dbg.EndPendingWaits();
-            Thread.Sleep(20);
-            //dbg.Execute("th");
+            RunDebugClick("untilmain", EventArgs.Empty);
+        }
+
+        public void StepInClick(object sender, EventArgs e)
+        {
+            if (!IsDebugging) return;
+            dbg.Execute("t");
+            WaitForEvent();
+            StopWaitingForEvents = false;
             GoToCurrentLocation();
-            //WaitForEvent();
-            /*dbg.ExecutionStatus = DebugStatus.Break;
-            dbg.InterruptTimeOut = 0;
-            dbg.Interrupt();
-            while (dbg.IsInterruptRequested)
-            {
-                Log("Interrupt waiting...");
-                Application.DoEvents();
-            }*/
-            //dbg.Execute("~n"); // Suspend program's main thread
-            //dbg.WaitForEvent();
-            /*dbg.ExecutionStatus = DebugStatus.Break;
-            dbg.Interrupt();
-            dbg.WaitForEvent(100);*/
         }
 
-        public void dbgStopButtonTS_Click(object sender, EventArgs e)
+        public void StepOverClick(object sender, EventArgs e)
         {
-            ForceExitDebugging();
+            if (!IsDebugging) return;
+            dbg.Execute("p");
+            WaitForEvent();
+            StopWaitingForEvents = false;
+            GoToCurrentLocation();
         }
 
         public void ToggleBreakPoint(object sender, EventArgs e)
@@ -154,6 +143,70 @@ namespace D_IDE
             UpdateBreakPointMarkers();
         }
 
+        private void RefreshBreakpointsClick(object sender, EventArgs e)
+        {
+            UpdateBreakPointMarkers();
+        }
+
+#endregion
+
+        #region Additional ToolStrip button events
+
+        public void ContinueClick(object sender, EventArgs e)
+        {
+            if (!IsDebugging)
+            {
+                RunDebugClick(sender, e);
+            }
+            else if (dbg != null)
+            {
+                dbg.Execute("gh");
+                WaitForEvent();
+            }
+        }
+
+        public void PauseClick(object sender, EventArgs e)
+        {
+            if (dbg == null) return;
+            StopWaitingForEvents = true;
+            dbg.EndPendingWaits();
+            Thread.Sleep(20);
+            //dbg.Execute("th");
+            GoToCurrentLocation();
+            //WaitForEvent();
+            /*dbg.ExecutionStatus = DebugStatus.Break;
+            dbg.InterruptTimeOut = 0;
+            dbg.Interrupt();
+            while (dbg.IsInterruptRequested)
+            {
+                Log("Interrupt waiting...");
+                Application.DoEvents();
+            }*/
+            //dbg.Execute("~n"); // Suspend program's main thread
+            //dbg.WaitForEvent();
+            /*dbg.ExecutionStatus = DebugStatus.Break;
+            dbg.Interrupt();
+            dbg.WaitForEvent(100);*/
+        }
+
+        public void StopClick(object sender, EventArgs e)
+        {
+            ForceExitDebugging();
+        }
+
+        public void StepOutClick(object sender, EventArgs e)
+        {
+            if (!IsDebugging) return;
+            dbg.Execute("pt");
+            WaitForEvent();
+            StopWaitingForEvents = false;
+            GoToCurrentLocation();
+        }
+
+
+        #endregion
+
+        #region Debugger related stuff
         private void InitDebugger()
         {
             try
@@ -166,41 +219,7 @@ namespace D_IDE
             {
                 Log(ex.Message);
             }
-        }
-
-        public void stepIn_Click(object sender, EventArgs e)
-        {
-            if (!IsDebugging) return;
-            dbg.Execute("t");
-            WaitForEvent();
-            StopWaitingForEvents = false;
-            GoToCurrentLocation();
-        }
-
-        public void stepOver_Click(object sender, EventArgs e)
-        {
-            if (!IsDebugging) return;
-            dbg.Execute("p");
-            WaitForEvent();
-            StopWaitingForEvents = false;
-            GoToCurrentLocation();
-        }
-
-        public void stepOutTS_Click(object sender, EventArgs e)
-        {
-            if (!IsDebugging) return;
-            dbg.Execute("pt");
-            WaitForEvent();
-            StopWaitingForEvents = false;
-            GoToCurrentLocation();
-
-            //stepIn_Click(sender,e);
-        }
-
-        private void runUntilMainToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            RunDebugClick("untilmain", EventArgs.Empty);
-        }
+        }        
 
         #region Exression evaluation
         public static Type DetermineArrayType(string type, out uint size, out bool IsString)
@@ -510,11 +529,6 @@ namespace D_IDE
             diw.Refresh();
         }
 
-        private void refreshBreakpointsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateBreakPointMarkers();
-        }
-
         /// <summary>
         /// Highlights all breakpoints in all open files
         /// </summary>
@@ -810,5 +824,7 @@ namespace D_IDE
 
             //callstackwin.Clear();
         }
+
+        #endregion
     }
 }

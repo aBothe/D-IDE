@@ -84,6 +84,14 @@ namespace D_IDE
         }
         #endregion
 
+        public void RemoveFileFromPrj(string file)
+        {
+            if (prj == null) return;
+
+            prj.resourceFiles.Remove(file);
+
+            UpdateFiles();
+        }
 
         public void UpdateLastFilesMenu()
         {
@@ -240,7 +248,6 @@ namespace D_IDE
             }
         }
 
-        #region Project relevated things
         /*
 		/// <summary>
 		/// TODO: Fix this
@@ -344,9 +351,6 @@ namespace D_IDE
             return tfn;
         }
 
-        #endregion
-
-
         /// <summary>
         /// Central accessing method to open files or projects. Use this method only to open files!
         /// </summary>
@@ -431,7 +435,7 @@ namespace D_IDE
             RefreshClassHierarchy();
             UpdateLastFilesMenu();
             if (this.dockPanel.ActiveDocumentPane != null)
-                this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.contextMenuStrip1; // Set Tab selection bars context menu to ours
+                this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.DocumentWindowContextMenu; // Set Tab selection bars context menu to ours
 
             // Important: set Read-Only flag if Debugger is running currently
             if (ret != null && ret.txt != null)
@@ -440,6 +444,169 @@ namespace D_IDE
             UpdateBreakPointsForDocWin(ret);
 
             return ret;
+        }
+
+        public static ImageList InitCodeCompletionIcons()
+        {
+
+            System.Resources.ResourceManager rm = new System.Resources.ResourceManager("D_IDE.Icons", Assembly.GetAssembly(typeof(D_IDEForm)));
+            icons = new ImageList();
+            // 
+            // icons
+            // 
+            icons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(rm.GetObject("icons.ImageStream")));
+            icons.TransparentColor = System.Drawing.Color.Transparent;
+            icons.Images.SetKeyName(0, "Icons.16x16.Enum.png");
+            icons.Images.SetKeyName(1, "Icons.16x16.Field.png");
+            icons.Images.SetKeyName(2, "Icons.16x16.Interface.png");
+            icons.Images.SetKeyName(3, "Icons.16x16.InternalClass.png");
+            icons.Images.SetKeyName(4, "Icons.16x16.InternalDelegate.png");
+            icons.Images.SetKeyName(5, "Icons.16x16.InternalEnum.png");
+            icons.Images.SetKeyName(6, "Icons.16x16.InternalEvent.png");
+            icons.Images.SetKeyName(7, "Icons.16x16.InternalField.png");
+            icons.Images.SetKeyName(8, "Icons.16x16.InternalIndexer.png");
+            icons.Images.SetKeyName(9, "Icons.16x16.InternalInterface.png");
+            icons.Images.SetKeyName(10, "Icons.16x16.InternalMethod.png");
+            icons.Images.SetKeyName(11, "Icons.16x16.InternalProperty.png");
+            icons.Images.SetKeyName(12, "Icons.16x16.InternalStruct.png");
+            icons.Images.SetKeyName(13, "Icons.16x16.Literal.png");
+            icons.Images.SetKeyName(14, "Icons.16x16.Method.png");
+            icons.Images.SetKeyName(15, "Icons.16x16.Parameter.png");
+            icons.Images.SetKeyName(16, "Icons.16x16.PrivateClass.png");
+            icons.Images.SetKeyName(17, "Icons.16x16.PrivateDelegate.png");
+            icons.Images.SetKeyName(18, "Icons.16x16.PrivateEnum.png");
+            icons.Images.SetKeyName(19, "Icons.16x16.PrivateEvent.png");
+            icons.Images.SetKeyName(20, "Icons.16x16.PrivateField.png");
+            icons.Images.SetKeyName(21, "Icons.16x16.PrivateIndexer.png");
+            icons.Images.SetKeyName(22, "Icons.16x16.PrivateInterface.png");
+            icons.Images.SetKeyName(23, "Icons.16x16.PrivateMethod.png");
+            icons.Images.SetKeyName(24, "Icons.16x16.PrivateProperty.png");
+            icons.Images.SetKeyName(25, "Icons.16x16.PrivateStruct.png");
+            icons.Images.SetKeyName(26, "Icons.16x16.Property.png");
+            icons.Images.SetKeyName(27, "Icons.16x16.ProtectedClass.png");
+            icons.Images.SetKeyName(28, "Icons.16x16.ProtectedDelegate.png");
+            icons.Images.SetKeyName(29, "Icons.16x16.ProtectedEnum.png");
+            icons.Images.SetKeyName(30, "Icons.16x16.ProtectedEvent.png");
+            icons.Images.SetKeyName(31, "Icons.16x16.ProtectedField.png");
+            icons.Images.SetKeyName(32, "Icons.16x16.ProtectedIndexer.png");
+            icons.Images.SetKeyName(33, "Icons.16x16.ProtectedInterface.png");
+            icons.Images.SetKeyName(34, "Icons.16x16.ProtectedMethod.png");
+            icons.Images.SetKeyName(35, "Icons.16x16.ProtectedProperty.png");
+            icons.Images.SetKeyName(36, "Icons.16x16.ProtectedStruct.png");
+            icons.Images.SetKeyName(37, "Icons.16x16.Struct.png");
+            icons.Images.SetKeyName(38, "Icons.16x16.Local.png");
+            icons.Images.SetKeyName(39, "Icons.16x16.Class.png");
+            icons.Images.SetKeyName(40, "Icons.16x16.Delegate.png");
+            icons.Images.SetKeyName(41, "code");
+            icons.Images.SetKeyName(42, "namespace");
+
+            return icons;
+        }
+
+        private void RefreshClassHierarchy()
+        {
+            DocumentInstanceWindow mtp = SelectedTabPage;
+            if (mtp == null) return;
+            TreeNode oldNode = null;
+            if (hierarchy.hierarchy.Nodes.Count > 0) oldNode = hierarchy.hierarchy.Nodes[0];
+            hierarchy.hierarchy.Nodes.Clear();
+
+            hierarchy.hierarchy.BeginUpdate();
+            TreeNode tn = new TreeNode(mtp.fileData.ModuleName);
+            tn.SelectedImageKey = tn.ImageKey = "namespace";
+            int i = 0;
+            if (mtp.fileData.dom != null)
+                foreach (DataType ch in mtp.fileData.dom)
+                {
+                    TreeNode ctn = GenerateHierarchyData(mtp.fileData.dom, ch,
+                        (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == ch.name) ?
+                        oldNode.Nodes[i] : null);
+                    ctn.ToolTipText = DCompletionData.BuildDescriptionString(ch);
+                    ctn.Tag = ch;
+                    tn.Nodes.Add(ctn);
+                    i++;
+                }
+            tn.Expand();
+            hierarchy.hierarchy.Nodes.Add(tn);
+            hierarchy.hierarchy.EndUpdate();
+        }
+
+        public FXFormsDesigner OpenFormsDesigner(string file)
+        {
+            FXFormsDesigner ret = null;
+
+            foreach (DockContent dc in dockPanel.Documents)
+            {
+                if (!(dc is FXFormsDesigner)) continue;
+                FXFormsDesigner fd = dc as FXFormsDesigner;
+                if (fd.FileName == file) return fd;
+            }
+
+            if (!File.Exists(file))
+            {
+                Log(ProgressStatusLabel.Text = ("File " + file + " doesn't exist!"));
+                return null;
+            }
+
+            ret = new FXFormsDesigner(file);
+            ret.Show(dockPanel, DockState.Document);
+            if (this.dockPanel.ActiveDocumentPane != null) this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.DocumentWindowContextMenu; // Set Tab selection bars context menu to ours
+            return ret;
+        }
+
+        TreeNode GenerateHierarchyData(DataType env, DataType ch, TreeNode oldNode)
+        {
+            if (ch == null) return null;
+            int ii = DCompletionData.GetImageIndex(icons, env, ch);
+
+            TreeNode ret = new TreeNode(ch.name, ii, ii);
+            ret.Tag = ch;
+            ret.SelectedImageIndex = ret.ImageIndex = ii;
+
+            ii = icons.Images.IndexOfKey("Icons.16x16.Parameter.png");
+            int i = 0;
+            foreach (DataType dt in ch.param)
+            {
+                TreeNode tn = GenerateHierarchyData(ch, dt,
+                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
+                    oldNode.Nodes[i] : null);
+                tn.SelectedImageIndex = tn.ImageIndex = ii;
+                tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
+
+                ret.Nodes.Add(tn);
+                i++;
+            }
+            i = 0;
+            foreach (DataType dt in ch)
+            {
+                ii = DCompletionData.GetImageIndex(icons, ch, dt);
+                TreeNode tn = GenerateHierarchyData(ch, dt,
+                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
+                    oldNode.Nodes[i] : null);
+
+                tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
+                ret.Nodes.Add(tn);
+                i++;
+            }
+            if (oldNode != null && oldNode.IsExpanded && oldNode.Text == ch.name)
+                ret.Expand();
+            return ret;
+        }
+
+        public void Log(string m)
+        {
+            if (!UseOutput) bpw.Log(m);
+            else output.Log(m);
+        }
+
+        /// <summary>
+        /// Add an error notification to the error list and set this to the current selection in the editor. If needed, the specific file gets opened automatically
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="lineNumber"></param>
+        void AddHighlightedBuildError(string file, int lineNumber, string errmsg, Color color)
+        {
+            errlog.AddBuildError(file, lineNumber, errmsg);
         }
     }
 }
