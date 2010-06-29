@@ -441,7 +441,7 @@ namespace D_IDE
             if (ret != null && ret.txt != null)
                 ret.txt.IsReadOnly = IsDebugging;
 
-            UpdateBreakPointsForDocWin(ret);
+            ret.DrawBreakPoints();
 
             return ret;
         }

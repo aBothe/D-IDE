@@ -96,6 +96,7 @@ namespace D_IDE
             catch (Exception ex) { MessageBox.Show(ex.Message + " (File not found or wrong file format!)"); }
             txt.ActiveTextAreaControl.Caret.PositionChanged += new EventHandler(Caret_PositionChanged);
             txt.Document.DocumentChanged += new DocumentEventHandler(Document_DocumentChanged);
+            txt.Document.LineCountChanged += new EventHandler<LineCountChangeEventArgs>(Document_LineCountChanged);
 
             if (DModule.Parsable(fn))
             {
@@ -111,7 +112,6 @@ namespace D_IDE
 
             // Context menu
             this.tcCont = new System.Windows.Forms.ContextMenuStrip();
-            this.Activated += new EventHandler(DocumentInstanceWindow_Activated);
 
             ToolStripMenuItem
                 tmi1, tmi2, tmi3,
@@ -133,8 +133,8 @@ namespace D_IDE
                 EmulatePaste();
             }));
 
-            GotoDef = new ToolStripMenuItem("Go to definition", null, goToDefinitionToolStripMenuItem_Click);
-            CreateImportDirective = new ToolStripMenuItem("Create import directive", null, createImportDirectiveItem_Click);
+            GotoDef = new ToolStripMenuItem("Go to definition", null, GoToDefinition_Click);
+            CreateImportDirective = new ToolStripMenuItem("Create import directive", null, CreateImportDirective_Click);
             CommentBlock = new ToolStripMenuItem("Comment out block", null, CommentOutBlock);
             UnCommentBlock = new ToolStripMenuItem("Uncomment block", null, UncommentBlock);
 
@@ -164,15 +164,56 @@ namespace D_IDE
             txt.ContextMenuStrip = tcCont;
         }
 
-        void DocumentInstanceWindow_Activated(object sender, EventArgs e)
+        void Document_LineCountChanged(object sender, LineCountChangeEventArgs e)
         {
-            D_IDEForm.thisForm.UpdateBreakPointsForDocWin(this);
-            this.txt.ActiveTextAreaControl.Focus();
+            foreach (DIDEBreakpoint dbp in Breakpoints)
+            {
+                if (dbp.line >= e.LineStart)
+                {
+                    dbp.line += e.LinesMoved;
+                }
+            }
+
+            D_IDEForm.thisForm.dbgwin.Update();
+            //DrawBreakPoints();
         }
+
+        #region Debug Breakpoints
+        public List<DIDEBreakpoint> Breakpoints
+        {
+            get
+            {
+                if (D_IDEForm.thisForm.Breakpoints.Breakpoints.ContainsKey(fileData.FileName))
+                    return D_IDEForm.thisForm.Breakpoints.Breakpoints[fileData.FileName];
+                else return new List<DIDEBreakpoint>();
+            }
+        }
+
+        public void DrawBreakPoints()
+        {
+            txt.Document.MarkerStrategy.RemoveAll(RemoveMarkerMatch);
+            txt.BeginUpdate();
+            foreach (DIDEBreakpoint bp in Breakpoints)
+            {
+                    LineSegment ls = txt.Document.GetLineSegment(bp.line - 1);
+                    TextMarker tm = new TextMarker(ls.Offset, ls.Length, TextMarkerType.SolidBlock, Color.Orange);
+
+                    txt.Document.MarkerStrategy.AddMarker(tm);
+            }
+
+            txt.EndUpdate();
+            txt.Refresh();
+        }
+
+        static bool RemoveMarkerMatch(TextMarker tm)
+        {
+            if (tm.Color == Color.Orange) return true;
+            return false;
+        }
+        #endregion
 
         void Document_DocumentChanged(object sender, DocumentEventArgs e)
         {
-            //txt.Document.FormattingStrategy.IndentLine(txt.ActiveTextAreaControl.TextArea, txt.ActiveTextAreaControl.Caret.Line);
             Modified = true;
         }
 
@@ -242,7 +283,7 @@ namespace D_IDE
             }
         }
 
-        void createImportDirectiveItem_Click(object sender, EventArgs e)
+        void CreateImportDirective_Click(object sender, EventArgs e)
         {
             int off = txt.ActiveTextAreaControl.Caret.Offset;
             bool ctor, super, isInst, isNameSpace;
@@ -323,7 +364,7 @@ namespace D_IDE
             return false;
         }
 
-        private void goToDefinitionToolStripMenuItem_Click(object sender, EventArgs e)
+        private void GoToDefinition_Click(object sender, EventArgs e)
         {
             if (Program.Parsing) return;
             int off = txt.ActiveTextAreaControl.Caret.Offset;
@@ -582,10 +623,6 @@ namespace D_IDE
             D_IDEForm.thisForm.errlog.parserErrors.Clear();
             D_IDEForm.thisForm.errlog.Update();
 
-            txt.Document.MarkerStrategy.RemoveAll(new Predicate<TextMarker>(delegate(TextMarker tm)
-            {
-                return true;
-            }));
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Parsing " + fileData.ModuleName;
             fileData.dom = DParser.ParseText(fileData.mod_file, fileData.ModuleName, txt.Text, out fileData.import);
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Done parsing " + fileData.ModuleName;

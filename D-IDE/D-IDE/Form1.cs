@@ -37,6 +37,7 @@ namespace D_IDE
         public D_IDEForm(string[] args)
         {
             thisForm = this;
+            Breakpoints = new BreakpointHelper(this);
 
             Form.CheckForIllegalCrossThreadCalls = false;
             InitializeComponent();
@@ -860,6 +861,7 @@ namespace D_IDE
             }
             searchDlg.currentOffset = 0;
             mtp.ParseFolds();
+            mtp.DrawBreakPoints();
             RefreshClassHierarchy();
         }
 

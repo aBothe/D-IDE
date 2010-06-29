@@ -17,12 +17,7 @@ namespace D_IDE
 		{
 			InitializeComponent();
 		}
-
-		/// <summary>
-		/// This is the main array for storing Breakpoints
-		/// </summary>
-		public Dictionary<string, List<DIDEBreakpoint>> Breakpoints = new Dictionary<string, List<DIDEBreakpoint>>();
-
+		
 		public void Clear()
 		{
 			list.Items.Clear();
@@ -35,9 +30,9 @@ namespace D_IDE
 		{
 			Clear();
 
-			foreach (string file in Breakpoints.Keys)
+			foreach (string file in D_IDEForm.thisForm.Breakpoints.Breakpoints.Keys)
 			{
-				foreach (DIDEBreakpoint dbp in Breakpoints[file])
+                foreach (DIDEBreakpoint dbp in D_IDEForm.thisForm.Breakpoints.Breakpoints[file])
 				{
 					ListViewItem lvi = new ListViewItem(Path.GetFileName(file));
 					lvi.Tag = dbp;
@@ -45,40 +40,6 @@ namespace D_IDE
 					list.Items.Add(lvi);
 				}
 			}
-		}
-
-		public bool Remove(string file, int line)
-		{
-			if (GetBreakpointAt(file,line)==null)	return false;
-
-			Breakpoints[file].Remove(GetBreakpointAt(file,line));
-
-			Update();
-			return true;
-		}
-
-		public DIDEBreakpoint GetBreakpointAt(string file, int line)
-		{
-			if (!Breakpoints.ContainsKey(file)) return null;
-
-			foreach (DIDEBreakpoint dbp in Breakpoints[file])
-			{
-				if (dbp.line == line) return dbp;
-			}
-			return null;
-		}
-
-		public bool AddBreakpoint(string file, int line)
-		{
-			if (GetBreakpointAt(file,line)!=null) return false;
-
-			if (!Breakpoints.ContainsKey(file))
-				Breakpoints.Add(file, new List<DIDEBreakpoint>());
-			
-			Breakpoints[file].Add(new DIDEBreakpoint(file, line));
-
-			Update();
-			return true;
 		}
 
 		public static void NavigateToPosition(string file, int line)

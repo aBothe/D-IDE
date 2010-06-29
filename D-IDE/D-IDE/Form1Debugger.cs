@@ -28,6 +28,142 @@ namespace D_IDE
 
     partial class D_IDEForm
     {
+        public class BreakpointHelper
+        {
+            protected D_IDEForm f;
+
+            public BreakpointHelper(D_IDEForm mainForm)
+            {
+                f = mainForm;
+            }
+
+            /// <summary>
+            /// This is the main array for storing Breakpoints
+            /// </summary>
+            public Dictionary<string, List<DIDEBreakpoint>> Breakpoints = new Dictionary<string, List<DIDEBreakpoint>>();
+
+            public void RetrieveFromCurrentDebugger()
+            {
+                if (f.IsDebugging)
+                {
+                    BreakPoint[] bps = f.dbg.Breakpoints;
+
+                    Breakpoints.Clear();
+
+                    foreach (BreakPoint bp in bps)
+                    {
+                        string file = "";
+                        uint line = 0;
+                        if (!f.dbg.Symbols.GetLineByOffset(bp.Offset, out file, out line)) continue;
+
+                        if (!Path.IsPathRooted(file) && f.prj!=null)
+                            file = f.prj.basedir + "\\" + file;
+
+                        //line++; // Set line to 1-based
+                        DIDEBreakpoint dbp = new DIDEBreakpoint(file, (int)line);
+                        dbp.bp = bp;
+
+                        if (!Breakpoints.ContainsKey(file))
+                            Breakpoints.Add(file, new List<DIDEBreakpoint>());
+                        Breakpoints[file].Add(dbp);
+                    }
+                }
+            }
+
+            public void RemoveAll()
+            {
+                if (f.IsDebugging)
+                {
+                    foreach (BreakPoint bp in f.dbg.Breakpoints)
+                    {
+                        f.dbg.RemoveBreakPoint(bp);
+                    }
+                    Breakpoints.Clear();
+                }
+            }
+
+            public void InsertAllBreakpoints()
+            {
+                if (f.IsDebugging)
+                {
+                    foreach (KeyValuePair<string, List<DIDEBreakpoint>> kv in Breakpoints)
+                    {
+                        foreach (DIDEBreakpoint dbp in kv.Value)
+                        {
+                            ulong off = 0;
+                            if (!f.dbg.Symbols.GetOffsetByLine(f.prj == null ? dbp.file : f.prj.GetRelFilePath(dbp.file), (uint)dbp.line, out off))
+                                continue;
+
+                            dbp.bp = f.dbg.AddBreakPoint(BreakPointOptions.Enabled);
+                            dbp.bp.Offset = off;
+                        }
+                    }
+                }
+            }
+
+            public bool AddBreakpoint(string file, int line)
+            {
+                if (IsBreakpointAt(file, line)) return false;
+
+                if (!Breakpoints.ContainsKey(file))
+                    Breakpoints.Add(file, new List<DIDEBreakpoint>());
+
+                DIDEBreakpoint dbp = new DIDEBreakpoint(file, line);
+
+                if (f.IsDebugging)
+                {
+                    ulong off = 0;
+                    if (!f.dbg.Symbols.GetOffsetByLine(f.prj == null ? dbp.file : f.prj.GetRelFilePath(dbp.file), (uint)dbp.line, out off))
+                        return false;
+
+                    dbp.bp=f.dbg.AddBreakPoint(BreakPointOptions.Enabled);
+                    dbp.bp.Offset = off;
+                }
+
+                Breakpoints[file].Add(dbp);
+                return true;
+            }
+
+            public bool RemoveBreakpoint(string file,int line)
+            {
+                DIDEBreakpoint bp = GetBreakpointAt(file, line);
+                if (bp == null) return false;
+
+                if (f.IsDebugging)
+                {
+                    f.dbg.RemoveBreakPoint(bp.bp);
+                }
+
+                Breakpoints[file].Remove(bp);
+                return true;
+            }
+
+            public DIDEBreakpoint GetBreakpointAt(string file, int line)
+            {
+                if (!Breakpoints.ContainsKey(file)) return null;
+
+                foreach (DIDEBreakpoint dbp in Breakpoints[file])
+                {
+                    if (dbp.line == line) return dbp;
+                }
+                return null;
+            }
+
+            public bool IsBreakpointAt(string file, int line)
+            {
+                return GetBreakpointAt(file,line)!=null;
+            }
+
+            public bool ToggleBreakpoint(string file, int line)
+            {
+                if (IsBreakpointAt(file, line))
+                    return RemoveBreakpoint(file, line);
+                else return AddBreakpoint(file, line);
+            }
+        }
+
+        public BreakpointHelper Breakpoints;
+
         #region Debug menu
 
         public void RunDebugClick(object sender, EventArgs e)
@@ -112,35 +248,11 @@ namespace D_IDE
             DocumentInstanceWindow diw = SelectedTabPage;
             if (diw == null) return;
 
-            if (IsDebugging)
-            {
-                ulong off = 0;
-                int line = diw.txt.ActiveTextAreaControl.Caret.Position.Line + 1;
-                if (!dbg.Symbols.GetOffsetByLine(diw.fileData.mod_file, (uint)line, out off))
-                    return;
+            int line = diw.txt.ActiveTextAreaControl.Caret.Position.Line + 1;
+            Breakpoints.ToggleBreakpoint(diw.fileData.mod_file, line);
 
-                foreach (BreakPoint tbp in dbg.Breakpoints)
-                {
-                    if (tbp.Offset == off)
-                    {
-                        dbg.RemoveBreakPoint(tbp);
-                        UpdateBreakPointMarkers();
-                        return;
-                    }
-                }
-
-                BreakPoint bp = dbg.AddBreakPoint(BreakPointOptions.Enabled);
-                bp.Offset = off;
-            }
-            else
-            {
-                int line = diw.txt.ActiveTextAreaControl.Caret.Position.Line + 1;
-
-                if (!dbgwin.Remove(diw.fileData.mod_file, line))
-                    dbgwin.AddBreakpoint(diw.fileData.mod_file, line);
-            }
-
-            UpdateBreakPointMarkers();
+            dbgwin.Update();
+            diw.DrawBreakPoints();
         }
 
         private void RefreshBreakpointsClick(object sender, EventArgs e)
@@ -202,7 +314,6 @@ namespace D_IDE
             StopWaitingForEvents = false;
             GoToCurrentLocation();
         }
-
 
         #endregion
 
@@ -468,79 +579,21 @@ namespace D_IDE
         }
 
         /// <summary>
-        /// Filter by dark red color
-        /// </summary>
-        /// <param name="tm"></param>
-        /// <returns></returns>
-        static bool RemoveMarkerMatch(TextMarker tm)
-        {
-            if (tm.Color == Color.DarkRed) return true;
-            return false;
-        }
-
-        public void UpdateBreakPointsForDocWin(DocumentInstanceWindow diw)
-        {
-        if(diw==null)return;
-            diw.txt.Document.MarkerStrategy.RemoveAll(RemoveMarkerMatch);
-            diw.Refresh();
-            if (IsDebugging)
-            {
-                BreakPoint[] bps = dbg.Breakpoints;
-
-                dbgwin.Breakpoints.Clear();
-
-                foreach (BreakPoint bp in bps)
-                {
-                    string file = "";
-                    uint line = 0;
-                    if (!dbg.Symbols.GetLineByOffset(bp.Offset, out file, out line)) continue;
-
-                    if (!Path.IsPathRooted(file))
-                        file = prj.basedir + "\\" + file;
-
-                    //line++; // Set line to 1-based
-                    DIDEBreakpoint dbp = new DIDEBreakpoint(file, (int)line);
-                    dbp.bp = bp;
-
-                    if (!dbgwin.Breakpoints.ContainsKey(file))
-                        dbgwin.Breakpoints.Add(file, new List<DIDEBreakpoint>());
-                    dbgwin.Breakpoints[file].Add(dbp);
-
-                    if (diw.fileData.mod_file==file)
-                    {
-                        LineSegment ls = diw.txt.Document.GetLineSegment((int)line-1);
-                        TextMarker tm = new TextMarker(ls.Offset, ls.Length, TextMarkerType.SolidBlock, Color.DarkRed,Color.White);
-
-                        diw.txt.Document.MarkerStrategy.AddMarker(tm);
-                    }
-                }
-                dbgwin.Update();
-            }
-            else if (dbgwin.Breakpoints.ContainsKey(diw.fileData.mod_file))
-            {
-                foreach (DIDEBreakpoint dbp in dbgwin.Breakpoints[diw.fileData.mod_file])
-                {
-                    LineSegment ls = diw.txt.Document.GetLineSegment(dbp.line-1);
-                    TextMarker tm = new TextMarker(ls.Offset, ls.Length, TextMarkerType.SolidBlock, Color.DarkRed,Color.White);
-
-                    diw.txt.Document.MarkerStrategy.AddMarker(tm);
-                }
-            }
-            diw.Refresh();
-        }
-
-        /// <summary>
         /// Highlights all breakpoints in all open files
         /// </summary>
         public void UpdateBreakPointMarkers()
         {
-            List<DocumentInstanceWindow> diws = new List<DocumentInstanceWindow>();
+            Breakpoints.RetrieveFromCurrentDebugger();
+
             foreach (DockContent dc in dockPanel.Documents)
             {
                 if (!(dc is DocumentInstanceWindow)) continue;
                 DocumentInstanceWindow diw = (DocumentInstanceWindow)dc;
-                UpdateBreakPointsForDocWin(diw);
+
+                diw.DrawBreakPoints();
             }
+
+            dbgwin.Update();
         }
 
         #region Debug properties
@@ -607,28 +660,11 @@ namespace D_IDE
             IsInitDebugger = true;
 
             dbg.WaitForEvent();
-
             dbg.Execute("bc"); // Clear breakpoint list
-
             dbg.WaitForEvent();
-            //Log("Basedir: " + prj.basedir);
-            //dbg.Execute("l+s");
 
-
-            foreach (KeyValuePair<string, List<DIDEBreakpoint>> kv in dbgwin.Breakpoints)
-            {
-                foreach (DIDEBreakpoint dbp in kv.Value)
-                {
-                    ulong off = 0;
-                    if (!dbg.Symbols.GetOffsetByLine(prj == null ? dbp.file : prj.GetRelFilePath(dbp.file), (uint)dbp.line, out off))
-                    {
-                        Log("Couldn't set breakpoint at " + dbp.file + ":" + dbp.line.ToString());
-                        continue;
-                    }
-                    dbp.bp = dbg.AddBreakPoint(BreakPointOptions.Enabled);
-                    dbp.bp.Offset = off;
-                }
-            }
+            Breakpoints.InsertAllBreakpoints();
+            
             IsInitDebugger = false;
 
             if (runUntilMainOnly) dbg.Execute("g _Dmain");
