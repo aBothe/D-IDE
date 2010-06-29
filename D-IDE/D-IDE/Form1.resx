@@ -117,10 +117,38 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="CloseDocWinToolbarItem.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <metadata name="closeAllToolStripMenuItem.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <metadata name="closeAllOthersToolStripMenuItem.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <metadata name="TBS.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <metadata name="TBS.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>727, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="newFile_TBS.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGNSURBVDhPlZPZTsJQEIZ9KX0HfQ19I6MXxnihGEJIMIFE
+        AxoUDK6gEEEqq+ybLKUt3fs7rZbElKKeZHIupt+X+U+mKyvfJxhnsKgC0Sx84Wd4QvdIvdZhf++4Tdjt
+        GNTY919hdX0T3lB8seTkMreQN4hWNQM7njAiieyXJBhzSvznGYdAN2HVgCTr2D48w9rG1rwcEbynyR8C
+        XQcUgkWCuZmGMa9aElvkEBwF7+YCjWBZ1TEjeCpoGE1V9Mcq2h+yJTBjOAQHgWsYFFijuSVFhyDpYHkN
+        Q4J7IwWtgYxqV3IX7Pmi1mOZeXlRx8SEWRVdgpt9CdWOiEJ95i7YPY5YI1t5OQ2DiYLOUEGtJ6HcEsEQ
+        /FIV3AVmNhOe56WRa10ZRYLzNYIrPFIFbrnAztvsy3jvSCg0ReQIzpQEJBket7lfBN2RjAblrbQlvDUI
+        ppHTRQGPDIeb3BTxDLt8gnpPRplgpi7SyAKeijwe8hwS2SliaRYXqclyQYny2suy7F64B/aCmM2/lOtf
+        +d/GJ0g0S/mnzrCsAAAAAElFTkSuQmCC
+</value>
+  </data>
   <metadata name="MainMenu.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="dSourceFileToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -146,46 +174,9 @@
   <metadata name="DocumentWindowContextMenu.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>456, 17</value>
   </metadata>
-  <metadata name="CloseDocWinToolbarItem.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
-  <metadata name="closeAllToolStripMenuItem.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
-  <metadata name="closeAllOthersToolStripMenuItem.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
-  <metadata name="CloseDocWinToolbarItem.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
-  <metadata name="closeAllToolStripMenuItem.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
-  <metadata name="closeAllOthersToolStripMenuItem.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
   <metadata name="statusStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>611, 17</value>
   </metadata>
-  <metadata name="TBS.GenerateMember" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
-  <metadata name="TBS.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>727, 17</value>
-  </metadata>
-  <data name="newFile_TBS.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAGNSURBVDhPlZPZTsJQEIZ9KX0HfQ19I6MXxnihGEJIMIFE
-        AxoUDK6gEEEqq+ybLKUt3fs7rZbElKKeZHIupt+X+U+mKyvfJxhnsKgC0Sx84Wd4QvdIvdZhf++4Tdjt
-        GNTY919hdX0T3lB8seTkMreQN4hWNQM7njAiieyXJBhzSvznGYdAN2HVgCTr2D48w9rG1rwcEbynyR8C
-        XQcUgkWCuZmGMa9aElvkEBwF7+YCjWBZ1TEjeCpoGE1V9Mcq2h+yJTBjOAQHgWsYFFijuSVFhyDpYHkN
-        Q4J7IwWtgYxqV3IX7Pmi1mOZeXlRx8SEWRVdgpt9CdWOiEJ95i7YPY5YI1t5OQ2DiYLOUEGtJ6HcEsEQ
-        /FIV3AVmNhOe56WRa10ZRYLzNYIrPFIFbrnAztvsy3jvSCg0ReQIzpQEJBket7lfBN2RjAblrbQlvDUI
-        ppHTRQGPDIeb3BTxDLt8gnpPRplgpi7SyAKeijwe8hwS2SliaRYXqclyQYny2suy7F64B/aCmM2/lOtf
-        +d/GJ0g0S/mnzrCsAAAAAElFTkSuQmCC
-</value>
-  </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAUAgIAAAAEAIAAoCAEAVgAAAEBAAAABACAAKEIAAH4IAQAwMAAAAQAgAKglAACmSgEAICAAAAEA

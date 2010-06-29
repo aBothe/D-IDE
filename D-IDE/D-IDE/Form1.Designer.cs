@@ -29,11 +29,34 @@
 		private void InitializeComponent()
 		{
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(D_IDEForm));
             System.Windows.Forms.ToolStripMenuItem CloseDocWinToolbarItem;
             System.Windows.Forms.ToolStripMenuItem closeAllToolStripMenuItem;
             System.Windows.Forms.ToolStripMenuItem closeAllOthersToolStripMenuItem;
             System.Windows.Forms.ToolStrip TBS;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(D_IDEForm));
+            this.newPrj_TBS = new System.Windows.Forms.ToolStripButton();
+            this.newFile_TBS = new System.Windows.Forms.ToolStripButton();
+            this.open_TBS = new System.Windows.Forms.ToolStripButton();
+            this.save_TBS = new System.Windows.Forms.ToolStripButton();
+            this.saveAll_TBS = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator17 = new System.Windows.Forms.ToolStripSeparator();
+            this.cutTBSButton = new System.Windows.Forms.ToolStripButton();
+            this.copyTBSButton = new System.Windows.Forms.ToolStripButton();
+            this.pasteTBSButton = new System.Windows.Forms.ToolStripButton();
+            this.sep_TBS1 = new System.Windows.Forms.ToolStripSeparator();
+            this.build_TBS = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
+            this.dbgContinueTS = new System.Windows.Forms.ToolStripButton();
+            this.dbgPauseButtonTS = new System.Windows.Forms.ToolStripButton();
+            this.dbgStopButtonTS = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
+            this.stepInTS = new System.Windows.Forms.ToolStripButton();
+            this.stepOverTS = new System.Windows.Forms.ToolStripButton();
+            this.stepOutTS = new System.Windows.Forms.ToolStripButton();
+            this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
+            this.searchTool = new System.Windows.Forms.ToolStripTextBox();
             this.MainMenu = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -116,38 +139,285 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.LineLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.ProgressStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.newPrj_TBS = new System.Windows.Forms.ToolStripButton();
-            this.newFile_TBS = new System.Windows.Forms.ToolStripButton();
-            this.open_TBS = new System.Windows.Forms.ToolStripButton();
-            this.save_TBS = new System.Windows.Forms.ToolStripButton();
-            this.saveAll_TBS = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator17 = new System.Windows.Forms.ToolStripSeparator();
-            this.cutTBSButton = new System.Windows.Forms.ToolStripButton();
-            this.copyTBSButton = new System.Windows.Forms.ToolStripButton();
-            this.pasteTBSButton = new System.Windows.Forms.ToolStripButton();
-            this.sep_TBS1 = new System.Windows.Forms.ToolStripSeparator();
-            this.build_TBS = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
-            this.dbgContinueTS = new System.Windows.Forms.ToolStripButton();
-            this.dbgPauseButtonTS = new System.Windows.Forms.ToolStripButton();
-            this.dbgStopButtonTS = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
-            this.stepInTS = new System.Windows.Forms.ToolStripButton();
-            this.stepOverTS = new System.Windows.Forms.ToolStripButton();
-            this.stepOutTS = new System.Windows.Forms.ToolStripButton();
-            this.sep_TBS2 = new System.Windows.Forms.ToolStripSeparator();
-            this.searchTool = new System.Windows.Forms.ToolStripTextBox();
             CloseDocWinToolbarItem = new System.Windows.Forms.ToolStripMenuItem();
             closeAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             closeAllOthersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             TBS = new System.Windows.Forms.ToolStrip();
+            TBS.SuspendLayout();
             this.MainMenu.SuspendLayout();
             this.DocumentWindowContextMenu.SuspendLayout();
             this.statusStrip1.SuspendLayout();
-            TBS.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // CloseDocWinToolbarItem
+            // 
+            CloseDocWinToolbarItem.Name = "CloseDocWinToolbarItem";
+            CloseDocWinToolbarItem.Size = new System.Drawing.Size(158, 22);
+            CloseDocWinToolbarItem.Text = "Close";
+            CloseDocWinToolbarItem.Click += new System.EventHandler(this.CloseDocWinClick);
+            // 
+            // closeAllToolStripMenuItem
+            // 
+            closeAllToolStripMenuItem.Name = "closeAllToolStripMenuItem";
+            closeAllToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
+            closeAllToolStripMenuItem.Text = "Close All";
+            closeAllToolStripMenuItem.Click += new System.EventHandler(this.closeAllToolStripMenuItem_Click);
+            // 
+            // closeAllOthersToolStripMenuItem
+            // 
+            closeAllOthersToolStripMenuItem.Name = "closeAllOthersToolStripMenuItem";
+            closeAllOthersToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
+            closeAllOthersToolStripMenuItem.Text = "Close All Others";
+            closeAllOthersToolStripMenuItem.Click += new System.EventHandler(this.closeAllOthersToolStripMenuItem_Click);
+            // 
+            // TBS
+            // 
+            TBS.AutoSize = false;
+            TBS.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newPrj_TBS,
+            this.newFile_TBS,
+            this.open_TBS,
+            this.save_TBS,
+            this.saveAll_TBS,
+            this.toolStripSeparator17,
+            this.cutTBSButton,
+            this.copyTBSButton,
+            this.pasteTBSButton,
+            this.sep_TBS1,
+            this.build_TBS,
+            this.toolStripButton1,
+            this.toolStripButton2,
+            this.toolStripSeparator13,
+            this.dbgContinueTS,
+            this.dbgPauseButtonTS,
+            this.dbgStopButtonTS,
+            this.toolStripSeparator14,
+            this.stepInTS,
+            this.stepOverTS,
+            this.stepOutTS,
+            this.sep_TBS2,
+            this.searchTool});
+            TBS.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
+            TBS.Location = new System.Drawing.Point(0, 24);
+            TBS.Name = "TBS";
+            TBS.Size = new System.Drawing.Size(1015, 25);
+            TBS.TabIndex = 6;
+            TBS.Text = "toolStrip1";
+            // 
+            // newPrj_TBS
+            // 
+            this.newPrj_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.newPrj_TBS.Image = global::D_IDE.Properties.Resources.new_prj;
+            this.newPrj_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.newPrj_TBS.Name = "newPrj_TBS";
+            this.newPrj_TBS.Size = new System.Drawing.Size(23, 22);
+            this.newPrj_TBS.Text = "Create project";
+            this.newPrj_TBS.ToolTipText = "Create project";
+            this.newPrj_TBS.Click += new System.EventHandler(this.NewProject);
+            // 
+            // newFile_TBS
+            // 
+            this.newFile_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.newFile_TBS.Image = ((System.Drawing.Image)(resources.GetObject("newFile_TBS.Image")));
+            this.newFile_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.newFile_TBS.Name = "newFile_TBS";
+            this.newFile_TBS.Size = new System.Drawing.Size(23, 22);
+            this.newFile_TBS.Text = "New File";
+            this.newFile_TBS.Click += new System.EventHandler(this.NewSourceFile);
+            // 
+            // open_TBS
+            // 
+            this.open_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.open_TBS.Image = global::D_IDE.Properties.Resources.open;
+            this.open_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.open_TBS.Name = "open_TBS";
+            this.open_TBS.Size = new System.Drawing.Size(23, 22);
+            this.open_TBS.Text = "Open File";
+            this.open_TBS.Click += new System.EventHandler(this.OpenFile);
+            // 
+            // save_TBS
+            // 
+            this.save_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.save_TBS.Image = global::D_IDE.Properties.Resources.save;
+            this.save_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.save_TBS.Name = "save_TBS";
+            this.save_TBS.Size = new System.Drawing.Size(23, 22);
+            this.save_TBS.Text = "Save";
+            this.save_TBS.Click += new System.EventHandler(this.SaveFile);
+            // 
+            // saveAll_TBS
+            // 
+            this.saveAll_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.saveAll_TBS.Image = global::D_IDE.Properties.Resources.save_all;
+            this.saveAll_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.saveAll_TBS.Name = "saveAll_TBS";
+            this.saveAll_TBS.Size = new System.Drawing.Size(23, 22);
+            this.saveAll_TBS.Text = "Save all";
+            this.saveAll_TBS.Click += new System.EventHandler(this.SaveAll);
+            // 
+            // toolStripSeparator17
+            // 
+            this.toolStripSeparator17.Name = "toolStripSeparator17";
+            this.toolStripSeparator17.Size = new System.Drawing.Size(6, 25);
+            // 
+            // cutTBSButton
+            // 
+            this.cutTBSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.cutTBSButton.Image = global::D_IDE.Properties.Resources.cut;
+            this.cutTBSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.cutTBSButton.Name = "cutTBSButton";
+            this.cutTBSButton.Size = new System.Drawing.Size(23, 22);
+            this.cutTBSButton.Text = "toolStripButton3";
+            this.cutTBSButton.ToolTipText = "Cut";
+            this.cutTBSButton.Click += new System.EventHandler(this.cutTBSButton_Click);
+            // 
+            // copyTBSButton
+            // 
+            this.copyTBSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.copyTBSButton.Image = global::D_IDE.Properties.Resources.copy;
+            this.copyTBSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.copyTBSButton.Name = "copyTBSButton";
+            this.copyTBSButton.Size = new System.Drawing.Size(23, 22);
+            this.copyTBSButton.Text = "toolStripButton4";
+            this.copyTBSButton.ToolTipText = "Copy";
+            this.copyTBSButton.Click += new System.EventHandler(this.copyTBSButton_Click);
+            // 
+            // pasteTBSButton
+            // 
+            this.pasteTBSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.pasteTBSButton.Image = global::D_IDE.Properties.Resources.paste;
+            this.pasteTBSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.pasteTBSButton.Name = "pasteTBSButton";
+            this.pasteTBSButton.Size = new System.Drawing.Size(23, 22);
+            this.pasteTBSButton.Text = "toolStripButton5";
+            this.pasteTBSButton.ToolTipText = "Paste";
+            this.pasteTBSButton.Click += new System.EventHandler(this.pasteTBSButton_Click);
+            // 
+            // sep_TBS1
+            // 
+            this.sep_TBS1.Name = "sep_TBS1";
+            this.sep_TBS1.Size = new System.Drawing.Size(6, 25);
+            // 
+            // build_TBS
+            // 
+            this.build_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.build_TBS.Image = global::D_IDE.Properties.Resources.build_prj;
+            this.build_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.build_TBS.Name = "build_TBS";
+            this.build_TBS.Size = new System.Drawing.Size(23, 22);
+            this.build_TBS.Text = "Build project";
+            this.build_TBS.Click += new System.EventHandler(this.BuildProjectClick);
+            // 
+            // toolStripButton1
+            // 
+            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton1.Image = global::D_IDE.Properties.Resources.build;
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton1.Text = "Build & Run without debugger";
+            this.toolStripButton1.ToolTipText = "Build & Run";
+            this.toolStripButton1.Click += new System.EventHandler(this.BuildAndRunClick);
+            // 
+            // toolStripButton2
+            // 
+            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton2.Image = global::D_IDE.Properties.Resources.prj_prop;
+            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton2.Name = "toolStripButton2";
+            this.toolStripButton2.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton2.Text = "Project properties";
+            this.toolStripButton2.Click += new System.EventHandler(this.ShowProjectProperties);
+            // 
+            // toolStripSeparator13
+            // 
+            this.toolStripSeparator13.Name = "toolStripSeparator13";
+            this.toolStripSeparator13.Size = new System.Drawing.Size(6, 25);
+            // 
+            // dbgContinueTS
+            // 
+            this.dbgContinueTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.dbgContinueTS.Image = global::D_IDE.Properties.Resources.build_dbg;
+            this.dbgContinueTS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.dbgContinueTS.Name = "dbgContinueTS";
+            this.dbgContinueTS.Size = new System.Drawing.Size(23, 22);
+            this.dbgContinueTS.Text = "Build & Run with debugger";
+            this.dbgContinueTS.ToolTipText = "Build and Debug application";
+            this.dbgContinueTS.Click += new System.EventHandler(this.ContinueClick);
+            // 
+            // dbgPauseButtonTS
+            // 
+            this.dbgPauseButtonTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.dbgPauseButtonTS.Enabled = false;
+            this.dbgPauseButtonTS.Image = global::D_IDE.Properties.Resources.pause;
+            this.dbgPauseButtonTS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.dbgPauseButtonTS.Name = "dbgPauseButtonTS";
+            this.dbgPauseButtonTS.Size = new System.Drawing.Size(23, 22);
+            this.dbgPauseButtonTS.Text = "Pause execution";
+            this.dbgPauseButtonTS.ToolTipText = "Pause execution";
+            this.dbgPauseButtonTS.Click += new System.EventHandler(this.PauseClick);
+            // 
+            // dbgStopButtonTS
+            // 
+            this.dbgStopButtonTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.dbgStopButtonTS.Enabled = false;
+            this.dbgStopButtonTS.Image = global::D_IDE.Properties.Resources.stop;
+            this.dbgStopButtonTS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.dbgStopButtonTS.Name = "dbgStopButtonTS";
+            this.dbgStopButtonTS.Size = new System.Drawing.Size(23, 22);
+            this.dbgStopButtonTS.Text = "Terminate process";
+            this.dbgStopButtonTS.ToolTipText = "Stop Execution";
+            this.dbgStopButtonTS.Click += new System.EventHandler(this.StopClick);
+            // 
+            // toolStripSeparator14
+            // 
+            this.toolStripSeparator14.Name = "toolStripSeparator14";
+            this.toolStripSeparator14.Size = new System.Drawing.Size(6, 25);
+            // 
+            // stepInTS
+            // 
+            this.stepInTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.stepInTS.Enabled = false;
+            this.stepInTS.Image = global::D_IDE.Properties.Resources.step_in;
+            this.stepInTS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.stepInTS.Name = "stepInTS";
+            this.stepInTS.Size = new System.Drawing.Size(23, 22);
+            this.stepInTS.Text = "Step In";
+            this.stepInTS.Click += new System.EventHandler(this.StepInClick);
+            // 
+            // stepOverTS
+            // 
+            this.stepOverTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.stepOverTS.Enabled = false;
+            this.stepOverTS.Image = global::D_IDE.Properties.Resources.step_over;
+            this.stepOverTS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.stepOverTS.Name = "stepOverTS";
+            this.stepOverTS.Size = new System.Drawing.Size(23, 22);
+            this.stepOverTS.Text = "Step Over";
+            this.stepOverTS.Click += new System.EventHandler(this.StepOverClick);
+            // 
+            // stepOutTS
+            // 
+            this.stepOutTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.stepOutTS.Enabled = false;
+            this.stepOutTS.Image = global::D_IDE.Properties.Resources.step_out;
+            this.stepOutTS.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.stepOutTS.Name = "stepOutTS";
+            this.stepOutTS.Size = new System.Drawing.Size(23, 22);
+            this.stepOutTS.Text = "Step Out";
+            this.stepOutTS.Click += new System.EventHandler(this.StepOutClick);
+            // 
+            // sep_TBS2
+            // 
+            this.sep_TBS2.Name = "sep_TBS2";
+            this.sep_TBS2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // searchTool
+            // 
+            this.searchTool.Name = "searchTool";
+            this.searchTool.Size = new System.Drawing.Size(170, 25);
+            this.searchTool.ToolTipText = "Press <Return> for search in current document";
+            this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
             // 
             // MainMenu
             // 
@@ -783,26 +1053,6 @@
             this.DocumentWindowContextMenu.Name = "contextMenuStrip1";
             this.DocumentWindowContextMenu.Size = new System.Drawing.Size(159, 70);
             // 
-            // CloseDocWinToolbarItem
-            // 
-            CloseDocWinToolbarItem.Name = "CloseDocWinToolbarItem";
-            CloseDocWinToolbarItem.Size = new System.Drawing.Size(158, 22);
-            CloseDocWinToolbarItem.Text = "Close";
-            // 
-            // closeAllToolStripMenuItem
-            // 
-            closeAllToolStripMenuItem.Name = "closeAllToolStripMenuItem";
-            closeAllToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
-            closeAllToolStripMenuItem.Text = "Close All";
-            closeAllToolStripMenuItem.Click += new System.EventHandler(this.closeAllToolStripMenuItem_Click);
-            // 
-            // closeAllOthersToolStripMenuItem
-            // 
-            closeAllOthersToolStripMenuItem.Name = "closeAllOthersToolStripMenuItem";
-            closeAllOthersToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
-            closeAllOthersToolStripMenuItem.Text = "Close All Others";
-            closeAllOthersToolStripMenuItem.Click += new System.EventHandler(this.closeAllOthersToolStripMenuItem_Click);
-            // 
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -830,255 +1080,6 @@
             this.ProgressStatusLabel.Size = new System.Drawing.Size(12, 17);
             this.ProgressStatusLabel.Text = "-";
             // 
-            // TBS
-            // 
-            TBS.AutoSize = false;
-            TBS.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.newPrj_TBS,
-            this.newFile_TBS,
-            this.open_TBS,
-            this.save_TBS,
-            this.saveAll_TBS,
-            this.toolStripSeparator17,
-            this.cutTBSButton,
-            this.copyTBSButton,
-            this.pasteTBSButton,
-            this.sep_TBS1,
-            this.build_TBS,
-            this.toolStripButton1,
-            this.toolStripButton2,
-            this.toolStripSeparator13,
-            this.dbgContinueTS,
-            this.dbgPauseButtonTS,
-            this.dbgStopButtonTS,
-            this.toolStripSeparator14,
-            this.stepInTS,
-            this.stepOverTS,
-            this.stepOutTS,
-            this.sep_TBS2,
-            this.searchTool});
-            TBS.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
-            TBS.Location = new System.Drawing.Point(0, 24);
-            TBS.Name = "TBS";
-            TBS.Size = new System.Drawing.Size(1015, 25);
-            TBS.TabIndex = 6;
-            TBS.Text = "toolStrip1";
-            // 
-            // newPrj_TBS
-            // 
-            this.newPrj_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.newPrj_TBS.Image = global::D_IDE.Properties.Resources.new_prj;
-            this.newPrj_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.newPrj_TBS.Name = "newPrj_TBS";
-            this.newPrj_TBS.Size = new System.Drawing.Size(23, 22);
-            this.newPrj_TBS.Text = "Create project";
-            this.newPrj_TBS.ToolTipText = "Create project";
-            this.newPrj_TBS.Click += new System.EventHandler(this.NewProject);
-            // 
-            // newFile_TBS
-            // 
-            this.newFile_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.newFile_TBS.Image = ((System.Drawing.Image)(resources.GetObject("newFile_TBS.Image")));
-            this.newFile_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.newFile_TBS.Name = "newFile_TBS";
-            this.newFile_TBS.Size = new System.Drawing.Size(23, 22);
-            this.newFile_TBS.Text = "New File";
-            this.newFile_TBS.Click += new System.EventHandler(this.NewSourceFile);
-            // 
-            // open_TBS
-            // 
-            this.open_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.open_TBS.Image = global::D_IDE.Properties.Resources.open;
-            this.open_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.open_TBS.Name = "open_TBS";
-            this.open_TBS.Size = new System.Drawing.Size(23, 22);
-            this.open_TBS.Text = "Open File";
-            this.open_TBS.Click += new System.EventHandler(this.OpenFile);
-            // 
-            // save_TBS
-            // 
-            this.save_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.save_TBS.Image = global::D_IDE.Properties.Resources.save;
-            this.save_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.save_TBS.Name = "save_TBS";
-            this.save_TBS.Size = new System.Drawing.Size(23, 22);
-            this.save_TBS.Text = "Save";
-            this.save_TBS.Click += new System.EventHandler(this.SaveFile);
-            // 
-            // saveAll_TBS
-            // 
-            this.saveAll_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.saveAll_TBS.Image = global::D_IDE.Properties.Resources.save_all;
-            this.saveAll_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.saveAll_TBS.Name = "saveAll_TBS";
-            this.saveAll_TBS.Size = new System.Drawing.Size(23, 22);
-            this.saveAll_TBS.Text = "Save all";
-            this.saveAll_TBS.Click += new System.EventHandler(this.SaveAll);
-            // 
-            // toolStripSeparator17
-            // 
-            this.toolStripSeparator17.Name = "toolStripSeparator17";
-            this.toolStripSeparator17.Size = new System.Drawing.Size(6, 25);
-            // 
-            // cutTBSButton
-            // 
-            this.cutTBSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.cutTBSButton.Image = global::D_IDE.Properties.Resources.cut;
-            this.cutTBSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.cutTBSButton.Name = "cutTBSButton";
-            this.cutTBSButton.Size = new System.Drawing.Size(23, 22);
-            this.cutTBSButton.Text = "toolStripButton3";
-            this.cutTBSButton.ToolTipText = "Cut";
-            this.cutTBSButton.Click += new System.EventHandler(this.cutTBSButton_Click);
-            // 
-            // copyTBSButton
-            // 
-            this.copyTBSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.copyTBSButton.Image = global::D_IDE.Properties.Resources.copy;
-            this.copyTBSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.copyTBSButton.Name = "copyTBSButton";
-            this.copyTBSButton.Size = new System.Drawing.Size(23, 22);
-            this.copyTBSButton.Text = "toolStripButton4";
-            this.copyTBSButton.ToolTipText = "Copy";
-            this.copyTBSButton.Click += new System.EventHandler(this.copyTBSButton_Click);
-            // 
-            // pasteTBSButton
-            // 
-            this.pasteTBSButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.pasteTBSButton.Image = global::D_IDE.Properties.Resources.paste;
-            this.pasteTBSButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.pasteTBSButton.Name = "pasteTBSButton";
-            this.pasteTBSButton.Size = new System.Drawing.Size(23, 22);
-            this.pasteTBSButton.Text = "toolStripButton5";
-            this.pasteTBSButton.ToolTipText = "Paste";
-            this.pasteTBSButton.Click += new System.EventHandler(this.pasteTBSButton_Click);
-            // 
-            // sep_TBS1
-            // 
-            this.sep_TBS1.Name = "sep_TBS1";
-            this.sep_TBS1.Size = new System.Drawing.Size(6, 25);
-            // 
-            // build_TBS
-            // 
-            this.build_TBS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.build_TBS.Image = global::D_IDE.Properties.Resources.build_prj;
-            this.build_TBS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.build_TBS.Name = "build_TBS";
-            this.build_TBS.Size = new System.Drawing.Size(23, 22);
-            this.build_TBS.Text = "Build project";
-            this.build_TBS.Click += new System.EventHandler(this.BuildProjectClick);
-            // 
-            // toolStripButton1
-            // 
-            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton1.Image = global::D_IDE.Properties.Resources.build;
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton1.Text = "Build & Run without debugger";
-            this.toolStripButton1.ToolTipText = "Build & Run";
-            this.toolStripButton1.Click += new System.EventHandler(this.BuildAndRunClick);
-            // 
-            // toolStripButton2
-            // 
-            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton2.Image = global::D_IDE.Properties.Resources.prj_prop;
-            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton2.Text = "Project properties";
-            this.toolStripButton2.Click += new System.EventHandler(this.ShowProjectProperties);
-            // 
-            // toolStripSeparator13
-            // 
-            this.toolStripSeparator13.Name = "toolStripSeparator13";
-            this.toolStripSeparator13.Size = new System.Drawing.Size(6, 25);
-            // 
-            // dbgContinueTS
-            // 
-            this.dbgContinueTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.dbgContinueTS.Image = global::D_IDE.Properties.Resources.build_dbg;
-            this.dbgContinueTS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.dbgContinueTS.Name = "dbgContinueTS";
-            this.dbgContinueTS.Size = new System.Drawing.Size(23, 22);
-            this.dbgContinueTS.Text = "Build & Run with debugger";
-            this.dbgContinueTS.ToolTipText = "Build and Debug application";
-            this.dbgContinueTS.Click += new System.EventHandler(this.ContinueClick);
-            // 
-            // dbgPauseButtonTS
-            // 
-            this.dbgPauseButtonTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.dbgPauseButtonTS.Enabled = false;
-            this.dbgPauseButtonTS.Image = global::D_IDE.Properties.Resources.pause;
-            this.dbgPauseButtonTS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.dbgPauseButtonTS.Name = "dbgPauseButtonTS";
-            this.dbgPauseButtonTS.Size = new System.Drawing.Size(23, 22);
-            this.dbgPauseButtonTS.Text = "Pause execution";
-            this.dbgPauseButtonTS.ToolTipText = "Pause execution";
-            this.dbgPauseButtonTS.Click += new System.EventHandler(this.PauseClick);
-            // 
-            // dbgStopButtonTS
-            // 
-            this.dbgStopButtonTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.dbgStopButtonTS.Enabled = false;
-            this.dbgStopButtonTS.Image = global::D_IDE.Properties.Resources.stop;
-            this.dbgStopButtonTS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.dbgStopButtonTS.Name = "dbgStopButtonTS";
-            this.dbgStopButtonTS.Size = new System.Drawing.Size(23, 22);
-            this.dbgStopButtonTS.Text = "Terminate process";
-            this.dbgStopButtonTS.ToolTipText = "Stop Execution";
-            this.dbgStopButtonTS.Click += new System.EventHandler(this.StopClick);
-            // 
-            // toolStripSeparator14
-            // 
-            this.toolStripSeparator14.Name = "toolStripSeparator14";
-            this.toolStripSeparator14.Size = new System.Drawing.Size(6, 25);
-            // 
-            // stepInTS
-            // 
-            this.stepInTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.stepInTS.Enabled = false;
-            this.stepInTS.Image = global::D_IDE.Properties.Resources.step_in;
-            this.stepInTS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.stepInTS.Name = "stepInTS";
-            this.stepInTS.Size = new System.Drawing.Size(23, 22);
-            this.stepInTS.Text = "Step In";
-            this.stepInTS.Click += new System.EventHandler(this.StepInClick);
-            // 
-            // stepOverTS
-            // 
-            this.stepOverTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.stepOverTS.Enabled = false;
-            this.stepOverTS.Image = global::D_IDE.Properties.Resources.step_over;
-            this.stepOverTS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.stepOverTS.Name = "stepOverTS";
-            this.stepOverTS.Size = new System.Drawing.Size(23, 22);
-            this.stepOverTS.Text = "Step Over";
-            this.stepOverTS.Click += new System.EventHandler(this.StepOverClick);
-            // 
-            // stepOutTS
-            // 
-            this.stepOutTS.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.stepOutTS.Enabled = false;
-            this.stepOutTS.Image = global::D_IDE.Properties.Resources.step_out;
-            this.stepOutTS.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.stepOutTS.Name = "stepOutTS";
-            this.stepOutTS.Size = new System.Drawing.Size(23, 22);
-            this.stepOutTS.Text = "Step Out";
-            this.stepOutTS.Click += new System.EventHandler(this.StepOutClick);
-            // 
-            // sep_TBS2
-            // 
-            this.sep_TBS2.Name = "sep_TBS2";
-            this.sep_TBS2.Size = new System.Drawing.Size(6, 25);
-            // 
-            // searchTool
-            // 
-            this.searchTool.Name = "searchTool";
-            this.searchTool.Size = new System.Drawing.Size(170, 25);
-            this.searchTool.ToolTipText = "Press <Return> for search in current document";
-            this.searchTool.KeyDown += new System.Windows.Forms.KeyEventHandler(this.searchTool_KeyDown);
-            // 
             // D_IDEForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1095,13 +1096,13 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.CloseForm);
+            TBS.ResumeLayout(false);
+            TBS.PerformLayout();
             this.MainMenu.ResumeLayout(false);
             this.MainMenu.PerformLayout();
             this.DocumentWindowContextMenu.ResumeLayout(false);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            TBS.ResumeLayout(false);
-            TBS.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
