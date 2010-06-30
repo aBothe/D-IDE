@@ -542,32 +542,32 @@ FunctionEnd
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 3.5
 ;--------------------------------------------------------
-Function DotNet35Exists
-	ClearErrors
-	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5" "Version"
-	IfErrors MDNFNotFound MDNFFound
-
-	MDNFFound:
-		Push 1
-		Goto ExitFunction
-
-	MDNFNotFound:
-		Push 0
-		Goto ExitFunction
-
-	ExitFunction:
-FunctionEnd
+;Function DotNet35Exists
+;	ClearErrors
+;	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5" "Version"
+;	IfErrors MDNFNotFound MDNFFound
+;
+;	MDNFFound:
+;		Push 1
+;		Goto ExitFunction
+;
+;	MDNFNotFound:
+;		Push 0
+;		Goto ExitFunction
+;
+;	ExitFunction:
+;FunctionEnd
 
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 4
 ;--------------------------------------------------------
 Function DotNet4Exists
 	ClearErrors
-	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\v4\Full" "Version"
+	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full" "Version"
 	IfErrors MDNFFullNotFound MDNFFound
 	
 	MDNFFullNotFound:
-		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\v4\Client" "Version"
+		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Client" "Version"
 		IfErrors MDNFNotFound MDNFFound
 
 	MDNFFound:
