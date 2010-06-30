@@ -1,11 +1,6 @@
 ;--------------------------------------------------------
-; Include ExperienceUI
+; Include ModernUI
 ;--------------------------------------------------------
-;!ifdef XPUI_SYSDIR
-;	!include "${XPUI_SYSDIR}\XPUI.nsh"
-;!else
-;	!include "XPUI.nsh"
-;!endif
 !include MUI2.nsh
 
 ;--------------------------------------------------------
@@ -16,7 +11,6 @@
 !define THIRD_PARTY_FILES "..\externalDeps"
 !define CLR_INSTALLER_HELPER ".\"
 
-;!define DNF35_URL "http://download.microsoft.com/download/6/0/f/60fc5854-3cb8-4892-b6db-bd4f42510f28/dotnetfx35.exe"
 !define DNF4_URL "http://download.microsoft.com/download/1/B/E/1BE39E79-7E39-46A3-96FF-047F95396215/dotNetFx40_Full_setup.exe"
 !define VCPPR2008_URL "http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
 !define DMD_URL "http://ftp.digitalmars.com/dinstaller.exe"
@@ -58,8 +52,6 @@ RequestExecutionLevel highest
 ;--------------------------------------------------------
 Function .onInit
 	InitPluginsDir
-	;!insertmacro XPUI_INSTALLOPTIONS_EXTRACT "dmd-config-choice.ini"
-	;!insertmacro XPUI_INSTALLOPTIONS_EXTRACT "dmd-config.ini"
 	File /oname=$PLUGINSDIR\dmd-config-choice.ini "dmd-config-choice.ini"
 	File /oname=$PLUGINSDIR\dmd-config.ini "dmd-config.ini"
 
@@ -79,7 +71,6 @@ Function .onInit
 	Pop $PERFORM_CLR_FEATURES
 	IntCmp $PERFORM_CLR_FEATURES 1 0 +2 +2
 	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
-
 
 	;NSISdl::download "${DMD_FILE_LIST_URL}" $2
 	;pop $3
@@ -521,30 +512,9 @@ SectionEnd
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 2.0
 ;--------------------------------------------------------
-Function DotNet20Exists
-	ClearErrors
-	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v2.0.50727" "Version"
-	IfErrors MDNFNotFound MDNFFound
-
-	MDNFFound:
-		Push 1
-		Goto ExitFunction
-
-	MDNFNotFound:
-		Push 0
-		Goto ExitFunction
-
-	ExitFunction:
-FunctionEnd
-
-; http://download.microsoft.com/download/1/B/E/1BE39E79-7E39-46A3-96FF-047F95396215/dotNetFx40_Full_setup.exe
-
-;--------------------------------------------------------
-; Detects Microsoft .Net Framework 3.5
-;--------------------------------------------------------
-;Function DotNet35Exists
+;Function DotNet20Exists
 ;	ClearErrors
-;	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5" "Version"
+;	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v2.0.50727" "Version"
 ;	IfErrors MDNFNotFound MDNFFound
 ;
 ;	MDNFFound:
