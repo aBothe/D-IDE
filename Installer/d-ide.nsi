@@ -16,7 +16,8 @@
 !define THIRD_PARTY_FILES "..\externalDeps"
 !define CLR_INSTALLER_HELPER ".\"
 
-!define DNF35_URL "http://download.microsoft.com/download/6/0/f/60fc5854-3cb8-4892-b6db-bd4f42510f28/dotnetfx35.exe"
+;!define DNF35_URL "http://download.microsoft.com/download/6/0/f/60fc5854-3cb8-4892-b6db-bd4f42510f28/dotnetfx35.exe"
+!define DNF4_URL "http://download.microsoft.com/download/1/B/E/1BE39E79-7E39-46A3-96FF-047F95396215/dotNetFx40_Full_setup.exe"
 !define VCPPR2008_URL "http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
 !define DMD_URL "http://ftp.digitalmars.com/dinstaller.exe"
 !define DMD_FILE_LIST_URL "http://ftp.digitalmars.com/"
@@ -254,40 +255,40 @@ Function DmdConfigPageValidation
 FunctionEnd
 
 ;--------------------------------------------------------
-; Download and install the .Net Framework 3.5
+; Download and install the .Net Framework 4
 ;--------------------------------------------------------
-Section "-.Net Framework 3.5" net35_section_id
-	Call DotNet35Exists
+Section "-.Net Framework 4" net4_section_id
+	Call DotNet4Exists
 	Pop $1
-	IntCmp $1 1 SkipDotNet35
+	IntCmp $1 1 SkipDotNet4
 
-	StrCpy $1 "dotnetfx35.exe"
+	StrCpy $1 "dotNetFx40_Full_setup.exe"
 	StrCpy $2 "$EXEDIR\$1"
 	IfFileExists $2 FileExistsAlready FileMissing
 
 	FileMissing:
-		DetailPrint ".Net Framework 3.5 not installed... Downloading file."
+		DetailPrint ".Net Framework 4 not installed... Downloading file."
 		StrCpy $2 "$TEMP\$1"
-		NSISdl::download "${DNF35_URL}" $2
+		NSISdl::download "${DNF4_URL}" $2
 
 	FileExistsAlready:
-		DetailPrint "Installing the .Net Framework 3.5."
+		DetailPrint "Installing the .Net Framework 4."
 		;ExecWait '"$SYSDIR\msiexec.exe" "$2" /quiet'
 		ExecWait '"$2" /quiet'
 
-		Call DotNet35Exists
+		Call DotNet4Exists
 		Pop $1
-		IntCmp $1 1 DotNet35Done DotNet35Failed
+		IntCmp $1 1 DotNet4Done DotNet4Failed
 
-	DotNet35Failed:
-		DetailPrint ".Net Framework 3.5 install failed... Aborting Install"
-		MessageBox MB_OK ".Net Framework 3.5 install failed... Aborting Install"
+	DotNet4Failed:
+		DetailPrint ".Net Framework 4 install failed... Aborting Install"
+		MessageBox MB_OK ".Net Framework 4 install failed... Aborting Install"
 		Abort
 
-	SkipDotNet35:
-		DetailPrint ".Net Framework 3.5 found... Continuing."
+	SkipDotNet4:
+		DetailPrint ".Net Framework 4 found... Continuing."
 
-	DotNet35Done:
+	DotNet4Done:
 SectionEnd
 
 ;--------------------------------------------------------
@@ -536,6 +537,8 @@ Function DotNet20Exists
 	ExitFunction:
 FunctionEnd
 
+; http://download.microsoft.com/download/1/B/E/1BE39E79-7E39-46A3-96FF-047F95396215/dotNetFx40_Full_setup.exe
+
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 3.5
 ;--------------------------------------------------------
@@ -543,6 +546,29 @@ Function DotNet35Exists
 	ClearErrors
 	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v3.5" "Version"
 	IfErrors MDNFNotFound MDNFFound
+
+	MDNFFound:
+		Push 1
+		Goto ExitFunction
+
+	MDNFNotFound:
+		Push 0
+		Goto ExitFunction
+
+	ExitFunction:
+FunctionEnd
+
+;--------------------------------------------------------
+; Detects Microsoft .Net Framework 4
+;--------------------------------------------------------
+Function DotNet4Exists
+	ClearErrors
+	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\v4\Full" "Version"
+	IfErrors MDNFFullNotFound MDNFFound
+	
+	MDNFFullNotFound:
+		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\v4\Client" "Version"
+		IfErrors MDNFNotFound MDNFFound
 
 	MDNFFound:
 		Push 1
