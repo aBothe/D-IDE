@@ -477,8 +477,8 @@ namespace D_IDE
             DModule mod = null;
 
             // Search expression in all superior blocks
-            DataType cblock = DCodeCompletionProvider.GetBlockAt(diw.fileData.dom, new CodeLocation(0, (int)ScopedSrcLine));
-            DataType symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(diw.project != null ? diw.project.Compiler : D_IDE_Properties.Default.DefaultCompiler, cblock, sym.Name);
+            DNode cblock = DCodeCompletionProvider.GetBlockAt(diw.fileData.dom, new CodeLocation(0, (int)ScopedSrcLine));
+            DNode symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(diw.project != null ? diw.project.Compiler : D_IDE_Properties.Default.DefaultCompiler, cblock, sym.Name);
             if (symNode == null)
             {
                 bool b = false;

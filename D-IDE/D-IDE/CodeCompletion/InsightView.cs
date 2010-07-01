@@ -139,7 +139,7 @@ namespace D_IDE
 
 				if (expressions == null || expressions.Length < 1) return;
 
-				DataType seldt = null; // Selected DataType
+				DNode seldt = null; // Selected DNode
 				DModule module = null;
 
 				if (expressions[0] == "this")
@@ -148,7 +148,7 @@ namespace D_IDE
 					i++;
 					if (expressions.Length < 2 && seldt != null)
 					{
-						foreach (DataType dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
+						foreach (DNode dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
 						{
 							data.Add(DCompletionData.BuildDescriptionString(dt));
 						}
@@ -164,7 +164,7 @@ namespace D_IDE
 						i++;
 						if (seldt != null && expressions.Length < 2)
 						{
-							foreach (DataType dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
+							foreach (DNode dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
 							{
 								data.Add(DCompletionData.BuildDescriptionString(dt));
 							}
@@ -174,7 +174,7 @@ namespace D_IDE
 				}
 				else
 				{
-					foreach (DataType dt in DCodeCompletionProvider.ResolveMultipleNodes(diw.project, diw.fileData, expressions))
+					foreach (DNode dt in DCodeCompletionProvider.ResolveMultipleNodes(diw.project, diw.fileData, expressions))
 					{
 						data.Add(DCompletionData.BuildDescriptionString(dt));
 					}
@@ -235,7 +235,7 @@ namespace D_IDE
 						if ((module = diw.project.FileDataByFile(modpath)) == null)
 							module = D_IDE_Properties.Default.GetModule(D_IDE_Properties.Default.dmd2, modpath);
 
-						seldt = new DataType(FieldType.Root);
+						seldt = new DNode(FieldType.Root);
 						seldt.module = modpath;
 						if (module != null)
 						{
@@ -257,9 +257,9 @@ namespace D_IDE
 				{
 					if (i == expressions.Length - 1) // One before the last one
 					{
-						List<DataType> tt = DCodeCompletionProvider.SearchExprsInClassHierarchy(cc,seldt, DCodeCompletionProvider.RemoveTemplatePartFromDecl(expressions[i]));
+						List<DNode> tt = DCodeCompletionProvider.SearchExprsInClassHierarchy(cc,seldt, DCodeCompletionProvider.RemoveTemplatePartFromDecl(expressions[i]));
 						if (tt != null)
-							foreach (DataType dt in tt)
+							foreach (DNode dt in tt)
 							{
 								data.Add(DCompletionData.BuildDescriptionString(dt));
 							}
@@ -271,7 +271,7 @@ namespace D_IDE
 
 					if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))
 					{
-						DataType seldd = seldt;
+						DNode seldd = seldt;
 						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.fileData.dom, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.type));
 						if (seldt == null) seldt = seldd;
 					}

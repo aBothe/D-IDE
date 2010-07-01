@@ -516,7 +516,7 @@ namespace D_IDE
             tn.SelectedImageKey = tn.ImageKey = "namespace";
             int i = 0;
             if (mtp.fileData.dom != null)
-                foreach (DataType ch in mtp.fileData.dom)
+                foreach (DNode ch in mtp.fileData.dom)
                 {
                     TreeNode ctn = GenerateHierarchyData(mtp.fileData.dom, ch,
                         (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == ch.name) ?
@@ -554,7 +554,7 @@ namespace D_IDE
             return ret;
         }
 
-        TreeNode GenerateHierarchyData(DataType env, DataType ch, TreeNode oldNode)
+        TreeNode GenerateHierarchyData(DNode env, DNode ch, TreeNode oldNode)
         {
             if (ch == null) return null;
             int ii = DCompletionData.GetImageIndex(icons, env, ch);
@@ -565,7 +565,7 @@ namespace D_IDE
 
             ii = icons.Images.IndexOfKey("Icons.16x16.Parameter.png");
             int i = 0;
-            foreach (DataType dt in ch.param)
+            foreach (DNode dt in ch.param)
             {
                 TreeNode tn = GenerateHierarchyData(ch, dt,
                     (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
@@ -577,7 +577,7 @@ namespace D_IDE
                 i++;
             }
             i = 0;
-            foreach (DataType dt in ch)
+            foreach (DNode dt in ch)
             {
                 ii = DCompletionData.GetImageIndex(icons, ch, dt);
                 TreeNode tn = GenerateHierarchyData(ch, dt,

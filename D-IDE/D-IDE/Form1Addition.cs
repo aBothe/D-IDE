@@ -226,7 +226,7 @@ namespace D_IDE
             get { return txt.ActiveTextAreaControl.Caret.Position; }
         }
 
-        DataType selectedBlock = null;
+        DNode selectedBlock = null;
         public List<ICompletionData> CurrentCompletionData = new List<ICompletionData>();
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace D_IDE
             D_IDEForm.thisForm.LineLabel.Text =
                 "Line " + (txt.ActiveTextAreaControl.Caret.Line + 1).ToString() +
                 " Col " + (txt.ActiveTextAreaControl.Caret.Column).ToString();
-            DataType tv = DCodeCompletionProvider.GetBlockAt(fileData.dom, Caret);
+            DNode tv = DCodeCompletionProvider.GetBlockAt(fileData.dom, Caret);
 
             if (selectedBlock != tv || selectedBlock == null)
             {
@@ -298,7 +298,7 @@ namespace D_IDE
             int key = DKeywords.GetToken(exprs[0]);
             if (key != -1 && key != DTokens.This && key != DTokens.Super) return;
             DModule gpf = null;
-            DataType dt =
+            DNode dt =
                 DCodeCompletionProvider.FindActualExpression(project,
                     fileData,
                     D_IDE_Properties.toCodeLocation(Caret),
@@ -380,7 +380,7 @@ namespace D_IDE
             int key = DKeywords.GetToken(exprs[0]);
             if (key != -1 && key != DTokens.This && key != DTokens.Super) return;
             DModule gpf = null;
-            DataType dt =
+            DNode dt =
                 DCodeCompletionProvider.FindActualExpression(project,
                     fileData,
                     D_IDE_Properties.toCodeLocation(Caret),
@@ -468,7 +468,7 @@ namespace D_IDE
             }
             #endregion
 
-            DataType dt =
+            DNode dt =
                 DCodeCompletionProvider.FindActualExpression(project,
                     fileData,
                     D_IDE_Properties.toCodeLocation(e.LogicalPosition),
@@ -489,7 +489,7 @@ namespace D_IDE
             {
                 string tt = "";
                 if (dt.Count < 1) return;
-                foreach (DataType ch in dt)
+                foreach (DNode ch in dt)
                 {
                     if (ch.fieldtype == FieldType.Constructor)
                         tt += DCompletionData.BuildDescriptionString(ch) + "\n\n";

@@ -572,11 +572,15 @@ namespace D_IDE
 
 		public string lastSearchDir = Application.StartupPath;
 
-		public static Location fromCodeLocation(CodeLocation cloc)
+		public static ICSharpCode.NRefactory.Location fromCodeLocation(CodeLocation cloc)
 		{
-			return new Location(cloc.Column, cloc.Line);
+			return new ICSharpCode.NRefactory.Location(cloc.Column, cloc.Line);
 		}
-		public static CodeLocation toCodeLocation(Location loc)
+        public static CodeLocation toCodeLocation(D_Parser.Location loc)
+        {
+            return new CodeLocation(loc.Column, loc.Line);
+        }
+		public static CodeLocation toCodeLocation(ICSharpCode.NRefactory.Location loc)
 		{
 			return new CodeLocation(loc.Column, loc.Line);
 		}

@@ -1,13 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
-using ICSharpCode.NRefactory.Ast;
-using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.Parser;
-using ICSharpCode.TextEditor;
 using System.IO;
-using ICSharpCode.TextEditor.Document;
 using System.Diagnostics;
 
 namespace D_Parser
@@ -19,8 +13,8 @@ namespace D_Parser
 	{
 		public string PhysFileName;
 
-		public static CodeLocation GetCodeLocation(Token t) { return new CodeLocation(t.Location.Column, t.Location.Line); }
-		public static CodeLocation ToCodeEndLocation(Token t) { return new CodeLocation(t.EndLocation.Column, t.EndLocation.Line); }
+		public static CodeLocation GetCodeLocation(DToken t) { return new CodeLocation(t.Location.Column, t.Location.Line); }
+		public static CodeLocation ToCodeEndLocation(DToken t) { return new CodeLocation(t.EndLocation.Column, t.EndLocation.Line); }
 
 		/// <summary>
 		/// Parses D source file
@@ -29,10 +23,10 @@ namespace D_Parser
 		/// <param name="imports"></param>
 		/// <param name="folds"></param>
 		/// <returns>Module structure</returns>
-		public static DataType ParseFile(string moduleName, string fn, out List<string> imports)
+		public static DNode ParseFile(string moduleName, string fn, out List<string> imports)
 		{
 			if (!File.Exists(fn)) { imports = new List<string>(); return null; }
-			DataType ret = new DataType(FieldType.Root);
+			DNode ret = new DNode(FieldType.Root);
 
 			FileStream fs;
 			try
@@ -45,8 +39,8 @@ namespace D_Parser
 			DLexer dl = new DLexer(tr);
 
 			DParser p = new DParser(dl);
-			dl.Errors.SemErr = p.SemErr;
-			dl.Errors.SynErr = p.SynErr;
+			//dl.Errors.SemErr = p.SemErr;
+			//dl.Errors.SynErr = p.SynErr;
 			p.PhysFileName = fn;
 			//p.SemErr(DTokens.Short);
 			if (fs.Length > (1024 * 1024 * 2))
@@ -72,10 +66,10 @@ namespace D_Parser
 		/// <param name="imports"></param>
 		/// <param name="folds"></param>
 		/// <returns>Module structure</returns>
-		public static DataType ParseText(string file, string moduleName, string cont, out List<string> imports)
+		public static DNode ParseText(string file, string moduleName, string cont, out List<string> imports)
 		{
 			if (cont == null || cont.Length < 1) { imports = null; return null; }
-			DataType ret = new DataType(FieldType.Root);
+			DNode ret = new DNode(FieldType.Root);
 
 			TextReader tr = new StringReader(cont);
 
@@ -102,9 +96,8 @@ namespace D_Parser
 		/// <summary>
 		/// Encapsules whole document structure
 		/// </summary>
-		DataType doc;
+		DNode doc;
 
-		public List<FoldMarker> folds;
 		public List<string> import;
 
 		/// <summary>
@@ -116,7 +109,7 @@ namespace D_Parser
 		/// </summary>
 		List<int> ExpressionModifiers;
 
-		public DataType Document
+		public DNode Document
 		{
 			get { return doc; }
 		}
@@ -224,34 +217,34 @@ namespace D_Parser
 		}
 
 		public DLexer lexer;
-		public Errors errors;
+		//public Errors errors;
 		public DParser(DLexer lexer)
 		{
 			this.lexer = lexer;
-			errors = lexer.Errors;
+			//errors = lexer.Errors;
 			//errors.SynErr = new ErrorCodeProc(SynErr);
 		}
 
 		StringBuilder qualidentBuilder = new StringBuilder();
 
-		Token t
+		DToken t
 		{
 			[System.Diagnostics.DebuggerStepThrough]
 			get
 			{
-				return (Token)lexer.Token;
+				return (DToken)lexer.CurrentToken;
 			}
 		}
 
 		/// <summary>
 		/// lookAhead token
 		/// </summary>
-		Token la
+		DToken la
 		{
 			[System.Diagnostics.DebuggerStepThrough]
 			get
 			{
-				return (Token)lexer.LookAhead;
+				return (DToken)lexer.LookAhead;
 			}
 		}
 
@@ -262,14 +255,14 @@ namespace D_Parser
 			for (int i = _lastcommentindex; ret.Length<512&&i>=_lastcommentindex&& i < lexer.Comments.Count; i++)
 			{
 				Comment tc = lexer.Comments[i];
-				if (tc.CommentType != CommentType.Documentation)
+				if (tc.CommentType != Comment.Type.Documentation)
 					continue;
 
                 string t = tc.CommentText.Trim();
                 for (int j = i; t == "ditto" && j > 0;j-- )
                 {
                     tc = lexer.Comments[j];
-                    if (tc.CommentType != CommentType.Documentation)
+                    if (tc.CommentType != Comment.Type.Documentation)
                         continue;
                     t = tc.CommentText;
                 }
@@ -281,7 +274,7 @@ namespace D_Parser
 		}
 
 		/// <summary>
-		/// Check if current lookAhead Token equals to n and skip that token.
+		/// Check if current lookAhead DToken equals to n and skip that token.
 		/// </summary>
 		/// <param name="n"></param>
 		/// <returns></returns>
@@ -342,15 +335,15 @@ namespace D_Parser
 			lexer.StartPeek();
 		}
 
-		Token Peek()
+		DToken Peek()
 		{
 			return lexer.Peek();
 		}
 
-		Token Peek(int n)
+		DToken Peek(int n)
 		{
 			lexer.StartPeek();
-			Token x = la;
+			DToken x = la;
 			while (n > 0)
 			{
 				x = lexer.Peek();
@@ -395,7 +388,7 @@ namespace D_Parser
 		/// <param name="imports">List of imports in the module</param>
 		/// <param name="fl">TODO: Folding marks</param>
 		/// <returns>Completely parsed module structure</returns>
-		public DataType Parse(string moduleName, out List<string> imports)
+		public DNode Parse(string moduleName, out List<string> imports)
 		{
 			import = new List<string>();
 			imports = import;
@@ -404,7 +397,7 @@ namespace D_Parser
 			BlockModifiers.Add(DTokens.Public);
 			ExpressionModifiers = new List<int>();
 
-			doc = new DataType(FieldType.Root);
+			doc = new DNode(FieldType.Root);
 			doc.name = moduleName;
 			doc.startLoc = CodeLocation.Empty;
 			doc.module = moduleName;
@@ -415,10 +408,10 @@ namespace D_Parser
 		}
 
 		/// <summary>
-		/// Parses complete block from current lookahead Token "{" until the last "}" on the same depth
+		/// Parses complete block from current lookahead DToken "{" until the last "}" on the same depth
 		/// </summary>
 		/// <param name="ret">Parent node</param>
-		void ParseBlock(ref DataType ret, bool isFunctionBody)
+		void ParseBlock(ref DNode ret, bool isFunctionBody)
 		{
 			int curbrace = 0;
 			if(String.IsNullOrEmpty( ret.desc))ret.desc = CheckForExpressionComments();
@@ -450,7 +443,7 @@ namespace D_Parser
 				#region Modifiers
 				if (DTokens.Modifiers[la.Kind])
 				{
-					Token pt = Peek(1);
+					DToken pt = Peek(1);
 					int mod = la.Kind;
 
 					if (pt.Kind == DTokens.OpenParenthesis) // const>(<char)[]
@@ -480,10 +473,10 @@ namespace D_Parser
 					else if (pt.Kind == DTokens.OpenCurlyBrace) // public >{<...}
 					{
 						lexer.NextToken(); // Skip modifier
-						DataType tblock = new DataType(ret.fieldtype);
+						DNode tblock = new DNode(ret.fieldtype);
 						ParseBlock(ref tblock, isFunctionBody);
 
-						foreach (DataType dt in tblock) // Apply modifier to parsed children
+						foreach (DNode dt in tblock) // Apply modifier to parsed children
 						{
 							if (!dt.modifiers.Contains(mod)) // static package int a;
 							{
@@ -497,7 +490,7 @@ namespace D_Parser
 					}
 					else
 					{
-						Token pt2 = pt;
+						DToken pt2 = pt;
 						pt = lexer.Peek();
 						bool hasFollowingMods = false;
 						while (pt.Kind != DTokens.EOF)
@@ -518,7 +511,7 @@ namespace D_Parser
 
 						if (!hasFollowingMods && la.Kind == DTokens.Const && pt2.Kind == DTokens.Identifier && pt.Kind == DTokens.Assign) // const >MyCnst2< = 2; // similar to enum MyCnst = 1;
 						{
-							DataType cdt = ParseEnum();
+							DNode cdt = ParseEnum();
 							cdt.type = "int";
 							cdt.modifiers.Add(DTokens.Const);
 							cdt.TypeToken = DTokens.Int;
@@ -564,7 +557,7 @@ namespace D_Parser
 					#region Within Function Body
 					if (isFunctionBody && !isTypeOf)
 					{
-						Token pk = Peek(1);
+						DToken pk = Peek(1);
 						switch (pk.Kind)
 						{
 							case DTokens.Dot: // Package.foo();
@@ -688,7 +681,7 @@ namespace D_Parser
 
 					#endregion
 
-					DataType tv = ParseExpression();
+					DNode tv = ParseExpression();
 					if (tv != null)
 					{
 						tv.modifiers.AddRange(TExprMods);
@@ -715,7 +708,7 @@ namespace D_Parser
 								SkipToClosingBrace();
 								break;
 							}
-							DataType custAlloc = new DataType(FieldType.Function);
+							DNode custAlloc = new DNode(FieldType.Function);
 							custAlloc.name = "new";
 							custAlloc.type = "void*";
 							custAlloc.TypeToken = DTokens.New;
@@ -743,7 +736,7 @@ namespace D_Parser
 								SkipToClosingBrace();
 								break;
 							}
-							DataType custAlloc = new DataType(FieldType.Function);
+							DNode custAlloc = new DNode(FieldType.Function);
 							custAlloc.name = "delete";
 							custAlloc.type = "void";
 							custAlloc.TypeToken = DTokens.Delete;
@@ -843,10 +836,10 @@ namespace D_Parser
 						if (ret.Count < 1) break;
 						lexer.NextToken(); // Skip ","
 						// MyType a,b,c,d;
-						DataType prevExpr = (DataType)ret.Children[ret.Count - 1];
+						DNode prevExpr = (DNode)ret.Children[ret.Count - 1];
 						if (prevExpr.fieldtype == FieldType.Variable)
 						{
-							DataType tv = new DataType(FieldType.Variable);
+							DNode tv = new DNode(FieldType.Variable);
 							if (tv == null) continue;
 							tv.modifiers = prevExpr.modifiers;
 							tv.startLoc = prevExpr.startLoc;
@@ -904,7 +897,7 @@ namespace D_Parser
 						curbrace++;
 						break;
 					case DTokens.Enum:
-						DataType mye = ParseEnum();
+						DNode mye = ParseEnum();
 						if (mye != null)
 						{
 							mye.Parent = ret;
@@ -914,7 +907,7 @@ namespace D_Parser
 								ret.Add(mye);
 							else
 							{
-								foreach (DataType ch in mye)
+								foreach (DNode ch in mye)
 								{
 									ch.Parent = ret;
 									ch.module = ret.module;
@@ -958,7 +951,7 @@ namespace D_Parser
 						else
 							cname = ret.name;
 
-						DataType ctor = ParseExpression();
+						DNode ctor = ParseExpression();
 						if (ctor != null)
 						{
 							if (ret.fieldtype == FieldType.Root && !TExprMods.Contains(DTokens.Static))
@@ -988,7 +981,7 @@ namespace D_Parser
 							break;
 						}
 
-						DataType myc = ParseClass();
+						DNode myc = ParseClass();
 						if (myc != null)
 						{
 							myc.module = ret.module;
@@ -1003,7 +996,7 @@ namespace D_Parser
 					case DTokens.Typedef:
 					case DTokens.Alias:
 						// typedef void* function(int a) foo;
-						DataType tt = new DataType();
+						DNode tt = new DNode();
 						tt.startLoc = GetCodeLocation(la);
 
 						int tbrace = 0;
@@ -1080,10 +1073,10 @@ namespace D_Parser
 		}
 
 
-		void ParseTemplateArguments(ref DataType v)
+		void ParseTemplateArguments(ref DNode v)
 		{
 			int psb = 0;// ()
-			DataType targ = null;
+			DNode targ = null;
 
 			if (la.Kind == DTokens.OpenParenthesis) psb = -1;
 			while (la.Kind != DTokens.EOF)
@@ -1122,7 +1115,7 @@ namespace D_Parser
 					case DTokens.Dot:
 						if (Peek(1).Kind == DTokens.Dot && Peek(2).Kind == DTokens.Dot) // "..."
 						{
-							if (targ == null) targ = new DataType(FieldType.Variable);
+							if (targ == null) targ = new DNode(FieldType.Variable);
 
 							targ.type = "...";
 							targ.name = "...";
@@ -1136,12 +1129,12 @@ namespace D_Parser
 						}
 						break;
 					case DTokens.Alias:
-						if (targ == null) targ = new DataType(FieldType.Variable);
+						if (targ == null) targ = new DNode(FieldType.Variable);
 						targ.startLoc = GetCodeLocation(la);
 						targ.modifiers.Add(la.Kind);
 						break;
 					default:
-						if (targ == null) { targ = new DataType(FieldType.Variable); targ.startLoc = ToCodeEndLocation(la); }
+						if (targ == null) { targ = new DNode(FieldType.Variable); targ.startLoc = ToCodeEndLocation(la); }
 
 						if (DTokens.Modifiers[la.Kind] && Peek(1).Kind != DTokens.OpenParenthesis) // const int a
 						{
@@ -1157,14 +1150,14 @@ namespace D_Parser
 		}
 
 		/// <summary>
-		/// Parses all variable declarations when "(" is the lookahead Token and retrieves them into v.param. 
+		/// Parses all variable declarations when "(" is the lookahead DToken and retrieves them into v.param. 
 		/// Thereafter ")" will be lookahead
 		/// </summary>
 		/// <param name="v"></param>
-		void ParseFunctionArguments(ref DataType v)
+		void ParseFunctionArguments(ref DNode v)
 		{
 			int psb = 0;// ()
-			DataType targ = null;
+			DNode targ = null;
 			// int[]* MyFunction(in string[]* arg, uint function(aa[]) funcarg, ref MyType b)
 			while (la.Kind != DTokens.EOF)
 			{
@@ -1197,7 +1190,7 @@ namespace D_Parser
 					case DTokens.Dot:
 						if (Peek(1).Kind == DTokens.Dot && Peek(2).Kind == DTokens.Dot) // "..."
 						{
-							if (targ == null) targ = new DataType(FieldType.Variable);
+							if (targ == null) targ = new DNode(FieldType.Variable);
 
 							targ.type = "...";
 							targ.name = "...";
@@ -1211,19 +1204,19 @@ namespace D_Parser
 						}
 						break;
 					case DTokens.Alias:
-						if (targ == null) targ = new DataType(FieldType.Variable);
+						if (targ == null) targ = new DNode(FieldType.Variable);
 						targ.modifiers.Add(la.Kind);
 						break;
 					default:
 						if (DTokens.Modifiers[la.Kind] && Peek(1).Kind != DTokens.OpenParenthesis) // const int a
 						{
-							if (targ == null) targ = new DataType(FieldType.Variable);
+							if (targ == null) targ = new DNode(FieldType.Variable);
 							targ.modifiers.Add(la.Kind);
 							break;
 						}
 						if (DTokens.BasicTypes[la.Kind] || la.Kind == DTokens.Identifier || la.Kind == DTokens.Typeof)
 						{
-							if (targ == null) targ = new DataType(FieldType.Variable);
+							if (targ == null) targ = new DNode(FieldType.Variable);
 							if (Peek(1).Kind == DTokens.Dot) break;
 
 							targ.startLoc = GetCodeLocation(la);
@@ -1259,7 +1252,7 @@ namespace D_Parser
 									if (la.Kind == DTokens.OpenParenthesis) tpsb++;
 									if (la.Kind == DTokens.CloseParenthesis) tpsb--;
 									targ.type += strVal;
-									Token pk2 = Peek(1);
+									DToken pk2 = Peek(1);
 									if (tpsb < 1 && (pk2.Kind == DTokens.Comma || pk2.Kind == DTokens.CloseParenthesis))
 									{
 										lexer.NextToken();
@@ -1310,8 +1303,8 @@ namespace D_Parser
 		/// =EnumVal1 | EnumVal2;
 		/// ]]></summary>
 		/// <returns></returns>
-		string ParseAssignIdent(ref DataType parent) { return ParseAssignIdent(ref parent, false); }
-		string ParseAssignIdent(ref DataType parent, bool isFuncParam)
+		string ParseAssignIdent(ref DNode parent) { return ParseAssignIdent(ref parent, false); }
+		string ParseAssignIdent(ref DNode parent, bool isFuncParam)
 		{
 			string ret = "";
 
@@ -1320,7 +1313,7 @@ namespace D_Parser
 			while (la.Kind != DTokens.EOF)
 			{
 				lexer.NextToken();
-				Token pk = Peek(1);
+				DToken pk = Peek(1);
 
 				if (ThrowIfEOF(DTokens.Semicolon)) { break; }
 
@@ -1358,7 +1351,7 @@ namespace D_Parser
 						}
 						if (isDelegate)
 						{
-							DataType delegatefun = new DataType(FieldType.Delegate);
+							DNode delegatefun = new DNode(FieldType.Delegate);
 							delegatefun.startLoc = GetCodeLocation(la);
 							delegatefun.type = "void";
 							delegatefun.TypeToken = DTokens.Void;
@@ -1406,7 +1399,7 @@ namespace D_Parser
 				{
 					if (Peek(1).Kind != DTokens.OpenParenthesis) // =delegate bool(...) {....}
 					{
-						DataType delegatefun = new DataType(FieldType.Delegate);
+						DNode delegatefun = new DNode(FieldType.Delegate);
 						delegatefun.startLoc = GetCodeLocation(la);
 						delegatefun.TypeToken = la.Kind;
 						ret += strVal;
@@ -1471,7 +1464,7 @@ namespace D_Parser
 				return ret;
 			}
 
-			Token pk = null;
+			DToken pk = null;
 			switch (Peek(1).Kind)
 			{
 				default: // Parse things like MyType123[string[]]
@@ -1577,9 +1570,9 @@ namespace D_Parser
 		/// this() {}
 		/// </summary>
 		/// <returns></returns>
-		DataType ParseExpression()
+		DNode ParseExpression()
 		{
-			DataType tv = new DataType();
+			DNode tv = new DNode();
 			tv.desc = CheckForExpressionComments();
 			tv.startLoc = GetCodeLocation(la);
 			bool isCTor = la.Kind == DTokens.This;
@@ -1651,7 +1644,7 @@ namespace D_Parser
 				if (Peek(1).Kind == DTokens.Assign)
 					lexer.NextToken();
 
-				Token dt = la;
+				DToken dt = la;
 
 				if (la.Kind == DTokens.Assign)
 					tv.value = ParseAssignIdent(ref tv);
@@ -1681,7 +1674,7 @@ namespace D_Parser
 				bool HasTemplateArgs = false;
 				#region Scan for template arguments
 				int psb = 0;
-				Token pk = la;
+				DToken pk = la;
 				lexer.StartPeek();
 				if (pk.Kind == DTokens.OpenParenthesis) psb = -1;
 				for (int i = 0; pk != null && pk.Kind != DTokens.EOF; i++)
@@ -1772,7 +1765,7 @@ namespace D_Parser
 					ParseBlock(ref tv, true);
 					tv.StartLocation = sloc;
 
-					Token bpk = Peek(1);
+					DToken bpk = Peek(1);
 					if (bpk.Kind == DTokens.In || bpk.Kind == DTokens.Out || bpk.Kind == DTokens.Body)
 					{
 						lexer.NextToken(); // Skip "}"
@@ -1798,9 +1791,9 @@ namespace D_Parser
 		/// public class MyType(T,S*,U[]): public Mybase, MyInterface {...}
 		/// </summary>
 		/// <returns></returns>
-		DataType ParseClass()
+		DNode ParseClass()
 		{
-			DataType myc = new DataType(FieldType.Class); // >class<
+			DNode myc = new DNode(FieldType.Class); // >class<
 			myc.desc = CheckForExpressionComments();
 			if (la.Kind == DTokens.Struct) myc.fieldtype = FieldType.Struct;
 			if (la.Kind == DTokens.Template) myc.fieldtype = FieldType.Template;
@@ -1901,9 +1894,9 @@ namespace D_Parser
 		/// }
 		/// </summary>
 		/// <returns></returns>
-		DataType ParseEnum()
+		DNode ParseEnum()
 		{
-			DataType mye = new DataType(FieldType.Enum);
+			DNode mye = new DNode(FieldType.Enum);
 			mye.startLoc = GetCodeLocation(la);
 
 			mye.type = strVal;
@@ -1924,7 +1917,7 @@ namespace D_Parser
 			#endregion
 
 			#region check for single declarations such as enum MyType i=4;
-			Token pk = la;
+			DToken pk = la;
 			lexer.StartPeek();
 			int psb = 0;
 			for (int i = 0; pk != null && pk.Kind != DTokens.EOF; i++)
@@ -2012,12 +2005,12 @@ namespace D_Parser
 				return mye;
 			}
 
-			DataType tt = new DataType(FieldType.EnumValue);
+			DNode tt = new DNode(FieldType.EnumValue);
 			while (!EOF)
 			{
 				lexer.NextToken();
 			enumcont:
-				if (tt == null) tt = new DataType(FieldType.EnumValue);
+				if (tt == null) tt = new DNode(FieldType.EnumValue);
 				if (ThrowIfEOF(DTokens.CloseCurlyBrace)) break;
 				switch (la.Kind)
 				{

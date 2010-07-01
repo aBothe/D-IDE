@@ -86,12 +86,12 @@ namespace D_IDE
 			else // Search first class that extends the fx.window.Window class
 			{
 				List<string> imp=new List<string>();
-				DataType dom= DParser.ParseText(File,"temp",fcon,out imp);
+				DNode dom= DParser.ParseText(File,"temp",fcon,out imp);
 				if (dom == null) return false;
-				DataType Node=null;
+				DNode Node=null;
 				foreach (INode n in dom)
 				{
-					DataType ch = n as DataType;
+					DNode ch = n as DNode;
 					string[] a = ch.superClass.Split('.');
 					if (a.Length < 0 || a[a.Length - 1] != "Window") continue;
 
@@ -141,14 +141,14 @@ namespace D_IDE
 				return false;
 
 			List<string> imp = new List<string>();
-			DataType dom = DParser.ParseText(file, "temp", fcon, out imp);
+			DNode dom = DParser.ParseText(file, "temp", fcon, out imp);
 			string[] a=null;
 
 			//Add all declarations to the editForm
 			foreach (INode n in dom)
 			{
 				Control ctrl = null;
-				DataType ch = n as DataType;
+				DNode ch = n as DNode;
 
 				if (ch.fieldtype == FieldType.Variable)
 				{

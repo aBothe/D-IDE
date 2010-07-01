@@ -12,8 +12,8 @@ namespace D_IDE
 {
 	public class DCompletionData : ICompletionData, IComparable
 	{
-		public DataType data;
-		public DataType parent;
+		public DNode data;
+		public DNode parent;
 
 		public string text;
 		public string description;
@@ -58,7 +58,7 @@ namespace D_IDE
 			this.ImageIndex = i;
 		}
 
-		public DCompletionData(DataType data, DataType parent, int Icon)
+		public DCompletionData(DNode data, DNode parent, int Icon)
 		{
 			this.data = data;
 			this.parent = parent;
@@ -66,7 +66,7 @@ namespace D_IDE
 			Init();
 		}
 
-		public DCompletionData(DataType data, DataType parent)
+		public DCompletionData(DNode data, DNode parent)
 		{
 			this.data = data;
 			this.parent = parent;
@@ -79,11 +79,11 @@ namespace D_IDE
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public static string BuildDescriptionString(DataType data)
+		public static string BuildDescriptionString(DNode data)
 		{
 			return BuildDescriptionString(data,null, true);
 		}
-		public static string BuildDescriptionString(DataType data_, DModule mod)
+		public static string BuildDescriptionString(DNode data_, DModule mod)
 		{
 			return BuildDescriptionString(data_, mod, true);
 		}
@@ -93,10 +93,10 @@ namespace D_IDE
 		/// <param name="data"></param>
 		/// <param name="IncludeDesc"></param>
 		/// <returns></returns>
-		public static string BuildDescriptionString(DataType data_, DModule mod, bool IncludeDesc)
+		public static string BuildDescriptionString(DNode data_, DModule mod, bool IncludeDesc)
 		{
 			if(data_ == null) return "";
-			DataType data=(data_ as DataType);
+			DNode data=(data_ as DNode);
 				
 				string ret = "";
 
@@ -115,11 +115,11 @@ namespace D_IDE
 				}
 
 				string path = (data.module != null && data.module != "" ? (data.module + ".") : "");
-				DataType tdt = data;
-				while(tdt != null && tdt.Parent != null && (tdt.Parent as DataType).fieldtype != FieldType.Root)
+				DNode tdt = data;
+				while(tdt != null && tdt.Parent != null && (tdt.Parent as DNode).fieldtype != FieldType.Root)
 				{
-					path = path.Insert(0, (tdt.Parent as DataType).name + ".");
-					tdt = (tdt.Parent as DataType);
+					path = path.Insert(0, (tdt.Parent as DNode).name + ".");
+					tdt = (tdt.Parent as DNode);
 				}
 
 
@@ -155,7 +155,7 @@ namespace D_IDE
 				if(data.param.Count > 0)
 				{
 					ret += "(";
-					foreach(DataType p in data.param)
+					foreach(DNode p in data.param)
 					{
 						foreach(int m in p.modifiers)
 						{
@@ -191,7 +191,7 @@ namespace D_IDE
 		private void Init()
 		{
 			if(data == null) return;
-			DataType d = data as DataType, par=parent as DataType;
+			DNode d = data as DNode, par=parent as DNode;
 			if (d.fieldtype == FieldType.Root && par.fieldtype == FieldType.Root 
 				&& d.name.Length > par.module.Length + 1 && d.name.StartsWith(par.module+"."))
 			{
@@ -202,12 +202,12 @@ namespace D_IDE
 			description = BuildDescriptionString(data);
 		}
 
-		static public int GetImageIndex(ImageList icons, DataType Parent, DataType Node)
+		static public int GetImageIndex(ImageList icons, DNode Parent, DNode Node)
 		{
 			if (icons == null) return -1;
 
-			DataType parent=(Parent as DataType);
-			DataType v=(Node as DataType);
+			DNode parent=(Parent as DNode);
+			DNode v=(Node as DNode);
 			if(v.fieldtype == FieldType.Delegate)
 			{
 				if(v.modifiers.Contains(DTokens.Private))

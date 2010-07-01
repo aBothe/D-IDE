@@ -71,7 +71,7 @@ namespace D_IDE
 			{
 				DModule pf = Form1.SelectedTabPage.fileData;
 				CodeLocation tl = new CodeLocation(ta.Caret.Column + 1, ta.Caret.Line + 1);
-				DataType seldt;
+				DNode seldt;
 				presel = null;
 
 				switch(curToken)

@@ -18,7 +18,7 @@ namespace D_IDE
 			InitializeComponent();
 		}
 
-		public TreeNode SearchTN(DataType dt)
+		public TreeNode SearchTN(DNode dt)
 		{
 			foreach(TreeNode tn in hierarchy.Nodes)
 			{
@@ -27,7 +27,7 @@ namespace D_IDE
 			}
 			return null;
 		}
-		public TreeNode SearchTN(TreeNode env,DataType dt)
+		public TreeNode SearchTN(TreeNode env,DNode dt)
 		{
 			if(env == null) return null;
 			foreach(TreeNode tn in env.Nodes)
@@ -43,7 +43,7 @@ namespace D_IDE
 		{
 			DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
 			if(e.Node.Tag==null || diw == null) return;
-			DataType dt = (DataType)e.Node.Tag;
+			DNode dt = (DNode)e.Node.Tag;
 			
 			try
 			{

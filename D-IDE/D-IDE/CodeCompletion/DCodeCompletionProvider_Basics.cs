@@ -53,15 +53,15 @@ namespace D_IDE
 			return IsInBlockComment || IsInLineComment || IsInString;
 		}
 
-		public static DataType GetBlockAt(DataType dataType, TextLocation textLocation)
+		public static DNode GetBlockAt(DNode dataType, TextLocation textLocation)
 		{
 			return GetBlockAt(dataType, new CodeLocation(textLocation.Column + 1, textLocation.Line + 1));
 		}
-		public static DataType GetBlockAt(DataType env, CodeLocation where)
+		public static DNode GetBlockAt(DNode env, CodeLocation where)
 		{
 			if (env!=null && where!=null && where >= env.startLoc && where <= env.endLoc && env.Count > 0)
 			{
-				foreach (DataType dt in env)
+				foreach (DNode dt in env)
 				{
 					dt.Parent = env;
 					if (where >= dt.startLoc && where <= dt.endLoc)
@@ -73,11 +73,11 @@ namespace D_IDE
 			return env;
 		}
 
-		public static DataType GetClassAt(DataType env, CodeLocation where)
+		public static DNode GetClassAt(DNode env, CodeLocation where)
 		{
 			if (where >= env.startLoc && where <= env.endLoc && env.Count > 0)
 			{
-				foreach (DataType dt in env)
+				foreach (DNode dt in env)
 				{
 					dt.Parent = env;
 					if (where >= dt.startLoc && where <= dt.endLoc && DTokens.ClassLike[dt.TypeToken])
@@ -132,11 +132,11 @@ namespace D_IDE
 		}
 		#endregion
 
-		public static DataType GetRoot(DataType dt)
+		public static DNode GetRoot(DNode dt)
 		{
 			if (dt == null) return null;
 			if (dt.fieldtype == FieldType.Root) return dt;
-			return GetRoot((DataType)dt.Parent);
+			return GetRoot((DNode)dt.Parent);
 		}
 
 		public CompletionDataProviderKeyResult ProcessKey(char key)
@@ -152,7 +152,7 @@ namespace D_IDE
 			}
 		}
 
-		public static DataType GetExprByName(DataType env, CodeLocation where, string name)
+		public static DNode GetExprByName(DNode env, CodeLocation where, string name)
 		{
 			if (env == null) return null;
 			if (env.name == name) return env;
@@ -161,7 +161,7 @@ namespace D_IDE
 			{
 				if (env.Count > 0)
 				{
-					foreach (DataType dt in env)
+					foreach (DNode dt in env)
 					{
 						dt.Parent = env;
 						if (dt.name != name)
@@ -178,18 +178,18 @@ namespace D_IDE
 			}
 			return null;
 		}
-		public static DataType GetExprByName(DataType env, string name)
+		public static DNode GetExprByName(DNode env, string name)
 		{
 			return GetExprByName(env, name, false);
 		}
-		public static DataType GetExprByName(DataType env, string name, bool RootOnly)
+		public static DNode GetExprByName(DNode env, string name, bool RootOnly)
 		{
 			if (env == null) return null;
 
 			if (env.name == name) { return env; }
 
 			if (env.param.Count > 0)
-				foreach (DataType dt in env.param)
+				foreach (DNode dt in env.param)
 				{
 					dt.Parent = env;
 					if (dt.name == name)
@@ -197,7 +197,7 @@ namespace D_IDE
 				}
 
 			if (env.Count > 0)
-				foreach (DataType dt in env)
+				foreach (DNode dt in env)
 				{
 					if (dt == env) continue;
 					dt.Parent = env;
@@ -206,20 +206,20 @@ namespace D_IDE
 
 					if (!RootOnly)
 					{
-						DataType tdt = GetExprByName(dt, name, false);
+						DNode tdt = GetExprByName(dt, name, false);
 						if (tdt != null) return tdt;
 					}
 				}
 			return null;
 		}
-		public static DataType GetExprByName(DataType env,DataType levelnode, string name, bool RootOnly)
+		public static DNode GetExprByName(DNode env,DNode levelnode, string name, bool RootOnly)
 		{
 			if (env == null) return null;
 
 			if (env.name == name) { return env; }
 
 			if (env.param.Count > 0)
-				foreach (DataType dt in env.param)
+				foreach (DNode dt in env.param)
 				{
 					dt.Parent = env;
 					if (dt.name == name)
@@ -227,7 +227,7 @@ namespace D_IDE
 				}
 
 			if (env.Count > 0)
-				foreach (DataType dt in env)
+				foreach (DNode dt in env)
 				{
 					if (dt == env) continue;
 					dt.Parent = env;
@@ -236,21 +236,21 @@ namespace D_IDE
 
 					if (!RootOnly)
 					{
-						DataType tdt = GetExprByName(dt, levelnode, name, dt == levelnode);
+						DNode tdt = GetExprByName(dt, levelnode, name, dt == levelnode);
 						if (tdt != null) return tdt;
 					}
 				}
 			return null;
 		}
-		public static List<DataType> GetExprsByName(DataType env, string name, bool RootOnly)
+		public static List<DNode> GetExprsByName(DNode env, string name, bool RootOnly)
 		{
-			List<DataType> ret = new List<DataType>();
+			List<DNode> ret = new List<DNode>();
 			if (env == null) return ret;
 
 			//if(env.name == name) {return ret; }
 
 			if (env.param.Count > 0)
-				foreach (DataType dt in env.param)
+				foreach (DNode dt in env.param)
 				{
 					dt.Parent = env;
 					if (dt.name == name)
@@ -258,7 +258,7 @@ namespace D_IDE
 				}
 
 			if (env.Count > 0)
-				foreach (DataType dt in env)
+				foreach (DNode dt in env)
 				{
 					dt.Parent = env;
 					if (dt.name == name)
@@ -269,14 +269,14 @@ namespace D_IDE
 			return ret;
 		}
 
-		public static DataType SearchExprInClassHierarchy(CompilerConfiguration cc,DataType env, DataType currentLevelNode, string name)
+		public static DNode SearchExprInClassHierarchy(CompilerConfiguration cc,DNode env, DNode currentLevelNode, string name)
 		{
 			if (env == null) return null;
 
 			if (env.name == name) { return env; }
 
 			if (env.param.Count > 0)
-				foreach (DataType dt in env.param)
+				foreach (DNode dt in env.param)
 				{
 					dt.Parent = env;
 					if (dt.name == name)
@@ -284,13 +284,13 @@ namespace D_IDE
 				}
 
 			if (env.Count > 0)
-				foreach (DataType dt in env)
+				foreach (DNode dt in env)
 				{
 					dt.Parent = env;
 					if (dt.name == name)
 						return dt;
 
-					DataType tdt = GetExprByName(dt, currentLevelNode, name, dt == currentLevelNode);
+					DNode tdt = GetExprByName(dt, currentLevelNode, name, dt == currentLevelNode);
 						if (tdt != null) return tdt;
 				}
 
@@ -301,21 +301,21 @@ namespace D_IDE
 			}*/
 			if (super != "")
 			{
-				DataType dt = SearchGlobalExpr(cc,null, super);
+				DNode dt = SearchGlobalExpr(cc,null, super);
 				if (dt == null) return null;
 				return SearchExprInClassHierarchy(cc,dt,currentLevelNode, name);
 			}
 
 			return null;
 		}
-		public static List<DataType> SearchExprsInClassHierarchy(CompilerConfiguration cc, DataType env, string name)
+		public static List<DNode> SearchExprsInClassHierarchy(CompilerConfiguration cc, DNode env, string name)
 		{
-			List<DataType> ret = new List<DataType>();
+			List<DNode> ret = new List<DNode>();
 			if (env == null) return ret;
 			if (env.name == name) { ret.Add(env); return ret; }
 
 			if (env.param.Count > 0)
-				foreach (DataType dt in env.param)
+				foreach (DNode dt in env.param)
 				{
 					dt.Parent = env;
 					if (dt.name == name)
@@ -323,7 +323,7 @@ namespace D_IDE
 				}
 
 			if (env.Count > 0)
-				foreach (DataType dt in env)
+				foreach (DNode dt in env)
 				{
 					dt.Parent = env;
 					if (dt.name == name)
@@ -342,20 +342,20 @@ namespace D_IDE
 			string super = env.superClass;// Should be superior class
 			if (super != "")
 			{
-				DataType dt = SearchGlobalExpr(cc,null, super);
+				DNode dt = SearchGlobalExpr(cc,null, super);
 				if (dt == null) return null;
 				ret.AddRange(SearchExprsInClassHierarchy(cc,dt, name));
 			}
 
 			return ret;
 		}
-		public static DataType SearchExprInClassHierarchyBackward(CompilerConfiguration cc, DataType node, string name)
+		public static DNode SearchExprInClassHierarchyBackward(CompilerConfiguration cc, DNode node, string name)
 		{
 			if (node == null) return null;
 
 			if (node.name == name) { return node; }
 
-			DataType dt = GetExprByName(node,name,true);
+			DNode dt = GetExprByName(node,name,true);
 			if (dt != null) return dt;
 
 			string super = node.superClass;// Should be superior class
@@ -372,16 +372,16 @@ namespace D_IDE
 				}
 			}
 
-			return SearchExprInClassHierarchyBackward(cc,(DataType)node.Parent,name);
+			return SearchExprInClassHierarchyBackward(cc,(DNode)node.Parent,name);
 		}
 
-		public static DataType SearchGlobalExpr(CompilerConfiguration cc,DataType local, string expr)
+		public static DNode SearchGlobalExpr(CompilerConfiguration cc,DNode local, string expr)
 		{
 			return SearchGlobalExpr(cc,local, expr, false);
 		}
-		public static DataType SearchGlobalExpr(CompilerConfiguration cc, DataType local, string expr, bool RootOnly)
+		public static DNode SearchGlobalExpr(CompilerConfiguration cc, DNode local, string expr, bool RootOnly)
 		{
-			DataType ret = null;
+			DNode ret = null;
 
 			if (local != null) ret = GetExprByName(local, expr, RootOnly);
 			if (ret != null) return ret;
@@ -393,11 +393,11 @@ namespace D_IDE
 			}
 			return null;
 		}
-		public static DataType SearchGlobalExpr(DProject prj, DModule local, string expr, bool RootOnly, out DModule module)
+		public static DNode SearchGlobalExpr(DProject prj, DModule local, string expr, bool RootOnly, out DModule module)
 		{
             CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
 			module = null;
-			DataType ret = null;
+			DNode ret = null;
 
 			if (local != null) ret = GetExprByName(local.dom, expr, RootOnly);
 			if (ret != null) { module = local; return ret; }
@@ -433,15 +433,15 @@ namespace D_IDE
 		/// <param name="expr"></param>
 		/// <param name="exact"></param>
 		/// <returns></returns>
-		public static List<DataType> SearchGlobalExprs(DProject prj, DataType local, string expr)
+		public static List<DNode> SearchGlobalExprs(DProject prj, DNode local, string expr)
 		{
 			return SearchGlobalExprs(prj, local, expr, false);
 		}
 		///<see cref="SearchGlobalExprs"/>
-		public static List<DataType> SearchGlobalExprs(DProject prj, DataType local, string expr, bool RootOnly)
+		public static List<DNode> SearchGlobalExprs(DProject prj, DNode local, string expr, bool RootOnly)
 		{
             CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
-			List<DataType> ret = new List<DataType>();
+			List<DNode> ret = new List<DNode>();
 
 			if (local != null) ret.AddRange(GetExprsByName(local, expr, RootOnly));
 
@@ -474,19 +474,19 @@ namespace D_IDE
 		/// </summary>
 		/// <param name="selectedExpression"></param>
 		/// <param name="rl"></param>
-		public static void AddAllClassMembers(CompilerConfiguration cc,DataType selectedExpression, ref List<ICompletionData> rl, bool all)
+		public static void AddAllClassMembers(CompilerConfiguration cc,DNode selectedExpression, ref List<ICompletionData> rl, bool all)
 		{
 			ImageList icons = D_IDEForm.icons;
 			if (selectedExpression != null)
 			{
-				foreach (DataType ch in selectedExpression)
+				foreach (DNode ch in selectedExpression)
 				{
 					ch.Parent = selectedExpression;
 					if ((!ch.modifiers.Contains(DTokens.Private) || all) && ch.fieldtype!=FieldType.Constructor) // Exlude ctors because they aren't needed
 						rl.Add(new DCompletionData(ch, selectedExpression));
 				}
 
-				foreach (DataType arg in selectedExpression.param)
+				foreach (DNode arg in selectedExpression.param)
 				{
 					rl.Add(new DCompletionData(arg, selectedExpression, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
 				}
@@ -495,25 +495,25 @@ namespace D_IDE
 				{
 					//TODO: Find out what gets affected by returning here
 					//return;
-					if (selectedExpression.fieldtype!=FieldType.Variable && !DTokens.ClassLike[selectedExpression.TypeToken] && selectedExpression.Parent != null && (selectedExpression.Parent as DataType).fieldtype != FieldType.Root)
-						AddAllClassMembers(cc,(DataType)selectedExpression.Parent, ref rl, all);
+					if (selectedExpression.fieldtype!=FieldType.Variable && !DTokens.ClassLike[selectedExpression.TypeToken] && selectedExpression.Parent != null && (selectedExpression.Parent as DNode).fieldtype != FieldType.Root)
+						AddAllClassMembers(cc,(DNode)selectedExpression.Parent, ref rl, all);
 				}
 				else
 				{
 					// if not, add items of all superior classes or interfaces
-					DataType dt = SearchGlobalExpr(cc,null, selectedExpression.superClass); // Should be superior class
+					DNode dt = SearchGlobalExpr(cc,null, selectedExpression.superClass); // Should be superior class
 					AddAllClassMembers(cc,dt, ref rl, false);
 				}
 			}
 		}
 
-		public static void AddAllClassMembers(CompilerConfiguration cc,DataType selectedExpression, ref List<ICompletionData> rl, bool all, bool exact, string searchExpr)
+		public static void AddAllClassMembers(CompilerConfiguration cc,DNode selectedExpression, ref List<ICompletionData> rl, bool all, bool exact, string searchExpr)
 		{
 			ImageList icons = D_IDEForm.icons;
 
 			if (selectedExpression != null)
 			{
-				foreach (DataType ch in selectedExpression)
+				foreach (DNode ch in selectedExpression)
 				{
 					DCompletionData cd = new DCompletionData(ch, selectedExpression);
 					if (exact)
@@ -530,7 +530,7 @@ namespace D_IDE
 																   || all)
 						rl.Add(cd);
 				}
-				foreach (DataType arg in (selectedExpression as DataType).param)
+				foreach (DNode arg in (selectedExpression as DNode).param)
 				{
 					if (exact)
 					{
@@ -542,8 +542,8 @@ namespace D_IDE
 					}
 					rl.Add(new DCompletionData(arg, selectedExpression, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
 				}
-				if ((selectedExpression as DataType).superClass == "") return;
-				DataType dt = SearchGlobalExpr(cc,null, (selectedExpression as DataType).superClass); // Should be superior class
+				if ((selectedExpression as DNode).superClass == "") return;
+				DNode dt = SearchGlobalExpr(cc,null, (selectedExpression as DNode).superClass); // Should be superior class
 				if (dt == null) return;
 				AddAllClassMembers(cc,dt, ref rl, all, exact, searchExpr);
 			}

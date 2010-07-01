@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ICSharpCode.NRefactory.Parser;
 using System.IO;
-using ICSharpCode.NRefactory;
 
 namespace D_Parser
 {
 	public class ExpressionFinder
 	{
-		protected List<Token> tokens;
+		protected List<DToken> tokens;
 		protected Comment[] comments;
 
-		public List<Token> Tokens
+		public List<DToken> Tokens
 		{
 			get { return tokens; }
 		}
@@ -39,12 +37,12 @@ namespace D_Parser
 			return new ExpressionFinder(TextToParse);
 		}
 
-		public static Token GetTokenAt(string TextToParse, CodeLocation where)
+		public static DToken GetTokenAt(string TextToParse, CodeLocation where)
 		{
 			DLexer lexer = new DLexer(new StringReader(TextToParse));
 
-			Token la = null;
-			while((la =(Token) lexer.NextToken()).Kind != DTokens.EOF)
+			DToken la = null;
+			while((la =(DToken) lexer.NextToken()).Kind != DTokens.EOF)
 			{
 				if(DParser.GetCodeLocation(la) >= where)
 				{
@@ -56,12 +54,12 @@ namespace D_Parser
 			return null;
 		}
 
-		public static Token GetPreviousTokenAt(string TextToParse, CodeLocation where)
+		public static DToken GetPreviousTokenAt(string TextToParse, CodeLocation where)
 		{
 			DLexer lexer = new DLexer(new StringReader(TextToParse));
 
-			Token la = null, prev=null;
-			while((la =(Token) lexer.NextToken()).Kind != DTokens.EOF)
+			DToken la = null, prev=null;
+			while((la =(DToken) lexer.NextToken()).Kind != DTokens.EOF)
 			{
 				if(DParser.GetCodeLocation(la) >= where)
 				{
@@ -76,10 +74,10 @@ namespace D_Parser
 
 		ExpressionFinder(string TextToParse)
 		{
-			tokens = new List<Token>();
+			tokens = new List<DToken>();
 			DLexer lexer = new DLexer(new StringReader(TextToParse));
 
-			Token la=null;
+			DToken la=null;
 			while ((la = lexer.NextToken()).Kind != DTokens.EOF)
 			{
 				tokens.Add(la);
@@ -98,9 +96,9 @@ namespace D_Parser
 			return false;
 		}
 
-		public Token GetTokenAt(CodeLocation where,out int index)
+		public DToken GetTokenAt(CodeLocation where,out int index)
 		{
-			Token t=null;
+			DToken t=null;
 			for(int i=0; i<tokens.Count; i++)
 			{
 				t=tokens[i];
@@ -114,9 +112,9 @@ namespace D_Parser
 			return null;
 		}
 
-		public Token GetTokenAt(CodeLocation where)
+		public DToken GetTokenAt(CodeLocation where)
 		{
-			foreach(Token t in tokens)
+			foreach(DToken t in tokens)
 			{
 				if (DParser.GetCodeLocation(t) >= where)
 					return t;
@@ -124,9 +122,9 @@ namespace D_Parser
 			return null;
 		}
 
-		public Token GetPreviousTokenAt(CodeLocation where,out int index)
+		public DToken GetPreviousTokenAt(CodeLocation where,out int index)
 		{
-			Token prev = null, cur = null;
+			DToken prev = null, cur = null;
 			for(int i = 0; i < tokens.Count; i++)
 			{
 				cur = tokens[i];
@@ -141,9 +139,9 @@ namespace D_Parser
 			return null;
 		}
 
-		public Token GetPreviousTokenAt(CodeLocation where)
+		public DToken GetPreviousTokenAt(CodeLocation where)
 		{
-			Token prev=null, cur=null;
+			DToken prev=null, cur=null;
 			for(int i=0; i < tokens.Count; i++ )
 			{
 				cur = tokens[i];

@@ -36,12 +36,12 @@ namespace D_IDE
 					ModuleName = Path.GetFileNameWithoutExtension(value);
 			}
 		}
-		public List<INode> Children
+		public List<DNode> Children
 		{
 			get {
 				if(dom!=null)
 					return dom.Children;
-				return new List<INode>();
+				return new List<DNode>();
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace D_IDE
 
         private void Init()
         {
-            dom = new DataType(FieldType.Root);
+            dom = new DNode(FieldType.Root);
             import = new List<string>();
             folds = new List<FoldMarker>();
         }
@@ -97,7 +97,7 @@ namespace D_IDE
             //try { Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + ModuleName; } catch { }
         }
 
-        public DataType dom; // Contains entire data (recursive)
+        public DNode dom; // Contains entire data (recursive)
         public List<string> import;
         [NonSerialized()]
         public List<FoldMarker> folds;

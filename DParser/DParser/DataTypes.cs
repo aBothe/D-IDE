@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ICSharpCode.NRefactory.Ast;
-using ICSharpCode.NRefactory;
 
 namespace D_Parser
 {
 	[Serializable()]
-    public class DataType:IEnumerable<INode>,INode
+    public class DNode:IEnumerable<DNode>
     {
         public FieldType fieldtype;
         public int TypeToken;
@@ -16,11 +14,11 @@ namespace D_Parser
 		public string module;
 
         public string value; // Variable
-        public List<INode> param; // Functions, Templates
+        public List<DNode> param; // Functions, Templates
         public string superClass, implementedInterface; // Class-Like; superClass also represents enum's base type
 
-		public List<INode> children=new List<INode>(); // Functions, Templates
-		public INode parent; // Functions, Templates
+		public List<DNode> children=new List<DNode>(); // Functions, Templates
+		public DNode parent; // Functions, Templates
 
         public string desc;
 
@@ -29,7 +27,7 @@ namespace D_Parser
         [NonSerialized()]
 		public CodeLocation startLoc, BlockStartLocation, endLoc;
 
-        public DataType(FieldType ftype)
+        public DNode(FieldType ftype)
         {
             Init();
             fieldtype = ftype;
@@ -42,7 +40,7 @@ namespace D_Parser
             this.type = "";
 
             value = "";
-            param = new List<INode>();
+            param = new List<DNode>();
             superClass = "";
             implementedInterface = "";
 
@@ -55,7 +53,7 @@ namespace D_Parser
             endLoc = new CodeLocation();
         }
 
-        public DataType()
+        public DNode()
         {
             Init();
             this.fieldtype = FieldType.Variable;
@@ -66,21 +64,21 @@ namespace D_Parser
             get { return children.Count; }
         }
 
-        public DataType this[int i]
+        public DNode this[int i]
         {
-			get { if(children.Count > i)return (DataType)children[i]; else return null; }
+			get { if(children.Count > i)return (DNode)children[i]; else return null; }
 			set { if (children.Count > i) children[i] = value; }
         }
 
-		public DataType this[string name]
+		public DNode this[string name]
 		{
 			get
 			{
 				if (children.Count > 1)
 				{
-					foreach (INode n in Children)
+					foreach (DNode n in Children)
 					{
-						if ((n as DataType).name == name) return (n as DataType);
+						if ((n as DNode).name == name) return (n as DNode);
 					}
 				}
 				return null;
@@ -103,14 +101,14 @@ namespace D_Parser
 			return "["+fieldtype.ToString()+"] "+type+" "+name;
 		}
 
-        public void Add(DataType v)
+        public void Add(DNode v)
         {
             children.Add(v);
         }
 
 		#region IEnumerable<DataType> Member
 
-		public IEnumerator<INode> GetEnumerator()
+		public IEnumerator<DNode> GetEnumerator()
 		{
 			return children.GetEnumerator();
 		}
@@ -121,13 +119,13 @@ namespace D_Parser
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 		{
-			return new List<DataType>.Enumerator();
+			return new List<DNode>.Enumerator();
 		}
 
 		#endregion
 
 		#region INode Member
-
+        /*
 		public object AcceptChildren(ICSharpCode.NRefactory.IAstVisitor visitor, object data)
 		{
 			return null;
@@ -137,17 +135,17 @@ namespace D_Parser
 		{
 			return null;
 		}
-
-		public List<INode> Children
+        */
+		public List<DNode> Children
 		{
 			get { return children; }
 		}
 
-		public Location EndLocation
+		public /*ICSharpCode.NRefactory.*/Location EndLocation
 		{
 			get
 			{
-				return new Location(endLoc.Column,endLoc.Line);
+                return new /*ICSharpCode.NRefactory.*/Location(endLoc.Column, endLoc.Line);
 			}
 			set
 			{
@@ -155,7 +153,7 @@ namespace D_Parser
 			}
 		}
 
-		public INode Parent
+		public DNode Parent
 		{
 			get
 			{
@@ -167,11 +165,11 @@ namespace D_Parser
 			}
 		}
 
-		public Location StartLocation
+        public Location StartLocation
 		{
 			get
 			{
-				return new Location(startLoc.Column, startLoc.Line);
+                return new /*ICSharpCode.NRefactory.*/Location(startLoc.Column, startLoc.Line);
 			}
 			set
 			{

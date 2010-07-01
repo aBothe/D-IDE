@@ -95,7 +95,7 @@ namespace D_IDE
 		/// <param name="local"></param>
 		/// <param name="expressions"></param>
 		/// <returns></returns>
-		public static DataType FindActualExpression(DProject prj, DModule local, CodeLocation caretLocation, string[] expressions, bool dotPressed, bool ResolveBaseType, out bool isSuper, out bool isInstance, out bool isNameSpace, out DModule module)
+		public static DNode FindActualExpression(DProject prj, DModule local, CodeLocation caretLocation, string[] expressions, bool dotPressed, bool ResolveBaseType, out bool isSuper, out bool isInstance, out bool isNameSpace, out DModule module)
 		{
             CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
 			module = local;
@@ -107,7 +107,7 @@ namespace D_IDE
 				int i = 0;
 				if (expressions == null || expressions.Length < 1) return null;
 
-				DataType seldt = null, seldd = null; // Selected DataType - Will be returned later
+				DNode seldt = null, seldd = null; // Selected DNode - Will be returned later
 
 				if (expressions[0] == "this")
 				{
@@ -130,7 +130,7 @@ namespace D_IDE
 				else
 				{
 					// Search expression in all superior blocks
-					DataType cblock = GetBlockAt(local.dom, caretLocation);
+					DNode cblock = GetBlockAt(local.dom, caretLocation);
 					seldt = SearchExprInClassHierarchyBackward(cc,cblock, RemoveTemplatePartFromDecl(expressions[0]));
 					// Search expression in current module root first
 					if (seldt == null)	seldt = SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(expressions[0]), true, out module);
@@ -202,7 +202,7 @@ namespace D_IDE
 							}
 
 							//Create a synthetic node which only contains module names
-							seldt = new DataType(FieldType.Root);
+							seldt = new DNode(FieldType.Root);
 							seldt.module = modpath;
 							if (module != null)
 							{
@@ -256,7 +256,7 @@ namespace D_IDE
 				DModule pf = diw.fileData;
 
 				CodeLocation tl = new CodeLocation(ta.Caret.Column + 1, ta.Caret.Line + 1);
-				DataType seldt, seldd;
+				DNode seldt, seldd;
 
 				int off = ta.Caret.Offset;
 
@@ -354,7 +354,7 @@ namespace D_IDE
 						{
 							AddAllClassMembers(cc,seldt, ref rl, true);
 
-							foreach (DataType arg in seldt.param)
+							foreach (DNode arg in seldt.param)
 							{
 								if (arg.type == null || arg.name == null) continue;
 								rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
@@ -369,7 +369,7 @@ namespace D_IDE
 								{
 									AddAllClassMembers(cc,seldd, ref rl, true);
 
-									foreach (DataType arg in seldd.param)
+									foreach (DNode arg in seldd.param)
 									{
 										if (arg.type == null || arg.name == null) continue;
 										rl.Add(new DCompletionData(arg, seldd, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
@@ -379,7 +379,7 @@ namespace D_IDE
 						}
 						else if (seldt.fieldtype == FieldType.Enum && seldt.Count > 0) // Flags.
 						{
-							foreach (DataType dt in seldt)
+							foreach (DNode dt in seldt)
 							{
 								rl.Add(new DCompletionData(dt, seldt));
 							}
@@ -392,11 +392,11 @@ namespace D_IDE
 							#region Add function which have seldt.name as first parameter
 							/*foreach(DModule gpf in D_IDE_Properties.GlobalModules)
 						{
-							foreach(DataType gch in gpf.dom.children)
+							foreach(DNode gch in gpf.dom.children)
 							{
 								if(gch.fieldtype != FieldType.Variable && gch.param.Count > 0 && (gch.modifiers.Contains(DTokens.Public) || gch.modifiers.Count < 1))
 								{
-									foreach(DataType param in gch.param)
+									foreach(DNode param in gch.param)
 									{
 										if(param.name.Length < 1) continue; // Skip on template params
 										if(param.type == seldt.name)
@@ -409,7 +409,7 @@ namespace D_IDE
 							}
 						}
 
-						foreach(DataType gch in pf.dom.children)
+						foreach(DNode gch in pf.dom.children)
 						{
 							if(gch.fieldtype == FieldType.Function && gch.param.Count > 0 && gch.param[0].type == seldt.name)
 							{
@@ -426,7 +426,7 @@ namespace D_IDE
 							}
 							else
 							{
-								foreach (DataType dt in seldt)
+								foreach (DNode dt in seldt)
 								{
 									if (
 										//showAll ||
@@ -445,7 +445,7 @@ namespace D_IDE
 							}
 							if (!isNameSpace) AddTypeStd(seldt, ref rl);
 
-							foreach (DataType arg in seldt.param)
+							foreach (DNode arg in seldt.param)
 							{
 								if (arg.type == null || arg.name == null) continue;
 								rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
@@ -495,7 +495,7 @@ namespace D_IDE
 			}
 		}
 
-		private void AddTypeStd(DataType seldt, ref List<ICompletionData> rl)
+		private void AddTypeStd(DNode seldt, ref List<ICompletionData> rl)
 		{
 			ImageList icons = D_IDEForm.icons;
 			rl.Add(new DCompletionData("sizeof", "Yields the memory usage of a type in bytes", icons.Images.IndexOfKey("Icons.16x16.Literal.png")));
@@ -511,15 +511,15 @@ namespace D_IDE
 		/// <param name="owner"></param>
 		/// <param name="isLastInExpressionChain">This value is needed for resolving functions because if this parameter is true then it returns the owner node</param>
 		/// <returns></returns>
-		public static DataType ResolveReturnOrBaseType(DProject prj, DModule local, DataType owner, bool isLastInExpressionChain)
+		public static DNode ResolveReturnOrBaseType(DProject prj, DModule local, DNode owner, bool isLastInExpressionChain)
 		{
 			if (owner == null) return null;
             CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
-			DataType ret = owner;
+			DNode ret = owner;
 			DModule mod = null;
 			if ((!DTokens.BasicTypes[(int)owner.TypeToken] && owner.fieldtype == FieldType.Variable) || ((owner.fieldtype == FieldType.Function || owner.fieldtype == FieldType.AliasDecl) && !isLastInExpressionChain))
 			{
-				ret = DCodeCompletionProvider.SearchExprInClassHierarchy(cc,(DataType)owner.Parent, null, RemoveTemplatePartFromDecl(owner.type));
+				ret = DCodeCompletionProvider.SearchExprInClassHierarchy(cc,(DNode)owner.Parent, null, RemoveTemplatePartFromDecl(owner.type));
 				if (ret == null)
 					ret = DCodeCompletionProvider.SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(owner.type), false, out mod);
 			}
@@ -535,18 +535,18 @@ namespace D_IDE
 		/// <param name="i"></param>
 		/// <param name="expressions"></param>
 		/// <returns></returns>
-		static List<DataType> _res(DProject prj, DModule local, DataType parent, int i, string[] expressions)
+		static List<DNode> _res(DProject prj, DModule local, DNode parent, int i, string[] expressions)
 		{
-			List<DataType> tl = new List<DataType>();
+			List<DNode> tl = new List<DNode>();
 			if (expressions == null || i >= expressions.Length)
 			{
 				tl.Add(parent);
 				return tl;
 			}
 
-			foreach (DataType dt in GetExprsByName(parent, expressions[i], true))
+			foreach (DNode dt in GetExprsByName(parent, expressions[i], true))
 			{
-				DataType seldt = ResolveReturnOrBaseType(prj, local, dt, i >= expressions.Length - 1);
+				DNode seldt = ResolveReturnOrBaseType(prj, local, dt, i >= expressions.Length - 1);
 
 				if (seldt == null) seldt = dt;
 
@@ -562,17 +562,17 @@ namespace D_IDE
 		/// <param name="local"></param>
 		/// <param name="expressions"></param>
 		/// <returns></returns>
-		public static List<DataType> ResolveMultipleNodes(DProject prj, DModule local, string[] expressions)
+		public static List<DNode> ResolveMultipleNodes(DProject prj, DModule local, string[] expressions)
 		{
-			if (expressions == null || expressions.Length < 1) return new List<DataType>();
+			if (expressions == null || expressions.Length < 1) return new List<DNode>();
 
-			List<DataType> rl = SearchGlobalExprs(prj, local.dom, expressions[0]);
+			List<DNode> rl = SearchGlobalExprs(prj, local.dom, expressions[0]);
 			if (expressions.Length < 2 || rl.Count < 1) return rl;
 
-			List<DataType> ret = new List<DataType>();
-			foreach (DataType dt in rl)
+			List<DNode> ret = new List<DNode>();
+			foreach (DNode dt in rl)
 			{
-				DataType seldt = ResolveReturnOrBaseType(prj, local, dt, expressions.Length == 2);
+				DNode seldt = ResolveReturnOrBaseType(prj, local, dt, expressions.Length == 2);
 				if (seldt == null) seldt = dt;
 				ret.AddRange(_res(prj, local, seldt, 1, expressions));
 			}

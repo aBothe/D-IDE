@@ -98,7 +98,7 @@ namespace D_IDE
         #endregion
 
         #region Nodes
-        void WriteNodes(List<INode> Nodes)
+        void WriteNodes(List<DNode> Nodes)
         {
             BinaryWriter bs = BinStream;
 
@@ -111,9 +111,9 @@ namespace D_IDE
 
             bs.Write(Nodes.Count);
 
-            foreach (INode n in Nodes)
+            foreach (DNode n in Nodes)
             {
-                DataType dt = n as DataType;
+                DNode dt = n as DNode;
                 bs.Write(NodeInitializer);
 
                 bs.Write((int)dt.fieldtype);
@@ -220,7 +220,7 @@ namespace D_IDE
         #endregion
 
         #region Nodes
-        void ReadNodes(ref List<INode> Nodes)
+        void ReadNodes(ref List<DNode> Nodes)
         {
             BinaryReader bs = BinStream;
 
@@ -236,18 +236,18 @@ namespace D_IDE
                     throw new Exception("Wrong node definition format!");
                 }
 
-                DataType dt = new DataType();
+                DNode dt = new DNode();
 
                 dt.fieldtype = (FieldType)bs.ReadInt32();
                 dt.name = ReadString();
                 dt.TypeToken = bs.ReadInt32();
                 dt.type = ReadString();
                 dt.desc = ReadString(true);
-                Location startLoc = new Location();
+                D_Parser.Location startLoc = new D_Parser.Location();
                 startLoc.X = bs.ReadInt32();
                 startLoc.Y = bs.ReadInt32();
                 dt.StartLocation = startLoc;
-                Location endLoc = new Location();
+                D_Parser.Location endLoc = new D_Parser.Location();
                 endLoc.X = bs.ReadInt32();
                 endLoc.Y = bs.ReadInt32();
                 dt.EndLocation = endLoc;
