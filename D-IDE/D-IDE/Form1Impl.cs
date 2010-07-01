@@ -429,19 +429,17 @@ namespace D_IDE
                 D_IDE_Properties.Default.lastFiles.Insert(0, file);
                 if (D_IDE_Properties.Default.lastFiles.Count > 10) D_IDE_Properties.Default.lastFiles.RemoveAt(10);
 
+                mtp.TabPageContextMenuStrip = DocumentWindowContextMenu;
+                mtp.DrawBreakPoints();
                 mtp.Show(dockPanel);
                 ret = mtp;
             }
             RefreshClassHierarchy();
             UpdateLastFilesMenu();
-            if (this.dockPanel.ActiveDocumentPane != null)
-                this.dockPanel.ActiveDocumentPane.ContextMenuStrip = this.DocumentWindowContextMenu; // Set Tab selection bars context menu to ours
 
             // Important: set Read-Only flag if Debugger is running currently
             if (ret != null && ret.txt != null)
                 ret.txt.IsReadOnly = IsDebugging;
-
-            ret.DrawBreakPoints();
 
             return ret;
         }
