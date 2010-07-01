@@ -67,7 +67,7 @@ Function .onInit
 	Call IsConnected
 	Pop $IS_CONNECTED
 
-	Call DotNet20Exists
+	Call DotNet4Exists
 	Pop $PERFORM_CLR_FEATURES
 	IntCmp $PERFORM_CLR_FEATURES 1 0 +2 +2
 	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
@@ -535,7 +535,7 @@ Function DotNet4Exists
 	ClearErrors
 	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full" "Version"
 	IfErrors MDNFFullNotFound MDNFFound
-	
+
 	MDNFFullNotFound:
 		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Client" "Version"
 		IfErrors MDNFNotFound MDNFFound
