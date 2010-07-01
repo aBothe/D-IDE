@@ -1051,7 +1051,7 @@
             closeAllToolStripMenuItem,
             closeAllOthersToolStripMenuItem});
             this.DocumentWindowContextMenu.Name = "contextMenuStrip1";
-            this.DocumentWindowContextMenu.Size = new System.Drawing.Size(159, 70);
+            this.DocumentWindowContextMenu.Size = new System.Drawing.Size(159, 92);
             // 
             // statusStrip1
             // 

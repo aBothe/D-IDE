@@ -1060,6 +1060,9 @@ namespace D_IDE
         #region Document Window Context menu
         private void CloseDocWinClick(object sender, EventArgs e)
         {
+            Point p = dockPanel.PointToClient( DocumentWindowContextMenu.Location);
+            Control c= dockPanel.GetChildAtPoint(p);
+
             if(dockPanel.DocumentsCount>=3)dockPanel.DocumentsToArray()[dockPanel.DocumentsCount - 2].DockHandler.Activate();
             (dockPanel.DocumentsToArray()[dockPanel.DocumentsCount-1] as DockContent).Close();
         }
