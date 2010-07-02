@@ -1077,7 +1077,11 @@ namespace D_IDE
         {
             IDockContent[] cts = dockPanel.DocumentsToArray();
             foreach (DockContent tp in cts)
-                tp.Close();
+            {
+                if (tp is StartPage) tp.Hide();
+                else
+                    tp.Close();
+            }
         }
 
         private void closeAllOthersToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1086,6 +1090,8 @@ namespace D_IDE
             for (int i = 0; i < dcs.Length; i++)
             {
                 if (dcs[i] == dockPanel.ActiveDocument) continue;
+                if (dcs[i] is StartPage) (dcs[i] as DockContent).Hide();
+                else
                 (dcs[i] as DockContent).Close();
             }
         }
