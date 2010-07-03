@@ -1531,13 +1531,25 @@ namespace D_Parser
 							(pk.Kind == DTokens.Semicolon || DTokens.AssignOps[pk.Kind] || pk.Kind == DTokens.Comma || pk.Kind == DTokens.Colon || pk.Kind == DTokens.CloseCurlyBrace)
 							) break;
 
-
 						if (la.Kind == DTokens.Identifier || DTokens.BasicTypes[la.Kind]) ret += (t.Kind != DTokens.Dot ? " " : "") + strVal;
 						if (la.Kind == DTokens.Not || la.Kind == DTokens.Dot) ret += strVal;
 
 						if ((la.Kind != DTokens.Not && la.Kind != DTokens.Dot) && pk.Kind == DTokens.Identifier) { break; } // const(char)
 					}
 					break;
+                /*
+                 NEW: Well, the following structure is very strange to me - I don't really know what's going on here ;-)
+                 */
+                case DTokens.Out:
+                case DTokens.InOut:
+                case DTokens.Ref: // auto >ref< ElementType!R foo(); // range.d
+                    if (Peek(2).Kind == DTokens.Identifier)
+                    {
+                        ret += " "+DTokens.GetTokenString(Peek(1).Kind);
+                        lexer.NextToken();
+                        goto default;
+                    }
+                    break;
 				case DTokens.OpenParenthesis:
 					// void MyFunc >(< ) {...}
 					// const>(<char)[]

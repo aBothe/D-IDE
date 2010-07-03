@@ -916,7 +916,7 @@
             // 
             this.refreshBreakpointsToolStripMenuItem.Name = "refreshBreakpointsToolStripMenuItem";
             this.refreshBreakpointsToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
-            this.refreshBreakpointsToolStripMenuItem.Text = "Refresh Breakpoints";
+            this.refreshBreakpointsToolStripMenuItem.Text = "Rehighlight Breakpoint";
             this.refreshBreakpointsToolStripMenuItem.Click += new System.EventHandler(this.RefreshBreakpointsClick);
             // 
             // globalToolStripMenuItem
@@ -1051,7 +1051,7 @@
             closeAllToolStripMenuItem,
             closeAllOthersToolStripMenuItem});
             this.DocumentWindowContextMenu.Name = "contextMenuStrip1";
-            this.DocumentWindowContextMenu.Size = new System.Drawing.Size(159, 92);
+            this.DocumentWindowContextMenu.Size = new System.Drawing.Size(159, 70);
             // 
             // statusStrip1
             // 
