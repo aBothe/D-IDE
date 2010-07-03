@@ -572,7 +572,7 @@ namespace D_IDE
 			}
 		}
 
-		private void removeProjectToolStripMenuItem_Click(object sender, EventArgs e)
+		private void RemoveProject_Click(object sender, EventArgs e)
 		{
 			Point tp = (Point)ProjectMenu.Tag;
 			if (tp == null) return;

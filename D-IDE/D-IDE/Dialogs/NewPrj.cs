@@ -18,7 +18,7 @@ namespace D_IDE.Dialogs
 			InitializeComponent();
 
 			prjdir.Text = D_IDE_Properties.Default.DefaultProjectDirectory;
-			prjtype.SelectedIndex = 0;
+			prjtype.SelectedIndex = 1; // Set default project type to console app......that's better, I think ;-)
 			SelectedDVersion = CompilerConfiguration.DVersion.D2;
 		}
 
@@ -26,13 +26,13 @@ namespace D_IDE.Dialogs
 		{
 			switch(prjtype.SelectedIndex)
 			{
-				case 0:
+				case 0: // Windows
 					return ".exe";
-				case 1:
+				case 1: // Console
 					return ".exe";
-				case 2:
+				case 2: // DLL
 					return ".dll";
-				case 3:
+				case 3: // LIB
 					return ".lib";
 				default:
 					return ".exe";

@@ -195,7 +195,7 @@ namespace D_IDE
             this.removeProjectToolStripMenuItem.Name = "removeProjectToolStripMenuItem";
             this.removeProjectToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
             this.removeProjectToolStripMenuItem.Text = "Remove project";
-            this.removeProjectToolStripMenuItem.Click += new System.EventHandler(this.removeProjectToolStripMenuItem_Click);
+            this.removeProjectToolStripMenuItem.Click += new System.EventHandler(this.RemoveProject_Click);
             // 
             // ProjectExplorer
             // 

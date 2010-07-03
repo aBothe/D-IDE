@@ -916,7 +916,7 @@
             // 
             this.refreshBreakpointsToolStripMenuItem.Name = "refreshBreakpointsToolStripMenuItem";
             this.refreshBreakpointsToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
-            this.refreshBreakpointsToolStripMenuItem.Text = "Rehighlight Breakpoint";
+            this.refreshBreakpointsToolStripMenuItem.Text = "Rehighlight Breakpoints";
             this.refreshBreakpointsToolStripMenuItem.Click += new System.EventHandler(this.RefreshBreakpointsClick);
             // 
             // globalToolStripMenuItem
@@ -1213,9 +1213,9 @@
 		private System.Windows.Forms.ToolStripMenuItem localsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem commentOutBlockToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uncommentBlocklineToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem refreshBreakpointsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem directoryToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem refreshBreakpointsToolStripMenuItem;
 	}
 }
 
