@@ -22,6 +22,62 @@ namespace D_IDE
 {
 	public class D_IDE_Properties
 	{
+        public static string UserDocStorageFile = Application.StartupPath + "\\SettingsAreAtUserDocs";
+        public static string cfgDirName = "D-IDE.config";
+        public static string cfgDir;
+        public static string prop_file = "D-IDE.settings.xml";
+        public static string D1ModuleCacheFile = "D-IDE.D1.cache.db";
+        public static string D2ModuleCacheFile = "D-IDE.D2.cache.db";
+        public static string LayoutFile = "D-IDE.layout.xml";
+
+        /// <summary>
+        /// Globally initializes all settings and essential properties
+        /// </summary>
+        static D_IDE_Properties()
+        {
+            // Determine config path
+            cfgDir = (File.Exists(UserDocStorageFile)?Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments):Application.StartupPath) + "\\" + cfgDirName;
+
+            // Create config directory
+            if (!Directory.Exists(cfgDir))
+                DBuilder.CreateDirectoryRecursively(cfgDir);
+
+            bool UpdateD2Cache = true;
+            try
+            {
+                // Load global settings
+                if (!Load(cfgDir + "\\" + prop_file))
+                {
+                    // If no settings were loaded, launch CompilerConfiguration wizard
+                    Program.StartScreen.Close();
+                    Misc.SetupWizardDialog swd = new D_IDE.Misc.SetupWizardDialog(CompilerConfiguration.DVersion.D2);
+                    if (swd.ShowDialog() == DialogResult.OK)
+                    {
+                        Default.dmd2 = swd.CompilerConfiguration;
+
+                        // Parse include paths if wanted
+                        if (!File.Exists(cfgDir + "\\" + D2ModuleCacheFile) && MessageBox.Show("Do you want to parse all of the import directories?", "Parse Imports", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
+                        {
+                            D_IDEForm.UpdateChacheThread(Default.dmd2);
+                            UpdateD2Cache = false;
+                        }
+                    }
+                }
+
+                // Initialize D Code Completion Icons
+                D_IDEForm.InitCodeCompletionIcons();
+
+                LoadGlobalCache(Default.dmd1, cfgDir + "\\" + D1ModuleCacheFile);
+                if(UpdateD2Cache)LoadGlobalCache(Default.dmd2, cfgDir + "\\" + D2ModuleCacheFile);
+            }
+            catch (Exception ex)
+            {
+                Program.StartScreen.Close();
+                MessageBox.Show(ex.Message + " (" + ex.Source + ")" + "\n\n" + ex.StackTrace, "Error while loading global settings");
+            }
+        }
+
+
 		public static bool Load(string fn)
 		{
 			if (!File.Exists(fn)) return false;
@@ -543,8 +599,6 @@ namespace D_IDE
 		public bool SingleInstance = true;
 		public bool WatchForUpdates = false;
 		public string DefaultProjectDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\D Projects";
-
-
 
 		public CompilerConfiguration dmd1 = new CompilerConfiguration(CompilerConfiguration.DVersion.D1);
 		public CompilerConfiguration dmd2 = new CompilerConfiguration(CompilerConfiguration.DVersion.D2);

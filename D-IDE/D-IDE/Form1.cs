@@ -37,6 +37,7 @@ namespace D_IDE
         public D_IDEForm(string[] args)
         {
             thisForm = this;
+
             Breakpoints = new BreakpointHelper(this);
 
             Form.CheckForIllegalCrossThreadCalls = false;
@@ -64,8 +65,8 @@ namespace D_IDE
 
             try
             {
-                if (File.Exists(Program.cfgDir + "\\" + Program.LayoutFile))
-                    dockPanel.LoadFromXml(Program.cfgDir + "\\" + Program.LayoutFile, new DeserializeDockContent(delegate(string s)
+                if (File.Exists(D_IDE_Properties.cfgDir + "\\" + D_IDE_Properties.LayoutFile))
+                    dockPanel.LoadFromXml(D_IDE_Properties.cfgDir + "\\" + D_IDE_Properties.LayoutFile, new DeserializeDockContent(delegate(string s)
                     {
                         if (s == typeof(BuildProcessWin).ToString()) return bpw;
                         else if (s == typeof(OutputWin).ToString()) return output;
@@ -91,6 +92,7 @@ namespace D_IDE
             hierarchy.hierarchy.ImageList = icons;
             #endregion
             startpage.Show(dockPanel);
+            startpage.TabPageContextMenuStrip = DocumentWindowContextMenu;
             this.Text = title;
 
             oF.Filter = "All Files|*.*|All Supported (*." + DProject.prjext + ";*.d;*.rc)|" + DProject.prjext +
@@ -872,8 +874,8 @@ namespace D_IDE
 
             ForceExitDebugging();
 
-            if (!Directory.Exists(Program.cfgDir))
-                Directory.CreateDirectory(Program.cfgDir);
+            if (!Directory.Exists(D_IDE_Properties.cfgDir))
+                Directory.CreateDirectory(D_IDE_Properties.cfgDir);
 
             #region Save all edited projects and store all opened files into an array
             D_IDE_Properties.Default.lastOpenFiles.Clear();
@@ -910,27 +912,27 @@ namespace D_IDE
             }
             #endregion
 
-            if (!File.Exists(Program.UserDocStorageFile))
+            if (!File.Exists(D_IDE_Properties.UserDocStorageFile))
             {
-                Program.cfgDir = Application.StartupPath + "\\" + Program.cfgDirName;
+                D_IDE_Properties.cfgDir = Application.StartupPath + "\\" + D_IDE_Properties.cfgDirName;
             }
             else
             {
-                Program.cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + Program.cfgDirName;
+                D_IDE_Properties.cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + D_IDE_Properties.cfgDirName;
             }
 
-            if (!Directory.Exists(Program.cfgDir))
-                DBuilder.CreateDirectoryRecursively(Program.cfgDir);
+            if (!Directory.Exists(D_IDE_Properties.cfgDir))
+                DBuilder.CreateDirectoryRecursively(D_IDE_Properties.cfgDir);
 
-            dockPanel.SaveAsXml(Program.cfgDir + "\\" + Program.LayoutFile);
+            dockPanel.SaveAsXml(D_IDE_Properties.cfgDir + "\\" + D_IDE_Properties.LayoutFile);
 
             D_IDE_Properties.Default.lastFormState = this.WindowState;
             D_IDE_Properties.Default.lastFormLocation = this.Location;
             D_IDE_Properties.Default.lastFormSize = this.Size;
 
-            D_IDE_Properties.Save(Program.cfgDir + "\\" + Program.prop_file);
-            D_IDE_Properties.SaveGlobalCache(D_IDE_Properties.Default.dmd1, Program.cfgDir + "\\" + Program.D1ModuleCacheFile);
-            D_IDE_Properties.SaveGlobalCache(D_IDE_Properties.Default.dmd2, Program.cfgDir + "\\" + Program.D2ModuleCacheFile);
+            D_IDE_Properties.Save(D_IDE_Properties.cfgDir + "\\" + D_IDE_Properties.prop_file);
+            D_IDE_Properties.SaveGlobalCache(D_IDE_Properties.Default.dmd1, D_IDE_Properties.cfgDir + "\\" + D_IDE_Properties.D1ModuleCacheFile);
+            D_IDE_Properties.SaveGlobalCache(D_IDE_Properties.Default.dmd2, D_IDE_Properties.cfgDir + "\\" + D_IDE_Properties.D2ModuleCacheFile);
         }
 
         private void CloseTab(object sender, EventArgs e)

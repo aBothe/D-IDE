@@ -124,7 +124,7 @@ namespace D_IDE
 			showCompleteLog.Checked = D_IDE_Properties.Default.ShowBuildCommands;
 			CreatePDB.Checked=D_IDE_Properties.Default.CreatePDBOnBuild;
 			ShowDbgPanelsOnDebugging.Checked = D_IDE_Properties.Default.ShowDbgPanelsOnDebugging;
-			StoreSettingsAtUserDocs.Checked = System.IO.File.Exists(Program.UserDocStorageFile);
+            StoreSettingsAtUserDocs.Checked = System.IO.File.Exists(D_IDE_Properties.UserDocStorageFile);
 
 			verbosedbgoutput.Checked = D_IDE_Properties.Default.VerboseDebugOutput;
 			AutoSkipUnknownCode.Checked = D_IDE_Properties.Default.SkipUnknownCode;
@@ -153,13 +153,13 @@ namespace D_IDE
 			D_IDE_Properties.Default.UseExternalDebugger=UseIntegDbg.Checked;
 			D_IDE_Properties.Default.CreatePDBOnBuild = CreatePDB.Checked;
 			D_IDE_Properties.Default.ShowDbgPanelsOnDebugging = ShowDbgPanelsOnDebugging.Checked;
-			if (StoreSettingsAtUserDocs.Checked && !File.Exists(Program.UserDocStorageFile))
+            if (StoreSettingsAtUserDocs.Checked && !File.Exists(D_IDE_Properties.UserDocStorageFile))
 			{
-				File.WriteAllText(Program.UserDocStorageFile, "Remove this file if settings are stored locally");
+                File.WriteAllText(D_IDE_Properties.UserDocStorageFile, "Remove this file if settings are stored locally");
 			}
-			else if (!StoreSettingsAtUserDocs.Checked && File.Exists(Program.UserDocStorageFile))
+            else if (!StoreSettingsAtUserDocs.Checked && File.Exists(D_IDE_Properties.UserDocStorageFile))
 			{
-				File.Delete(Program.UserDocStorageFile);
+                File.Delete(D_IDE_Properties.UserDocStorageFile);
 			}
 
 			if (SelectedDVersion == CompilerConfiguration.DVersion.D1)

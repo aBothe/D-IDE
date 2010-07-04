@@ -8,13 +8,6 @@ namespace D_IDE
 {
     static class Program
     {
-        public static string UserDocStorageFile = Application.StartupPath + "\\SettingsAreAtUserDocs";
-        public static string cfgDirName = "D-IDE.config";
-        public static string cfgDir;
-        public static string prop_file = "D-IDE.settings.xml";
-        public static string D1ModuleCacheFile = "D-IDE.D1.cache.db";
-        public static string D2ModuleCacheFile = "D-IDE.D2.cache.db";
-        public static string LayoutFile = "D-IDE.layout.xml";
         public const string news_php = "http://d-ide.sourceforge.net/classes/news.php";
         public const string ver_txt = "http://d-ide.svn.sourceforge.net/viewvc/d-ide/ver.txt";
         public static App app;
@@ -32,50 +25,9 @@ namespace D_IDE
             Application.SetCompatibleTextRenderingDefault(false);
             app = new App();
 
-            D_IDEForm.InitCodeCompletionIcons();
-
             // Show startup popup
             StartScreen = new CachingScreen();
-            if (!Debugger.IsAttached) StartScreen.Show();
-
-            if (!File.Exists(UserDocStorageFile))
-            {
-                cfgDir = Application.StartupPath + "\\" + cfgDirName;
-            }
-            else
-                cfgDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + cfgDirName;
-            try
-            {
-                if (!Directory.Exists(Program.cfgDir))
-                    DBuilder.CreateDirectoryRecursively(Program.cfgDir);
-
-                if (!D_IDE_Properties.Load(cfgDir + "\\" + prop_file))
-                {
-                    StartScreen.Close();
-                    Misc.SetupWizardDialog swd = new D_IDE.Misc.SetupWizardDialog(CompilerConfiguration.DVersion.D2);
-                    if (swd.ShowDialog() == DialogResult.OK)
-                    {
-                        D_IDE_Properties.Default.dmd2 = swd.CompilerConfiguration;
-
-                        if (!File.Exists(cfgDir + "\\" + Program.D2ModuleCacheFile) && MessageBox.Show("Do you want to parse all of the import directories?", "Parse Imports", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
-                        {
-                            D_IDEForm.UpdateChacheThread(D_IDE_Properties.Default.dmd2);
-                        }
-                    }
-                }
-                
-                if (true || !Debugger.IsAttached)
-                {
-                    D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd1, cfgDir + "\\" + Program.D1ModuleCacheFile);
-                    D_IDE_Properties.LoadGlobalCache(D_IDE_Properties.Default.dmd2, cfgDir + "\\" + Program.D2ModuleCacheFile);
-                }
-            }
-            catch (Exception ex)
-            {
-                Program.StartScreen.Close();
-                //if (System.Diagnostics.Debugger.IsAttached) throw ex;
-                MessageBox.Show(ex.Message + " (" + ex.Source + ")" + "\n\n" + ex.StackTrace, "Error while loading global settings");
-            }
+            StartScreen.Show();
 
             app.Run(args);
         }
@@ -89,7 +41,7 @@ namespace D_IDE
     {
         public App()
         {
-            this.IsSingleInstance = D_IDE_Properties.Default.SingleInstance; // makes this a single-instance app
+            this.IsSingleInstance = true; // makes this a single-instance app
             this.EnableVisualStyles = true; // C# windowsForms apps typically turn this on.  We'll do the same thing here.
             this.ShutdownStyle = Microsoft.VisualBasic.ApplicationServices.ShutdownMode.AfterMainFormCloses; // the vb app model supports two different shutdown styles.  We'll use this one for the sample.
         }
