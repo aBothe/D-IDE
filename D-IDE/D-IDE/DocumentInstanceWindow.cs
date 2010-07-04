@@ -566,35 +566,33 @@ namespace D_IDE
             #endregion
             #region If no single-line comment was removed, delete multi-line comment block tags
             int off = CaretOffset;
-            char cur='\0';
             bool IsNested = false;
 
-            commStart = off;
             // Seek the comment block opener
-            for (; commStart >= 0; commStart--)
+            commStart = DCodeCompletionProvider.Commenting.LastIndexOf(txt.Text, "/*", off);
+            int nestedCommStart = DCodeCompletionProvider.Commenting.LastIndexOf(txt.Text, "/+", off);
+            if (nestedCommStart>commStart)
             {
-                cur = txt.Document.TextBufferStrategy.GetCharAt(commStart);
-
-                if ((cur == '*' || (IsNested=cur=='+')) && commStart > 0 &&
-                    txt.Document.TextBufferStrategy.GetCharAt(commStart - 1) == '/')
-                {
-                    commStart--;
-                    break;
-                }
+                commStart = nestedCommStart;
+                IsNested = true;
             }
+
             if (commStart < 0) return;
-            int commEnd = txt.Text.IndexOf(IsNested?"+/":"*/", off);
+            int commEnd = DCodeCompletionProvider.Commenting.IndexOf (txt.Text,IsNested?"+/":"*/", off);
             if (commEnd < 0) return;
 
             txt.Document.UndoStack.StartUndoGroup();
             txt.Document.Remove(commEnd, 2);
             txt.Document.Remove(commStart, 2);
 
-            ISelection isel = txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
-            txt.ActiveTextAreaControl.SelectionManager.SetSelection(
-                    new TextLocation(isel.StartPosition.X -2, isel.StartPosition.Y),
-                    new TextLocation(isel.EndPosition.X -2, isel.EndPosition.Y)
-                    );
+            if (txt.ActiveTextAreaControl.SelectionManager.SelectionCollection.Count > 0)
+            {
+                ISelection isel = txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
+                txt.ActiveTextAreaControl.SelectionManager.SetSelection(
+                        new TextLocation(isel.StartPosition.X - 2, isel.StartPosition.Y),
+                        new TextLocation(isel.EndPosition.X - 2, isel.EndPosition.Y)
+                        );
+            }
 
             txt.Document.UndoStack.EndUndoGroup();
             #endregion

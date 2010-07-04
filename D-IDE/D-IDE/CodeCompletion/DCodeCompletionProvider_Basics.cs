@@ -26,6 +26,68 @@ namespace D_IDE
 
         public class Commenting
         {
+            public static int IndexOf(string HayStack, string Needle, int Start)
+            {
+                if (String.IsNullOrEmpty(Needle) || Needle.Length > HayStack.Length) return -1;
+                char cur = '\0';
+                int off = Start;
+                bool IsInString = false;
+
+                while (off < HayStack.Length)
+                {
+                    cur = HayStack[off];
+
+                    // String check
+                    if (cur == '\"' && (off < 1 || HayStack[off - 1] != '\\'))
+                    {
+                        IsInString = !IsInString;
+                    }
+
+                    if (!IsInString && cur == Needle[0])
+                    {
+                        if (off + Needle.Length > HayStack.Length) 
+                            return -1;
+
+                        if (HayStack.Substring(off, Needle.Length) == Needle) 
+                            return off;
+                    }
+
+                    off++;
+                }
+                return -1;
+            }
+
+            public static int LastIndexOf(string HayStack, string Needle, int Start)
+            {
+                if (String.IsNullOrEmpty(Needle) || HayStack.Length<Needle.Length) return -1;
+                char cur = '\0';
+                int off = Start;
+                bool IsInString = false;
+
+                while (off >= 0)
+                {
+                    cur = HayStack[off];
+
+                    // String check
+                    if (cur == '\"' && (off < 1 || HayStack[off - 1] != '\\'))
+                    {
+                        IsInString = !IsInString;
+                    }
+
+                    if (!IsInString && cur == Needle[0])
+                    {
+                        if (off + Needle.Length > HayStack.Length)
+                            return -1;
+
+                        if (HayStack.Substring(off, Needle.Length) == Needle)
+                            return off;
+                    }
+
+                    off--;
+                }
+                return -1;
+            }
+
             public static void IsInCommentAreaOrString(string Text, int Offset, out bool IsInString, out bool IsInLineComment,out bool IsInBlockComment,out bool IsInNestedBlockComment)
             {
                 char cur = '\0', peekChar = '\0';
