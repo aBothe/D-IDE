@@ -23,35 +23,60 @@ namespace D_IDE
 			}
 			return ret;
 		}
-		public static bool IsInCommentAreaOrString(string Text, int Offset)
-		{
-			char cur = '\0', peekChar = '\0';
-			int off = 0;
-			bool IsInString = false, IsInLineComment = false, IsInBlockComment = false;
 
-			while (off < Offset)
-			{
-				cur = Text[off];
-				#region Non-parsed file sections
-				if (off < Text.Length - 1) peekChar = Text[off + 1];
+        public class Commenting
+        {
+            public static void IsInCommentAreaOrString(string Text, int Offset, out bool IsInString, out bool IsInLineComment,out bool IsInBlockComment,out bool IsInNestedBlockComment)
+            {
+                char cur = '\0', peekChar = '\0';
+                int off = 0;
+                IsInString = IsInLineComment = IsInBlockComment = IsInNestedBlockComment = false;
 
-				if (!IsInBlockComment && !IsInLineComment && cur == '\"' && (off < 1 || Text[off - 1] != '\\'))
-					IsInString = !IsInString;
+                while (off < Offset)
+                {
+                    cur = Text[off];
+                    if (off < Text.Length - 1) peekChar = Text[off + 1];
 
-				if (!IsInBlockComment && !IsInString && cur == '/' && peekChar == '/')
-					IsInLineComment = true;
-				if (!IsInBlockComment && !IsInString && IsInLineComment && cur == '\n')
-					IsInLineComment = false;
+                    // String check
+                    if (!IsInLineComment && !IsInBlockComment && !IsInNestedBlockComment && cur == '\"' && (off < 1 || Text[off - 1] != '\\'))
+                        IsInString = !IsInString;
 
-				if (!IsInLineComment && !IsInString && cur == '/' && (peekChar == '*' || peekChar == '+'))
-					IsInBlockComment = true;
-				if (!IsInLineComment && !IsInString && IsInBlockComment && (cur == '*' || cur == '+') && peekChar == '/')
-					IsInBlockComment = false;
-				#endregion
-				off++;
-			}
-			return IsInBlockComment || IsInLineComment || IsInString;
-		}
+                    if (!IsInString)
+                    {
+                        // Line comment check
+                        if (!IsInBlockComment && !IsInNestedBlockComment)
+                        {
+                            if (cur == '/' && peekChar == '/')
+                                IsInLineComment = true;
+                            if (IsInLineComment && cur == '\n')
+                                IsInLineComment = false;
+                        }
+
+                        // Block comment check
+                        if (cur == '/' && peekChar == '*')
+                            IsInBlockComment = true;
+                        if (IsInBlockComment && cur == '*' && peekChar == '/')
+                            IsInBlockComment = false;
+
+                        // Nested comment check
+                        if (!IsInString && cur == '/' && peekChar == '+')
+                            IsInNestedBlockComment = true;
+                        if (IsInNestedBlockComment && cur == '+' && peekChar == '/')
+                            IsInNestedBlockComment = false;
+                    }
+
+                    off++;
+                }
+            }
+
+            public static bool IsInCommentAreaOrString(string Text, int Offset)
+            {
+                bool a, b, c, d;
+                IsInCommentAreaOrString(Text, Offset, out a, out b, out c, out d);
+
+                return a || b || c || d;
+            }
+        }
 
 		public static DNode GetBlockAt(DNode dataType, TextLocation textLocation)
 		{

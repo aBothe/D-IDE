@@ -332,7 +332,7 @@ namespace D_IDE
         public bool TextAreaKeyEventHandler(char key)
         {
             if (Program.Parsing ||
-                DCodeCompletionProvider.IsInCommentAreaOrString(txt.Document.TextContent, txt.ActiveTextAreaControl.Caret.Offset))
+                DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, txt.ActiveTextAreaControl.Caret.Offset))
                 return false;
 
             //if (key == '(')txt.Document.Insert(CaretOffset, ")");
@@ -413,7 +413,7 @@ namespace D_IDE
             {
                 return;
             }
-			if (mouseOffset < 1 || DCodeCompletionProvider.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
+			if (mouseOffset < 1 || DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
             bool ctor, super, isInst, isNameSpace;
             DModule gpf = null;
             int off = mouseOffset;
@@ -507,6 +507,7 @@ namespace D_IDE
             IW.ShowInsightWindow();
         }
 
+        #region Commenting
         public void CommentOutBlock(object o, EventArgs ea)
         {
             string sel = txt.ActiveTextAreaControl.SelectionManager.SelectedText;
@@ -522,8 +523,22 @@ namespace D_IDE
             {
                 ISelection isel = txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
                 txt.Document.UndoStack.StartUndoGroup();
-                txt.Document.Insert(isel.EndOffset, "*/");
-                txt.Document.Insert(isel.Offset, "/*");
+
+                bool a, b, IsInBlock, IsInNested;
+                DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Text, isel.Offset, out a, out b, out IsInBlock, out IsInNested);
+                // If current selection is inside a string
+                if (a || (IsInBlock && IsInNested)) return;
+
+                if (IsInNested && !IsInBlock || (!IsInBlock && !IsInNested))
+                {
+                    txt.Document.Insert(isel.EndOffset, "*/");
+                    txt.Document.Insert(isel.Offset, "/*");
+                }
+                else if (IsInBlock && !IsInNested)
+                {
+                    txt.Document.Insert(isel.EndOffset, "+/");
+                    txt.Document.Insert(isel.Offset, "/+");
+                }
                 txt.ActiveTextAreaControl.SelectionManager.SetSelection(
                     new TextLocation(isel.StartPosition.X + 2, isel.StartPosition.Y),
                     new TextLocation(isel.EndPosition.X + 2, isel.EndPosition.Y)
@@ -551,10 +566,16 @@ namespace D_IDE
             #endregion
             #region If no single-line comment was removed, delete multi-line comment block tags
             int off = CaretOffset;
+            char cur='\0';
+            bool IsNested = false;
+
             commStart = off;
-            for (; commStart > 0; commStart--)
+            // Seek the comment block opener
+            for (; commStart >= 0; commStart--)
             {
-                if (txt.Document.TextBufferStrategy.GetCharAt(commStart) == '*' && commStart > 0 &&
+                cur = txt.Document.TextBufferStrategy.GetCharAt(commStart);
+
+                if ((cur == '*' || (IsNested=cur=='+')) && commStart > 0 &&
                     txt.Document.TextBufferStrategy.GetCharAt(commStart - 1) == '/')
                 {
                     commStart--;
@@ -562,17 +583,25 @@ namespace D_IDE
                 }
             }
             if (commStart < 0) return;
-            int commEnd = txt.Text.IndexOf("*/", off);
+            int commEnd = txt.Text.IndexOf(IsNested?"+/":"*/", off);
             if (commEnd < 0) return;
 
             txt.Document.UndoStack.StartUndoGroup();
             txt.Document.Remove(commEnd, 2);
             txt.Document.Remove(commStart, 2);
+
+            ISelection isel = txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
+            txt.ActiveTextAreaControl.SelectionManager.SetSelection(
+                    new TextLocation(isel.StartPosition.X -2, isel.StartPosition.Y),
+                    new TextLocation(isel.EndPosition.X -2, isel.EndPosition.Y)
+                    );
+
             txt.Document.UndoStack.EndUndoGroup();
             #endregion
             Refresh();
 
         }
+        #endregion
 
         public DocumentInstanceWindow(string filename, string prj)
         {

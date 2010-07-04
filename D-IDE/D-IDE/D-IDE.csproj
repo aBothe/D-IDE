@@ -230,7 +230,7 @@
     <Compile Include="FormsDesigner\PropertyView.Designer.cs">
       <DependentUpon>PropertyView.cs</DependentUpon>
     </Compile>
-    <Compile Include="Form1Addition.cs">
+    <Compile Include="DocumentInstanceWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Misc\BinaryDataTypeStorage.cs" />
