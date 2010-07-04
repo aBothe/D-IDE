@@ -526,8 +526,6 @@ namespace D_IDE
 
                 bool a, b, IsInBlock, IsInNested;
                 DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Text, isel.Offset, out a, out b, out IsInBlock, out IsInNested);
-                // If current selection is inside a string
-                if (a || (IsInBlock && IsInNested)) return;
 
                 if (IsInNested && !IsInBlock || (!IsInBlock && !IsInNested))
                 {
@@ -584,6 +582,8 @@ namespace D_IDE
             txt.Document.UndoStack.StartUndoGroup();
             txt.Document.Remove(commEnd, 2);
             txt.Document.Remove(commStart, 2);
+
+            txt.ActiveTextAreaControl.Caret.Position = txt.ActiveTextAreaControl.Document.OffsetToPosition(off-2);
 
             if (txt.ActiveTextAreaControl.SelectionManager.SelectionCollection.Count > 0)
             {
