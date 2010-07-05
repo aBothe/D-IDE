@@ -699,56 +699,41 @@ namespace D_Parser
 				switch (la.Kind)
 				{
 					#region Custom Allocators
+                    case DTokens.Delete:
 					case DTokens.New:
+                        bool IsAlloc = la.Kind == DTokens.New;
+                        if (isFunctionBody) break;
+
 						// This is for handling custom allocators (new(uint size){...})
 						if (!isFunctionBody)
 						{
-							if (!PeekMustBe(DTokens.OpenParenthesis, "Expected \"(\" for declaring a custom allocator!"))
+							if (!PeekMustBe(DTokens.OpenParenthesis, "Expected \"(\" for declaring a custom (de-)allocator!"))
 							{
 								SkipToClosingBrace();
 								break;
 							}
-							DNode custAlloc = new DNode(FieldType.Function);
-							custAlloc.name = "new";
-							custAlloc.type = "void*";
+							DMethod custAlloc = new DMethod();
+                            if (IsAlloc)
+                            {
+                                custAlloc.name = "new";
+                                custAlloc.type = "void*";
+                            }
+                            else
+                            {
+                                custAlloc.name = "delete";
+                                custAlloc.type = "void";
+                            }
 							custAlloc.TypeToken = DTokens.New;
 							lexer.NextToken();
 							ParseFunctionArguments(ref custAlloc);
-							if (!Expect(DTokens.CloseParenthesis, "Expected \")\" for declaring a custom allocator!"))
+							if (!Expect(DTokens.CloseParenthesis, "Expected \")\" for declaring a custom (de-)allocator!"))
 							{
 								SkipToClosingBrace();
 								break;
 							}
 							custAlloc.modifiers.Add(DTokens.Private);
-							ParseBlock(ref custAlloc, true);
-
-							custAlloc.module = ret.module;
-							custAlloc.Parent = ret;
-							ret.Add(custAlloc);
-						}
-						break;
-					case DTokens.Delete:
-						// This is for handling custom deallocators (delete(void* p){...})
-						if (!isFunctionBody)
-						{
-							if (!PeekMustBe(DTokens.OpenParenthesis, "Expected \"(\" for declaring a custom deallocator!"))
-							{
-								SkipToClosingBrace();
-								break;
-							}
-							DNode custAlloc = new DNode(FieldType.Function);
-							custAlloc.name = "delete";
-							custAlloc.type = "void";
-							custAlloc.TypeToken = DTokens.Delete;
-							lexer.NextToken();
-							ParseFunctionArguments(ref custAlloc);
-							if (!Expect(DTokens.CloseParenthesis, "Expected \")\" for declaring a custom deallocator!"))
-							{
-								SkipToClosingBrace();
-								break;
-							}
-							custAlloc.modifiers.Add(DTokens.Private);
-							ParseBlock(ref custAlloc, true);
+                            DNode _custAlloc = custAlloc;
+							ParseBlock(ref _custAlloc, true);
 
 							custAlloc.module = ret.module;
 							custAlloc.Parent = ret;
@@ -839,7 +824,7 @@ namespace D_Parser
 						DNode prevExpr = (DNode)ret.Children[ret.Count - 1];
 						if (prevExpr.fieldtype == FieldType.Variable)
 						{
-							DNode tv = new DNode(FieldType.Variable);
+							DVariable tv = new DVariable();
 							if (tv == null) continue;
 							tv.modifiers = prevExpr.modifiers;
 							tv.startLoc = prevExpr.startLoc;
@@ -848,11 +833,11 @@ namespace D_Parser
 							tv.name = ParseTypeIdent();
 							tv.endLoc = GetCodeLocation(la);
 
-							if (la.Kind == DTokens.Assign) tv.value = ParseAssignIdent(ref ret);
+							if (la.Kind == DTokens.Assign) tv.Value= ParseAssignIdent(ref ret);
 							else if (Peek(1).Kind == DTokens.Assign)
 							{
 								lexer.NextToken();
-								tv.value = ParseAssignIdent(ref ret);
+								tv.Value = ParseAssignIdent(ref ret);
 							}
 
 							ret.Add(tv);
@@ -1076,7 +1061,7 @@ namespace D_Parser
 		void ParseTemplateArguments(ref DNode v)
 		{
 			int psb = 0;// ()
-			DNode targ = null;
+			DVariable targ = null;
 
 			if (la.Kind == DTokens.OpenParenthesis) psb = -1;
 			while (la.Kind != DTokens.EOF)
@@ -1098,7 +1083,7 @@ namespace D_Parser
 							{
 								targ.endLoc = ToCodeEndLocation(t);
 								targ.name = targ.type;
-								v.param.Add(targ);
+								v.TemplateParameters.Add(targ);
 							}
 							return;
 						}
@@ -1109,13 +1094,13 @@ namespace D_Parser
 						if (targ == null) { SkipToClosingBrace(); break; }
 						targ.endLoc = GetCodeLocation(la);
 						targ.name = targ.type;
-						v.param.Add(targ);
+                        v.TemplateParameters.Add(targ);
 						targ = null;
 						break;
 					case DTokens.Dot:
 						if (Peek(1).Kind == DTokens.Dot && Peek(2).Kind == DTokens.Dot) // "..."
 						{
-							if (targ == null) targ = new DNode(FieldType.Variable);
+							if (targ == null) targ = new DVariable();
 
 							targ.type = "...";
 							targ.name = "...";
@@ -1124,17 +1109,17 @@ namespace D_Parser
 							targ.endLoc = GetCodeLocation(la);
 							targ.endLoc.Column += 3; // three dots (...)
 
-							v.param.Add(targ);
+                        v.TemplateParameters.Add(targ);
 							targ = null;
 						}
 						break;
 					case DTokens.Alias:
-						if (targ == null) targ = new DNode(FieldType.Variable);
+						if (targ == null) targ = new DVariable();
 						targ.startLoc = GetCodeLocation(la);
 						targ.modifiers.Add(la.Kind);
 						break;
 					default:
-						if (targ == null) { targ = new DNode(FieldType.Variable); targ.startLoc = ToCodeEndLocation(la); }
+						if (targ == null) { targ = new DVariable(); targ.startLoc = ToCodeEndLocation(la); }
 
 						if (DTokens.Modifiers[la.Kind] && Peek(1).Kind != DTokens.OpenParenthesis) // const int a
 						{
@@ -1154,7 +1139,7 @@ namespace D_Parser
 		/// Thereafter ")" will be lookahead
 		/// </summary>
 		/// <param name="v"></param>
-		void ParseFunctionArguments(ref DNode v)
+		void ParseFunctionArguments(ref DMethod v)
 		{
 			int psb = 0;// ()
 			DNode targ = null;
@@ -1176,7 +1161,7 @@ namespace D_Parser
 							if (targ != null)
 							{
 								targ.endLoc = ToCodeEndLocation(t);
-								v.param.Add(targ);
+								v.Parameters.Add(targ);
 							}
 							return;
 						}
@@ -1184,13 +1169,13 @@ namespace D_Parser
 					case DTokens.Comma:
 						if (targ == null) { SkipToClosingBrace(); break; }
 						targ.endLoc = GetCodeLocation(la);
-						v.param.Add(targ);
+						v.Parameters.Add(targ);
 						targ = null;
 						break;
 					case DTokens.Dot:
 						if (Peek(1).Kind == DTokens.Dot && Peek(2).Kind == DTokens.Dot) // "..."
 						{
-							if (targ == null) targ = new DNode(FieldType.Variable);
+							if (targ == null) targ = new DVariable();
 
 							targ.type = "...";
 							targ.name = "...";
@@ -1199,24 +1184,24 @@ namespace D_Parser
 							targ.endLoc = GetCodeLocation(la);
 							targ.endLoc.Column += 3; // three dots (...)
 
-							v.param.Add(targ);
+							v.Parameters.Add(targ);
 							targ = null;
 						}
 						break;
 					case DTokens.Alias:
-						if (targ == null) targ = new DNode(FieldType.Variable);
+						if (targ == null) targ = new DVariable();
 						targ.modifiers.Add(la.Kind);
 						break;
 					default:
 						if (DTokens.Modifiers[la.Kind] && Peek(1).Kind != DTokens.OpenParenthesis) // const int a
 						{
-							if (targ == null) targ = new DNode(FieldType.Variable);
+							if (targ == null) targ = new DVariable();
 							targ.modifiers.Add(la.Kind);
 							break;
 						}
 						if (DTokens.BasicTypes[la.Kind] || la.Kind == DTokens.Identifier || la.Kind == DTokens.Typeof)
 						{
-							if (targ == null) targ = new DNode(FieldType.Variable);
+							if (targ == null) targ = new DVariable();
 							if (Peek(1).Kind == DTokens.Dot) break;
 
 							targ.startLoc = GetCodeLocation(la);
@@ -1229,12 +1214,13 @@ namespace D_Parser
 
 							if (la.Kind == DTokens.Delegate || la.Kind == DTokens.Function)
 							{
-								targ.fieldtype = FieldType.Delegate;
+                                targ=new DDelegate().Assign(targ);
 								targ.type += " " + strVal;
 								lexer.NextToken(); // Skip "delegate" or "function"
 								if (Expect(DTokens.OpenParenthesis, "Delegate parameters expected!"))
 								{
-									ParseFunctionArguments(ref targ);
+                                    DMethod _targ = (DMethod)targ;
+									ParseFunctionArguments(ref _targ);
 									Expect(DTokens.CloseParenthesis, "Missing \")\" after delegate argument parsing!");
 								}
 							}
@@ -1266,7 +1252,11 @@ namespace D_Parser
 
 							if (Peek(1).Kind == DTokens.Assign) // Argument has default argument
 							{
-								targ.value = ParseAssignIdent(ref v, true);
+								if(targ is DVariable) 
+                                    (targ as DVariable).Value = ParseAssignIdent(ref targ, true);
+                                else 
+                                    ParseAssignIdent(ref targ, true);
+
 								if (la.Kind == DTokens.CloseParenthesis && Peek(1).Kind == DTokens.Comma) lexer.NextToken(); // void foo(int a=bar(>),<bool b)
 								continue;
 							}
@@ -1351,7 +1341,7 @@ namespace D_Parser
 						}
 						if (isDelegate)
 						{
-							DNode delegatefun = new DNode(FieldType.Delegate);
+							DMethod delegatefun = new DDelegate();
 							delegatefun.startLoc = GetCodeLocation(la);
 							delegatefun.type = "void";
 							delegatefun.TypeToken = DTokens.Void;
@@ -1363,7 +1353,8 @@ namespace D_Parser
 							{
 								psb--;
 								lexer.NextToken(); // Skip ")"
-								ParseBlock(ref delegatefun, true);
+                                DNode _delegatefun = delegatefun;
+								ParseBlock(ref _delegatefun, true);
 								delegatefun.endLoc = GetCodeLocation(la);
 								Expect(DTokens.CloseCurlyBrace, "Error parsing anonymous delegate: ending \"}\" missing!");
 								parent.Add(delegatefun);
@@ -1399,7 +1390,7 @@ namespace D_Parser
 				{
 					if (Peek(1).Kind != DTokens.OpenParenthesis) // =delegate bool(...) {....}
 					{
-						DNode delegatefun = new DNode(FieldType.Delegate);
+                        DMethod delegatefun = new DDelegate();
 						delegatefun.startLoc = GetCodeLocation(la);
 						delegatefun.TypeToken = la.Kind;
 						ret += strVal;
@@ -1416,7 +1407,8 @@ namespace D_Parser
 						{
 							psb--;
 							lexer.NextToken(); // Skip ")"
-							ParseBlock(ref delegatefun, true);
+                            DNode _delegatefun = delegatefun;
+                            ParseBlock(ref _delegatefun, true);
 							delegatefun.endLoc = GetCodeLocation(la);
 							Expect(DTokens.CloseCurlyBrace, "Error parsing anonymous delegate: ending \"}\" missing!");
 							parent.Add(delegatefun);
@@ -1611,8 +1603,10 @@ namespace D_Parser
 					lexer.NextToken(); // Skip "delegate" or "function"
                     if (Expect(DTokens.OpenParenthesis, "Failed to parse delegate declaration - \"(\" missing!"))
                     {
-                        tv.fieldtype = FieldType.Delegate;
-                        ParseFunctionArguments(ref tv);
+                        DMethod deleg = new DDelegate();
+                        deleg.Assign(tv);
+                        ParseFunctionArguments(ref deleg);
+                        tv = deleg;
                         if (Expect(DTokens.CloseParenthesis, "Failed to parse delegate declaration - \")\" missing!"))
                         {
                             if (la.Kind != DTokens.Identifier)
@@ -1620,7 +1614,7 @@ namespace D_Parser
                                 SynErr(DTokens.Identifier, "Missing Identifier!");
                                 return null;
                             }
-                            tv.name = strVal; // Assign delegate name
+                            deleg.name = strVal; // Assign delegate name
 
                             // New: Also parse possible arguments that are written after the delegate name
                             // @property void function() ctor>()<;
@@ -1628,11 +1622,11 @@ namespace D_Parser
                             {
                                 lexer.NextToken(); // Skip delegate id
                                 lexer.NextToken(); // Skip opening parenthesis
-                                ParseFunctionArguments(ref tv);
+                                ParseFunctionArguments(ref deleg);
                                 Expect(DTokens.CloseParenthesis, "Failed to parse delegate declaration - \")\" missing!");
                             }
 
-                            tv.endLoc = GetCodeLocation(la);
+                            deleg.endLoc = GetCodeLocation(la);
 
                             if (Peek(1).Kind == DTokens.Assign) // int delegate(bool b) foo = (bool b) {...};
                             {
@@ -1640,7 +1634,7 @@ namespace D_Parser
                                 ParseAssignIdent(ref tv);
                             }
 
-                            return tv;
+                            return deleg;
                         }
                     }
 				}
@@ -1650,8 +1644,10 @@ namespace D_Parser
 
 			if (IsVarDecl())// int foo; TypeTuple!(a,T)[] a;
 			{
-				tv.fieldtype = FieldType.Variable;
-				tv.name = ParseTypeIdent();
+                DVariable var = new DVariable();
+                var.Assign(tv);
+                tv = var;
+				var.name = ParseTypeIdent();
 
 				if (Peek(1).Kind == DTokens.Assign)
 					lexer.NextToken();
@@ -1659,7 +1655,7 @@ namespace D_Parser
 				DToken dt = la;
 
 				if (la.Kind == DTokens.Assign)
-					tv.value = ParseAssignIdent(ref tv);
+					var.Value = ParseAssignIdent(ref tv);
 
 				if (Peek(1).Kind == DTokens.Semicolon || Peek(1).Kind == DTokens.Comma)
 					lexer.NextToken();
@@ -1670,15 +1666,17 @@ namespace D_Parser
 					{
 						CodeLocation cl = GetCodeLocation(dt);
 						SynErr(dt.Kind, cl.Column, cl.Line, "Missing semicolon near declaration!");
-						return tv;
+						return var;
 					}
 					SkipToSemicolon();
 				}
 			}
 			else if (la.Kind == DTokens.Identifier || isCTor) // MyType myfunc() {...}; this()() {...}
 			{
-				tv.fieldtype = FieldType.Function;
-				tv.name = strVal;
+                DMethod meth = new DMethod();
+                meth.Assign(tv);
+                tv = meth;
+				meth.name = strVal;
 				lexer.NextToken(); // Skip function name
 
 				if (!Expect(DTokens.OpenParenthesis, "Failure during Paramter parsing - \"(\" missing!")) { SkipToClosingBrace(); return null; }
@@ -1710,7 +1708,7 @@ namespace D_Parser
 					if (HasTemplateArgs)
 						ParseTemplateArguments(ref tv);
 					else
-						ParseFunctionArguments(ref tv);
+						ParseFunctionArguments(ref meth);
 				}
 
 				if (HasTemplateArgs) // void templFunc(S,T[],U*) (S s, int b=2) {...}
@@ -1718,7 +1716,7 @@ namespace D_Parser
 					if (!Expect(DTokens.CloseParenthesis, "Failure during Paramter parsing - \")\" missing!")) { SkipToClosingBrace(); return null; }
 					// la.Kind == "("
 					if (Peek(1).Kind != DTokens.CloseParenthesis)
-						ParseFunctionArguments(ref tv);
+						ParseFunctionArguments(ref meth);
 					else
 						lexer.NextToken();// Skip "("
 				}
@@ -1727,9 +1725,9 @@ namespace D_Parser
 
 				if (la.Kind == DTokens.Assign) // this() = null;
 				{
-					tv.value = SkipToSemicolon();
+					/*tv.value = */SkipToSemicolon();
 					tv.endLoc = GetCodeLocation(la);
-					return tv;
+					return meth;
 				}
 
 				if (DTokens.Modifiers[la.Kind] && la.Kind != DTokens.In && la.Kind != DTokens.Out && la.Kind != DTokens.Body) // void foo() const if(...) {...}
@@ -1737,7 +1735,7 @@ namespace D_Parser
 					lexer.NextToken();
 				}
 
-				if (la.Kind == DTokens.If)
+				if (la.Kind == DTokens.If) // void foo() if(...) {}
 				{
 					lexer.NextToken(); // Skip "if"
 					SkipToClosingParenthesis();
@@ -1908,7 +1906,7 @@ namespace D_Parser
 		/// <returns></returns>
 		DNode ParseEnum()
 		{
-			DNode mye = new DNode(FieldType.Enum);
+			DNode mye = new DEnum();
 			mye.startLoc = GetCodeLocation(la);
 
 			mye.type = strVal;
@@ -1942,9 +1940,11 @@ namespace D_Parser
 				}
 				if (psb < 1 && (pk.Kind == DTokens.Semicolon || pk.Kind==DTokens.Assign)) // enum Type Name=Value;
 				{
+                    DVariable enumVar = new DVariable();
+                    enumVar.Assign(mye);
+                    mye = enumVar;
+
 					int cbrace = 0;
-					mye.fieldtype = FieldType.Variable;
-					mye.superClass = "";
 					mye.type = "";
 					while (!EOF)
 					{
@@ -1956,24 +1956,26 @@ namespace D_Parser
 						if (psb < 1 && cbrace < 1 && la.Kind == DTokens.Semicolon) break;
 						if (psb < 1 && IsVarDecl()) // enum MyType Ident= Value; or enum MyType Ident;
 						{
-							mye.name = strVal;
+
+
+							enumVar.name = strVal;
 							lexer.NextToken(); // Skip ID
                             if (la.Kind == DTokens.Assign) {
                                 lexer.NextToken();
-                                mye.value = SkipToSemicolon();
+                                enumVar.Value = SkipToSemicolon();
                             }
 							break;
 						}else
-						mye.type += strVal;
+                            enumVar.type += strVal;
 					}
 
-					if (mye.type == "")
+                    if (enumVar.type == "")
 					{
-						mye.type = "int";
-						mye.TypeToken = DTokens.Int;
+                        enumVar.type = "int";
+                        enumVar.TypeToken = DTokens.Int;
 					}
-					mye.endLoc = GetCodeLocation(la);
-					return mye;
+                    enumVar.endLoc = GetCodeLocation(la);
+                    return enumVar;
 				}
 				pk = lexer.Peek();
 			}
@@ -2017,12 +2019,12 @@ namespace D_Parser
 				return mye;
 			}
 
-			DNode tt = new DNode(FieldType.EnumValue);
+            DEnumValue tt = new DEnumValue();
 			while (!EOF)
 			{
 				lexer.NextToken();
 			enumcont:
-				if (tt == null) tt = new DNode(FieldType.EnumValue);
+				if (tt == null) tt = new DEnumValue();
 				if (ThrowIfEOF(DTokens.CloseCurlyBrace)) break;
 				switch (la.Kind)
 				{
@@ -2038,7 +2040,7 @@ namespace D_Parser
 						tt = null;
 						break;
 					case DTokens.Assign: // Value assigment
-						tt.value = ParseAssignIdent(ref mye);
+						tt.Value = ParseAssignIdent(ref mye);
 						//MessageBox.Show("Set " + tt.name + " to " + tt.value);
 						if (la.Kind != DTokens.Identifier) goto enumcont;
 						break;

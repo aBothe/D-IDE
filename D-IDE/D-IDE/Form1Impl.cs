@@ -563,7 +563,8 @@ namespace D_IDE
 
             ii = icons.Images.IndexOfKey("Icons.16x16.Parameter.png");
             int i = 0;
-            foreach (DNode dt in ch.param)
+
+            foreach (DNode dt in ch.TemplateParameters)
             {
                 TreeNode tn = GenerateHierarchyData(ch, dt,
                     (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
@@ -574,6 +575,19 @@ namespace D_IDE
                 ret.Nodes.Add(tn);
                 i++;
             }
+
+            if(ch is DMethod)
+                foreach (DNode dt in (ch as DMethod).Parameters)
+                {
+                    TreeNode tn = GenerateHierarchyData(ch, dt,
+                        (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
+                        oldNode.Nodes[i] : null);
+                    tn.SelectedImageIndex = tn.ImageIndex = ii;
+                    tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
+
+                    ret.Nodes.Add(tn);
+                    i++;
+                }
             i = 0;
             foreach (DNode dt in ch)
             {

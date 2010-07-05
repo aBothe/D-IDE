@@ -131,11 +131,12 @@ namespace D_IDE
                     bs.Write(mod);
 
                 WriteString(dt.module);
-                WriteString(dt.value,true);
+                if(dt is DVariable)WriteString((dt as DVariable).Value,true);
                 WriteString(dt.superClass);
                 WriteString(dt.implementedInterface);
 
-                WriteNodes(dt.param);
+                WriteNodes(dt.TemplateParameters);
+                if(dt is DMethod)WriteNodes((dt as DMethod).Parameters);
                 WriteNodes(dt.Children);
             }
 
@@ -239,6 +240,31 @@ namespace D_IDE
                 DNode dt = new DNode();
 
                 dt.fieldtype = (FieldType)bs.ReadInt32();
+                switch (dt.fieldtype)
+                {
+                    default: break;
+                    case FieldType.Class:
+                    case FieldType.Interface:
+                    case FieldType.Struct:
+                    case FieldType.Template:
+                        dt = new DClassLike();
+                        break;
+                    case FieldType.Delegate:
+                        dt = new DDelegate();
+                        break;
+                    case FieldType.Enum:
+                        dt = new DEnum();
+                        break;
+                    case FieldType.EnumValue:
+                        dt = new DEnumValue();
+                        break;
+                    case FieldType.Function:
+                        dt = new DMethod();
+                        break;
+                    case FieldType.Variable:
+                        dt = new DVariable();
+                        break;
+                }
                 dt.name = ReadString();
                 dt.TypeToken = bs.ReadInt32();
                 dt.type = ReadString();
@@ -257,11 +283,12 @@ namespace D_IDE
                     dt.modifiers.Add(bs.ReadInt32());
 
                 dt.module = ReadString();
-                dt.value = ReadString(true);
+                if(dt is DVariable)(dt as DVariable).Value = ReadString(true);
                 dt.superClass = ReadString();
                 dt.implementedInterface = ReadString();
 
-                ReadNodes(ref dt.param);
+                ReadNodes(ref dt.TemplateParameters);
+                if (dt is DMethod) ReadNodes(ref (dt as DMethod).Parameters);
                 ReadNodes(ref dt.children);
 
                 Nodes.Add(dt);

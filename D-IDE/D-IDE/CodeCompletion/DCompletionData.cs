@@ -152,10 +152,24 @@ namespace D_IDE
 				}
 
 			addparams:
-				if(data.param.Count > 0)
+                if (data.TemplateParameters.Count > 0)
+                {
+                    ret += "(";
+                    foreach (DNode p in data.TemplateParameters)
+                    {
+                        foreach (int m in p.modifiers)
+                        {
+                            ret += DTokens.GetTokenString(m) + " ";
+                        }
+                        ret += (p.type != p.name ? p.type + " " : "") + p.name + ",";
+                    }
+                    ret = ret.Trim(',') + ")";
+                }
+
+				if(data is DMethod)
 				{
 					ret += "(";
-					foreach(DNode p in data.param)
+					foreach(DNode p in (data as DMethod).Parameters)
 					{
 						foreach(int m in p.modifiers)
 						{
@@ -166,15 +180,16 @@ namespace D_IDE
 					ret = ret.Trim(',') + ")";
 				}
 
-				if(data.value != "")
+				if(data is DVariable)
 				{
-					if(data.fieldtype == FieldType.EnumValue)
+					if(data is DEnumValue)
 					{
-						ret = data.value;
+						ret = (data as DEnumValue).Value;
+                        if(ret==null)ret="";
 					}
 					else
 					{
-						ret += " =" + data.value;
+						ret += " =" + (data as DVariable).Value;
 					}
 				}
 

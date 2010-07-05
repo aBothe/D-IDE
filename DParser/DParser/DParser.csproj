@@ -51,6 +51,7 @@
     <Compile Include="DataTypes.cs" />
     <Compile Include="DKeywords.cs" />
     <Compile Include="DLexer.cs" />
+    <Compile Include="DNode.cs" />
     <Compile Include="DParser.cs" />
     <Compile Include="DTokens.cs" />
     <Compile Include="ExpressionFinder.cs" />

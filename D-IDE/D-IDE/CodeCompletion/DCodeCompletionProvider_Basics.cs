@@ -269,19 +269,36 @@ namespace D_IDE
 		{
 			return GetExprByName(env, name, false);
 		}
+        static bool CheckForParamNameEquation(DNode env, string name, ref DNode match)
+        {
+            if (env.TemplateParameters.Count > 0)
+                foreach (DNode dt in env.TemplateParameters)
+                {
+                    dt.Parent = env;
+                    if (dt.name == name)
+                    {
+                        match = dt; return true;
+                    }
+                }
+            if (env is DMethod)
+                foreach (DNode dt in (env as DMethod).Parameters)
+                {
+                    dt.Parent = env;
+                    if (dt.name == name)
+                    {
+                        match = dt; return true;
+                    }
+                }
+            return false;
+        }
 		public static DNode GetExprByName(DNode env, string name, bool RootOnly)
 		{
 			if (env == null) return null;
 
 			if (env.name == name) { return env; }
 
-			if (env.param.Count > 0)
-				foreach (DNode dt in env.param)
-				{
-					dt.Parent = env;
-					if (dt.name == name)
-						return dt;
-				}
+            DNode possibleReturn=null;
+            if (CheckForParamNameEquation(env, name, ref possibleReturn)) return possibleReturn;
 
 			if (env.Count > 0)
 				foreach (DNode dt in env)
@@ -305,13 +322,8 @@ namespace D_IDE
 
 			if (env.name == name) { return env; }
 
-			if (env.param.Count > 0)
-				foreach (DNode dt in env.param)
-				{
-					dt.Parent = env;
-					if (dt.name == name)
-						return dt;
-				}
+            DNode possibleReturn = null;
+            if (CheckForParamNameEquation(env, name, ref possibleReturn)) return possibleReturn;
 
 			if (env.Count > 0)
 				foreach (DNode dt in env)
@@ -336,13 +348,20 @@ namespace D_IDE
 
 			//if(env.name == name) {return ret; }
 
-			if (env.param.Count > 0)
-				foreach (DNode dt in env.param)
+			if (env.TemplateParameters.Count > 0)
+				foreach (DNode dt in env.TemplateParameters)
 				{
 					dt.Parent = env;
 					if (dt.name == name)
 						ret.Add(dt);
 				}
+            if (env is DMethod)
+                foreach (DNode dt in (env as DMethod).Parameters)
+                {
+                    dt.Parent = env;
+                    if (dt.name == name)
+                        ret.Add(dt);
+                }
 
 			if (env.Count > 0)
 				foreach (DNode dt in env)
@@ -362,13 +381,8 @@ namespace D_IDE
 
 			if (env.name == name) { return env; }
 
-			if (env.param.Count > 0)
-				foreach (DNode dt in env.param)
-				{
-					dt.Parent = env;
-					if (dt.name == name)
-						return dt;
-				}
+            DNode possibleReturn = null;
+            if (CheckForParamNameEquation(env, name, ref possibleReturn)) return possibleReturn;
 
 			if (env.Count > 0)
 				foreach (DNode dt in env)
@@ -401,13 +415,20 @@ namespace D_IDE
 			if (env == null) return ret;
 			if (env.name == name) { ret.Add(env); return ret; }
 
-			if (env.param.Count > 0)
-				foreach (DNode dt in env.param)
-				{
-					dt.Parent = env;
-					if (dt.name == name)
-						ret.Add(dt);
-				}
+            if (env.TemplateParameters.Count > 0)
+                foreach (DNode dt in env.TemplateParameters)
+                {
+                    dt.Parent = env;
+                    if (dt.name == name)
+                        ret.Add(dt);
+                }
+            if (env is DMethod)
+                foreach (DNode dt in (env as DMethod).Parameters)
+                {
+                    dt.Parent = env;
+                    if (dt.name == name)
+                        ret.Add(dt);
+                }
 
 			if (env.Count > 0)
 				foreach (DNode dt in env)
@@ -573,10 +594,15 @@ namespace D_IDE
 						rl.Add(new DCompletionData(ch, selectedExpression));
 				}
 
-				foreach (DNode arg in selectedExpression.param)
+				foreach (DNode arg in selectedExpression.TemplateParameters)
 				{
 					rl.Add(new DCompletionData(arg, selectedExpression, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
 				}
+                if(selectedExpression is DMethod)
+                    foreach (DNode arg in (selectedExpression as DMethod).Parameters)
+                    {
+                        rl.Add(new DCompletionData(arg, selectedExpression, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
+                    }
 
 				if (selectedExpression.superClass == "")
 				{
@@ -617,7 +643,7 @@ namespace D_IDE
 																   || all)
 						rl.Add(cd);
 				}
-				foreach (DNode arg in (selectedExpression as DNode).param)
+				foreach (DNode arg in selectedExpression.TemplateParameters)
 				{
 					if (exact)
 					{
@@ -629,6 +655,21 @@ namespace D_IDE
 					}
 					rl.Add(new DCompletionData(arg, selectedExpression, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
 				}
+
+                if(selectedExpression is DMethod)
+                    foreach (DNode arg in (selectedExpression as DMethod).Parameters)
+                    {
+                        if (exact)
+                        {
+                            if (arg.name != searchExpr) continue;
+                        }
+                        else
+                        {
+                            if (!arg.name.StartsWith(searchExpr, StringComparison.CurrentCultureIgnoreCase)) continue;
+                        }
+                        rl.Add(new DCompletionData(arg, selectedExpression, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
+                    }
+
 				if ((selectedExpression as DNode).superClass == "") return;
 				DNode dt = SearchGlobalExpr(cc,null, (selectedExpression as DNode).superClass); // Should be superior class
 				if (dt == null) return;

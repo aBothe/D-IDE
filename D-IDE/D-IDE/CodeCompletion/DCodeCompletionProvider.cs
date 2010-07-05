@@ -354,7 +354,7 @@ namespace D_IDE
 						{
 							AddAllClassMembers(cc,seldt, ref rl, true);
 
-							foreach (DNode arg in seldt.param)
+							foreach (DNode arg in (seldt as DMethod).Parameters)
 							{
 								if (arg.type == null || arg.name == null) continue;
 								rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
@@ -369,7 +369,7 @@ namespace D_IDE
 								{
 									AddAllClassMembers(cc,seldd, ref rl, true);
 
-									foreach (DNode arg in seldd.param)
+                                    foreach (DNode arg in (seldt as DMethod).Parameters)
 									{
 										if (arg.type == null || arg.name == null) continue;
 										rl.Add(new DCompletionData(arg, seldd, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
@@ -445,11 +445,17 @@ namespace D_IDE
 							}
 							if (!isNameSpace) AddTypeStd(seldt, ref rl);
 
-							foreach (DNode arg in seldt.param)
+							foreach (DNode arg in seldt.TemplateParameters)
 							{
 								if (arg.type == null || arg.name == null) continue;
 								rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
 							}
+                            if(seldt is DMethod)
+                                foreach (DNode arg in (seldt as DMethod).Parameters)
+                                {
+                                    if (arg.type == null || arg.name == null) continue;
+                                    rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
+                                }
 						}
 					}
 					#endregion
