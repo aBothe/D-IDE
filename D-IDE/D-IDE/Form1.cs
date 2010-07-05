@@ -176,19 +176,21 @@ namespace D_IDE
 
                 Log("Build single " + tp.fileData.mod_file + " to " + exe);
                 string args = D_IDE_Properties.Default.DefaultCompiler.ExeLinkerDebugArgs;
-                args = args.Replace("$objs", "\""+tp.fileData.mod_file+"\"");
+                args = args.Replace("$objs", "\"" + tp.fileData.mod_file + "\"");
                 args = args.Replace("$libs", "");
-                args = args.Replace("$exe", "\""+exe+"\"");
-                
-				try{
-				Process p= DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.fileData.mod_file), true);
-				if (p != null && !p.WaitForExit(10000))
-				{
-					Log("Execeeded 10 seconds execution time!");
-					p.Kill();
-					return null;
-				}
-				}catch(Exception ex){Log(ex.Message);}
+                args = args.Replace("$exe", "\"" + exe + "\"");
+
+                try
+                {
+                    Process p = DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.fileData.mod_file), true);
+                    if (p != null && !p.WaitForExit(10000))
+                    {
+                        Log("Execeeded 10 seconds execution time!");
+                        p.Kill();
+                        return null;
+                    }
+                }
+                catch (Exception ex) { Log(ex.Message); }
 
                 DBuilder.CreatePDBFromExe(null, exe);
                 return exe;
@@ -408,8 +410,8 @@ namespace D_IDE
                 }
             }
 
+            #region Update the global cache if a file which is located in a global import path gets saved
             if (mtp == null) return;
-
             CompilerConfiguration cc = D_IDE_Properties.Default.dmd1;
         goonwithcc:
             foreach (string dir in cc.ImportDirectories)
@@ -428,6 +430,7 @@ namespace D_IDE
             bool tb = cc == D_IDE_Properties.Default.dmd2;
             cc = D_IDE_Properties.Default.dmd2;
             if (!tb) goto goonwithcc;
+            #endregion
 
             RefreshClassHierarchy();
         }
@@ -970,7 +973,7 @@ namespace D_IDE
         #endregion
 
         #region Updates
-/*
+        /*
         public static WebClient webclient = new WebClient();
         public Thread RevisionUpdateThread;
         public void CheckForUpdates()
@@ -1066,11 +1069,11 @@ namespace D_IDE
 
             for (int i = 0; i < dcs.Length; i++)
             {
-                if (dcs[i] == dockPanel.ActiveDocument) 
+                if (dcs[i] == dockPanel.ActiveDocument)
                 {
-                    if(i>0)(dcs[i - 1] as DockContent).Activate();
+                    if (i > 0) (dcs[i - 1] as DockContent).Activate();
                     (dcs[i] as DockContent).Close();
-                    break; 
+                    break;
                 }
             }
         }
@@ -1094,7 +1097,7 @@ namespace D_IDE
                 if (dcs[i] == dockPanel.ActiveDocument) continue;
                 if (dcs[i] is StartPage) (dcs[i] as DockContent).Hide();
                 else
-                (dcs[i] as DockContent).Close();
+                    (dcs[i] as DockContent).Close();
             }
         }
         #endregion
