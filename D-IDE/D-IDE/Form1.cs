@@ -178,11 +178,11 @@ namespace D_IDE
                 string args = D_IDE_Properties.Default.DefaultCompiler.ExeLinkerDebugArgs;
                 args = args.Replace("$objs", "\"" + tp.fileData.mod_file + "\"");
                 args = args.Replace("$libs", "");
-                args = args.Replace("$exe", "\"" + exe + "\"");
+                args = args.Replace("\"$exe\"","$exe").Replace("$exe", "\"" + exe + "\"");
 
                 try
                 {
-                    Process p = DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.fileData.mod_file), true);
+                    Process p = DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.fileData.mod_file), false);
                     if (p != null && !p.WaitForExit(10000))
                     {
                         Log("Execeeded 10 seconds execution time!");
@@ -192,7 +192,7 @@ namespace D_IDE
                 }
                 catch (Exception ex) { Log(ex.Message); }
 
-                DBuilder.CreatePDBFromExe(null, exe);
+                //DBuilder.CreatePDBFromExe(null, exe);
                 return exe;
             }
             return null;
@@ -208,16 +208,6 @@ namespace D_IDE
             errlog.buildErrors.Clear();
             errlog.Update();
             if (D_IDE_Properties.Default.DoAutoSaveOnBuilding) SaveAllTabs();
-            /*
-            foreach (DockContent tp in dockPanel.Documents)
-            {
-                if (tp is DocumentInstanceWindow)
-                {
-                    DocumentInstanceWindow mtp = (DocumentInstanceWindow)tp;
-                    //mtp.txt.Document.CustomLineManager.Clear();
-                    mtp.txt.ActiveTextAreaControl.Refresh();
-                }
-            }*/
 
             UseOutput = false;
 

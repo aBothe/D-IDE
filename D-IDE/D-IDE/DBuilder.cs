@@ -278,14 +278,14 @@ namespace D_IDE
             OnMessage(prj, target, "Link file to " + target);
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Link file to " + target;
 
-            if(!Path.IsPathRooted(exe))
-                exe=cc.BinDirectory + "\\" + exe;
+            if (!Path.IsPathRooted(exe))
+                exe = cc.BinDirectory + "\\" + exe;
 
             Process prc = DBuilder.Exec(exe, args + " " + prj.linkargs, prj.basedir, false);
             if (prc == null) return null;
             if (!prc.WaitForExit(10 * 1000))
             {
-                OnMessage(prj,exe,ProcessTimeExceededMsg);
+                OnMessage(prj, exe, ProcessTimeExceededMsg);
                 prc.Kill();
                 prc.WaitForExit();
             }
@@ -300,9 +300,9 @@ namespace D_IDE
 
                 #region cv2pdb
                 // Create program database (pdb) file from CodeView data from the target exe
-                if (IsDebug && D_IDE_Properties.Default.CreatePDBOnBuild && prj.type!=DProject.PrjType.StaticLib)
+                if (IsDebug && D_IDE_Properties.Default.CreatePDBOnBuild && prj.type != DProject.PrjType.StaticLib)
                 {
-                    CreatePDBFromExe(prj,target);
+                    CreatePDBFromExe(prj, target);
                 }
                 #endregion
 
@@ -314,13 +314,13 @@ namespace D_IDE
             return null;
         }
 
-        public static void CreatePDBFromExe(DProject prj,string exe)
+        public static void CreatePDBFromExe(DProject prj, string exe)
         {
             string pdb = Path.ChangeExtension(exe, ".pdb");
             OnMessage(prj, pdb, "Create debug information database " + pdb);
             //CodeViewToPDB.CodeViewToPDBConverter.DoConvert(exe, pdb);
-            Process cv2pdb= Exec("cv2pdb.exe","\""+exe+"\"",Path.GetDirectoryName(exe),false);
-            if(cv2pdb!=null && !cv2pdb.HasExited)cv2pdb.WaitForExit(10000);
+            Process cv2pdb = Exec("cv2pdb.exe", "\"" + exe + "\"", Path.GetDirectoryName(exe), false);
+            if (cv2pdb != null && !cv2pdb.HasExited) cv2pdb.WaitForExit(10000);
         }
 
         public static bool BuildObjFile(string file, CompilerConfiguration cc, string target, string exeDir, string additionalArgs, bool IsDebug)
@@ -351,7 +351,7 @@ namespace D_IDE
             args = args.Replace("$rc", file);
             args = args.Replace("$res", target);
 
-            Process prc = DBuilder.Exec(Path.IsPathRooted(cc.ResourceCompiler)? cc.ResourceCompiler:(cc.BinDirectory+"\\"+cc.ResourceCompiler), args, exeDir, false);
+            Process prc = DBuilder.Exec(Path.IsPathRooted(cc.ResourceCompiler) ? cc.ResourceCompiler : (cc.BinDirectory + "\\" + cc.ResourceCompiler), args, exeDir, false);
             if (prc == null) return false;
             if (!prc.WaitForExit(10 * 1000))
             {
