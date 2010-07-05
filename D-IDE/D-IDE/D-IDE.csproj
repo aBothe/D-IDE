@@ -473,24 +473,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="dproj.ico" />
-    <None Include="Resources\Undo_48x48.png" />
-    <None Include="Resources\Stop_48x48.png" />
-    <None Include="Resources\Settings_48x48.png" />
-    <None Include="Resources\Search_48x48.png" />
-    <None Include="Resources\Save_48x48.png" />
-    <None Include="Resources\Refresh_48x48.png" />
-    <None Include="Resources\Redo_48x48.png" />
-    <None Include="Resources\Properties_48x48.png" />
-    <None Include="Resources\Play_48x48.png" />
-    <None Include="Resources\Paste_48x48.png" />
-    <None Include="Resources\Open_48x48.png" />
-    <None Include="Resources\New_48x48.png" />
-    <None Include="Resources\Information_48x48.png" />
-    <None Include="Resources\Download_48x48.png" />
-    <None Include="Resources\Cut_48x48.png" />
-    <None Include="Resources\Copy_48x48.png" />
-    <None Include="Resources\Add_48x48.png" />
-    <None Include="Resources\dprj.png" />
     <None Include="RC.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
