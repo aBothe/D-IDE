@@ -87,7 +87,8 @@ namespace D_IDE
 		{
 			return BuildDescriptionString(data_, mod, true);
 		}
-		/// <summary>
+
+        /// <summary>
 		/// Builds expression description string
 		/// </summary>
 		/// <param name="data"></param>
@@ -143,14 +144,6 @@ namespace D_IDE
 					(!String.IsNullOrEmpty(path) ? (path) : "") + // Module path
 					(data.type != data.name ? data.name : ""); // int : MyType // Field Name
 
-				if(DTokens.ClassLike[(int)data.TypeToken] || data.fieldtype == FieldType.Enum)
-				{
-					if(data.superClass != "")
-						ret += " : " + data.superClass;
-					if(data.implementedInterface != "")
-						ret += (data.superClass != "" ? ", " : "") + data.implementedInterface;
-				}
-
 			addparams:
                 if (data.TemplateParameters.Count > 0)
                 {
@@ -164,6 +157,19 @@ namespace D_IDE
                         ret += (p.type != p.name ? p.type + " " : "") + p.name + ",";
                     }
                     ret = ret.Trim(',') + ")";
+                }
+
+                if (data is DClassLike)
+                {
+                    if (!String.IsNullOrEmpty((data as DClassLike).BaseClass))
+                        ret += " : " + (data as DClassLike).BaseClass;
+                    if (!String.IsNullOrEmpty((data as DClassLike).ImplementedInterface))
+                        ret += (!String.IsNullOrEmpty((data as DClassLike).BaseClass) ? ", " : " : ") + (data as DClassLike).ImplementedInterface;
+                }
+
+                if (data is DEnum && !String.IsNullOrEmpty((data as DEnum).EnumBaseType))
+                {
+                    ret += " : " + (data as DEnum).EnumBaseType;
                 }
 
 				if(data is DMethod)
@@ -180,17 +186,12 @@ namespace D_IDE
 					ret = ret.Trim(',') + ")";
 				}
 
-				if(data is DVariable)
+				if(data is DVariable && !String.IsNullOrEmpty((data as DVariable).Value))
 				{
 					if(data is DEnumValue)
-					{
-						ret = (data as DEnumValue).Value;
-                        if(ret==null)ret="";
-					}
+						ret = (data as DEnumValue).Value; // Show its value only
 					else
-					{
 						ret += " =" + (data as DVariable).Value;
-					}
 				}
 
 				if(IncludeDesc && !String.IsNullOrEmpty(data.desc))

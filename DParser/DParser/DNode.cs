@@ -13,7 +13,6 @@ namespace D_Parser
         public string module;
 
         public List<DNode> TemplateParameters=new List<DNode>(); // Functions, Templates
-        public string superClass, implementedInterface; // Class-Like; superClass also represents enum's base type
 
         public List<DNode> children = new List<DNode>(); // Functions, Templates
         public DNode Parent; // Functions, Templates
@@ -38,8 +37,7 @@ namespace D_Parser
             name = other.name;
             module = other.module;
             TemplateParameters = other.TemplateParameters;
-            superClass = other.superClass;
-            implementedInterface = other.implementedInterface;
+
             children = other.Children;
             Parent = other.Parent;
             desc = other.desc;
@@ -55,9 +53,6 @@ namespace D_Parser
             name = "";
             TypeToken = 0;
             this.type = "";
-
-            superClass = "";
-            implementedInterface = "";
 
             desc = "";
 

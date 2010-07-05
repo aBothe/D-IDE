@@ -41,7 +41,7 @@ namespace D_IDE
 		const string EndComment = "/*###FXForms - End###*/";
 
 		public bool SaveToFile(string File)
-		{
+		{/*
 			string fcon = System.IO.File.ReadAllText(File);
 
 			string funcContent = "\r\nvoid InitializeComponents()\r\n{\r\n";
@@ -117,7 +117,7 @@ namespace D_IDE
 			}
 
 			System.IO.File.WriteAllText(File,fcon);
-
+*/
 			return true;
 		}
 

@@ -111,9 +111,8 @@ namespace D_IDE
 
             bs.Write(Nodes.Count);
 
-            foreach (DNode n in Nodes)
+            foreach (DNode dt in Nodes)
             {
-                DNode dt = n as DNode;
                 bs.Write(NodeInitializer);
 
                 bs.Write((int)dt.fieldtype);
@@ -131,9 +130,17 @@ namespace D_IDE
                     bs.Write(mod);
 
                 WriteString(dt.module);
-                if(dt is DVariable)WriteString((dt as DVariable).Value,true);
-                WriteString(dt.superClass);
-                WriteString(dt.implementedInterface);
+                if(dt is DVariable)
+                    WriteString((dt as DVariable).Value,true);
+
+                if (dt is DClassLike)
+                {
+                    WriteString((dt as DClassLike).BaseClass);
+                    WriteString((dt as DClassLike).ImplementedInterface);
+                }
+
+                if (dt is DEnum)
+                    WriteString((dt as DEnum).EnumBaseType);
 
                 WriteNodes(dt.TemplateParameters);
                 if(dt is DMethod)WriteNodes((dt as DMethod).Parameters);
@@ -258,6 +265,7 @@ namespace D_IDE
                     case FieldType.EnumValue:
                         dt = new DEnumValue();
                         break;
+                    case FieldType.Constructor: // Also a ctor is treated as a method here
                     case FieldType.Function:
                         dt = new DMethod();
                         break;
@@ -283,9 +291,17 @@ namespace D_IDE
                     dt.modifiers.Add(bs.ReadInt32());
 
                 dt.module = ReadString();
-                if(dt is DVariable)(dt as DVariable).Value = ReadString(true);
-                dt.superClass = ReadString();
-                dt.implementedInterface = ReadString();
+                if(dt is DVariable)
+                    (dt as DVariable).Value = ReadString(true);
+
+                if (dt is DClassLike)
+                {
+                    (dt as DClassLike).BaseClass = ReadString();
+                    (dt as DClassLike).ImplementedInterface = ReadString();
+                }
+
+                if (dt is DEnum)
+                    (dt as DEnum).EnumBaseType = ReadString();
 
                 ReadNodes(ref dt.TemplateParameters);
                 if (dt is DMethod) ReadNodes(ref (dt as DMethod).Parameters);

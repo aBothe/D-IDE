@@ -902,11 +902,12 @@ namespace D_Parser
 						}
 						break;
 					case DTokens.Super:
-						if (isFunctionBody) // Every "super" in a function body can only be a call....
-						{
-							SkipToSemicolon();
-							break;
-						}
+                        if (isFunctionBody) // Every "super" in a function body can only be a call....
+                        {
+                            SkipToSemicolon();
+                            break;
+                        }
+                        else SynErr(DTokens.Super);
 						break;
 					case DTokens.This:
 						if (isFunctionBody) // Every "this" in a function body can only be a call....
@@ -1102,8 +1103,8 @@ namespace D_Parser
 						{
 							if (targ == null) targ = new DVariable();
 
-							targ.type = "...";
-							targ.name = "...";
+                            if (targ.name == "") targ.name = "...";
+                            targ.type = "...";
 
 							targ.startLoc = GetCodeLocation(la);
 							targ.endLoc = GetCodeLocation(la);
@@ -1803,9 +1804,10 @@ namespace D_Parser
 		/// <returns></returns>
 		DNode ParseClass()
 		{
-			DNode myc = new DNode(FieldType.Class); // >class<
+			DClassLike myc = new DClassLike(); // >class<
+            DNode _myc = myc;
 			myc.desc = CheckForExpressionComments();
-			if (la.Kind == DTokens.Struct) myc.fieldtype = FieldType.Struct;
+			if (la.Kind == DTokens.Struct || la.kind==DTokens.Union) myc.fieldtype = FieldType.Struct;
 			if (la.Kind == DTokens.Template) myc.fieldtype = FieldType.Template;
 			if (la.Kind == DTokens.Interface) myc.fieldtype = FieldType.Interface;
 			myc.TypeToken = la.Kind;
@@ -1839,11 +1841,11 @@ namespace D_Parser
 			// >(T,S,U[])<
 			if (la.Kind == DTokens.OpenParenthesis) // "(" template declaration
 			{
-				ParseTemplateArguments(ref myc);
+				ParseTemplateArguments(ref _myc);
 				if (!Expect(DTokens.CloseParenthesis, "Failure during template paramter parsing - \")\" missing!")) { SkipToClosingBrace(); }
 			}
 
-			if (myc.name != "Object" && myc.fieldtype != FieldType.Struct) myc.superClass = "Object"; // Every object except the Object class itself has "Object" as its base class!
+			if (myc.name != "Object" && myc.fieldtype != FieldType.Struct) myc.BaseClass = "Object"; // Every object except the Object class itself has "Object" as its base class!
 			// >: MyBase, MyInterface< {...}
 			if (la.Kind == DTokens.Colon) // : inheritance
 			{
@@ -1859,18 +1861,18 @@ namespace D_Parser
 						break;
 					}
 				}
-				myc.superClass = ParseTypeIdent();
+				myc.BaseClass = ParseTypeIdent();
 				if (la.Kind == DTokens.Comma)
 				{
 					lexer.NextToken(); // Skip ","
-					myc.implementedInterface = ParseTypeIdent();
+					myc.ImplementedInterface = ParseTypeIdent();
 				}
 				lexer.NextToken(); // Skip to "{"
 			}
-			if (myc.superClass == myc.name)
+			if (myc.BaseClass == myc.name)
 			{
 				SemErr(DTokens.Colon, "Cannot inherit \"" + myc.name + "\" from itself!");
-				myc.superClass = "";
+				myc.BaseClass = "";
 			}
 
 			if (la.Kind == DTokens.If)
@@ -1886,7 +1888,7 @@ namespace D_Parser
 				return myc;
 			}
 
-			ParseBlock(ref myc, false);
+			ParseBlock(ref _myc, false);
 
 			myc.endLoc = GetCodeLocation(la);
 
@@ -1910,7 +1912,7 @@ namespace D_Parser
 			mye.startLoc = GetCodeLocation(la);
 
 			mye.type = strVal;
-			mye.superClass = "int";
+			(mye as DEnum).EnumBaseType = "int";
 
 			#region Apply vis modifiers
 			bool cvm = DTokens.ContainsVisMod(ExpressionModifiers);
@@ -1992,12 +1994,12 @@ namespace D_Parser
 			if (la.Kind == DTokens.Colon) // Enum base type
 			{
 				// la = ":"
-				mye.superClass = "";
+                (mye as DEnum).EnumBaseType = "";
 				while (!EOF && la.Kind != DTokens.OpenCurlyBrace)
 				{
 					lexer.NextToken();
-					if (la.Kind == DTokens.OpenParenthesis) { mye.superClass += "(" + SkipToClosingParenthesis(); }
-					if (la.Kind == DTokens.OpenSquareBracket) { mye.superClass += "[" + SkipToClosingSquares(); }
+                    if (la.Kind == DTokens.OpenParenthesis) { (mye as DEnum).EnumBaseType += "(" + SkipToClosingParenthesis(); }
+                    if (la.Kind == DTokens.OpenSquareBracket) { (mye as DEnum).EnumBaseType += "[" + SkipToClosingSquares(); }
 				}
 				// la = "{"
 				if (la.Kind != DTokens.OpenCurlyBrace)
@@ -2029,29 +2031,25 @@ namespace D_Parser
 				switch (la.Kind)
 				{
 					case DTokens.CloseCurlyBrace: // Final "}"
-						//MessageBox.Show("}");
 						if (tt.name != "") mye.Add(tt);
 						mye.endLoc = GetCodeLocation(la);
 						return mye;
 					case DTokens.Comma: // Next item
-						//MessageBox.Show(tt.name+" Comma");
 						tt.endLoc = GetCodeLocation(la);
 						if (tt.name != "") mye.Add(tt);
 						tt = null;
 						break;
 					case DTokens.Assign: // Value assigment
 						tt.Value = ParseAssignIdent(ref mye);
-						//MessageBox.Show("Set " + tt.name + " to " + tt.value);
 						if (la.Kind != DTokens.Identifier) goto enumcont;
 						break;
 					case DTokens.Identifier: // Can just be a new item
-						tt.type = mye.superClass;
+                        tt.type = (mye as DEnum).EnumBaseType;
 						tt.startLoc = GetCodeLocation(la);
 						tt.name = ParseTypeIdent();
 						if (la.Kind != DTokens.Identifier) goto enumcont;
-						//MessageBox.Show("New one called " + tt.name);
 						break;
-					default: /*SynErr(la.Kind);*/ break;
+					default: break;
 				}
 			}
 			mye.endLoc = GetCodeLocation(la);

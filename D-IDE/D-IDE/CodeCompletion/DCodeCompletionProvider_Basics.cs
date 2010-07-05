@@ -395,17 +395,20 @@ namespace D_IDE
 						if (tdt != null) return tdt;
 				}
 
-			string super = env.superClass;// Should be superior class
-			/*if(!DTokens.ClassLike[env.TypeToken] && !exact)
-			{
-				super = env.type;
-			}*/
-			if (super != "")
-			{
-				DNode dt = SearchGlobalExpr(cc,null, super);
-				if (dt == null) return null;
-				return SearchExprInClassHierarchy(cc,dt,currentLevelNode, name);
-			}
+            if (env is DClassLike)
+            {
+                string super = (env as DClassLike).BaseClass;// Should be superior class
+                /*if(!DTokens.ClassLike[env.TypeToken] && !exact)
+                {
+                    super = env.type;
+                }*/
+                if (super != "")
+                {
+                    DNode dt = SearchGlobalExpr(cc, null, super);
+                    if (dt == null) return null;
+                    return SearchExprInClassHierarchy(cc, dt, currentLevelNode, name);
+                }
+            }
 
 			return null;
 		}
@@ -447,13 +450,16 @@ namespace D_IDE
 					ret.AddRange(GetExprsByName(dt, name, false));
 				}
 
-			string super = env.superClass;// Should be superior class
-			if (super != "")
-			{
-				DNode dt = SearchGlobalExpr(cc,null, super);
-				if (dt == null) return null;
-				ret.AddRange(SearchExprsInClassHierarchy(cc,dt, name));
-			}
+            if (env is DClassLike)
+            {
+                string super = (env as DClassLike).BaseClass;// Should be superior class
+                if (super != "")
+                {
+                    DNode dt = SearchGlobalExpr(cc, null, super);
+                    if (dt == null) return null;
+                    ret.AddRange(SearchExprsInClassHierarchy(cc, dt, name));
+                }
+            }
 
 			return ret;
 		}
@@ -466,19 +472,22 @@ namespace D_IDE
 			DNode dt = GetExprByName(node,name,true);
 			if (dt != null) return dt;
 
-			string super = node.superClass;// Should be superior class
-			/*if(!DTokens.ClassLike[env.TypeToken] && !exact)
-			{
-				super = env.type;
-			}*/
-			if (super != "")
-			{
-				dt = SearchGlobalExpr(cc,null, super);
-				if (dt != null)
-				{
-					return SearchExprInClassHierarchyBackward(cc,dt, name);
-				}
-			}
+            if (node is DClassLike)
+            {
+                string super = (node as DClassLike).BaseClass;// Should be superior class
+                /*if(!DTokens.ClassLike[env.TypeToken] && !exact)
+                {
+                    super = env.type;
+                }*/
+                if (super != "")
+                {
+                    dt = SearchGlobalExpr(cc, null, super);
+                    if (dt != null)
+                    {
+                        return SearchExprInClassHierarchyBackward(cc, dt, name);
+                    }
+                }
+            }
 
 			return SearchExprInClassHierarchyBackward(cc,(DNode)node.Parent,name);
 		}
@@ -604,18 +613,18 @@ namespace D_IDE
                         rl.Add(new DCompletionData(arg, selectedExpression, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
                     }
 
-				if (selectedExpression.superClass == "")
+                if (selectedExpression is DClassLike && !String.IsNullOrEmpty((selectedExpression as DClassLike).BaseClass))
+                {
+                    // if not, add items of all superior classes or interfaces
+                    DNode dt = SearchGlobalExpr(cc, null, (selectedExpression as DClassLike).BaseClass); // Should be superior class
+                    AddAllClassMembers(cc, dt, ref rl, false);
+                }
+				else
 				{
 					//TODO: Find out what gets affected by returning here
 					//return;
 					if (selectedExpression.fieldtype!=FieldType.Variable && !DTokens.ClassLike[selectedExpression.TypeToken] && selectedExpression.Parent != null && (selectedExpression.Parent as DNode).fieldtype != FieldType.Root)
 						AddAllClassMembers(cc,(DNode)selectedExpression.Parent, ref rl, all);
-				}
-				else
-				{
-					// if not, add items of all superior classes or interfaces
-					DNode dt = SearchGlobalExpr(cc,null, selectedExpression.superClass); // Should be superior class
-					AddAllClassMembers(cc,dt, ref rl, false);
 				}
 			}
 		}
@@ -670,10 +679,12 @@ namespace D_IDE
                         rl.Add(new DCompletionData(arg, selectedExpression, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
                     }
 
-				if ((selectedExpression as DNode).superClass == "") return;
-				DNode dt = SearchGlobalExpr(cc,null, (selectedExpression as DNode).superClass); // Should be superior class
-				if (dt == null) return;
-				AddAllClassMembers(cc,dt, ref rl, all, exact, searchExpr);
+                if (selectedExpression is DClassLike && !String.IsNullOrEmpty((selectedExpression as DClassLike).BaseClass))
+                {
+                    DNode dt = SearchGlobalExpr(cc, null, (selectedExpression as DClassLike).BaseClass); // Should be superior class
+                    if (dt == null) return;
+                    AddAllClassMembers(cc, dt, ref rl, all, exact, searchExpr);
+                }
 			}
 		}
 

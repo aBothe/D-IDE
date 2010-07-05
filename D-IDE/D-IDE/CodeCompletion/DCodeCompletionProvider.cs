@@ -117,12 +117,9 @@ namespace D_IDE
 				else if (expressions[0] == "super")
 				{
 					seldt = GetClassAt(local.dom, caretLocation);
-					if (seldt != null)
+					if (seldt is DClassLike && !String.IsNullOrEmpty( (seldt as DClassLike).BaseClass))
 					{
-						if (seldt.superClass == "")
-						{
-							seldt = SearchGlobalExpr(prj, local, seldt.superClass, false, out module);
-						}
+                        seldt = SearchGlobalExpr(prj, local, (seldt as DClassLike).BaseClass, false, out module);
 					}
 					isSuper = true;
 					i++;
@@ -362,9 +359,9 @@ namespace D_IDE
 						}
 						else if (expressions[0] == "super" && expressions.Count < 2) // super.
 						{
-							if (seldt.superClass != "")
+							if (seldt is DClassLike && !String.IsNullOrEmpty((seldt as DClassLike).BaseClass))
 							{
-								seldd = SearchGlobalExpr(cc,pf.dom, seldt.superClass);
+                                seldd = SearchGlobalExpr(cc, pf.dom, (seldt as DClassLike).BaseClass);
 								if (seldd != null)
 								{
 									AddAllClassMembers(cc,seldd, ref rl, true);

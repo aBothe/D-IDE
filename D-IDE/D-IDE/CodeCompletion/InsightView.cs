@@ -158,9 +158,9 @@ namespace D_IDE
 				else if (expressions[0] == "super")
 				{
 					seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
-					if (seldt != null && seldt.superClass != "")
+                    if (seldt is DClassLike && !String.IsNullOrEmpty((seldt as DClassLike).BaseClass))
 					{
-						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.fileData.dom, seldt.superClass);
+                        seldt = DCodeCompletionProvider.SearchGlobalExpr(cc, diw.fileData.dom, (seldt as DClassLike).BaseClass);
 						i++;
 						if (seldt != null && expressions.Length < 2)
 						{

@@ -36,6 +36,9 @@ namespace D_Parser
 
     public class DClassLike : DNode
     {
+        public string ImplementedInterface;
+        public string BaseClass;
+
         public DClassLike()
             : base(FieldType.Class)
         {
@@ -45,6 +48,8 @@ namespace D_Parser
 
     public class DEnum : DNode
     {
+        public string EnumBaseType;
+
         public DEnum()
             : base(FieldType.Enum)
         {
