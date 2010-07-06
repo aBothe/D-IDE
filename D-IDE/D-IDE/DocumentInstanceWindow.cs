@@ -576,14 +576,14 @@ namespace D_IDE
             }
 
             if (commStart < 0) return;
-            int commEnd = DCodeCompletionProvider.Commenting.IndexOf (txt.Text,IsNested?"+/":"*/", off);
+            int commEnd = DCodeCompletionProvider.Commenting.IndexOf (txt.Text,IsNested?"+/":"*/", off+(commStart==off?2:0));
             if (commEnd < 0) return;
 
             txt.Document.UndoStack.StartUndoGroup();
             txt.Document.Remove(commEnd, 2);
             txt.Document.Remove(commStart, 2);
 
-            txt.ActiveTextAreaControl.Caret.Position = txt.ActiveTextAreaControl.Document.OffsetToPosition(off-2);
+            if(commStart!=off)txt.ActiveTextAreaControl.Caret.Position = txt.ActiveTextAreaControl.Document.OffsetToPosition(off-2);
 
             if (txt.ActiveTextAreaControl.SelectionManager.SelectionCollection.Count > 0)
             {
