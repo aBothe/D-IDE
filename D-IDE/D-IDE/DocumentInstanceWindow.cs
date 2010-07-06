@@ -516,7 +516,7 @@ namespace D_IDE
                 int line = Caret.Line;
                 txt.Document.Insert(
                     txt.Document.PositionToOffset(new TextLocation(0, line)),
-                    "//"
+                    "// "
                     );
             }
             else
@@ -524,20 +524,23 @@ namespace D_IDE
                 ISelection isel = txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
                 txt.Document.UndoStack.StartUndoGroup();
 
-                bool a, b, IsInBlock, IsInNested;
+                bool a, b, IsInBlock, IsInNested, HasBeenCommented=false;
                 DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Text, isel.Offset, out a, out b, out IsInBlock, out IsInNested);
 
                 if (IsInNested && !IsInBlock || (!IsInBlock && !IsInNested))
                 {
                     txt.Document.Insert(isel.EndOffset, "*/");
                     txt.Document.Insert(isel.Offset, "/*");
+                    HasBeenCommented = true;
                 }
                 else if (IsInBlock && !IsInNested)
                 {
                     txt.Document.Insert(isel.EndOffset, "+/");
                     txt.Document.Insert(isel.Offset, "/+");
+                    HasBeenCommented = true;
                 }
-                txt.ActiveTextAreaControl.SelectionManager.SetSelection(
+
+                if(HasBeenCommented)txt.ActiveTextAreaControl.SelectionManager.SetSelection(
                     new TextLocation(isel.StartPosition.X + 2, isel.StartPosition.Y),
                     new TextLocation(isel.EndPosition.X + 2, isel.EndPosition.Y)
                     );
