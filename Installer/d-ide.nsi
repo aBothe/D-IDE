@@ -12,7 +12,8 @@
 !define CLR_INSTALLER_HELPER ".\"
 
 !define DNF4_URL "http://download.microsoft.com/download/1/B/E/1BE39E79-7E39-46A3-96FF-047F95396215/dotNetFx40_Full_setup.exe"
-!define VCPPR2008_URL "http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
+;!define VCPPR2008_URL "http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
+!define VCPPR2010_URL "http://download.microsoft.com/download/5/B/C/5BC5DBB3-652D-4DCE-B14A-475AB85EEF6E/vcredist_x86.exe"
 !define DMD_URL "http://ftp.digitalmars.com/dinstaller.exe"
 !define DMD_FILE_LIST_URL "http://ftp.digitalmars.com/"
 
@@ -283,39 +284,39 @@ Section "-.Net Framework 4" net4_section_id
 SectionEnd
 
 ;--------------------------------------------------------
-; Download and install the Visual C++ 7.0 Runtime
+; Download and install the Visual C++ 2010 Runtime
 ;--------------------------------------------------------
-Section "-Visual C++ 2008 Runtime" vcpp2008runtime_section_id
-	Call VisualCPP2008RuntimeExists
+Section "-Visual C++ 2010 Runtime" vcpp2010runtime_section_id
+	Call VisualCPP2010RuntimeExists
 	Pop $1
-	IntCmp $1 0 SkipVCPP2008Runtime
+	IntCmp $1 0 SkipVCPP2010Runtime
 
 	StrCpy $1 "vcredist_x86.exe"
 	StrCpy $2 "$EXEDIR\$1"
 	IfFileExists $2 FileExistsAlready FileMissing
 
 	FileMissing:
-		DetailPrint "Visual C++ 2008 Runtime not installed... Downloading file."
+		DetailPrint "Visual C++ 2010 Runtime not installed... Downloading file."
 		StrCpy $2 "$TEMP\$1"
-		NSISdl::download "${VCPPR2008_URL}" $2
+		NSISdl::download "${VCPPR2010_URL}" $2
 
-	FileExistsAlready:
-		DetailPrint "Installing the Visual C++ 2008 Runtime."
+	FileExistsAlreadyFileExistsAlready:
+		DetailPrint "Installing the Visual C++ 2010 Runtime."
 		ExecWait "$2 /q"
 
-		Call VisualCPP2008RuntimeExists
+		Call VisualCPP2010RuntimeExists
 		Pop $1
-		IntCmp $1 0 VCPP2008RuntimeDone VCPP2008RuntimeFailed
+		IntCmp $1 0 VCPP2010RuntimeDone VCPP2010RuntimeFailed
 
-	VCPP2008RuntimeFailed:
-		DetailPrint "Visual C++ 2008 Runtime install failed... Aborting Install"
-		MessageBox MB_OK "Visual C++ 2008 Runtime install failed... Aborting Install"
+	VCPP2010RuntimeFailed:
+		DetailPrint "Visual C++ 2010 Runtime install failed... Aborting Install"
+		MessageBox MB_OK "Visual C++ 2010 Runtime install failed... Aborting Install"
 		Abort
 
-	SkipVCPP2008Runtime:
-		DetailPrint "Visual C++ 2008 Runtime found... Continuing."
+	SkipVCPP2010Runtime:
+		DetailPrint "Visual C++ 2010 Runtime found... Continuing."
 
-	VCPP2008RuntimeDone:
+	VCPP2010RuntimeDone:
 SectionEnd
 
 ;--------------------------------------------------------
@@ -552,21 +553,25 @@ Function DotNet4Exists
 FunctionEnd
 
 ;--------------------------------------------------------
-; Detects Visual C++ 2008 Runtime
+; Detects Visual C++ 2010 Runtime
 ;--------------------------------------------------------
-Function VisualCPP2008RuntimeExists
+Function VisualCPP2010RuntimeExists
 	ClearErrors
-	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{FF66E9F6-83E7-3A3E-AF14-8DE9A809A6A4}" "DisplayVersion"
-	IfErrors VCPP2008TryAgain VCPP2008Found
-	VCPP2008TryAgain:
-		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3C3D696B-0DB7-3C6D-A356-3DB8CE541918}" "DisplayVersion"
-		IfErrors VCPP2008NotFound VCPP2008Found
+	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x86" "Installed"
+	IfErrors VCPP2010TryAgain VCPP2010Found
+	VCPP2010TryAgain:
+		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x64" "Installed"
+		IfErrors VCPP2010TryYetAgain VCPP2010Found
 
-	VCPP2008Found:
+	VCPP2010TryYetAgain:
+		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\ia64" "Installed"
+		IfErrors VCPP2010NotFound VCPP2010Found
+
+	VCPP2010Found:
 		Push 0
 		Goto ExitFunction
 
-	VCPP2008NotFound:
+	VCPP2010NotFound:
 		Push 1
 		Goto ExitFunction
 
