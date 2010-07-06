@@ -300,7 +300,7 @@ Section "-Visual C++ 2010 Runtime" vcpp2010runtime_section_id
 		StrCpy $2 "$TEMP\$1"
 		NSISdl::download "${VCPPR2010_URL}" $2
 
-	FileExistsAlreadyFileExistsAlready:
+	FileExistsAlready:
 		DetailPrint "Installing the Visual C++ 2010 Runtime."
 		ExecWait "$2 /q"
 
