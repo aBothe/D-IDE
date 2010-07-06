@@ -516,7 +516,7 @@ namespace D_IDE
                 int line = Caret.Line;
                 txt.Document.Insert(
                     txt.Document.PositionToOffset(new TextLocation(0, line)),
-                    "// "
+                    "//"
                     );
             }
             else
