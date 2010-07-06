@@ -302,7 +302,8 @@ Section "-Visual C++ 2010 Runtime" vcpp2010runtime_section_id
 
 	FileExistsAlready:
 		DetailPrint "Installing the Visual C++ 2010 Runtime."
-		ExecWait "$2 /q"
+		;ExecWait "$2 /q"
+		ExecWait "$2"
 
 		Call VisualCPP2010RuntimeExists
 		Pop $1
