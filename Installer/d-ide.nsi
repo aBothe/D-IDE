@@ -290,6 +290,7 @@ Section "-Visual C++ 2010 Runtime" vcpp2010runtime_section_id
 	Call VisualCPP2010RuntimeExists
 	Pop $1
 	IntCmp $1 0 SkipVCPP2010Runtime
+	MessageBox MB_OK "Value of var: $1"
 
 	StrCpy $1 "vcredist_x86.exe"
 	StrCpy $2 "$EXEDIR\$1"
@@ -302,12 +303,13 @@ Section "-Visual C++ 2010 Runtime" vcpp2010runtime_section_id
 
 	FileExistsAlready:
 		DetailPrint "Installing the Visual C++ 2010 Runtime."
-		;ExecWait "$2 /q"
-		ExecWait "$2"
+		ExecWait "$2 /q"
+		;ExecWait "$2"
 
 		Call VisualCPP2010RuntimeExists
 		Pop $1
 		IntCmp $1 0 VCPP2010RuntimeDone VCPP2010RuntimeFailed
+		MessageBox MB_OK "Value of var: $1"
 
 	VCPP2010RuntimeFailed:
 		DetailPrint "Visual C++ 2010 Runtime install failed... Aborting Install"
@@ -558,14 +560,14 @@ FunctionEnd
 ;--------------------------------------------------------
 Function VisualCPP2010RuntimeExists
 	ClearErrors
-	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x86" "Installed"
+	ReadRegDWORD $1 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x86" "Installed"
 	IfErrors VCPP2010TryAgain VCPP2010Found
 	VCPP2010TryAgain:
-		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x64" "Installed"
+		ReadRegDWORD $1 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x64" "Installed"
 		IfErrors VCPP2010TryYetAgain VCPP2010Found
 
 	VCPP2010TryYetAgain:
-		ReadRegStr $1 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\ia64" "Installed"
+		ReadRegDWORD $1 HKLM "SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\ia64" "Installed"
 		IfErrors VCPP2010NotFound VCPP2010Found
 
 	VCPP2010Found:
