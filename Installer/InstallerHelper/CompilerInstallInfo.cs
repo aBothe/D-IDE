@@ -54,7 +54,7 @@ public class CompilerInstallInfo
                     {
                         DirectoryInfo
                             dir = executableFile.Directory.Parent.Parent,
-                            druntime = new DirectoryInfo(dir.FullName + @"\src\druntime"),
+                            druntime = new DirectoryInfo(dir.FullName + @"\src\druntime\import"),
                             phobos = new DirectoryInfo(dir.FullName + @"\src\phobos");
 
                         if (druntime.Exists) dirs.Add(druntime.FullName);

@@ -427,16 +427,24 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		pop $DMD2_BIN_VERSION
 		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion" $DMD2_BIN_VERSION
 
-		CopyFiles "$INSTDIR\D-IDE.config\D-IDE.settings.xml" "$TEMP"
+		
+		StrCpy $0 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
+		StrCpy $1 "$TEMP\D-IDE.settings.xml"
+		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
+		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
 
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
+		
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 1 "${D_FILE_LIST}"
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$TEMP\D-IDE.settings.xml"
-
-		CopyFiles "$TEMP\D-IDE.settings.xml" "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
-
 		pop $1
 		StrCmp $1 "" +2 0
 		DetailPrint $1
+		
+		
+		StrCpy $0 "$TEMP\D-IDE.settings.xml"
+		StrCpy $1 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
+		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
+		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
 
 	Finished:
 

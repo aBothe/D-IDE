@@ -862,7 +862,7 @@ namespace D_IDE
 							{
 								if (xr.LocalName == "dir")
 									cc.ImportDirectories.Add(xr.ReadString());
-								else break;
+								else if (xr.NodeType != XmlNodeType.Whitespace) break;
 							}
 							break;
 
@@ -888,8 +888,8 @@ namespace D_IDE
 								else if (xr.LocalName == "args")
 								{
 									arg = xr.ReadString();
-								}
-								else break;
+                                }
+                                else if (xr.NodeType != XmlNodeType.Whitespace) break;
 							}
 
 							switch (binname)
