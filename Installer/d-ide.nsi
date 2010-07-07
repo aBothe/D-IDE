@@ -268,7 +268,6 @@ Section "-Visual C++ 2010 Runtime" vcpp2010runtime_section_id
 	Call VisualCPP2010RuntimeExists
 	Pop $1
 	IntCmp $1 0 SkipVCPP2010Runtime
-	MessageBox MB_OK "Value of var: $1"
 
 	StrCpy $1 "vcredist_x86.exe"
 	StrCpy $2 "$EXEDIR\$1"
