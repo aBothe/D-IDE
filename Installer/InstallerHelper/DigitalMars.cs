@@ -15,6 +15,7 @@ namespace DIDE.Installer
         private const string DIGITAL_MARS_HTTP = "http://ftp.digitalmars.com/";
         private const string DIGITAL_MARS_DMD_1 = "ftp://ftp.digitalmars.com/dmd.1.056.zip";
         private const string DIGITAL_MARS_DMD_2 = "ftp://ftp.digitalmars.com/dmd.2.041.zip";
+        //private const string FILE_LIST = "dmd.files.${FILEDATE}.html";
 
         private static Dictionary<int, CompilerVersion> versions = new Dictionary<int, CompilerVersion>();
 
@@ -39,6 +40,42 @@ namespace DIDE.Installer
             GetDMDInfo();
             subVersion = (version == 1) ? versions[1].SubVersion : versions[2].SubVersion;
             return (version == 1) ? versions[1].Url : versions[2].Url;
+        }
+
+        public static void PreloadFromHtmlList(string filename)
+        {
+            if (versions.Count == 0)
+            {
+                if (File.Exists(filename))
+                {
+                    string[] lines = File.ReadAllLines(filename);
+                    CompilerVersion ver;
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        int idx1 = lines[i].IndexOf("dmd.1.");
+                        int idx2 = lines[i].IndexOf("dmd.2.");
+                        if (idx1 > 0 || idx2 > 0)
+                        {
+                            ver = new CompilerVersion();
+                            if (ver.FromHtml(lines[i]))
+                            {
+                                if (!versions.ContainsKey(ver.Version) || versions[ver.Version].SubVersion < ver.SubVersion)
+                                {
+                                    versions[ver.Version] = ver;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!DataFile.Exists && versions.Count == 2)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        foreach (CompilerVersion v in versions.Values) sb.Append(v.ToString()).Append("\r\n");
+                        File.WriteAllText(DataFile.FullName, sb.ToString());
+                        DataFile.Refresh();
+                    }
+                }
+            }
         }
 
         public static void Preload()
@@ -161,6 +198,31 @@ namespace DIDE.Installer
                     Url = items[2].Trim();
                     Error = items[3].Trim();
                     return true;
+                }
+                return false;
+            }
+            public bool FromHtml(string s)
+            {
+                string start = "href=\"";
+                int idx1 = s.IndexOf(start) + start.Length, idx2;
+                if (idx1 > 0)
+                {
+                    idx2 = s.IndexOf('\"', idx1 + 1);
+                    if (idx2 > idx1)
+                    {
+                        string fname = s.Substring(idx1, idx2 - idx1);
+
+                        string[] items = fname.Split('.');
+                        if (items.Length == 4)
+                        {
+                            Version = Convert.ToInt32(items[1]);
+                            SubVersion = Convert.ToInt32(items[2]);
+                            Url = DIGITAL_MARS_HTTP + fname;
+                            Error = string.Empty;
+                            return true;
+                        }
+
+                    }
                 }
                 return false;
             }

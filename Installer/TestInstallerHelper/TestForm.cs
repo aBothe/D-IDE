@@ -24,7 +24,7 @@ namespace TestInstallerHelper
             InstallerHelper.CreateConfigurationFile(file);
 
             InstallerHelper.Refresh();
-            InstallerHelper.Initialize();
+            InstallerHelper.Initialize(@"C:\Users\Justin\AppData\Local\Temp\dmd.files.20100706.html");
             while (InstallerHelper.IsThreadActive)
             {
                 Write(".");

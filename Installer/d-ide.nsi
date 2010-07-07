@@ -34,6 +34,7 @@ Var DMD2_BIN_VERSION
 Var DMD1_LATEST_VERSION
 Var DMD2_LATEST_VERSION
 Var D_WEB_INSTALL_PATH
+Var D_FILE_LIST
 Var PERFORM_CLR_FEATURES
 Var IS_CONNECTED
 
@@ -59,24 +60,29 @@ Function .onInit
 	SetOutPath $PLUGINSDIR
 	File "DIDE.Installer.dll"
 
+	StrCpy $D_FILE_LIST "$TEMP\dmd.files.${FILEDATE}.html"
+	
 	ReadRegStr $DMD1_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath"
 	ReadRegStr $DMD2_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath"
 	ReadRegStr $DMD1_BIN_VERSION HKLM "SOFTWARE\D-IDE" "Dmd1xBinVersion"
 	ReadRegStr $DMD2_BIN_VERSION HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion"
 	ReadRegStr $D_WEB_INSTALL_PATH HKLM "SOFTWARE\D" "Install_Dir"
 
+	Call DotNet20Exists
+	Pop $PERFORM_CLR_FEATURES
+	
 	Call IsConnected
 	Pop $IS_CONNECTED
+	
+	IntCmp $IS_CONNECTED 1 0 skipToEnd skipToEnd
 
-	Call DotNet4Exists
-	Pop $PERFORM_CLR_FEATURES
-	IntCmp $PERFORM_CLR_FEATURES 1 0 +2 +2
-	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
+	inetc::get "${DMD_FILE_LIST_URL}" "${D_FILE_LIST}"
+	Pop $0
+	
+	IntCmp $PERFORM_CLR_FEATURES 1 0 skipToEnd skipToEnd
+	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 1 "${D_FILE_LIST}"
 
-	;NSISdl::download "${DMD_FILE_LIST_URL}" $2
-	;pop $3
-	;MessageBox MB_OK "$3 $2"
-
+	skipToEnd:
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -112,29 +118,9 @@ Page custom DmdConfigPage DmdConfigPageValidation
 
 !insertmacro MUI_LANGUAGE "English"
 
-;--------------------------------------------------------
-; Custom Experience UI Configuration
-;--------------------------------------------------------
-;!define XPUI_ABORTWARNING
-
-;${Page} Welcome
-;${LicensePage} ".\License.rtf"
-;${Page} Directory
-;Page custom DmdConfigChoicePage DmdConfigChoicePageValidation
-;Page custom DmdConfigPage DmdConfigPageValidation
-;${Page} Components
-;${Page} InstFiles
-;${Page} Finish
-
-;${UnPage} Welcome
-;!insertmacro XPUI_PAGEMODE_UNINST
-;!insertmacro XPUI_PAGE_UNINSTCONFIRM_NSIS
-;!insertmacro XPUI_PAGE_INSTFILES
-;!insertmacro XPUI_LANGUAGE "English"
 
 ReserveFile "dmd-config-choice.ini"
 ReserveFile "dmd-config.ini"
-;!insertmacro XPUI_RESERVEFILE_INSTALLOPTIONS
 
 ;--------------------------------------------------------
 ; Setup Icons
@@ -146,16 +132,13 @@ UninstallIcon ".\uninstall.ico"
 ; In this section, we shall use a custom configuration page.
 ;------------------------------------------------------------------------
 Function DmdConfigChoicePage
-	;!insertmacro XPUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
-	;!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config-choice.ini"
 
 	!insertmacro MUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
 	InstallOptions::dialog "$PLUGINSDIR\dmd-config-choice.ini"
 FunctionEnd
 
 Function DmdConfigChoicePageValidation
-    ; At this point the user has either pressed Next or one of our custom buttons
-    ; We find out which by reading from the INI file
+
     ReadINIStr $0 "$PLUGINSDIR\dmd-config-choice.ini" "Settings" "State"
     StrCmp $0 1 doNothingOption
     StrCmp $0 2 webInstallerOption
@@ -219,9 +202,7 @@ Function DmdConfigPage
 		pop $DMD2_BIN_PATH
 		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 7" "State" $DMD2_BIN_PATH
 
-	;!insertmacro XPUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
-	;!insertmacro XPUI_INSTALLOPTIONS_DISPLAY "dmd-config.ini"
-
+		
 	!insertmacro MUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
 	InstallOptions::dialog "$PLUGINSDIR\dmd-config.ini"
 FunctionEnd
@@ -304,12 +285,10 @@ Section "-Visual C++ 2010 Runtime" vcpp2010runtime_section_id
 	FileExistsAlready:
 		DetailPrint "Installing the Visual C++ 2010 Runtime."
 		ExecWait "$2 /q"
-		;ExecWait "$2"
 
 		Call VisualCPP2010RuntimeExists
 		Pop $1
 		IntCmp $1 0 VCPP2010RuntimeDone VCPP2010RuntimeFailed
-		MessageBox MB_OK "Value of var: $1"
 
 	VCPP2010RuntimeFailed:
 		DetailPrint "Visual C++ 2010 Runtime install failed... Aborting Install"
@@ -397,7 +376,7 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		IfFileExists $2 Dmd1FileExists Dmd1FileMissing
 
 		Dmd1FileMissing:
-			StrCpy $2 "$EXEDIR\$1"
+			StrCpy $2 "$TEMP\$1"
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Url" 0
 			Pop $0
 			NSISdl::download "$0" $2
@@ -419,7 +398,7 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 
 		Dmd2FileMissing:
 			StrCpy $1 "dmd2.$DMD2_LATEST_VERSION.zip"
-			StrCpy $2 "$EXEDIR\$1"
+			StrCpy $2 "$TEMP\$1"
 			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Url" 0
 			Pop $0
 			NSISdl::download "$0" $2
@@ -516,21 +495,21 @@ SectionEnd
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 2.0
 ;--------------------------------------------------------
-;Function DotNet20Exists
-;	ClearErrors
-;	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v2.0.50727" "Version"
-;	IfErrors MDNFNotFound MDNFFound
-;
-;	MDNFFound:
-;		Push 1
-;		Goto ExitFunction
-;
-;	MDNFNotFound:
-;		Push 0
-;		Goto ExitFunction
-;
-;	ExitFunction:
-;FunctionEnd
+Function DotNet20Exists
+	ClearErrors
+	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v2.0.50727" "Version"
+	IfErrors MDNFNotFound MDNFFound
+
+	MDNFFound:
+		Push 1
+		Goto ExitFunction
+
+	MDNFNotFound:
+		Push 0
+		Goto ExitFunction
+
+	ExitFunction:
+FunctionEnd
 
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 4

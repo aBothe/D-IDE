@@ -10,9 +10,11 @@ namespace DIDE.Installer
     public class InstallerHelper
     {
         private static Thread t;
+        private static string fileListLocation;
 
-        public static void Initialize()
+        public static void Initialize(String fileListLocation)
         {
+            InstallerHelper.fileListLocation = fileListLocation;
             ThreadStart ts = new ThreadStart(Preload);
             t = new Thread(ts);
             t.Start();
@@ -47,10 +49,15 @@ namespace DIDE.Installer
             try
             {
                 LocalCompiler.Refresh();
+                DigitalMars.PreloadFromHtmlList(fileListLocation);
                 DigitalMars.Preload();
                 LocalCompiler.Preload();
             }
             catch (ThreadAbortException)
+            {
+                //do nothing now - just return
+            }
+            catch (Exception)
             {
                 //do nothing now - just return
             }
