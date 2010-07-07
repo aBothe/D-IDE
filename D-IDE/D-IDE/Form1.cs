@@ -1062,7 +1062,10 @@ namespace D_IDE
                 if (dcs[i] == dockPanel.ActiveDocument)
                 {
                     if (i > 0) (dcs[i - 1] as DockContent).Activate();
-                    (dcs[i] as DockContent).Close();
+
+                    if (dcs[i] is DocumentInstanceWindow)
+                        (dcs[i] as DockContent).Close();
+                    else (dcs[i] as DockContent).Hide();
                     break;
                 }
             }
