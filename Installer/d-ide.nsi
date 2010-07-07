@@ -12,7 +12,6 @@
 !define CLR_INSTALLER_HELPER ".\"
 
 !define DNF4_URL "http://download.microsoft.com/download/1/B/E/1BE39E79-7E39-46A3-96FF-047F95396215/dotNetFx40_Full_setup.exe"
-;!define VCPPR2008_URL "http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe"
 !define VCPPR2010_URL "http://download.microsoft.com/download/5/B/C/5BC5DBB3-652D-4DCE-B14A-475AB85EEF6E/vcredist_x86.exe"
 !define DMD_URL "http://ftp.digitalmars.com/dinstaller.exe"
 !define DMD_FILE_LIST_URL "http://ftp.digitalmars.com/"
@@ -25,6 +24,7 @@
 
 !define DMD_WEB_INSTALLER "DMD Web Installer"
 !define DMD_UNZIP_AND_COPY "DMD Unzip and Copy"
+!define D_FILE_LIST "$TEMP\dmd.files.${FILEDATE}.html"
 
 Var DMD_INSTALL_ACTION
 Var DMD1_BIN_PATH
@@ -34,7 +34,6 @@ Var DMD2_BIN_VERSION
 Var DMD1_LATEST_VERSION
 Var DMD2_LATEST_VERSION
 Var D_WEB_INSTALL_PATH
-Var D_FILE_LIST
 Var PERFORM_CLR_FEATURES
 Var IS_CONNECTED
 
@@ -59,8 +58,6 @@ Function .onInit
 
 	SetOutPath $PLUGINSDIR
 	File "DIDE.Installer.dll"
-
-	StrCpy $D_FILE_LIST "$TEMP\dmd.files.${FILEDATE}.html"
 	
 	ReadRegStr $DMD1_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath"
 	ReadRegStr $DMD2_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath"
@@ -76,11 +73,11 @@ Function .onInit
 	
 	IntCmp $IS_CONNECTED 1 0 skipToEnd skipToEnd
 
-	inetc::get "${DMD_FILE_LIST_URL}" "${D_FILE_LIST}"
-	Pop $0
-	
-	IntCmp $PERFORM_CLR_FEATURES 1 0 skipToEnd skipToEnd
-	CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 1 "${D_FILE_LIST}"
+		inetc::get "${DMD_FILE_LIST_URL}" "${D_FILE_LIST}"
+		Pop $0
+		
+		IntCmp $PERFORM_CLR_FEATURES 1 0 skipToEnd skipToEnd
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 1 "${D_FILE_LIST}"
 
 	skipToEnd:
 FunctionEnd
@@ -430,8 +427,13 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		pop $DMD2_BIN_VERSION
 		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion" $DMD2_BIN_VERSION
 
+		CopyFiles "$INSTDIR\D-IDE.config\D-IDE.settings.xml" "$TEMP"
+
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 0
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$TEMP\D-IDE.settings.xml"
+
+		CopyFiles "$TEMP\D-IDE.settings.xml" "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
+
 		pop $1
 		StrCmp $1 "" +2 0
 		DetailPrint $1
