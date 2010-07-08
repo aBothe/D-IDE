@@ -527,13 +527,13 @@ namespace D_IDE
                 bool a, b, IsInBlock, IsInNested, HasBeenCommented=false;
                 DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Text, isel.Offset, out a, out b, out IsInBlock, out IsInNested);
 
-                if (IsInNested && !IsInBlock || (!IsInBlock && !IsInNested))
+                if (!IsInBlock && !IsInNested)
                 {
                     txt.Document.Insert(isel.EndOffset, "*/");
                     txt.Document.Insert(isel.Offset, "/*");
                     HasBeenCommented = true;
                 }
-                else if (IsInBlock && !IsInNested)
+                else
                 {
                     txt.Document.Insert(isel.EndOffset, "+/");
                     txt.Document.Insert(isel.Offset, "/+");
@@ -579,7 +579,10 @@ namespace D_IDE
             }
 
             if (commStart < 0) return;
-            int commEnd = DCodeCompletionProvider.Commenting.IndexOf (txt.Text,IsNested?"+/":"*/", off+(commStart==off?2:0));
+
+            int off2 = off + (commStart == off ? 2 : 0);
+
+            int commEnd = DCodeCompletionProvider.Commenting.IndexOf (txt.Text,IsNested?"+/":"*/", off2);
             if (commEnd < 0) return;
 
             txt.Document.UndoStack.StartUndoGroup();
@@ -653,6 +656,8 @@ namespace D_IDE
             D_IDEForm.thisForm.errlog.parserErrors.Clear();
             D_IDEForm.thisForm.errlog.Update();
 
+            txt.Document.MarkerStrategy.RemoveAll(RemoveParserMarkersPred);
+
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Parsing " + fileData.ModuleName;
             fileData.dom = DParser.ParseText(fileData.mod_file, fileData.ModuleName, txt.Text, out fileData.import);
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Done parsing " + fileData.ModuleName;
@@ -665,6 +670,12 @@ namespace D_IDE
             }
 
             ParseFolds();
+        }
+
+        private static bool RemoveParserMarkersPred(TextMarker tm)
+        {
+            if (tm.TextMarkerType == TextMarkerType.WaveLine) return true;
+            return false;
         }
 
         #region Folding

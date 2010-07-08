@@ -94,7 +94,7 @@ namespace D_IDE
                 int off = 0;
                 IsInString = IsInLineComment = IsInBlockComment = IsInNestedBlockComment = false;
 
-                while (off < Offset)
+                while (off < Offset-1)
                 {
                     cur = Text[off];
                     if (off < Text.Length - 1) peekChar = Text[off + 1];
