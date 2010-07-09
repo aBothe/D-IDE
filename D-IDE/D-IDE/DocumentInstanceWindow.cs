@@ -566,30 +566,32 @@ namespace D_IDE
             }
             #endregion
             #region If no single-line comment was removed, delete multi-line comment block tags
-            int off = CaretOffset;
-            bool IsNested = false;
-
+            if (CaretOffset < 2) return;
+            int off = CaretOffset-2;
+            
             // Seek the comment block opener
-            commStart = DCodeCompletionProvider.Commenting.LastIndexOf(txt.Text, "/*", off);
-            int nestedCommStart = DCodeCompletionProvider.Commenting.LastIndexOf(txt.Text, "/+", off);
-            if (nestedCommStart>commStart)
+            commStart = DCodeCompletionProvider.Commenting.LastIndexOf(txt.Text, false, off);
+            int nestedCommStart = DCodeCompletionProvider.Commenting.LastIndexOf(txt.Text, true, off);
+            if (commStart < 0 && nestedCommStart<0) return;
+
+            // Seek the fitting comment block closer
+            int off2 = off +(Math.Max(nestedCommStart,commStart) == off ? 2 : 0);
+            int commEnd = DCodeCompletionProvider.Commenting.IndexOf (txt.Text, false, off2);
+            int commEnd2 = DCodeCompletionProvider.Commenting.IndexOf(txt.Text, true, off2);
+
+            if (nestedCommStart > commStart && commEnd2>nestedCommStart)
             {
                 commStart = nestedCommStart;
-                IsNested = true;
+                commEnd = commEnd2;
             }
 
-            if (commStart < 0) return;
-
-            int off2 = off + (commStart == off ? 2 : 0);
-
-            int commEnd = DCodeCompletionProvider.Commenting.IndexOf (txt.Text,IsNested?"+/":"*/", off2);
-            if (commEnd < 0) return;
+            if (commStart<0 || commEnd < 0) return;
 
             txt.Document.UndoStack.StartUndoGroup();
             txt.Document.Remove(commEnd, 2);
             txt.Document.Remove(commStart, 2);
 
-            if(commStart!=off)txt.ActiveTextAreaControl.Caret.Position = txt.ActiveTextAreaControl.Document.OffsetToPosition(off-2);
+            if(commStart!=off)txt.ActiveTextAreaControl.Caret.Position = txt.ActiveTextAreaControl.Document.OffsetToPosition(off/*-2*/);
 
             if (txt.ActiveTextAreaControl.SelectionManager.SelectionCollection.Count > 0)
             {

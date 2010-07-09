@@ -26,12 +26,13 @@ namespace D_IDE
 
         public class Commenting
         {
-            public static int IndexOf(string HayStack, string Needle, int Start)
+            public static int IndexOf(string HayStack, bool Nested, int Start)
             {
-                if (String.IsNullOrEmpty(Needle) || Needle.Length > HayStack.Length) return -1;
+                string Needle = Nested ? "+/" : "*/";
                 char cur = '\0';
                 int off = Start;
                 bool IsInString = false;
+                int block=0, nested=0;
 
                 while (off < HayStack.Length)
                 {
@@ -43,13 +44,37 @@ namespace D_IDE
                         IsInString = !IsInString;
                     }
 
+                    if (!IsInString && (cur == '/') && (HayStack[off + 1] == '*' || HayStack[off + 1] == '+'))
+                    {
+                        if (HayStack[off + 1] == '*')
+                            block++;
+                        else 
+                            nested++;
+
+                        off +=2;
+                        continue;
+                    }
+
                     if (!IsInString && cur == Needle[0])
                     {
-                        if (off + Needle.Length > HayStack.Length) 
+                        if (off + Needle.Length >= HayStack.Length) 
                             return -1;
 
-                        if (HayStack.Substring(off, Needle.Length) == Needle) 
-                            return off;
+                        if (HayStack.Substring(off, Needle.Length) == Needle)
+                        {
+                            if (Nested) nested--; else block--;
+
+                            if ((Nested ? nested : block) < 0) // that value has to be -1 because we started to count at 0
+                                return off;
+
+                            off++; // Skip + or *
+                        }
+
+                        if (HayStack.Substring(off, 2) == (Nested ? "*/" : "+/"))
+                        {
+                            if (Nested) block--; else nested--;
+                            off++;
+                        }
                     }
 
                     off++;
@@ -57,16 +82,18 @@ namespace D_IDE
                 return -1;
             }
 
-            public static int LastIndexOf(string HayStack, string Needle, int Start)
+            public static int LastIndexOf(string HayStack, bool Nested, int Start)
             {
-                if (String.IsNullOrEmpty(Needle) || HayStack.Length<Needle.Length) return -1;
-                char cur = '\0';
+                string Needle = Nested ? "/+" : "/*";
+                char cur = '\0', prev='\0';
                 int off = Start;
                 bool IsInString = false;
+                int block = 0, nested = 0;
 
                 while (off >= 0)
                 {
                     cur = HayStack[off];
+                    if (off > 0) prev = HayStack[off - 1];
 
                     // String check
                     if (cur == '\"' && (off < 1 || HayStack[off - 1] != '\\'))
@@ -74,13 +101,32 @@ namespace D_IDE
                         IsInString = !IsInString;
                     }
 
-                    if (!IsInString && cur == Needle[0])
+                    if (!IsInString && (cur=='+' || cur=='*') && HayStack[off+1]=='/')
                     {
-                        if (off + Needle.Length > HayStack.Length)
-                            return -1;
+                        if (cur == '*')
+                            block--;
+                        else
+                            nested--;
 
+                        off -=2;
+                        continue;
+                    }
+
+                    if (!IsInString && cur == '/')
+                    {
                         if (HayStack.Substring(off, Needle.Length) == Needle)
+                        {
+                            if (Nested) nested++; else block++;
+
+                            if ((Nested ? nested : block) >=1)
                             return off;
+                        }
+
+                        if (HayStack.Substring(off, 2) == (Nested ? "/*" : "/+"))
+                        {
+                            if (Nested) block++; else nested++;
+                            off--;
+                        }
                     }
 
                     off--;
