@@ -537,10 +537,22 @@ namespace D_Parser
                 {
                     if (!isFunctionBody && Peek(1).Kind == DTokens.OpenParenthesis)
                     {
-                        if (Peek().Kind == DTokens.Times) // void(*foo)(....);
+                        if (Peek(2).Kind == DTokens.Times && Peek(3).Kind == DTokens.Identifier) // void(*foo)(int,bool argument);
                         {
-                            SemErr(la.Kind, "Skip that kind of syntax...");
-                            SkipToSemicolon();
+                            DDelegate dd = new DDelegate();
+                            dd.type = strVal; // First identifier
+                            lexer.NextToken(); // Skip ID
+                            lexer.NextToken(); // Skip (
+                            lexer.NextToken(); // Skip *
+                            dd.name = strVal; // Function id
+                            lexer.NextToken(); // Skip id
+                            if (!Expect(DTokens.CloseParenthesis, "Expected )")) { SkipToSemicolon(); continue; }
+
+                            DMethod dm = dd;
+                            ParseFunctionArguments(ref dm);
+
+                            ret.Add(dd);
+
                             continue;
                         }
                     }
@@ -1207,8 +1219,32 @@ namespace D_Parser
 
                             targ.startLoc = GetCodeLocation(la);
                             targ.TypeToken = la.Kind;
+
+                            // void (*fn)(int,a,b,c)
+                            if (Peek(1).Kind == DTokens.OpenParenthesis && Peek(2).Kind == DTokens.Times && Peek(3).Kind == DTokens.Identifier)
+                            {
+                                DDelegate dd = new DDelegate();
+                                dd.Assign(targ);
+                                lexer.NextToken(); // Skip ID
+                                lexer.NextToken(); // Skip (
+                                lexer.NextToken(); // Skip *
+                                dd.name = strVal; // Function id
+                                lexer.NextToken(); // Skip id
+                                if (!Expect(DTokens.CloseParenthesis, "Expected )")) break;
+
+                                DMethod dm = dd;
+                                ParseFunctionArguments(ref dm);
+
+                                v.Add(dd);
+                                targ = null;
+                                break;
+                            }
+
                             bool hasTypeMod = false;
                             targ.type = ParseTypeIdent(false, out hasTypeMod);
+
+                            if (la.Kind == DTokens.Comma) continue; // if its just a type without an id
+
                             if (hasTypeMod || (la.Kind != DTokens.CloseParenthesis && Peek(1).Kind != DTokens.CloseParenthesis))
                                 lexer.NextToken(); // Skip last ID
                             if (la.Kind == DTokens.CloseParenthesis) continue;
