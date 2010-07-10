@@ -71,6 +71,7 @@ namespace D_IDE
             this.prjFiles.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.prjFiles_ItemDrag);
             this.prjFiles.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.prjFiles_NodeMouseClick);
             this.prjFiles.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.prjFiles_NodeMouseDoubleClick);
+            this.prjFiles.Click += new System.EventHandler(this.ToogleNode);
             this.prjFiles.DragDrop += new System.Windows.Forms.DragEventHandler(this.prjFiles_DragDrop);
             this.prjFiles.DragEnter += new System.Windows.Forms.DragEventHandler(this.prjFiles_DragOver);
             this.prjFiles.DragOver += new System.Windows.Forms.DragEventHandler(this.prjFiles_DragOver);
@@ -155,14 +156,14 @@ namespace D_IDE
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
             this.fileToolStripMenuItem.Text = "File";
             this.fileToolStripMenuItem.Click += new System.EventHandler(this.addExistingToolStripMenuItem_Click);
             // 
             // directoryToolStripMenuItem
             // 
             this.directoryToolStripMenuItem.Name = "directoryToolStripMenuItem";
-            this.directoryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.directoryToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
             this.directoryToolStripMenuItem.Text = "Directory";
             this.directoryToolStripMenuItem.Click += new System.EventHandler(this.directoryToolStripMenuItem_Click);
             // 
@@ -199,6 +200,7 @@ namespace D_IDE
             // 
             // ProjectExplorer
             // 
+            this.AutoHidePortion = 0.15D;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(221, 352);

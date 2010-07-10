@@ -43,6 +43,7 @@ namespace D_IDE
             Form.CheckForIllegalCrossThreadCalls = false;
             InitializeComponent();
 
+
             /*if (D_IDE_Properties.Default.UseRibbonMenu)
             {
                 this.MainMenuStrip.Visible = false;
@@ -745,12 +746,10 @@ namespace D_IDE
             D_IDE_Properties.Default.dmd1.GlobalModules.Clear();
             D_IDE_Properties.Default.dmd2.GlobalModules.Clear();
             if (updateTh != null && updateTh.ThreadState == System.Threading.ThreadState.Running) return;
-            updateTh = new Thread(delegate()
-            {
+            //updateTh = new Thread(delegate()      {
                 UpdateChacheThread(D_IDE_Properties.Default.dmd1);
                 UpdateChacheThread(D_IDE_Properties.Default.dmd2);
-            });
-            updateTh.Start();
+            //});            updateTh.Start();
         }
 
         private void StopReparsingCacheClick(object sender, EventArgs e)

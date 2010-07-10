@@ -414,8 +414,15 @@ namespace D_Parser
 							token = ReadOperator('/');
 						}
 						break;
+                    case 'r':
+                        peek = ReaderPeek();
+						if(peek == '"')
+							continue;
+						else 
+                            goto default;
+                    case '`':
 					case '"':
-						token = ReadString();
+						token = ReadString(nextChar);
 						break;
 					case '\'':
 						token = ReadChar();
@@ -848,21 +855,21 @@ namespace D_Parser
 			}
 		}
 
-		DToken ReadString()
+		DToken ReadString(int initialChar)
 		{
 			int x = Col - 1;
 			int y = Line;
 
 			sb.Length = 0;
 			originalValue.Length = 0;
-			originalValue.Append('"');
+			originalValue.Append((char)initialChar);
 			bool doneNormally = false;
 			int nextChar;
 			while((nextChar = ReaderRead()) != -1)
 			{
 				char ch = (char)nextChar;
 
-				if(ch == '"')
+				if(nextChar==initialChar)
 				{
 					doneNormally = true;
 					originalValue.Append('"');

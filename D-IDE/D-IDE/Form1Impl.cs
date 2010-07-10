@@ -223,7 +223,11 @@ namespace D_IDE
                     catch (Exception ex)
                     {
                         //if (Debugger.IsAttached) throw ex;
-                        if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.Log(tf);
+                        try
+                        {
+                            if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.Log(tf);
+                        }
+                        catch { }
                         if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n" + ex.Source, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.stopParsingToolStripMenuItem.Enabled = false;

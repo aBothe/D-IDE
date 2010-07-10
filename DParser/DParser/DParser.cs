@@ -753,6 +753,16 @@ namespace D_Parser
                         }
                         break;
                     #endregion
+                    case DTokens.Times:
+                        if (!isFunctionBody)
+                        {
+                            SemErr(DTokens.Times, "Expected declaration and not *");
+                        }
+                        else // *this=...;
+                        {
+                            SkipToSemicolon();
+                        }
+                        break;
                     case DTokens.Cast:
                         if (PeekMustBe(DTokens.OpenParenthesis, "Error parsing \"cast\" Expression: \"(\" expected!"))
                         {

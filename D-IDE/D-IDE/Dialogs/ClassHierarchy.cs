@@ -66,5 +66,12 @@ namespace D_IDE
 				hadClicked = false;
 			}
 		}
+
+        private void TooglNode(object sender, EventArgs e)
+        {
+            TreeNode tn= hierarchy.GetNodeAt(hierarchy.PointToClient( MousePosition));
+            if (tn == null) return;
+            tn.Toggle();
+        }
 	}
 }

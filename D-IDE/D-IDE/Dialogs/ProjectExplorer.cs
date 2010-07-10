@@ -388,18 +388,9 @@ namespace D_IDE
 		}
 
 		private void createNewDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			Point tp = (Point)ProjectMenu.Tag;
-			if (tp == null) return;
-			TreeNode tn = prjFiles.GetNodeAt(tp);
-			if (tn == null || !(tn is ProjectNode)) return;
+        {
 
-			string ndir = (tn as ProjectNode).Project.basedir + "\\New Directory";
-
-			DirectoryTreeNode ntn = new DirectoryTreeNode((tn as ProjectNode).Project, ndir);
-			tn.Nodes.Add(ntn);
-			ntn.BeginEdit();
-		}
+        }
 
 		private void prjFiles_AfterCollapse(object sender, TreeViewEventArgs e)
 		{
@@ -615,6 +606,12 @@ namespace D_IDE
 			UpdateFiles();
 		}
 
+        private void ToogleNode(object sender, EventArgs e)
+        {
+            TreeNode tn = prjFiles.GetNodeAt(prjFiles.PointToClient(MousePosition));
+            if (tn == null) return;
+            tn.Toggle();
+        }
         
 	}
 
