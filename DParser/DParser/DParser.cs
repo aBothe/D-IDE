@@ -357,7 +357,7 @@ namespace D_Parser
         {
             int peek = Peek(1).Kind;
             return la.Kind == DTokens.Identifier &&
-                (peek == DTokens.Comma || peek == DTokens.Assign || peek == DTokens.Semicolon || peek == DTokens.OpenSquareBracket);
+                (peek == DTokens.Comma || peek == DTokens.Assign || peek == DTokens.Semicolon);
         }
 
         bool EOF
@@ -1484,7 +1484,8 @@ namespace D_Parser
                     case DTokens.Assign:
                     case DTokens.Colon:
                     case DTokens.Semicolon: // int;
-                        SynErr(la.Kind, "Expected an identifier!");
+                        if(!IsCStyleDeclaration)
+                            SynErr(la.Kind, "Expected an identifier!");
                         goto do_return;
 
                     case DTokens.Comma:// void foo(T>,< U)()
@@ -1531,7 +1532,7 @@ namespace D_Parser
                         break;
 
                     case DTokens.CloseSquareBracket:
-                        TypeDeclaration keyType = new DTokenDeclaration(DTokens.Int); // default key type is int!
+                        TypeDeclaration keyType = new DTokenDeclaration(DTokens.Int); // default key type is int
                         if (t.Kind != DTokens.OpenSquareBracket) // int>[<] abc;
                         {
                             keyType = declStack.Pop();
@@ -1655,7 +1656,8 @@ namespace D_Parser
 
             //if (!isCTor) lexer.NextToken(); // Skip last ID parsed by ParseIdentifier();
 
-            if (IsVarDecl())// int foo; TypeTuple!(a,T)[] a;
+            if (IsVarDecl() ||// int foo; TypeTuple!(a,T)[] a;
+                ( tv.name!=null &&  (la.Kind==DTokens.Semicolon || la.Kind==DTokens.Assign || la.Kind==DTokens.Comma))) // char abc[]>;< dchar def[]>=<...;
             {
                 DVariable var = new DVariable();
                 var.Assign(tv);
