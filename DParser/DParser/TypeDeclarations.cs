@@ -11,25 +11,11 @@ namespace D_Parser
         public TypeDeclaration Base=null;
         public TypeDeclaration ParentDecl { get { return Base; } set { Base = value; } }
 
-        public TypeDeclaration MostBasic
+        public TypeDeclaration HasSpecificTypeDeclaration<DeclarationType>()
         {
-            get {
-                if (Base != null) return Base.MostBasic;
-                else return Base;
-            }
-            set
-            {
-                if (Base != null) Base.MostBasic=value;
-                else Base=value;
-            }
-        }
+            if (Base == null) return null;
 
-        public TypeDeclaration OneBeforeMostBasic
-        {
-            set {
-                if (Base.Base == null) Base = value;
-                else Base.OneBeforeMostBasic = value;
-            }
+            return Base.HasSpecificTypeDeclaration<DeclarationType>();
         }
 
         /// <summary>
@@ -46,10 +32,6 @@ namespace D_Parser
     {
         public override uint GetDeclarationClassTypeId { get { return 1; } }
         public string Name;
-        /// <summary>
-        /// Unused
-        /// </summary>
-        public new TypeDeclaration Base;
 
         public NormalDeclaration() { }
         public NormalDeclaration(string Identifier)
@@ -57,7 +39,7 @@ namespace D_Parser
 
         public override string  ToString()
         {
-            return Name;
+            return Name + (Base != null ? (" " + Base.ToString()) : "");
         }
     }
 
@@ -65,10 +47,6 @@ namespace D_Parser
     {
         public override uint GetDeclarationClassTypeId { get { return 2; } }
         public int Token;
-        /// <summary>
-        /// Unused
-        /// </summary>
-        public new TypeDeclaration Base;
 
         public DTokenDeclaration() { }
         public DTokenDeclaration(int Token)
@@ -82,7 +60,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Name;
+            return Name + (Base != null ? (" "+Base.ToString()) : "");
         }
     }
 

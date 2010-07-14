@@ -738,6 +738,7 @@ namespace D_IDE
         public bool InsertAction(ICompletionData idata, TextArea ta, int off, char key)
         {
             if (idata == null) return false;
+            if (String.IsNullOrEmpty(idata.Text)) { presel = null; return false; }
             int o = 0;
 
             for (int i = off - 1; i > 0; i--)
