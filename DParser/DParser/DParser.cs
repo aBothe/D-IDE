@@ -1963,7 +1963,7 @@ namespace D_Parser
                     (mye as DEnum).EnumBaseType = ParseTypeIdent(out _unused);
                     if (Peek(1).Kind == DTokens.OpenCurlyBrace) lexer.NextToken();
                 }
-                else // enum Type[]** ABC;
+                else if(la.Kind!=DTokens.OpenCurlyBrace) // enum Type[]** ABC;
                 {
                     DVariable enumVar = new DVariable();
                     enumVar.Assign(mye);
