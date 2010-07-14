@@ -490,13 +490,14 @@ namespace D_IDE
 
             if (symNode != null)
             {
+                string type = symNode.Type.ToString();
                 if (sym.Size == 8 && sym.TextValue.IndexOfAny("`".ToCharArray()) > 0) // If it's an array
                 {
-                    return BuildArrayContentString(sym.Offset, symNode.type);
-                }else if(symNode.type.IndexOf('[')>0)
+                    return BuildArrayContentString(sym.Offset, type);
+                }else if(type.IndexOf('[')>0)
                 {
-                    int i = symNode.type.IndexOf('[');
-                    
+                    int i = type.IndexOf('[');
+                    //TODO
                 }
             }
             return sym.TextValue;

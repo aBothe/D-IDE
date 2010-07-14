@@ -14,14 +14,16 @@ namespace D_Parser
 
         }
     }
-
+    /*
     public class DDelegate : DMethod
     {
+        public new DelegateDeclaration Type;
+
         public DDelegate()
         {
             fieldtype = FieldType.Delegate;
         }
-    }
+    }*/
 
     public class DMethod : DNode
     {
@@ -36,8 +38,8 @@ namespace D_Parser
 
     public class DClassLike : DNode
     {
-        public string ImplementedInterface;
-        public string BaseClass;
+        public TypeDeclaration ImplementedInterface;
+        public TypeDeclaration BaseClass;
 
         public DClassLike()
             : base(FieldType.Class)
@@ -48,7 +50,7 @@ namespace D_Parser
 
     public class DEnum : DNode
     {
-        public string EnumBaseType;
+        public TypeDeclaration EnumBaseType;
 
         public DEnum()
             : base(FieldType.Enum)

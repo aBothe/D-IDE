@@ -67,11 +67,10 @@ namespace D_IDE
 			}
 		}
 
-        private void TooglNode(object sender, EventArgs e)
+        private void NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            TreeNode tn= hierarchy.GetNodeAt(hierarchy.PointToClient( MousePosition));
-            if (tn == null) return;
-            tn.Toggle();
+            if(e.X>e.Node.Bounds.Left-16)
+            e.Node.Toggle();
         }
 	}
 }

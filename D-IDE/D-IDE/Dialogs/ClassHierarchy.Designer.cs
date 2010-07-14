@@ -42,8 +42,8 @@ namespace D_IDE
             this.hierarchy.Size = new System.Drawing.Size(291, 365);
             this.hierarchy.TabIndex = 0;
             this.hierarchy.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.hierarchy_BeforeCollapse);
+            this.hierarchy.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.NodeMouseClick);
             this.hierarchy.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.hierarchy_NodeMouseDoubleClick);
-            this.hierarchy.Click += new System.EventHandler(this.TooglNode);
             // 
             // ClassHierarchy
             // 

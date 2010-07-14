@@ -212,7 +212,7 @@ namespace D_Parser
 			Equal, // ==
 			NotEqual, // !=
 			Is, // is
-			Not, // !
+			//Not, // !
 			LessThan, // <
 			LessEqual, // <=
 			GreaterThan, // >

@@ -8,7 +8,7 @@ namespace D_Parser
     {
         public FieldType fieldtype;
         public int TypeToken;
-        public string type;
+        public TypeDeclaration Type;
         public string name;
         public string module;
 
@@ -33,7 +33,7 @@ namespace D_Parser
         {
             //fieldtype = other.fieldtype;
             TypeToken = other.TypeToken;
-            type = other.type;
+            Type = other.Type;
             name = other.name;
             module = other.module;
             TemplateParameters = other.TemplateParameters;
@@ -52,7 +52,6 @@ namespace D_Parser
         {
             name = "";
             TypeToken = 0;
-            this.type = "";
 
             desc = "";
 
@@ -108,7 +107,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return "[" + fieldtype.ToString() + "] " + type + " " + name;
+            return "[" + fieldtype.ToString() + "] " + Type.ToString() + " " + name;
         }
 
         public void Add(DNode v)

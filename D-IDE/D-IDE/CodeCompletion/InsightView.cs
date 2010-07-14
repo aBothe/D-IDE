@@ -158,9 +158,9 @@ namespace D_IDE
 				else if (expressions[0] == "super")
 				{
 					seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
-                    if (seldt is DClassLike && !String.IsNullOrEmpty((seldt as DClassLike).BaseClass))
+                    if (seldt is DClassLike && (seldt as DClassLike).BaseClass!=null)
 					{
-                        seldt = DCodeCompletionProvider.SearchGlobalExpr(cc, diw.fileData.dom, (seldt as DClassLike).BaseClass);
+                        seldt = DCodeCompletionProvider.SearchGlobalExpr(cc, diw.fileData.dom, (seldt as DClassLike).BaseClass.ToString());
 						i++;
 						if (seldt != null && expressions.Length < 2)
 						{
@@ -272,7 +272,7 @@ namespace D_IDE
 					if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))
 					{
 						DNode seldd = seldt;
-						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.fileData.dom, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.type));
+						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.fileData.dom, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.Type.ToString()));
 						if (seldt == null) seldt = seldd;
 					}
 				}

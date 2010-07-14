@@ -122,7 +122,7 @@ namespace D_IDE
 		}
 
 		protected bool ParseFile(string file)
-		{
+		{/*
 			editForm.Controls.Clear();
 
 			string fcon = File.ReadAllText(file);
@@ -295,7 +295,7 @@ namespace D_IDE
 			}
 
 			sr.Close();
-
+            */
 			return true;
 		}
 

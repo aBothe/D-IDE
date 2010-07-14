@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using D_Parser;
-using ICSharpCode.NRefactory.Ast;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
-using ICSharpCode.NRefactory;
 
 namespace D_IDE
 {
@@ -118,7 +116,7 @@ namespace D_IDE
                 bs.Write((int)dt.fieldtype);
                 WriteString(dt.name);
                 bs.Write((int)dt.TypeToken);
-                WriteString(dt.type);
+                WriteTypeDecl(dt.Type);
                 WriteString(dt.desc,true);
                 bs.Write(dt.StartLocation.X);
                 bs.Write(dt.StartLocation.Y);
@@ -135,12 +133,12 @@ namespace D_IDE
 
                 if (dt is DClassLike)
                 {
-                    WriteString((dt as DClassLike).BaseClass);
-                    WriteString((dt as DClassLike).ImplementedInterface);
+                    WriteTypeDecl((dt as DClassLike).BaseClass);
+                    WriteTypeDecl((dt as DClassLike).ImplementedInterface);
                 }
 
                 if (dt is DEnum)
-                    WriteString((dt as DEnum).EnumBaseType);
+                    WriteTypeDecl((dt as DEnum).EnumBaseType);
 
                 WriteNodes(dt.TemplateParameters);
                 if(dt is DMethod)WriteNodes((dt as DMethod).Parameters);
@@ -148,6 +146,11 @@ namespace D_IDE
             }
 
             bs.Flush();
+        }
+
+        void WriteTypeDecl(TypeDeclaration decl)
+        {
+
         }
         #endregion
     }
@@ -256,9 +259,6 @@ namespace D_IDE
                     case FieldType.Template:
                         dt = new DClassLike();
                         break;
-                    case FieldType.Delegate:
-                        dt = new DDelegate();
-                        break;
                     case FieldType.Enum:
                         dt = new DEnum();
                         break;
@@ -275,7 +275,7 @@ namespace D_IDE
                 }
                 dt.name = ReadString();
                 dt.TypeToken = bs.ReadInt32();
-                dt.type = ReadString();
+                dt.Type = ReadTypeDecl();
                 dt.desc = ReadString(true);
                 D_Parser.Location startLoc = new D_Parser.Location();
                 startLoc.X = bs.ReadInt32();
@@ -296,12 +296,12 @@ namespace D_IDE
 
                 if (dt is DClassLike)
                 {
-                    (dt as DClassLike).BaseClass = ReadString();
-                    (dt as DClassLike).ImplementedInterface = ReadString();
+                    (dt as DClassLike).BaseClass = ReadTypeDecl();
+                    (dt as DClassLike).ImplementedInterface = ReadTypeDecl();
                 }
 
                 if (dt is DEnum)
-                    (dt as DEnum).EnumBaseType = ReadString();
+                    (dt as DEnum).EnumBaseType = ReadTypeDecl();
 
                 ReadNodes(ref dt.TemplateParameters);
                 if (dt is DMethod) ReadNodes(ref (dt as DMethod).Parameters);
@@ -309,6 +309,11 @@ namespace D_IDE
 
                 Nodes.Add(dt);
             }
+        }
+
+        TypeDeclaration ReadTypeDecl()
+        {
+            return null;
         }
         #endregion
     }

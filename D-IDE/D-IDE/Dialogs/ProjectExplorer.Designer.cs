@@ -71,7 +71,6 @@ namespace D_IDE
             this.prjFiles.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.prjFiles_ItemDrag);
             this.prjFiles.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.prjFiles_NodeMouseClick);
             this.prjFiles.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.prjFiles_NodeMouseDoubleClick);
-            this.prjFiles.Click += new System.EventHandler(this.ToogleNode);
             this.prjFiles.DragDrop += new System.Windows.Forms.DragEventHandler(this.prjFiles_DragDrop);
             this.prjFiles.DragEnter += new System.Windows.Forms.DragEventHandler(this.prjFiles_DragOver);
             this.prjFiles.DragOver += new System.Windows.Forms.DragEventHandler(this.prjFiles_DragOver);

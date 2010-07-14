@@ -117,9 +117,9 @@ namespace D_IDE
 				else if (expressions[0] == "super")
 				{
 					seldt = GetClassAt(local.dom, caretLocation);
-					if (seldt is DClassLike && !String.IsNullOrEmpty( (seldt as DClassLike).BaseClass))
+					if (seldt is DClassLike && (seldt as DClassLike).BaseClass!=null)
 					{
-                        seldt = SearchGlobalExpr(prj, local, (seldt as DClassLike).BaseClass, false, out module);
+                        seldt = SearchGlobalExpr(prj, local, (seldt as DClassLike).BaseClass.ToString(), false, out module);
 					}
 					isSuper = true;
 					i++;
@@ -341,7 +341,7 @@ namespace D_IDE
 					   )
 					{
 						seldd = seldt;
-						seldt = SearchGlobalExpr(cc,pf.dom, seldt.type);
+						seldt = SearchGlobalExpr(cc,pf.dom, seldt.Type.ToString());
 						isInst = true;
 					}
 
@@ -353,22 +353,22 @@ namespace D_IDE
 
 							foreach (DNode arg in (seldt as DMethod).Parameters)
 							{
-								if (arg.type == null || arg.name == null) continue;
+								if (arg.Type == null || arg.name == null) continue;
 								rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
 							}
 						}
 						else if (expressions[0] == "super" && expressions.Count < 2) // super.
 						{
-							if (seldt is DClassLike && !String.IsNullOrEmpty((seldt as DClassLike).BaseClass))
+							if (seldt is DClassLike && (seldt as DClassLike).BaseClass!=null)
 							{
-                                seldd = SearchGlobalExpr(cc, pf.dom, (seldt as DClassLike).BaseClass);
+                                seldd = SearchGlobalExpr(cc, pf.dom, (seldt as DClassLike).BaseClass.ToString());
 								if (seldd != null)
 								{
 									AddAllClassMembers(cc,seldd, ref rl, true);
 
                                     foreach (DNode arg in (seldt as DMethod).Parameters)
 									{
-										if (arg.type == null || arg.name == null) continue;
+										if (arg.Type == null || arg.name == null) continue;
 										rl.Add(new DCompletionData(arg, seldd, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
 									}
 								}
@@ -444,13 +444,13 @@ namespace D_IDE
 
 							foreach (DNode arg in seldt.TemplateParameters)
 							{
-								if (arg.type == null || arg.name == null) continue;
+								if (arg.Type == null || arg.name == null) continue;
 								rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
 							}
                             if(seldt is DMethod)
                                 foreach (DNode arg in (seldt as DMethod).Parameters)
                                 {
-                                    if (arg.type == null || arg.name == null) continue;
+                                    if (arg.Type == null || arg.name == null) continue;
                                     rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
                                 }
 						}
@@ -522,9 +522,9 @@ namespace D_IDE
 			DModule mod = null;
 			if ((!DTokens.BasicTypes[(int)owner.TypeToken] && owner.fieldtype == FieldType.Variable) || ((owner.fieldtype == FieldType.Function || owner.fieldtype == FieldType.AliasDecl) && !isLastInExpressionChain))
 			{
-				ret = DCodeCompletionProvider.SearchExprInClassHierarchy(cc,(DNode)owner.Parent, null, RemoveTemplatePartFromDecl(owner.type));
+				ret = DCodeCompletionProvider.SearchExprInClassHierarchy(cc,(DNode)owner.Parent, null, RemoveTemplatePartFromDecl(owner.Type.ToString()));
 				if (ret == null)
-					ret = DCodeCompletionProvider.SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(owner.type), false, out mod);
+					ret = DCodeCompletionProvider.SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(owner.Type.ToString()), false, out mod);
 			}
 			return ret;
 		}

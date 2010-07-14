@@ -182,6 +182,7 @@ namespace D_Parser
         /// <returns>An <see cref="CurrentToken"/> object.</returns>
         public DToken Peek()
         {
+            if (peekToken == null) StartPeek();
             //			Console.WriteLine("Call to Peek");
             if (peekToken.next == null)
             {

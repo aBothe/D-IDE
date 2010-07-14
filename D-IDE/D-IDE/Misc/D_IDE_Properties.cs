@@ -654,31 +654,6 @@ namespace D_IDE
 		}
 	}
 
-    /*public class CodeViewToPDBConverter
-    { 
-        public delegate void MsgHandler(string message);
-        static public event MsgHandler Message;
-
-        static public bool DoConvert(bool isD2,string exe,string pdb)
-        {
-            try
-            {
-                Process p = DBuilder.Exec("cv2pdb.exe", (!isD2 ? "-D2 " : "-D1 ") +""+ exe + " " + pdb, Path.GetDirectoryName(exe), true);
-                if (!p.WaitForExit(10000))
-                {
-                    p.Kill();
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Message(ex.Message);
-                return false;
-            }
-            return true;
-        }
-    }*/
-
 	public class CompilerConfiguration
 	{
 		public DVersion Version = DVersion.D2;

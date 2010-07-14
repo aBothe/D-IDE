@@ -212,7 +212,9 @@ namespace D_IDE
 					ProjectMenu.Show(prjFiles, e.Location);
 					ProjectMenu.Tag = e.Location;
 				}
-			}
+            }
+            else if (e.X > e.Node.Bounds.Left - 16)
+                e.Node.Toggle();
 		}
 
 		private void RemoveFile(object sender, EventArgs e)
@@ -604,15 +606,7 @@ namespace D_IDE
 			catch (Exception ex) { MessageBox.Show(ex.Message); }
 
 			UpdateFiles();
-		}
-
-        private void ToogleNode(object sender, EventArgs e)
-        {
-            TreeNode tn = prjFiles.GetNodeAt(prjFiles.PointToClient(MousePosition));
-            if (tn == null) return;
-            tn.Toggle();
-        }
-        
+		}        
 	}
 
 	#region Nodes
