@@ -219,7 +219,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Base.ToString()+"("+Template.ToString()+")";
+            return (Base!=null?Base.ToString():"").ToString()+"!("+(Template!=null?Template.ToString():"")+")";
         }
     }
 
@@ -236,7 +236,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Base.ToString()+"."+AccessedMember.ToString();
+            return (Base!=null?Base.ToString():"")+"."+(AccessedMember!=null? AccessedMember.ToString():"");
         }
     }
 }

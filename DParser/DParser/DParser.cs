@@ -531,14 +531,22 @@ namespace D_Parser
                                 continue;
 
                             case DTokens.Not: // Type!(int,b)();
-                                int mbrace = 0;
+                                int par = 0;
                                 bool isCall = false;
+                                Peek(); // skip peeked '!'
                                 while ((pk = Peek()).Kind != DTokens.EOF)
                                 {
-                                    if (pk.Kind == DTokens.OpenCurlyBrace) mbrace++;
-                                    if (pk.Kind == DTokens.CloseCurlyBrace) mbrace--;
+                                    if (pk.Kind == DTokens.OpenParenthesis)
+                                    {
+                                        if (par < 0) // Template!( |Here we start; par=0|...(.|par=1|.). |par=0|.. ) |par=-1| >(<
+                                        {
+                                            isCall = true; break;
+                                        }
+                                        par++;
+                                    }
+                                    if (pk.Kind == DTokens.CloseParenthesis) par--;
 
-                                    if (mbrace < 1 && pk.Kind == DTokens.Semicolon) { isCall = true; break; }
+                                    if (pk.Kind == DTokens.Semicolon || pk.Kind==DTokens.OpenCurlyBrace) { isCall = false; break; }
                                 }
                                 if (!isCall) break;
                                 SkipToSemicolon();
@@ -1332,6 +1340,7 @@ namespace D_Parser
                 if (IsInit /* int* */ ||
                     ((IsInMemberModBracket /* const(ABC...) */ || (t != null && t.Kind == DTokens.Not)) || /* List!(ABC...) */
                     (t != null && t.Kind == DTokens.OpenParenthesis) /* Template!>(>abc) */ ||
+                    (t!=null && t.Kind==DTokens.Dot) || // >.<MyIdent
                     (t != null && t.Kind == DTokens.OpenSquareBracket && la.Kind != DTokens.CloseSquareBracket) /* int[><] */))
                 {
                     if (!DTokens.BasicTypes[la.Kind] && la.Kind != DTokens.Identifier)
@@ -1501,13 +1510,21 @@ namespace D_Parser
                         break;
 
                     case DTokens.Dot: // >.<init
-                        if (!PeekMustBe(DTokens.Identifier, "Expected identifier after a dot"))
+                        if (Peek(1).Kind != DTokens.Identifier)
+                        {
+                            SynErr(DTokens.Dot, "Expected identifier after a dot");
                             goto do_return;
+                        }
 
                         if (IsInit) // .init
+                        {
+                            lexer.NextToken(); // Skip '.'
                             declStack.Push(new NormalDeclaration(strVal));
+                        }
                         else // Template!(ABC...)>.<StaticType
+                        {
                             declStack.Push(new DotCombinedDeclaration(declStack.Pop()));
+                        }
                         break;
                 }
 
@@ -1521,13 +1538,11 @@ namespace D_Parser
             {
                 TypeDeclaration innerType = declStack.Pop();
                 if (declStack.Peek() is TemplateDecl)
-                {
                     (declStack.Peek() as TemplateDecl).Template = innerType;
-                }
                 else if (declStack.Peek() is ArrayDecl)
-                {
                     (declStack.Peek() as ArrayDecl).KeyType = innerType;
-                }
+                else if (declStack.Peek() is DotCombinedDeclaration)
+                    (declStack.Peek() as DotCombinedDeclaration).AccessedMember = innerType;
             }
 
             if (declStack.Count > 0)
