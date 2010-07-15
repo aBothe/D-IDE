@@ -125,7 +125,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Base.ToString() + "*";
+            return (Base != null ? Base.ToString() : "") + "*";
         }
     }
 
@@ -146,7 +146,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Name+"("+Base.ToString()+")";
+            return Name+"("+(Base!=null? Base.ToString():"")+")";
         }
     }
 
@@ -154,11 +154,11 @@ namespace D_Parser
     {
         public override uint GetDeclarationClassTypeId { get { return 7; } }
         public VarArgDecl() { }
-        public VarArgDecl(string Identifier) { Name = Identifier; }
+        public VarArgDecl(TypeDeclaration BaseIdentifier) { Base = BaseIdentifier; }
 
         public override string ToString()
         {
-            return Name+"...";
+            return (Base != null ? Base.ToString() : "") + "...";
         }
     }
 

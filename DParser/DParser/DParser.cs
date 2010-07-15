@@ -223,7 +223,39 @@ namespace D_Parser
             this.lexer = lexer;
             //errors = lexer.Errors;
             //errors.SynErr = new ErrorCodeProc(SynErr);
+            lexer.OnComment += new AbstractLexer.CommentHandler(lexer_OnComment);
         }
+
+        #region DDoc handling
+
+        public DNode LastElement = null;
+        string LastDescription = ""; // This is needed if some later comments are 'ditto'
+        string CurrentDescription = "";
+
+        void lexer_OnComment(Comment comment)
+        {
+            if (comment.CommentType == Comment.Type.Documentation)
+            {
+                if (comment.CommentText != "ditto")
+                    CurrentDescription += comment.CommentText;
+                else
+                    CurrentDescription = LastDescription;
+
+                /*
+                 * /// start description
+                 * void foo() /// description for foo()
+                 * {}
+                 */
+                if (LastElement != null && LastElement.StartLocation.Line == comment.StartPosition.Line && comment.StartPosition.Column > LastElement.StartLocation.Column)
+                {
+                    LastElement.desc += CurrentDescription;
+                    LastDescription = CurrentDescription;
+                    CurrentDescription = "";
+                }
+            }
+        }
+
+        #endregion
 
         StringBuilder qualidentBuilder = new StringBuilder();
 
@@ -248,28 +280,11 @@ namespace D_Parser
             }
         }
 
-        int _lastcommentindex = 0;
-        public string CheckForExpressionComments()
+        public string CheckForDocComments()
         {
-            string ret = "";
-            for (int i = _lastcommentindex; ret.Length < 512 && i >= _lastcommentindex && i < lexer.Comments.Count; i++)
-            {
-                Comment tc = lexer.Comments[i];
-                if (tc.CommentType != Comment.Type.Documentation)
-                    continue;
-
-                string t = tc.CommentText.Trim();
-                for (int j = i; t == "ditto" && j > 0; j--)
-                {
-                    tc = lexer.Comments[j];
-                    if (tc.CommentType != Comment.Type.Documentation)
-                        continue;
-                    t = tc.CommentText;
-                }
-                if (ret == "") ret = t;
-                else ret += "\n" + t;
-            }
-            _lastcommentindex = lexer.Comments.Count;
+            string ret = CurrentDescription;
+            LastDescription = CurrentDescription;
+            CurrentDescription = "";
             return ret;
         }
 
@@ -399,7 +414,7 @@ namespace D_Parser
         void ParseBlock(ref DNode ret, bool isFunctionBody)
         {
             int curbrace = 0;
-            if (String.IsNullOrEmpty(ret.desc)) ret.desc = CheckForExpressionComments();
+            if (String.IsNullOrEmpty(ret.desc)) ret.desc = CheckForDocComments();
             List<int> prevBlockModifiers = new List<int>(BlockModifiers);
             ExpressionModifiers.Clear();
             BlockModifiers.Clear();
@@ -676,7 +691,7 @@ namespace D_Parser
                                 }
                                 if (pk.Kind == DTokens.CloseParenthesis) par--;
 
-                                if (pk.Kind == DTokens.Semicolon || pk.Kind == DTokens.CloseCurlyBrace || pk.Kind==DTokens.OpenCurlyBrace) break;
+                                if (pk.Kind == DTokens.Semicolon || pk.Kind == DTokens.CloseCurlyBrace || pk.Kind == DTokens.OpenCurlyBrace) break;
                             }
                             if (!IsFunctionDefinition)
                             {
@@ -705,6 +720,7 @@ namespace D_Parser
                     DNode tv = ParseExpression();
                     if (tv != null)
                     {
+                        LastElement = tv;
                         tv.modifiers.AddRange(TExprMods);
                         tv.module = ret.module;
                         tv.Parent = ret;
@@ -873,7 +889,7 @@ namespace D_Parser
                                 lexer.NextToken();
                                 tv.Value = ParseAssignIdent(false);
                             }
-
+                            LastElement = tv;
                             ret.Add(tv);
 
                             if (la.Kind == DTokens.Comma) goto blockcont; // Another declaration is directly following
@@ -909,6 +925,9 @@ namespace D_Parser
                             ret.endLoc = GetCodeLocation(la);
                             BlockModifiers = prevBlockModifiers;
                             ExpressionModifiers.Clear();
+
+                            CurrentDescription = "";
+                            LastDescription = "";
                             return;
                         }
                         break;
@@ -923,7 +942,10 @@ namespace D_Parser
                             mye.module = ret.module;
 
                             if (mye.name != "")
+                            {
+                                LastElement = mye;
                                 ret.Add(mye);
+                            }
                             else
                             {
                                 foreach (DNode ch in mye)
@@ -974,6 +996,7 @@ namespace D_Parser
                         DNode ctor = ParseExpression();
                         if (ctor != null)
                         {
+                            LastElement = ctor;
                             if (ret.fieldtype == FieldType.Root && !TExprMods.Contains(DTokens.Static))
                             {
                                 SemErr(DTokens.This, ctor.startLoc.Column, ctor.startLoc.Line, "Module Constructors must be static!");
@@ -1004,6 +1027,7 @@ namespace D_Parser
                         DNode myc = ParseClass();
                         if (myc != null)
                         {
+                            LastElement = myc;
                             myc.module = ret.module;
                             myc.Parent = ret;
                             ret.Add(myc);
@@ -1017,18 +1041,20 @@ namespace D_Parser
                     case DTokens.Alias:
                         // typedef void* function(int a) foo;
                         lexer.NextToken(); // Skip alias|typedef
-                        DNode aliasType=ParseExpression();
+                        DNode aliasType = ParseExpression();
                         if (aliasType == null) break;
                         aliasType.fieldtype = FieldType.AliasDecl;
+                        LastElement = aliasType;
                         ret.Add(aliasType);
 
                         while (la.Kind == DTokens.Comma)
                         {
-                            if (!PeekMustBe(DTokens.Identifier,"Identifier expected")) break;
+                            if (!PeekMustBe(DTokens.Identifier, "Identifier expected")) break;
                             DNode other = new DNode();
                             other.fieldtype = FieldType.AliasDecl;
                             other.Assign(aliasType);
                             other.name = strVal;
+                            LastElement = other;
                             ret.Add(other);
                             lexer.NextToken();
                         }
@@ -1047,6 +1073,7 @@ namespace D_Parser
                 }
                 #endregion
             }
+            
             // Debug.Print("ParseBlock ended (" + ret.name + ")");
         }
 
@@ -1133,12 +1160,12 @@ namespace D_Parser
                             if (targ == null) { targ = new DVariable(); targtype = ""; }
 
                             if (targ.name == "") targ.name = "...";
-                            targtype = "...";
+                            if (targtype != "") targ.name = targtype;
 
-                            targ.startLoc = GetCodeLocation(la);
-                            targ.endLoc = GetCodeLocation(la);
+                            targ.StartLocation = la.Location;
+                            targ.EndLocation = la.EndLocation;
                             targ.endLoc.Column += 3; // three dots (...)
-
+                            targ.Type = targtype != "" ? new VarArgDecl(new NormalDeclaration(targtype)) : new VarArgDecl();
                             v.TemplateParameters.Add(targ);
                             targ = null;
                         }
@@ -1451,11 +1478,7 @@ namespace D_Parser
 
                             lexer.NextToken(); // Skip last token parsed, can theoretically only be an identifier
 
-                            if (String.IsNullOrEmpty(dv.name))
-                            {
-                                SynErr(DTokens.CloseParenthesis, "Expected identifier!");
-                                goto do_return;
-                            }
+                            // Do not expect a parameter id here!
 
                             if (la.Kind == DTokens.Assign) // void delegate(int i>=<5, bool a=false)
                                 dv.Value = ParseAssignIdent(true);
@@ -1484,7 +1507,7 @@ namespace D_Parser
                     case DTokens.Assign:
                     case DTokens.Colon:
                     case DTokens.Semicolon: // int;
-                        if(!IsCStyleDeclaration)
+                        if (!IsCStyleDeclaration)
                             SynErr(la.Kind, "Expected an identifier!");
                         goto do_return;
 
@@ -1580,6 +1603,18 @@ namespace D_Parser
                         break;
 
                     case DTokens.Dot: // >.<init
+                        if (Peek(1).Kind == DTokens.Dot && Peek().Kind == DTokens.Dot) // >...<
+                        {
+                            lexer.NextToken(); // 1st dot
+                            lexer.NextToken(); // 2nd dot
+
+                            if (declStack.Count < 1) // void foo(>...<) {}
+                                declStack.Push(new VarArgDecl());
+                            else
+                                declStack.Push(new VarArgDecl(declStack.Pop()));
+                        }
+
+
                         if (Peek(1).Kind != DTokens.Identifier)
                         {
                             SynErr(DTokens.Dot, "Expected identifier after a dot");
@@ -1636,8 +1671,8 @@ namespace D_Parser
         DNode ParseExpression()
         {
             DNode tv = new DNode();
-            tv.desc = CheckForExpressionComments();
-            tv.startLoc = GetCodeLocation(la);
+            tv.desc = CheckForDocComments();
+            tv.StartLocation=la.Location;
             bool isCTor = la.Kind == DTokens.This;
             tv.TypeToken = la.Kind;
             if (!isCTor)
@@ -1657,7 +1692,7 @@ namespace D_Parser
             //if (!isCTor) lexer.NextToken(); // Skip last ID parsed by ParseIdentifier();
 
             if (IsVarDecl() ||// int foo; TypeTuple!(a,T)[] a;
-                ( tv.name!=null &&  (la.Kind==DTokens.Semicolon || la.Kind==DTokens.Assign || la.Kind==DTokens.Comma))) // char abc[]>;< dchar def[]>=<...;
+                (tv.name != null && (la.Kind == DTokens.Semicolon || la.Kind == DTokens.Assign || la.Kind == DTokens.Comma))) // char abc[]>;< dchar def[]>=<...;
             {
                 DVariable var = new DVariable();
                 var.Assign(tv);
@@ -1678,12 +1713,12 @@ namespace D_Parser
                     if (la.Kind != DTokens.Semicolon)
                     {
                         SynErr(DTokens.Semicolon, "Missing semicolon!");
-                        return var;
+                        goto expr_ret;
                     }
                 }
 
             }
-            else if (la.Kind == DTokens.Identifier || isCTor || (la.Kind==DTokens.CloseParenthesis && Peek(1).Kind==DTokens.OpenParenthesis)) // MyType myfunc() {...}; this()() {...}; int (*foo)>(<int a, bool b);
+            else if (la.Kind == DTokens.Identifier || isCTor || (la.Kind == DTokens.CloseParenthesis && Peek(1).Kind == DTokens.OpenParenthesis)) // MyType myfunc() {...}; this()() {...}; int (*foo)>(<int a, bool b);
             {
                 DMethod meth = new DMethod();
                 meth.Assign(tv);
@@ -1738,7 +1773,7 @@ namespace D_Parser
                     /*tv.value = */
                     SkipToSemicolon();
                     tv.endLoc = GetCodeLocation(la);
-                    return meth;
+                    goto expr_ret;
                 }
 
                 #region In|Out|Body regions of a method
@@ -1804,6 +1839,8 @@ namespace D_Parser
                 return null;
 
         expr_ret:
+
+
             return tv;
         }
 
@@ -1816,7 +1853,7 @@ namespace D_Parser
         {
             DClassLike myc = new DClassLike(); // >class<
             DNode _myc = myc;
-            myc.desc = CheckForExpressionComments();
+            myc.desc = CheckForDocComments();
             if (la.Kind == DTokens.Struct || la.kind == DTokens.Union) myc.fieldtype = FieldType.Struct;
             if (la.Kind == DTokens.Template) myc.fieldtype = FieldType.Template;
             if (la.Kind == DTokens.Interface) myc.fieldtype = FieldType.Interface;
@@ -1898,7 +1935,7 @@ namespace D_Parser
                 SynErr(DTokens.OpenCurlyBrace, "Error parsing " + DTokens.GetTokenString(myc.TypeToken) + " " + myc.name + ": missing {");
                 return myc;
             }
-
+            LastElement = myc;
             ParseBlock(ref _myc, false);
 
             myc.endLoc = GetCodeLocation(la);
@@ -1963,7 +2000,7 @@ namespace D_Parser
                     (mye as DEnum).EnumBaseType = ParseTypeIdent(out _unused);
                     if (Peek(1).Kind == DTokens.OpenCurlyBrace) lexer.NextToken();
                 }
-                else if(la.Kind!=DTokens.OpenCurlyBrace) // enum Type[]** ABC;
+                else if (la.Kind != DTokens.OpenCurlyBrace) // enum Type[]** ABC;
                 {
                     DVariable enumVar = new DVariable();
                     enumVar.Assign(mye);
@@ -1981,7 +2018,7 @@ namespace D_Parser
 
             if (la.Kind != DTokens.OpenCurlyBrace) // Check beginning "{"
             {
-                SynErr(DTokens.OpenCurlyBrace,"Expected '{' when parsing enumeration");
+                SynErr(DTokens.OpenCurlyBrace, "Expected '{' when parsing enumeration");
                 SkipToClosingBrace();
                 mye.EndLocation = la.Location;
                 return mye;

@@ -20,19 +20,16 @@ namespace D_Parser
         protected DToken curToken = null;
         protected DToken peekToken = null;
 
-        string[] specialCommentTags = null;
-        protected Hashtable specialCommentHash = null;
         protected StringBuilder sb = new StringBuilder();
 
-        // used for the original value of strings (with escape sequences).
+        /// <summary>
+        /// used for the original value of strings (with escape sequences).
+        /// </summary>
         protected StringBuilder originalValue = new StringBuilder();
 
         public bool SkipAllComments { get; set; }
-        public bool EvaluateConditionalCompilation { get; set; }
-        public virtual IDictionary<string, object> ConditionalCompilationSymbols
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public delegate void CommentHandler(Comment comment);
+        public abstract event CommentHandler OnComment;
 
         protected static IEnumerable<string> GetSymbols(string symbols)
         {
@@ -68,14 +65,9 @@ namespace D_Parser
             }
         }
 
-        protected bool recordRead = false;
-        protected StringBuilder recordedText = new StringBuilder();
-
         protected int ReaderRead()
         {
             int val = reader.Read();
-            if (recordRead)
-                recordedText.Append((char)val);
             if ((val == '\r' && reader.Peek() != '\n') || val == '\n')
             {
                 ++line;
@@ -102,30 +94,6 @@ namespace D_Parser
         }
 
         /// <summary>
-        /// Special comment tags are tags like TODO, HACK or UNDONE which are read by the lexer and stored in <see cref="TagComments"/>.
-        /// </summary>
-        public string[] SpecialCommentTags
-        {
-            get
-            {
-                return specialCommentTags;
-            }
-            set
-            {
-                specialCommentTags = value;
-                specialCommentHash = null;
-                if (specialCommentTags != null && specialCommentTags.Length > 0)
-                {
-                    specialCommentHash = new Hashtable();
-                    foreach (string str in specialCommentTags)
-                    {
-                        specialCommentHash.Add(str, null);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// The current DToken. <seealso cref="ICSharpCode.NRefactory.Parser.DToken"/>
         /// </summary>
         public DToken CurrentToken
@@ -149,6 +117,11 @@ namespace D_Parser
             }
         }
 
+        public DToken CurrentPeekToken
+        {
+            get { return peekToken; }
+        }
+
         /// <summary>
         /// Constructor for the abstract lexer class.
         /// </summary>
@@ -163,7 +136,6 @@ namespace D_Parser
             reader.Close();
             reader = null;
             lastToken = curToken = peekToken = null;
-            specialCommentHash = null;
             sb = originalValue = null;
         }
         #endregion
@@ -353,27 +325,12 @@ namespace D_Parser
 		}
 
 		#region Abstract Lexer Props & Methods
-		#region Properties
 		public List<Comment> Comments;
-		/*protected DToken lastToken = null;
-		protected DToken curToken = null;
-		protected DToken curTokennext = null;
-		protected DToken peekToken = null;
-		protected DToken peekTokennext = null;
-		string[] specialCommentTags = null;
-		protected StringBuilder sb = new StringBuilder();
-
-		// used for the original value of strings (with escape sequences).
-		protected StringBuilder originalValue = new StringBuilder();
-		protected Hashtable specialCommentHash = null;*/
-
-		//public delegate void LexerErrorHandler(int line, int col, string message);
-		//static public event LexerErrorHandler OnError;
+        public override event AbstractLexer.CommentHandler OnComment;
 		void OnError(int line, int col, string message)
 		{
 			//errors.Error(line, col, message);
 		}
-		#endregion
 		#endregion
 
 		protected override DToken Next()
@@ -1334,9 +1291,7 @@ namespace D_Parser
 							ReadMultiLineComment(Comment.Type.Documentation, true);
 					}
 					else
-					{
 						ReadMultiLineComment(Comment.Type.Block, true);
-					}
 					break;
 				case '*':
 					if(ReaderPeek() == '*')// DDoc
@@ -1346,20 +1301,16 @@ namespace D_Parser
 							ReadMultiLineComment(Comment.Type.Documentation, false);
 					}
 					else
-					{
 						ReadMultiLineComment(Comment.Type.Block, false);
-					}
 					break;
 				case '/':
 					if(ReaderPeek() == '/')// DDoc
 					{
-						ReaderRead();
+                        while (ReaderPeek() == '/') ReaderRead(); // Skip initial "////"
 						ReadSingleLineComment(Comment.Type.Documentation);
 					}
 					else
-					{
 						ReadSingleLineComment(Comment.Type.SingleLine);
-					}
 					break;
 				default:
 					OnError(Line, Col, String.Format("Error while reading comment"));
@@ -1372,13 +1323,15 @@ namespace D_Parser
 			Location st = new Location(Col, Line);
 			string comm = ReadToEndOfLine();
 			Location end = new Location(Col, st.Line);
-			Comments.Add(new Comment(commentType, comm, st.Column<2, st, end));
+            Comment nComm = new Comment(commentType, comm.Trim(), st.Column < 2, st, end);
+			Comments.Add(nComm);
+            OnComment(nComm);
 		}
 
 		void ReadMultiLineComment(Comment.Type commentType, bool isNestingComment)
 		{
 			int nextChar;
-
+            Comment nComm = null;
 			Location st = new Location(Col, Line);
 			StringBuilder scCurWord = new StringBuilder(); // current word, (scTag == null) or comment (when scTag != null)
 
@@ -1390,15 +1343,20 @@ namespace D_Parser
 				if((ch == '+' || (ch == '*' && !isNestingComment)) && ReaderPeek() == '/')
 				{
 					ReaderRead(); // Skip "*" or "+"
-					Comments.Add(new Comment(commentType, scCurWord.ToString().TrimEnd(ch), st.Column<2, st, new Location(Col, Line)));
+                    nComm = new Comment(commentType, scCurWord.ToString().Trim(ch,' ','\t','\r','\n'), st.Column < 2, st, new Location(Col, Line));
+					Comments.Add(nComm);
+                    OnComment(nComm);
 					return;
 				}
 
-				if(HandleLineEnd(ch)) scCurWord.AppendLine();
-
-				scCurWord.Append(ch);
+				if(HandleLineEnd(ch)) 
+                    scCurWord.AppendLine();
+                else
+				    scCurWord.Append(ch);
 			}
-			Comments.Add(new Comment(commentType, scCurWord.ToString(), st.Column < 2, st, new Location(Col, Line)));
+            nComm = new Comment(commentType, scCurWord.ToString().Trim(), st.Column < 2, st, new Location(Col, Line));
+			Comments.Add(nComm);
+            OnComment(nComm);
 			// Reached EOF before end of multiline comment.
 			OnError(Line, Col, String.Format("Reached EOF before the end of a multiline comment"));
 		}
@@ -1420,80 +1378,5 @@ namespace D_Parser
 				NextToken();
 			}
 		}
-
-		/*
-		 * TODO: Fix it
-		 * public string SkipTo(char targetToken)
-		{
-			int tt = DTokens.GetTokenID(targetToken.ToString());
-			if (LookAhead.Kind == tt) return "";
-			StringBuilder sb = new StringBuilder(100);
-			int braceCount = 0, parenthesisCount=0;
-
-			int nextChar;
-			while((nextChar = ReaderRead()) != -1)
-			{
-				if (parenthesisCount < 1 && braceCount < 1 && (char)nextChar == targetToken)
-				{}
-				else if(sb.Length<10000)
-					sb.Append((char)nextChar);
-
-				switch(nextChar)
-				{
-					case '(':
-						parenthesisCount++;
-						break;
-					case ')':
-						parenthesisCount--;
-						break;
-					case '{':
-						braceCount++;
-						break;
-					case '}':
-						if(--braceCount < 0)
-						{
-							curToken = new DToken(DTokens.CloseCurlyBrace, Col - 1, Line);
-							return sb.ToString();
-						}
-						break;
-					case '/':
-						int peek = ReaderPeek();
-						if(peek == '/' || peek == '*' || peek=='+')
-						{
-							ReadComment();
-						}
-						break;
-					case '"':
-						if (sb.Length < 10000) sb.Append((string)ReadString().LiteralValue + "\"");
-						break;
-					case '\'':
-						if (sb.Length < 10000) sb.Append(ReadChar().Value);
-						break;
-					case '\r':
-					case '\n':
-						HandleLineEnd((char)nextChar);
-						break;
-					case '@':
-						int next = ReaderRead();
-						if(next == -1)
-						{
-							OnError(Line, Col, String.Format("EOF after @"));
-						}
-						else if(next == '"')
-						{
-							if (sb.Length < 10000) sb.Append("\"" + (string)ReadVerbatimString().LiteralValue + "\"");
-						}
-						break;
-				}
-
-				if (parenthesisCount<1 && braceCount<1 && (char)nextChar == targetToken)
-				{
-					curToken = new DToken(tt, Col - 1, Line);
-					return sb.ToString();
-				}
-			}
-			curToken = new DToken(DTokens.EOF, Col, Line);
-			return sb.ToString();
-		}*/
 	}
 }
