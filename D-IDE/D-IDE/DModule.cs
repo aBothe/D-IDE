@@ -5,22 +5,14 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-
-using ICSharpCode.NRefactory.Ast;
-using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.Parser;
 using ICSharpCode.TextEditor.Document;
 using D_Parser;
 
 namespace D_IDE
 {
-    [Serializable()]
     public class DModule
     {
 		public static bool ClearErrorLogBeforeParsing = true;
-		[NonSerialized()]
 		public DProject Project;
         public string ModuleName;
         public string mod_file;
@@ -99,7 +91,6 @@ namespace D_IDE
 
         public DNode dom; // Contains entire data (recursive)
         public List<string> import;
-        [NonSerialized()]
         public List<FoldMarker> folds;
     }
 }

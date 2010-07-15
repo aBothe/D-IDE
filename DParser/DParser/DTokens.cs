@@ -185,7 +185,7 @@ namespace D_Parser
         public static BitArray MemberFunctionAttributes = NewSet(Const, Immutable, Shared, InOut);
 		public static BitArray ParamModifiers = NewSet(In, Out, InOut, Ref);
 		public static BitArray ClassLike = NewSet(Class, Template, Interface, Struct, Union);
-		public static BitArray BasicTypes = NewSet(Auto, Const, Immutable, Bool, Byte        ,Ubyte        ,Short        ,Ushort        ,Int        ,Uint        ,Long        ,Ulong        ,Char        ,Wchar        ,Dchar        ,Float        ,Double        ,Real        ,Ifloat        ,Idouble        ,Ireal        ,Cfloat        ,Cdouble        ,Creal        ,Void);
+		public static BitArray BasicTypes = NewSet(Auto, Bool, Byte        ,Ubyte        ,Short        ,Ushort        ,Int        ,Uint        ,Long        ,Ulong        ,Char        ,Wchar        ,Dchar        ,Float        ,Double        ,Real        ,Ifloat        ,Idouble        ,Ireal        ,Cfloat        ,Cdouble        ,Creal        ,Void);
 		public static BitArray AssnStartOp = NewSet(Plus, Minus, Not, Tilde, Times);
 		public static BitArray AssignOps = NewSet(
 			Assign, // =

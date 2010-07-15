@@ -217,4 +217,44 @@ namespace D_Parser
             return (Base!=null?Base.ToString():"")+"."+(AccessedMember!=null? AccessedMember.ToString():"");
         }
     }
+
+
+#region Expressions
+    public class BooleanExpression : TypeDeclaration
+    {
+        public override uint GetDeclarationClassTypeId  { get { return 11; } }
+        public int OperatorToken;
+        public TypeDeclaration LeftValue
+        {
+            get { return Base; }
+            set { Base = value; }
+        }
+        public TypeDeclaration RightValue;
+
+        public BooleanExpression() { }
+        public BooleanExpression(int Operator) { OperatorToken = Operator; }
+        public BooleanExpression(int Operator, TypeDeclaration Left) { OperatorToken = Operator; LeftValue = Left; }
+
+        public override string ToString()
+        {
+            return LeftValue.ToString()+" "+DTokens.GetTokenString(OperatorToken)+" "+RightValue.ToString();
+        }
+    }
+
+    public class DecisiveBooleanExpression : TypeDeclaration
+    {
+        public override uint GetDeclarationClassTypeId { get { return 12; } }
+        public BooleanExpression TriggerExpression;
+        public TypeDeclaration TrueExpression, FalseExpression;
+
+        public DecisiveBooleanExpression() { }
+
+        public override string ToString()
+        {
+            return TriggerExpression.ToString()+"?"+TrueExpression.ToString()+":"+FalseExpression.ToString();
+        }
+    }
+#endregion
+
+
 }

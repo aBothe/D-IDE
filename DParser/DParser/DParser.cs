@@ -572,7 +572,8 @@ namespace D_Parser
                      * don't confuse it with a function call that contains a * as one of the first arguments like foo(*pointer);
                      */
                         case DTokens.OpenParenthesis:
-                            if(!DTokens.BasicTypes[la.Kind] && la.Kind!=DTokens.Identifier) break;
+                            if(!DTokens.BasicTypes[la.Kind] && la.Kind!=DTokens.Identifier)
+                                break;
                             pk = Peek();
                             if (pk.Kind != DTokens.Times)
                             {
@@ -1285,12 +1286,12 @@ namespace D_Parser
                             targ.modifiers.Add(la.Kind);
                             break;
                         }
-                        if (DTokens.BasicTypes[la.Kind] || la.Kind == DTokens.Identifier || la.Kind == DTokens.Typeof)
+                        if (DTokens.BasicTypes[la.Kind] || la.Kind == DTokens.Identifier || la.Kind == DTokens.Typeof ||DTokens.MemberFunctionAttributes[la.Kind])
                         {
                             if (targ == null) targ = new DVariable();
                             if (Peek(1).Kind == DTokens.Dot) break;
 
-                            targ.startLoc = GetCodeLocation(la);
+                            targ.StartLocation=la.Location;
                             targ.TypeToken = la.Kind;
 
                             targ.Type = ParseTypeIdent(out targ.name);
@@ -1389,6 +1390,7 @@ namespace D_Parser
             
             Stack<TypeDeclaration> declStack = new Stack<TypeDeclaration>();
             bool IsInit = true;
+            bool IsAliasDecl = (t != null && (t.Kind == DTokens.Alias || t.Kind == DTokens.Typedef));
             bool IsBaseTypeAnalysis = ((t != null && t.Kind == DTokens.Colon) || la.Kind == DTokens.Colon); // class ABC>:<Object {}
             if (la.Kind == DTokens.Colon) lexer.NextToken(); // Skip ':'
             bool IsCStyleDeclaration = false; // char abc>[<30];
@@ -1408,11 +1410,19 @@ namespace D_Parser
 
                 if ((DTokens.MemberFunctionAttributes[la.Kind] || la.Kind==DTokens.Typeof) && pk.Kind == DTokens.OpenParenthesis) // const(...)
                 {
+                    bool IsTypeOf = la.Kind == DTokens.Typeof;
                     declStack.Push(new MemberFunctionAttributeDecl(la.Kind));
                     IsInMemberModBracket = true;
                     lexer.NextToken(); // Skip const
                     lexer.NextToken(); // Skip (
                     IsInit = false;
+
+                    if (IsTypeOf && la.Kind != DTokens.Identifier)
+                    {
+                        declStack.Push(new DTokenDeclaration(la.Kind));
+                        lexer.NextToken();
+                    }
+
                     continue;
                 }
 
@@ -1470,14 +1480,14 @@ namespace D_Parser
                     (t != null && t.Kind == DTokens.Dot) || // >.<MyIdent
                     (t != null && t.Kind == DTokens.OpenSquareBracket && la.Kind != DTokens.CloseSquareBracket) /* int[><] */)
                 {
-                    if (!DTokens.BasicTypes[la.Kind] && la.Kind != DTokens.Identifier)
+                    if (!DTokens.BasicTypes[la.Kind] && la.Kind != DTokens.Identifier && la.Kind!=DTokens.This && la.Kind!=DTokens.Super /* >this<.ABC abc; */)
                     {
                         SynErr(la.Kind, "Expected identifier or base type!");
                         goto do_return;
                     }
                     //lexer.NextToken(); // Skip token that is in front of the identifier
 
-                    if (DTokens.BasicTypes[la.Kind])
+                    if (la.Kind!=DTokens.Identifier)
                         declStack.Push(new DTokenDeclaration(la.Kind));
                     else declStack.Push(new NormalDeclaration(strVal));
                 }
@@ -1538,7 +1548,9 @@ namespace D_Parser
                     case DTokens.Assign:
                     case DTokens.Colon:
                     case DTokens.Semicolon: // int;
-                        if (!IsCStyleDeclaration)
+                        if (IsAliasDecl && VariableName == null)
+                            VariableName = DTokens.GetTokenString(t.Kind);
+                        else if (!IsCStyleDeclaration)
                             SynErr(la.Kind, "Expected an identifier!");
                         goto do_return;
 
@@ -1565,7 +1577,6 @@ namespace D_Parser
                         if (IsInMemberModBracket)
                             IsInMemberModBracket = false;
 
-                        if (declStack.Count < 2) goto do_return;
                         while (declStack.Count > 1)
                         {
                             TypeDeclaration innerType = declStack.Pop();
@@ -1624,6 +1635,11 @@ namespace D_Parser
 
                     case DTokens.OpenSquareBracket: // int>[<...]
                         declStack.Push(new ArrayDecl(declStack.Pop()));
+                        if (pk.Kind != DTokens.CloseSquareBracket) // Here we cheat a bit - otherwise we should mind every kind of other expressions that may occur here...I'm still to lazy to realize this ;-)
+                        {
+                            declStack.Push( new NormalDeclaration(SkipToClosingSquares()));
+                            continue;
+                        }
                         break;
 
                     case DTokens.Dot: // >.<init
@@ -1697,7 +1713,7 @@ namespace D_Parser
             DNode tv = new DNode();
             tv.desc = CheckForDocComments();
             tv.StartLocation = la.Location;
-            bool isCTor = la.Kind == DTokens.This;
+            bool isCTor = (la.Kind == DTokens.This && Peek(1).Kind==DTokens.OpenParenthesis);
             tv.TypeToken = la.Kind;
             if (!isCTor)
             {
@@ -1749,7 +1765,9 @@ namespace D_Parser
                 tv = meth;
                 lexer.NextToken(); // Skip function name
 
-                if (!Expect(DTokens.OpenParenthesis, "Expected '('")) { SkipToClosingBrace(); return null; }
+                if (!Expect(DTokens.OpenParenthesis, "Expected '('")) 
+                { 
+                    SkipToClosingBrace(); return null; }
 
                 bool HasTemplateArgs = false;
                 #region Scan for template arguments
