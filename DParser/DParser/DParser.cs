@@ -237,7 +237,7 @@ namespace D_Parser
             if (comment.CommentType == Comment.Type.Documentation)
             {
                 if (comment.CommentText != "ditto")
-                    CurrentDescription += comment.CommentText;
+                    CurrentDescription +=(CurrentDescription==""?"":"\r\n")+ comment.CommentText;
                 else
                     CurrentDescription = LastDescription;
 
@@ -246,9 +246,9 @@ namespace D_Parser
                  * void foo() /// description for foo()
                  * {}
                  */
-                if (LastElement != null && LastElement.StartLocation.Line == comment.StartPosition.Line && comment.StartPosition.Column > LastElement.StartLocation.Column)
+                if (LastElement != null && LastElement.StartLocation.Line== comment.StartPosition.Line && comment.StartPosition.Column > LastElement.StartLocation.Column)
                 {
-                    LastElement.desc += CurrentDescription;
+                    LastElement.desc += (LastElement.desc == "" ? "" : "\r\n") + CurrentDescription;
                     LastDescription = CurrentDescription;
                     CurrentDescription = "";
                 }
@@ -1852,6 +1852,7 @@ namespace D_Parser
         DNode ParseClass()
         {
             DClassLike myc = new DClassLike(); // >class<
+            myc.StartLocation = la.Location;
             DNode _myc = myc;
             myc.desc = CheckForDocComments();
             if (la.Kind == DTokens.Struct || la.kind == DTokens.Union) myc.fieldtype = FieldType.Struct;
@@ -1881,6 +1882,7 @@ namespace D_Parser
             }
 
             myc.name = strVal; // >MyType<
+            LastElement = myc;
             lexer.NextToken(); // Skip id
 
             if (la.Kind == DTokens.Semicolon) return myc;
@@ -1935,7 +1937,7 @@ namespace D_Parser
                 SynErr(DTokens.OpenCurlyBrace, "Error parsing " + DTokens.GetTokenString(myc.TypeToken) + " " + myc.name + ": missing {");
                 return myc;
             }
-            LastElement = myc;
+            
             ParseBlock(ref _myc, false);
 
             myc.endLoc = GetCodeLocation(la);
