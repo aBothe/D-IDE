@@ -129,7 +129,7 @@ namespace D_IDE
 
             if (data.fieldtype == FieldType.Constructor)
             {
-                ret += "Constructor of " + data.name;
+                ret += data.name;
                 goto addparams;
             }
 

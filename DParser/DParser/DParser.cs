@@ -231,13 +231,17 @@ namespace D_Parser
         public DNode LastElement = null;
         string LastDescription = ""; // This is needed if some later comments are 'ditto'
         string CurrentDescription = "";
+        bool HadEmptyCommentBefore = false;
 
         void lexer_OnComment(Comment comment)
         {
             if (comment.CommentType == Comment.Type.Documentation)
             {
                 if (comment.CommentText != "ditto")
-                    CurrentDescription +=(CurrentDescription==""?"":"\r\n")+ comment.CommentText;
+                {
+                    HadEmptyCommentBefore= (CurrentDescription=="" && comment.CommentText == "");
+                    CurrentDescription += (CurrentDescription == "" ? "" : "\r\n") + comment.CommentText;
+                }
                 else
                     CurrentDescription = LastDescription;
 
@@ -283,7 +287,8 @@ namespace D_Parser
         public string CheckForDocComments()
         {
             string ret = CurrentDescription;
-            LastDescription = CurrentDescription;
+            if (CurrentDescription != "" || HadEmptyCommentBefore)
+                LastDescription = CurrentDescription;
             CurrentDescription = "";
             return ret;
         }
@@ -927,7 +932,6 @@ namespace D_Parser
                             ExpressionModifiers.Clear();
 
                             CurrentDescription = "";
-                            LastDescription = "";
                             return;
                         }
                         break;
