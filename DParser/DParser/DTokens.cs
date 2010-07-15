@@ -24,7 +24,7 @@ namespace D_Parser
 		public const int DoubleColon = 10;
 		public const int Semicolon = 11;
 		public const int Question = 12;
-		public const int DoubleQuestion = 13;
+		public const int Dollar = 13;
 		public const int Comma = 14;
 		public const int Dot = 15;
 		public const int OpenCurlyBrace = 16;
@@ -182,6 +182,7 @@ namespace D_Parser
 			return bitArray;
 		}
 
+        public static BitArray MemberFunctionAttributes = NewSet(Const, Immutable, Shared, InOut);
 		public static BitArray ParamModifiers = NewSet(In, Out, InOut, Ref);
 		public static BitArray ClassLike = NewSet(Class, Template, Interface, Struct, Union);
 		public static BitArray BasicTypes = NewSet(Auto, Const, Immutable, Bool, Byte        ,Ubyte        ,Short        ,Ushort        ,Int        ,Uint        ,Long        ,Ulong        ,Char        ,Wchar        ,Dchar        ,Float        ,Double        ,Real        ,Ifloat        ,Idouble        ,Ireal        ,Cfloat        ,Cdouble        ,Creal        ,Void);
@@ -282,7 +283,7 @@ namespace D_Parser
 			"::",
 			";",
 			"?",
-			"??",
+			"$",
 			",",
 			".",
 			"{",

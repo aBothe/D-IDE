@@ -1238,12 +1238,9 @@ namespace D_Parser
                     }
                     return new DToken(DTokens.GreaterThan, x, y);
                 case '?':
-                    if (ReaderPeek() == '?')
-                    {
-                        ReaderRead();
-                        return new DToken(DTokens.DoubleQuestion, x, y);
-                    }
                     return new DToken(DTokens.Question, x, y);
+                case '$':
+                    return new DToken(DTokens.Dollar, x, y);
                 case ';':
                     return new DToken(DTokens.Semicolon, x, y);
                 case ':':

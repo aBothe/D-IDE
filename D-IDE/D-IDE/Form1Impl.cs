@@ -343,9 +343,11 @@ namespace D_IDE
                 tfn = sF.FileName;
             }
             else return null;
-
-            File.WriteAllText(tfn, "");
-
+            try
+            {
+                File.WriteAllText(tfn, "");
+            }
+            catch (Exception ex) { MessageBox.Show(ex.ToString()); return null; }
             if (OpenAfterCreating) Open(tfn, Project != null ? Project.prjfn : "");
             if (Project != null)
             {
