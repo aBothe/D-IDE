@@ -213,7 +213,7 @@ namespace D_IDE
 					ProjectMenu.Tag = e.Location;
 				}
             }
-            else if (e.X > e.Node.Bounds.Left - 16)
+            else if (e.Clicks<2 && e.X > e.Node.Bounds.Left - 16)
                 e.Node.Toggle();
 		}
 

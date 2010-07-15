@@ -327,8 +327,8 @@ namespace D_IDE
 
         public string CreateNewSourceFile(bool OpenAfterCreating)
         {
-            return CreateNewSourceFile(MessageBox.Show("Do you want to add the file to the current project?", "New File",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes ? prj : null, OpenAfterCreating);
+            return CreateNewSourceFile((prj!=null && MessageBox.Show("Do you want to add the file to the current project?", "New File",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) ? prj : null, OpenAfterCreating);
         }
 
         public string CreateNewSourceFile(DProject Project, bool OpenAfterCreating)
@@ -343,6 +343,8 @@ namespace D_IDE
                 tfn = sF.FileName;
             }
             else return null;
+
+            File.WriteAllText(tfn, "");
 
             if (OpenAfterCreating) Open(tfn, Project != null ? Project.prjfn : "");
             if (Project != null)

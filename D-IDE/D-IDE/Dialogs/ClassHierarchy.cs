@@ -66,11 +66,5 @@ namespace D_IDE
 				hadClicked = false;
 			}
 		}
-
-        private void NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
-        {
-            if(e.X>e.Node.Bounds.Left-16)
-            e.Node.Toggle();
-        }
 	}
 }
