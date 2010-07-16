@@ -186,6 +186,9 @@ namespace D_Parser
                 if (ret.Length < 2000) ret += strVal;
                 lexer.NextToken();
             }
+
+            if (la.Kind == DTokens.CloseParenthesis) lexer.NextToken();
+
             return ret;
         }
 
@@ -440,7 +443,7 @@ namespace D_Parser
                     if (Peek(1).Kind == DTokens.OpenParenthesis)
                     {
                         SkipToClosingParenthesis();
-                        continue;
+                        goto blockcont;
                     }
                 }
 
@@ -827,7 +830,8 @@ namespace D_Parser
                         if (PeekMustBe(DTokens.OpenParenthesis, "Error parsing \"with()\" Expression: \"(\" expected!"))
                         {
                             SkipToClosingParenthesis();
-                            if (la.Kind != DTokens.CloseParenthesis) SynErr(DTokens.CloseParenthesis, "Error parsing \"with()\" Expression: \")\" expected!");
+                            if (t.Kind != DTokens.CloseParenthesis) SynErr(DTokens.CloseParenthesis, "Error parsing \"with()\" Expression: \")\" expected!");
+                            goto blockcont;
                         }
                         break;
                     case DTokens.Asm: // Inline Assembler
@@ -842,11 +846,17 @@ namespace D_Parser
                         break;
                     case DTokens.Catch:
                         if (Peek(1).Kind == DTokens.OpenParenthesis)
+                        {
                             SkipToClosingParenthesis();
+                            goto blockcont;
+                        }
                         break;
                     case DTokens.Debug:
                         if (Peek(1).Kind == DTokens.OpenParenthesis)
+                        {
                             SkipToClosingParenthesis();
+                            goto blockcont;
+                        }
                         break;
                     case DTokens.Goto:
                         SkipToSemicolon();
@@ -887,7 +897,7 @@ namespace D_Parser
                         if (PeekMustBe(DTokens.OpenParenthesis, "'(' expected!"))
                         {
                             SkipToClosingParenthesis();
-                            break;
+                            goto blockcont;
                         }
                         break;
                     case DTokens.Else:
@@ -943,7 +953,10 @@ namespace D_Parser
                         break;
                     case DTokens.Extern:
                         if (Peek(1).Kind == DTokens.OpenParenthesis)
+                        {
                             SkipToClosingParenthesis();
+                            goto blockcont;
+                        }
                         break;
                     case DTokens.CloseCurlyBrace: // }
                         curbrace--;
@@ -1357,7 +1370,7 @@ namespace D_Parser
             while (b && !ThrowIfEOF(DTokens.Semicolon))
             {
                 lexer.NextToken();
-                cont:
+            cont:
                 foreach (int tk in EndTokens)
                     if (la.Kind == tk)
                     {
@@ -1365,7 +1378,7 @@ namespace D_Parser
                     }
 
                 if (la.Kind == DTokens.OpenCurlyBrace) { ret += "{..."; SkipToClosingBrace(); }
-                if (la.Kind == DTokens.OpenParenthesis) { ret += "(" + SkipToClosingParenthesis(); }
+                if (la.Kind == DTokens.OpenParenthesis) { ret += "(" + SkipToClosingParenthesis() + ")"; goto cont; }
                 if (la.Kind == DTokens.OpenSquareBracket) { ret += "[" + SkipToClosingSquares(); }
 
                 ret += (la.Kind == DTokens.Identifier || la.Kind == DTokens.Delegate || la.Kind == DTokens.Function ? " " : "") + strVal;
@@ -1427,10 +1440,7 @@ namespace D_Parser
                     IsInit = false;
 
                     if (IsTypeOf)
-                    {
                         declStack.Push(new NormalDeclaration(SkipToClosingParenthesis()));
-                        lexer.NextToken();
-                    }
                     continue;
                 }
 
@@ -1612,7 +1622,7 @@ namespace D_Parser
                         ArrayDecl arrDecl = declStack.Pop() as ArrayDecl;
                         if (arrDecl == null)
                         {
-                            SynErr(DTokens.CloseSquareBracket,"Error, check array syntax");
+                            SynErr(DTokens.CloseSquareBracket, "Error, check array syntax");
                             break;
                         }
                         arrDecl.KeyType = keyType;
@@ -1639,6 +1649,7 @@ namespace D_Parser
                         else if (la.Kind == DTokens.OpenParenthesis)
                         {
                             templDecl_.Template = new NormalDeclaration(SkipToClosingParenthesis());
+                            continue;
                         }
                         else
                         {
@@ -1835,7 +1846,6 @@ namespace D_Parser
                 {
                     lexer.NextToken(); // Skip "if"
                     SkipToClosingParenthesis();
-                    lexer.NextToken(); // Skip ")"
                 }
 
                 if (la.Kind == DTokens.Semicolon) { goto expr_ret; } // void foo()();
@@ -1856,16 +1866,11 @@ namespace D_Parser
             in_out_body:
                 if (la.Kind == DTokens.In || la.Kind == DTokens.Out || la.Kind == DTokens.Body) // void foo() in{}body{}
                 {
-
-                    if (la.Kind == DTokens.Out)
+                    lexer.NextToken();
+                    if (t.Kind == DTokens.Out && la.Kind == DTokens.OpenParenthesis)
                     {
-                        if (Peek(1).Kind == DTokens.OpenParenthesis)
-                        {
-                            lexer.NextToken(); // Skip "out"
-                            SkipToClosingParenthesis();
-                        }
+                        SkipToClosingParenthesis();
                     }
-                    lexer.NextToken(); // Skip "in"
 
                     Location sloc = tv.StartLocation;
                     ParseBlock(ref tv, true);
@@ -1978,7 +1983,6 @@ namespace D_Parser
             {
                 lexer.NextToken();
                 SkipToClosingParenthesis();
-                lexer.NextToken(); // Skip ")"
             }
 
             if (la.Kind != DTokens.OpenCurlyBrace)
