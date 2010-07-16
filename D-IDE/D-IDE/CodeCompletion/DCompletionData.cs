@@ -136,7 +136,7 @@ namespace D_IDE
             string dataType = data.Type != null ? data.Type.ToString() : "";
             if (data.fieldtype == FieldType.AliasDecl)
             {
-                ret += dataType;
+                ret = "alias "+ dataType+ " "+data.name;
                 return ret;
             }
 

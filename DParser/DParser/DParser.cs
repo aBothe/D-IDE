@@ -175,12 +175,11 @@ namespace D_Parser
 
                     case DTokens.OpenParenthesis:
                         round++;
-                        lexer.NextToken();
-                        continue;
+                        break;
 
                     case DTokens.CloseParenthesis:
                         round--;
-                        if (mbrace < 1 && round < 1) { b = false; continue; }
+                        if (mbrace < 1 && round < 1) { b = false; }
                         break;
                 }
                 if (ret.Length < 2000) ret += strVal;
@@ -453,7 +452,7 @@ namespace D_Parser
                     DToken pt = Peek(1);
                     int mod = la.Kind;
 
-                    if (pt.Kind == DTokens.OpenParenthesis && Peek(2).Kind == DTokens.CloseParenthesis) // invariant() {...} - whatever this shall mean...something like that is possible in D!
+                    if (pt.Kind == DTokens.OpenParenthesis && Peek().Kind == DTokens.CloseParenthesis && Peek().Kind == DTokens.OpenCurlyBrace) // invariant() {...} - whatever this shall mean...something like that is possible in D!
                     {
                         lexer.NextToken(); // Skip modifier ID
                         lexer.NextToken(); // Skip "("
@@ -463,7 +462,11 @@ namespace D_Parser
                         }
                         continue;
                     }
-
+                    else if (DTokens.MemberFunctionAttributes[la.Kind] && pt.Kind == DTokens.OpenParenthesis)
+                    {
+                        goto go_on;
+                    }
+                    
                     if (DTokens.MemberFunctionAttributes[la.Kind] && pt.Kind == DTokens.Identifier && (Peek().Kind == DTokens.Assign || lexer.CurrentPeekToken.Kind == DTokens.Comma || lexer.CurrentPeekToken.Kind == DTokens.Semicolon)) // const abc=45;
                     {
                         DVariable cnst = new DVariable();
@@ -555,7 +558,7 @@ namespace D_Parser
 
                 }
                 #endregion
-
+            go_on:
                 #region Normal Expressions
                 if (DTokens.BasicTypes[la.Kind] ||
                     la.Kind == DTokens.Identifier ||
@@ -911,16 +914,21 @@ namespace D_Parser
                         }
                         // MyType a,b,c,d;
                         DNode prevExpr = (DNode)ret.Children[ret.Count - 1];
-                        if (prevExpr.fieldtype == FieldType.Variable)
+                        if (prevExpr is DVariable)
                         {
                             DVariable tv = new DVariable();
                             if (tv == null) continue;
-                            tv.modifiers = prevExpr.modifiers;
-                            tv.startLoc = prevExpr.startLoc;
-                            tv.Type = prevExpr.Type;
-                            tv.TypeToken = prevExpr.TypeToken;
+                            tv.Assign(prevExpr);
+                            tv.desc = CheckForDocComments();
+                            tv.StartLocation = la.Location;
+                            tv.fieldtype = prevExpr.fieldtype;
+                            if (la.Kind != DTokens.Identifier)
+                            {
+                                SynErr(DTokens.Comma,"Identifier for var enumeration expected!");
+                                continue;
+                            }
                             tv.name = strVal;
-                            tv.endLoc = GetCodeLocation(la);
+                            tv.EndLocation=la.EndLocation;
                             lexer.NextToken(); // Skip var id
 
                             if (Peek(1).Kind == DTokens.Assign) lexer.NextToken();
@@ -1084,21 +1092,13 @@ namespace D_Parser
                         lexer.NextToken(); // Skip alias|typedef
                         DNode aliasType = ParseExpression();
                         if (aliasType == null) break;
+                        aliasType.desc = CheckForDocComments();
                         aliasType.fieldtype = FieldType.AliasDecl;
                         LastElement = aliasType;
                         ret.Add(aliasType);
 
-                        while (la.Kind == DTokens.Comma)
-                        {
-                            if (!PeekMustBe(DTokens.Identifier, "Identifier expected")) break;
-                            DNode other = new DNode();
-                            other.fieldtype = FieldType.AliasDecl;
-                            other.Assign(aliasType);
-                            other.name = strVal;
-                            LastElement = other;
-                            ret.Add(other);
-                            lexer.NextToken();
-                        }
+                        if (la.Kind == DTokens.Comma)
+                            goto blockcont;
 
                         break;
                     case DTokens.Import:
@@ -1436,11 +1436,14 @@ namespace D_Parser
                     declStack.Push(new MemberFunctionAttributeDecl(la.Kind));
                     IsInMemberModBracket = true;
                     lexer.NextToken(); // Skip const
-                    lexer.NextToken(); // Skip (
                     IsInit = false;
 
                     if (IsTypeOf)
-                        declStack.Push(new NormalDeclaration(SkipToClosingParenthesis()));
+                    {
+                        (declStack.Peek() as MemberFunctionAttributeDecl).Base = new NormalDeclaration(SkipToClosingParenthesis());
+                        IsInMemberModBracket = false;
+                    }
+                    else lexer.NextToken(); // Skip (
                     continue;
                 }
 
