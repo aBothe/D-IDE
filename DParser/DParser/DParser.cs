@@ -119,22 +119,21 @@ namespace D_Parser
             string ret = "";
 
             int mbrace = 0, par = 0;
-            while (la.Kind != DTokens.EOF)
+            while (!ThrowIfEOF(DTokens.Semicolon))
             {
                 if (la.Kind == DTokens.OpenCurlyBrace) mbrace++;
-                if (la.Kind == DTokens.CloseCurlyBrace) mbrace--;
+                else if (la.Kind == DTokens.CloseCurlyBrace) mbrace--;
 
-                if (la.Kind == DTokens.OpenParenthesis) par++;
-                if (la.Kind == DTokens.CloseParenthesis) par--;
+                else if (la.Kind == DTokens.OpenParenthesis) par++;
+                else if (la.Kind == DTokens.CloseParenthesis) par--;
 
-                if (ThrowIfEOF(DTokens.Semicolon)) break;
                 if (mbrace < 1 && par < 1 && la.Kind != DTokens.Semicolon && Peek(1).Kind == DTokens.CloseCurlyBrace)
                 {
                     ret += strVal;
                     SynErr(la.Kind, "Check for missing semicolon!");
                     break;
                 }
-                if (mbrace < 1 && par < 1 && la.Kind == DTokens.Semicolon)
+                else if (mbrace < 1 && par < 1 && la.Kind == DTokens.Semicolon)
                 {
                     break;
                 }
@@ -147,14 +146,13 @@ namespace D_Parser
         public void SkipToClosingBrace()
         {
             int mbrace = 0;
-            while (la.Kind != DTokens.EOF)
+            while (!ThrowIfEOF(DTokens.CloseCurlyBrace))
             {
-                if (ThrowIfEOF(DTokens.CloseCurlyBrace)) return;
                 if (la.Kind == DTokens.OpenCurlyBrace)
                 {
                     mbrace++;
                 }
-                if (la.Kind == DTokens.CloseCurlyBrace)
+                else if (la.Kind == DTokens.CloseCurlyBrace)
                 {
                     mbrace--;
                     if (mbrace <= 0) { break; }
@@ -167,21 +165,23 @@ namespace D_Parser
         {
             string ret = "";
             int mbrace = 0, round = 0;
-            while (!EOF)
+            bool b = true;
+            while (b && !ThrowIfEOF(DTokens.CloseParenthesis))
             {
-                if (la.Kind == DTokens.OpenCurlyBrace) mbrace++;
-                if (la.Kind == DTokens.CloseCurlyBrace) mbrace--;
+                switch (la.Kind)
+                {
+                    case DTokens.OpenCurlyBrace: mbrace++; break;
+                    case DTokens.CloseCurlyBrace: mbrace--; break;
 
-                if (ThrowIfEOF(DTokens.CloseParenthesis)) break;
-                if (la.Kind == DTokens.OpenParenthesis)
-                {
-                    round++;
-                    lexer.NextToken(); continue;
-                }
-                if (la.Kind == DTokens.CloseParenthesis)
-                {
-                    round--;
-                    if (mbrace < 1 && round < 1) { break; }
+                    case DTokens.OpenParenthesis:
+                        round++;
+                        lexer.NextToken();
+                        continue;
+
+                    case DTokens.CloseParenthesis:
+                        round--;
+                        if (mbrace < 1 && round < 1) { b = false; continue; }
+                        break;
                 }
                 if (ret.Length < 2000) ret += strVal;
                 lexer.NextToken();
@@ -193,12 +193,11 @@ namespace D_Parser
         {
             string ret = "";
             int mbrace = 0, round = 0;
-            while (!EOF)
+            while (!ThrowIfEOF(DTokens.CloseSquareBracket))
             {
                 if (la.Kind == DTokens.OpenCurlyBrace) mbrace++;
                 if (la.Kind == DTokens.CloseCurlyBrace) mbrace--;
 
-                if (ThrowIfEOF(DTokens.CloseSquareBracket)) break;
                 if (la.Kind == DTokens.OpenSquareBracket)
                 {
                     round++;
@@ -474,7 +473,7 @@ namespace D_Parser
                         if (Peek(1).Kind == DTokens.Assign)
                         {
                             lexer.NextToken();
-                            cnst.Value = ParseAssignIdent(DTokens.Semicolon,DTokens.Comma);
+                            cnst.Value = ParseAssignIdent(DTokens.Semicolon, DTokens.Comma);
                             if (Peek(1).Kind == DTokens.Semicolon || lexer.CurrentPeekToken.Kind == DTokens.Comma) lexer.NextToken();
                         }
                         cnst.EndLocation = la.EndLocation;
@@ -914,8 +913,8 @@ namespace D_Parser
                             tv.endLoc = GetCodeLocation(la);
                             lexer.NextToken(); // Skip var id
 
-                            if (Peek(1).Kind == DTokens.Assign)lexer.NextToken();
-                            if (la.Kind == DTokens.Assign) tv.Value = ParseAssignIdent(DTokens.Semicolon,DTokens.Comma);
+                            if (Peek(1).Kind == DTokens.Assign) lexer.NextToken();
+                            if (la.Kind == DTokens.Assign) tv.Value = ParseAssignIdent(DTokens.Semicolon, DTokens.Comma);
 
                             LastElement = tv;
                             ret.Add(tv);
@@ -982,6 +981,8 @@ namespace D_Parser
                                 }
                                 ret.Children.AddRange(mye.Children);
                             }
+                            if (la.Kind == DTokens.Comma) // enum int abc>,< def=45;
+                                goto blockcont;
                         }
                         break;
                     case DTokens.Super:
@@ -1311,7 +1312,7 @@ namespace D_Parser
                             if (Peek(1).Kind == DTokens.Assign) // Argument has default argument
                             {
                                 if (targ is DVariable)
-                                    (targ as DVariable).Value = ParseAssignIdent(DTokens.Comma,DTokens.CloseParenthesis);
+                                    (targ as DVariable).Value = ParseAssignIdent(DTokens.Comma, DTokens.CloseParenthesis);
                                 else
                                     ParseAssignIdent(DTokens.Comma, DTokens.CloseParenthesis);
 
@@ -1347,20 +1348,20 @@ namespace D_Parser
         /// <returns></returns>
         string ParseAssignIdent()
         {
-            return ParseAssignIdent(DTokens.Semicolon,DTokens.Comma,DTokens.CloseCurlyBrace,DTokens.CloseParenthesis);
+            return ParseAssignIdent(DTokens.Semicolon, DTokens.Comma, DTokens.CloseCurlyBrace, DTokens.CloseParenthesis);
         }
         string ParseAssignIdent(params int[] EndTokens)
         {
             string ret = "";
             bool b = true;
-            while (b&& !ThrowIfEOF(DTokens.Semicolon))
+            while (b && !ThrowIfEOF(DTokens.Semicolon))
             {
                 lexer.NextToken();
-
+                cont:
                 foreach (int tk in EndTokens)
                     if (la.Kind == tk)
                     {
-                        b = false; break;
+                        return ret.Trim();
                     }
 
                 if (la.Kind == DTokens.OpenCurlyBrace) { ret += "{..."; SkipToClosingBrace(); }
@@ -1530,7 +1531,7 @@ namespace D_Parser
                             // Do not expect a parameter id here!
 
                             if (la.Kind == DTokens.Assign) // void delegate(int i>=<5, bool a=false)
-                                dv.Value = ParseAssignIdent(DTokens.Comma,DTokens.CloseParenthesis);
+                                dv.Value = ParseAssignIdent(DTokens.Comma, DTokens.CloseParenthesis);
 
                             dd.Parameters.Add(dv);
 
@@ -1609,6 +1610,11 @@ namespace D_Parser
                             }
                         }
                         ArrayDecl arrDecl = declStack.Pop() as ArrayDecl;
+                        if (arrDecl == null)
+                        {
+                            SynErr(DTokens.CloseSquareBracket,"Error, check array syntax");
+                            break;
+                        }
                         arrDecl.KeyType = keyType;
                         declStack.Push(arrDecl);
                         break;
@@ -2056,6 +2062,12 @@ namespace D_Parser
                     if (enumVar.Type == null)
                         enumVar.Type = new DTokenDeclaration(DTokens.Int);
 
+                    if (Peek(1).Kind == DTokens.Assign) lexer.NextToken();
+                    if (la.Kind == DTokens.Assign)
+                    {
+                        enumVar.Value = ParseAssignIdent();
+                    }
+
                     enumVar.EndLocation = la.Location;
                     return enumVar;
                 }
@@ -2088,7 +2100,7 @@ namespace D_Parser
                         tt = null;
                         break;
                     case DTokens.Assign: // Value assignment
-                        tt.Value = ParseAssignIdent(DTokens.Comma,DTokens.CloseCurlyBrace);
+                        tt.Value = ParseAssignIdent(DTokens.Comma, DTokens.CloseCurlyBrace);
                         if (la.Kind != DTokens.Identifier) goto enumcont;
                         break;
                     case DTokens.Identifier: // Can just be a new item

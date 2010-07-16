@@ -82,7 +82,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return ValueType.ToString()+"["+KeyType.ToString()+"]";
+            return ValueType.ToString()+"["+(KeyType!=null? KeyType.ToString():"")+"]";
         }
     }
 
