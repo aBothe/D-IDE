@@ -35,7 +35,7 @@ namespace D_Parser
 
         public NormalDeclaration() { }
         public NormalDeclaration(string Identifier)
-        { Name = Identifier; }
+        { Name = Identifier.Trim('(',')'); }
 
         public override string  ToString()
         {
