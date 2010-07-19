@@ -1207,14 +1207,15 @@ namespace D_Parser
                     case DTokens.Dot:
                         if (Peek(1).Kind == DTokens.Dot && Peek(2).Kind == DTokens.Dot) // "..."
                         {
-                            if (targ == null) { targ = new DVariable(); targtype = ""; }
+                            if (targ == null) { targ = new DVariable(); targ.StartLocation = la.Location; targtype = ""; }
 
                             if (targ.name == "") targ.name = "...";
                             if (targtype != "") targ.name = targtype;
 
-                            targ.StartLocation = la.Location;
+                            lexer.NextToken();
+                            lexer.NextToken();
+                            
                             targ.EndLocation = la.EndLocation;
-                            targ.endLoc.Column += 3; // three dots (...)
                             targ.Type = targtype != "" ? new VarArgDecl(new NormalDeclaration(targtype)) : new VarArgDecl();
                             v.TemplateParameters.Add(targ);
                             targ = null;
@@ -1503,7 +1504,7 @@ namespace D_Parser
 
                 if (la.Kind == DTokens.Identifier) // int* >ABC<;
                 {
-                    if (pk.Kind == DTokens.OpenSquareBracket) // int ABC>[<1234];
+                    if (!IsInit && pk.Kind == DTokens.OpenSquareBracket) // int ABC>[<1234];
                     {
                         VariableName = strVal;
                         IsCStyleDeclaration = true;
@@ -1518,8 +1519,17 @@ namespace D_Parser
                        )
                     {
                         if (!IsInit)
+                        {
+                            if (pk.Kind == DTokens.OpenParenthesis) // w.foo>(<...);
+                            {
+                                if (t.Kind==DTokens.Dot || declStack.Count<1) // .doit(); // foo();
+                                {
+                                    return null;
+                                }
+                            }
                             VariableName = strVal;
-                        else 
+                        }
+                        else
                             declStack.Push(new NormalDeclaration(strVal));
                         goto do_return;
                     }
@@ -1759,7 +1769,11 @@ namespace D_Parser
             if (!isCTor)
             {
                 tv.Type = ParseTypeIdent(out tv.name);
-                if (tv.Type == null) return null;
+                if (tv.Type == null)
+                {
+                    SkipToSemicolon();
+                    return null;
+                }
             }
             else
                 tv.Type = new DTokenDeclaration(DTokens.This);
@@ -1796,6 +1810,12 @@ namespace D_Parser
             }
             else if (la.Kind == DTokens.Identifier || isCTor || (la.Kind == DTokens.CloseParenthesis && Peek(1).Kind == DTokens.OpenParenthesis)) // MyType myfunc() {...}; this()() {...}; int (*foo)>(<int a, bool b);
             {
+                if (!isCTor && (String.IsNullOrEmpty(tv.name) || tv.Type == null)) 
+                { 
+                    SkipToSemicolon(); 
+                    return null;
+                }
+
                 DMethod meth = new DMethod();
                 meth.Assign(tv);
                 tv = meth;
