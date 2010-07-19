@@ -308,7 +308,7 @@ namespace D_IDE
                 return icons.Images.IndexOfKey("Icons.16x16.Interface.png");
             }
 
-            if (v.fieldtype == FieldType.Function)
+            if (v.fieldtype == FieldType.Function || v.fieldtype==FieldType.Constructor)
             {
                 if (v.modifiers.Contains(DTokens.Private))
                     return icons.Images.IndexOfKey("Icons.16x16.PrivateMethod.png");

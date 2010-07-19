@@ -1034,7 +1034,7 @@ namespace D_Parser
                             break;
                         }
 
-                        #region Modifier assessment
+                        #region Modifiers
                         bool cvm = DTokens.ContainsVisMod(ExpressionModifiers);
                         foreach (int m in BlockModifiers)
                         {
@@ -1049,29 +1049,25 @@ namespace D_Parser
 
                         #endregion
 
-                        string cname = "";
-                        if (t.Kind == DTokens.Tilde) // "~"
-                            cname = "~" + ret.name;
-                        else
-                            cname = ret.name;
+                        bool IsDestructor = t.Kind == DTokens.Tilde;
 
                         DNode ctor = ParseExpression();
                         if (ctor != null)
                         {
-                            LastElement = ctor;
                             if (ret.fieldtype == FieldType.Root && !TExprMods.Contains(DTokens.Static))
                             {
                                 SemErr(DTokens.This, ctor.startLoc.Column, ctor.startLoc.Line, "Module Constructors must be static!");
                             }
 
                             ctor.modifiers.AddRange(TExprMods);
-                            ctor.name = cname;
+                            ctor.name = (IsDestructor?"~":"")+"this";
                             ctor.fieldtype = FieldType.Constructor;
-                            ctor.endLoc = GetCodeLocation(la);
+                            ctor.EndLocation=la.EndLocation;
 
                             ctor.Parent = ret;
                             ctor.module = ret.module;
 
+                            LastElement = ctor;
                             ret.Add(ctor);
                         }
                         break;
@@ -1452,20 +1448,34 @@ namespace D_Parser
                     continue;
                 }
 
-                if ((DTokens.MemberFunctionAttributes[la.Kind] || la.Kind == DTokens.Typeof) && pk.Kind == DTokens.OpenParenthesis) // const(...)
+                if ((DTokens.MemberFunctionAttributes[la.Kind] || la.Kind == DTokens.Typeof)) // const(...)
                 {
                     bool IsTypeOf = la.Kind == DTokens.Typeof;
-                    declStack.Push(new MemberFunctionAttributeDecl(la.Kind));
-                    lexer.NextToken(); // Skip const
-                    IsInit = false;
+                    if (IsTypeOf && pk.Kind != DTokens.OpenParenthesis) // typeof abcd --> illegal
+                    {
+                        SynErr(DTokens.OpenParenthesis,"'(' after a typeof expression expected");
+                        return null;
+                    }
+                    else if (pk.Kind == DTokens.OpenParenthesis) // const>(>char)
+                    {
+                        declStack.Push(new MemberFunctionAttributeDecl(la.Kind));
+                        lexer.NextToken(); // Skip const
+                        IsInit = false;
 
-                    if (IsTypeOf)
-                        (declStack.Peek() as MemberFunctionAttributeDecl).Base = new NormalDeclaration(SkipToClosingParenthesis().Trim('(',')'));
-                    else{
-                        lexer.NextToken(); // Skip '('
-                        (declStack.Peek() as MemberFunctionAttributeDecl).Base =ParseTypeIdent();
-                        if(la.Kind!=DTokens.CloseParenthesis)lexer.NextToken(); // Skip last ident. parsed by ParseTypeIdent()
-                        lexer.NextToken(); // Skip ')'
+                        if (IsTypeOf)
+                            (declStack.Peek() as MemberFunctionAttributeDecl).Base = new NormalDeclaration(SkipToClosingParenthesis().Trim('(', ')'));
+                        else
+                        {
+                            lexer.NextToken(); // Skip '('
+                            (declStack.Peek() as MemberFunctionAttributeDecl).Base = ParseTypeIdent();
+                            if (la.Kind != DTokens.CloseParenthesis) lexer.NextToken(); // Skip last ident. parsed by ParseTypeIdent()
+                            lexer.NextToken(); // Skip ')'
+                        }
+                    }
+                    else // const >char<
+                    {
+                        declStack.Push(new MemberFunctionAttributeDecl(la.Kind));
+                        lexer.NextToken(); // Skip const
                     }
                     continue;
                 }
@@ -2052,7 +2062,7 @@ namespace D_Parser
             if (la.Kind != DTokens.OpenCurlyBrace) // Otherwise it would be enum >{<...}
             {
                 DToken pk = Peek(1);
-                if (la.Kind == DTokens.Identifier && (pk.Kind == DTokens.OpenCurlyBrace || pk.Kind == DTokens.Colon)) // enum ABC>{>...}
+                if (la.Kind == DTokens.Identifier && (pk.Kind == DTokens.OpenCurlyBrace || pk.Kind == DTokens.Colon || pk.Kind==DTokens.Assign)) // enum ABC>{>...}
                 {
                     mye.name = strVal;
                     lexer.NextToken(); // Skip enum id
@@ -2063,6 +2073,16 @@ namespace D_Parser
                     string _unused = null;
                     (mye as DEnum).EnumBaseType = ParseTypeIdent(out _unused);
                     if (Peek(1).Kind == DTokens.OpenCurlyBrace) lexer.NextToken();
+                }
+                else if (la.Kind == DTokens.Assign) // enum abc>=< [aaa,bbb,ccc];
+                {
+                    DVariable enumVar = new DVariable();
+                    enumVar.Assign(mye);
+                    mye = enumVar;
+                    mye.Type = new DTokenDeclaration(DTokens.Int);
+                    enumVar.Value = ParseAssignIdent(DTokens.Semicolon);
+                    enumVar.EndLocation = la.EndLocation;
+                    return enumVar;
                 }
                 else if (la.Kind != DTokens.OpenCurlyBrace) // enum Type[]** ABC;
                     return ParseExpression();
