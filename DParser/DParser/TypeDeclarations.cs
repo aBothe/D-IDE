@@ -8,15 +8,8 @@ namespace D_Parser
     {
         public abstract uint GetDeclarationClassTypeId { get; }
 
-        public TypeDeclaration Base=null;
+        public TypeDeclaration Base;
         public TypeDeclaration ParentDecl { get { return Base; } set { Base = value; } }
-
-        public TypeDeclaration HasSpecificTypeDeclaration<DeclarationType>()
-        {
-            if (Base == null) return null;
-
-            return Base.HasSpecificTypeDeclaration<DeclarationType>();
-        }
 
         /// <summary>
         /// Returns a string which represents the current type
@@ -107,7 +100,14 @@ namespace D_Parser
 
             foreach (DVariable n in Parameters)
             {
-                ret += n.Type.ToString()+" "+n.name+ (String.IsNullOrEmpty(n.Value)?"":("= "+n.Value))+", ";
+                if(n.Type!=null)
+                    ret += n.Type.ToString();
+                
+                if(!String.IsNullOrEmpty(n.name))
+                    ret+=(" " + n.name); 
+                
+                if(!String.IsNullOrEmpty(n.Value))
+                    ret+="= " + n.Value + ", ";
             }
             ret=ret.TrimEnd(',',' ')+")";
             return ret;

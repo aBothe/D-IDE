@@ -322,9 +322,8 @@ namespace D_IDE
 			if(codeCompletionListView == null) return false;
 			ICompletionData data = codeCompletionListView.SelectedCompletionData;
 			bool result = false;
-			if (data != null) {
+			if (data != null && !String.IsNullOrEmpty( data.Text)) {
 				control.BeginUpdate();
-				
 				try {
 					if (endOffset - startOffset > 0) {
 						control.Document.Remove(startOffset, endOffset - startOffset);

@@ -1426,6 +1426,9 @@ namespace D_Parser
         /// <returns></returns>
         TypeDeclaration ParseTypeIdent(out string VariableName)
         {
+            /*
+             * This functions ends when la.Kind== ; or , or ) or { or if it has found an identifier (probably a function or var ident.)
+             */
             VariableName = null;
 
             Stack<TypeDeclaration> declStack = new Stack<TypeDeclaration>();
@@ -1459,9 +1462,10 @@ namespace D_Parser
                     if (IsTypeOf)
                         (declStack.Peek() as MemberFunctionAttributeDecl).Base = new NormalDeclaration(SkipToClosingParenthesis().Trim('(',')'));
                     else{
-                        lexer.NextToken(); // Skip (
+                        lexer.NextToken(); // Skip '('
                         (declStack.Peek() as MemberFunctionAttributeDecl).Base =ParseTypeIdent();
-                        if(la.Kind!=DTokens.CloseParenthesis && Peek(1).Kind==DTokens.CloseParenthesis)lexer.NextToken();
+                        if(la.Kind!=DTokens.CloseParenthesis)lexer.NextToken(); // Skip last ident. parsed by ParseTypeIdent()
+                        lexer.NextToken(); // Skip ')'
                     }
                     continue;
                 }
@@ -1556,7 +1560,7 @@ namespace D_Parser
                         while (!ThrowIfEOF(DTokens.CloseParenthesis))
                         {
                             DVariable dv = new DVariable();
-                            dv.Type = ParseTypeIdent(out dv.name);
+                           dv.Type = ParseTypeIdent(out dv.name);
 
                             if (dv.name != null) lexer.NextToken(); // Skip last token parsed, can theoretically only be an identifier
 
@@ -1567,14 +1571,19 @@ namespace D_Parser
 
                             dd.Parameters.Add(dv);
 
-                            if (la.Kind == DTokens.CloseParenthesis) break;
-                            if (la.Kind == DTokens.Comma) lexer.NextToken();
+
+                            if (la.Kind == DTokens.Comma)
+                            {
+                                lexer.NextToken();
+                                continue;
+                            }
+                            break;
                         }
                         #endregion
                         break;
 
-                    case DTokens.OpenParenthesis: // void >(<*foo)();
-                        if (pk.Kind != DTokens.Times)
+                    case DTokens.OpenParenthesis: 
+                        if (pk.Kind != DTokens.Times)// void >(<*foo)();
                             goto do_return;
 
                         lexer.NextToken(); // Skip '('
@@ -1595,21 +1604,17 @@ namespace D_Parser
                             SynErr(la.Kind, "Expected an identifier!");
                         goto do_return;
 
+                    case DTokens.CloseParenthesis: // void foo(T,U>)<()
                     case DTokens.Comma:// void foo(T>,< U)()
                         goto do_return;
                     case DTokens.OpenCurlyBrace: // enum abc >{< ... }
                         goto do_return;
                     case DTokens.CloseCurlyBrace: // int asdf; aaa>}<
                         if (t.Kind == DTokens.Identifier)
-                            SynErr(la.Kind, "Found '}' when expecting ';'!");
+                            SynErr(la.Kind, "Found '}' when expecting ';'");
                         else // int aaa}
-                            SynErr(la.Kind, "Found '}' when expecting identifier!");
+                            SynErr(la.Kind, "Found '}' when expecting identifier");
                         goto do_return;
-
-                    case DTokens.CloseParenthesis: // const(...>)< | Template!(...>)< | void foo(T,U>)<()
-                        if(pk.Kind!=DTokens.Identifier)
-                            goto do_return;
-                        break;
 
                     case DTokens.CloseSquareBracket:
                         TypeDeclaration keyType = new DTokenDeclaration(DTokens.Int); // default key type is int
