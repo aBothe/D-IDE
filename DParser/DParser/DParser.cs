@@ -839,7 +839,7 @@ namespace D_Parser
                         break;
                     #endregion
                     case DTokens.Cast:
-                        SynErr(la.Kind, "Cast cannot be done at front of a statement");
+                        //SynErr(la.Kind, "Cast cannot be done at front of a statement");
                         SkipToSemicolon();
                         break;
                     case DTokens.With:
@@ -1091,6 +1091,12 @@ namespace D_Parser
                             ret.Add(myc);
                         }
                         continue;
+                    case DTokens.Synchronized:
+                        if (PeekMustBe(DTokens.OpenParenthesis, "'(' expected at a synchronized-statement"))
+                        {
+                            SkipToClosingParenthesis();
+                        }
+                        break;
                     case DTokens.Module:
                         lexer.NextToken();
                         ret.module = SkipToSemicolon();
@@ -1113,6 +1119,8 @@ namespace D_Parser
                     case DTokens.Import:
                         ParseImport();
                         continue;
+                    case DTokens.Decrement: // --a;
+                    case DTokens.Increment: // ++a;
                     case DTokens.Mixin:
                     case DTokens.Assert:
                     case DTokens.Pragma:
@@ -1316,7 +1324,8 @@ namespace D_Parser
                             targ.TypeToken = la.Kind;
 
                             targ.Type = ParseTypeIdent(out targ.name);
-                            if (la.Kind == DTokens.Comma || (la.Kind == DTokens.CloseParenthesis && (Peek(1).Kind == DTokens.Semicolon || lexer.CurrentPeekToken.Kind==DTokens.CloseCurlyBrace)))// size_t wcslen(in wchar *>);<
+
+                            if (la.Kind == DTokens.Comma || (la.Kind == DTokens.CloseParenthesis && (targ.name==null || Peek(1).Kind == DTokens.Semicolon || lexer.CurrentPeekToken.Kind==DTokens.CloseCurlyBrace)))// size_t wcslen(in wchar *>);<
                             {
                                 continue;
                             }
@@ -1556,6 +1565,8 @@ namespace D_Parser
                     else declStack.Push(new NormalDeclaration(strVal));
                 }
 
+                if (DTokens.Conditions[la.Kind] || (VariableName==null && DTokens.AssignOps[pk.Kind]))
+                    return null;
 
                 switch (la.Kind)
                 {
@@ -1582,7 +1593,7 @@ namespace D_Parser
                             DVariable dv = new DVariable();
                            dv.Type = ParseTypeIdent(out dv.name);
 
-                            if (dv.name != null) lexer.NextToken(); // Skip last token parsed, can theoretically only be an identifier
+                            if (Peek(1).Kind==DTokens.Comma||lexer.CurrentPeekToken.Kind==DTokens.CloseParenthesis||lexer.CurrentPeekToken.Kind==DTokens.Assign) lexer.NextToken(); // Skip last token parsed, can theoretically only be an identifier
 
                             // Do not expect a parameter id here!
 
@@ -1602,9 +1613,14 @@ namespace D_Parser
                         #endregion
                         break;
 
-                    case DTokens.OpenParenthesis: 
+                    case DTokens.OpenParenthesis:
                         if (pk.Kind != DTokens.Times)// void >(<*foo)();
-                            goto do_return;
+                        {
+                            if (t.Kind == DTokens.CloseSquareBracket) // foo[0>]<(asdf);
+                                return null;
+                            else
+                                goto do_return;
+                        }
 
                         lexer.NextToken(); // Skip '('
                         //TODO: possible but rare array declaration | void (*>[<]foo)();
@@ -1621,7 +1637,7 @@ namespace D_Parser
                         if (IsAliasDecl && VariableName == null)
                             VariableName = DTokens.GetTokenString(t.Kind);
                         else if (!IsCStyleDeclaration)
-                            SynErr(la.Kind, "Expected an identifier!");
+                            return null;
                         goto do_return;
 
                     case DTokens.CloseParenthesis: // void foo(T,U>)<()
@@ -1704,6 +1720,9 @@ namespace D_Parser
                     case DTokens.Dot: // >.<init
                         if (Peek(1).Kind == DTokens.Dot && Peek().Kind == DTokens.Dot) // >...<
                         {
+                            if (VariableName == null && t.Kind == DTokens.Identifier)
+                                VariableName = t.Value;
+
                             lexer.NextToken(); // 1st dot
                             lexer.NextToken(); // 2nd dot
 
@@ -1711,16 +1730,19 @@ namespace D_Parser
                                 declStack.Push(new VarArgDecl());
                             else
                                 declStack.Push(new VarArgDecl(declStack.Pop()));
-                        }
 
-
-                        if (Peek(1).Kind != DTokens.Identifier)
-                        {
-                            SynErr(DTokens.Dot, "Expected identifier after a dot");
                             goto do_return;
                         }
+                        else
+                        {
+                            if (Peek(1).Kind != DTokens.Identifier)
+                            {
+                                SynErr(DTokens.Dot, "Expected identifier after a dot");
+                                goto do_return;
+                            }
 
-                        declStack.Push(new DotCombinedDeclaration(declStack.Pop()));
+                            declStack.Push(new DotCombinedDeclaration(declStack.Pop()));
+                        }
                         break;
                 }
 
@@ -1769,7 +1791,7 @@ namespace D_Parser
             if (!isCTor)
             {
                 tv.Type = ParseTypeIdent(out tv.name);
-                if (tv.Type == null)
+                if (tv.Type == null || tv.name==null)
                 {
                     SkipToSemicolon();
                     return null;
