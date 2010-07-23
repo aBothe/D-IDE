@@ -150,7 +150,42 @@ namespace D_IDE
 
         void WriteTypeDecl(TypeDeclaration decl)
         {
+            BinaryWriter bs = BinStream;
 
+            if (decl == null) // If there's no type, simply write a 0 to the file
+            {
+                bs.Write((byte)0); 
+                return; 
+            }
+            bs.Write(decl.TypeId);
+
+            if (decl is DTokenDeclaration)
+                bs.Write((decl as DTokenDeclaration).Token);
+            else if (decl is NormalDeclaration)
+                WriteString((decl as NormalDeclaration).Name, true);
+            else if (decl is ArrayDecl)
+                WriteTypeDecl((decl as ArrayDecl).KeyType);
+            else if (decl is DelegateDeclaration)
+            {
+                bs.Write((decl as DelegateDeclaration).IsFunction);
+                WriteNodes((decl as DelegateDeclaration).Parameters);
+            }
+            else if (decl is InheritanceDecl)
+            {
+                WriteTypeDecl((decl as InheritanceDecl).InheritedClass);
+                WriteTypeDecl((decl as InheritanceDecl).InheritedInterface);
+            }
+            else if (decl is TemplateDecl)
+                WriteTypeDecl((decl as TemplateDecl).Template);
+            else if (decl is DotCombinedDeclaration)
+                WriteTypeDecl((decl as DotCombinedDeclaration).AccessedMember);
+            else
+            {
+                bs.Write((byte)0);
+                return;
+            }
+
+            WriteTypeDecl(decl.Base);
         }
         #endregion
     }
@@ -313,7 +348,55 @@ namespace D_IDE
 
         TypeDeclaration ReadTypeDecl()
         {
-            return null;
+            TypeDeclaration ret = null;
+            BinaryReader bs = BinStream;
+
+            byte declType = bs.ReadByte();
+            if (declType < 1) return null;
+
+            if (declType == DTokenDeclaration.GetDeclarationClassTypeId)
+                ret = new DTokenDeclaration(bs.ReadInt32());
+            else if (declType == NormalDeclaration.GetDeclarationClassTypeId)
+                ret = new NormalDeclaration(ReadString(true));
+            else if (declType == ArrayDecl.GetDeclarationClassTypeId)
+            {
+                ret = new ArrayDecl();
+                (ret as ArrayDecl).KeyType = ReadTypeDecl();
+            }
+            else if (declType == DelegateDeclaration.GetDeclarationClassTypeId)
+            {
+                DelegateDeclaration dd = new DelegateDeclaration();
+                ret = dd;
+                dd.IsFunction = bs.ReadBoolean();
+                ReadNodes(ref dd.Parameters);
+            }
+            else if (declType == PointerDecl.GetDeclarationClassTypeId)
+                ret = new PointerDecl();
+            else if (declType == MemberFunctionAttributeDecl.GetDeclarationClassTypeId)
+                ret = new MemberFunctionAttributeDecl(bs.ReadInt32());
+            else if (declType == VarArgDecl.GetDeclarationClassTypeId)
+                ret = new VarArgDecl();
+            else if (declType == InheritanceDecl.GetDeclarationClassTypeId)
+            {
+                InheritanceDecl id = new InheritanceDecl();
+                id.InheritedClass = ReadTypeDecl();
+                id.InheritedInterface = ReadTypeDecl();
+                ret = id;
+            }
+            else if (declType == TemplateDecl.GetDeclarationClassTypeId)
+            {
+                ret = new TemplateDecl();
+                (ret as TemplateDecl).Template = ReadTypeDecl();
+            }
+            else if (declType == DotCombinedDeclaration.GetDeclarationClassTypeId)
+            {
+                ret = new DotCombinedDeclaration();
+                (ret as DotCombinedDeclaration).AccessedMember = ReadTypeDecl();
+            }
+            else return null;
+
+            ret.Base = ReadTypeDecl();
+            return ret;
         }
         #endregion
     }

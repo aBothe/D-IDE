@@ -141,7 +141,7 @@ namespace D_IDE
             }
 
             ret +=
-                (dataType == "" ? DTokens.GetTokenString(data.TypeToken) : dataType) + " " + // Type ID
+                (dataType == "" && data.TypeToken > 2 ? DTokens.GetTokenString(data.TypeToken) : dataType) + " " + // Type ID
                 (!String.IsNullOrEmpty(path) ? (path) : "") + // Module path
                 (dataType != data.name ? data.name : ""); // int : MyType // Field Name
 
@@ -155,8 +155,8 @@ namespace D_IDE
                     {
                         ret += DTokens.GetTokenString(m) + " ";
                     }
-                    if (p.Type != null)
-                        ret += (p.Type.ToString() != p.name ? p.Type.ToString() + " " : "") + p.name + ",";
+                    if (p.Type != null && p.Type.ToString()!=p.name)
+                        ret += p.Type.ToString() + " " + p.name + ",";
                     else ret += p.name + ",";
                 }
                 ret = ret.Trim(',') + ")";
@@ -206,7 +206,7 @@ namespace D_IDE
 
             if (ret.Length > 512) { ret = ret.Remove(509); ret += "..."; }
 
-            return ret;
+            return ret.Trim();
         }
 
         private void Init()

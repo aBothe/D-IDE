@@ -6,7 +6,7 @@ namespace D_Parser
 {
     public abstract class TypeDeclaration
     {
-        public abstract uint GetDeclarationClassTypeId { get; }
+        public abstract byte TypeId { get; }
 
         public TypeDeclaration Base;
         public TypeDeclaration ParentDecl { get { return Base; } set { Base = value; } }
@@ -23,7 +23,8 @@ namespace D_Parser
     /// </summary>
     public class NormalDeclaration : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 1; } }
+        public static byte GetDeclarationClassTypeId { get { return 1; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public string Name;
 
         public NormalDeclaration() { }
@@ -38,7 +39,8 @@ namespace D_Parser
 
     public class DTokenDeclaration : NormalDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 2; } }
+        public static new byte GetDeclarationClassTypeId { get { return 2; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public int Token;
 
         public DTokenDeclaration() { }
@@ -47,7 +49,7 @@ namespace D_Parser
 
         public new string Name
         {
-            get { return DTokens.GetTokenString(Token); }
+            get { return Token>=3?DTokens.GetTokenString(Token):""; }
             set { Token = DTokens.GetTokenID(value); }
         }
 
@@ -62,7 +64,11 @@ namespace D_Parser
     /// </summary>
     public class ArrayDecl : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 3; } }
+        public static byte GetDeclarationClassTypeId { get { return 3; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
+        /// <summary>
+        /// Equals <see cref="Base" />
+        /// </summary>
         public TypeDeclaration ValueType
         {
             get { return Base; }
@@ -81,7 +87,8 @@ namespace D_Parser
 
     public class DelegateDeclaration : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 4; } }
+        public static byte GetDeclarationClassTypeId { get { return 4; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public TypeDeclaration ReturnType
         {
             get { return Base; }
@@ -92,7 +99,7 @@ namespace D_Parser
         /// </summary>
         public bool IsFunction = false;
 
-        public List<DVariable> Parameters = new List<DVariable>();
+        public List<DNode> Parameters = new List<DNode>();
 
         public override string ToString()
         {
@@ -119,7 +126,8 @@ namespace D_Parser
     /// </summary>
     public class PointerDecl : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 5; } }
+        public static byte GetDeclarationClassTypeId { get { return 5; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public PointerDecl() { }
         public PointerDecl(TypeDeclaration BaseType) { Base = BaseType; }
 
@@ -134,7 +142,11 @@ namespace D_Parser
     /// </summary>
     public class MemberFunctionAttributeDecl : DTokenDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 6; } }
+        public static byte GetDeclarationClassTypeId { get { return 6; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
+        /// <summary>
+        /// Equals <see cref="Token"/>
+        /// </summary>
         public int Modifier
         {
             get { return Token; }
@@ -150,9 +162,10 @@ namespace D_Parser
         }
     }
 
-    public class VarArgDecl : NormalDeclaration
+    public class VarArgDecl : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 7; } }
+        public static byte GetDeclarationClassTypeId { get { return 7; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public VarArgDecl() { }
         public VarArgDecl(TypeDeclaration BaseIdentifier) { Base = BaseIdentifier; }
 
@@ -168,7 +181,8 @@ namespace D_Parser
     /// </summary>
     public class InheritanceDecl : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 8; } }
+        public static byte GetDeclarationClassTypeId { get { return 8; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public TypeDeclaration InheritedClass;
         public TypeDeclaration InheritedInterface;
 
@@ -177,7 +191,16 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Base.ToString()+": "+InheritedClass.ToString()+(InheritedInterface!=null?(", "+InheritedInterface.ToString()):"");
+            string ret = "";
+
+            if (Base != null) ret += Base.ToString();
+
+            if (InheritedClass != null || InheritedInterface != null) ret += ":";
+            if (InheritedClass != null) ret += InheritedClass.ToString();
+            if (InheritedClass != null && InheritedInterface != null) ret += ", ";
+            if(InheritedInterface != null)ret+= InheritedInterface.ToString();
+
+            return ret;
         }
     }
 
@@ -186,7 +209,8 @@ namespace D_Parser
     /// </summary>
     public class TemplateDecl : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 9; } }
+        public static byte GetDeclarationClassTypeId { get { return 9; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public TypeDeclaration Template;
 
         public TemplateDecl() { }
@@ -202,11 +226,12 @@ namespace D_Parser
     }
 
     /// <summary>
-    /// A.B
+    /// Base.AccessedMember
     /// </summary>
     public class DotCombinedDeclaration : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 10; } }
+        public static byte GetDeclarationClassTypeId { get { return 10; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public TypeDeclaration AccessedMember;
 
         public DotCombinedDeclaration() { }
@@ -222,7 +247,9 @@ namespace D_Parser
 #region Expressions
     public class BooleanExpression : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId  { get { return 11; } }
+        public static byte GetDeclarationClassTypeId { get { return 11; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
+
         public int OperatorToken;
         public TypeDeclaration LeftValue
         {
@@ -243,7 +270,9 @@ namespace D_Parser
 
     public class DecisiveBooleanExpression : TypeDeclaration
     {
-        public override uint GetDeclarationClassTypeId { get { return 12; } }
+        public static byte GetDeclarationClassTypeId { get { return 12; } }
+        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
+
         public BooleanExpression TriggerExpression;
         public TypeDeclaration TrueExpression, FalseExpression;
 
