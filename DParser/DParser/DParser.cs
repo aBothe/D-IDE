@@ -2076,14 +2076,17 @@ namespace D_Parser
                 }
                 string _unused = null;
                 myc.BaseClasses.Add(ParseTypeIdent(out _unused));
-                lexer.NextToken();
-                while(la.Kind == DTokens.Comma && !ThrowIfEOF(DTokens.CloseParenthesis))
+                if (la.Kind != DTokens.OpenCurlyBrace)
                 {
-                    lexer.NextToken(); // Skip ","
-                    myc.BaseClasses.Add(ParseTypeIdent(out _unused));
-                    lexer.NextToken(); // Skip last id
+                    lexer.NextToken();
+                    while (la.Kind == DTokens.Comma && !ThrowIfEOF(DTokens.CloseParenthesis))
+                    {
+                        lexer.NextToken(); // Skip ","
+                        myc.BaseClasses.Add(ParseTypeIdent(out _unused));
+                        lexer.NextToken(); // Skip last id
+                    }
+                    if (la.Kind != DTokens.OpenCurlyBrace) lexer.NextToken(); // Skip to "{"
                 }
-                if (la.Kind != DTokens.OpenCurlyBrace) lexer.NextToken(); // Skip to "{"
             }
 
             if (myc.name != "Object" && myc.fieldtype != FieldType.Struct && myc.BaseClasses.Count<1) 
