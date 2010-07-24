@@ -133,8 +133,9 @@ namespace D_IDE
 
                 if (dt is DClassLike)
                 {
-                    WriteTypeDecl((dt as DClassLike).BaseClass);
-                    WriteTypeDecl((dt as DClassLike).ImplementedInterface);
+                    bs.Write((byte)(dt as DClassLike).BaseClasses.Count);
+                    foreach(TypeDeclaration td in (dt as DClassLike).BaseClasses)
+                        WriteTypeDecl(td);
                 }
 
                 if (dt is DEnum)
@@ -328,8 +329,9 @@ namespace D_IDE
 
                 if (dt is DClassLike)
                 {
-                    (dt as DClassLike).BaseClass = ReadTypeDecl();
-                    (dt as DClassLike).ImplementedInterface = ReadTypeDecl();
+                    byte InhCount = bs.ReadByte();
+                    for (int j = 0; j < InhCount; j++)
+                        (dt as DClassLike).BaseClasses.Add(ReadTypeDecl());
                 }
 
                 if (dt is DEnum)

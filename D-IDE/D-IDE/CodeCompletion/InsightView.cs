@@ -158,18 +158,23 @@ namespace D_IDE
 				else if (expressions[0] == "super")
 				{
 					seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
-                    if (seldt is DClassLike && (seldt as DClassLike).BaseClass!=null)
+                    if (seldt is DClassLike && (seldt as DClassLike).BaseClasses.Count>0)
 					{
-                        seldt = DCodeCompletionProvider.SearchGlobalExpr(cc, diw.fileData.dom, (seldt as DClassLike).BaseClass.ToString());
-						i++;
-						if (seldt != null && expressions.Length < 2)
-						{
-							foreach (DNode dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
-							{
-								data.Add(DCompletionData.BuildDescriptionString(dt));
-							}
-							return;
-						}
+                        i++;
+                        bool do_return = false;
+                        foreach (TypeDeclaration td in (seldt as DClassLike).BaseClasses)
+                        {
+                            seldt = DCodeCompletionProvider.SearchGlobalExpr(cc, diw.fileData.dom, td.ToString());
+                            if (seldt != null && expressions.Length < 2)
+                            {
+                                foreach (DNode dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
+                                {
+                                    data.Add(DCompletionData.BuildDescriptionString(dt));
+                                }
+                                do_return = true;
+                            }
+                        }
+                        if(do_return)return;
 					}
 				}
 				else

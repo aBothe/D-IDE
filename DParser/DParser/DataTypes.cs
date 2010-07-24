@@ -38,8 +38,7 @@ namespace D_Parser
 
     public class DClassLike : DNode
     {
-        public TypeDeclaration ImplementedInterface;
-        public TypeDeclaration BaseClass;
+        public List<TypeDeclaration> BaseClasses=new List<TypeDeclaration>();
 
         public DClassLike()
             : base(FieldType.Class)

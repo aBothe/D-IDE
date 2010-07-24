@@ -8,9 +8,7 @@ using ICSharpCode.TextEditor.Gui.CompletionWindow;
 using ICSharpCode.NRefactory;
 
 using D_Parser;
-using ICSharpCode.NRefactory.Parser;
 using ICSharpCode.TextEditor.Document;
-using ICSharpCode.NRefactory.Ast;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
@@ -117,9 +115,9 @@ namespace D_IDE
 				else if (expressions[0] == "super")
 				{
 					seldt = GetClassAt(local.dom, caretLocation);
-					if (seldt is DClassLike && (seldt as DClassLike).BaseClass!=null)
+					if (seldt is DClassLike && (seldt as DClassLike).BaseClasses.Count>0)
 					{
-                        seldt = SearchGlobalExpr(prj, local, (seldt as DClassLike).BaseClass.ToString(), false, out module);
+                        seldt = SearchGlobalExpr(prj, local, (seldt as DClassLike).BaseClasses[0].ToString(), false, out module);
 					}
 					isSuper = true;
 					i++;
@@ -359,19 +357,22 @@ namespace D_IDE
 						}
 						else if (expressions[0] == "super" && expressions.Count < 2) // super.
 						{
-							if (seldt is DClassLike && (seldt as DClassLike).BaseClass!=null)
+							if (seldt is DClassLike && (seldt as DClassLike).BaseClasses.Count>0)
 							{
-                                seldd = SearchGlobalExpr(cc, pf.dom, (seldt as DClassLike).BaseClass.ToString());
-								if (seldd != null)
-								{
-									AddAllClassMembers(cc,seldd, ref rl, true);
+                                foreach (D_Parser.TypeDeclaration td in (seldt as DClassLike).BaseClasses)
+                                {
+                                    seldd = SearchGlobalExpr(cc, pf.dom, td.ToString());
+                                    if (seldd != null)
+                                    {
+                                        AddAllClassMembers(cc, seldd, ref rl, true);
 
-                                    foreach (DNode arg in (seldt as DMethod).Parameters)
-									{
-										if (arg.Type == null || arg.name == null) continue;
-										rl.Add(new DCompletionData(arg, seldd, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
-									}
-								}
+                                        foreach (DNode arg in (seldt as DMethod).Parameters)
+                                        {
+                                            if (arg.Type == null || arg.name == null) continue;
+                                            rl.Add(new DCompletionData(arg, seldd, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
+                                        }
+                                    }
+                                }
 							}
 						}
 						else if (seldt.fieldtype == FieldType.Enum && seldt.Count > 0) // Flags.

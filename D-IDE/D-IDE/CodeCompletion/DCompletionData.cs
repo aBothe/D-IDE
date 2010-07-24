@@ -17,7 +17,7 @@ namespace D_IDE
 
         public string text;
         public string description;
-        public int imageindex;
+        private int ii = -2;
         double priority;
 
         public string Text
@@ -35,8 +35,14 @@ namespace D_IDE
 
         public int ImageIndex
         {
-            get { return imageindex; }
-            set { imageindex = value; }
+            set { ii = value; }
+            get
+            {
+                if (ii >= -1)
+                    return ii;
+                else
+                    return GetImageIndex(D_IDEForm.icons, data.Parent, data);
+            }
         }
 
         public double Priority
@@ -70,7 +76,6 @@ namespace D_IDE
         {
             this.data = data;
             this.parent = parent;
-            this.ImageIndex = GetImageIndex(D_IDEForm.icons, parent, data);
             Init();
         }
 
@@ -136,7 +141,7 @@ namespace D_IDE
             string dataType = data.Type != null ? data.Type.ToString() : "";
             if (data.fieldtype == FieldType.AliasDecl)
             {
-                ret = "alias "+ dataType+ " "+data.name;
+                ret = "alias " + dataType + " " + data.name;
                 return ret;
             }
 
@@ -155,7 +160,7 @@ namespace D_IDE
                     {
                         ret += DTokens.GetTokenString(m) + " ";
                     }
-                    if (p.Type != null && p.Type.ToString()!=p.name)
+                    if (p.Type != null && p.Type.ToString() != p.name)
                         ret += p.Type.ToString() + " " + p.name + ",";
                     else ret += p.name + ",";
                 }
@@ -164,10 +169,14 @@ namespace D_IDE
 
             if (data is DClassLike)
             {
-                if ((data as DClassLike).BaseClass != null)
-                    ret += " : " + (data as DClassLike).BaseClass.ToString();
-                if ((data as DClassLike).ImplementedInterface != null)
-                    ret += ((data as DClassLike).BaseClass != null ? ", " : " : ") + (data as DClassLike).ImplementedInterface.ToString();
+                DClassLike dc = data as DClassLike;
+                if (dc.BaseClasses.Count > 0)
+                {
+                    ret += ": ";
+                    foreach (D_Parser.TypeDeclaration td in dc.BaseClasses)
+                        ret += td.ToString()+", ";
+                    ret=ret.Trim(' ',',');
+                }
             }
 
             if (data is DEnum && (data as DEnum).EnumBaseType != null)
@@ -308,7 +317,7 @@ namespace D_IDE
                 return icons.Images.IndexOfKey("Icons.16x16.Interface.png");
             }
 
-            if (v.fieldtype == FieldType.Function || v.fieldtype==FieldType.Constructor)
+            if (v.fieldtype == FieldType.Function || v.fieldtype == FieldType.Constructor)
             {
                 if (v.modifiers.Contains(DTokens.Private))
                     return icons.Images.IndexOfKey("Icons.16x16.PrivateMethod.png");

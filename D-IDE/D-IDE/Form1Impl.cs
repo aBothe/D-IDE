@@ -244,6 +244,7 @@ namespace D_IDE
             DModule.ClearErrorLogBeforeParsing = true;
             lock (cc.GlobalModules)
             {
+                cc.GlobalModules = null;
                 cc.GlobalModules = ret;
 
                 List<ICompletionData> ilist = new List<ICompletionData>();
