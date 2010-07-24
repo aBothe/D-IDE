@@ -254,6 +254,8 @@ namespace D_Parser
 
 	"@property",
 	"@disabled",
+    "@safe",
+    "@system",
 		};
 
 		static myLookupTable keywords = new myLookupTable(true);

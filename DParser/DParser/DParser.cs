@@ -1466,7 +1466,7 @@ namespace D_Parser
 
                 if (IsInit && la.Kind == DTokens.Dot) { lexer.NextToken(); continue; }
 
-                if (IsInit && DTokens.ParamModifiers[la.Kind]) // ref int
+                if (IsInit && DTokens.Modifiers[la.Kind] && !DTokens.MemberFunctionAttributes[la.Kind]) // ref int
                 {
                     declStack.Push(new DTokenDeclaration(la.Kind));
                     lexer.NextToken(); // Skip ref, inout, out ,in
@@ -1928,7 +1928,6 @@ namespace D_Parser
                 {
                     lexer.NextToken(); // Skip "if"
                     SkipToClosingParenthesis();
-                    
                 }
 
                 if (la.Kind == DTokens.Semicolon) { goto expr_ret; } // void foo()();

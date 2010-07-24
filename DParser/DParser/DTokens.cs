@@ -170,8 +170,10 @@ namespace D_Parser
 		public const int Alias = 154;
 		public const int PropertyAttribute = 155;
 		public const int DisabledAttribute = 156;
+        public const int SafeAttribute = 157;
+        public const int SystemAttribute = 158;
 
-		public const int MaxToken = 157;
+		public const int MaxToken = 159;
 		static BitArray NewSet(params int[] values)
 		{
 			BitArray bitArray = new BitArray(MaxToken);
@@ -244,7 +246,17 @@ namespace D_Parser
 			Lazy, 
 			Nothrow,
 			PropertyAttribute,
-			DisabledAttribute);
+			DisabledAttribute,
+            SafeAttribute,
+            SystemAttribute
+            );
+        public static BitArray Attributes = NewSet(
+            PropertyAttribute,
+            DisabledAttribute,
+            SafeAttribute,
+            SystemAttribute
+            );
+
 
 		public static bool ContainsVisMod(List<int> mods)
 		{
@@ -448,7 +460,9 @@ namespace D_Parser
 	"alias",
 
 	"@property",
-	"@disabled"
+	"@disabled",
+    "@safe",
+    "@system"
 		};
 		public static string GetTokenString(int token)
 		{

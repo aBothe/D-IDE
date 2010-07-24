@@ -179,11 +179,6 @@ namespace D_IDE
                 WriteTypeDecl((decl as TemplateDecl).Template);
             else if (decl is DotCombinedDeclaration)
                 WriteTypeDecl((decl as DotCombinedDeclaration).AccessedMember);
-            else
-            {
-                bs.Write((byte)0);
-                return;
-            }
 
             WriteTypeDecl(decl.Base);
         }
@@ -300,10 +295,12 @@ namespace D_IDE
                     case FieldType.EnumValue:
                         dt = new DEnumValue();
                         break;
+                    case FieldType.Delegate:
                     case FieldType.Constructor: // Also a ctor is treated as a method here
                     case FieldType.Function:
                         dt = new DMethod();
                         break;
+                    case FieldType.AliasDecl:
                     case FieldType.Variable:
                         dt = new DVariable();
                         break;

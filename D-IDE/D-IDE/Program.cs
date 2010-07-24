@@ -27,7 +27,7 @@ namespace D_IDE
 
             // Show startup popup
             StartScreen = new CachingScreen();
-            StartScreen.Show();
+            if(!Debugger.IsAttached)StartScreen.Show();
 
             app.Run(args);
         }
