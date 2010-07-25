@@ -114,6 +114,37 @@ namespace D_Parser
             get { return doc; }
         }
 
+        public bool CheckForAssignOps()
+        {
+            lexer.StartPeek();
+            int psb = 0,sqb=0;
+            while (lexer.CurrentPeekToken.Kind != DTokens.EOF)
+            {
+                if (lexer.CurrentPeekToken.Kind == DTokens.OpenParenthesis) psb++;
+                else if (lexer.CurrentPeekToken.Kind == DTokens.CloseParenthesis) psb--;
+                else if (lexer.CurrentPeekToken.Kind == DTokens.OpenSquareBracket) sqb++;
+                else if (lexer.CurrentPeekToken.Kind == DTokens.CloseSquareBracket) sqb--;
+
+                else if (DTokens.AssignOps[lexer.CurrentPeekToken.Kind] && psb < 1 && sqb < 1)
+                {
+                    // Here's a point of discussion: Is it an assignment or a variable initializer
+                    if (lexer.CurrentPeekToken.Kind == DTokens.Assign)
+                        return false;
+                    
+                    return true;
+                }
+
+                else if (psb < 0
+                    || lexer.CurrentPeekToken.Kind == DTokens.OpenCurlyBrace
+                    || lexer.CurrentPeekToken.Kind == DTokens.Semicolon
+                    || lexer.CurrentPeekToken.Kind == DTokens.CloseCurlyBrace)
+                    break;
+
+                lexer.Peek();
+            }
+            return false;
+        }
+
         public string SkipToSemicolon()
         {
             string ret = "";
@@ -189,10 +220,13 @@ namespace D_Parser
                         break;
                 }
                 if (ret.Length < 2000) ret += ((la.Kind == DTokens.Identifier && (t.Kind == DTokens.Identifier || DTokens.BasicTypes[t.Kind])) ? " " : "") + strVal;
-                lexer.NextToken();
+                    lexer.NextToken();
             }
 
-            if (SkipLastClosingParenthesis && round<1 && la.Kind == DTokens.CloseParenthesis) lexer.NextToken();
+            if (SkipLastClosingParenthesis && round < 1 && la.Kind == DTokens.CloseParenthesis)
+            {
+                    lexer.NextToken();
+            }
 
             return ret;
         }
@@ -1117,8 +1151,25 @@ namespace D_Parser
                     case DTokens.Increment: // ++a;
                     case DTokens.Mixin:
                     case DTokens.Assert:
-                    case DTokens.Pragma:
                         SkipToSemicolon();
+                        break;
+                    case DTokens.Pragma:
+                        if (!PeekMustBe(DTokens.OpenParenthesis, "Parenthesis declaration expected"))
+                            break;
+                        else
+                        {
+                            string expr=SkipToClosingParenthesis();
+                            if (expr == "()")
+                                SemErr(DTokens.Pragma, "Pragma statement expected");
+                            
+                            if (la.Kind == DTokens.Semicolon) break;
+
+                            if (la.Kind == DTokens.OpenCurlyBrace)
+                                BlockModifiers.Add(DTokens.Pragma);
+                            else ExpressionModifiers.Add(DTokens.Pragma);
+                            
+                            goto blockcont;
+                        }
                         break;
                     default:
                         break;
@@ -1779,6 +1830,7 @@ namespace D_Parser
 
                             goto do_return;
                         }
+                        
                         else
                         {
                             if (Peek(1).Kind != DTokens.Identifier)
@@ -1834,6 +1886,7 @@ namespace D_Parser
             tv.StartLocation = la.Location;
             bool isCTor = (la.Kind == DTokens.This && Peek(1).Kind == DTokens.OpenParenthesis);
             tv.TypeToken = la.Kind;
+
             if (!isCTor)
             {
                 tv.Type = ParseTypeIdent(out tv.name);

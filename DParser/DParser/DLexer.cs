@@ -380,6 +380,8 @@ namespace D_Parser
                         else
                             goto default;
                     case '`':
+                        token = ReadVerbatimString(nextChar);
+                        break;
                     case '"':
                         token = ReadString(nextChar);
                         break;
@@ -400,7 +402,7 @@ namespace D_Parser
                             ch = (char)next;
                             if (ch == '"')
                             {
-                                token = ReadVerbatimString();
+                                token = ReadVerbatimString(next);
                             }
                             else if (Char.IsLetterOrDigit(ch) || ch == '_')
                             {
@@ -831,7 +833,7 @@ namespace D_Parser
                 if (nextChar == initialChar)
                 {
                     doneNormally = true;
-                    originalValue.Append('"');
+                    originalValue.Append((char)nextChar);
                     // Skip string literals
                     ch = (char)this.ReaderPeek();
                     if (ch == 'c' || ch == 'w' || ch == 'd') ReaderRead();
@@ -868,27 +870,37 @@ namespace D_Parser
             return new DToken(DTokens.Literal, new Location(x, y), new Location(x + originalValue.Length, y), originalValue.ToString(), sb.ToString(), LiteralFormat.StringLiteral);
         }
 
-        DToken ReadVerbatimString()
+        DToken ReadVerbatimString(int EndingChar)
         {
             sb.Length = 0;
             originalValue.Length = 0;
-            originalValue.Append("@\"");
             int x = Col - 2; // @ and " already read
             int y = Line;
             int nextChar;
+
+            if (EndingChar == (int)'\"')
+            {
+                originalValue.Append("@\"");
+            }
+            else
+            {
+                originalValue.Append((char)EndingChar);
+                x=Col-1;
+            }
             while ((nextChar = ReaderRead()) != -1)
             {
                 char ch = (char)nextChar;
 
-                if (ch == '"')
+                if (nextChar==EndingChar)
                 {
-                    if (ReaderPeek() != '"')
+                    if (ReaderPeek() != (char)EndingChar)
                     {
-                        originalValue.Append('"');
+                        originalValue.Append((char)EndingChar);
                         break;
                     }
-                    originalValue.Append("\"\"");
-                    sb.Append('"');
+                    originalValue.Append((char)EndingChar);
+                    originalValue.Append((char)EndingChar);
+                    sb.Append((char)EndingChar);
                     ReaderRead();
                 }
                 else if (HandleLineEnd(ch))
