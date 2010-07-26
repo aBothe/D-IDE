@@ -106,6 +106,10 @@ namespace D_IDE
                                 else p.dmd2 = cc;
                                 break;
 
+                            case "codetemplates":
+                                CodeTemplate.Load(xr);
+                                break;
+
                             case "recentprojects":
                                 if (xr.IsEmptyElement) break;
                                 while (xr.Read())
@@ -511,6 +515,9 @@ namespace D_IDE
             xw.WriteStartElement("shownewconsolewhenexecuting");
             xw.WriteAttributeString("value", Default.ShowExternalConsoleWhenExecuting ? "1" : "0");
             xw.WriteEndElement();
+
+            //Code templates
+            CodeTemplate.Save(xw);
 
 			xw.WriteEndDocument();
 			xw.Close();

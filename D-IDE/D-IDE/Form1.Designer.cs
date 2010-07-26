@@ -139,6 +139,7 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.LineLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.ProgressStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.codeTemplatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             CloseDocWinToolbarItem = new System.Windows.Forms.ToolStripMenuItem();
             closeAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             closeAllOthersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -924,7 +925,8 @@
             this.globalToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.propertiesToolStripMenuItem1,
             this.updateCacheToolStripMenuItem,
-            this.stopParsingToolStripMenuItem});
+            this.stopParsingToolStripMenuItem,
+            this.codeTemplatesToolStripMenuItem});
             this.globalToolStripMenuItem.Name = "globalToolStripMenuItem";
             this.globalToolStripMenuItem.Size = new System.Drawing.Size(53, 20);
             this.globalToolStripMenuItem.Text = "Global";
@@ -1080,6 +1082,13 @@
             this.ProgressStatusLabel.Size = new System.Drawing.Size(12, 17);
             this.ProgressStatusLabel.Text = "-";
             // 
+            // codeTemplatesToolStripMenuItem
+            // 
+            this.codeTemplatesToolStripMenuItem.Name = "codeTemplatesToolStripMenuItem";
+            this.codeTemplatesToolStripMenuItem.Size = new System.Drawing.Size(227, 22);
+            this.codeTemplatesToolStripMenuItem.Text = "Code Templates";
+            this.codeTemplatesToolStripMenuItem.Click += new System.EventHandler(this.codeTemplatesToolStripMenuItem_Click);
+            // 
             // D_IDEForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1216,6 +1225,7 @@
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem directoryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refreshBreakpointsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem codeTemplatesToolStripMenuItem;
 	}
 }
 

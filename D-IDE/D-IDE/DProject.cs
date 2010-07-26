@@ -157,6 +157,19 @@ namespace D_IDE
 			return file;
 		}
 
+        /// <summary>
+        /// Gets module and package (no leading, but trailing dots) string from file
+        /// </summary>
+        public void GetModuleAndPackage(string file, out string module, out string package)
+        {
+            file = GetRelFilePath(file);
+            if (file.EndsWith(".d")) file = file.Substring(0, file.Length - 2);
+            file = file.Replace('\\', '.');
+            module = file.Substring(Math.Max(0, file.LastIndexOf('.') + 1));
+            package = file.Substring(0, Math.Max(0, file.LastIndexOf('.')));
+            if (package.Length > 0) package += ".";
+        }
+
 		public bool FileExists(string file)
 		{
 			if (!File.Exists(file))

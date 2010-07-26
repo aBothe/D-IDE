@@ -740,6 +740,20 @@ namespace D_IDE
                     }
             (new IDESettings()).Show(dockPanel);
         }
+        /// <summary>
+        /// Shows code templates UI
+        /// </summary>
+        private void codeTemplatesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dockPanel.DocumentsCount > 0)
+                foreach (DockContent dc in dockPanel.Documents)
+                    if (dc is CodeTemplates)
+                    {
+                        dc.Activate();
+                        return;
+                    }
+            (new CodeTemplates()).Show(dockPanel);
+        }
 
         private void ReparseCacheClick(object sender, EventArgs e)
         {
@@ -1093,5 +1107,6 @@ namespace D_IDE
             }
         }
         #endregion
+
     }
 }

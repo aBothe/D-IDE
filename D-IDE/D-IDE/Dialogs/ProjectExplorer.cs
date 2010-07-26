@@ -338,7 +338,8 @@ namespace D_IDE
                 initialdir = (tn as DirectoryTreeNode).AbsolutePath;
             string fn = D_IDEForm.thisForm.CreateNewSourceFile(tprj, false, initialdir);
 
-            File.WriteAllText(fn, "\r\nclass " + Path.GetFileNameWithoutExtension(fn) + "\r\n{\r\n\r\n}");
+            //File.WriteAllText(fn, "\r\nclass " + Path.GetFileNameWithoutExtension(fn) + "\r\n{\r\n\r\n}");
+            File.WriteAllText(fn, CodeTemplate.InstantiateTemplate("_module", tprj, tprj.GetRelFilePath(fn)));
 
             D_IDEForm.thisForm.Open(fn);
             UpdateFiles();
