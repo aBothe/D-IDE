@@ -696,7 +696,19 @@ namespace D_IDE
 			Version = version;
 			if (Version == DVersion.D1) BinDirectory = "C:\\dmd\\windows\\bin";
 			else BinDirectory = "C:\\dmd2\\windows\\bin";
+            GuessBinFromPath();
 		}
+        private void GuessBinFromPath()
+        {
+            string[] paths = Environment.GetEnvironmentVariable("PATH").Split(';');
+            foreach (string path in paths)
+            {
+                if (Version == DVersion.D1 && path.EndsWith("\\dmd\\windows\\bin", StringComparison.OrdinalIgnoreCase))
+                    BinDirectory = path;
+                if (Version == DVersion.D2 && path.EndsWith("\\dmd2\\windows\\bin", StringComparison.OrdinalIgnoreCase))
+                    BinDirectory = path;
+            }
+        }
 
 		public string SoureCompiler = "dmd.exe";
 		public string ExeLinker = "dmd.exe";
@@ -705,16 +717,16 @@ namespace D_IDE
 		public string LibLinker = "lib.exe";
 		public string ResourceCompiler = "rc.exe";
 
-		public string SoureCompilerDebugArgs = "-c \"$src\" -of\"$obj\" -gc";
-        public string Win32ExeLinkerDebugArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc";
-		public string ExeLinkerDebugArgs = "$objs $libs -of\"$exe\" -gc";
-		public string DllLinkerDebugArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc";
+        public string SoureCompilerDebugArgs = "-c \"$src\" -of\"$obj\" -gc -debug";
+        public string Win32ExeLinkerDebugArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -gc -debug";
+        public string ExeLinkerDebugArgs = "$objs $libs -of\"$exe\" -gc -debug";
+		public string DllLinkerDebugArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc -debug";
 		public string LibLinkerDebugArgs = "-c -n \"$lib\" $objs";
 
-		public string SoureCompilerArgs = "-c \"$src\" -of\"$obj\" -release";
-        public string Win32ExeLinkerArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -release";
-		public string ExeLinkerArgs = "$objs $libs -of\"$exe\" -release";
-		public string DllLinkerArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -release";
+        public string SoureCompilerArgs = "-c \"$src\" -of\"$obj\" -release -O -inline";
+        public string Win32ExeLinkerArgs = "$objs $libs -L/su:windows -L/exet:nt -of\"$exe\" -release -O -inline";
+		public string ExeLinkerArgs = "$objs $libs -of\"$exe\" -release -O -inline";
+        public string DllLinkerArgs = "$objs $libs -L/IMPLIB:\"$lib\" -of\"$dll\" -release -O -inline";
         public string LibLinkerArgs = "-c -n \"$lib\" $objs";
 
 		public string ResourceCompilerArgs = "/fo\"$res\" \"$rc\"";
@@ -815,7 +827,6 @@ namespace D_IDE
 
 			if (xr.LocalName != "dmd") return null;
 			cc.Version = (DVersion)Convert.ToInt32(xr.GetAttribute("version"));
-
 			while (xr.Read())// now 'settings' should be the current node
 			{
 				if (xr.LocalName == "dmd" && xr.NodeType == XmlNodeType.EndElement) break;
