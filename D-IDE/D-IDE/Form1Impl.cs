@@ -366,13 +366,13 @@ namespace D_IDE
         /// <param name="file"></param>
         /// <returns></returns>
         [DebuggerStepThrough()]
-        public DocumentInstanceWindow Open(string file)
+        public DocumentInstanceWindow Open(string file, bool silent = false)
         {
             if (prj != null && prj.resourceFiles.Contains(prj.GetRelFilePath(file)))
                 return Open(prj.GetPhysFilePath(file), ProjectFile);
-            return Open(file, "");
+            return Open(file, "", silent);
         }
-        public DocumentInstanceWindow Open(string file, string owner)
+        public DocumentInstanceWindow Open(string file, string owner, bool silent = false)
         {
             if (prj != null && file == prj.prjfn) return null; // Don't reopen the current project
 
@@ -398,7 +398,7 @@ namespace D_IDE
 
             if (Path.GetExtension(file) == DProject.prjext)
             {
-                if (prj != null)
+                if (prj != null && !silent)
                 {
                     if (MessageBox.Show("Do you want to open another project?", "Open new project", MessageBoxButtons.YesNo) == DialogResult.No) return null;
                 }

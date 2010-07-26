@@ -40,12 +40,14 @@ namespace D_IDE
             this.ProjectMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.addNewFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addDClassToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addFolderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addExistingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.directoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.setAsActiveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.removeProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.DSourceMenu.SuspendLayout();
@@ -74,6 +76,7 @@ namespace D_IDE
             this.prjFiles.DragDrop += new System.Windows.Forms.DragEventHandler(this.prjFiles_DragDrop);
             this.prjFiles.DragEnter += new System.Windows.Forms.DragEventHandler(this.prjFiles_DragOver);
             this.prjFiles.DragOver += new System.Windows.Forms.DragEventHandler(this.prjFiles_DragOver);
+            this.prjFiles.KeyUp += new System.Windows.Forms.KeyEventHandler(this.prjFiles_KeyUp);
             // 
             // fileIcons
             // 
@@ -120,28 +123,37 @@ namespace D_IDE
             this.ProjectMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addNewFileToolStripMenuItem,
             this.addDClassToolStripMenuItem,
+            this.addFolderToolStripMenuItem,
             this.addExistingToolStripMenuItem,
             this.toolStripSeparator1,
             this.setAsActiveToolStripMenuItem,
             this.propertiesToolStripMenuItem,
+            this.openInExplorerToolStripMenuItem,
             this.toolStripSeparator2,
             this.removeProjectToolStripMenuItem});
             this.ProjectMenu.Name = "ProjectMenu";
-            this.ProjectMenu.Size = new System.Drawing.Size(158, 170);
+            this.ProjectMenu.Size = new System.Drawing.Size(190, 192);
             // 
             // addNewFileToolStripMenuItem
             // 
             this.addNewFileToolStripMenuItem.Name = "addNewFileToolStripMenuItem";
-            this.addNewFileToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.addNewFileToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.addNewFileToolStripMenuItem.Text = "Add New File";
             this.addNewFileToolStripMenuItem.Click += new System.EventHandler(this.addNewFileToolStripMenuItem_Click);
             // 
             // addDClassToolStripMenuItem
             // 
             this.addDClassToolStripMenuItem.Name = "addDClassToolStripMenuItem";
-            this.addDClassToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.addDClassToolStripMenuItem.Text = "Add D Class";
+            this.addDClassToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.addDClassToolStripMenuItem.Text = "Add D Class (Module)";
             this.addDClassToolStripMenuItem.Click += new System.EventHandler(this.addDClassToolStripMenuItem_Click);
+            // 
+            // addFolderToolStripMenuItem
+            // 
+            this.addFolderToolStripMenuItem.Name = "addFolderToolStripMenuItem";
+            this.addFolderToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.addFolderToolStripMenuItem.Text = "Add Folder (Package)";
+            this.addFolderToolStripMenuItem.Click += new System.EventHandler(this.addFolderToolStripMenuItem_Click);
             // 
             // addExistingToolStripMenuItem
             // 
@@ -149,7 +161,7 @@ namespace D_IDE
             this.fileToolStripMenuItem,
             this.directoryToolStripMenuItem});
             this.addExistingToolStripMenuItem.Name = "addExistingToolStripMenuItem";
-            this.addExistingToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.addExistingToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.addExistingToolStripMenuItem.Text = "Add Existing";
             // 
             // fileToolStripMenuItem
@@ -169,31 +181,38 @@ namespace D_IDE
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(154, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(186, 6);
             // 
             // setAsActiveToolStripMenuItem
             // 
             this.setAsActiveToolStripMenuItem.Name = "setAsActiveToolStripMenuItem";
-            this.setAsActiveToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.setAsActiveToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.setAsActiveToolStripMenuItem.Text = "Set as active";
             this.setAsActiveToolStripMenuItem.Click += new System.EventHandler(this.setAsActiveToolStripMenuItem_Click);
             // 
             // propertiesToolStripMenuItem
             // 
             this.propertiesToolStripMenuItem.Name = "propertiesToolStripMenuItem";
-            this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.propertiesToolStripMenuItem.Text = "Properties";
             this.propertiesToolStripMenuItem.Click += new System.EventHandler(this.propertiesToolStripMenuItem_Click);
+            // 
+            // openInExplorerToolStripMenuItem
+            // 
+            this.openInExplorerToolStripMenuItem.Name = "openInExplorerToolStripMenuItem";
+            this.openInExplorerToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.openInExplorerToolStripMenuItem.Text = "Open in Explorer";
+            this.openInExplorerToolStripMenuItem.Click += new System.EventHandler(this.openInExplorerToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(154, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(186, 6);
             // 
             // removeProjectToolStripMenuItem
             // 
             this.removeProjectToolStripMenuItem.Name = "removeProjectToolStripMenuItem";
-            this.removeProjectToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.removeProjectToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.removeProjectToolStripMenuItem.Text = "Remove project";
             this.removeProjectToolStripMenuItem.Click += new System.EventHandler(this.RemoveProject_Click);
             // 
@@ -234,5 +253,7 @@ namespace D_IDE
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
 		private System.Windows.Forms.ToolStripMenuItem removeProjectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addDClassToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openInExplorerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addFolderToolStripMenuItem;
 	}
 }
