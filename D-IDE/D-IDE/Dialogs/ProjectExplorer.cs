@@ -212,13 +212,23 @@ namespace D_IDE
                 {
                     prjFiles.SelectedNode = e.Node;
                     ProjectMenu.Close();
+                    FolderMenu.Close();
                     DSourceMenu.Show(prjFiles, e.Location);
                     DSourceMenu.Tag = e.Location;
+                }
+                else if (e.Node is DirectoryTreeNode)
+                {
+                    prjFiles.SelectedNode = e.Node;
+                    ProjectMenu.Close();
+                    DSourceMenu.Close();
+                    FolderMenu.Show(prjFiles, e.Location);
+                    FolderMenu.Tag = e.Location;
                 }
                 else if (e.Node is ProjectNode)
                 {
                     prjFiles.SelectedNode = e.Node;
                     DSourceMenu.Close();
+                    FolderMenu.Close();
                     ProjectMenu.Show(prjFiles, e.Location);
                     ProjectMenu.Tag = e.Location;
                 }
@@ -274,7 +284,7 @@ namespace D_IDE
 
         private void addNewFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Point tp = (Point)ProjectMenu.Tag;
+            Point tp = (Point)(sender as ToolStripItem).Owner.Tag;
             TreeNode tn = prjFiles.GetNodeAt(tp);
             if (tn == null) return;
 
@@ -282,12 +292,17 @@ namespace D_IDE
             DProject tprj = (tn as ProjectNode).Project;
             if (tprj == null) return;
 
-            D_IDEForm.thisForm.CreateNewSourceFile(tprj, true);
+            string initialdir = null;
+            if (tn is DirectoryTreeNode)
+                initialdir = (tn as DirectoryTreeNode).AbsolutePath;
+            D_IDEForm.thisForm.CreateNewSourceFile(tprj, true, initialdir);
+
+            UpdateFiles();
         }
 
         private void addExistingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Point tp = (Point)ProjectMenu.Tag;
+            Point tp = (Point)(sender as ToolStripItem).Owner.Tag;
             TreeNode tn = prjFiles.GetNodeAt(tp);
             if (tn == null) return;
 
@@ -310,7 +325,7 @@ namespace D_IDE
 
         private void addDClassToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Point tp = (Point)ProjectMenu.Tag;
+            Point tp = (Point)(sender as ToolStripItem).Owner.Tag;
             TreeNode tn = prjFiles.GetNodeAt(tp);
             if (tn == null) return;
 
@@ -318,11 +333,15 @@ namespace D_IDE
             DProject tprj = (tn as ProjectNode).Project;
             if (tprj == null) return;
 
-            string fn = D_IDEForm.thisForm.CreateNewSourceFile(tprj, false);
+            string initialdir = null;
+            if (tn is DirectoryTreeNode)
+                initialdir = (tn as DirectoryTreeNode).AbsolutePath;
+            string fn = D_IDEForm.thisForm.CreateNewSourceFile(tprj, false, initialdir);
 
             File.WriteAllText(fn, "\r\nclass " + Path.GetFileNameWithoutExtension(fn) + "\r\n{\r\n\r\n}");
 
             D_IDEForm.thisForm.Open(fn);
+            UpdateFiles();
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -381,7 +400,7 @@ namespace D_IDE
 
                     return;
                 }
-                else if (e.Node is ProjectNode)
+                else if (e.Node is DedicatedProjectNode)
                 {
                     DProject mpr = (e.Node as ProjectNode).Project;
 
@@ -413,16 +432,17 @@ namespace D_IDE
                         return;
                     }
 
+                    string relfile = fn.AbsolutePath.Replace(fn.Project.basedir, "").TrimStart('\\');
                     List<string> nfiles = new List<string>(fn.Project.resourceFiles);
                     for (int i = 0; i < fn.Project.resourceFiles.Count; i++)
                     {
                         string file = fn.Project.resourceFiles[i];
-                        if (file == fn.FileOrPath)
-                            nfiles[i] = filename;
+                        if (file == relfile)
+                            nfiles[i] = (relfile.Substring(0, Math.Max(0, relfile.LastIndexOf('\\'))) + "\\" + e.Label).TrimStart('\\');
                     }
                     try
                     {
-                        File.Move(fn.FileOrPath, filename);
+                        File.Move(fn.AbsolutePath, filename);
                     }
                     catch (Exception ex)
                     {
@@ -609,7 +629,7 @@ namespace D_IDE
 
         private void directoryToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Point tp = (Point)ProjectMenu.Tag;
+            Point tp = (Point)(sender as ToolStripItem).Owner.Tag;
             if (tp == null) return;
             TreeNode tn = prjFiles.GetNodeAt(tp);
             if (tn == null) return;
@@ -629,6 +649,7 @@ namespace D_IDE
 
                 tprj.AddDirectory(fb.SelectedPath, dr == DialogResult.Yes);
             }
+            UpdateFiles();
         }
 
         private void RemoveProject_Click(object sender, EventArgs e)
@@ -679,7 +700,7 @@ namespace D_IDE
         /// </summary>
         private void openInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Point tp = (Point)ProjectMenu.Tag;
+            Point tp = (Point)(sender as ToolStripItem).Owner.Tag;
             if (tp == null) return;
             TreeNode tn = prjFiles.GetNodeAt(tp);
             if (tn == null) return;
@@ -688,7 +709,12 @@ namespace D_IDE
             DProject tprj = (tn as ProjectNode).Project;
             if (tprj == null) return;
 
-            Process.Start("explorer", tprj.basedir);
+            string dir = '"' + tprj.basedir + '"';
+            if (tn is DirectoryTreeNode)
+                dir = '"' + (tn as DirectoryTreeNode).AbsolutePath + '"';
+            else if (tn is FileTreeNode)
+                dir = "/select,\"" + (tn as FileTreeNode).AbsolutePath + '"';
+            Process.Start("explorer", dir);
         }
 
         /// <summary>
@@ -696,7 +722,7 @@ namespace D_IDE
         /// </summary>
         private void addFolderToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Point tp = (Point)ProjectMenu.Tag;
+            Point tp = (Point)(sender as ToolStripItem).Owner.Tag;
             TreeNode tn = prjFiles.GetNodeAt(tp);
             if (tn == null) return;
 
@@ -706,16 +732,17 @@ namespace D_IDE
             if (tprj == null) return;
 
             string dirname = pn.FileOrPath;
-            if (tn is FileTreeNode) dirname = new FileInfo(dirname).DirectoryName;
-            else if (tn is DedicatedProjectNode) dirname = tprj.basedir;
-            if (Directory.Exists(dirname + "\\New Folder"))
+            if (tn is FileTreeNode) dirname = Path.GetDirectoryName(dirname);
+            else if (tn is DedicatedProjectNode) dirname = "";
+            if (Directory.Exists(tprj.basedir + (dirname == "" ? "" : "\\" + dirname) + "\\New Folder"))
             {
                 int i = 2;
-                while (Directory.Exists(dirname + "\\New Folder (" + i + ")")) ++i;
+                while (Directory.Exists(tprj.basedir + (dirname == "" ? "" : "\\" + dirname) + "\\New Folder (" + i + ")")) ++i;
                 dirname = dirname + "\\New Folder (" + i + ")";
             }
             else dirname += "\\New Folder";
-            Directory.CreateDirectory(dirname);
+            dirname = dirname.TrimStart('\\');
+            Directory.CreateDirectory(tprj.basedir + "\\" + dirname);
             DirectoryTreeNode dnode = new DirectoryTreeNode(tprj, dirname);
             if (tn is FileTreeNode)
                 tn.Parent.Nodes.Add(dnode);

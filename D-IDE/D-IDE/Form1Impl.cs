@@ -332,13 +332,13 @@ namespace D_IDE
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) ? prj : null, OpenAfterCreating);
         }
 
-        public string CreateNewSourceFile(DProject Project, bool OpenAfterCreating)
+        public string CreateNewSourceFile(DProject Project, bool OpenAfterCreating, string initialdir = null)
         {
             string tfn = "Untitled.d";
 
             sF.Filter = "All Files (*.*)|*.*";
             sF.FileName = tfn;
-            if (Project != null) sF.InitialDirectory = Project.basedir;
+            if (Project != null) sF.InitialDirectory = initialdir != null ? initialdir : Project.basedir;
             if (sF.ShowDialog() == DialogResult.OK)
             {
                 tfn = sF.FileName;

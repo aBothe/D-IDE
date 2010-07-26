@@ -37,6 +37,7 @@ namespace D_IDE
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openInFormsEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripMenuItem();
             this.ProjectMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.addNewFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addDClassToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -50,8 +51,18 @@ namespace D_IDE
             this.openInExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.removeProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.FolderMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
             this.DSourceMenu.SuspendLayout();
             this.ProjectMenu.SuspendLayout();
+            this.FolderMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // prjFiles
@@ -93,9 +104,10 @@ namespace D_IDE
             this.DSourceMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
             this.removeToolStripMenuItem,
-            this.openInFormsEditorToolStripMenuItem});
+            this.openInFormsEditorToolStripMenuItem,
+            this.toolStripMenuItem8});
             this.DSourceMenu.Name = "contextMenuStrip1";
-            this.DSourceMenu.Size = new System.Drawing.Size(187, 70);
+            this.DSourceMenu.Size = new System.Drawing.Size(187, 92);
             // 
             // openToolStripMenuItem
             // 
@@ -117,6 +129,13 @@ namespace D_IDE
             this.openInFormsEditorToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.openInFormsEditorToolStripMenuItem.Text = "Open in Forms Editor";
             this.openInFormsEditorToolStripMenuItem.Click += new System.EventHandler(this.openInFormsEditorToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem8
+            // 
+            this.toolStripMenuItem8.Name = "toolStripMenuItem8";
+            this.toolStripMenuItem8.Size = new System.Drawing.Size(186, 22);
+            this.toolStripMenuItem8.Text = "Open in Explorer";
+            this.toolStripMenuItem8.Click += new System.EventHandler(this.openInExplorerToolStripMenuItem_Click);
             // 
             // ProjectMenu
             // 
@@ -167,14 +186,14 @@ namespace D_IDE
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.fileToolStripMenuItem.Text = "File";
             this.fileToolStripMenuItem.Click += new System.EventHandler(this.addExistingToolStripMenuItem_Click);
             // 
             // directoryToolStripMenuItem
             // 
             this.directoryToolStripMenuItem.Name = "directoryToolStripMenuItem";
-            this.directoryToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.directoryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.directoryToolStripMenuItem.Text = "Directory";
             this.directoryToolStripMenuItem.Click += new System.EventHandler(this.directoryToolStripMenuItem_Click);
             // 
@@ -216,6 +235,75 @@ namespace D_IDE
             this.removeProjectToolStripMenuItem.Text = "Remove project";
             this.removeProjectToolStripMenuItem.Click += new System.EventHandler(this.RemoveProject_Click);
             // 
+            // FolderMenu
+            // 
+            this.FolderMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem1,
+            this.toolStripMenuItem2,
+            this.toolStripMenuItem3,
+            this.toolStripMenuItem4,
+            this.toolStripSeparator3,
+            this.toolStripMenuItem7});
+            this.FolderMenu.Name = "FolderMenu";
+            this.FolderMenu.Size = new System.Drawing.Size(190, 142);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(189, 22);
+            this.toolStripMenuItem1.Text = "Add New File";
+            this.toolStripMenuItem1.Click += new System.EventHandler(this.addNewFileToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(189, 22);
+            this.toolStripMenuItem2.Text = "Add D Class (Module)";
+            this.toolStripMenuItem2.Click += new System.EventHandler(this.addDClassToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem3
+            // 
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(189, 22);
+            this.toolStripMenuItem3.Text = "Add Folder (Package)";
+            this.toolStripMenuItem3.Click += new System.EventHandler(this.addFolderToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem4
+            // 
+            this.toolStripMenuItem4.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem5,
+            this.toolStripMenuItem6});
+            this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(189, 22);
+            this.toolStripMenuItem4.Text = "Add Existing";
+            this.toolStripMenuItem4.Click += new System.EventHandler(this.addExistingToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem5
+            // 
+            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
+            this.toolStripMenuItem5.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItem5.Text = "File";
+            this.toolStripMenuItem5.Click += new System.EventHandler(this.addExistingToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem6
+            // 
+            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
+            this.toolStripMenuItem6.Size = new System.Drawing.Size(152, 22);
+            this.toolStripMenuItem6.Text = "Directory";
+            this.toolStripMenuItem6.Click += new System.EventHandler(this.directoryToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(186, 6);
+            // 
+            // toolStripMenuItem7
+            // 
+            this.toolStripMenuItem7.Name = "toolStripMenuItem7";
+            this.toolStripMenuItem7.Size = new System.Drawing.Size(189, 22);
+            this.toolStripMenuItem7.Text = "Open in Explorer";
+            this.toolStripMenuItem7.Click += new System.EventHandler(this.openInExplorerToolStripMenuItem_Click);
+            // 
             // ProjectExplorer
             // 
             this.AutoHidePortion = 0.15D;
@@ -230,6 +318,7 @@ namespace D_IDE
             this.Text = "ProjectExplorer";
             this.DSourceMenu.ResumeLayout(false);
             this.ProjectMenu.ResumeLayout(false);
+            this.FolderMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
 		}
@@ -255,5 +344,15 @@ namespace D_IDE
         private System.Windows.Forms.ToolStripMenuItem addDClassToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openInExplorerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addFolderToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip FolderMenu;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem5;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem6;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem7;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem8;
 	}
 }
