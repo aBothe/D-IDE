@@ -1,7 +1,7 @@
 COMPILER D2
 
-	public SymbolTable   tab;
-	public CodeGenerator gen;
+	//public DNode ModuleNode=new DNode(FieldType.Root);
+	public List<string> Imports=new List<string>();
 
 /*--------------------------------------------------------------------------*/
 CHARACTERS
@@ -78,6 +78,7 @@ TOKENS
 
 
 /*--- Operators and special symbols ---*/
+
 	DivAss="/=".
 	Dot=".".
 	DblDot="..".
@@ -260,13 +261,6 @@ TOKENS
 	while="while".
 	with="with".
 
-	__FILE__="__FILE__".
-	__LINE__="__LINE__".
-	__gshared="__gshared".
-	__thread="__thread".
-	__traits="__traits".
-
-
   /*----- operators and special characters needed in LL(1) resolvers --------------*/
 
 
@@ -329,29 +323,17 @@ ModuleDeclaration=
 	module ModuleFullyQualifiedName ";".
 
 ModuleFullyQualifiedName=
-	[Packages "."] ModuleName.
-
-ModuleName=
-	Identifier.
-
-Packages=
-	[Packages "."] PackageName.
-
-PackageName=
-	Identifier.
-
-
+	{Identifier "."} Identifier.
 
 ImportDeclaration=
 	[static] import ImportList ";".
 
 ImportList=
-	Import|
-	ImportBindings|
-	Import "," ImportList.
+	Import ["," ImportList]|
+	ImportBindings.
 
 Import=
-	[ModuleAliasIdentifier "="] ModuleFullyQualifiedName.
+	[Identifier "="] ModuleFullyQualifiedName.
 
 ImportBindings=
 	Import ":" ImportBindList.
@@ -362,9 +344,6 @@ ImportBindList=
 ImportBind=
 	Identifier ["=" Identifier].
 
-ModuleAliasIdentifier=
-	Identifier.
-
 
 MixinDeclaration=
     mixin "(" AssignExpression ")" ";".
@@ -374,22 +353,16 @@ MixinDeclaration=
 /*----------------------------------- Declarations -------------------------------------*/
 
 Declaration=
-        ["alias"] Decl.
+        ["alias"] ({StorageClass} Decl|StorageClass {StorageClass} Identifier "=" AssignExpression ";" /* Auto declaration */ ).
 
 Decl=
-        StorageClasses Decl |
-        BasicType Declarators ";" |
-        BasicType Declarator FunctionBody |
-        AutoDeclaration.
+        BasicType (Declarators ";" |Declarator FunctionBody).
 
 Declarators=
-        DeclaratorInitializer ["," DeclaratorIdentifierList].
+        DeclaratorInitializer {"," DeclaratorIdentifier}.
 
 DeclaratorInitializer=
         Declarator "=" Initializer.
-
-DeclaratorIdentifierList=
-        DeclaratorIdentifier ["," DeclaratorIdentifierList].
 
 DeclaratorIdentifier=
         Identifier ["=" Initializer].
@@ -428,12 +401,8 @@ BasicTypeX=
 
 BasicType2=
         "*"|
-        "[" "]"|
-        "[" AssignExpression "]"|
-        "[" AssignExpression ".." AssignExpression "]"|
-        "[" Type "]"|
-        delegate Parameters [FunctionAttributes]|
-        function Parameters [FunctionAttributes].
+        "[" ([AssignExpression [".." AssignExpression]] | Type) "]"|
+        (delegate|function) Parameters [FunctionAttributes].
 
 Declarator=
         [BasicType2] Identifier [DeclaratorSuffixes].
@@ -447,9 +416,6 @@ DeclaratorSuffix=
 
 IdentifierList=
         (TemplateInstance | Identifier) ["." IdentifierList].
-
-StorageClasses=
-	StorageClass [StorageClasses].
 
 StorageClass=
         abstract|
@@ -479,10 +445,8 @@ Parameters=
 	"(" [ParameterList] ")".
 
 ParameterList=
-        Parameter|
-        Parameter "," ParameterList|
-        Parameter "..."|
-        "...".
+        Parameter ["," ParameterList]|
+        [Parameter] "...".
 
 Parameter=
         [InOut] Declarator ["=" DefaultInitializerExpression].
@@ -512,8 +476,8 @@ MemberFunctionAttribute=
 
 DefaultInitializerExpression=
 	AssignExpression|
-	__FILE__|
-	__LINE__.
+	"__FILE__"|
+	"__LINE__".
 
 Initializer=
         VoidInitializer|
@@ -545,10 +509,6 @@ StructMemberInitializer=
 	Identifier ":" NonVoidInitializer.
 
 
-
-AutoDeclaration=
-	StorageClasses Identifier "=" AssignExpression ";".
-
 Typeof=
         typeof "(" (Expression|return) ")".
 
@@ -577,11 +537,11 @@ Attribute=
     const|
     auto|
     scope|
-  __gshared|
+  "__gshared"|
     shared|
     immutable|
     inout|
-    "@disable".
+    "@" ("disable" | "property" | "safe").
 
 
 DeclarationBlock=
@@ -624,21 +584,7 @@ Expression=
 	AssignExpression ["," Expression].
 
 AssignExpression=
-	ConditionalExpression|
-	ConditionalExpression "=" AssignExpression|
-	ConditionalExpression "+=" AssignExpression|
-	ConditionalExpression "-=" AssignExpression|
-	ConditionalExpression "*=" AssignExpression|
-	ConditionalExpression "/=" AssignExpression|
-	ConditionalExpression "%=" AssignExpression|
-	ConditionalExpression "&=" AssignExpression|
-	ConditionalExpression "|=" AssignExpression|
-	ConditionalExpression "^=" AssignExpression|
-	ConditionalExpression "~=" AssignExpression|
-	ConditionalExpression "<<=" AssignExpression|
-	ConditionalExpression ">>=" AssignExpression|
-	ConditionalExpression ">>>=" AssignExpression|
-	ConditionalExpression "^^=" AssignExpression.
+	ConditionalExpression [("="|"+="|"-="|"*="|"/="|"%="| "&=" | "|="|"^="|"~="|"<<="|">>="|">>>="|"^^=") AssignExpression].
 
 ConditionalExpression=
 	OrOrExpression ["?" Expression ":" ConditionalExpression].
@@ -698,14 +644,7 @@ PowExpression=
 
 UnaryExpression=
 	PostfixExpression|
-	"&" UnaryExpression|
-	"++" UnaryExpression|
-	"--" UnaryExpression|
-	"*" UnaryExpression|
-	"-" UnaryExpression|
-	"+" UnaryExpression|
-	"!" UnaryExpression|
-	"~" UnaryExpression|
+	("&"|"++"|"--"|"*"|"-"|"+" |"!" |"~") UnaryExpression|
 	"(" Type ")" "." Identifier|
 	NewExpression|
 	DeleteExpression|
@@ -713,9 +652,7 @@ UnaryExpression=
 	NewAnonClassExpression.
 
 NewExpression=
-	NewArguments Type "[" AssignExpression "]"|
-	NewArguments Type "(" ArgumentList ")"|
-	NewArguments Type|
+	NewArguments Type ["[" AssignExpression "]"|"(" ArgumentList ")"]|
 	NewArguments ClassArguments [BaseClassList] "{" DeclDefs "}".
 
 NewArguments=
@@ -735,10 +672,8 @@ CastExpression=
 
 PostfixExpression=
 	PrimaryExpression|
-	PostfixExpression "." Identifier|
-	PostfixExpression "." NewExpression|
-	PostfixExpression "++"|
-	PostfixExpression "--"|
+	PostfixExpression "." (Identifier|NewExpression)|
+	PostfixExpression ("++"|"--")|
 	PostfixExpression "(" [ArgumentList] ")"|
 	IndexExpression|
 	SliceExpression.
@@ -758,8 +693,8 @@ PrimaryExpression=
 	true|
 	false|
 	"$"|
-	__FILE__|
-	__LINE__|
+	"__FILE__"|
+	"__LINE__"|
 	Integer|
 	FloatLiteral|
 	CharLiteral|
@@ -800,9 +735,7 @@ ValueExpression=
 	ConditionalExpression.
 
 FunctionLiteral=
-	function [Type] [ParameterAttributes] FunctionBody|
-	delegate [Type] [ParameterAttributes] FunctionBody|
-	[ParameterAttributes] FunctionBody.
+	[(function|delegate) [Type]] [ParameterAttributes] FunctionBody.
 
 ParameterAttributes=
 	Parameters [FunctionAttributes].
@@ -820,14 +753,7 @@ TypeidExpression=
     typeid "(" (Type|Expression) ")".
 
 IsExpression=
-	is "(" Type ")"|
-	is "(" Type ":" TypeSpecialization ")"|
-	is "(" Type "==" TypeSpecialization ")"|
-	is "(" Type Identifier ")"|
-	is "(" Type Identifier ":" TypeSpecialization ")"|
-	is "(" Type Identifier "==" TypeSpecialization ")"|
-	is "(" Type Identifier ":" TypeSpecialization "," TemplateParameterList ")"|
-	is "(" Type Identifier "==" TypeSpecialization "," TemplateParameterList ")".
+	is "(" Type [Identifier] [(":"|"==") TypeSpecialization] ["," TemplateParameterList] ")".
 
 TypeSpecialization=
 	Type|
@@ -912,10 +838,8 @@ LabeledStatement=
 
 
 BlockStatement=
-    "{" [StatementList] "}".
+    "{" {Statement} "}".
 
-StatementList=
-    Statement [StatementList].
 
 ExpressionStatement=
     Expression ";".
@@ -923,21 +847,13 @@ ExpressionStatement=
 DeclarationStatement=
     Declaration.
 
-
 IfStatement=
-	if "(" IfCondition ")" ThenStatement|
-	if "(" IfCondition ")" ThenStatement else ElseStatement.
+	if "(" IfCondition ")" ScopeStatement [else ScopeStatement].
 
 IfCondition=
 	Expression|
 	auto Identifier "=" Expression|
 	Declarator "=" Expression.
-
-ThenStatement=
-	ScopeStatement.
-
-ElseStatement=
-	ScopeStatement.
 
 WhileStatement=
     while "(" Expression ")" ScopeStatement.
@@ -956,7 +872,7 @@ Initialize=
 
 
 ForeachStatement=
-    Foreach "(" ForeachTypeList ";" Aggregate ")" NoScopeNonEmptyStatement.
+    Foreach "(" ForeachTypeList ";" Expression ")" NoScopeNonEmptyStatement.
 
 Foreach=
     foreach|
@@ -967,10 +883,6 @@ ForeachTypeList=
 
 ForeachType=
     [ref] [Type] Identifier.
-
-Aggregate=
-    Expression.
-
 
 
 SwitchStatement=
@@ -1011,10 +923,7 @@ ReturnStatement=
 
 
 GotoStatement=
-    goto Identifier ";"|
-    goto default ";"|
-    goto case ";"|
-    goto case Expression ";".
+    goto (Identifier|default|case [Expression]) ";".
 
 
 WithStatement=
@@ -1030,7 +939,7 @@ TryStatement=
 
 Catches=
 	LastCatch|
-	Catch [Catches].
+	{Catch}.
 
 LastCatch=
 	catch NoScopeNonEmptyStatement.
@@ -1065,15 +974,7 @@ MixinStatement=
 
 
 ForeachRangeStatement=
-    Foreach "(" ForeachType ";" LwrExpression ".." UprExpression ")" ScopeStatement.
-
-LwrExpression=
-    Expression.
-
-UprExpression=
-    Expression.
-
-
+    Foreach "(" ForeachType ";" Expression ".." Expression ")" ScopeStatement.
 
 
 
@@ -1082,10 +983,7 @@ UprExpression=
 
 
 AggregateDeclaration=
-	struct Identifier StructBody|
-	union Identifier StructBody|
-	struct Identifier ";"|
-	union Identifier ";"|
+	(struct|union) Identifier (StructBody|";")|
 	StructTemplateDeclaration|
 	UnionTemplateDeclaration.
 
@@ -1236,24 +1134,11 @@ InterfaceBody=
 
 
 EnumDeclaration=
-	enum EnumTag EnumBody|
-	enum EnumBody|
-	enum EnumTag ":" EnumBaseType EnumBody|
-	enum ":" EnumBaseType EnumBody.
-
-EnumTag=
-	Identifier.
-
-EnumBaseType=
-	Type.
+	enum [Identifier] [":" Type] EnumBody.
 
 EnumBody=
 	";"|
-	"{" EnumMembers "}".
-
-EnumMembers=
-	EnumMember|
-	EnumMember "," [EnumMembers].
+	"{" EnumMember {"," [EnumMember]} "}".
 
 EnumMember=
 	[Type] Identifier ["=" AssignExpression].
@@ -1337,8 +1222,8 @@ TemplateSingleArgument=
 	true|
 	false|
 	null|
-	__FILE__|
-	__LINE__.
+	"__FILE__"|
+	"__LINE__".
 
 
 TemplateTypeParameter=
@@ -1362,7 +1247,7 @@ TemplateValueParameterSpecialization=
     ":" ConditionalExpression.
 
 TemplateValueParameterDefault=
-    "=" ( __FILE__| __LINE__|ConditionalExpression).
+    "=" ( "__FILE__"| "__LINE__"|ConditionalExpression).
 
 
 
@@ -1419,15 +1304,11 @@ MixinIdentifier=
 
 
 ConditionalDeclaration=
-    Condition CCDeclarationBlock [else CCDeclarationBlock]|
-    Condition ":" Declarations.
+    Condition (CCDeclarationBlock [else CCDeclarationBlock] | ":" Declaration).
 
 CCDeclarationBlock=
     Declaration|
-    "{" [Declarations] "}".
-
-Declarations=
-    Declaration [Declarations].
+    "{" {Declaration} "}".
 
 ConditionalStatement=
     Condition NoScopeNonEmptyStatement [else NoScopeNonEmptyStatement].
@@ -1468,7 +1349,7 @@ StaticAssert=
 
 
 TraitsExpression=
-    __traits "(" TraitsKeyword "," TraitsArguments ")".
+    "__traits" "(" TraitsKeyword "," TraitsArgument {"," TraitsArgument} ")".
 
 TraitsKeyword=
     "isAbstractClass"|
@@ -1497,9 +1378,6 @@ TraitsKeyword=
     "derivedMembers"|
     "isSame"|
     "compiles".
-
-TraitsArguments=
-    TraitsArgument ["," TraitsArguments].
 
 TraitsArgument=
     AssignExpression|

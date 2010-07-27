@@ -26,6 +26,7 @@ Coco/R itself) does not fall under the GNU General Public License.
 ----------------------------------------------------------------------*/
 -->begin
 using System;
+using System.Collections.Generic;
 
 -->namespace
 
@@ -37,6 +38,7 @@ public class DParser {
 
 	public Scanner scanner;
 	public Errors  errors;
+	public List<string> ErrorMsgs=new List<string>();
 
 	public Token t;    // last recognized token
 	public Token la;   // lookahead token
@@ -50,12 +52,16 @@ public class DParser {
 	}
 
 	void SynErr (int n) {
-		if (errDist >= minErrDist) errors.SynErr(la.line, la.col, n);
+		if (errDist >= minErrDist) {errors.SynErr(la.line, la.col, n);
+
+		ErrorMsgs.Add(la.line.ToString()+";"+la.col.ToString()+" "+Errors.ErrMsg(n));}
 		errDist = 0;
 	}
 
 	public void SemErr (string msg) {
-		if (errDist >= minErrDist) errors.SemErr(t.line, t.col, msg);
+		if (errDist >= minErrDist)
+		{errors.SemErr(t.line, t.col, msg);
+		ErrorMsgs.Add(la.line.ToString()+";"+la.col.ToString()+" "+msg);}
 		errDist = 0;
 	}
 
@@ -122,13 +128,18 @@ public class Errors {
 	public System.IO.TextWriter errorStream = Console.Out;   // error messages go to this stream
   public string errMsgFormat = "-- line {0} col {1}: {2}"; // 0=line, 1=column, 2=text
 
-	public void SynErr (int line, int col, int n) {
-		string s;
+	public static string ErrMsg(int n)
+	{
+	string s;
 		switch (n) {
 -->errors
 			default: s = "error " + n; break;
 		}
-		errorStream.WriteLine(errMsgFormat, line, col, s);
+		return s;
+	}
+
+	public void SynErr (int line, int col, int n) {
+		errorStream.WriteLine(errMsgFormat, line, col, ErrMsg(n));
 		count++;
 	}
 
