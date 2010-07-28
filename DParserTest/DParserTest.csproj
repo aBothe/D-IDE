@@ -55,6 +55,11 @@
     <Compile Include="Scanner.cs" />
     <Compile Include="TypeDeclarations.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="D2.ATG" />
+    <None Include="Parser.frame" />
+    <None Include="Scanner.frame" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

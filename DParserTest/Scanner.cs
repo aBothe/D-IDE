@@ -1,230 +1,1393 @@
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 using System.IO;
+using System.Globalization;
 using System.Collections;
 
 namespace D_Parser {
 
-public class Token {
-	public int kind;    // token kind
-	public int pos;     // token position in the source text (starting at 0)
-	public int col;     // token column (starting at 1)
-	public int line;    // token line (starting at 1)
-	public string val;  // token value
-	public Token next;  // ML 2005-03-11 Tokens are kept in linked list
-	public new string ToString()
-	{
-		return val;
-	}
-}
+    /// <summary>
+    /// Taken from SharpDevelop.NRefactory
+    /// </summary>
+    public abstract class AbstractLexer
+    {
+        protected TextReader reader;
+        protected int col = 1;
+        protected int line = 1;
 
-//-----------------------------------------------------------------------------------
-// Buffer
-//-----------------------------------------------------------------------------------
-public class Buffer {
-	// This Buffer supports the following cases:
-	// 1) seekable stream (file)
-	//    a) whole stream in buffer
-	//    b) part of stream in buffer
-	// 2) non seekable stream (network, console)
+        protected DToken t = null;
+        protected DToken la = null;
+        protected DToken peekToken = null;
 
-	public const int EOF = char.MaxValue + 1;
-	const int MIN_BUFFER_LENGTH = 1024; // 1KB
-	const int MAX_BUFFER_LENGTH = MIN_BUFFER_LENGTH * 64; // 64KB
-	byte[] buf;         // input buffer
-	int bufStart;       // position of first byte in buffer relative to input stream
-	int bufLen;         // length of buffer
-	int fileLen;        // length of input stream (may change if the stream is no file)
-	int bufPos;         // current position in buffer
-	Stream stream;      // input stream (seekable)
-	bool isUserStream;  // was the stream opened by the user?
+        protected StringBuilder sb = new StringBuilder();
 
-	public Buffer (Stream s, bool isUserStream) {
-		stream = s; this.isUserStream = isUserStream;
+        /// <summary>
+        /// used for the original value of strings (with escape sequences).
+        /// </summary>
+        protected StringBuilder originalValue = new StringBuilder();
 
-		if (stream.CanSeek) {
-			fileLen = (int) stream.Length;
-			bufLen = Math.Min(fileLen, MAX_BUFFER_LENGTH);
-			bufStart = Int32.MaxValue; // nothing in the buffer so far
-		} else {
-			fileLen = bufLen = bufStart = 0;
-		}
+        public bool SkipAllComments { get; set; }
+        public delegate void CommentHandler(Comment comment);
+        public abstract event CommentHandler OnComment;
 
-		buf = new byte[(bufLen>0) ? bufLen : MIN_BUFFER_LENGTH];
-		if (fileLen > 0) Pos = 0; // setup buffer to position 0 (start)
-		else bufPos = 0; // index 0 is already after the file, thus Pos = 0 is invalid
-		if (bufLen == fileLen && stream.CanSeek) Close();
-	}
+        protected int Line
+        {
+            get
+            {
+                return line;
+            }
+        }
+        protected int Col
+        {
+            get
+            {
+                return col;
+            }
+        }
 
-	protected Buffer(Buffer b) { // called in UTF8Buffer constructor
-		buf = b.buf;
-		bufStart = b.bufStart;
-		bufLen = b.bufLen;
-		fileLen = b.fileLen;
-		bufPos = b.bufPos;
-		stream = b.stream;
-		// keep destructor from closing the stream
-		b.stream = null;
-		isUserStream = b.isUserStream;
-	}
+        protected int ReaderRead()
+        {
+            int val = reader.Read();
+            if ((val == '\r' && reader.Peek() != '\n') || val == '\n')
+            {
+                ++line;
+                col = 1;
+                LineBreak();
+            }
+            else if (val >= 0)
+            {
+                col++;
+            }
+            return val;
+        }
+        protected int ReaderPeek()
+        {
+            return reader.Peek();
+        }
 
-	~Buffer() { Close(); }
+        public void SetInitialLocation(Location location)
+        {
+            if (t != null || la != null || peekToken != null)
+                throw new InvalidOperationException();
+            this.line = location.Line;
+            this.col = location.Column;
+        }
 
-	protected void Close() {
-		if (!isUserStream && stream != null) {
-			stream.Close();
-			stream = null;
-		}
-	}
+        /// <summary>
+        /// The current DToken. <seealso cref="ICSharpCode.NRefactory.Parser.DToken"/>
+        /// </summary>
+        public DToken CurrentToken
+        {
+            get
+            {
+                //				Console.WriteLine("Call to DToken");
+                return t;
+            }
+        }
 
-	public virtual int Read () {
-		if (bufPos < bufLen) {
-			return buf[bufPos++];
-		} else if (Pos < fileLen) {
-			Pos = Pos; // shift buffer start to Pos
-			return buf[bufPos++];
-		} else if (stream != null && !stream.CanSeek && ReadNextStreamChunk() > 0) {
-			return buf[bufPos++];
-		} else {
-			return EOF;
-		}
-	}
+        /// <summary>
+        /// The next DToken (The <see cref="CurrentToken"/> after <see cref="NextToken"/> call) . <seealso cref="ICSharpCode.NRefactory.Parser.DToken"/>
+        /// </summary>
+        public DToken LookAhead
+        {
+            get
+            {
+                //				Console.WriteLine("Call to LookAhead");
+                return la;
+            }
+        }
 
-	public int Peek () {
-		int curPos = Pos;
-		int ch = Read();
-		Pos = curPos;
-		return ch;
-	}
+        public DToken CurrentPeekToken
+        {
+            get { return peekToken; }
+        }
 
-	public string GetString (int beg, int end) {
-		int len = 0;
-		char[] buf = new char[end - beg];
-		int oldPos = Pos;
-		Pos = beg;
-		while (Pos < end) buf[len++] = (char) Read();
-		Pos = oldPos;
-		return new String(buf, 0, len);
-	}
+        /// <summary>
+        /// Constructor for the abstract lexer class.
+        /// </summary>
+        protected AbstractLexer(TextReader reader)
+        {
+            this.reader = reader;
+        }
 
-	public int Pos {
-		get { return bufPos + bufStart; }
-		set {
-			if (value >= fileLen && stream != null && !stream.CanSeek) {
-				// Wanted position is after buffer and the stream
-				// is not seek-able e.g. network or console,
-				// thus we have to read the stream manually till
-				// the wanted position is in sight.
-				while (value >= fileLen && ReadNextStreamChunk() > 0);
-			}
+        #region System.IDisposable interface implementation
+        public virtual void Dispose()
+        {
+            reader.Close();
+            reader = null;
+            t = la = peekToken = null;
+            sb = originalValue = null;
+        }
+        #endregion
 
-			if (value < 0 || value > fileLen) {
-				throw new FatalError("buffer out of bounds access, position: " + value);
-			}
+        /// <summary>
+        /// Must be called before a peek operation.
+        /// </summary>
+        public void StartPeek()
+        {
+            peekToken = curToken;
+        }
 
-			if (value >= bufStart && value < bufStart + bufLen) { // already in buffer
-				bufPos = value - bufStart;
-			} else if (stream != null) { // must be swapped in
-				stream.Seek(value, SeekOrigin.Begin);
-				bufLen = stream.Read(buf, 0, buf.Length);
-				bufStart = value; bufPos = 0;
-			} else {
-				// set the position to the end of the file, Pos will return fileLen.
-				bufPos = fileLen - bufStart;
-			}
-		}
-	}
+        /// <summary>
+        /// Gives back the next token. A second call to Peek() gives the next token after the last call for Peek() and so on.
+        /// </summary>
+        /// <returns>An <see cref="CurrentToken"/> object.</returns>
+        public DToken Peek()
+        {
+            if (peekToken == null) StartPeek();
+            //			Console.WriteLine("Call to Peek");
+            if (peekToken.next == null)
+            {
+                peekToken.next = Next();
+                //specialTracker.InformToken(peekToken.next.kind);
+            }
+            peekToken = peekToken.next;
+            return peekToken;
+        }
 
-	// Read the next chunk of bytes from the stream, increases the buffer
-	// if needed and updates the fields fileLen and bufLen.
-	// Returns the number of bytes read.
-	private int ReadNextStreamChunk() {
-		int free = buf.Length - bufLen;
-		if (free == 0) {
-			// in the case of a growing input stream
-			// we can neither seek in the stream, nor can we
-			// foresee the maximum length, thus we must adapt
-			// the buffer size on demand.
-			byte[] newBuf = new byte[bufLen * 2];
-			Array.Copy(buf, newBuf, bufLen);
-			buf = newBuf;
-			free = bufLen;
-		}
-		int read = stream.Read(buf, bufLen, free);
-		if (read > 0) {
-			fileLen = bufLen = (bufLen + read);
-			return read;
-		}
-		// end of stream reached
-		return 0;
-	}
-}
+        /// <summary>
+        /// Reads the next token and gives it back.
+        /// </summary>
+        /// <returns>An <see cref="CurrentToken"/> object.</returns>
+        public virtual DToken NextToken()
+        {
+            if (t == null)
+            {
+                t = Next();
+                t.next = Next();
+                la = t.next;
+                return t;
+            }
 
-//-----------------------------------------------------------------------------------
-// UTF8Buffer
-//-----------------------------------------------------------------------------------
-public class UTF8Buffer: Buffer {
-	public UTF8Buffer(Buffer b): base(b) {}
+            t = la;
 
-	public override int Read() {
-		int ch;
-		do {
-			ch = base.Read();
-			// until we find a utf8 start (0xxxxxxx or 11xxxxxx)
-		} while ((ch >= 128) && ((ch & 0xC0) != 0xC0) && (ch != EOF));
-		if (ch < 128 || ch == EOF) {
-			// nothing to do, first 127 chars are the same in ascii and utf8
-			// 0xxxxxxx or end of file character
-		} else if ((ch & 0xF0) == 0xF0) {
-			// 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-			int c1 = ch & 0x07; ch = base.Read();
-			int c2 = ch & 0x3F; ch = base.Read();
-			int c3 = ch & 0x3F; ch = base.Read();
-			int c4 = ch & 0x3F;
-			ch = (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
-		} else if ((ch & 0xE0) == 0xE0) {
-			// 1110xxxx 10xxxxxx 10xxxxxx
-			int c1 = ch & 0x0F; ch = base.Read();
-			int c2 = ch & 0x3F; ch = base.Read();
-			int c3 = ch & 0x3F;
-			ch = (((c1 << 6) | c2) << 6) | c3;
-		} else if ((ch & 0xC0) == 0xC0) {
-			// 110xxxxx 10xxxxxx
-			int c1 = ch & 0x1F; ch = base.Read();
-			int c2 = ch & 0x3F;
-			ch = (c1 << 6) | c2;
-		}
-		return ch;
-	}
-}
+            if (la.next == null)
+                la.next = Next();
+
+            la = la.next;
+            return t;
+        }
+
+        protected abstract DToken Next();
+
+        protected static bool IsIdentifierPart(int ch)
+        {
+            if (ch == 95) return true;  // 95 = '_'
+            if (ch == -1) return false;
+            return char.IsLetterOrDigit((char)ch); // accept unicode letters
+        }
+
+        protected static bool IsHex(char digit)
+        {
+            return Char.IsDigit(digit) || ('A' <= digit && digit <= 'F') || ('a' <= digit && digit <= 'f');
+        }
+
+        protected int GetHexNumber(char digit)
+        {
+            if (Char.IsDigit(digit))
+            {
+                return digit - '0';
+            }
+            if ('A' <= digit && digit <= 'F')
+            {
+                return digit - 'A' + 0xA;
+            }
+            if ('a' <= digit && digit <= 'f')
+            {
+                return digit - 'a' + 0xA;
+            }
+            //errors.Error(line, col, String.Format("Invalid hex number '" + digit + "'"));
+            return 0;
+        }
+        protected Location lastLineEnd = new Location(1, 1);
+        protected Location curLineEnd = new Location(1, 1);
+        protected void LineBreak()
+        {
+            lastLineEnd = curLineEnd;
+            curLineEnd = new Location(col - 1, line);
+        }
+        protected bool HandleLineEnd(char ch)
+        {
+            // Handle MS-DOS or MacOS line ends.
+            if (ch == '\r')
+            {
+                if (reader.Peek() == '\n')
+                { // MS-DOS line end '\r\n'
+                    ReaderRead(); // LineBreak (); called by ReaderRead ();
+                    return true;
+                }
+                else
+                { // assume MacOS line end which is '\r'
+                    LineBreak();
+                    return true;
+                }
+            }
+            if (ch == '\n')
+            {
+                LineBreak();
+                return true;
+            }
+            return false;
+        }
+
+        protected void SkipToEndOfLine()
+        {
+            int nextChar;
+            while ((nextChar = reader.Read()) != -1)
+            {
+                if (nextChar == '\r')
+                {
+                    if (reader.Peek() == '\n')
+                        reader.Read();
+                    nextChar = '\n';
+                }
+                if (nextChar == '\n')
+                {
+                    ++line;
+                    col = 1;
+                    break;
+                }
+            }
+        }
+
+        protected string ReadToEndOfLine()
+        {
+            sb.Length = 0;
+            int nextChar;
+            while ((nextChar = reader.Read()) != -1)
+            {
+                char ch = (char)nextChar;
+
+                if (nextChar == '\r')
+                {
+                    if (reader.Peek() == '\n')
+                        reader.Read();
+                    nextChar = '\n';
+                }
+                // Return read string, if EOL is reached
+                if (nextChar == '\n')
+                {
+                    ++line;
+                    col = 1;
+                    return sb.ToString();
+                }
+
+                sb.Append(ch);
+            }
+
+            // Got EOF before EOL
+            string retStr = sb.ToString();
+            col += retStr.Length;
+            return retStr;
+        }
+    }
+
+
+
+
+
+
+
+public class DLexer : AbstractLexer
+    {
+        public DLexer(TextReader reader)
+            : base(reader)
+        {
+            Comments = new List<Comment>();
+        }
+
+        public List<Comment> Comments;
+        public override event AbstractLexer.CommentHandler OnComment;
+        void OnError(int line, int col, string message)
+        {
+            //errors.Error(line, col, message);
+        }
+
+        protected override DToken Next()
+        {
+            int nextChar;
+            char ch;
+            bool hadLineEnd = false;
+            if (Line == 1 && Col == 1) hadLineEnd = true; // beginning of document
+
+            while ((nextChar = ReaderRead()) != -1)
+            {
+                DToken token;
+
+                switch (nextChar)
+                {
+                    case ' ':
+                    case '\t':
+                        continue;
+                    case '\r':
+                    case '\n':
+                        if (hadLineEnd)
+                        {
+                            // second line end before getting to a token
+                            // -> here was a blank line
+                            //specialTracker.AddEndOfLine(new Location(Col, Line));
+                        }
+                        HandleLineEnd((char)nextChar);
+                        hadLineEnd = true;
+                        continue;
+                    case '/':
+                        int peek = ReaderPeek();
+                        if (peek == '/' || peek == '*' || peek == '+')
+                        {
+                            ReadComment();
+                            continue;
+                        }
+                        else
+                        {
+                            token = ReadOperator('/');
+                        }
+                        break;
+                    case 'r':
+                        peek = ReaderPeek();
+                        if (peek == '"')
+						{
+							ReaderRead();
+							token = ReadString(nextChar);
+                            break;
+                        }else
+                            goto default;
+                    case '`':
+                        token = ReadVerbatimString(nextChar);
+                        break;
+                    case '"':
+                        token = ReadString(nextChar);
+                        break;
+                    case '\'':
+                        token = ReadChar();
+                        break;
+                    case '@':
+                        int next = ReaderRead();
+                        if (next == -1)
+                        {
+                            OnError(Line, Col, String.Format("EOF after @"));
+                            continue;
+                        }
+                        else
+                        {
+                            int x = Col - 1;
+                            int y = Line;
+                            ch = (char)next;
+                            if (ch == '"')
+                            {
+                                token = ReadVerbatimString(next);
+                            }
+                            else if (Char.IsLetterOrDigit(ch) || ch == '_')
+                            {
+                                bool canBeKeyword;
+                                string ident = ReadIdent(ch, out canBeKeyword);
+                                int tkind = DTokens.GetTokenID("@" + ident);
+                                token = new DToken(tkind < 0 ? DTokens.Identifier : tkind, x - 1, y, (tkind < 0 ? "" : "@") + ident);
+                            }
+                            else
+                            {
+                                OnError(y, x, String.Format("Unexpected char in Lexer.Next() : {0}", ch));
+                                continue;
+                            }
+                        }
+                        break;
+                    default:
+                        ch = (char)nextChar;
+                        if (Char.IsLetter(ch) || ch == '_' || ch == '\\')
+                        {
+                            int x = Col - 1; // Col was incremented above, but we want the start of the identifier
+                            int y = Line;
+                            bool canBeKeyword;
+                            string s = ReadIdent(ch, out canBeKeyword);
+                            if (canBeKeyword)
+                            {
+                                int keyWordToken = DKeywords.GetToken(s);
+                                if (keyWordToken >= 0)
+                                {
+                                    return new DToken(keyWordToken, x, y);
+                                }
+                            }
+                            return new DToken(DTokens.Identifier, x, y, s);
+                        }
+                        else if (Char.IsDigit(ch))
+                        {
+                            token = ReadDigit(ch, Col - 1);
+                        }
+                        else
+                        {
+                            token = ReadOperator(ch);
+                        }
+                        break;
+                }
+
+                // try error recovery (token = null -> continue with next char)
+                if (token != null)
+                {
+                    //token.prev = base.curToken;
+                    return token;
+                }
+            }
+
+            return new DToken(DTokens.EOF, Col, Line, String.Empty);
+        }
+
+        // The C# compiler has a fixed size length therefore we'll use a fixed size char array for identifiers
+        // it's also faster than using a string builder.
+        const int MAX_IDENTIFIER_LENGTH = 512;
+        char[] identBuffer = new char[MAX_IDENTIFIER_LENGTH];
+
+        string ReadIdent(char ch, out bool canBeKeyword)
+        {
+            int peek;
+            int curPos = 0;
+            canBeKeyword = true;
+            while (true)
+            {
+                if (ch == '\\')
+                {
+                    peek = ReaderPeek();
+                    if (peek != 'u' && peek != 'U')
+                    {
+                        OnError(Line, Col, "Identifiers can only contain unicode escape sequences");
+                    }
+                    canBeKeyword = false;
+                    string surrogatePair;
+                    ReadEscapeSequence(out ch, out surrogatePair);
+                    if (surrogatePair != null)
+                    {
+                        if (!char.IsLetterOrDigit(surrogatePair, 0))
+                        {
+                            OnError(Line, Col, "Unicode escape sequences in identifiers cannot be used to represent characters that are invalid in identifiers");
+                        }
+                        for (int i = 0; i < surrogatePair.Length - 1; i++)
+                        {
+                            if (curPos < MAX_IDENTIFIER_LENGTH)
+                            {
+                                identBuffer[curPos++] = surrogatePair[i];
+                            }
+                        }
+                        ch = surrogatePair[surrogatePair.Length - 1];
+                    }
+                    else
+                    {
+                        if (!IsIdentifierPart(ch))
+                        {
+                            OnError(Line, Col, "Unicode escape sequences in identifiers cannot be used to represent characters that are invalid in identifiers");
+                        }
+                    }
+                }
+
+                if (curPos < MAX_IDENTIFIER_LENGTH)
+                {
+                    identBuffer[curPos++] = ch;
+                }
+                else
+                {
+                    OnError(Line, Col, String.Format("Identifier too long"));
+                    while (IsIdentifierPart(ReaderPeek()))
+                    {
+                        ReaderRead();
+                    }
+                    break;
+                }
+                peek = ReaderPeek();
+                if (IsIdentifierPart(peek) || peek == '\\')
+                {
+                    ch = (char)ReaderRead();
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return new String(identBuffer, 0, curPos);
+        }
+
+        DToken ReadDigit(char ch, int x)
+        {
+            unchecked
+            { // prevent exception when ReaderPeek() = -1 is cast to char
+                int y = Line;
+                sb.Length = 0;
+                sb.Append(ch);
+                string prefix = null;
+                string suffix = null;
+
+                bool ishex = false;
+                bool isunsigned = false;
+                bool islong = false;
+                bool isfloat = false;
+                bool isdouble = false;
+                bool isdecimal = false;
+
+                char peek = (char)ReaderPeek();
+
+                if (ch == '.')
+                {
+                    isdouble = true;
+
+                    while (Char.IsDigit((char)ReaderPeek()))
+                    { // read decimal digits beyond the dot
+                        sb.Append((char)ReaderRead());
+                    }
+                    peek = (char)ReaderPeek();
+                }
+                else if (ch == '0' && (peek == 'x' || peek == 'X'))
+                {
+                    ReaderRead(); // skip 'x'
+                    sb.Length = 0; // Remove '0' from 0x prefix from the stringvalue
+                    while (IsHex((char)ReaderPeek()))
+                    {
+                        sb.Append((char)ReaderRead());
+                    }
+                    if (sb.Length == 0)
+                    {
+                        sb.Append('0'); // dummy value to prevent exception
+                        OnError(y, x, "Invalid hexadecimal integer literal");
+                    }
+                    ishex = true;
+                    prefix = "0x";
+                    peek = (char)ReaderPeek();
+                }
+                else
+                {
+                    while (Char.IsDigit((char)ReaderPeek()))
+                    {
+                        sb.Append((char)ReaderRead());
+                    }
+                    peek = (char)ReaderPeek();
+                }
+
+                DToken nextToken = null; // if we accidently read a 'dot'
+                if (peek == '.')
+                { // read floating point number
+                    ReaderRead();
+                    peek = (char)ReaderPeek();
+                    if (!Char.IsDigit(peek))
+                    {
+                        nextToken = new DToken(DTokens.Dot, Col - 1, Line);
+                        peek = '.';
+                    }
+                    else
+                    {
+                        isdouble = true; // double is default
+                        if (ishex)
+                        {
+                            OnError(y, x, String.Format("No hexadecimal floating point values allowed"));
+                        }
+                        sb.Append('.');
+
+                        while (Char.IsDigit((char)ReaderPeek()))
+                        { // read decimal digits beyond the dot
+                            sb.Append((char)ReaderRead());
+                        }
+                        peek = (char)ReaderPeek();
+                    }
+                }
+
+                if (peek == 'e' || peek == 'E')
+                { // read exponent
+                    isdouble = true;
+                    sb.Append((char)ReaderRead());
+                    peek = (char)ReaderPeek();
+                    if (peek == '-' || peek == '+')
+                    {
+                        sb.Append((char)ReaderRead());
+                    }
+                    while (Char.IsDigit((char)ReaderPeek()))
+                    { // read exponent value
+                        sb.Append((char)ReaderRead());
+                    }
+                    isunsigned = true;
+                    peek = (char)ReaderPeek();
+                }
+
+                if (peek == 'f' || peek == 'F')
+                { // float value
+                    ReaderRead();
+                    suffix = "f";
+                    isfloat = true;
+                }
+                else if (peek == 'd' || peek == 'D')
+                { // double type suffix (obsolete, double is default)
+                    ReaderRead();
+                    suffix = "d";
+                    isdouble = true;
+                }
+                else if (peek == 'm' || peek == 'M')
+                { // decimal value
+                    ReaderRead();
+                    suffix = "m";
+                    isdecimal = true;
+                }
+                else if (!isdouble)
+                {
+                    if (peek == 'u' || peek == 'U')
+                    {
+                        ReaderRead();
+                        suffix = "u";
+                        isunsigned = true;
+                        peek = (char)ReaderPeek();
+                    }
+
+                    if (peek == 'l' || peek == 'L')
+                    {
+                        ReaderRead();
+                        peek = (char)ReaderPeek();
+                        islong = true;
+                        if (!isunsigned && (peek == 'u' || peek == 'U'))
+                        {
+                            ReaderRead();
+                            suffix = "lu";
+                            isunsigned = true;
+                        }
+                        else
+                        {
+                            suffix = isunsigned ? "ul" : "l";
+                        }
+                    }
+                }
+
+                string digit = sb.ToString();
+                string stringValue = prefix + digit + suffix;
+
+                if (isfloat)
+                {
+                    float num;
+                    if (float.TryParse(digit, NumberStyles.Any, CultureInfo.InvariantCulture, out num))
+                    {
+                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.DecimalNumber);
+                    }
+                    else
+                    {
+                        OnError(y, x, String.Format("Can't parse float {0}", digit));
+                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, 0f, LiteralFormat.DecimalNumber);
+                    }
+                }
+                if (isdecimal)
+                {
+                    decimal num;
+                    if (decimal.TryParse(digit, NumberStyles.Any, CultureInfo.InvariantCulture, out num))
+                    {
+                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.DecimalNumber);
+                    }
+                    else
+                    {
+                        OnError(y, x, String.Format("Can't parse decimal {0}", digit));
+                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, 0m, LiteralFormat.DecimalNumber);
+                    }
+                }
+                if (isdouble)
+                {
+                    double num;
+                    if (double.TryParse(digit, NumberStyles.Any, CultureInfo.InvariantCulture, out num))
+                    {
+                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.DecimalNumber);
+                    }
+                    else
+                    {
+                        OnError(y, x, String.Format("Can't parse double {0}", digit));
+                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, 0d, LiteralFormat.DecimalNumber);
+                    }
+                }
+
+                // Try to determine a parsable value using ranges.
+                ulong result;
+                if (ishex)
+                {
+                    if (!ulong.TryParse(digit, NumberStyles.HexNumber, null, out result))
+                    {
+                        OnError(y, x, String.Format("Can't parse hexadecimal constant {0}", digit));
+                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue.ToString(), 0, LiteralFormat.DecimalNumber);
+                    }
+                }
+                else
+                {
+                    if (!ulong.TryParse(digit, NumberStyles.Integer, null, out result))
+                    {
+                        OnError(y, x, String.Format("Can't parse integral constant {0}", digit));
+                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue.ToString(), 0, LiteralFormat.DecimalNumber);
+                    }
+                }
+
+                if (result > long.MaxValue)
+                {
+                    islong = true;
+                    isunsigned = true;
+                }
+                else if (result > uint.MaxValue)
+                {
+                    islong = true;
+                }
+                else if (result > int.MaxValue)
+                {
+                    isunsigned = true;
+                }
+
+                DToken token;
+
+                if (islong)
+                {
+                    if (isunsigned)
+                    {
+                        ulong num;
+                        if (ulong.TryParse(digit, ishex ? NumberStyles.HexNumber : NumberStyles.Number, CultureInfo.InvariantCulture, out num))
+                        {
+                            token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.DecimalNumber);
+                        }
+                        else
+                        {
+                            OnError(y, x, String.Format("Can't parse unsigned long {0}", digit));
+                            token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, 0UL, LiteralFormat.DecimalNumber);
+                        }
+                    }
+                    else
+                    {
+                        long num;
+                        if (long.TryParse(digit, ishex ? NumberStyles.HexNumber : NumberStyles.Number, CultureInfo.InvariantCulture, out num))
+                        {
+                            token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.DecimalNumber);
+                        }
+                        else
+                        {
+                            OnError(y, x, String.Format("Can't parse long {0}", digit));
+                            token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, 0L, LiteralFormat.DecimalNumber);
+                        }
+                    }
+                }
+                else
+                {
+                    if (isunsigned)
+                    {
+                        uint num;
+                        if (uint.TryParse(digit, ishex ? NumberStyles.HexNumber : NumberStyles.Number, CultureInfo.InvariantCulture, out num))
+                        {
+                            token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.DecimalNumber);
+                        }
+                        else
+                        {
+                            OnError(y, x, String.Format("Can't parse unsigned int {0}", digit));
+                            token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, (uint)0, LiteralFormat.DecimalNumber);
+                        }
+                    }
+                    else
+                    {
+                        int num;
+                        if (int.TryParse(digit, ishex ? NumberStyles.HexNumber : NumberStyles.Number, CultureInfo.InvariantCulture, out num))
+                        {
+                            token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.DecimalNumber);
+                        }
+                        else
+                        {
+                            OnError(y, x, String.Format("Can't parse int {0}", digit));
+                            token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, 0, LiteralFormat.DecimalNumber);
+                        }
+                    }
+                }
+                //token.next = nextToken;
+                return token;
+            }
+        }
+
+        DToken ReadString(int initialChar)
+        {
+            int x = Col - 1;
+            int y = Line;
+
+            sb.Length = 0;
+            originalValue.Length = 0;
+            originalValue.Append((char)initialChar);
+            bool doneNormally = false;
+            int nextChar;
+            while ((nextChar = ReaderRead()) != -1)
+            {
+                char ch = (char)nextChar;
+
+                if (nextChar == initialChar)
+                {
+                    doneNormally = true;
+                    originalValue.Append((char)nextChar);
+                    // Skip string literals
+                    ch = (char)this.ReaderPeek();
+                    if (ch == 'c' || ch == 'w' || ch == 'd') ReaderRead();
+                    break;
+                }
+                HandleLineEnd(ch);
+                if (ch == '\\')
+                {
+                    originalValue.Append('\\');
+                    string surrogatePair;
+
+                    originalValue.Append(ReadEscapeSequence(out ch, out surrogatePair));
+                    if (surrogatePair != null)
+                    {
+                        sb.Append(surrogatePair);
+                    }
+                    else
+                    {
+                        sb.Append(ch);
+                    }
+                }
+                else
+                {
+                    originalValue.Append(ch);
+                    sb.Append(ch);
+                }
+            }
+
+            if (!doneNormally)
+            {
+                OnError(y, x, String.Format("End of file reached inside string literal"));
+            }
+
+            return new DToken(DTokens.Literal, new Location(x, y), new Location(x + originalValue.Length, y), originalValue.ToString(), sb.ToString(), LiteralFormat.StringLiteral);
+        }
+
+        DToken ReadVerbatimString(int EndingChar)
+        {
+            sb.Length = 0;
+            originalValue.Length = 0;
+            int x = Col - 2; // @ and " already read
+            int y = Line;
+            int nextChar;
+
+            if (EndingChar == (int)'\"')
+            {
+                originalValue.Append("@\"");
+            }
+            else
+            {
+                originalValue.Append((char)EndingChar);
+                x=Col-1;
+            }
+            while ((nextChar = ReaderRead()) != -1)
+            {
+                char ch = (char)nextChar;
+
+                if (nextChar==EndingChar)
+                {
+                    if (ReaderPeek() != (char)EndingChar)
+                    {
+                        originalValue.Append((char)EndingChar);
+                        break;
+                    }
+                    originalValue.Append((char)EndingChar);
+                    originalValue.Append((char)EndingChar);
+                    sb.Append((char)EndingChar);
+                    ReaderRead();
+                }
+                else if (HandleLineEnd(ch))
+                {
+                    sb.Append("\r\n");
+                    originalValue.Append("\r\n");
+                }
+                else
+                {
+                    sb.Append(ch);
+                    originalValue.Append(ch);
+                }
+            }
+
+            if (nextChar == -1)
+            {
+                OnError(y, x, String.Format("End of file reached inside verbatim string literal"));
+            }
+
+            return new DToken(DTokens.Literal, new Location(x, y), new Location(x + originalValue.Length, y), originalValue.ToString(), sb.ToString(), LiteralFormat.VerbatimStringLiteral);
+        }
+
+        char[] escapeSequenceBuffer = new char[12];
+
+        /// <summary>
+        /// reads an escape sequence
+        /// </summary>
+        /// <param name="ch">The character represented by the escape sequence,
+        /// or '\0' if there was an error or the escape sequence represents a character that
+        /// can be represented only be a suggorate pair</param>
+        /// <param name="surrogatePair">Null, except when the character represented
+        /// by the escape sequence can only be represented by a surrogate pair (then the string
+        /// contains the surrogate pair)</param>
+        /// <returns>The escape sequence</returns>
+        string ReadEscapeSequence(out char ch, out string surrogatePair)
+        {
+            surrogatePair = null;
+
+            int nextChar = ReaderRead();
+            if (nextChar == -1)
+            {
+                OnError(Line, Col, String.Format("End of file reached inside escape sequence"));
+                ch = '\0';
+                return String.Empty;
+            }
+            int number;
+            char c = (char)nextChar;
+            int curPos = 1;
+            escapeSequenceBuffer[0] = c;
+            switch (c)
+            {
+                case '\'':
+                    ch = '\'';
+                    break;
+                case '\"':
+                    ch = '\"';
+                    break;
+                case '\\':
+                    ch = '\\';
+                    break;
+                case '0':
+                    ch = '\0';
+                    break;
+                case 'a':
+                    ch = '\a';
+                    break;
+                case 'b':
+                    ch = '\b';
+                    break;
+                case 'f':
+                    ch = '\f';
+                    break;
+                case 'n':
+                    ch = '\n';
+                    break;
+                case 'r':
+                    ch = '\r';
+                    break;
+                case 't':
+                    ch = '\t';
+                    break;
+                case 'v':
+                    ch = '\v';
+                    break;
+                case 'u':
+                case 'x':
+                    // 16 bit unicode character
+                    c = (char)ReaderRead();
+                    number = GetHexNumber(c);
+                    escapeSequenceBuffer[curPos++] = c;
+
+                    if (number < 0)
+                    {
+                        OnError(Line, Col - 1, String.Format("Invalid char in literal : {0}", c));
+                    }
+                    for (int i = 0; i < 3; ++i)
+                    {
+                        if (IsHex((char)ReaderPeek()))
+                        {
+                            c = (char)ReaderRead();
+                            int idx = GetHexNumber(c);
+                            escapeSequenceBuffer[curPos++] = c;
+                            number = 16 * number + idx;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    ch = (char)number;
+                    break;
+                case 'U':
+                    // 32 bit unicode character
+                    number = 0;
+                    for (int i = 0; i < 8; ++i)
+                    {
+                        if (IsHex((char)ReaderPeek()))
+                        {
+                            c = (char)ReaderRead();
+                            int idx = GetHexNumber(c);
+                            escapeSequenceBuffer[curPos++] = c;
+                            number = 16 * number + idx;
+                        }
+                        else
+                        {
+                            OnError(Line, Col - 1, String.Format("Invalid char in literal : {0}", (char)ReaderPeek()));
+                            break;
+                        }
+                    }
+                    if (number > 0xffff)
+                    {
+                        ch = '\0';
+                        surrogatePair = char.ConvertFromUtf32(number);
+                    }
+                    else
+                    {
+                        ch = (char)number;
+                    }
+                    break;
+                default:
+                    OnError(Line, Col, String.Format("Unexpected escape sequence : {0}", c));
+                    ch = '\0';
+                    break;
+            }
+            return new String(escapeSequenceBuffer, 0, curPos);
+        }
+
+        DToken ReadChar()
+        {
+            int x = Col - 1;
+            int y = Line;
+            int nextChar = ReaderRead();
+            if (nextChar == -1)
+            {
+                OnError(y, x, String.Format("End of file reached inside character literal"));
+                return null;
+            }
+            char ch = (char)nextChar;
+            char chValue = ch;
+            string escapeSequence = String.Empty;
+            if (ch == '\\')
+            {
+                string surrogatePair;
+                escapeSequence = ReadEscapeSequence(out chValue, out surrogatePair);
+                if (surrogatePair != null)
+                {
+                    OnError(y, x, String.Format("The unicode character must be represented by a surrogate pair and does not fit into a System.Char"));
+                }
+            }
+
+            unchecked
+            {
+                if ((char)ReaderRead() != '\'')
+                {
+                    OnError(y, x, String.Format("Char not terminated"));
+                }
+            }
+            return new DToken(DTokens.Literal, new Location(x, y), new Location(x + 1, y), "'" + ch + escapeSequence + "'", chValue, LiteralFormat.CharLiteral);
+        }
+
+        DToken ReadOperator(char ch)
+        {
+            int x = Col - 1;
+            int y = Line;
+            switch (ch)
+            {
+                case '+':
+                    switch (ReaderPeek())
+                    {
+                        case '+':
+                            ReaderRead();
+                            return new DToken(DTokens.Increment, x, y);
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.PlusAssign, x, y);
+                    }
+                    return new DToken(DTokens.Plus, x, y);
+                case '-':
+                    switch (ReaderPeek())
+                    {
+                        case '-':
+                            ReaderRead();
+                            return new DToken(DTokens.Decrement, x, y);
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.MinusAssign, x, y);
+                        case '>':
+                            ReaderRead();
+                            return new DToken(DTokens.TildeAssign, x, y);
+                    }
+                    return new DToken(DTokens.Minus, x, y);
+                case '*':
+                    switch (ReaderPeek())
+                    {
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.TimesAssign, x, y);
+                        default:
+                            break;
+                    }
+                    return new DToken(DTokens.Times, x, y);
+                case '/':
+                    switch (ReaderPeek())
+                    {
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.DivAssign, x, y);
+                    }
+                    return new DToken(DTokens.Div, x, y);
+                case '%':
+                    switch (ReaderPeek())
+                    {
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.ModAssign, x, y);
+                    }
+                    return new DToken(DTokens.Mod, x, y);
+                case '&':
+                    switch (ReaderPeek())
+                    {
+                        case '&':
+                            ReaderRead();
+                            return new DToken(DTokens.LogicalAnd, x, y);
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.BitwiseAndAssign, x, y);
+                    }
+                    return new DToken(DTokens.BitwiseAnd, x, y);
+                case '|':
+                    switch (ReaderPeek())
+                    {
+                        case '|':
+                            ReaderRead();
+                            return new DToken(DTokens.LogicalOr, x, y);
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.BitwiseOrAssign, x, y);
+                    }
+                    return new DToken(DTokens.BitwiseOr, x, y);
+                case '^':
+                    switch (ReaderPeek())
+                    {
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.XorAssign, x, y);
+                        default:
+                            break;
+                    }
+                    return new DToken(DTokens.Xor, x, y);
+                case '!':
+                    switch (ReaderPeek())
+                    {
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.NotEqual, x, y);
+                    }
+                    return new DToken(DTokens.Not, x, y);
+                case '~':
+                    switch (ReaderPeek())
+                    {
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.TildeAssign, x, y);
+                    }
+                    return new DToken(DTokens.Tilde, x, y);
+                case '=':
+                    switch (ReaderPeek())
+                    {
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.Equal, x, y);
+                    }
+                    return new DToken(DTokens.Assign, x, y);
+                case '<':
+                    switch (ReaderPeek())
+                    {
+                        case '<':
+                            ReaderRead();
+                            switch (ReaderPeek())
+                            {
+                                case '=':
+                                    ReaderRead();
+                                    return new DToken(DTokens.ShiftLeftAssign, x, y);
+                                default:
+                                    break;
+                            }
+                            return new DToken(DTokens.ShiftLeft, x, y);
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.LessEqual, x, y);
+                    }
+                    return new DToken(DTokens.LessThan, x, y);
+                case '>':
+                    switch (ReaderPeek())
+                    {
+                        case '>':
+                            ReaderRead();
+                            if (ReaderPeek() != -1)
+                            {
+                                switch ((char)ReaderPeek())
+                                {
+                                    case '=':
+                                        ReaderRead();
+                                        return new DToken(DTokens.ShiftRightAssign, x, y);
+                                    case '>':
+                                        ReaderRead();
+                                        if (ReaderPeek() != -1)
+                                        {
+                                            switch ((char)ReaderPeek())
+                                            {
+                                                case '=':
+                                                    ReaderRead();
+                                                    return new DToken(DTokens.TripleRightAssign, x, y);
+                                                default:
+                                                    break;
+                                            }
+                                        }
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            return new DToken(DTokens.ShiftLeft, x, y);
+                        case '=':
+                            ReaderRead();
+                            return new DToken(DTokens.GreaterEqual, x, y);
+                    }
+                    return new DToken(DTokens.GreaterThan, x, y);
+                case '?':
+                    return new DToken(DTokens.Question, x, y);
+                case '$':
+                    return new DToken(DTokens.Dollar, x, y);
+                case ';':
+                    return new DToken(DTokens.Semicolon, x, y);
+                case ':':
+                    if (ReaderPeek() == ':')
+                    {
+                        ReaderRead();
+                        return new DToken(DTokens.DoubleColon, x, y);
+                    }
+                    return new DToken(DTokens.Colon, x, y);
+                case ',':
+                    return new DToken(DTokens.Comma, x, y);
+                case '.':
+                    // Prevent OverflowException when ReaderPeek returns -1
+                    int tmp = ReaderPeek();
+                    if (tmp > 0 && Char.IsDigit((char)tmp))
+                    {
+                        return ReadDigit('.', Col - 1);
+                    }
+                    return new DToken(DTokens.Dot, x, y);
+                case ')':
+                    return new DToken(DTokens.CloseParenthesis, x, y);
+                case '(':
+                    return new DToken(DTokens.OpenParenthesis, x, y);
+                case ']':
+                    return new DToken(DTokens.CloseSquareBracket, x, y);
+                case '[':
+                    return new DToken(DTokens.OpenSquareBracket, x, y);
+                case '}':
+                    return new DToken(DTokens.CloseCurlyBrace, x, y);
+                case '{':
+                    return new DToken(DTokens.OpenCurlyBrace, x, y);
+                default:
+                    return null;
+            }
+        }
+
+        void ReadComment()
+        {
+            int pk = 0;
+            switch (ReaderRead())
+            {
+                case '+':
+                    if (ReaderPeek() == '+')// DDoc
+                    {
+                        ReadMultiLineComment(Comment.Type.Documentation, true);
+                    }
+                    else
+                        ReadMultiLineComment(Comment.Type.Block, true);
+                    break;
+                case '*':
+                    if (ReaderPeek() == '*')// DDoc
+                    {
+                        ReadMultiLineComment(Comment.Type.Documentation, false);
+                    }
+                    else
+                        ReadMultiLineComment(Comment.Type.Block, false);
+                    break;
+                case '/':
+                    if (ReaderPeek() == '/')// DDoc
+                        ReadSingleLineComment(Comment.Type.Documentation);
+                    else
+                        ReadSingleLineComment(Comment.Type.SingleLine);
+                    break;
+                default:
+                    OnError(Line, Col, String.Format("Error while reading comment"));
+                    break;
+            }
+        }
+
+        void ReadSingleLineComment(Comment.Type commentType)
+        {
+            Location st = new Location(Col, Line);
+            string comm = ReadToEndOfLine().TrimStart('/');
+            Location end = new Location(Col, st.Line);
+            Comment nComm = new Comment(commentType, comm.Trim(), st.Column < 2, st, end);
+            Comments.Add(nComm);
+            OnComment(nComm);
+        }
+
+        void ReadMultiLineComment(Comment.Type commentType, bool isNestingComment)
+        {
+            int nextChar;
+            Comment nComm = null;
+            Location st = new Location(Col, Line);
+            StringBuilder scCurWord = new StringBuilder(); // current word, (scTag == null) or comment (when scTag != null)
+
+            while ((nextChar = ReaderRead()) != -1)
+            {
+                char ch = (char)nextChar;
+
+                // End of multiline comment reached ?
+                if ((ch == '+' || (ch == '*' && !isNestingComment)) && ReaderPeek() == '/')
+                {
+                    ReaderRead(); // Skip "*" or "+"
+                    nComm = new Comment(commentType, scCurWord.ToString().Trim(ch, ' ', '\t', '\r', '\n','*','+'), st.Column < 2, st, new Location(Col, Line));
+                    Comments.Add(nComm);
+                    OnComment(nComm);
+                    return;
+                }
+
+                if (HandleLineEnd(ch))
+                    scCurWord.AppendLine();
+                else
+                    scCurWord.Append(ch);
+            }
+            nComm = new Comment(commentType, scCurWord.ToString().Trim(), st.Column < 2, st, new Location(Col, Line));
+            Comments.Add(nComm);
+            OnComment(nComm);
+            // Reached EOF before end of multiline comment.
+            OnError(Line, Col, String.Format("Reached EOF before the end of a multiline comment"));
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //-----------------------------------------------------------------------------------
 // Scanner
 //-----------------------------------------------------------------------------------
-public class Scanner {
+/*
+public class Scanner :AbstractLexer {
 	const char EOL = '\n';
-	const int eofSym = 0; /* pdt */
+	const int eofSym = 0; // pdt
 	const int maxT = 223;
 	const int noSym = 223;
 
 
-	public Buffer buffer; // scanner buffer
-
-	Token t;          // current token
 	int ch;           // current input character
-	int pos;          // byte position of current character
-	int col;          // column number of current character
-	int line;         // line number of current character
-	int oldEols;      // EOLs that appeared in a comment;
+	int pos=-1;          // byte position of current character
+	int oldEols=0;      // EOLs that appeared in a comment;
 	static readonly Hashtable start; // maps first token character to start state
 
-	Token tokens;     // list of tokens already peeked (first token is a dummy)
-	Token pt;         // current peek token
+	DToken tokens;     // list of tokens already peeked (first token is a dummy)
 
 	char[] tval = new char[128]; // text of current token
 	int tlen;         // length of current token
 
-	static Scanner() {
+	static DLexer() {
 		start = new Hashtable(128);
 		for (int i = 65; i <= 66; ++i) start[i] = 1;
 		for (int i = 68; i <= 90; ++i) start[i] = 1;
@@ -274,42 +1437,26 @@ public class Scanner {
 
 	}
 
-	public Scanner (string fileName) {
-		try {
-			Stream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-			buffer = new Buffer(stream, false);
-			Init();
-		} catch (IOException) {
-			throw new FatalError("Cannot open file " + fileName);
-		}
-	}
+	public DLexer(TextReader reader)
+        : base(reader)
+    {
+        Comments = new List<Comment>();
+    }
 
-	public Scanner (Stream s) {
-		buffer = new Buffer(s, true);
-		Init();
-	}
-
-	void Init() {
-		pos = -1; line = 1; col = 0;
-		oldEols = 0;
-		NextCh();
-		if (ch == 0xEF) { // check optional byte order mark for UTF-8
-			NextCh(); int ch1 = ch;
-			NextCh(); int ch2 = ch;
-			if (ch1 != 0xBB || ch2 != 0xBF) {
-				throw new FatalError(String.Format("illegal byte order mark: EF {0,2:X} {1,2:X}", ch1, ch2));
-			}
-			buffer = new UTF8Buffer(buffer); col = 0;
-			NextCh();
-		}
-		pt = tokens = new Token();  // first token is a dummy
-	}
+    #region Abstract Lexer Props & Methods
+    public List<Comment> Comments;
+    public override event AbstractLexer.CommentHandler OnComment;
+    void OnError(int line, int col, string message)
+    {
+        //errors.Error(line, col, message);
+    }
+    #endregion
 
 	void NextCh() {
 		if (oldEols > 0) { ch = EOL; oldEols--; }
 		else {
 			pos = buffer.Pos;
-			ch = buffer.Read(); col++;
+			ch = ReaderRead();
 			// replace isolated '\r' by '\n' in order to make
 			// eol handling uniform across Windows, Unix and Mac
 			if (ch == '\r' && buffer.Peek() != '\n') ch = EOL;
@@ -562,7 +1709,7 @@ public class Scanner {
 		}
 	}
 
-	Token NextToken() {
+	protected override DToken Next(){
 		while (ch == ' ' ||
 			ch >= 9 && ch <= 10 || ch == 13
 		) NextCh();
@@ -570,7 +1717,7 @@ public class Scanner {
 		int apx = 0;
 		int recKind = noSym;
 		int recEnd = pos;
-		t = new Token();
+		DToken t = new DToken();
 		t.pos = pos; t.col = col; t.line = line;
 		int state;
 		if (start.ContainsKey(ch)) { state = (int) start[ch]; }
@@ -1135,5 +2282,6 @@ public class Scanner {
 	public void ResetPeek () { pt = tokens; }
 
 } // end Scanner
+*/
 
 }

@@ -34,21 +34,17 @@ using System.Collections;
 
 -->namespace
 
-public partial class DTokens
-{
--->declarations
-}
     /// <summary>
     /// Taken from SharpDevelop.NRefactory
     /// </summary>
     public abstract class AbstractLexer
     {
-        TextReader reader;
-        int col = 1;
-        int line = 1;
+        protected TextReader reader;
+        protected int col = 1;
+        protected int line = 1;
 
-        protected DToken lastToken = null;
-        protected DToken curToken = null;
+        protected DToken t = null;
+        protected DToken la = null;
         protected DToken peekToken = null;
 
         protected StringBuilder sb = new StringBuilder();
@@ -61,25 +57,6 @@ public partial class DTokens
         public bool SkipAllComments { get; set; }
         public delegate void CommentHandler(Comment comment);
         public abstract event CommentHandler OnComment;
-
-        protected static IEnumerable<string> GetSymbols(string symbols)
-        {
-            if (!string.IsNullOrEmpty(symbols))
-            {
-                foreach (string symbol in symbols.Split(';', ' ', '\t'))
-                {
-                    string s = symbol.Trim();
-                    if (s.Length == 0)
-                        continue;
-                    yield return s;
-                }
-            }
-        }
-
-        public virtual void SetConditionalCompilationSymbols(string symbols)
-        {
-            throw new NotSupportedException();
-        }
 
         protected int Line
         {
@@ -118,7 +95,7 @@ public partial class DTokens
 
         public void SetInitialLocation(Location location)
         {
-            if (lastToken != null || curToken != null || peekToken != null)
+            if (t != null || la != null || peekToken != null)
                 throw new InvalidOperationException();
             this.line = location.Line;
             this.col = location.Column;
@@ -132,7 +109,7 @@ public partial class DTokens
             get
             {
                 //				Console.WriteLine("Call to DToken");
-                return lastToken;
+                return t;
             }
         }
 
@@ -144,7 +121,7 @@ public partial class DTokens
             get
             {
                 //				Console.WriteLine("Call to LookAhead");
-                return curToken;
+                return la;
             }
         }
 
@@ -166,7 +143,7 @@ public partial class DTokens
         {
             reader.Close();
             reader = null;
-            lastToken = curToken = peekToken = null;
+            t = la = peekToken = null;
             sb = originalValue = null;
         }
         #endregion
@@ -176,7 +153,7 @@ public partial class DTokens
         /// </summary>
         public void StartPeek()
         {
-            peekToken = curToken;
+            peekToken = t;
         }
 
         /// <summary>
@@ -202,28 +179,21 @@ public partial class DTokens
         /// <returns>An <see cref="CurrentToken"/> object.</returns>
         public virtual DToken NextToken()
         {
-            if (curToken == null)
+            if (t == null)
             {
-                curToken = Next();
-                //specialTracker.InformToken(curToken.Kind);
-                //Console.WriteLine(ICSharpCode.NRefactory.Parser.CSharp.Tokens.GetTokenString(curToken.kind) + " -- " + curToken.val + "(" + curToken.kind + ")");
-                return curToken;
+                t = Next();
+                t.next = Next();
+                la = t.next;
+                return t;
             }
 
-            lastToken = curToken;
+            t = la;
 
-            if (curToken.next == null)
-            {
-                curToken.next = Next();
-                if (curToken.next != null)
-                {
-                    //specialTracker.InformToken(curToken.next.Kind);
-                }
-            }
+            if (la.next == null)
+                la.next = Next();
 
-            curToken = curToken.next;
-            //Console.WriteLine(ICSharpCode.NRefactory.Parser.CSharp.Tokens.GetTokenString(curToken.kind) + " -- " + curToken.val + "(" + curToken.kind + ")");
-            return curToken;
+            la = la.next;
+            return t;
         }
 
         protected abstract DToken Next();
@@ -338,17 +308,15 @@ public partial class DTokens
             col += retStr.Length;
             return retStr;
         }
-
-        /// <summary>
-        /// Skips to the end of the current code block.
-        /// For this, the lexer must have read the next token AFTER the token opening the
-        /// block (so that Lexer.DToken is the block-opening token, not Lexer.LookAhead).
-        /// After the call, Lexer.LookAhead will be the block-closing token.
-        /// </summary>
-        public abstract void SkipCurrentBlock(int targetToken);
     }
 
-    public class DLexer : AbstractLexer
+
+
+
+
+
+
+public class DLexer : AbstractLexer
     {
         public DLexer(TextReader reader)
             : base(reader)
@@ -356,14 +324,12 @@ public partial class DTokens
             Comments = new List<Comment>();
         }
 
-        #region Abstract Lexer Props & Methods
         public List<Comment> Comments;
         public override event AbstractLexer.CommentHandler OnComment;
         void OnError(int line, int col, string message)
         {
             //errors.Error(line, col, message);
         }
-        #endregion
 
         protected override DToken Next()
         {
@@ -407,8 +373,11 @@ public partial class DTokens
                     case 'r':
                         peek = ReaderPeek();
                         if (peek == '"')
-                            continue;
-                        else
+						{
+							ReaderRead();
+							token = ReadString(nextChar);
+                            break;
+                        }else
                             goto default;
                     case '`':
                         token = ReadVerbatimString(nextChar);
@@ -1395,90 +1364,78 @@ public partial class DTokens
             // Reached EOF before end of multiline comment.
             OnError(Line, Col, String.Format("Reached EOF before the end of a multiline comment"));
         }
-
-        public override void SkipCurrentBlock(int targetToken)
-        {
-            int braceCount = 0;
-            while (curToken != null)
-            {
-                if (curToken.Kind == DTokens.OpenCurlyBrace)
-                {
-                    ++braceCount;
-                }
-                else if (curToken.Kind == DTokens.CloseCurlyBrace)
-                {
-                    if (--braceCount < 0)
-                        return;
-                }
-                NextToken();
-            }
-        }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //-----------------------------------------------------------------------------------
 // Scanner
 //-----------------------------------------------------------------------------------
 /*
-public class Scanner {
+public class Scanner :AbstractLexer {
 	const char EOL = '\n';
-	const int eofSym = 0; /* pdt */
+	const int eofSym = 0; // pdt
+-->declarations
 
-	public Buffer buffer; // scanner buffer
-
-	DToken t;          // current token
 	int ch;           // current input character
-	int pos;          // byte position of current character
-	int col;          // column number of current character
-	int line;         // line number of current character
-	int oldEols;      // EOLs that appeared in a comment;
+	int pos=-1;          // byte position of current character
+	int oldEols=0;      // EOLs that appeared in a comment;
 	static readonly Hashtable start; // maps first token character to start state
 
 	DToken tokens;     // list of tokens already peeked (first token is a dummy)
-	DToken pt;         // current peek token
 
 	char[] tval = new char[128]; // text of current token
 	int tlen;         // length of current token
 
-	static Scanner() {
+	static DLexer() {
 		start = new Hashtable(128);
 -->initialization
 	}
 
-	public Scanner (string fileName) {
-		try {
-			Stream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-			buffer = new Buffer(stream, false);
-			Init();
-		} catch (IOException) {
-			throw new FatalError("Cannot open file " + fileName);
-		}
-	}
+	public DLexer(TextReader reader)
+        : base(reader)
+    {
+        Comments = new List<Comment>();
+    }
 
-	public Scanner (Stream s) {
-		buffer = new Buffer(s, true);
-		Init();
-	}
-
-	void Init() {
-		pos = -1; line = 1; col = 0;
-		oldEols = 0;
-		NextCh();
-		if (ch == 0xEF) { // check optional byte order mark for UTF-8
-			NextCh(); int ch1 = ch;
-			NextCh(); int ch2 = ch;
-			if (ch1 != 0xBB || ch2 != 0xBF) {
-				throw new FatalError(String.Format("illegal byte order mark: EF {0,2:X} {1,2:X}", ch1, ch2));
-			}
-			buffer = new UTF8Buffer(buffer); col = 0;
-			NextCh();
-		}
-		pt = tokens = new Token();  // first token is a dummy
-	}
+    #region Abstract Lexer Props & Methods
+    public List<Comment> Comments;
+    public override event AbstractLexer.CommentHandler OnComment;
+    void OnError(int line, int col, string message)
+    {
+        //errors.Error(line, col, message);
+    }
+    #endregion
 
 	void NextCh() {
 		if (oldEols > 0) { ch = EOL; oldEols--; }
 		else {
 			pos = buffer.Pos;
-			ch = buffer.Read(); col++;
+			ch = ReaderRead();
 			// replace isolated '\r' by '\n' in order to make
 			// eol handling uniform across Windows, Unix and Mac
 			if (ch == '\r' && buffer.Peek() != '\n') ch = EOL;
@@ -1506,14 +1463,14 @@ public class Scanner {
 -->literals
 	}
 
-	Token NextToken() {
+	protected override DToken Next(){
 		while (ch == ' ' ||
 -->scan1
 		) NextCh();
 -->scan2
 		int recKind = noSym;
 		int recEnd = pos;
-		t = new Token();
+		DToken t = new DToken();
 		t.pos = pos; t.col = col; t.line = line;
 		int state;
 		if (start.ContainsKey(ch)) { state = (int) start[ch]; }
@@ -1569,4 +1526,5 @@ public class Scanner {
 
 } // end Scanner
 */
+
 $$$

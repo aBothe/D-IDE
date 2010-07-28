@@ -6,7 +6,7 @@ namespace D_Parser {
 
 
 
-public class DParser {
+public class DTokens{
 	public const int _EOF = 0;
 	public const int _Identifier = 1;
 	public const int _Integer = 2;
@@ -174,6 +174,9 @@ public class DParser {
 	public const int _with = 164;
 	public const int maxT = 223;
 
+}
+
+public class DParser {
 	const bool T = true;
 	const bool x = false;
 	const int minErrDist = 2;
@@ -188,11 +191,29 @@ public class DParser {
         }
 	public List<string> import;
 
-	public Scanner lexer;
+	public DLexer lexer;
 	public Errors errors = new Errors();
 
-	public Token t;    // last recognized token
-	public Token la;   // lookahead token
+    DToken t
+    {
+        [System.Diagnostics.DebuggerStepThrough]
+        get
+        {
+            return (DToken)lexer.CurrentToken;
+        }
+    }
+
+    /// <summary>
+    /// lookAhead token
+    /// </summary>
+    DToken la
+    {
+        [System.Diagnostics.DebuggerStepThrough]
+        get
+        {
+            return (DToken)lexer.LookAhead;
+        }
+    }
 	int errDist = minErrDist;
 
 public List<string> Imports=new List<string>();
@@ -201,7 +222,7 @@ public List<string> Imports=new List<string>();
 /*--------------------------------------------------------------------------*/
 
 
-	public DParser(Scanner lexer) {
+	public DParser(DLexer lexer) {
 		this.lexer = lexer;
 	}
 
@@ -222,13 +243,8 @@ public List<string> Imports=new List<string>();
 	}
 
 	void Get () {
-		for (;;) {
-			t = la;
-			la = lexer.Scan();
-			if (la.kind <= maxT) { ++errDist; break; }
+		lexer.NextToken();
 
-			la = t;
-		}
 	}
 
 	void Expect (int n) {

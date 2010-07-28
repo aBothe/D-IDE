@@ -30,8 +30,11 @@ using System.Collections.Generic;
 
 -->namespace
 
-public class DParser {
+public class DTokens{
 -->constants
+}
+
+public class DParser {
 	const bool T = true;
 	const bool x = false;
 	const int minErrDist = 2;
@@ -46,16 +49,34 @@ public class DParser {
         }
 	public List<string> import;
 
-	public Scanner lexer;
+	public DLexer lexer;
 	public Errors errors = new Errors();
 
-	public Token t;    // last recognized token
-	public Token la;   // lookahead token
+    DToken t
+    {
+        [System.Diagnostics.DebuggerStepThrough]
+        get
+        {
+            return (DToken)lexer.CurrentToken;
+        }
+    }
+
+    /// <summary>
+    /// lookAhead token
+    /// </summary>
+    DToken la
+    {
+        [System.Diagnostics.DebuggerStepThrough]
+        get
+        {
+            return (DToken)lexer.LookAhead;
+        }
+    }
 	int errDist = minErrDist;
 
 -->declarations
 
-	public DParser(Scanner lexer) {
+	public DParser(DLexer lexer) {
 		this.lexer = lexer;
 	}
 
@@ -76,13 +97,8 @@ public class DParser {
 	}
 
 	void Get () {
-		for (;;) {
-			t = la;
-			la = lexer.Scan();
-			if (la.kind <= maxT) { ++errDist; break; }
+		lexer.NextToken();
 -->pragmas
-			la = t;
-		}
 	}
 
 	void Expect (int n) {
