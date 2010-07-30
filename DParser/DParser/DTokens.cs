@@ -6,7 +6,7 @@ using System.Collections;
 namespace D_Parser
 {
 
-	public static class DTokens
+	public class DTokens
 	{
 		// ----- terminal classes -----
 		public const int EOF = 0;
@@ -184,7 +184,8 @@ namespace D_Parser
 			return bitArray;
 		}
 
-        public static BitArray MemberFunctionAttributes = NewSet(Const, Immutable, Shared, InOut);
+        public static BitArray FunctionAttribute = NewSet(Pure, Nothrow);
+        public static BitArray MemberFunctionAttribute = NewSet(Const, Immutable, Shared, InOut, Pure, Nothrow);
 		public static BitArray ParamModifiers = NewSet(In, Out, InOut, Ref);
 		public static BitArray ClassLike = NewSet(Class, Template, Interface, Struct, Union);
 		public static BitArray BasicTypes = NewSet(Auto, Bool, Byte        ,Ubyte        ,Short        ,Ushort        ,Int        ,Uint        ,Long        ,Ulong        ,Char        ,Wchar        ,Dchar        ,Float        ,Double        ,Real        ,Ifloat        ,Idouble        ,Ireal        ,Cfloat        ,Cdouble        ,Creal        ,Void);

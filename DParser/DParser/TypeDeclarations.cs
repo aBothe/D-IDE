@@ -29,9 +29,9 @@ namespace D_Parser
 
         public NormalDeclaration() { }
         public NormalDeclaration(string Identifier)
-        { Name = Identifier.Trim('(',')'); }
+        { Name = Identifier.Trim('(', ')'); }
 
-        public override string  ToString()
+        public override string ToString()
         {
             return Name + (Base != null ? (" " + Base.ToString()) : "");
         }
@@ -49,13 +49,13 @@ namespace D_Parser
 
         public new string Name
         {
-            get { return Token>=3?DTokens.GetTokenString(Token):""; }
+            get { return Token >= 3 ? DTokens.GetTokenString(Token) : ""; }
             set { Token = DTokens.GetTokenID(value); }
         }
 
         public override string ToString()
         {
-            return Name + (Base != null ? (" "+Base.ToString()) : "");
+            return Name + (Base != null ? (" " + Base.ToString()) : "");
         }
     }
 
@@ -81,7 +81,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return ValueType.ToString()+"["+(KeyType!=null? KeyType.ToString():"")+"]";
+            return ValueType.ToString() + "[" + (KeyType != null ? KeyType.ToString() : "") + "]";
         }
     }
 
@@ -103,20 +103,22 @@ namespace D_Parser
 
         public override string ToString()
         {
-            string ret=ReturnType.ToString()+(IsFunction?" function":" delegate")+"(";
+            string ret = ReturnType.ToString() + (IsFunction ? " function" : " delegate") + "(";
 
             foreach (DVariable n in Parameters)
             {
-                if(n.Type!=null)
+                if (n.Type != null)
                     ret += n.Type.ToString();
-                
-                if(!String.IsNullOrEmpty(n.name))
-                    ret+=(" " + n.name); 
-                
-                if(!String.IsNullOrEmpty(n.Value))
-                    ret+="= " + n.Value + ", ";
+
+                if (!String.IsNullOrEmpty(n.name))
+                    ret += (" " + n.name);
+
+                if (n.Initializer != null)
+                    ret += "= " + n.Initializer.ToString();
+
+                ret += ", ";
             }
-            ret=ret.TrimEnd(',',' ')+")";
+            ret = ret.TrimEnd(',', ' ') + ")";
             return ret;
         }
     }
@@ -158,7 +160,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Name+"("+(Base!=null? Base.ToString():"")+")";
+            return Name + "(" + (Base != null ? Base.ToString() : "") + ")";
         }
     }
 
@@ -198,7 +200,7 @@ namespace D_Parser
             if (InheritedClass != null || InheritedInterface != null) ret += ":";
             if (InheritedClass != null) ret += InheritedClass.ToString();
             if (InheritedClass != null && InheritedInterface != null) ret += ", ";
-            if(InheritedInterface != null)ret+= InheritedInterface.ToString();
+            if (InheritedInterface != null) ret += InheritedInterface.ToString();
 
             return ret;
         }
@@ -221,7 +223,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return (Base!=null?Base.ToString():"").ToString()+"!("+(Template!=null?Template.ToString():"")+")";
+            return (Base != null ? Base.ToString() : "").ToString() + "!(" + (Template != null ? Template.ToString() : "") + ")";
         }
     }
 
@@ -239,51 +241,38 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return (Base!=null?Base.ToString():"")+"."+(AccessedMember!=null? AccessedMember.ToString():"");
+            return (Base != null ? Base.ToString() : "") + "." + (AccessedMember != null ? AccessedMember.ToString() : "");
         }
     }
 
 
-#region Expressions
-    public class BooleanExpression : TypeDeclaration
+    #region Expressions
+    public class DExpressionDecl : TypeDeclaration
     {
         public static byte GetDeclarationClassTypeId { get { return 11; } }
         public override byte TypeId { get { return GetDeclarationClassTypeId; } }
 
-        public int OperatorToken;
-        public TypeDeclaration LeftValue
-        {
-            get { return Base; }
-            set { Base = value; }
-        }
-        public TypeDeclaration RightValue;
+        public DExpression Expression;
 
-        public BooleanExpression() { }
-        public BooleanExpression(int Operator) { OperatorToken = Operator; }
-        public BooleanExpression(int Operator, TypeDeclaration Left) { OperatorToken = Operator; LeftValue = Left; }
+        public DExpressionDecl() { }
+
+        public DExpressionDecl(DExpression dExpression)
+        {
+            this.Expression = dExpression;
+        }
 
         public override string ToString()
         {
-            return LeftValue.ToString()+" "+DTokens.GetTokenString(OperatorToken)+" "+RightValue.ToString();
+            return Expression.ToString();
         }
     }
 
-    public class DecisiveBooleanExpression : TypeDeclaration
+
+    public class DExpression
     {
-        public static byte GetDeclarationClassTypeId { get { return 12; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
-
-        public BooleanExpression TriggerExpression;
-        public TypeDeclaration TrueExpression, FalseExpression;
-
-        public DecisiveBooleanExpression() { }
-
-        public override string ToString()
-        {
-            return TriggerExpression.ToString()+"?"+TrueExpression.ToString()+":"+FalseExpression.ToString();
-        }
+        public DExpression() { }
     }
-#endregion
+    #endregion
 
 
 }
