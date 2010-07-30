@@ -180,6 +180,7 @@ namespace D_Parser
         #endregion
 
         #region Declarations
+        // http://www.digitalmars.com/d/2.0/declaration.html
 
         bool IsDeclaration()
         {
@@ -206,7 +207,7 @@ namespace D_Parser
             }
 
             // Autodeclaration
-            if (storAttr.Count>0 && PK(Identifier) && Peek().Kind == DTokens.Assign)
+            if (storAttr.Count > 0 && PK(Identifier) && Peek().Kind == DTokens.Assign)
             {
                 Step();
                 DNode n = new DVariable();
@@ -225,7 +226,9 @@ namespace D_Parser
             List<DNode> decls = new List<DNode>();
 
             DNode firstNode = new DVariable();
-            firstNode.Type = Declarator(out firstNode.name);
+            firstNode.Type = BasicType();
+            TypeDeclaration ttd = Declarator(out firstNode.name);
+            if (ttd != null) { ttd.Base = firstNode.Type; firstNode.Type = ttd; }
 
             bool IsMethod = false; //TODO: Check if declaration contains parameters or not
             if (IsMethod)
@@ -280,7 +283,7 @@ namespace D_Parser
 
         TypeDeclaration BasicType()
         {
-            TypeDeclaration td=null;
+            TypeDeclaration td = null;
             if (BasicTypes[la.Kind])
             {
                 Step();
@@ -301,11 +304,11 @@ namespace D_Parser
             {
                 Step();
                 Expect(OpenParenthesis);
-                MemberFunctionAttributeDecl md=new MemberFunctionAttributeDecl(Typeof);
+                MemberFunctionAttributeDecl md = new MemberFunctionAttributeDecl(Typeof);
                 td = md;
                 if (LA(Return))
                     md.Base = new DTokenDeclaration(Return);
-                else 
+                else
                     md.Base = Expression();
                 Expect(CloseParenthesis);
 
@@ -321,6 +324,11 @@ namespace D_Parser
                 td.Base = IdentifierList();
 
             return td;
+        }
+
+        bool IsBasicType2()
+        {
+            return LA(Times) || LA(OpenSquareBracket) || LA(Delegate) || LA(Function);
         }
 
         TypeDeclaration BasicType2()
@@ -364,32 +372,83 @@ namespace D_Parser
             else if (LA(Delegate) || LA(Function))
             {
                 Step();
+                TypeDeclaration td = null;
                 DelegateDeclaration dd = new DelegateDeclaration();
                 dd.IsFunction = t.Kind == Function;
 
                 dd.Parameters = Parameters();
-
+                td = dd;
                 //TODO: add attributes to declaration
                 while (FunctionAttribute[la.Kind])
                 {
                     Step();
+                    td = new DTokenDeclaration(t.Kind, td);
                 }
+                return td;
             }
-            else 
+            else
                 SynErr(Identifier);
             return null;
         }
 
         TypeDeclaration Declarator(out string VarIdent)
         {
-            VarIdent = "";
-            return null;
+            VarIdent = null;
+
+            TypeDeclaration td = null;
+
+            while (IsBasicType2())
+            {
+                if (td == null) td = BasicType2();
+                else { TypeDeclaration td2 = BasicType2(); td2.Base = td; td = td2; }
+            }
+
+            Expect(Identifier);
+            VarIdent = t.Value;
+
+            // DeclaratorSuffixes
+
+            /*
+             * Note:
+             * http://www.digitalmars.com/d/2.0/declaration.html#DeclaratorSuffix
+             * The definition of a sequence of declarator suffixes is buggy here! Theoretically template parameters can be declared without a surrounding ( and )!
+             * Also, more than one parameter sequences are possible!
+             * 
+             * TemplateParameterList[opt] Parameters MemberFunctionAttributes[opt]
+             */
+            while (LA(OpenSquareBracket))
+            {
+                Step();
+                ArrayDecl ad=new ArrayDecl(td);
+                if (!LA(CloseSquareBracket))
+                {
+                    if (IsAssignExpression())
+                        ad.KeyType = new DExpressionDecl(AssignExpression());
+                    else
+                        ad.KeyType = Type();
+
+                    Expect(CloseSquareBracket);
+                }
+            }
+
+            if (LA(OpenParenthesis))
+            {
+                if (IsTemplateParameterList())
+                {
+                    Step();
+                    TemplateParameterList();
+                    Expect(CloseParenthesis);
+                }
+                Parameters();
+            }
+
+            return td;
         }
 
-        private TypeDeclaration IdentifierList()
+        TypeDeclaration IdentifierList()
         {
-            TypeDeclaration td=null;
-            
+            TypeDeclaration td = null;
+
             if (!LA(Identifier))
                 SynErr(Identifier);
 
@@ -443,12 +502,12 @@ namespace D_Parser
             }
         }
 
-        private TypeDeclaration Type()
+        TypeDeclaration Type()
         {
             throw new NotImplementedException();
         }
 
-        private List<DNode> Parameters()
+        List<DNode> Parameters()
         {
             throw new NotImplementedException();
         }
@@ -552,6 +611,33 @@ namespace D_Parser
         #endregion
 
         #region Templates
+
+        /// <summary>
+        /// Be a bit lazy here with checking whether there're templates or not
+        /// </summary>
+        private bool IsTemplateParameterList()
+        {
+            lexer.StartPeek();
+            int r = 0;
+            while (r >= 0 && lexer.CurrentPeekToken.Kind != EOF)
+            {
+                if (lexer.CurrentPeekToken.Kind == OpenParenthesis) r++;
+                else if (lexer.CurrentPeekToken.Kind == CloseParenthesis)
+                {
+                    r--;
+                    if (r < 0 && Peek().Kind == OpenParenthesis)
+                        return true;
+                }
+                Peek();
+            }
+            return false;
+        }
+
+        private List<DNode> TemplateParameterList()
+        {
+            throw new NotImplementedException();
+        }
+
         private TypeDeclaration TemplateInstance()
         {
             throw new NotImplementedException();

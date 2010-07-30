@@ -47,6 +47,12 @@ namespace D_Parser
         public DTokenDeclaration(int Token)
         { this.Token = Token; }
 
+        public DTokenDeclaration(int p, TypeDeclaration td)
+        {
+            Token = p;
+            Base = td;
+        }
+
         public new string Name
         {
             get { return Token >= 3 ? DTokens.GetTokenString(Token) : ""; }
