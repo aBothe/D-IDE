@@ -393,6 +393,7 @@ namespace D_Parser
             DNode ret = new DVariable();
 
             TypeDeclaration td = null;
+            TypeDeclaration ttd = null;
 
             while (IsBasicType2())
             {
@@ -400,12 +401,60 @@ namespace D_Parser
                 else { TypeDeclaration td2 = BasicType2(); td2.Base = td; td = td2; }
             }
 
-            Expect(Identifier);
-            ret.name = t.Value;
+            /*
+             * Add some syntax possibilities here
+             * like in 
+             * int (x);
+             * or in
+             * int(*foo);
+             */
+            if (LA(OpenParenthesis))
+            {
+                Step();
+                /* 
+                 * Parse all basictype2's that are following the initial '('
+                 */
+                while (IsBasicType2())
+                {
+                    if (td == null) td = BasicType2();
+                    else
+                    {
+                        ttd = BasicType2();
+                        ttd.Base = td;
+                        td = ttd;
+                    }
+                }
+
+                /*
+                 * Here is a identifier with some optional DeclaratorSuffixes
+                 */
+                if (!LA(CloseParenthesis))
+                {
+                    Expect(Identifier);
+                    ret.name = t.Value;
+
+                    /*
+                     * Just after a identifier suffixes can follow!
+                     */
+                    if (!LA(CloseParenthesis))
+                    {
+                        List<DNode> _unused=null;
+                        ttd=DeclaratorSuffixes(out _unused,out _unused);
+                        ttd.Base = td;
+                        td = ttd;
+                    }
+                }
+                Expect(CloseParenthesis);
+            }
+            else
+            {
+                Expect(Identifier);
+                ret.name = t.Value;
+            }
 
             // DeclaratorSuffixes
             List<DNode> _Parameters;
-            TypeDeclaration ttd = DeclaratorSuffixes(out ret.TemplateParameters,out _Parameters);
+            ttd = DeclaratorSuffixes(out ret.TemplateParameters,out _Parameters);
             if (ttd != null)
             {
                 ttd.Base = td;
@@ -584,14 +633,73 @@ namespace D_Parser
             return null;
         }
 
+        /// <summary>
+        /// Parse parameters
+        /// </summary>
         List<DNode> Parameters()
+        {
+            List<DNode> ret = new List<DNode>();
+            Expect(OpenParenthesis);
+
+            // Empty parameter list
+            if (LA(CloseParenthesis))
+            {
+                Step();
+                return ret;
+            }
+
+            if (!IsTripleDot())
+                ret.Add(Parameter());
+
+            while (LA(Comma))
+            {
+                Step();
+                if (IsTripleDot())
+                    break;
+                ret.Add(Parameter());
+            }
+
+            /*
+             * There can be only one '...' in every parameter list
+             */
+            if (IsTripleDot())
+            {
+                // If it had not a comma, add a VarArgDecl to the last parameter
+                bool HadComma = T(Comma);
+
+                Step();
+                Step();
+                Step();
+
+                if (!HadComma && ret.Count > 0)
+                {
+                    ret[ret.Count - 1].Type = new VarArgDecl(ret[ret.Count - 1].Type);
+                }
+                else
+                {
+                    DVariable dv = new DVariable();
+                    dv.Type = new VarArgDecl();
+                    ret.Add(dv);
+                }
+            }
+
+            Expect(CloseParenthesis);
+            return ret;
+        }
+
+        private DNode Parameter()
         {
             throw new NotImplementedException();
         }
 
+        bool IsTripleDot()
+        {
+            return LA(Dot) && PK(Dot) && Peek().Kind == Dot;
+        }
+
         bool IsInOut()
         {
-            return LA(In) || LA(Out) || LA(Ref) || LA(InOut);
+            return LA(In) || LA(Out) || LA(Ref) || LA(Lazy);
         }
 
 
