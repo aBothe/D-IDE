@@ -223,24 +223,17 @@ namespace D_Parser
             }
 
             // Declarators
-            List<DNode> decls = new List<DNode>();
+            TypeDeclaration ttd = BasicType();
+            DNode firstNode = Declarator();
 
-            DNode firstNode = new DVariable();
-            firstNode.Type = BasicType();
-            TypeDeclaration ttd = Declarator(out firstNode.name);
-            if (ttd != null) { ttd.Base = firstNode.Type; firstNode.Type = ttd; }
+            if (firstNode.Type == null)
+                firstNode.Type = ttd;
+            else
+                firstNode.Type.Base = ttd;
 
-            bool IsMethod = false; //TODO: Check if declaration contains parameters or not
-            if (IsMethod)
-            {
-                DMethod dm = new DMethod();
-                dm.Assign(firstNode);
-                firstNode = dm;
-            }
-
-            bool ExpectFunctionBody = !(LA(Assign) || LA(Comma) || LA(Semicolon));
 
             // BasicType Declarators ;
+            bool ExpectFunctionBody = !(LA(Assign) || LA(Comma) || LA(Semicolon));
             if (!ExpectFunctionBody)
             {
                 // DeclaratorInitializer
@@ -391,9 +384,13 @@ namespace D_Parser
             return null;
         }
 
-        TypeDeclaration Declarator(out string VarIdent)
+        /// <summary>
+        /// Parses a type declarator
+        /// </summary>
+        /// <returns>A dummy node that contains the return type, the variable name and possible parameters of a function declaration</returns>
+        DNode Declarator()
         {
-            VarIdent = null;
+            DNode ret = new DVariable();
 
             TypeDeclaration td = null;
 
@@ -404,31 +401,57 @@ namespace D_Parser
             }
 
             Expect(Identifier);
-            VarIdent = t.Value;
+            ret.name = t.Value;
 
             // DeclaratorSuffixes
+            List<DNode> _Parameters;
+            TypeDeclaration ttd = DeclaratorSuffixes(out ret.TemplateParameters,out _Parameters);
+            if (ttd != null)
+            {
+                ttd.Base = td;
+                td = ttd;
+            }
+            ret.Type = td;
 
-            /*
-             * Note:
-             * http://www.digitalmars.com/d/2.0/declaration.html#DeclaratorSuffix
-             * The definition of a sequence of declarator suffixes is buggy here! Theoretically template parameters can be declared without a surrounding ( and )!
-             * Also, more than one parameter sequences are possible!
-             * 
-             * TemplateParameterList[opt] Parameters MemberFunctionAttributes[opt]
-             */
+            if (_Parameters != null)
+            {
+                DMethod dm = new DMethod();
+                dm.Assign(ret);
+                dm.Parameters = _Parameters;
+                ret = dm;
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Note:
+        /// http://www.digitalmars.com/d/2.0/declaration.html#DeclaratorSuffix
+        /// The definition of a sequence of declarator suffixes is buggy here! Theoretically template parameters can be declared without a surrounding ( and )!
+        /// Also, more than one parameter sequences are possible!
+        /// 
+        /// TemplateParameterList[opt] Parameters MemberFunctionAttributes[opt]
+        /// </summary>
+        TypeDeclaration DeclaratorSuffixes(out List<DNode> TemplateParameters, out List<DNode> _Parameters)
+        {
+            TypeDeclaration td = null;
+            TemplateParameters = new List<DNode>();
+            _Parameters = null;
+
             while (LA(OpenSquareBracket))
             {
                 Step();
-                ArrayDecl ad=new ArrayDecl(td);
+                ArrayDecl ad = new ArrayDecl(td);
                 if (!LA(CloseSquareBracket))
                 {
                     if (IsAssignExpression())
                         ad.KeyType = new DExpressionDecl(AssignExpression());
                     else
                         ad.KeyType = Type();
-
-                    Expect(CloseSquareBracket);
                 }
+                Expect(CloseSquareBracket);
+                ad.ValueType = td;
+                td = ad;
             }
 
             if (LA(OpenParenthesis))
@@ -436,12 +459,17 @@ namespace D_Parser
                 if (IsTemplateParameterList())
                 {
                     Step();
-                    TemplateParameterList();
+                    TemplateParameters = TemplateParameterList();
                     Expect(CloseParenthesis);
                 }
-                Parameters();
-            }
+                _Parameters = Parameters();
 
+                //TODO: MemberFunctionAttributes -- add them to the declaration
+                while (MemberFunctionAttribute[la.Kind])
+                {
+                    Step();
+                }
+            }
             return td;
         }
 
@@ -463,18 +491,18 @@ namespace D_Parser
                 td = new NormalDeclaration(t.Value);
             }
 
+            // IdentifierList
             while (LA(Dot))
             {
                 Step();
-
+                DotCombinedDeclaration dcd = new DotCombinedDeclaration(td);
                 // Template instancing
                 if (PK(Not))
-                    td = TemplateInstance();
+                    dcd.AccessedMember = TemplateInstance();
                 // Identifier
                 else
-                {
-                    td = new NormalDeclaration(t.Value);
-                }
+                    dcd.AccessedMember = new NormalDeclaration(t.Value);
+                td = dcd;
             }
 
             return td;
@@ -504,7 +532,34 @@ namespace D_Parser
 
         TypeDeclaration Type()
         {
-            throw new NotImplementedException();
+            TypeDeclaration td = BasicType();
+
+            if (IsDeclarator2())
+            {
+                TypeDeclaration ttd = Declarator2();
+                ttd.Base = td;
+                td = ttd;
+            }
+
+            return td;
+        }
+
+        bool IsDeclarator2()
+        {
+            return IsBasicType2() || LA(OpenParenthesis);
+        }
+
+        /// <summary>
+        /// http://www.digitalmars.com/d/2.0/declaration.html#Declarator2
+        /// The next bug: Following the definition strictly, this function would end up in an endless loop of requesting another Declarator2
+        /// 
+        /// So here I think that a Declarator2 only consists of a couple of BasicType2's and some DeclaratorSuffixes
+        /// </summary>
+        /// <returns></returns>
+        TypeDeclaration Declarator2()
+        {
+            
+            return null;
         }
 
         List<DNode> Parameters()
