@@ -274,9 +274,24 @@ namespace D_Parser
     }
 
 
-    public class DExpression
+    public abstract class DExpression
     {
         public DExpression() { }
+
+        public abstract string ToString();
+    }
+
+    public class IdentExpression : DExpression
+    {
+        public string Value="";
+
+        public IdentExpression() { }
+        public IdentExpression(string Val) { Value = Val; }
+
+        public override string ToString()
+        {
+            return Value;
+        }
     }
     #endregion
 

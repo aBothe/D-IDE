@@ -224,7 +224,7 @@ namespace D_Parser
 
             // Declarators
             TypeDeclaration ttd = BasicType();
-            DNode firstNode = Declarator();
+            DNode firstNode = Declarator(false);
 
             if (firstNode.Type == null)
                 firstNode.Type = ttd;
@@ -388,7 +388,7 @@ namespace D_Parser
         /// Parses a type declarator
         /// </summary>
         /// <returns>A dummy node that contains the return type, the variable name and possible parameters of a function declaration</returns>
-        DNode Declarator()
+        DNode Declarator(bool IsParam)
         {
             DNode ret = new DVariable();
 
@@ -448,6 +448,9 @@ namespace D_Parser
             }
             else
             {
+                if (IsParam && !LA(Identifier))
+                    return ret;
+
                 Expect(Identifier);
                 ret.name = t.Value;
             }
@@ -687,14 +690,35 @@ namespace D_Parser
             return ret;
         }
 
-        private DNode Parameter()
-        {
-            throw new NotImplementedException();
-        }
-
         bool IsTripleDot()
         {
             return LA(Dot) && PK(Dot) && Peek().Kind == Dot;
+        }
+
+        private DNode Parameter()
+        {
+            //TODO: Handle this
+            if (IsInOut())
+            {
+                Step();
+            }
+
+            DNode ret = Declarator(true);
+
+            // DefaultInitializerExpression
+            if (LA(Assign))
+            {
+                DExpression defInit = null;
+                if (LA(Identifier) && (la.Value == "__FILE__" || la.Value == "__LINE__"))
+                    defInit = new IdentExpression(la.Value);
+                else
+                    defInit = AssignExpression();
+
+                if (ret is DVariable)
+                    (ret as DVariable).Initializer = defInit;
+            }
+
+            return ret;
         }
 
         bool IsInOut()
