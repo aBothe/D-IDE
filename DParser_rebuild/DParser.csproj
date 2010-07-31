@@ -6,9 +6,9 @@
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{0290A229-9AA1-41C3-B525-CAFB86D8BC42}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DParser</RootNamespace>
+    <RootNamespace>D_Parser</RootNamespace>
     <PlatformTarget>x86</PlatformTarget>
     <AssemblyName>D_Parser</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
@@ -38,6 +38,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>D_Parser.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -53,8 +56,10 @@
     <Compile Include="DLexer.cs" />
     <Compile Include="DNode.cs" />
     <Compile Include="DParser.cs" />
+    <Compile Include="DParser_Impl.cs" />
     <Compile Include="DTokens.cs" />
     <Compile Include="ExpressionFinder.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ParserUtil.cs" />
     <Compile Include="TypeDeclarations.cs" />

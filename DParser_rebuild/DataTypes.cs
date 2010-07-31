@@ -6,7 +6,7 @@ namespace D_Parser
 {
     public class DVariable : DNode
     {
-        public string Value; // Variable
+        public DExpression Initializer; // Variable
 
         public DVariable()
             :base(FieldType.Variable)

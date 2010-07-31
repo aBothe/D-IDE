@@ -16,6 +16,7 @@ namespace D_Parser
         int col = 1;
         int line = 1;
 
+        protected DToken prevToken = null;
         protected DToken lastToken = null;
         protected DToken curToken = null;
         protected DToken peekToken = null;
@@ -93,6 +94,11 @@ namespace D_Parser
             this.col = location.Column;
         }
 
+        public DToken LastToken
+        {
+            get { return prevToken; }
+        }
+
         /// <summary>
         /// The current DToken. <seealso cref="ICSharpCode.NRefactory.Parser.DToken"/>
         /// </summary>
@@ -155,11 +161,9 @@ namespace D_Parser
         public DToken Peek()
         {
             if (peekToken == null) StartPeek();
-            //			Console.WriteLine("Call to Peek");
             if (peekToken.next == null)
             {
                 peekToken.next = Next();
-                //specialTracker.InformToken(peekToken.next.kind);
             }
             peekToken = peekToken.next;
             return peekToken;
@@ -179,6 +183,8 @@ namespace D_Parser
                 return curToken;
             }
 
+            prevToken = lastToken;
+
             lastToken = curToken;
 
             if (curToken.next == null)
@@ -191,6 +197,7 @@ namespace D_Parser
             }
 
             curToken = curToken.next;
+            StartPeek();
             //Console.WriteLine(ICSharpCode.NRefactory.Parser.CSharp.Tokens.GetTokenString(curToken.kind) + " -- " + curToken.val + "(" + curToken.kind + ")");
             return curToken;
         }
