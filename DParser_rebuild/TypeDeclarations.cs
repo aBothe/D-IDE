@@ -88,11 +88,11 @@ namespace D_Parser
         public TypeDeclaration KeyType;
         public enum ClampType
         {
-            Round=0,
-            Square=1,
-            Curly=2
+            Round = 0,
+            Square = 1,
+            Curly = 2
         }
-        public ClampType Clamps=ClampType.Square;
+        public ClampType Clamps = ClampType.Square;
         public bool IsArrayDecl
         {
             get { return Clamps == ClampType.Square; }
@@ -117,7 +117,7 @@ namespace D_Parser
                     s += "{";
                     break;
             }
-            s+=(KeyType != null ? KeyType.ToString() : "");
+            s += (KeyType != null ? KeyType.ToString() : "");
             switch (Clamps)
             {
                 case ClampType.Round:
@@ -204,12 +204,14 @@ namespace D_Parser
             set { Token = value; }
         }
 
+        public TypeDeclaration InnerType;
+
         public MemberFunctionAttributeDecl() { }
         public MemberFunctionAttributeDecl(int ModifierToken) { this.Modifier = ModifierToken; }
 
         public override string ToString()
         {
-            return Name + "(" + (Base != null ? Base.ToString() : "") + ")";
+            return (Base != null ? (Base.ToString()+" ") : "") +Name + "(" + (InnerType != null ? InnerType.ToString() : "") + ")";
         }
     }
 
@@ -320,13 +322,14 @@ namespace D_Parser
     public abstract class DExpression
     {
         public DExpression() { }
+        public DExpression Base;
 
         public abstract string ToString();
     }
 
     public class IdentExpression : DExpression
     {
-        public string Value="";
+        public string Value = "";
 
         public IdentExpression() { }
         public IdentExpression(string Val) { Value = Val; }
@@ -334,6 +337,137 @@ namespace D_Parser
         public override string ToString()
         {
             return Value;
+        }
+    }
+
+    public class TokenExpression : DExpression
+    {
+        public int Token;
+
+        public TokenExpression() { }
+        public TokenExpression(int T) { Token = T; }
+
+        public override string ToString()
+        {
+            return DParser.GetTokenString(Token);
+        }
+    }
+
+    public class ClampExpression : DExpression
+    {
+        public DExpression FrontExpression
+        {
+            get { return Base; }
+            set { Base = value; }
+        }
+        public DExpression InnerExpression;
+
+        public enum ClampType
+        {
+            Round = 0,
+            Square = 1,
+            Curly = 2
+        }
+        public ClampType Clamps = ClampType.Square;
+        public bool IsArrayDecl
+        {
+            get { return Clamps == ClampType.Square; }
+        }
+
+        public ClampExpression() { }
+        public ClampExpression(DExpression frontExpr) { FrontExpression = frontExpr; }
+        public ClampExpression(DExpression frontExpr, ClampType clamps) { FrontExpression = frontExpr; Clamps = clamps; }
+        public ClampExpression(ClampType clamps) { Clamps = clamps; }
+
+        public override string ToString()
+        {
+            string s = (FrontExpression != null ? FrontExpression.ToString() : "");
+            switch (Clamps)
+            {
+                case ClampType.Round:
+                    s += "(";
+                    break;
+                case ClampType.Square:
+                    s += "[";
+                    break;
+                case ClampType.Curly:
+                    s += "{";
+                    break;
+            }
+            s += (InnerExpression != null ? InnerExpression.ToString() : "");
+            switch (Clamps)
+            {
+                case ClampType.Round:
+                    s += ")";
+                    break;
+                case ClampType.Square:
+                    s += "]";
+                    break;
+                case ClampType.Curly:
+                    s += "}";
+                    break;
+            }
+            return s;
+        }
+    }
+
+    public class AssignTokenExpression : DExpression
+    {
+        public int Token;
+        public DExpression FollowingExpression;
+        public DExpression PrevExpression
+        {
+            get { return Base; }
+            set { Base = value; }
+        }
+
+        public AssignTokenExpression() { }
+        public AssignTokenExpression(int T) { Token = T; }
+
+        public override string ToString()
+        {
+            return (PrevExpression != null ? PrevExpression.ToString() : "") + " " + DParser.GetTokenString(Token) + " " + (FollowingExpression != null ? FollowingExpression.ToString() : "");
+        }
+    }
+
+    public class ArrayExpression : DExpression
+    {
+        public ClampExpression.ClampType Clamps = ClampExpression.ClampType.Square;
+        public List<DExpression> Expressions = new List<DExpression>();
+
+        public ArrayExpression() { }
+        public ArrayExpression(ClampExpression.ClampType clamps) { Clamps = clamps; }
+
+        public override string ToString()
+        {
+            string s = (Base != null ? Base.ToString() : "");
+            switch (Clamps)
+            {
+                case ClampExpression.ClampType.Round:
+                    s += "(";
+                    break;
+                case ClampExpression.ClampType.Square:
+                    s += "[";
+                    break;
+                case ClampExpression.ClampType.Curly:
+                    s += "{";
+                    break;
+            }
+            foreach (DExpression expr in Expressions)
+                s += expr.ToString()+", ";
+            switch (Clamps)
+            {
+                case ClampExpression.ClampType.Round:
+                    s += ")";
+                    break;
+                case ClampExpression.ClampType.Square:
+                    s += "]";
+                    break;
+                case ClampExpression.ClampType.Curly:
+                    s += "}";
+                    break;
+            }
+            return s;
         }
     }
     #endregion

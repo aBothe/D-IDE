@@ -91,7 +91,10 @@ namespace D_Parser
 
             // else:
             else
+            {
                 SynErr(t.Kind, "Declaration expected");
+                Step();
+            }
         }
 
         void ModuleDeclaration()
@@ -288,24 +291,15 @@ namespace D_Parser
                 Step();
                 MemberFunctionAttributeDecl md = new MemberFunctionAttributeDecl(t.Kind);
                 Expect(OpenParenthesis);
-                md.Base = Type();
+                md.InnerType = Type();
                 Expect(CloseParenthesis);
                 return md;
             }
 
             if (LA(Typeof))
             {
-                Step();
-                Expect(OpenParenthesis);
-                MemberFunctionAttributeDecl md = new MemberFunctionAttributeDecl(Typeof);
-                td = md;
-                if (LA(Return))
-                    md.Base = new DTokenDeclaration(Return);
-                else
-                    md.Base = Expression();
-                Expect(CloseParenthesis);
-
-                if (!LA(Dot)) return md;
+                td = TypeOf();
+                if (!LA(Dot)) return td;
             }
 
             if (LA(Dot))
@@ -399,7 +393,7 @@ namespace D_Parser
             while (IsBasicType2())
             {
                 if (ret.Type == null) ret.Type = BasicType2();
-                else { ttd = BasicType2(); ttd.Base = ret.Type; ret.Type =ttd; }
+                else { ttd = BasicType2(); ttd.Base = ret.Type; ret.Type = ttd; }
             }
             /*
              * Add some syntax possibilities here
@@ -411,7 +405,7 @@ namespace D_Parser
             if (LA(OpenParenthesis))
             {
                 Step();
-                ClampDecl cd= new ClampDecl(ret.Type,ClampDecl.ClampType.Round);
+                ClampDecl cd = new ClampDecl(ret.Type, ClampDecl.ClampType.Round);
                 ret.Type = cd;
 
                 /* 
@@ -648,15 +642,15 @@ namespace D_Parser
                 // DeclaratorSuffixes
                 if (LA(OpenSquareBracket))
                 {
-                    List<DNode> _unused = null, _unused2=null;
-                    DeclaratorSuffixes(out _unused,out _unused2);
+                    List<DNode> _unused = null, _unused2 = null;
+                    DeclaratorSuffixes(out _unused, out _unused2);
                 }
                 return td;
             }
 
             while (IsBasicType2())
             {
-                TypeDeclaration ttd= BasicType2();
+                TypeDeclaration ttd = BasicType2();
                 ttd.Base = td;
                 td = ttd;
             }
@@ -731,17 +725,17 @@ namespace D_Parser
                 Step();
             }
 
-            TypeDeclaration td =null;
+            TypeDeclaration td = null;
             /*
              * A basictype is possible(!), not required
              */
-            if (IsBasicType() && (!LA(Identifier) || (!PK(Identifier) && lexer.CurrentPeekToken.Kind!=OpenParenthesis)))
+            if (IsBasicType() && (!LA(Identifier) || (!PK(Identifier) && lexer.CurrentPeekToken.Kind != OpenParenthesis)))
             {
                 td = BasicType();
             }
 
             DNode ret = Declarator(true);
-            if (ret.Type == null) 
+            if (ret.Type == null)
                 ret.Type = td;
             else
                 ret.Type.Base = td;
@@ -770,7 +764,93 @@ namespace D_Parser
 
         private DExpression Initializer()
         {
-            throw new NotImplementedException();
+            // VoidInitializer
+            if (LA(Void))
+            {
+                Step();
+                return new TokenExpression(Void);
+            }
+
+            return NonVoidInitializer();
+        }
+
+        DExpression NonVoidInitializer()
+        {
+            // ArrayInitializer | StructInitializer
+            if (LA(OpenSquareBracket) || LA(OpenCurlyBrace))
+            {
+                Step();
+                bool IsStructInit = T(OpenCurlyBrace);
+                if (IsStructInit ? LA(CloseCurlyBrace) : LA(CloseSquareBracket))
+                {
+                    Step();
+                    return new ClampExpression(IsStructInit ? ClampExpression.ClampType.Curly : ClampExpression.ClampType.Square);
+                }
+
+                // ArrayMemberInitializations
+                ArrayExpression ae = new ArrayExpression(IsStructInit ? ClampExpression.ClampType.Curly : ClampExpression.ClampType.Square);
+                DExpression element = null;
+
+                bool IsInit = true;
+                while (IsInit || LA(Comma))
+                {
+                    if (!IsInit) Step();
+                    IsInit = false;
+
+
+                    if (IsStructInit)
+                    {
+                        // Identifier : NonVoidInitializer
+                        if (LA(Identifier) && PK(Colon))
+                        {
+                            Step();
+                            AssignTokenExpression inh = new AssignTokenExpression(Colon);
+                            inh.PrevExpression = new IdentExpression(t.Value);
+                            Step();
+                            inh.FollowingExpression = NonVoidInitializer();
+                            element = inh;
+                        }
+                        else
+                            element = NonVoidInitializer();
+                    }
+                    else
+                    {
+                        // ArrayMemberInitialization
+                        element = NonVoidInitializer();
+                        bool HasBeenAssExpr = !(T(CloseSquareBracket) || T(CloseCurlyBrace));
+
+                        // AssignExpression : NonVoidInitializer
+                        if (HasBeenAssExpr && LA(Colon))
+                        {
+                            Step();
+                            AssignTokenExpression inhExpr = new AssignTokenExpression(Colon);
+                            inhExpr.PrevExpression = element;
+                            inhExpr.FollowingExpression = NonVoidInitializer();
+                            element = inhExpr;
+                        }
+                    }
+
+                    ae.Expressions.Add(element);
+                }
+
+                Expect(CloseSquareBracket);
+                return ae;
+            }
+            else
+                return AssignExpression();
+        }
+
+        TypeDeclaration TypeOf()
+        {
+            Expect(Typeof);
+            Expect(OpenParenthesis);
+            MemberFunctionAttributeDecl md = new MemberFunctionAttributeDecl(Typeof);
+            if (LA(Return))
+                md.InnerType = new DTokenDeclaration(Return);
+            else
+                md.InnerType = Expression();
+            Expect(CloseParenthesis);
+            return md;
         }
 
         #endregion

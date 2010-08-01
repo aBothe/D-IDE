@@ -18,7 +18,6 @@ namespace D_Parser
                 "int x;" +
                 "int* y;"+
                 "int (*myFct);"+*/
-                "foo();"+
                 "void[]**[] foo(int a, bool b) {}";
             List<string> imps;
             DParser dp = DParser.Create(new StringReader(src));
