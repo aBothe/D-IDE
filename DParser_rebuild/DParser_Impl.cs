@@ -241,7 +241,10 @@ namespace D_Parser
             {
                 // DeclaratorInitializer
                 if (LA(Assign))
+                {
+                    Step();
                     (firstNode as DVariable).Initializer = Initializer();
+                }
 
                 par.Add(firstNode);
 
@@ -743,6 +746,7 @@ namespace D_Parser
             // DefaultInitializerExpression
             if (LA(Assign))
             {
+                Step();
                 DExpression defInit = null;
                 if (LA(Identifier) && (la.Value == "__FILE__" || la.Value == "__LINE__"))
                     defInit = new IdentExpression(la.Value);
@@ -848,7 +852,7 @@ namespace D_Parser
             if (LA(Return))
                 md.InnerType = new DTokenDeclaration(Return);
             else
-                md.InnerType = Expression();
+                md.InnerType = new DExpressionDecl( Expression());
             Expect(CloseParenthesis);
             return md;
         }
@@ -875,9 +879,25 @@ namespace D_Parser
         #endregion
 
         #region Expressions
-        TypeDeclaration Expression()
+        DExpression Expression()
         {
-            throw new NotImplementedException();
+            // AssignExpression
+            DExpression ass = AssignExpression();
+            if (!LA(Comma))
+                return ass;
+
+            /*
+             * The following is a leftover of C syntax and proably cause some errors when parsing arguments etc.
+             */
+            // AssignExpression , Expression
+            ArrayExpression ae = new ArrayExpression(ClampExpression.ClampType.Round);
+            ae.Expressions.Add(ass);
+            while (LA(Comma))
+            {
+                Step();
+                ae.Expressions.Add(AssignExpression());
+            }
+            return ae;
         }
 
         bool IsAssignExpression()
@@ -887,7 +907,538 @@ namespace D_Parser
 
         DExpression AssignExpression()
         {
-            throw new NotImplementedException();
+            DExpression left = ConditionalExpression();
+            if (!AssignOps[la.Kind])
+                return left;
+
+            AssignTokenExpression ate = new AssignTokenExpression(t.Kind);
+            ate.PrevExpression = left;
+            ate.FollowingExpression = AssignExpression();
+            return ate;
+        }
+
+        DExpression ConditionalExpression()
+        {
+            DExpression trigger = OrOrExpression();
+            if (!LA(Question))
+                return trigger;
+
+            Expect(Question);
+            SwitchExpression se = new SwitchExpression(trigger);
+            se.TrueCase = AssignExpression();
+            Expect(Colon);
+            se.FalseCase = ConditionalExpression();
+            return se;
+        }
+
+        DExpression OrOrExpression()
+        {
+            DExpression left = CmpExpression();
+            if (!(LA(LogicalOr) || LA(LogicalAnd) || LA(BitwiseOr) || LA(BitwiseAnd) || LA(Xor)))
+                return left;
+
+            Step();
+            AssignTokenExpression ae = new AssignTokenExpression(t.Kind);
+            ae.PrevExpression = left;
+            ae.FollowingExpression = OrOrExpression();
+            return ae;
+        }
+
+        DExpression CmpExpression()
+        {
+            DExpression left = AddExpression();
+
+            bool CanProceed =
+                // RelExpression
+                RelationalOperators[la.Kind] ||
+                // EqualExpression
+                LA(Equal) || LA(NotEqual) ||
+                // IdentityExpression | InExpression
+                LA(Is) || LA(In) || (LA(Not) && (PK(Is) || lexer.CurrentPeekToken.Kind == In)) ||
+                // ShiftExpression
+                LA(ShiftLeft) || LA(ShiftRight) || LA(ShiftRightUnsigned);
+
+            if (!CanProceed)
+                return left;
+
+            // If we have a !in or !is
+            if (LA(Not)) Step();
+            Step();
+            AssignTokenExpression ae = new AssignTokenExpression(t.Kind);
+            ae.PrevExpression = left;
+            // When a shift expression occurs, an AddExpression is required to follow
+            if (T(ShiftLeft) || T(ShiftRight) || T(ShiftRightUnsigned))
+                ae.FollowingExpression = AddExpression();
+            else
+                ae.FollowingExpression = OrOrExpression();
+            return ae;
+        }
+
+        private DExpression AddExpression()
+        {
+            DExpression left = MulExpression();
+
+            if (!(LA(Plus) || LA(Minus) || LA(Tilde)))
+                return left;
+
+            Step();
+            AssignTokenExpression ae = new AssignTokenExpression(t.Kind);
+            ae.PrevExpression = left;
+            ae.FollowingExpression = MulExpression();
+            return ae;
+        }
+
+        DExpression MulExpression()
+        {
+            DExpression left = PowExpression();
+
+            if (!(LA(Times) || LA(Div) || LA(Mod)))
+                return left;
+
+            Step();
+            AssignTokenExpression ae = new AssignTokenExpression(t.Kind);
+            ae.PrevExpression = left;
+            ae.FollowingExpression = MulExpression();
+            return ae;
+        }
+
+        DExpression PowExpression()
+        {
+            DExpression left = UnaryExpression();
+
+            if (!(LA(Pow)))
+                return left;
+
+            Step();
+            AssignTokenExpression ae = new AssignTokenExpression(t.Kind);
+            ae.PrevExpression = left;
+            ae.FollowingExpression = PowExpression();
+            return ae;
+        }
+
+        DExpression UnaryExpression()
+        {
+            // CastExpression
+            if (LA(Cast))
+            {
+                Step();
+                Expect(OpenParenthesis);
+                TypeDeclaration castType = Type();
+                Expect(CloseParenthesis);
+
+                DExpression ex = UnaryExpression();
+                ClampExpression ce = new ClampExpression(new TokenExpression(Cast), ClampExpression.ClampType.Round);
+                ex.Base = ce;
+                return ex;
+            }
+
+            if (LA(BitwiseAnd) || LA(Increment) || LA(Decrement) || LA(Times) || LA(Minus) || LA(Plus) ||
+                LA(Not) || LA(Tilde))
+            {
+                Step();
+                AssignTokenExpression ae = new AssignTokenExpression(t.kind);
+                ae.FollowingExpression = UnaryExpression();
+                return ae;
+            }
+
+            if (LA(OpenParenthesis))
+            {
+                Step();
+                ClampExpression ce = new ClampExpression(ClampExpression.ClampType.Round);
+                ce.InnerExpression = new TypeDeclarationExpression(Type());
+                Expect(CloseParenthesis);
+                Expect(Dot);
+                Expect(Identifier);
+                AssignTokenExpression ae = new AssignTokenExpression(Dot);
+                ae.PrevExpression = ce;
+                ae.FollowingExpression = new IdentExpression(t.Value);
+                return ae;
+            }
+
+            // NewExpression
+            if (LA(New))
+                return NewExpression();
+
+            // DeleteExpression
+            if (LA(Delete))
+            {
+                Step();
+                DExpression ex = UnaryExpression();
+                ex.Base = new TokenExpression(Delete);
+                return ex;
+            }
+
+            return PostfixExpression();
+        }
+
+        DExpression NewExpression()
+        {
+            Expect(New);
+            DExpression ex = new TokenExpression(New);
+
+            // NewArguments
+            if (LA(OpenParenthesis))
+            {
+                Step();
+                if (LA(CloseParenthesis))
+                    Step();
+                else
+                {
+                    ArrayExpression ae = new ArrayExpression(ClampExpression.ClampType.Round);
+                    ae.Base = ex;
+                    ae.Expressions = ArgumentList();
+                    ex = ae;
+                }
+            }
+
+            /*
+             * If here occurs a class keyword, interpretate it as an anonymous class definition
+             * NewArguments ClassArguments BaseClasslist[opt] { DeclDefs } 
+             */
+            if (LA(Class))
+            {
+                Step();
+                DExpression ex2 = new TokenExpression(Class);
+                ex2.Base = ex;
+                ex = ex2;
+
+                // ClassArguments
+                if (LA(OpenParenthesis))
+                {
+                    if (LA(CloseParenthesis))
+                        Step();
+                    else
+                    {
+                        ArrayExpression ae = new ArrayExpression(ClampExpression.ClampType.Round);
+                        ae.Base = ex;
+                        ae.Expressions = ArgumentList();
+                        ex = ae;
+                    }
+                }
+
+                // BaseClasslist[opt]
+                if (LA(Colon))
+                {
+                    //TODO : Add base classes to expression somehow ;-)
+                    BaseClassList();
+                }
+
+                Expect(OpenCurlyBrace);
+
+                //TODO : Add anonymous class to parent expression somehow
+                DNode anonClass = new DClassLike();
+                anonClass.TypeToken = Class;
+                while (!IsEOF && !LA(CloseCurlyBrace))
+                {
+                    DeclDef(ref anonClass);
+                }
+
+                Expect(CloseCurlyBrace);
+                return ex;
+            }
+
+            // NewArguments Type
+            else
+            {
+                DExpression ex2 = new TypeDeclarationExpression(Type());
+                ex2.Base = ex;
+                ex = ex2;
+
+                if (LA(OpenSquareBracket))
+                {
+                    ClampExpression ce = new ClampExpression();
+                    ce.Base = ex;
+                    ce.InnerExpression = AssignExpression();
+                    Expect(CloseSquareBracket);
+                }
+                else if (LA(OpenParenthesis))
+                {
+                    ArrayExpression ae = new ArrayExpression(ClampExpression.ClampType.Round);
+                    ae.Base = ex;
+                    ae.Expressions = ArgumentList();
+                    ex = ae;
+                }
+            }
+            return ex;
+        }
+
+        List<DExpression> ArgumentList()
+        {
+            List<DExpression> ret = new List<DExpression>();
+
+            ret.Add(AssignExpression());
+
+            while (LA(Comma))
+            {
+                Step();
+                ret.Add(AssignExpression());
+            }
+
+            return ret;
+        }
+
+        DExpression PostfixExpression()
+        {
+            // PostfixExpression
+            DExpression retEx = PrimaryExpression();
+
+            /*
+             * A postfixexpression must start with a primaryexpression and can 
+             * consist of more than one additional epxression --
+             * things like foo()[1] become possible then
+             */
+            while (LA(Dot) || LA(Increment) || LA(Decrement) || LA(OpenParenthesis) || LA(OpenSquareBracket))
+            {
+                // Function call
+                if (LA(OpenParenthesis))
+                {
+                    Step();
+                    ArrayExpression ae = new ArrayExpression(ClampExpression.ClampType.Round);
+                    ae.Base = retEx;
+                    if (!LA(CloseParenthesis))
+                        ae.Expressions = ArgumentList();
+                    else Step();
+
+                    retEx = ae;
+                }
+
+                // IndexExpression | SliceExpression
+                else if (LA(OpenSquareBracket))
+                {
+                    Step();
+
+                    if (!LA(CloseSquareBracket))
+                    {
+                        DExpression firstEx = AssignExpression();
+                        // [ AssignExpression .. AssignExpression ]
+                        if (LA(Dot) && PK(Dot))
+                        {
+                            Step();
+                            Step();
+                            TokenExpression tex = new TokenExpression(Dot);
+                            tex.Base = firstEx;
+                            TokenExpression tex2 = new TokenExpression(Dot);
+                            tex2.Base = tex;
+
+                            DExpression second = AssignExpression();
+                            second.Base = tex2;
+
+                            retEx = second;
+                        }
+                        // [ ArgumentList ]
+                        else if (LA(Comma))
+                        {
+                            ArrayExpression ae = new ArrayExpression();
+                            ae.Expressions.Add(firstEx);
+                            while (LA(Comma))
+                            {
+                                Step();
+                                ae.Expressions.Add(AssignExpression());
+                            }
+                        }
+                        else
+                            SynErr(CloseSquareBracket);
+                    }
+
+                    Expect(CloseSquareBracket);
+                }
+
+                else if (LA(Dot))
+                {
+                    Step();
+                    AssignTokenExpression ae = new AssignTokenExpression(Dot);
+                    ae.PrevExpression = retEx;
+                    if (LA(New))
+                        ae.FollowingExpression = NewExpression();
+                    else if (LA(Identifier))
+                    {
+                        Step();
+                        ae.FollowingExpression = new IdentExpression(t.Value);
+                    }
+                    else
+                        SynErr(Identifier, "Identifier or new expected");
+
+                    retEx = ae;
+                }
+                else if (LA(Increment) || LA(Decrement))
+                {
+                    Step();
+                    DExpression ex2 = new TokenExpression(t.Kind);
+                    ex2.Base = retEx;
+                    retEx = ex2;
+                }
+            }
+
+            return retEx;
+        }
+
+        DExpression PrimaryExpression()
+        {
+            if (LA(Identifier) && PK(Not))
+                return new TypeDeclarationExpression(TemplateInstance());
+
+            if (LA(Identifier))
+            {
+                Step();
+                return new IdentExpression(t.Value);
+            }
+
+            if (LA(This) || LA(Super) || LA(Null) || LA(True) || LA(False) || LA(Dollar))
+            {
+                Step();
+                return new TokenExpression(t.Kind);
+            }
+
+            if (LA(Literal))
+            {
+                Step();
+                return new IdentExpression(t.LiteralValue);
+            }
+
+            if (LA(Dot))
+            {
+                Step();
+                Expect(Identifier);
+                DExpression ret = new IdentExpression(t.Value);
+                ret.Base = new TokenExpression(Dot);
+                return ret;
+            }
+
+            // ArrayLiteral
+	        // AssocArrayLiteral
+            if (LA(OpenSquareBracket))
+            {
+                Step();
+                ArrayExpression arre=new ArrayExpression();
+
+                DExpression firstCondExpr = ConditionalExpression();
+                // Can be an associative array only
+                if (LA(Colon))
+                {
+                    Step();
+                    AssignTokenExpression ae = new AssignTokenExpression(Colon);
+                    ae.PrevExpression = firstCondExpr;
+                    ae.FollowingExpression = ConditionalExpression();
+                    arre.Expressions.Add(ae);
+
+                    while (LA(Comma))
+                    {
+                        Step();
+                        ae = new AssignTokenExpression(Colon);
+                        ae.PrevExpression = ConditionalExpression();
+                        Expect(Colon);
+                        ae.FollowingExpression = ConditionalExpression();
+                        arre.Expressions.Add(ae);
+                    }
+                }
+                else
+                {
+                    if (AssignOps[la.Kind])
+                    {
+                        Step();
+                        AssignTokenExpression ae = new AssignTokenExpression(t.Kind);
+                        ae.PrevExpression = firstCondExpr;
+                        ae.FollowingExpression = AssignExpression();
+                        arre.Expressions.Add(ae);
+                    }
+
+                    while (LA(Comma))
+                    {
+                        Step();
+                        arre.Expressions.Add(AssignExpression());
+                    }
+                }
+
+                Expect(CloseSquareBracket);
+                return arre;
+            }
+
+	        //TODO: FunctionLiteral
+
+	        // AssertExpression
+            if (LA(Assert))
+            {
+                Step();
+                Expect(OpenParenthesis);
+                ClampExpression ce = new ClampExpression(ClampExpression.ClampType.Round);
+                ce.FrontExpression = new TokenExpression(Assert);
+                ce.InnerExpression = AssignExpression();
+
+                if (LA(Comma))
+                {
+                    Step();
+                    AssignTokenExpression ate = new AssignTokenExpression(Comma);
+                    ate.PrevExpression = ce.InnerExpression;
+                    ate.FollowingExpression = AssignExpression();
+                    ce.InnerExpression = ate;
+                }
+                Expect(CloseParenthesis);
+                return ce;
+            }
+
+            // MixinExpression | ImportExpression
+            if (LA(Mixin) || LA(Import))
+            {
+                Step();
+                int tk = t.Kind;
+                Expect(OpenParenthesis);
+                ClampExpression ce = new ClampExpression(ClampExpression.ClampType.Round);
+                ce.FrontExpression = new TokenExpression(tk);
+                ce.InnerExpression = AssignExpression();
+                Expect(CloseParenthesis);
+                return ce;
+            }
+
+            // Typeof
+            if (LA(Typeof))
+            {
+                return new TypeDeclarationExpression( TypeOf());
+            }
+
+            // TypeidExpression
+            if (LA(Typeid))
+            {
+
+            }
+            // IsExpression
+            if (LA(Is))
+            {
+
+            }
+            // ( Expression )
+            if (LA(OpenParenthesis))
+            {
+                Step();
+                DExpression ret = Expression();
+                Expect(CloseParenthesis);
+                return ret;
+            }
+            // TraitsExpression
+            if (LA(__traits))
+            {
+                return TraitsExpression();
+            }
+
+	        // BasicType . Identifier
+            if (LA(Const) || LA(Immutable) || LA(Shared) || LA(InOut))
+            {
+                Step();
+                int tk = t.Kind;
+                Expect(OpenParenthesis);
+                ClampExpression ce = new ClampExpression(ClampExpression.ClampType.Round);
+                ce.FrontExpression = new TokenExpression(tk);
+                ce.InnerExpression= new TypeDeclarationExpression(Type());
+                Expect(CloseParenthesis);
+
+                Expect(Dot);
+                Expect(Identifier);
+                AssignTokenExpression ate = new AssignTokenExpression(Dot);
+                ate.PrevExpression = ce;
+                ate.FollowingExpression = new IdentExpression(t.Value);
+            }
+
+            SynErr(t.Kind,"Identifier expected when parsing an expression");
+            return null;
         }
         #endregion
 
@@ -904,6 +1455,11 @@ namespace D_Parser
 
         #region Classes
         private void ClassDeclaration()
+        {
+            throw new NotImplementedException();
+        }
+
+        private List<TypeDeclaration> BaseClassList()
         {
             throw new NotImplementedException();
         }
@@ -973,6 +1529,20 @@ namespace D_Parser
         private TypeDeclaration TemplateInstance()
         {
             throw new NotImplementedException();
+        }
+        #endregion
+
+        #region Traits
+        DExpression TraitsExpression()
+        {
+            Expect(__traits);
+            Expect(OpenParenthesis);
+            ClampExpression ce = new ClampExpression(new TokenExpression(__traits), ClampExpression.ClampType.Round);
+
+            //TODO: traits keywords
+
+            Expect(CloseParenthesis);
+            return ce;
         }
         #endregion
     }

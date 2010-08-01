@@ -13,6 +13,11 @@ namespace D_Parser
         {
 
         }
+
+        public override string ToString()
+        {
+            return base.ToString()+(Initializer!=null?(" = "+Initializer.ToString()):"");
+        }
     }
     /*
     public class DDelegate : DMethod

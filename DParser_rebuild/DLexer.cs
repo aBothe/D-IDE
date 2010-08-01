@@ -1173,8 +1173,14 @@ namespace D_Parser
                         case '=':
                             ReaderRead();
                             return new DToken(DTokens.XorAssign, x, y);
-                        default:
-                            break;
+                        case '^':
+                            if (ReaderPeek() == '=')
+                            {
+                                ReaderRead();
+                                ReaderRead();
+                                return new DToken(DTokens.PowAssign,x,y);
+                            }
+                            return new DToken(DTokens.Pow, x, y);
                     }
                     return new DToken(DTokens.Xor, x, y);
                 case '!':
@@ -1183,6 +1189,38 @@ namespace D_Parser
                         case '=':
                             ReaderRead();
                             return new DToken(DTokens.NotEqual, x, y);
+
+                        case '<':
+                            ReaderRead();
+                            switch (ReaderPeek())
+                            {
+                                case '=':
+                                    ReaderRead();
+                                    return new DToken(DTokens.NotLessThanAssign, x, y);
+                                case '>':
+                                    ReaderRead();
+                                    switch (ReaderPeek())
+                                    {
+                                        case '=':
+                                            ReaderRead();
+                                            return new DToken(DTokens.NotUnequalAssign, x, y); // !<>=
+                                    }
+                                    return new DToken(DTokens.NotUnequal, x, y); // !<>
+                            }
+                            return new DToken(DTokens.NotLessThan, x, y);
+
+                        case '>':
+                            ReaderRead();
+                            switch (ReaderPeek())
+                            {
+                                case '=':
+                                    ReaderRead();
+                                    return new DToken(DTokens.NotGreaterThanAssign, x, y); // !>=
+                                default:
+                                    break;
+                            }
+                            return new DToken(DTokens.NotGreaterThan, x, y); // !>
+
                     }
                     return new DToken(DTokens.Not, x, y);
                 case '~':
@@ -1215,6 +1253,17 @@ namespace D_Parser
                                     break;
                             }
                             return new DToken(DTokens.ShiftLeft, x, y);
+                        case '>':
+                            ReaderRead();
+                            switch (ReaderPeek())
+                            {
+                                case '=':
+                                    ReaderRead();
+                                    return new DToken(DTokens.UnequalAssign, x, y);
+                                default:
+                                    break;
+                            }
+                            return new DToken(DTokens.Unequal, x, y);
                         case '=':
                             ReaderRead();
                             return new DToken(DTokens.LessEqual, x, y);
@@ -1241,16 +1290,13 @@ namespace D_Parser
                                                 case '=':
                                                     ReaderRead();
                                                     return new DToken(DTokens.TripleRightAssign, x, y);
-                                                default:
-                                                    break;
                                             }
+                                            return new DToken(DTokens.ShiftRightUnsigned, x, y); // >>>
                                         }
-                                        break;
-                                    default:
                                         break;
                                 }
                             }
-                            return new DToken(DTokens.ShiftLeft, x, y);
+                            return new DToken(DTokens.ShiftRight, x, y);
                         case '=':
                             ReaderRead();
                             return new DToken(DTokens.GreaterEqual, x, y);

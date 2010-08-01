@@ -324,19 +324,19 @@ namespace D_Parser
         public DExpression() { }
         public DExpression Base;
 
-        public abstract string ToString();
+        public new abstract string ToString();
     }
 
     public class IdentExpression : DExpression
     {
-        public string Value = "";
+        public object Value = "";
 
         public IdentExpression() { }
-        public IdentExpression(string Val) { Value = Val; }
+        public IdentExpression(object Val) { Value = Val; }
 
         public override string ToString()
         {
-            return Value;
+            return (Value is string)?(string)Value:Value.ToString();
         }
     }
 
@@ -350,6 +350,19 @@ namespace D_Parser
         public override string ToString()
         {
             return DParser.GetTokenString(Token);
+        }
+    }
+
+    public class TypeDeclarationExpression : DExpression
+    {
+        public TypeDeclaration Declaration;
+
+        public TypeDeclarationExpression() { }
+        public TypeDeclarationExpression(TypeDeclaration td) { Declaration = td; }
+
+        public override string ToString()
+        {
+            return Declaration!=null?Declaration.ToString():"";
         }
     }
 
@@ -427,6 +440,25 @@ namespace D_Parser
         public override string ToString()
         {
             return (PrevExpression != null ? PrevExpression.ToString() : "") + " " + DParser.GetTokenString(Token) + " " + (FollowingExpression != null ? FollowingExpression.ToString() : "");
+        }
+    }
+
+
+    public class SwitchExpression : DExpression
+    {
+        public DExpression TriggerExpression
+        {
+            get { return Base; }
+            set { Base = value; }
+        }
+        public DExpression TrueCase, FalseCase;
+
+        public SwitchExpression() { }
+        public SwitchExpression(DExpression Trigger) { TriggerExpression = Trigger; }
+
+        public override string ToString()
+        {
+            return (TriggerExpression != null ? TriggerExpression.ToString() : "") + "?" + (TrueCase != null ? TrueCase.ToString() : "") + " : " + (FalseCase != null ? FalseCase.ToString() : "");
         }
     }
 
