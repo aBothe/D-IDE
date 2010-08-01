@@ -9,18 +9,25 @@ namespace D_Parser
     {
         public static void Main(string[] args)
         {
-            string src = 
+            string src = /*
                 "module abc.test;"+
                 "import Test=astd.myImport;"+
                 "import std.stdio;"+
-                "import core.memory, core.gc;";
+                "import core.memory, core.gc;"+*/
+                /*
+                "int x;" +
+                "int* y;"+
+                "int (*myFct);"+*/
+                "foo();"+
+                "void[]**[] foo(int a, bool b) {}";
             List<string> imps;
             DParser dp = DParser.Create(new StringReader(src));
             DParser.OnError += new DParser.ErrorHandler(DParser_OnError);
 
             DNode n = dp.Parse("", out imps);
+            n.name = n.module;
 
-            Dump(n);
+            Dump(n,"");
 
             return;
         }
@@ -30,14 +37,17 @@ namespace D_Parser
             Console.WriteLine("Line "+line.ToString()+" Col "+col.ToString()+": "+message);
         }
 
-        static void Dump(DNode n)
+        static void Dump(DNode n,string lev)
         {
-            Console.WriteLine(((n.Type!=null)?n.Type.ToString():"")+" "+n.name);
-
-            foreach (DNode ch in n)
+            Console.WriteLine(lev+n.ToString());
+            if (n.Count > 0)
             {
-                Console.Write("  ");
-                Dump(ch);
+                Console.WriteLine(lev+"{");
+                foreach (DNode ch in n)
+                {
+                    Dump(ch,lev+"  ");
+                }
+                Console.WriteLine(lev+"}");
             }
         }
     }

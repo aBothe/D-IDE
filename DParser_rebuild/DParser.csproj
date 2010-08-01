@@ -58,7 +58,6 @@
     <Compile Include="DParser.cs" />
     <Compile Include="DParser_Impl.cs" />
     <Compile Include="DTokens.cs" />
-    <Compile Include="ExpressionFinder.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ParserUtil.cs" />

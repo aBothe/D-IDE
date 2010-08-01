@@ -107,7 +107,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return "[" + fieldtype.ToString() + "] " + Type.ToString() + " " + name;
+            return "[" + fieldtype.ToString() + "] " + (Type!=null?Type.ToString():"") + " " + name;
         }
 
         public void Add(DNode v)

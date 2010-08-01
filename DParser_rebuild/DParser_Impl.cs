@@ -184,7 +184,7 @@ namespace D_Parser
 
         bool IsDeclaration()
         {
-            return false;
+            return LA(Alias) || IsStorageClass || IsBasicType();
         }
 
         void Declaration(ref DNode par)
@@ -229,7 +229,7 @@ namespace D_Parser
             if (firstNode.Type == null)
                 firstNode.Type = ttd;
             else
-                firstNode.Type.Base = ttd;
+                firstNode.Type.MostBasic.Base = ttd;
 
 
             // BasicType Declarators ;
@@ -328,14 +328,17 @@ namespace D_Parser
         {
             // *
             if (LA(Times))
+            {
+                Step();
                 return new PointerDecl();
+            }
 
             // [ ... ]
             else if (LA(OpenSquareBracket))
             {
                 Step();
                 // [ ]
-                if (LA(CloseSquareBracket)) { Step(); return new ArrayDecl(); }
+                if (LA(CloseSquareBracket)) { Step(); return new ClampDecl(); }
 
                 TypeDeclaration ret = null;
 
@@ -391,16 +394,13 @@ namespace D_Parser
         DNode Declarator(bool IsParam)
         {
             DNode ret = new DVariable();
-
-            TypeDeclaration td = null;
             TypeDeclaration ttd = null;
 
             while (IsBasicType2())
             {
-                if (td == null) td = BasicType2();
-                else { TypeDeclaration td2 = BasicType2(); td2.Base = td; td = td2; }
+                if (ret.Type == null) ret.Type = BasicType2();
+                else { ttd = BasicType2(); ttd.Base = ret.Type; ret.Type =ttd; }
             }
-
             /*
              * Add some syntax possibilities here
              * like in 
@@ -411,39 +411,60 @@ namespace D_Parser
             if (LA(OpenParenthesis))
             {
                 Step();
+                ClampDecl cd= new ClampDecl(ret.Type,ClampDecl.ClampType.Round);
+                ret.Type = cd;
+
                 /* 
                  * Parse all basictype2's that are following the initial '('
                  */
                 while (IsBasicType2())
                 {
-                    if (td == null) td = BasicType2();
+                    ttd = BasicType2();
+
+                    if (cd.KeyType == null) cd.KeyType = ttd;
                     else
                     {
-                        ttd = BasicType2();
-                        ttd.Base = td;
-                        td = ttd;
+                        ttd.Base = cd.KeyType;
+                        cd.KeyType = ttd;
                     }
                 }
 
                 /*
-                 * Here is a identifier with some optional DeclaratorSuffixes
+                 * Here can be an identifier with some optional DeclaratorSuffixes
                  */
                 if (!LA(CloseParenthesis))
                 {
-                    Expect(Identifier);
-                    ret.name = t.Value;
-
-                    /*
-                     * Just after a identifier suffixes can follow!
-                     */
-                    if (!LA(CloseParenthesis))
+                    if (IsParam && !LA(Identifier))
                     {
-                        List<DNode> _unused=null;
-                        ttd=DeclaratorSuffixes(out _unused,out _unused);
-                        ttd.Base = td;
-                        td = ttd;
+                        /* If this Declarator is a parameter of a function, don't expect anything here
+                         * exept a '*' that means that here's an anonymous function pointer
+                         */
+                        if (!T(Times))
+                            SynErr(Times);
+                    }
+                    else
+                    {
+                        Expect(Identifier);
+                        ret.name = t.Value;
+
+                        /*
+                         * Just here suffixes can follow!
+                         */
+                        if (!LA(CloseParenthesis))
+                        {
+                            List<DNode> _unused = null;
+                            ttd = DeclaratorSuffixes(out _unused, out _unused);
+
+                            if (cd.KeyType == null) cd.KeyType = ttd;
+                            else
+                            {
+                                ttd.Base = cd.KeyType;
+                                cd.KeyType = ttd;
+                            }
+                        }
                     }
                 }
+                ret.Type = cd;
                 Expect(CloseParenthesis);
             }
             else
@@ -455,25 +476,32 @@ namespace D_Parser
                 ret.name = t.Value;
             }
 
-            // DeclaratorSuffixes
-            List<DNode> _Parameters;
-            ttd = DeclaratorSuffixes(out ret.TemplateParameters,out _Parameters);
-            if (ttd != null)
+            if (IsDeclaratorSuffix)
             {
-                ttd.Base = td;
-                td = ttd;
-            }
-            ret.Type = td;
+                // DeclaratorSuffixes
+                List<DNode> _Parameters;
+                ttd = DeclaratorSuffixes(out ret.TemplateParameters, out _Parameters);
+                if (ttd != null)
+                {
+                    ttd.Base = ret.Type;
+                    ret.Type = ttd;
+                }
 
-            if (_Parameters != null)
-            {
-                DMethod dm = new DMethod();
-                dm.Assign(ret);
-                dm.Parameters = _Parameters;
-                ret = dm;
+                if (_Parameters != null)
+                {
+                    DMethod dm = new DMethod();
+                    dm.Assign(ret);
+                    dm.Parameters = _Parameters;
+                    ret = dm;
+                }
             }
 
             return ret;
+        }
+
+        bool IsDeclaratorSuffix
+        {
+            get { return LA(OpenSquareBracket) || LA(OpenParenthesis); }
         }
 
         /// <summary>
@@ -493,7 +521,7 @@ namespace D_Parser
             while (LA(OpenSquareBracket))
             {
                 Step();
-                ArrayDecl ad = new ArrayDecl(td);
+                ClampDecl ad = new ClampDecl(td);
                 if (!LA(CloseSquareBracket))
                 {
                     if (IsAssignExpression())
@@ -703,7 +731,20 @@ namespace D_Parser
                 Step();
             }
 
+            TypeDeclaration td =null;
+            /*
+             * A basictype is possible(!), not required
+             */
+            if (IsBasicType() && (!LA(Identifier) || (!PK(Identifier) && lexer.CurrentPeekToken.Kind!=OpenParenthesis)))
+            {
+                td = BasicType();
+            }
+
             DNode ret = Declarator(true);
+            if (ret.Type == null) 
+                ret.Type = td;
+            else
+                ret.Type.Base = td;
 
             // DefaultInitializerExpression
             if (LA(Assign))
@@ -815,7 +856,9 @@ namespace D_Parser
         #region Functions
         void FunctionBody(ref DNode par)
         {
+            Expect(OpenCurlyBrace);
 
+            Expect(CloseCurlyBrace);
         }
         #endregion
 

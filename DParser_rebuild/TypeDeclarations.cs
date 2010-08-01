@@ -11,6 +11,11 @@ namespace D_Parser
         public TypeDeclaration Base;
         public TypeDeclaration ParentDecl { get { return Base; } set { Base = value; } }
 
+        public TypeDeclaration MostBasic
+        {
+            get { if (Base == null) return this; else return Base.MostBasic; }
+        }
+
         /// <summary>
         /// Returns a string which represents the current type
         /// </summary>
@@ -68,7 +73,7 @@ namespace D_Parser
     /// <summary>
     /// Array decl, e.g. &gt;int[string]&lt; myArray;
     /// </summary>
-    public class ArrayDecl : TypeDeclaration
+    public class ClampDecl : TypeDeclaration
     {
         public static byte GetDeclarationClassTypeId { get { return 3; } }
         public override byte TypeId { get { return GetDeclarationClassTypeId; } }
@@ -81,13 +86,51 @@ namespace D_Parser
             set { Base = value; }
         }
         public TypeDeclaration KeyType;
+        public enum ClampType
+        {
+            Round=0,
+            Square=1,
+            Curly=2
+        }
+        public ClampType Clamps=ClampType.Square;
+        public bool IsArrayDecl
+        {
+            get { return Clamps == ClampType.Square; }
+        }
 
-        public ArrayDecl() { }
-        public ArrayDecl(TypeDeclaration ValueType) { this.ValueType = ValueType; }
+        public ClampDecl() { }
+        public ClampDecl(TypeDeclaration ValueType) { this.ValueType = ValueType; }
+        public ClampDecl(TypeDeclaration ValueType, ClampType clamps) { this.ValueType = ValueType; Clamps = clamps; }
 
         public override string ToString()
         {
-            return ValueType.ToString() + "[" + (KeyType != null ? KeyType.ToString() : "") + "]";
+            string s = (ValueType != null ? ValueType.ToString() : "");
+            switch (Clamps)
+            {
+                case ClampType.Round:
+                    s += "(";
+                    break;
+                case ClampType.Square:
+                    s += "[";
+                    break;
+                case ClampType.Curly:
+                    s += "{";
+                    break;
+            }
+            s+=(KeyType != null ? KeyType.ToString() : "");
+            switch (Clamps)
+            {
+                case ClampType.Round:
+                    s += ")";
+                    break;
+                case ClampType.Square:
+                    s += "]";
+                    break;
+                case ClampType.Curly:
+                    s += "}";
+                    break;
+            }
+            return s;
         }
     }
 
