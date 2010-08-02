@@ -889,7 +889,29 @@ namespace D_Parser
 
         private void AttributeSpecifier()
         {
-            throw new NotImplementedException();
+            if (LA(Extern) && PK(OpenParenthesis))
+            {
+                Step();
+                Step();
+                Expect(Identifier);
+                Expect(CloseParenthesis);
+            }
+            else if (LA(Align) && PK(OpenParenthesis))
+            {
+                Step();
+                Step();
+                Expect(Literal);
+                Expect(CloseParenthesis);
+            }
+            else if (LA(Pragma))
+                _Pragma();
+            else
+                Step();
+
+            if (LA(Colon))
+                Step();
+
+            // Unlike the definition we return here because later we'll treat this attribute as a pre-definition of a Declaration
         }
         #endregion
 
@@ -915,9 +937,60 @@ namespace D_Parser
             return ae;
         }
 
+        /// <summary>
+        /// This function has a very high importance because here we decide whether it's a declaration or assignExpression!
+        /// </summary>
         bool IsAssignExpression()
         {
-            return false;
+            if (IsBasicType())
+            {
+                if (LA(Identifier) || BasicTypes[la.Kind] || LA(Dot))
+                {
+                    if (LA(Dot))
+                        Peek();
+
+                    // Check for template declarations
+                    if (PK(Not))
+                    {
+                        Peek();
+                        if (PK(OpenParenthesis))
+                        {
+                            Peek();
+                            OverPeekRoundBrackets();
+                        }
+                        else
+                            Peek();
+                    }
+
+                    // Check for basictype2's
+                    // Important: Do this AFTER we seeked for template declarations...
+                    // because we have a peek token that's located after the template decl!
+                    if (PK(Identifier) || PK(Dot) || PK(Times) || PK(OpenSquareBracket) || PK(Delegate) || PK(Function))
+                        return false;
+                }
+
+                else if (LA(Typeof) || MemberFunctionAttribute[la.Kind])
+                {
+                    if (PK(OpenParenthesis))
+                    {
+                        Peek();
+                        OverPeekRoundBrackets();
+                    }
+
+                    if (PK(Dot) && !LA(Typeof))
+                    {
+                        Peek();
+                        if (PK(Identifier)) Peek();
+                    }
+
+                    if (PK(Identifier) || PK(Times) || PK(OpenSquareBracket) || PK(Delegate) || PK(Function) || PK(Dot))
+                        return false;
+                }
+            }
+            else if (IsStorageClass)
+                return false;
+
+            return true;
         }
 
         DExpression AssignExpression()
@@ -926,6 +999,7 @@ namespace D_Parser
             if (!AssignOps[la.Kind])
                 return left;
 
+            Step();
             AssignTokenExpression ate = new AssignTokenExpression(t.Kind);
             ate.PrevExpression = left;
             ate.FollowingExpression = AssignExpression();
@@ -1212,7 +1286,7 @@ namespace D_Parser
                     ae.Base = retEx;
                     if (!LA(CloseParenthesis))
                         ae.Expressions = ArgumentList();
-                    else Step();
+                    Step();
 
                     retEx = ae;
                 }
@@ -1319,8 +1393,7 @@ namespace D_Parser
                 return ret;
             }
 
-            // ArrayLiteral
-            // AssocArrayLiteral
+            // ArrayLiteral | AssocArrayLiteral
             if (LA(OpenSquareBracket))
             {
                 Step();
@@ -1413,12 +1486,12 @@ namespace D_Parser
             // TypeidExpression
             if (LA(Typeid))
             {
-
+                //TODO
             }
             // IsExpression
             if (LA(Is))
             {
-
+                //TODO
             }
             // ( Expression )
             if (LA(OpenParenthesis))
@@ -1435,7 +1508,7 @@ namespace D_Parser
             }
 
             // BasicType . Identifier
-            if (LA(Const) || LA(Immutable) || LA(Shared) || LA(InOut))
+            if (LA(Const) || LA(Immutable) || LA(Shared) || LA(InOut) || BasicTypes[la.Kind])
             {
                 Step();
                 int tk = t.Kind;
@@ -1453,6 +1526,7 @@ namespace D_Parser
             }
 
             SynErr(t.Kind, "Identifier expected when parsing an expression");
+            Step();
             return null;
         }
         #endregion

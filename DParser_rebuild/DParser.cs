@@ -114,149 +114,6 @@ namespace D_Parser
             get { return doc; }
         }
 
-        public bool CheckForAssignOps()
-        {
-            lexer.StartPeek();
-            int psb = 0,sqb=0;
-            while (lexer.CurrentPeekToken.Kind != DTokens.EOF)
-            {
-                if (lexer.CurrentPeekToken.Kind == DTokens.OpenParenthesis) psb++;
-                else if (lexer.CurrentPeekToken.Kind == DTokens.CloseParenthesis) psb--;
-                else if (lexer.CurrentPeekToken.Kind == DTokens.OpenSquareBracket) sqb++;
-                else if (lexer.CurrentPeekToken.Kind == DTokens.CloseSquareBracket) sqb--;
-
-                else if (DTokens.AssignOps[lexer.CurrentPeekToken.Kind] && psb < 1 && sqb < 1)
-                {
-                    // Here's a point of discussion: Is it an assignment or a variable initializer
-                    if (lexer.CurrentPeekToken.Kind == DTokens.Assign)
-                        return false;
-                    
-                    return true;
-                }
-
-                else if (psb < 0
-                    || lexer.CurrentPeekToken.Kind == DTokens.OpenCurlyBrace
-                    || lexer.CurrentPeekToken.Kind == DTokens.Semicolon
-                    || lexer.CurrentPeekToken.Kind == DTokens.CloseCurlyBrace)
-                    break;
-
-                lexer.Peek();
-            }
-            return false;
-        }
-
-        public string SkipToSemicolon()
-        {
-            string ret = "";
-
-            int mbrace = 0, par = 0;
-            while (!ThrowIfEOF(DTokens.Semicolon))
-            {
-                if (la.Kind == DTokens.OpenCurlyBrace) mbrace++;
-                else if (la.Kind == DTokens.CloseCurlyBrace) mbrace--;
-
-                else if (la.Kind == DTokens.OpenParenthesis) par++;
-                else if (la.Kind == DTokens.CloseParenthesis) par--;
-
-                if (mbrace < 1 && par < 1 && la.Kind != DTokens.Semicolon && Peek(1).Kind == DTokens.CloseCurlyBrace)
-                {
-                    ret += strVal;
-                    SynErr(la.Kind, "Check for missing semicolon!");
-                    break;
-                }
-                else if (mbrace < 1 && par < 1 && la.Kind == DTokens.Semicolon)
-                {
-                    break;
-                }
-                if (ret.Length < 2000) ret += ((la.Kind == DTokens.Identifier && t.Kind != DTokens.Dot) ? " " : "") + strVal;
-                lexer.NextToken();
-            }
-            return ret;
-        }
-
-        public void SkipToClosingBrace()
-        {
-            int mbrace = 0;
-            while (!ThrowIfEOF(DTokens.CloseCurlyBrace))
-            {
-                if (la.Kind == DTokens.OpenCurlyBrace)
-                {
-                    mbrace++;
-                }
-                else if (la.Kind == DTokens.CloseCurlyBrace)
-                {
-                    mbrace--;
-                    if (mbrace <= 0) { break; }
-                }
-                lexer.NextToken();
-            }
-        }
-
-        [DebuggerStepThrough()]
-        public string SkipToClosingParenthesis()
-        {
-            return SkipToClosingParenthesis(true);
-        }
-
-        public string SkipToClosingParenthesis(bool SkipLastClosingParenthesis)
-        {
-            string ret = "";
-            int mbrace = 0, round = 0;
-            bool b = true;
-            while (b && !ThrowIfEOF(DTokens.CloseParenthesis))
-            {
-                switch (la.Kind)
-                {
-                    case DTokens.OpenCurlyBrace: mbrace++; break;
-                    case DTokens.CloseCurlyBrace: mbrace--; break;
-
-                    case DTokens.OpenParenthesis:
-                        round++;
-                        break;
-
-                    case DTokens.CloseParenthesis:
-                        round--;
-                        if (mbrace < 1 && round < 1) { b = false; ret += ")"; continue; }
-                        break;
-                }
-                if (ret.Length < 2000) ret += ((la.Kind == DTokens.Identifier && (t.Kind == DTokens.Identifier || DTokens.BasicTypes[t.Kind])) ? " " : "") + strVal;
-                    lexer.NextToken();
-            }
-
-            if (SkipLastClosingParenthesis && round < 1 && la.Kind == DTokens.CloseParenthesis)
-            {
-                    lexer.NextToken();
-            }
-
-            return ret;
-        }
-
-        public string SkipToClosingSquares()
-        {
-            string ret = "";
-            int mbrace = 0, round = 0;
-            while (!ThrowIfEOF(DTokens.CloseSquareBracket))
-            {
-                if (la.Kind == DTokens.OpenCurlyBrace) mbrace++;
-                if (la.Kind == DTokens.CloseCurlyBrace) mbrace--;
-
-                if (la.Kind == DTokens.OpenSquareBracket)
-                {
-                    round++;
-                    lexer.NextToken(); continue;
-                }
-                if (la.Kind == DTokens.CloseSquareBracket)
-                {
-                    round--;
-                    if (mbrace < 1 && round < 1) { break; }
-                }
-                if (ret.Length < 2000) ret += strVal;
-
-                lexer.NextToken();
-            }
-            return ret;
-        }
-
         public DLexer lexer;
         //public Errors errors;
         public DParser(DLexer lexer)
@@ -310,6 +167,19 @@ namespace D_Parser
             get
             {
                 return (DToken)lexer.CurrentToken;
+            }
+        }
+
+        void OverPeekRoundBrackets()
+        {
+            int roundBrackets = 0;
+            while (roundBrackets >= 0 && lexer.CurrentPeekToken.Kind != EOF && !PK(CloseParenthesis))
+            {
+                if (PK(OpenParenthesis))
+                    roundBrackets++;
+                if (PK(CloseParenthesis))
+                    roundBrackets--;
+                Peek();
             }
         }
 
@@ -374,7 +244,7 @@ namespace D_Parser
         /// <returns></returns>
         bool PK(int n)
         {
-            return Peek(1).Kind == n;
+            return lexer.CurrentPeekToken.Kind == n;
         }
 
         private bool Expect(int n)
@@ -387,40 +257,16 @@ namespace D_Parser
         }
 
         /// <summary>
-        /// Retrieve string value of current lookAhead token
+        /// Retrieve string value of current token
         /// </summary>
         protected string strVal
         {
             get
             {
-                if (la.Kind == DTokens.Identifier || la.Kind == DTokens.Literal)
-                    return la.Value;
-                return DTokens.GetTokenString(la.Kind);
+                if (t.Kind == DTokens.Identifier || t.Kind == DTokens.Literal)
+                    return t.Value;
+                return DTokens.GetTokenString(t.Kind);
             }
-        }
-
-        protected bool ThrowIfEOF(int n)
-        {
-            if (la.Kind == DTokens.EOF)
-            {
-                SynErr(n, "End of file reached!");
-                return true;
-            }
-            return false;
-        }
-
-        protected bool PeekMustBe(int n, string reason)
-        {
-            if (Peek(1).Kind == n)
-            {
-                lexer.NextToken();
-            }
-            else
-            {
-                SynErr(n, reason);
-                return false;
-            }
-            return true;
         }
 
         /* Return the n-th token after the current lookahead token */
@@ -459,7 +305,7 @@ namespace D_Parser
             get { return la == null || la.Kind == EOF; }
         }
 
-        DToken Step() { return lexer.NextToken(); }
+        DToken Step() { lexer.NextToken(); Peek(1); return t; }
 
         /// <summary>
         /// Initializes and proceed parse procedure

@@ -10,16 +10,20 @@ namespace D_Parser
         public static void Main(string[] args)
         {
             string src = /*
-                "module abc.test;"+
-                "import Test=astd.myImport;"+
-                "import std.stdio;"+
-                "import core.memory, core.gc;"+*/
-                /*
-                "int x;" +
-                "int* y;"+
-                "int (*myFct);"+*/
-                "int a=33+55;"+
-                "void[]**[] foo(int a=34, bool b) {}";
+                "module abc.test;\n"+
+                "import Test=astd.myImport;\n"+
+                "import std.stdio;\n"+
+                "import core.memory, core.gc;\n"+*/
+                "int x;\n"+
+                "int* y;\n"+
+                "int (*myFct);\n"+
+                "int a=33+55;\n" +
+                "void[]**[] foo(int a=34, bool b) {\n" +
+                "int i=45;\n" +
+                "i++;\n" +
+                "int j=i+34;\n" +
+                "if(j>i) writeln(\"Hello Yay!\");\n" +
+                "}";
             List<string> imps;
             DParser dp = DParser.Create(new StringReader(src));
             DParser.OnError += new DParser.ErrorHandler(DParser_OnError);

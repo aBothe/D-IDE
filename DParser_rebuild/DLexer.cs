@@ -32,25 +32,6 @@ namespace D_Parser
         public delegate void CommentHandler(Comment comment);
         public abstract event CommentHandler OnComment;
 
-        protected static IEnumerable<string> GetSymbols(string symbols)
-        {
-            if (!string.IsNullOrEmpty(symbols))
-            {
-                foreach (string symbol in symbols.Split(';', ' ', '\t'))
-                {
-                    string s = symbol.Trim();
-                    if (s.Length == 0)
-                        continue;
-                    yield return s;
-                }
-            }
-        }
-
-        public virtual void SetConditionalCompilationSymbols(string symbols)
-        {
-            throw new NotSupportedException();
-        }
-
         protected int Line
         {
             get
@@ -162,9 +143,7 @@ namespace D_Parser
         {
             if (peekToken == null) StartPeek();
             if (peekToken.next == null)
-            {
                 peekToken.next = Next();
-            }
             peekToken = peekToken.next;
             return peekToken;
         }

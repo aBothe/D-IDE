@@ -34,7 +34,7 @@ namespace D_Parser
 
         public NormalDeclaration() { }
         public NormalDeclaration(string Identifier)
-        { Name = Identifier.Trim('(', ')'); }
+        { Name = Identifier; }
 
         public override string ToString()
         {
@@ -487,6 +487,7 @@ namespace D_Parser
             }
             foreach (DExpression expr in Expressions)
                 s += expr.ToString()+", ";
+            s = s.TrimEnd(' ', ',');
             switch (Clamps)
             {
                 case ClampExpression.ClampType.Round:
