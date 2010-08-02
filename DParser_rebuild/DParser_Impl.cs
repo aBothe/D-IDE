@@ -852,7 +852,7 @@ namespace D_Parser
             if (LA(Return))
                 md.InnerType = new DTokenDeclaration(Return);
             else
-                md.InnerType = new DExpressionDecl( Expression());
+                md.InnerType = new DExpressionDecl(Expression());
             Expect(CloseParenthesis);
             return md;
         }
@@ -860,6 +860,21 @@ namespace D_Parser
         #endregion
 
         #region Attributes
+
+        void _Pragma()
+        {
+            Expect(Pragma);
+            Expect(OpenParenthesis);
+            Expect(Identifier);
+
+            if (LA(Comma))
+            {
+                Step();
+                ArgumentList();
+            }
+            Expect(CloseParenthesis);
+        }
+
         bool IsAttributeSpecifier()
         {
             return (LA(Extern) || LA(Align) || LA(Pragma) || LA(Deprecated) || IsProtectionAttribute()
@@ -1305,11 +1320,11 @@ namespace D_Parser
             }
 
             // ArrayLiteral
-	        // AssocArrayLiteral
+            // AssocArrayLiteral
             if (LA(OpenSquareBracket))
             {
                 Step();
-                ArrayExpression arre=new ArrayExpression();
+                ArrayExpression arre = new ArrayExpression();
 
                 DExpression firstCondExpr = ConditionalExpression();
                 // Can be an associative array only
@@ -1353,9 +1368,9 @@ namespace D_Parser
                 return arre;
             }
 
-	        //TODO: FunctionLiteral
+            //TODO: FunctionLiteral
 
-	        // AssertExpression
+            // AssertExpression
             if (LA(Assert))
             {
                 Step();
@@ -1392,7 +1407,7 @@ namespace D_Parser
             // Typeof
             if (LA(Typeof))
             {
-                return new TypeDeclarationExpression( TypeOf());
+                return new TypeDeclarationExpression(TypeOf());
             }
 
             // TypeidExpression
@@ -1419,7 +1434,7 @@ namespace D_Parser
                 return TraitsExpression();
             }
 
-	        // BasicType . Identifier
+            // BasicType . Identifier
             if (LA(Const) || LA(Immutable) || LA(Shared) || LA(InOut))
             {
                 Step();
@@ -1427,7 +1442,7 @@ namespace D_Parser
                 Expect(OpenParenthesis);
                 ClampExpression ce = new ClampExpression(ClampExpression.ClampType.Round);
                 ce.FrontExpression = new TokenExpression(tk);
-                ce.InnerExpression= new TypeDeclarationExpression(Type());
+                ce.InnerExpression = new TypeDeclarationExpression(Type());
                 Expect(CloseParenthesis);
 
                 Expect(Dot);
@@ -1437,13 +1452,378 @@ namespace D_Parser
                 ate.FollowingExpression = new IdentExpression(t.Value);
             }
 
-            SynErr(t.Kind,"Identifier expected when parsing an expression");
+            SynErr(t.Kind, "Identifier expected when parsing an expression");
             return null;
         }
         #endregion
 
         #region Statements
+        void Statement(ref DNode par, bool CanBeEmpty, bool BlocksAllowed)
+        {
+            if (CanBeEmpty && LA(Semicolon))
+            {
+                Step();
+                return;
+            }
 
+            else if (BlocksAllowed && LA(OpenCurlyBrace))
+            {
+                BlockStatement(ref par);
+                return;
+            }
+
+            // LabeledStatement
+            else if (LA(Identifier) && PK(Colon))
+            {
+                Step();
+                Step();
+                return;
+            }
+
+            // IfStatement
+            else if (LA(If))
+            {
+                Step();
+                Expect(OpenParenthesis);
+
+                // IfCondition
+                if (LA(Auto))
+                {
+                    Step();
+                    Expect(Identifier);
+                    Expect(Assign);
+                    Expression();
+                }
+                else if (IsAssignExpression())
+                    Expression();
+                else
+                {
+                    Declarator(false);
+                    Expect(Assign);
+                    Expression();
+                }
+
+                Expect(CloseParenthesis);
+                // ThenStatement
+                Statement(ref par, false, true);
+
+                // ElseStatement
+                if (LA(Else))
+                {
+                    Step();
+                    Statement(ref par, false, true);
+                }
+            }
+
+            // WhileStatement
+            else if (LA(While))
+            {
+                Step();
+                Expect(OpenParenthesis);
+                Expression();
+                Expect(CloseParenthesis);
+
+                Statement(ref par, false, true);
+            }
+
+            // DoStatement
+            else if (LA(Do))
+            {
+                Step();
+                Statement(ref par, false, true);
+                Expect(While);
+                Expect(OpenParenthesis);
+                Expression();
+                Expect(CloseParenthesis);
+            }
+
+            // ForStatement
+            else if (LA(For))
+            {
+                Step();
+                Expect(OpenParenthesis);
+
+                // Initialize
+                if (LA(Semicolon))
+                    Step();
+                else
+                    Statement(ref par, false, true);
+
+                // Test
+                if (!LA(Semicolon))
+                    Expression();
+
+                Expect(Semicolon);
+
+                // Increment
+                if (!LA(CloseParenthesis))
+                    Expression();
+
+                Expect(CloseParenthesis);
+
+                Statement(ref par, false, true);
+            }
+
+            // ForeachStatement
+            else if (LA(Foreach) || LA(Foreach_Reverse))
+            {
+                Step();
+                Expect(OpenParenthesis);
+
+                bool init = true;
+                while (init || LA(Comma))
+                {
+                    if (!init) Step();
+                    init = false;
+
+                    if (LA(Ref))
+                        Step();
+
+                    if (LA(Identifier) && (PK(Semicolon) || lexer.CurrentPeekToken.Kind == Comma))
+                    {
+                        Step();
+                    }
+                    else
+                    {
+                        Type();
+                        Expect(Identifier);
+                    }
+                }
+
+                Expect(Semicolon);
+                Expression();
+
+                // ForeachRangeStatement
+                if (LA(Dot) && PK(Dot))
+                {
+                    Step();
+                    Step();
+                    Expression();
+                }
+
+                Expect(CloseParenthesis);
+
+                Statement(ref par, false, true);
+            }
+
+            // [Final] SwitchStatement
+            else if ((LA(Final) && PK(Switch)) || LA(Switch))
+            {
+                if (LA(Final))
+                    Step();
+                Step();
+                Expect(OpenParenthesis);
+                Expression();
+                Expect(CloseParenthesis);
+                Statement(ref par, false, true);
+            }
+
+            // CaseStatement
+            else if (LA(Case))
+            {
+                Step();
+
+                AssignExpression();
+
+                if (!(LA(Colon) && PK(Dot) && Peek().Kind == Dot))
+                    while (LA(Comma))
+                        AssignExpression();
+
+                Expect(Colon);
+
+                // CaseRangeStatement
+                if (LA(Dot) && PK(Dot))
+                {
+                    Step();
+                    Step();
+                    Expect(Case);
+                    AssignExpression();
+                    Expect(Colon);
+
+                    Statement(ref par, true, true);
+                }
+            }
+
+            // Default
+            else if (LA(Default))
+            {
+                Step();
+                Expect(Colon);
+                Statement(ref par, true, true);
+            }
+
+            // Continue | Break
+            else if (LA(Continue) || LA(Break))
+            {
+                Step();
+                if (LA(Identifier))
+                    Step();
+                Expect(Semicolon);
+            }
+
+            // Return
+            else if (LA(Return))
+            {
+                Step();
+                if (!LA(Semicolon))
+                    Expression();
+                Expect(Semicolon);
+            }
+
+            // Goto
+            else if (LA(Goto))
+            {
+                Step();
+                if (LA(Identifier) || LA(Default))
+                {
+                    Step();
+                }
+                else if (LA(Case))
+                {
+                    Step();
+                    if (!LA(Semicolon))
+                        Expression();
+                }
+
+                Expect(Semicolon);
+            }
+
+            // WithStatement
+            else if (LA(With))
+            {
+                Step();
+                Expect(OpenParenthesis);
+
+                // Symbol
+                if (LA(Identifier))
+                    IdentifierList();
+                else
+                    Expression();
+
+                Expect(CloseParenthesis);
+                Statement(ref par, false, true);
+            }
+
+            // SynchronizedStatement
+            else if (LA(Synchronized))
+            {
+                Step();
+                if (LA(OpenParenthesis))
+                {
+                    Step();
+                    Expression();
+                    Expect(CloseParenthesis);
+                }
+                Statement(ref par, false, true);
+            }
+
+            // TryStatement
+            else if (LA(Try))
+            {
+                Step();
+                Statement(ref par, false, true);
+
+                if (!(LA(Catch) || LA(Finally)))
+                    SynErr(Catch, "catch or finally expected");
+
+                // Catches
+            do_catch:
+                if (LA(Catch))
+                {
+                    Step();
+
+                    // CatchParameter
+                    if (LA(OpenParenthesis))
+                    {
+                        DVariable catchVar = new DVariable();
+                        catchVar.Type = BasicType();
+                        Expect(Identifier);
+                        catchVar.name = t.Value;
+                        Expect(CloseParenthesis);
+
+                        Statement(ref par, false, true);
+
+                        if (LA(Catch))
+                            goto do_catch;
+                    }
+                }
+
+                if (LA(Finally))
+                {
+                    Step();
+
+                    Statement(ref par, false, true);
+                }
+            }
+
+            // ThrowStatement
+            else if (LA(Throw))
+            {
+                Step();
+
+                Expression();
+            }
+
+            // ScopeGuardStatement
+            else if (LA(Scope))
+            {
+                Step();
+                Expect(OpenParenthesis);
+                Expect(Identifier); // exit, failure, success
+                Expect(CloseParenthesis);
+                Statement(ref par, false, true);
+            }
+
+            // AsmStatement
+            else if (LA(Asm))
+            {
+                Step();
+                Expect(OpenCurlyBrace);
+
+                while (!IsEOF && !LA(CloseCurlyBrace))
+                {
+                    Step();
+                }
+
+                Expect(CloseCurlyBrace);
+            }
+
+            // PragmaStatement
+            else if (LA(Pragma))
+            {
+                _Pragma();
+                Statement(ref par, true, true);
+            }
+
+            // MixinStatement
+            else if (LA(Mixin))
+            {
+                Step();
+                Expect(OpenParenthesis);
+
+                AssignExpression();
+
+                Expect(CloseParenthesis);
+                Expect(Semicolon);
+            }
+
+            else if (IsAssignExpression())
+                AssignExpression();
+
+            else Declaration(ref par);
+        }
+
+        void BlockStatement(ref DNode par)
+        {
+            Expect(OpenCurlyBrace);
+
+            while (!IsEOF && !LA(CloseCurlyBrace))
+            {
+                Statement(ref par, true, true);
+            }
+
+            Expect(CloseCurlyBrace);
+        }
         #endregion
 
         #region Structs & Unions
@@ -1492,9 +1872,44 @@ namespace D_Parser
         #region Functions
         void FunctionBody(ref DNode par)
         {
-            Expect(OpenCurlyBrace);
+            bool HadIn = false, HadOut = false;
 
-            Expect(CloseCurlyBrace);
+        check_again:
+            if (!HadIn && LA(In))
+            {
+                HadIn = true;
+                Step();
+                BlockStatement(ref par);
+
+                if (!HadOut && LA(Out))
+                    goto check_again;
+            }
+
+            if (!HadOut && LA(Out))
+            {
+                HadOut = true;
+                Step();
+
+                if (LA(OpenParenthesis))
+                {
+                    Step();
+                    Expect(Identifier);
+                    Expect(CloseParenthesis);
+                }
+
+                BlockStatement(ref par);
+
+                if (!HadIn && LA(In))
+                    goto check_again;
+            }
+
+            if (HadIn || HadOut)
+                Expect(Body);
+            else if (LA(Body))
+                Step();
+
+            BlockStatement(ref par);
+
         }
         #endregion
 
