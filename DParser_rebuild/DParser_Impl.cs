@@ -17,91 +17,65 @@ namespace D_Parser
         /// <summary>
         /// Module entry point
         /// </summary>
-        void Root()
+        DModule Root()
         {
             Step();
 
+            DModule module = new DModule();
+            DBlockStatement _block = module as DBlockStatement;
+
             // Only one module declaration possible possible!
             if (LA(Module))
-                ModuleDeclaration();
+                module.ModuleName=ModuleDeclaration();
 
             // Now only declarations or other statements are allowed!
             while (!IsEOF)
             {
-                DeclDef(ref doc);
+                //AttributeSpecifier
+                if (IsAttributeSpecifier())
+                    AttributeSpecifier();
+
+                //ImportDeclaration
+                else if (LA(Import))
+                    ImportDeclaration(ref module);
+
+                //Constructor
+                else if (LA(This))
+                    module.Add( Constructor());
+
+                //Destructor
+                else if (LA(Tilde) && LA(This))
+                    module.Add( Destructor());
+
+                //Invariant
+                else if (LA(Invariant))
+                    module.Add(_Invariant());
+
+                //UnitTest
+                //ConditionalDeclaration
+                //StaticAssert
+                //TemplateMixin
+
+                //MixinDeclaration
+                else if (LA(Mixin))
+                    MixinDeclaration();
+
+                //;
+                else if (LA(Semicolon))
+                    Step();
+
+                // else:
+                else Declaration(ref _block);
             }
+            return module;
         }
 
-        void DeclDef(ref DNode par)
-        {
-            //AttributeSpecifier
-            if (IsAttributeSpecifier())
-                AttributeSpecifier();
-
-            //ImportDeclaration
-            else if (LA(Import))
-                ImportDeclaration();
-
-            //EnumDeclaration
-            else if (LA(Enum))
-                EnumDeclaration();
-
-            //ClassDeclaration
-            else if (LA(Class))
-                ClassDeclaration();
-
-            //InterfaceDeclaration
-            else if (LA(Interface))
-                InterfaceDeclaration();
-
-            //AggregateDeclaration
-            else if (LA(Struct) || LA(Union))
-                AggregateDeclaration();
-
-            //Declaration
-            else if (IsDeclaration())
-                Declaration(ref par);
-
-            //Constructor
-            else if (LA(This))
-                Constructor(ref par);
-
-            //Destructor
-            else if (LA(Tilde) && LA(This))
-                Destructor(ref par);
-
-            //Invariant
-            //UnitTest
-            //StaticConstructor
-            //StaticDestructor
-            //SharedStaticConstructor
-            //SharedStaticDestructor
-            //ConditionalDeclaration
-            //StaticAssert
-            //TemplateDeclaration
-            //TemplateMixin
-
-            //MixinDeclaration
-            else if (LA(Mixin))
-                MixinDeclaration();
-
-            //;
-            else if (LA(Semicolon))
-                Step();
-
-            // else:
-            else
-            {
-                SynErr(t.Kind, "Declaration expected");
-                Step();
-            }
-        }
-
-        void ModuleDeclaration()
+        string ModuleDeclaration()
         {
             Expect(Module);
-            Document.module = ModuleFullyQualifiedName();
+            string ret = ModuleFullyQualifiedName();
             Expect(Semicolon);
+            return ret;
         }
 
         string ModuleFullyQualifiedName()
@@ -119,7 +93,7 @@ namespace D_Parser
             return ret;
         }
 
-        void ImportDeclaration()
+        void ImportDeclaration(ref DModule par)
         {
             Expect(Import);
 
@@ -139,16 +113,14 @@ namespace D_Parser
                 while (LA(Comma))
                 {
                     Step();
-                    _Import();
+                    par.Imports.Add(_Import());
                 }
 
             Expect(Semicolon);
         }
 
-        void _Import()
+        string _Import()
         {
-            string imp = "";
-
             // ModuleAliasIdentifier
             if (PK(Assign))
             {
@@ -157,8 +129,7 @@ namespace D_Parser
                 Step();
             }
 
-            imp = ModuleFullyQualifiedName();
-            import.Add(imp);
+            return ModuleFullyQualifiedName();
         }
 
         void ImportBind()
@@ -190,16 +161,33 @@ namespace D_Parser
             return LA(Alias) || IsStorageClass || IsBasicType();
         }
 
-        void Declaration(ref DNode par)
+        void Declaration(ref DBlockStatement par)
         {
             if (LA(Alias))
             {
                 Step();
+                DBlockStatement _t = new DBlockStatement();
+                Decl(ref _t);
+                foreach (DNode n in _t)
+                    n.fieldtype = FieldType.AliasDecl;
+
+                par.Children.AddRange(_t);
             }
-            Decl(ref par);
+            else if (LA(Struct) || LA(Union))
+                par.Add(AggregateDeclaration());
+            else if (LA(Enum))
+                par.Add(EnumDeclaration());
+            else if (LA(Class))
+                par.Add(ClassDeclaration());
+            else if (LA(Template))
+                par.Add(TemplateDeclaration());
+            else if (LA(Interface))
+                par.Add(InterfaceDeclaration());
+            else 
+                Decl(ref par);
         }
 
-        void Decl(ref DNode par)
+        void Decl(ref DBlockStatement par)
         {
             // Enum possible storage class attributes
             List<int> storAttr = new List<int>();
@@ -217,7 +205,7 @@ namespace D_Parser
                 n.Type = new DTokenDeclaration(t.Kind);
                 n.TypeToken = t.Kind;
                 Expect(Identifier);
-                n.name = t.Value;
+                n.Name = t.Value;
                 Expect(Assign);
                 (n as DVariable).Initializer = AssignExpression();
                 Expect(Semicolon);
@@ -256,7 +244,7 @@ namespace D_Parser
 
                     DVariable otherNode = new DVariable();
                     otherNode.Assign(firstNode);
-                    otherNode.name = t.Value;
+                    otherNode.Name = t.Value;
 
                     if (LA(Assign))
                         otherNode.Initializer = Initializer();
@@ -268,10 +256,15 @@ namespace D_Parser
             }
 
             // BasicType Declarator FunctionBody
+            else if (firstNode is DBlockStatement)
+            {
+                DBlockStatement _block = firstNode as DBlockStatement;
+                FunctionBody(ref _block);
+                par.Add(firstNode);
+            }
             else
             {
-                FunctionBody(ref firstNode);
-                par.Add(firstNode);
+                SynErr(OpenCurlyBrace,"Function declaration expected in front of block statement");
             }
         }
 
@@ -442,7 +435,7 @@ namespace D_Parser
                     else
                     {
                         Expect(Identifier);
-                        ret.name = t.Value;
+                        ret.Name = t.Value;
 
                         /*
                          * Just here suffixes can follow!
@@ -470,7 +463,7 @@ namespace D_Parser
                     return ret;
 
                 Expect(Identifier);
-                ret.name = t.Value;
+                ret.Name = t.Value;
             }
 
             if (IsDeclaratorSuffix)
@@ -861,6 +854,18 @@ namespace D_Parser
 
         #region Attributes
 
+        DBlockStatement _Invariant()
+        {
+            DBlockStatement inv = new DMethod();
+            inv.Name = "invariant";
+
+            Expect(Invariant);
+            Expect(OpenParenthesis);
+            Expect(CloseParenthesis);
+            BlockStatement(ref inv);
+            return inv;
+        }
+
         void _Pragma()
         {
             Expect(Pragma);
@@ -944,8 +949,12 @@ namespace D_Parser
         {
             if (IsBasicType())
             {
-                if (LA(Identifier) || BasicTypes[la.Kind] || LA(Dot))
+                if (LA(Identifier) || LA(Dot) || BasicTypes[la.Kind])
                 {
+                    /*
+                     * In the following we are skipping the entire identifierlist that may consists of TemplateDeclarations and/or multiple identifiers
+                     */
+
                     if (LA(Dot))
                         Peek();
 
@@ -956,16 +965,60 @@ namespace D_Parser
                         if (PK(OpenParenthesis))
                         {
                             Peek();
-                            OverPeekRoundBrackets();
+                            OverPeekBrackets(OpenParenthesis);
                         }
                         else
                             Peek();
                     }
 
+                    // Skip possible slicing operators
+                    while (PK(OpenSquareBracket))
+                    {
+                        Peek();
+                        OverPeekBrackets(OpenSquareBracket);
+                    }
+
+                    while (PK(Dot))
+                    {
+                        Peek();
+                        // pk should be an identifier now
+                        if (!PK(Identifier))
+                        {
+                            SynErr(Identifier);
+                            return true;
+                        }
+
+                        Peek(); // Skip identifier
+
+                        // Check for template declarations
+                        if (PK(Not))
+                        {
+                            Peek();
+                            if (PK(OpenParenthesis))
+                            {
+                                Peek();
+                                OverPeekBrackets(OpenParenthesis);
+                            }
+                            else
+                                Peek();
+                        }
+
+                        // Skip possible slicing operators
+                        while (PK(OpenSquareBracket))
+                        {
+                            Peek();
+                            OverPeekBrackets(OpenSquareBracket);
+                        }
+                    }
+
+                    /*
+                     * And after we skipped all idents and templDecls, we check for basictype2's or trailing identifiers which represent a declaration
+                     */
+
                     // Check for basictype2's
                     // Important: Do this AFTER we seeked for template declarations...
                     // because we have a peek token that's located after the template decl!
-                    if (PK(Identifier) || PK(Dot) || PK(Times) || PK(OpenSquareBracket) || PK(Delegate) || PK(Function))
+                    if (PK(Identifier) || PK(Times) || PK(Delegate) || PK(Function))
                         return false;
                 }
 
@@ -974,7 +1027,7 @@ namespace D_Parser
                     if (PK(OpenParenthesis))
                     {
                         Peek();
-                        OverPeekRoundBrackets();
+                        OverPeekBrackets(OpenParenthesis);
                     }
 
                     if (PK(Dot) && !LA(Typeof))
@@ -1212,17 +1265,10 @@ namespace D_Parser
                     BaseClassList();
                 }
 
-                Expect(OpenCurlyBrace);
+                DBlockStatement _block = new DClassLike();
+                _block.fieldtype = FieldType.Class;
+                ClassBody(ref _block);
 
-                //TODO : Add anonymous class to parent expression somehow
-                DNode anonClass = new DClassLike();
-                anonClass.TypeToken = Class;
-                while (!IsEOF && !LA(CloseCurlyBrace))
-                {
-                    DeclDef(ref anonClass);
-                }
-
-                Expect(CloseCurlyBrace);
                 return ex;
             }
 
@@ -1532,7 +1578,7 @@ namespace D_Parser
         #endregion
 
         #region Statements
-        void Statement(ref DNode par, bool CanBeEmpty, bool BlocksAllowed)
+        void Statement(ref DBlockStatement par, bool CanBeEmpty, bool BlocksAllowed)
         {
             if (CanBeEmpty && LA(Semicolon))
             {
@@ -1812,7 +1858,7 @@ namespace D_Parser
                         DVariable catchVar = new DVariable();
                         catchVar.Type = BasicType();
                         Expect(Identifier);
-                        catchVar.name = t.Value;
+                        catchVar.Name = t.Value;
                         Expect(CloseParenthesis);
 
                         Statement(ref par, false, true);
@@ -1882,12 +1928,15 @@ namespace D_Parser
             }
 
             else if (IsAssignExpression())
+            {
                 AssignExpression();
-
-            else Declaration(ref par);
+                Expect(Semicolon);
+            }
+            else 
+                Declaration(ref par);
         }
 
-        void BlockStatement(ref DNode par)
+        void BlockStatement(ref DBlockStatement par)
         {
             Expect(OpenCurlyBrace);
 
@@ -1901,14 +1950,97 @@ namespace D_Parser
         #endregion
 
         #region Structs & Unions
-        private void AggregateDeclaration()
+        private DNode AggregateDeclaration()
         {
-            throw new NotImplementedException();
+            if (!(LA(Union) || LA(Struct)))
+                SynErr(t.Kind, "union or struct required");
+            Step();
+
+            DClassLike ret = new DClassLike();
+            ret.Type = new DTokenDeclaration(t.Kind);
+            ret.TypeToken = t.Kind;
+
+            Expect(Identifier);
+            ret.Name = t.Value;
+
+            if (LA(Semicolon))
+            {
+                Step();
+                return ret;
+            }
+
+            // StructTemplateDeclaration
+            if (LA(OpenParenthesis))
+            {
+                Step();
+                ret.TemplateParameters = TemplateParameterList();
+                Expect(CloseParenthesis);
+
+                // Constraint[opt]
+                if (LA(If))
+                {
+                    Step();
+                    Expect(OpenParenthesis);
+                    Expression();
+                    Expect(CloseParenthesis);
+                }
+            }
+
+            Expect(OpenCurlyBrace);
+
+            while (!IsEOF && !LA(CloseCurlyBrace))
+            {
+                if (IsAttributeSpecifier())
+                    AttributeSpecifier();
+
+                // StructConstructor | StructDestructor
+                else if (LA(This) || (LA(Tilde) && PK(This)))
+                {
+                    DMethod dm = new DMethod();
+                    dm.Type = new NormalDeclaration((LA(Dot) ? "~" : "") + "this");
+                    dm.Name = (LA(Dot) ? "~" : "") + "this";
+
+                    if (LA(Dot))
+                        Step();
+                    Step();
+
+                    Expect(OpenParenthesis);
+
+                    if (LA(This))
+                    {
+                        DVariable dv = new DVariable();
+                        dv.Name = "this";
+                        dm.Parameters.Add(dv);
+                        Step();
+                    }
+                    else
+                        dm.Parameters = Parameters();
+
+                    Expect(CloseParenthesis);
+
+                    DBlockStatement dm_ = dm as DBlockStatement;
+                    FunctionBody(ref dm_);
+                    ret.Add(dm);
+                }
+
+                else if (LA(Invariant))
+                    ret.Add(_Invariant());
+                else if (LA(Semicolon))
+                    Step();
+                else
+                {
+                    DBlockStatement _ret = ret as DBlockStatement;
+                    Decl(ref _ret);
+                }
+            }
+
+            Expect(CloseCurlyBrace);
+            return ret;
         }
         #endregion
 
         #region Classes
-        private void ClassDeclaration()
+        private DNode ClassDeclaration()
         {
             throw new NotImplementedException();
         }
@@ -1918,33 +2050,38 @@ namespace D_Parser
             throw new NotImplementedException();
         }
 
-        void Constructor(ref DNode par)
+        private void ClassBody(ref DBlockStatement _block)
         {
-
+            throw new NotImplementedException();
         }
 
-        void Destructor(ref DNode par)
+        DNode Constructor()
         {
+            throw new NotImplementedException();
+        }
 
+        DNode Destructor()
+        {
+            throw new NotImplementedException();
         }
         #endregion
 
         #region Interfaces
-        private void InterfaceDeclaration()
+        private DNode InterfaceDeclaration()
         {
             throw new NotImplementedException();
         }
         #endregion
 
         #region Enums
-        private void EnumDeclaration()
+        private DNode EnumDeclaration()
         {
             throw new NotImplementedException();
         }
         #endregion
 
         #region Functions
-        void FunctionBody(ref DNode par)
+        void FunctionBody(ref DBlockStatement par)
         {
             bool HadIn = false, HadOut = false;
 
@@ -1988,6 +2125,10 @@ namespace D_Parser
         #endregion
 
         #region Templates
+        private DNode TemplateDeclaration()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Be a bit lazy here with checking whether there're templates or not

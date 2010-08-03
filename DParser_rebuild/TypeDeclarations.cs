@@ -159,8 +159,8 @@ namespace D_Parser
                 if (n.Type != null)
                     ret += n.Type.ToString();
 
-                if (!String.IsNullOrEmpty(n.name))
-                    ret += (" " + n.name);
+                if (!String.IsNullOrEmpty(n.Name))
+                    ret += (" " + n.Name);
 
                 if (n.Initializer != null)
                     ret += "= " + n.Initializer.ToString();

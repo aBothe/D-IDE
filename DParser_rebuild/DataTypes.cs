@@ -4,6 +4,19 @@ using System.Text;
 
 namespace D_Parser
 {
+    /// <summary>
+    /// Encapsules an entire document and represents the root node
+    /// </summary>
+    public class DModule : DBlockStatement
+    {
+        public string ModuleName="";
+        public string ModuleFile="";
+
+        public List<string> Imports = new List<string>();
+
+        public DModule():base(FieldType.Root) { }
+    }
+
     public class DVariable : DNode
     {
         public DExpression Initializer; // Variable
@@ -11,7 +24,6 @@ namespace D_Parser
         public DVariable()
             :base(FieldType.Variable)
         {
-
         }
 
         public override string ToString()
@@ -19,18 +31,82 @@ namespace D_Parser
             return base.ToString()+(Initializer!=null?(" = "+Initializer.ToString()):"");
         }
     }
-    /*
-    public class DDelegate : DMethod
+
+    public class DBlockStatement : DNode, IEnumerable<DNode>
     {
-        public new DelegateDeclaration Type;
+        public Location BlockStartLocation=new Location();
 
-        public DDelegate()
+        public DBlockStatement() {}
+        public DBlockStatement(FieldType Field) { fieldtype = Field; }
+
+        public new DNode Assign(DBlockStatement block)
         {
-            fieldtype = FieldType.Delegate;
+            children = block.children;
+            BlockStartLocation = block.BlockStartLocation;
+            return base.Assign(block as DNode);
         }
-    }*/
 
-    public class DMethod : DNode
+        public List<DNode> children = new List<DNode>();
+
+        public int Count
+        {
+            get { return children.Count; }
+        }
+
+        public DNode this[int i]
+        {
+            get { if (children.Count > i)return (DNode)children[i]; else return null; }
+            set { if (children.Count > i) children[i] = value; }
+        }
+
+        public DNode this[string name]
+        {
+            get
+            {
+                if (children.Count > 1)
+                {
+                    foreach (DNode n in Children)
+                    {
+                        if ((n as DNode).Name == name) return (n as DNode);
+                    }
+                }
+                return null;
+            }
+            set
+            {
+                if (children.Count > 1)
+                {
+                    for (int i = 0; i < Count; i++)
+                    {
+                        if (this[i].Name == name) this[i] = value;
+                    }
+                }
+            }
+        }
+
+        public void Add(DNode v)
+        {
+            children.Add(v);
+        }
+
+        public List<DNode> Children
+        {
+            get { return children; }
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return children.GetEnumerator();
+        }
+
+        IEnumerator<DNode> IEnumerable<DNode>.GetEnumerator()
+        {
+            return children.GetEnumerator();
+        }
+
+    }
+
+    public class DMethod : DBlockStatement
     {
         public List<DNode> Parameters = new List<DNode>();
 
@@ -41,7 +117,7 @@ namespace D_Parser
         }
     }
 
-    public class DClassLike : DNode
+    public class DClassLike : DBlockStatement
     {
         public List<TypeDeclaration> BaseClasses=new List<TypeDeclaration>();
 
@@ -52,7 +128,7 @@ namespace D_Parser
         }
     }
 
-    public class DEnum : DNode
+    public class DEnum : DBlockStatement
     {
         public TypeDeclaration EnumBaseType;
 

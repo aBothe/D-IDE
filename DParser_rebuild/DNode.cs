@@ -4,24 +4,22 @@ using System.Text;
 
 namespace D_Parser
 {
-    public class DNode : IEnumerable<DNode>
+    public class DNode
     {
         public FieldType fieldtype;
-        public int TypeToken;
+        public int TypeToken=0;
         public TypeDeclaration Type;
-        public string name;
-        public string module;
+        public string Name;
 
         public List<DNode> TemplateParameters=new List<DNode>(); // Functions, Templates
 
-        public List<DNode> children = new List<DNode>(); // Functions, Templates
         public DNode Parent; // Functions, Templates
 
-        public string desc;
+        public string Description="";
 
-        public List<int> modifiers;
+        public List<string> Attributes=new List<string>();
 
-        public CodeLocation startLoc, BlockStartLocation, endLoc;
+        public CodeLocation startLoc, endLoc;
 
         public DNode(FieldType ftype)
         {
@@ -34,31 +32,20 @@ namespace D_Parser
             //fieldtype = other.fieldtype;
             TypeToken = other.TypeToken;
             Type = other.Type;
-            name = other.name;
-            module = other.module;
+            Name = other.Name;
             TemplateParameters = other.TemplateParameters;
 
-            children = other.Children;
             Parent = other.Parent;
-            desc = other.desc;
-            modifiers = other.modifiers;
+            Description = other.Description;
+            Attributes = other.Attributes;
             startLoc = other.startLoc;
-            BlockStartLocation = other.BlockStartLocation;
             endLoc = other.endLoc;
             return this;
         }
 
         protected void Init()
         {
-            name = "";
-            TypeToken = 0;
-
-            desc = "";
-
-            modifiers = new List<int>();
-
             startLoc = new CodeLocation();
-            BlockStartLocation = new CodeLocation();
             endLoc = new CodeLocation();
         }
 
@@ -68,56 +55,9 @@ namespace D_Parser
             this.fieldtype = FieldType.Variable;
         }
 
-        public int Count
-        {
-            get { return children.Count; }
-        }
-
-        public DNode this[int i]
-        {
-            get { if (children.Count > i)return (DNode)children[i]; else return null; }
-            set { if (children.Count > i) children[i] = value; }
-        }
-
-        public DNode this[string name]
-        {
-            get
-            {
-                if (children.Count > 1)
-                {
-                    foreach (DNode n in Children)
-                    {
-                        if ((n as DNode).name == name) return (n as DNode);
-                    }
-                }
-                return null;
-            }
-            set
-            {
-                if (children.Count > 1)
-                {
-                    for (int i = 0; i < Count; i++)
-                    {
-                        if (this[i].name == name) this[i] = value;
-                    }
-                }
-            }
-        }
-
-
         public override string ToString()
         {
-            return "[" + fieldtype.ToString() + "] " + (Type!=null?Type.ToString():"") + " " + name;
-        }
-
-        public void Add(DNode v)
-        {
-            children.Add(v);
-        }
-
-        public List<DNode> Children
-        {
-            get { return children; }
+            return "[" + fieldtype.ToString() + "] " + (Type!=null?Type.ToString():"") + " " + Name;
         }
 
         public Location EndLocation
@@ -143,16 +83,6 @@ namespace D_Parser
                 startLoc = new CodeLocation(value.Column, value.Line);
             }
         }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return children.GetEnumerator();
-        }
-
-        IEnumerator<DNode> IEnumerable<DNode>.GetEnumerator()
-        {
-            return children.GetEnumerator();
-        }
     }
 
     public enum FieldType
@@ -160,17 +90,20 @@ namespace D_Parser
         AliasDecl,
         Constructor,
 
+        EnumValue, // enum item
+        Delegate,
+
         Variable,
-        Function,
+        Function, // is treated as a block statement
 
         Root, // root element
+        Block, // a field that is able to contain some children
+
+        // Special kinds of blocks
         Class,
         Template,
         Struct,
         Enum,
-        EnumValue, // enum item
-        Interface,
-
-        Delegate
+        Interface
     }
 }
