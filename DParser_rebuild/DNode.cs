@@ -17,7 +17,7 @@ namespace D_Parser
 
         public string Description="";
 
-        public List<string> Attributes=new List<string>();
+        public List<int> Attributes=new List<int>();
 
         public CodeLocation startLoc, endLoc;
 

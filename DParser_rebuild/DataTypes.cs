@@ -39,7 +39,7 @@ namespace D_Parser
         public DBlockStatement() {}
         public DBlockStatement(FieldType Field) { fieldtype = Field; }
 
-        public new DNode Assign(DBlockStatement block)
+        public DNode Assign(DBlockStatement block)
         {
             children = block.children;
             BlockStartLocation = block.BlockStartLocation;
@@ -119,7 +119,7 @@ namespace D_Parser
 
     public class DClassLike : DBlockStatement
     {
-        public List<TypeDeclaration> BaseClasses=new List<TypeDeclaration>();
+        public List<string> BaseClasses=new List<string>();
 
         public DClassLike()
             : base(FieldType.Class)

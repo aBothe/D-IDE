@@ -26,7 +26,7 @@ namespace D_Parser
 
             // Only one module declaration possible possible!
             if (LA(Module))
-                module.ModuleName=ModuleDeclaration();
+                module.ModuleName = ModuleDeclaration();
 
             // Now only declarations or other statements are allowed!
             while (!IsEOF)
@@ -41,11 +41,11 @@ namespace D_Parser
 
                 //Constructor
                 else if (LA(This))
-                    module.Add( Constructor());
+                    module.Add(Constructor());
 
                 //Destructor
                 else if (LA(Tilde) && LA(This))
-                    module.Add( Destructor());
+                    module.Add(Destructor());
 
                 //Invariant
                 else if (LA(Invariant))
@@ -183,7 +183,7 @@ namespace D_Parser
                 par.Add(TemplateDeclaration());
             else if (LA(Interface))
                 par.Add(InterfaceDeclaration());
-            else 
+            else
                 Decl(ref par);
         }
 
@@ -264,7 +264,7 @@ namespace D_Parser
             }
             else
             {
-                SynErr(OpenCurlyBrace,"Function declaration expected in front of block statement");
+                SynErr(OpenCurlyBrace, "Function declaration expected in front of block statement");
             }
         }
 
@@ -715,22 +715,17 @@ namespace D_Parser
 
         private DNode Parameter()
         {
-            //TODO: Handle this
+            int attr = 0;
             if (IsInOut())
             {
                 Step();
+                attr = t.Kind;
             }
 
-            TypeDeclaration td = null;
-            /*
-             * A basictype is possible(!), not required
-             */
-            if (IsBasicType() && (!LA(Identifier) || (!PK(Identifier) && lexer.CurrentPeekToken.Kind != OpenParenthesis)))
-            {
-                td = BasicType();
-            }
+            TypeDeclaration td = BasicType();
 
             DNode ret = Declarator(true);
+            if (attr != 0) ret.Attributes.Add(attr);
             if (ret.Type == null)
                 ret.Type = td;
             else
@@ -1265,7 +1260,7 @@ namespace D_Parser
                     BaseClassList();
                 }
 
-                DBlockStatement _block = new DClassLike();
+                DClassLike _block = new DClassLike();
                 _block.fieldtype = FieldType.Class;
                 ClassBody(ref _block);
 
@@ -1604,6 +1599,8 @@ namespace D_Parser
             else if (LA(If))
             {
                 Step();
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = t.Location;
                 Expect(OpenParenthesis);
 
                 // IfCondition
@@ -1625,13 +1622,19 @@ namespace D_Parser
 
                 Expect(CloseParenthesis);
                 // ThenStatement
-                Statement(ref par, false, true);
+
+                Statement(ref dbs, false, true);
+                if (dbs.Count > 0) par.Add(dbs);
 
                 // ElseStatement
                 if (LA(Else))
                 {
                     Step();
-                    Statement(ref par, false, true);
+                    dbs = new DBlockStatement();
+                    dbs.StartLocation = t.Location;
+                    Statement(ref dbs, false, true);
+                    dbs.EndLocation = t.EndLocation;
+                    if (dbs.Count > 0) par.Add(dbs);
                 }
             }
 
@@ -1639,35 +1642,52 @@ namespace D_Parser
             else if (LA(While))
             {
                 Step();
+
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = t.Location;
+
                 Expect(OpenParenthesis);
                 Expression();
                 Expect(CloseParenthesis);
 
-                Statement(ref par, false, true);
+                Statement(ref dbs, false, true);
+                dbs.EndLocation = t.EndLocation;
+                if (dbs.Count > 0) par.Add(dbs);
             }
 
             // DoStatement
             else if (LA(Do))
             {
                 Step();
-                Statement(ref par, false, true);
+
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = t.Location;
+                Statement(ref dbs, false, true);
+
                 Expect(While);
                 Expect(OpenParenthesis);
                 Expression();
                 Expect(CloseParenthesis);
+
+                dbs.EndLocation = t.EndLocation;
+                if (dbs.Count > 0) par.Add(dbs);
             }
 
             // ForStatement
             else if (LA(For))
             {
                 Step();
+
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = t.Location;
+
                 Expect(OpenParenthesis);
 
                 // Initialize
                 if (LA(Semicolon))
                     Step();
                 else
-                    Statement(ref par, false, true);
+                    Statement(ref dbs, false, true);
 
                 // Test
                 if (!LA(Semicolon))
@@ -1681,13 +1701,19 @@ namespace D_Parser
 
                 Expect(CloseParenthesis);
 
-                Statement(ref par, false, true);
+                Statement(ref dbs, false, true);
+                dbs.EndLocation = t.EndLocation;
+                if (dbs.Count > 0) par.Add(dbs);
             }
 
             // ForeachStatement
             else if (LA(Foreach) || LA(Foreach_Reverse))
             {
                 Step();
+
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = t.Location;
+
                 Expect(OpenParenthesis);
 
                 bool init = true;
@@ -1696,18 +1722,27 @@ namespace D_Parser
                     if (!init) Step();
                     init = false;
 
-                    if (LA(Ref))
-                        Step();
+                    DVariable forEachVar = new DVariable();
+                    forEachVar.StartLocation = la.Location;
 
+                    if (LA(Ref))
+                    {
+                        Step();
+                        forEachVar.Attributes.Add(Ref);
+                    }
                     if (LA(Identifier) && (PK(Semicolon) || lexer.CurrentPeekToken.Kind == Comma))
                     {
                         Step();
+                        forEachVar.Name = t.Value;
                     }
                     else
                     {
-                        Type();
+                        forEachVar.Type = Type();
                         Expect(Identifier);
+                        forEachVar.Name = t.Value;
                     }
+                    forEachVar.EndLocation = t.EndLocation;
+                    dbs.Add(forEachVar);
                 }
 
                 Expect(Semicolon);
@@ -1723,25 +1758,40 @@ namespace D_Parser
 
                 Expect(CloseParenthesis);
 
-                Statement(ref par, false, true);
+                Statement(ref dbs, false, true);
+
+                dbs.EndLocation = t.EndLocation;
+                if (dbs.Count > 0) par.Add(dbs);
             }
 
             // [Final] SwitchStatement
             else if ((LA(Final) && PK(Switch)) || LA(Switch))
             {
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = la.Location;
+
                 if (LA(Final))
+                {
+                    dbs.Attributes.Add(Final);
                     Step();
+                }
                 Step();
                 Expect(OpenParenthesis);
                 Expression();
                 Expect(CloseParenthesis);
-                Statement(ref par, false, true);
+                Statement(ref dbs, false, true);
+                dbs.EndLocation = t.EndLocation;
+
+                if (dbs.Count > 0) par.Add(dbs);
             }
 
             // CaseStatement
             else if (LA(Case))
             {
                 Step();
+
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = la.Location;
 
                 AssignExpression();
 
@@ -1759,17 +1809,27 @@ namespace D_Parser
                     Expect(Case);
                     AssignExpression();
                     Expect(Colon);
-
-                    Statement(ref par, true, true);
                 }
+
+                Statement(ref dbs, true, true);
+                dbs.EndLocation = t.EndLocation;
+
+                if (dbs.Count > 0) par.Add(dbs);
             }
 
             // Default
             else if (LA(Default))
             {
                 Step();
+
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = la.Location;
+
                 Expect(Colon);
-                Statement(ref par, true, true);
+                Statement(ref dbs, true, true);
+                dbs.EndLocation = t.EndLocation;
+
+                if (dbs.Count > 0) par.Add(dbs);
             }
 
             // Continue | Break
@@ -1812,6 +1872,10 @@ namespace D_Parser
             else if (LA(With))
             {
                 Step();
+
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = t.Location;
+
                 Expect(OpenParenthesis);
 
                 // Symbol
@@ -1821,27 +1885,41 @@ namespace D_Parser
                     Expression();
 
                 Expect(CloseParenthesis);
-                Statement(ref par, false, true);
+                Statement(ref dbs, false, true);
+                dbs.EndLocation = t.EndLocation;
+
+                if (dbs.Count > 0) par.Add(dbs);
             }
 
             // SynchronizedStatement
             else if (LA(Synchronized))
             {
                 Step();
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = t.Location;
+
                 if (LA(OpenParenthesis))
                 {
                     Step();
                     Expression();
                     Expect(CloseParenthesis);
                 }
-                Statement(ref par, false, true);
+                Statement(ref dbs, false, true);
+
+                dbs.EndLocation = t.EndLocation;
+                if (dbs.Count > 0) par.Add(dbs);
             }
 
             // TryStatement
             else if (LA(Try))
             {
                 Step();
-                Statement(ref par, false, true);
+
+                DBlockStatement dbs = new DBlockStatement();
+                dbs.StartLocation = t.Location;
+                Statement(ref dbs, false, true);
+                dbs.EndLocation = t.EndLocation;
+                if (dbs.Count > 0) par.Add(dbs);
 
                 if (!(LA(Catch) || LA(Finally)))
                     SynErr(Catch, "catch or finally expected");
@@ -1851,28 +1929,38 @@ namespace D_Parser
                 if (LA(Catch))
                 {
                     Step();
+                    dbs = new DBlockStatement();
+                    dbs.StartLocation = t.Location;
 
                     // CatchParameter
                     if (LA(OpenParenthesis))
                     {
+                        Step();
                         DVariable catchVar = new DVariable();
                         catchVar.Type = BasicType();
                         Expect(Identifier);
                         catchVar.Name = t.Value;
                         Expect(CloseParenthesis);
-
-                        Statement(ref par, false, true);
-
-                        if (LA(Catch))
-                            goto do_catch;
+                        dbs.Add(catchVar);
                     }
+
+                    Statement(ref dbs, false, true);
+                    dbs.EndLocation = t.EndLocation;
+                    if (dbs.Count > 0) par.Add(dbs);
+
+                    if (LA(Catch))
+                        goto do_catch;
                 }
 
                 if (LA(Finally))
                 {
                     Step();
 
-                    Statement(ref par, false, true);
+                    dbs = new DBlockStatement();
+                    dbs.StartLocation = t.Location;
+                    Statement(ref dbs, false, true);
+                    dbs.EndLocation = t.EndLocation;
+                    if (dbs.Count > 0) par.Add(dbs);
                 }
             }
 
@@ -1880,8 +1968,8 @@ namespace D_Parser
             else if (LA(Throw))
             {
                 Step();
-
                 Expression();
+                Expect(Semicolon);
             }
 
             // ScopeGuardStatement
@@ -1932,13 +2020,14 @@ namespace D_Parser
                 AssignExpression();
                 Expect(Semicolon);
             }
-            else 
+            else
                 Declaration(ref par);
         }
 
         void BlockStatement(ref DBlockStatement par)
         {
             Expect(OpenCurlyBrace);
+            par.BlockStartLocation = t.Location;
 
             while (!IsEOF && !LA(CloseCurlyBrace))
             {
@@ -1957,6 +2046,7 @@ namespace D_Parser
             Step();
 
             DClassLike ret = new DClassLike();
+            ret.fieldtype = FieldType.Struct;
             ret.Type = new DTokenDeclaration(t.Kind);
             ret.TypeToken = t.Kind;
 
@@ -1978,14 +2068,60 @@ namespace D_Parser
 
                 // Constraint[opt]
                 if (LA(If))
-                {
-                    Step();
-                    Expect(OpenParenthesis);
-                    Expression();
-                    Expect(CloseParenthesis);
-                }
+                    Constraint();
             }
 
+            ClassBody(ref ret);
+
+            return ret;
+        }
+        #endregion
+
+        #region Classes
+        private DNode ClassDeclaration()
+        {
+            Expect(Class);
+            DClassLike dc = new DClassLike();
+            dc.StartLocation = t.Location;
+
+            Expect(Identifier);
+            dc.Name = t.Value;
+
+            if (LA(OpenParenthesis))
+            {
+                Step();
+                dc.TemplateParameters = TemplateParameterList();
+                Expect(CloseParenthesis);
+            }
+
+            if (LA(Colon))
+                dc.BaseClasses = BaseClassList();
+
+            ClassBody(ref dc);
+
+            dc.EndLocation = t.EndLocation;
+            return dc;
+        }
+
+        private List<string> BaseClassList()
+        {
+            Expect(Colon);
+
+            List<string> ret = new List<string>();
+
+            bool init = true;
+            while (init || LA(Comma))
+            {
+                if (IsProtectionAttribute() && !LA(Protected))
+                    Step();
+
+                ret.Add(ModuleFullyQualifiedName());
+            }
+            return ret;
+        }
+
+        private void ClassBody(ref DClassLike ret)
+        {
             Expect(OpenCurlyBrace);
 
             while (!IsEOF && !LA(CloseCurlyBrace))
@@ -2006,7 +2142,7 @@ namespace D_Parser
 
                     Expect(OpenParenthesis);
 
-                    if (LA(This))
+                    if (LA(This) && ret.fieldtype != FieldType.Struct)
                     {
                         DVariable dv = new DVariable();
                         dv.Name = "this";
@@ -2035,24 +2171,6 @@ namespace D_Parser
             }
 
             Expect(CloseCurlyBrace);
-            return ret;
-        }
-        #endregion
-
-        #region Classes
-        private DNode ClassDeclaration()
-        {
-            throw new NotImplementedException();
-        }
-
-        private List<TypeDeclaration> BaseClassList()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void ClassBody(ref DBlockStatement _block)
-        {
-            throw new NotImplementedException();
         }
 
         DNode Constructor()
@@ -2067,9 +2185,40 @@ namespace D_Parser
         #endregion
 
         #region Interfaces
-        private DNode InterfaceDeclaration()
+        private DClassLike InterfaceDeclaration()
         {
-            throw new NotImplementedException();
+            Expect(Interface);
+            DClassLike dc = new DClassLike();
+            dc.StartLocation = t.Location;
+
+            Expect(Identifier);
+            dc.Name = t.Value;
+
+            if (LA(OpenParenthesis))
+            {
+                Step();
+                dc.TemplateParameters = TemplateParameterList();
+                Expect(CloseParenthesis);
+
+                if (LA(If))
+                    Constraint();
+            }
+
+            if (LA(Colon))
+                dc.BaseClasses = BaseClassList();
+
+            ClassBody(ref dc);
+
+            dc.EndLocation = t.EndLocation;
+            return dc;
+        }
+
+        void Constraint()
+        {
+            Expect(If);
+            Expect(OpenParenthesis);
+            Expression();
+            Expect(CloseParenthesis);
         }
         #endregion
 
@@ -2125,9 +2274,34 @@ namespace D_Parser
         #endregion
 
         #region Templates
+        /*
+         * American beer is like sex on a boat - Fucking close to water;)
+         */
+
         private DNode TemplateDeclaration()
         {
-            throw new NotImplementedException();
+            Expect(Template);
+            DClassLike dc = new DClassLike();
+            dc.fieldtype = FieldType.Template;
+            dc.StartLocation = t.Location;
+
+            Expect(Identifier);
+            dc.Name = t.Value;
+
+            Expect(OpenParenthesis);
+            dc.TemplateParameters = TemplateParameterList();
+            Expect(CloseParenthesis);
+
+            if (LA(If))
+                Constraint();
+
+            if (LA(Colon))
+                dc.BaseClasses = BaseClassList();
+
+            ClassBody(ref dc);
+
+            dc.EndLocation = t.EndLocation;
+            return dc;
         }
 
         /// <summary>
@@ -2143,8 +2317,10 @@ namespace D_Parser
                 else if (lexer.CurrentPeekToken.Kind == CloseParenthesis)
                 {
                     r--;
-                    if (r < 0 && Peek().Kind == OpenParenthesis)
-                        return true;
+                    if (r <= 0)
+                        if (Peek().Kind == OpenParenthesis)
+                            return true;
+                        else return false;
                 }
                 Peek();
             }
@@ -2153,12 +2329,135 @@ namespace D_Parser
 
         private List<DNode> TemplateParameterList()
         {
-            throw new NotImplementedException();
+            List<DNode> ret = new List<DNode>();
+
+            bool init = true;
+            while (init || LA(Comma))
+            {
+                if (!init) Step();
+                init = false;
+
+                DNode dv=new DVariable();
+
+                // TemplateThisParameter
+                if (LA(This))
+                    Step();
+
+                // TemplateTupleParameter
+                if (LA(Identifier) && PK(Dot) && Peek().Kind == Dot && Peek().Kind == Dot)
+                {
+                    Step();
+                    dv.Type = new VarArgDecl();
+                    dv.Name = t.Value;
+                    Step();
+                    Step();
+                    Step();
+                }
+
+                // TemplateAliasParameter
+                else if (LA(Alias))
+                {
+                    Step();
+                    dv.Type = new DTokenDeclaration(Alias);
+                    Expect(Identifier);
+                    dv.Name = t.Value;
+
+                    // TemplateAliasParameterSpecialization
+                    if (LA(Colon))
+                    {
+                        Step();
+
+                        dv.Type = new InheritanceDecl(dv.Type);
+                        (dv.Type as InheritanceDecl).InheritedClass=Type();
+                    }
+
+                    // TemplateAliasParameterDefault
+                    if (LA(Assign))
+                    {
+                        Step();
+                        (dv as DVariable).Initializer = new TypeDeclarationExpression(Type());
+                    }
+                }
+
+                // TemplateTypeParameter
+                else if (LA(Identifier) && (PK(Colon) || PK(Assign) || PK(Comma) || PK(CloseParenthesis)))
+                {
+                    Step();
+                    dv.Name = t.Value;
+
+                    if (LA(Colon))
+                    {
+                        Step();
+                        dv.Type = new InheritanceDecl(dv.Type);
+                        (dv.Type as InheritanceDecl).InheritedClass = Type();
+                    }
+
+                    if (LA(Assign))
+                    {
+                        Step();
+                        (dv as DVariable).Initializer = new TypeDeclarationExpression(Type());
+                    }
+                }
+
+                else
+                {
+                    TypeDeclaration bt = BasicType();
+                    dv = Declarator(false);
+                    dv.Type.Base = bt;
+
+                    if (LA(Colon))
+                    {
+                        Step();
+                        ConditionalExpression();
+                    }
+
+                    if (LA(Assign))
+                    {
+                        Step();
+                        if (LA(Identifier))
+                            Step();
+                        else
+                            ConditionalExpression();
+                    }
+                }
+                ret.Add(dv);
+            }
+
+            return ret;
         }
 
         private TypeDeclaration TemplateInstance()
         {
-            throw new NotImplementedException();
+            Expect(Identifier);
+            TemplateDecl td = new TemplateDecl(new NormalDeclaration(t.Value));
+            Expect(Not);
+            if (LA(OpenParenthesis))
+            {
+                Step();
+
+                bool init=true;
+                while(init || LA(Comma))
+                {
+                    if(!init)Step();
+                    init=false;
+
+                    if(IsAssignExpression())
+                        td.Template.Add(new DExpressionDecl(AssignExpression()));
+                    else
+                        td.Template.Add(Type());
+                }
+
+                Expect(CloseParenthesis);
+            }
+            else
+            {
+                Step();
+                if (T(Identifier) || T(Literal))
+                    td.Template.Add(new NormalDeclaration(t.Value));
+                else
+                    td.Template.Add(new DTokenDeclaration(t.Kind));
+            }
+            return td;
         }
         #endregion
 

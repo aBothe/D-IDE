@@ -264,7 +264,7 @@ namespace D_Parser
     {
         public static byte GetDeclarationClassTypeId { get { return 9; } }
         public override byte TypeId { get { return GetDeclarationClassTypeId; } }
-        public TypeDeclaration Template;
+        public List<TypeDeclaration> Template=new List<TypeDeclaration>();
 
         public TemplateDecl() { }
         public TemplateDecl(TypeDeclaration Base)
@@ -274,7 +274,13 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return (Base != null ? Base.ToString() : "").ToString() + "!(" + (Template != null ? Template.ToString() : "") + ")";
+            string s = (Base != null ? Base.ToString() : "").ToString() + "!(";
+
+            foreach (TypeDeclaration t in Template)
+                s += t.ToString()+",";
+            s=s.TrimEnd(',',' ');
+            s+=")";
+            return s;
         }
     }
 

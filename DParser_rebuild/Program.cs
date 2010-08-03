@@ -22,6 +22,7 @@ namespace D_Parser
 
         static void DParser_OnError(DModule tempModule, int line, int col, int kindOf, string message)
         {
+            throw new Exception(message);
             Console.WriteLine("Line "+line.ToString()+" Col "+col.ToString()+": "+message);
         }
 

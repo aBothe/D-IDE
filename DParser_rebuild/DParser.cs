@@ -241,17 +241,6 @@ namespace D_Parser
         public delegate void ErrorHandler(DModule tempModule, int line, int col, int kindOf, string message);
         static public event ErrorHandler OnError, OnSemanticError;
 
-
-        void SynErr(int n, int col, int ln)
-        {
-            OnError(Document, ln, col, n, "");
-            //errors.SynErr(ln, col, n);
-        }
-        void SynErr(int n, int col, int ln, string msg)
-        {
-            OnError(Document, ln, col, n, msg);
-            //errors.Error(ln, col, msg);
-        }
         void SynErr(int n, string msg)
         {
             OnError(Document, la.Location.Line, la.Location.Column, n, msg);
@@ -263,16 +252,6 @@ namespace D_Parser
             //errors.SynErr(la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n);
         }
 
-        void SemErr(int n, int col, int ln)
-        {
-            OnSemanticError(Document, ln, col, n, "");
-            //errors.SemErr(ln, col, n);
-        }
-        void SemErr(int n, int col, int ln, string msg)
-        {
-            OnSemanticError(Document, ln, col, n, msg);
-            //errors.Error(ln, col, msg);
-        }
         void SemErr(int n, string msg)
         {
             OnSemanticError(Document, la.Location.Line, la.Location.Column, n, msg);
