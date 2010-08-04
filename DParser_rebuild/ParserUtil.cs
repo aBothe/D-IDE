@@ -183,9 +183,6 @@ namespace D_Parser
             }
         }
 
-        public CodeLocation EndLocation_ { get { return new CodeLocation(col + ToString().Length, line); } }
-        public CodeLocation Location_ { get { return new CodeLocation(col, line); } }
-
         public override string ToString()
         {
             if (kind == DTokens.Identifier || kind == DTokens.Literal)

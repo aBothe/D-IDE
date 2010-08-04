@@ -1323,7 +1323,6 @@ namespace D_Parser
 
         void ReadComment()
         {
-            int pk = 0;
             switch (ReaderRead())
             {
                 case '+':

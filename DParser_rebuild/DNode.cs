@@ -6,7 +6,7 @@ namespace D_Parser
 {
     public class DNode
     {
-        public FieldType fieldtype;
+        public FieldType fieldtype = FieldType.Variable;
         public int TypeToken=0;
         public TypeDeclaration Type;
         public string Name;
@@ -19,11 +19,11 @@ namespace D_Parser
 
         public List<int> Attributes=new List<int>();
 
-        public CodeLocation startLoc, endLoc;
+        public Location StartLocation,EndLocation;
+
 
         public DNode(FieldType ftype)
         {
-            Init();
             fieldtype = ftype;
         }
 
@@ -38,50 +38,18 @@ namespace D_Parser
             Parent = other.Parent;
             Description = other.Description;
             Attributes = other.Attributes;
-            startLoc = other.startLoc;
-            endLoc = other.endLoc;
+            StartLocation = other.StartLocation;
+            EndLocation = other.EndLocation;
             return this;
-        }
-
-        protected void Init()
-        {
-            startLoc = new CodeLocation();
-            endLoc = new CodeLocation();
         }
 
         public DNode()
         {
-            Init();
-            this.fieldtype = FieldType.Variable;
         }
 
         public override string ToString()
         {
             return "[" + fieldtype.ToString() + "] " + (Type!=null?Type.ToString():"") + " " + Name;
-        }
-
-        public Location EndLocation
-        {
-            get
-            {
-                return new Location(endLoc.Column, endLoc.Line);
-            }
-            set
-            {
-                endLoc = new CodeLocation(value.Column, value.Line);
-            }
-        }
-
-        public Location StartLocation
-        {
-            get
-            {
-                return new Location(startLoc.Column, startLoc.Line);
-            }
-            set
-            {
-                startLoc = new CodeLocation(value.Column, value.Line);
-            }
         }
     }
 

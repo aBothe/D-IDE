@@ -50,7 +50,6 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeLocation.cs" />
     <Compile Include="DataTypes.cs" />
     <Compile Include="DKeywords.cs" />
     <Compile Include="DLexer.cs" />

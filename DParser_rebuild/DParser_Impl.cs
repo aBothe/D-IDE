@@ -22,52 +22,90 @@ namespace D_Parser
             Step();
 
             DModule module = new DModule();
-            DBlockStatement _block = module as DBlockStatement;
-
+            doc = module;
             // Only one module declaration possible possible!
             if (LA(Module))
                 module.ModuleName = ModuleDeclaration();
 
+            DBlockStatement _block = module as DBlockStatement;
             // Now only declarations or other statements are allowed!
             while (!IsEOF)
             {
-                //AttributeSpecifier
-                if (IsAttributeSpecifier())
-                    AttributeSpecifier();
-
-                //ImportDeclaration
-                else if (LA(Import))
-                    ImportDeclaration(ref module);
-
-                //Constructor
-                else if (LA(This))
-                    module.Add(Constructor());
-
-                //Destructor
-                else if (LA(Tilde) && LA(This))
-                    module.Add(Destructor());
-
-                //Invariant
-                else if (LA(Invariant))
-                    module.Add(_Invariant());
-
-                //UnitTest
-                //ConditionalDeclaration
-                //StaticAssert
-                //TemplateMixin
-
-                //MixinDeclaration
-                else if (LA(Mixin))
-                    MixinDeclaration();
-
-                //;
-                else if (LA(Semicolon))
-                    Step();
-
-                // else:
-                else Declaration(ref _block);
+                DeclDef(ref _block);
             }
             return module;
+        }
+
+        void DeclDef(ref DBlockStatement module)
+        {
+            //AttributeSpecifier
+            if (IsAttributeSpecifier())
+                AttributeSpecifier();
+
+            //ImportDeclaration
+            else if (LA(Import))
+                ImportDeclaration();
+
+            //Constructor
+            else if (LA(This))
+                module.Add(Constructor(module.fieldtype==FieldType.Struct));
+
+            //Destructor
+            else if (LA(Tilde) && LA(This))
+                module.Add(Destructor());
+
+            //Invariant
+            else if (LA(Invariant))
+                module.Add(_Invariant());
+
+            //UnitTest
+            //ConditionalDeclaration
+            //StaticAssert
+            //TemplateMixin
+
+            //MixinDeclaration
+            else if (LA(Mixin))
+                MixinDeclaration();
+
+            //;
+            else if (LA(Semicolon))
+                Step();
+
+            // {
+            else if (LA(OpenCurlyBrace))
+            {
+                // Due to having a new attribute scope, we'll use a new attribute stack here
+                Stack<int> AttrBackup = BlockAttributes;
+                BlockAttributes = new Stack<int>();
+
+                while (DeclarationAttributes.Count > 0)
+                    BlockAttributes.Push(DeclarationAttributes.Pop());
+
+                ClassBody(ref module);
+
+                // After the block ended, restore the previous block attributes
+                BlockAttributes = AttrBackup;
+            }
+
+            // Class Allocators
+            // Note: Although occuring in global scope, parse it anyway but declare it as semantic nonsense;)
+            else if (LA(New))
+            {
+                Step();
+
+                DMethod dm=new DMethod();
+                dm.Name="new";
+                DNode dn = dm as DNode;
+                ApplyAttributes(ref dn);
+
+                dm.Parameters=Parameters();
+                DBlockStatement dbs = dm as DBlockStatement;
+                FunctionBody(ref dbs);
+                
+            }
+
+            // else:
+            else Declaration(ref module);
         }
 
         string ModuleDeclaration()
@@ -93,7 +131,7 @@ namespace D_Parser
             return ret;
         }
 
-        void ImportDeclaration(ref DModule par)
+        void ImportDeclaration()
         {
             Expect(Import);
 
@@ -113,7 +151,7 @@ namespace D_Parser
                 while (LA(Comma))
                 {
                     Step();
-                    par.Imports.Add(_Import());
+                    doc.Imports.Add(_Import());
                 }
 
             Expect(Semicolon);
@@ -150,7 +188,6 @@ namespace D_Parser
         {
             throw new NotImplementedException();
         }
-
         #endregion
 
         #region Declarations
@@ -167,6 +204,9 @@ namespace D_Parser
             {
                 Step();
                 DBlockStatement _t = new DBlockStatement();
+                DNode dn = _t as DNode;
+                ApplyAttributes(ref dn);
+
                 Decl(ref _t);
                 foreach (DNode n in _t)
                     n.fieldtype = FieldType.AliasDecl;
@@ -190,18 +230,22 @@ namespace D_Parser
         void Decl(ref DBlockStatement par)
         {
             // Enum possible storage class attributes
-            List<int> storAttr = new List<int>();
+            bool HasStorageClassModifiers = false;
             while (IsStorageClass)
             {
                 Step();
-                storAttr.Add(t.Kind);
+                if (!DeclarationAttributes.Contains(t.Kind))
+                    DeclarationAttributes.Push(t.Kind);
+                HasStorageClassModifiers = true;
             }
 
             // Autodeclaration
-            if (storAttr.Count > 0 && PK(Identifier) && Peek().Kind == DTokens.Assign)
+            if (HasStorageClassModifiers && PK(Identifier) && Peek().Kind == DTokens.Assign)
             {
                 Step();
                 DNode n = new DVariable();
+                ApplyAttributes(ref n);
+
                 n.Type = new DTokenDeclaration(t.Kind);
                 n.TypeToken = t.Kind;
                 Expect(Identifier);
@@ -216,6 +260,7 @@ namespace D_Parser
             // Declarators
             TypeDeclaration ttd = BasicType();
             DNode firstNode = Declarator(false);
+            ApplyAttributes(ref firstNode);
 
             if (firstNode.Type == null)
                 firstNode.Type = ttd;
@@ -877,7 +922,7 @@ namespace D_Parser
 
         bool IsAttributeSpecifier()
         {
-            return (LA(Extern) || LA(Align) || LA(Pragma) || LA(Deprecated) || IsProtectionAttribute()
+            return (LA(Extern) ||LA(Export) || LA(Align) || LA(Pragma) || LA(Deprecated) || IsProtectionAttribute()
                 || LA(Static) || LA(Final) || LA(Override) || LA(Abstract) || LA(Const) || LA(Auto) || LA(Scope) || LA(__gshared) || LA(Shared) || LA(Immutable) || LA(InOut)
                 || LA(DisabledAttribute));
         }
@@ -889,11 +934,13 @@ namespace D_Parser
 
         private void AttributeSpecifier()
         {
+            int attr = la.Kind;
             if (LA(Extern) && PK(OpenParenthesis))
             {
                 Step();
                 Step();
-                Expect(Identifier);
+                while (!IsEOF && !LA(CloseParenthesis))
+                    Step();
                 Expect(CloseParenthesis);
             }
             else if (LA(Align) && PK(OpenParenthesis))
@@ -909,7 +956,11 @@ namespace D_Parser
                 Step();
 
             if (LA(Colon))
+            {
+                BlockAttributes.Push(attr);
                 Step();
+            }
+            else DeclarationAttributes.Push(attr);
 
             // Unlike the definition we return here because later we'll treat this attribute as a pre-definition of a Declaration
         }
@@ -1260,7 +1311,7 @@ namespace D_Parser
                     BaseClassList();
                 }
 
-                DClassLike _block = new DClassLike();
+                DBlockStatement _block = new DClassLike();
                 _block.fieldtype = FieldType.Class;
                 ClassBody(ref _block);
 
@@ -2015,6 +2066,10 @@ namespace D_Parser
                 Expect(Semicolon);
             }
 
+                // Blockstatement
+            else if (LA(OpenCurlyBrace))
+                BlockStatement(ref par);
+
             else if (IsAssignExpression())
             {
                 AssignExpression();
@@ -2045,7 +2100,7 @@ namespace D_Parser
                 SynErr(t.Kind, "union or struct required");
             Step();
 
-            DClassLike ret = new DClassLike();
+            DBlockStatement ret = new DClassLike();
             ret.fieldtype = FieldType.Struct;
             ret.Type = new DTokenDeclaration(t.Kind);
             ret.TypeToken = t.Kind;
@@ -2081,7 +2136,7 @@ namespace D_Parser
         private DNode ClassDeclaration()
         {
             Expect(Class);
-            DClassLike dc = new DClassLike();
+            DBlockStatement dc = new DClassLike();
             dc.StartLocation = t.Location;
 
             Expect(Identifier);
@@ -2095,7 +2150,7 @@ namespace D_Parser
             }
 
             if (LA(Colon))
-                dc.BaseClasses = BaseClassList();
+                (dc as DClassLike).BaseClasses = BaseClassList();
 
             ClassBody(ref dc);
 
@@ -2120,76 +2175,68 @@ namespace D_Parser
             return ret;
         }
 
-        private void ClassBody(ref DClassLike ret)
+        private void ClassBody(ref DBlockStatement ret)
         {
             Expect(OpenCurlyBrace);
-
             while (!IsEOF && !LA(CloseCurlyBrace))
             {
-                if (IsAttributeSpecifier())
-                    AttributeSpecifier();
-
-                // StructConstructor | StructDestructor
-                else if (LA(This) || (LA(Tilde) && PK(This)))
-                {
-                    DMethod dm = new DMethod();
-                    dm.Type = new NormalDeclaration((LA(Dot) ? "~" : "") + "this");
-                    dm.Name = (LA(Dot) ? "~" : "") + "this";
-
-                    if (LA(Dot))
-                        Step();
-                    Step();
-
-                    Expect(OpenParenthesis);
-
-                    if (LA(This) && ret.fieldtype != FieldType.Struct)
-                    {
-                        DVariable dv = new DVariable();
-                        dv.Name = "this";
-                        dm.Parameters.Add(dv);
-                        Step();
-                    }
-                    else
-                        dm.Parameters = Parameters();
-
-                    Expect(CloseParenthesis);
-
-                    DBlockStatement dm_ = dm as DBlockStatement;
-                    FunctionBody(ref dm_);
-                    ret.Add(dm);
-                }
-
-                else if (LA(Invariant))
-                    ret.Add(_Invariant());
-                else if (LA(Semicolon))
-                    Step();
-                else
-                {
-                    DBlockStatement _ret = ret as DBlockStatement;
-                    Decl(ref _ret);
-                }
+                DeclDef(ref ret);
             }
-
             Expect(CloseCurlyBrace);
         }
 
-        DNode Constructor()
+        DNode Constructor(bool IsStruct)
         {
-            throw new NotImplementedException();
+            Expect(This);
+            DMethod dm = new DMethod();
+            dm.Type = new NormalDeclaration("this");
+            dm.Name = "this";
+
+            Expect(OpenParenthesis);
+
+            if (LA(This) && IsStruct)
+            {
+                DVariable dv = new DVariable();
+                dv.Name = "this";
+                dm.Parameters.Add(dv);
+                Step();
+            }
+            else
+                dm.Parameters = Parameters();
+
+            Expect(CloseParenthesis);
+
+            DBlockStatement dm_ = dm as DBlockStatement;
+            FunctionBody(ref dm_);
+            return dm;
         }
 
         DNode Destructor()
         {
-            throw new NotImplementedException();
+            Expect(Tilde);
+            Expect(This);
+            DMethod dm = new DMethod();
+            dm.Type = new NormalDeclaration("~this");
+            dm.Name = "~this";
+
+            Expect(OpenParenthesis);
+            dm.Parameters = Parameters();
+            Expect(CloseParenthesis);
+
+            DBlockStatement dm_ = dm as DBlockStatement;
+            FunctionBody(ref dm_);
+            return dm;
         }
         #endregion
 
         #region Interfaces
-        private DClassLike InterfaceDeclaration()
+        private DBlockStatement InterfaceDeclaration()
         {
             Expect(Interface);
-            DClassLike dc = new DClassLike();
+            DBlockStatement dc = new DClassLike();
             dc.StartLocation = t.Location;
+            DNode n = dc as DNode;
+            ApplyAttributes(ref n);
 
             Expect(Identifier);
             dc.Name = t.Value;
@@ -2205,7 +2252,7 @@ namespace D_Parser
             }
 
             if (LA(Colon))
-                dc.BaseClasses = BaseClassList();
+                (dc as DClassLike).BaseClasses = BaseClassList();
 
             ClassBody(ref dc);
 
@@ -2281,8 +2328,10 @@ namespace D_Parser
         private DNode TemplateDeclaration()
         {
             Expect(Template);
-            DClassLike dc = new DClassLike();
+            DBlockStatement dc = new DClassLike();
             dc.fieldtype = FieldType.Template;
+            DNode n = dc as DNode;
+            ApplyAttributes(ref n);
             dc.StartLocation = t.Location;
 
             Expect(Identifier);
@@ -2296,7 +2345,7 @@ namespace D_Parser
                 Constraint();
 
             if (LA(Colon))
-                dc.BaseClasses = BaseClassList();
+                (dc as DClassLike).BaseClasses = BaseClassList();
 
             ClassBody(ref dc);
 

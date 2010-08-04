@@ -25,11 +25,24 @@ namespace D_Parser
         /// <summary>
         /// Modifiers for entire block
         /// </summary>
-        List<int> BlockModifiers;
+        Stack<int> BlockAttributes=new Stack<int>();
         /// <summary>
         /// Modifiers for current expression only
         /// </summary>
-        List<int> ExpressionModifiers;
+        Stack<int> DeclarationAttributes=new Stack<int>();
+
+        void ApplyAttributes(ref DNode n)
+        {
+            foreach (int attr in BlockAttributes.ToArray())
+                n.Attributes.Add(attr);
+
+            while (DeclarationAttributes.Count > 0)
+            {
+                int attr = DeclarationAttributes.Pop();
+                if (!n.Attributes.Contains(attr))
+                    n.Attributes.Add(attr);
+            }
+        }
 
         public DModule Document
         {
