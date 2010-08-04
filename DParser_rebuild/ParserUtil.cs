@@ -139,8 +139,6 @@ namespace D_Parser
 
     public class DToken
     {
-        internal readonly int kind;
-
         internal readonly int col;
         internal readonly int line;
 
@@ -150,10 +148,7 @@ namespace D_Parser
         internal DToken next;
         readonly Location endLocation;
 
-        public int Kind
-        {
-            get { return kind; }
-        }
+        public readonly int Kind;
 
         public LiteralFormat LiteralFormat
         {
@@ -185,9 +180,9 @@ namespace D_Parser
 
         public override string ToString()
         {
-            if (kind == DTokens.Identifier || kind == DTokens.Literal)
+            if (Kind == DTokens.Identifier || Kind == DTokens.Literal)
                 return val;
-            return DTokens.GetTokenString(kind);
+            return DTokens.GetTokenString(Kind);
         }
 
         public DToken(DToken t)
@@ -199,7 +194,7 @@ namespace D_Parser
         public DToken(int kind, int col, int line) : this(kind, col, line, null) { }
         public DToken(int kind, int col, int line, string val)
         {
-            this.kind = kind;
+            this.Kind = kind;
             this.col = col;
             this.line = line;
             this.val = val;
@@ -212,7 +207,7 @@ namespace D_Parser
 
         public DToken(int kind, Location startLocation, Location endLocation, string val, object literalValue, LiteralFormat literalFormat)
         {
-            this.kind = kind;
+            this.Kind = kind;
             this.col = startLocation.Column;
             this.line = startLocation.Line;
             this.endLocation = endLocation;

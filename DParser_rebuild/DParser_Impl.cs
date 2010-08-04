@@ -38,6 +38,8 @@ namespace D_Parser
 
         void DeclDef(ref DBlockStatement module)
         {
+            bool HasConditionalDeclaration = false;
+
             //AttributeSpecifier
             if (IsAttributeSpecifier())
                 AttributeSpecifier();
@@ -48,7 +50,7 @@ namespace D_Parser
 
             //Constructor
             else if (LA(This))
-                module.Add(Constructor(module.fieldtype==FieldType.Struct));
+                module.Add(Constructor(module.fieldtype == FieldType.Struct));
 
             //Destructor
             else if (LA(Tilde) && LA(This))
@@ -59,8 +61,79 @@ namespace D_Parser
                 module.Add(_Invariant());
 
             //UnitTest
+            else if (LA(Unittest))
+            {
+                Step();
+                DBlockStatement dbs = new DBlockStatement(FieldType.Function);
+                dbs.Type = new DTokenDeclaration(Unittest);
+                dbs.StartLocation = t.Location;
+                FunctionBody(ref dbs);
+                dbs.EndLocation = t.EndLocation;
+            }
+
             //ConditionalDeclaration
+            else if (LA(Version) || LA(Debug) || LA(If))
+            {
+                Step();
+                string n = t.ToString();
+
+                if (T(If))
+                {
+                    Expect(OpenParenthesis);
+                    AssignExpression();
+                    Expect(CloseParenthesis);
+                }
+                else if (LA(Assign))
+                {
+                    Step();
+                    Step();
+                    Expect(Semicolon);
+                }
+                else if (T(Version))
+                {
+                    Expect(OpenParenthesis);
+                    n += "(";
+                    Step();
+                    n += t.ToString();
+                    Expect(CloseParenthesis);
+                    n += ")";
+                }
+                else if (T(Debug) && LA(OpenParenthesis))
+                {
+                    Expect(OpenParenthesis);
+                    n += "(";
+                    Step();
+                    n += t.ToString();
+                    Expect(CloseParenthesis);
+                    n += ")";
+                }
+
+                if (LA(Colon))
+                    Step();
+
+                HasConditionalDeclaration = true;
+                return;
+            }
+
+            else if (HasConditionalDeclaration && LA(Else))
+            {
+                Step();
+            }
+
             //StaticAssert
+            else if (LA(Assert))
+            {
+                Step();
+                Expect(OpenParenthesis);
+                AssignExpression();
+                if (LA(Comma))
+                {
+                    Step();
+                    AssignExpression();
+                }
+                Expect(CloseParenthesis);
+                Expect(Semicolon);
+            }
             //TemplateMixin
 
             //MixinDeclaration
@@ -74,7 +147,7 @@ namespace D_Parser
             // {
             else if (LA(OpenCurlyBrace))
             {
-                // Due to having a new attribute scope, we'll use a new attribute stack here
+                // Due to having a new attribute scope, we'll have use a new attribute stack here
                 Stack<int> AttrBackup = BlockAttributes;
                 BlockAttributes = new Stack<int>();
 
@@ -93,19 +166,21 @@ namespace D_Parser
             {
                 Step();
 
-                DMethod dm=new DMethod();
-                dm.Name="new";
+                DMethod dm = new DMethod();
+                dm.Name = "new";
                 DNode dn = dm as DNode;
                 ApplyAttributes(ref dn);
 
-                dm.Parameters=Parameters();
+                dm.Parameters = Parameters();
                 DBlockStatement dbs = dm as DBlockStatement;
                 FunctionBody(ref dbs);
-                
+
             }
 
             // else:
             else Declaration(ref module);
+
+            HasConditionalDeclaration = false;
         }
 
         string ModuleDeclaration()
@@ -216,7 +291,22 @@ namespace D_Parser
             else if (LA(Struct) || LA(Union))
                 par.Add(AggregateDeclaration());
             else if (LA(Enum))
-                par.Add(EnumDeclaration());
+            {
+                DNode n = EnumDeclaration();
+                // If the enum name is empty, add all enum values to the par node
+                if (n is DEnum && String.IsNullOrEmpty((n as DEnum).Name))
+                {
+                    DEnum en = n as DEnum;
+
+                    foreach (DNode ev in en)
+                    {
+                        ev.Attributes.AddRange(en.Attributes);
+                        par.Add(ev);
+                    }
+                }
+                else
+                    par.Add(n);
+            }
             else if (LA(Class))
                 par.Add(ClassDeclaration());
             else if (LA(Template))
@@ -922,7 +1012,7 @@ namespace D_Parser
 
         bool IsAttributeSpecifier()
         {
-            return (LA(Extern) ||LA(Export) || LA(Align) || LA(Pragma) || LA(Deprecated) || IsProtectionAttribute()
+            return (LA(Extern) || LA(Export) || LA(Align) || LA(Pragma) || LA(Deprecated) || IsProtectionAttribute()
                 || LA(Static) || LA(Final) || LA(Override) || LA(Abstract) || LA(Const) || LA(Auto) || LA(Scope) || LA(__gshared) || LA(Shared) || LA(Immutable) || LA(InOut)
                 || LA(DisabledAttribute));
         }
@@ -960,9 +1050,8 @@ namespace D_Parser
                 BlockAttributes.Push(attr);
                 Step();
             }
-            else DeclarationAttributes.Push(attr);
 
-            // Unlike the definition we return here because later we'll treat this attribute as a pre-definition of a Declaration
+            else DeclarationAttributes.Push(attr);
         }
         #endregion
 
@@ -1224,7 +1313,7 @@ namespace D_Parser
                 LA(Not) || LA(Tilde))
             {
                 Step();
-                AssignTokenExpression ae = new AssignTokenExpression(t.kind);
+                AssignTokenExpression ae = new AssignTokenExpression(t.Kind);
                 ae.FollowingExpression = UnaryExpression();
                 return ae;
             }
@@ -2272,7 +2361,75 @@ namespace D_Parser
         #region Enums
         private DNode EnumDeclaration()
         {
-            throw new NotImplementedException();
+            Expect(Enum);
+
+            DEnum mye = new DEnum();
+            mye.StartLocation = t.Location;
+            DNode n = mye as DNode;
+            ApplyAttributes(ref n);
+
+            if (LA(Identifier))
+            {
+                Step();
+                mye.Name = t.Value;
+            }
+
+            if (LA(Colon))
+            {
+                Step();
+                mye.EnumBaseType = Type();
+            }
+
+            if (LA(Semicolon))
+            {
+                Step();
+
+                DVariable enumVar = new DVariable();
+                enumVar.Assign(mye);
+                if (mye.EnumBaseType != null)
+                    enumVar.Type = mye.EnumBaseType;
+                else
+                    enumVar.Type = new DTokenDeclaration(Enum);
+                enumVar.EndLocation = t.Location;
+
+                return enumVar;
+            }
+            else
+            {
+                Expect(OpenCurlyBrace);
+
+                bool init = true;
+                while ((init && !LA(Comma)) || LA(Comma))
+                {
+                    if (!init) Step();
+                    init = false;
+
+                    if (LA(CloseCurlyBrace)) break;
+
+                    DEnumValue ev = new DEnumValue();
+                    ev.StartLocation = t.Location;
+                    if (LA(Identifier) && (PK(Assign) || lexer.CurrentPeekToken.Kind == Comma || lexer.CurrentPeekToken.Kind == CloseCurlyBrace))
+                    {
+                        Step();
+                        ev.Name = t.Value;
+                    }
+                    else
+                    {
+                        ev.Type = Type();
+                        Expect(Identifier);
+                        ev.Name = t.Value;
+                    }
+
+                    if (LA(Assign))
+                    {
+                        Step();
+                        ev.Initializer = AssignExpression();
+                    }
+                    mye.Add(ev);
+                }
+                Expect(CloseCurlyBrace);
+                return mye;
+            }
         }
         #endregion
 
@@ -2386,7 +2543,7 @@ namespace D_Parser
                 if (!init) Step();
                 init = false;
 
-                DNode dv=new DVariable();
+                DNode dv = new DVariable();
 
                 // TemplateThisParameter
                 if (LA(This))
@@ -2417,7 +2574,7 @@ namespace D_Parser
                         Step();
 
                         dv.Type = new InheritanceDecl(dv.Type);
-                        (dv.Type as InheritanceDecl).InheritedClass=Type();
+                        (dv.Type as InheritanceDecl).InheritedClass = Type();
                     }
 
                     // TemplateAliasParameterDefault
@@ -2484,13 +2641,13 @@ namespace D_Parser
             {
                 Step();
 
-                bool init=true;
-                while(init || LA(Comma))
+                bool init = true;
+                while (init || LA(Comma))
                 {
-                    if(!init)Step();
-                    init=false;
+                    if (!init) Step();
+                    init = false;
 
-                    if(IsAssignExpression())
+                    if (IsAssignExpression())
                         td.Template.Add(new DExpressionDecl(AssignExpression()));
                     else
                         td.Template.Add(Type());
