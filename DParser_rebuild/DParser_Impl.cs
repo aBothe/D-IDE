@@ -2190,8 +2190,6 @@ namespace D_Parser
 
         private List<TypeDeclaration> BaseClassList()
         {
-            if (la.line == 196) { }
-
             Expect(Colon);
 
             List<TypeDeclaration> ret = new List<TypeDeclaration>();
@@ -2212,11 +2210,13 @@ namespace D_Parser
         private void ClassBody(ref DBlockStatement ret)
         {
             Expect(OpenCurlyBrace);
+            ret.BlockStartLocation = t.Location;
             while (!IsEOF && !LA(CloseCurlyBrace))
             {
                 DeclDef(ref ret);
             }
             Expect(CloseCurlyBrace);
+            ret.EndLocation = t.EndLocation;
         }
 
         DNode Constructor(bool IsStruct)
@@ -2374,6 +2374,7 @@ namespace D_Parser
             else
             {
                 Expect(OpenCurlyBrace);
+                mye.BlockStartLocation = t.Location;
 
                 bool init = true;
                 while ((init && !LA(Comma)) || LA(Comma))
@@ -2385,7 +2386,7 @@ namespace D_Parser
 
                     DEnumValue ev = new DEnumValue();
                     ev.StartLocation = t.Location;
-                    if (LA(Identifier) && (PK(Assign) || lexer.CurrentPeekToken.Kind == Comma || lexer.CurrentPeekToken.Kind == CloseCurlyBrace))
+                    if (LA(Identifier) && (PK(Assign) || PK(Comma) || PK(CloseCurlyBrace)))
                     {
                         Step();
                         ev.Name = t.Value;
@@ -2402,10 +2403,18 @@ namespace D_Parser
                         Step();
                         ev.Initializer = AssignExpression();
                     }
-                    mye.Add(ev);
+
+                    ev.EndLocation = t.EndLocation;
+
+                    if (String.IsNullOrEmpty(mye.Name))
+                        par.Add(ev);
+                    else
+                        mye.Add(ev);
                 }
                 Expect(CloseCurlyBrace);
-                par.Add(mye);
+                mye.EndLocation = t.Location;
+                if (!String.IsNullOrEmpty(mye.Name))
+                    par.Add(mye);
             }
         }
         #endregion
