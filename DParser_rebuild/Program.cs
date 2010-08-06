@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using PAB;
+using System.Threading;
 
 namespace D_Parser
 {
@@ -9,13 +11,20 @@ namespace D_Parser
     {
         public static void Main(string[] args)
         {
-            DParser dp = DParser.Create(new StringReader(File.ReadAllText("E:\\test.d")));
+            string src = File.ReadAllText("E:\\dmd2\\src\\phobos\\std\\algorithm.d"/*"E:\\test.d"*/);
+
+            HiPerfTimer hp = new HiPerfTimer();
             DParser.OnError += new DParser.ErrorHandler(DParser_OnError);
 
-            DModule n = dp.Parse();
-            n.Name = n.ModuleName;
+            hp.Start();
 
-            Dump(n,"");
+            DParser dp = DParser.Create(new StringReader(src));
+            DModule n = dp.Parse();
+
+            hp.Stop();
+            n.Name = n.ModuleName;
+            Console.WriteLine(hp.Duration + "s");
+            //Dump(n,"");
 
             return;
         }
@@ -23,20 +32,20 @@ namespace D_Parser
         static void DParser_OnError(DModule tempModule, int line, int col, int kindOf, string message)
         {
             throw new Exception(message);
-            Console.WriteLine("Line "+line.ToString()+" Col "+col.ToString()+": "+message);
+            Console.WriteLine("Line " + line.ToString() + " Col " + col.ToString() + ": " + message);
         }
 
-        static void Dump(DNode n,string lev)
+        static void Dump(DNode n, string lev)
         {
-            Console.WriteLine(lev+n.ToString());
+            Console.WriteLine(lev + n.ToString());
             if (n is DBlockStatement)
             {
-                Console.WriteLine(lev+"{");
+                Console.WriteLine(lev + "{");
                 foreach (DNode ch in n as DBlockStatement)
                 {
-                    Dump(ch,lev+"  ");
+                    Dump(ch, lev + "  ");
                 }
-                Console.WriteLine(lev+"}");
+                Console.WriteLine(lev + "}");
             }
         }
     }

@@ -175,21 +175,19 @@ namespace D_Parser
 
         // Additional operators
         public const int PowAssign = 159; // ^^=
-        public const int LessThanAssign = 160; // <=
-        public const int GreaterThanAssign = 161; // >=
-        public const int NotUnequalAssign = 162; // !<>=
-        public const int NotUnequal = 163; // !<>
-        public const int Unequal = 164; // <>
-        public const int UnequalAssign = 165; // <>=
-        public const int NotGreaterThan = 166; // !>
-        public const int NotGreaterThanAssign = 167; // !>=
-        public const int NotLessThan = 168; // !<
-        public const int NotLessThanAssign = 169; // !<=
-        public const int ShiftRight = 170; // >>
-        public const int ShiftRightUnsigned = 171; // >>>
-        public const int Pow = 172; // ^^
+        public const int NotUnequalAssign = 160; // !<>=
+        public const int NotUnequal = 161; // !<>
+        public const int Unequal = 162; // <>
+        public const int UnequalAssign = 163; // <>=
+        public const int NotGreaterThan = 164; // !>
+        public const int NotGreaterThanAssign = 165; // !>=
+        public const int NotLessThan = 166; // !<
+        public const int NotLessThanAssign = 167; // !<=
+        public const int ShiftRight = 168; // >>
+        public const int ShiftRightUnsigned = 169; // >>>
+        public const int Pow = 170; // ^^
 
-        public const int MaxToken = 173;
+        public const int MaxToken = 171;
         static BitArray NewSet(params int[] values)
         {
             BitArray bitArray = new BitArray(MaxToken);
@@ -219,14 +217,21 @@ namespace D_Parser
             TildeAssign, // ~=
             ShiftLeftAssign, // <<=
             ShiftRightAssign, // >>=
-            TripleRightAssign// >>>=
+            TripleRightAssign,// >>>=
+            PowAssign,
+            LessEqual,
+            GreaterEqual,
+            NotUnequalAssign,
+            UnequalAssign,
+            NotGreaterThanAssign,
+            NotLessThanAssign
             );
         public static BitArray TypeDeclarationKW = NewSet(Class, Interface, Struct, Template, Enum, Delegate, Function);
         public static BitArray RelationalOperators = NewSet(
             LessThan,
-            LessThanAssign,
+            LessEqual,
             GreaterThan,
-            GreaterThanAssign,
+            GreaterEqual,
             NotUnequalAssign, // !<>=
             NotUnequal, // !<>
             Unequal,
@@ -481,8 +486,6 @@ namespace D_Parser
 
     // Additional operators
         "^^=",
-        "<=",
-        ">=",
         "!<>=",
         "!<>",
         "<>",
