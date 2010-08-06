@@ -112,12 +112,15 @@ namespace D_Parser
             else if (OpenBracketKind == OpenCurlyBrace) CloseBracket = CloseCurlyBrace;
 
             int i = 0;
-            while (i >= 0 && lexer.CurrentPeekToken.Kind != EOF && !PK(CloseBracket))
+            while (lexer.CurrentPeekToken.Kind != EOF)
             {
                 if (PK(OpenBracketKind))
                     i++;
-                if (PK(CloseBracket))
+                else if (PK(CloseBracket))
+                {
                     i--;
+                    if (i <= 0) { Peek(); break; }
+                }
                 Peek();
             }
         }

@@ -119,7 +119,7 @@ namespace D_Parser
 
     public class DClassLike : DBlockStatement
     {
-        public List<string> BaseClasses=new List<string>();
+        public List<TypeDeclaration> BaseClasses=new List<TypeDeclaration>();
 
         public DClassLike()
             : base(FieldType.Class)

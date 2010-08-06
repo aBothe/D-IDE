@@ -193,7 +193,7 @@ namespace D_Parser
     /// </summary>
     public class MemberFunctionAttributeDecl : DTokenDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 6; } }
+        public static new byte GetDeclarationClassTypeId { get { return 6; } }
         public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         /// <summary>
         /// Equals <see cref="Token"/>
