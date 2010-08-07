@@ -11,22 +11,30 @@ namespace D_Parser
     {
         public static void Main(string[] args)
         {
-            string src = File.ReadAllText("E:\\dmd2\\src\\phobos\\std\\algorithm.d"/*"E:\\test.d"*/);
+            Dictionary<string, string> Files = new Dictionary<string, string>();
+            Files.Add("bind",File.ReadAllText("E:\\dmd2\\src\\phobos\\std\\bind.d"));
+            /*foreach (string fn in Directory.GetFiles("E:\\dmd2\\src\\phobos", "*.d", SearchOption.AllDirectories))
+            {
+                if (fn.EndsWith("phobos.d")) continue;
+                Files.Add(fn, File.ReadAllText(fn));
+            }*/
 
             HiPerfTimer hp = new HiPerfTimer();
             DParser.OnError += new DParser.ErrorHandler(DParser_OnError);
 
             hp.Start();
-
-            DParser dp = DParser.Create(new StringReader(src));
-            DModule n = dp.Parse();
-
+            int i = 0;
+            foreach (string file in Files.Keys)
+            {
+                i++;
+                DParser dp = DParser.Create(new StringReader(Files[file]));
+                DModule n = dp.Parse(true);
+            }
             hp.Stop();
-            n.Name = n.ModuleName;
             Console.WriteLine(hp.Duration + "s");
-            Dump(n,"");
 
-            return;
+            //Dump(n,"");
+            //Console.Read();
         }
 
         static void DParser_OnError(DModule tempModule, int line, int col, int kindOf, string message)

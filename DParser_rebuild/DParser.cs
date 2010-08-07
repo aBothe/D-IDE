@@ -48,7 +48,7 @@ namespace D_Parser
         {
             get { return doc; }
         }
-
+        bool ParseStructureOnly = false;
         public DLexer lexer;
         //public Errors errors;
         public DParser(DLexer lexer)
@@ -246,14 +246,21 @@ namespace D_Parser
 
         DToken Step() { lexer.NextToken(); Peek(1); return t; }
 
+        [DebuggerStepThrough()]
+        public DModule Parse()
+        {
+            return Parse(false);
+        }
+
         /// <summary>
         /// Initializes and proceed parse procedure
         /// </summary>
         /// <param name="imports">List of imports in the module</param>
-        /// <param name="fl">TODO: Folding marks</param>
+        /// <param name="ParseStructureOnly">If true, all statements and non-declarations are ignored - useful for analysing libraries</param>
         /// <returns>Completely parsed module structure</returns>
-        public DModule Parse()
+        public DModule Parse(bool ParseStructureOnly)
         {
+            this.ParseStructureOnly = ParseStructureOnly;
             doc=Root();
             return doc;
         }

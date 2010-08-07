@@ -209,6 +209,7 @@ namespace D_Parser
             // ImportBindings
             if (la.Kind==(Colon))
             {
+                Step();
                 ImportBind();
                 while (la.Kind==(Comma))
                 {
@@ -248,14 +249,43 @@ namespace D_Parser
             if (la.Kind==(Assign))
             {
                 Step();
+                Expect(Identifier);
                 imbBindDef = t.Value;
             }
         }
 
 
-        void MixinDeclaration()
+        DNode MixinDeclaration()
         {
-            throw new NotImplementedException();
+            Expect(Mixin);
+
+            if (LA(OpenParenthesis))
+            {
+                Step();
+                AssignExpression();
+                Expect(CloseParenthesis);
+            }
+            else
+            {
+                // TemplateMixinDeclaration
+                if (LA(Template))
+                    return TemplateDeclaration();
+
+                // TemplateMixin
+                else if (LA(Identifier))
+                {
+                    if (PK(Not))
+                        TemplateInstance();
+                    else
+                        Expect(Identifier);
+
+                    // MixinIdentifier
+                    if (LA(Identifier))
+                        Step();
+                }
+            }
+            Expect(Semicolon);
+            return null;
         }
         #endregion
 
@@ -275,6 +305,21 @@ namespace D_Parser
                 DBlockStatement _t = new DBlockStatement();
                 DNode dn = _t as DNode;
                 ApplyAttributes(ref dn);
+
+                // AliasThis
+                if (la.Kind == Identifier && PK(This))
+                {
+                    Step();
+                    DVariable dv = new DVariable();
+                    dv.StartLocation = lexer.LastToken.Location;
+                    dv.fieldtype = FieldType.AliasDecl;
+                    dv.Name = "this";
+                    dv.Type = new NormalDeclaration(t.Value);
+                    dv.EndLocation = t.EndLocation;
+                    Step();
+                    Expect(Semicolon);
+                    return;
+                }
 
                 Decl(ref _t);
                 foreach (DNode n in _t)
@@ -2223,15 +2268,10 @@ namespace D_Parser
             }
 
             // MixinStatement
+            //TODO: Handle this one in terms of adding it to the node structure
             else if (la.Kind == (Mixin))
             {
-                Step();
-                Expect(OpenParenthesis);
-
-                AssignExpression();
-
-                Expect(CloseParenthesis);
-                Expect(Semicolon);
+                    MixinDeclaration();
             }
 
             // (Static) AssertExpression
@@ -2261,12 +2301,15 @@ namespace D_Parser
             Expect(OpenCurlyBrace);
             par.BlockStartLocation = t.Location;
 
-            while (!IsEOF && la.Kind!=(CloseCurlyBrace))
-            {
-                Statement(ref par, true, true);
-            }
-
+            if (ParseStructureOnly)
+                lexer.SkipCurrentBlock();
+            else
+                while (!IsEOF && la.Kind != (CloseCurlyBrace))
+                {
+                    Statement(ref par, true, true);
+                }
             Expect(CloseCurlyBrace);
+            par.EndLocation = t.EndLocation;
         }
         #endregion
 
@@ -2780,25 +2823,27 @@ namespace D_Parser
 
         private TypeDeclaration TemplateInstance()
         {
+            if (la.line == 1013) { }
             Expect(Identifier);
             TemplateDecl td = new TemplateDecl(new NormalDeclaration(t.Value));
             Expect(Not);
             if (la.Kind==(OpenParenthesis))
             {
                 Step();
-
-                bool init = true;
-                while (init || la.Kind==(Comma))
+                if (la.Kind != CloseParenthesis)
                 {
-                    if (!init) Step();
-                    init = false;
+                    bool init = true;
+                    while (init || la.Kind == (Comma))
+                    {
+                        if (!init) Step();
+                        init = false;
 
-                    if (IsAssignExpression())
-                        td.Template.Add(new DExpressionDecl(AssignExpression()));
-                    else
-                        td.Template.Add(Type());
+                        if (IsAssignExpression())
+                            td.Template.Add(new DExpressionDecl(AssignExpression()));
+                        else
+                            td.Template.Add(Type());
+                    }
                 }
-
                 Expect(CloseParenthesis);
             }
             else

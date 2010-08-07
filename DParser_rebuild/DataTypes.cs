@@ -108,7 +108,7 @@ namespace D_Parser
 
     public class DMethod : DBlockStatement
     {
-        public List<DNode> Parameters = new List<DNode>();
+        public List<DNode> Parameters=new List<DNode>();
 
         public DMethod()
             : base(FieldType.Function)

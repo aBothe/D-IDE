@@ -17,8 +17,8 @@ namespace D_Parser
         int line = 1;
 
         protected DToken prevToken = null;
-        protected DToken lastToken = null;
         protected DToken curToken = null;
+        protected DToken lookaheadToken = null;
         protected DToken peekToken = null;
 
         protected StringBuilder sb = new StringBuilder();
@@ -69,7 +69,7 @@ namespace D_Parser
 
         public void SetInitialLocation(Location location)
         {
-            if (lastToken != null || curToken != null || peekToken != null)
+            if (curToken != null || lookaheadToken != null || peekToken != null)
                 throw new InvalidOperationException();
             this.line = location.Line;
             this.col = location.Column;
@@ -88,7 +88,7 @@ namespace D_Parser
             get
             {
                 //				Console.WriteLine("Call to DToken");
-                return lastToken;
+                return curToken;
             }
         }
 
@@ -100,7 +100,7 @@ namespace D_Parser
             get
             {
                 //				Console.WriteLine("Call to LookAhead");
-                return curToken;
+                return lookaheadToken;
             }
         }
 
@@ -122,7 +122,7 @@ namespace D_Parser
         {
             reader.Close();
             reader = null;
-            lastToken = curToken = peekToken = null;
+            curToken = lookaheadToken = peekToken = null;
             sb = originalValue = null;
         }
         #endregion
@@ -132,7 +132,7 @@ namespace D_Parser
         /// </summary>
         public void StartPeek()
         {
-            peekToken = curToken;
+            peekToken = lookaheadToken;
         }
 
         /// <summary>
@@ -154,31 +154,31 @@ namespace D_Parser
         /// <returns>An <see cref="CurrentToken"/> object.</returns>
         public virtual DToken NextToken()
         {
-            if (curToken == null)
+            if (lookaheadToken == null)
             {
-                curToken = Next();
+                lookaheadToken = Next();
                 //specialTracker.InformToken(curToken.Kind);
                 //Console.WriteLine(ICSharpCode.NRefactory.Parser.CSharp.Tokens.GetTokenString(curToken.kind) + " -- " + curToken.val + "(" + curToken.kind + ")");
-                return curToken;
+                return lookaheadToken;
             }
 
-            prevToken = lastToken;
+            prevToken = curToken;
 
-            lastToken = curToken;
+            curToken = lookaheadToken;
 
-            if (curToken.next == null)
+            if (lookaheadToken.next == null)
             {
-                curToken.next = Next();
-                if (curToken.next != null)
+                lookaheadToken.next = Next();
+                if (lookaheadToken.next != null)
                 {
                     //specialTracker.InformToken(curToken.next.Kind);
                 }
             }
 
-            curToken = curToken.next;
+            lookaheadToken = lookaheadToken.next;
             StartPeek();
             //Console.WriteLine(ICSharpCode.NRefactory.Parser.CSharp.Tokens.GetTokenString(curToken.kind) + " -- " + curToken.val + "(" + curToken.kind + ")");
-            return curToken;
+            return lookaheadToken;
         }
 
         protected abstract DToken Next();
@@ -300,7 +300,7 @@ namespace D_Parser
         /// block (so that Lexer.DToken is the block-opening token, not Lexer.LookAhead).
         /// After the call, Lexer.LookAhead will be the block-closing token.
         /// </summary>
-        public abstract void SkipCurrentBlock(int targetToken);
+        public abstract void SkipCurrentBlock();
     }
 
     public class DLexer : AbstractLexer
@@ -1396,21 +1396,58 @@ namespace D_Parser
             OnError(Line, Col, String.Format("Reached EOF before the end of a multiline comment"));
         }
 
-        public override void SkipCurrentBlock(int targetToken)
+        /// <summary>
+        /// Bypass entire code blocks
+        /// </summary>
+        public override void SkipCurrentBlock()
         {
             int braceCount = 0;
-            while (curToken != null)
+            if (LookAhead.Kind == DTokens.OpenCurlyBrace) braceCount++;
+            if (CurrentPeekToken.Kind == DTokens.OpenCurlyBrace) braceCount++;
+            int nextChar;
+            while ((nextChar = ReaderRead()) != -1)
             {
-                if (curToken.Kind == DTokens.OpenCurlyBrace)
+                switch (nextChar)
                 {
-                    ++braceCount;
+                        // Handle line ends
+                    case '\r':
+                    case '\n':
+                        HandleLineEnd((char)nextChar);
+                        continue;
+
+                        // Handle comments
+                    case '/':
+                        int peek = ReaderPeek();
+                        if (peek == '/' || peek == '*' || peek == '+')
+                        {
+                            ReadComment();
+                            continue;
+                        }
+                        break;
+
+                        // handle string literals
+                    case '`':
+                        ReadVerbatimString(nextChar);
+                        break;
+                    case '"':
+                        ReadString(nextChar);
+                        break;
+                    case '\'':
+                        ReadChar();
+                        break;
+
+                    case '{':
+                        braceCount++;
+                        continue;
+                    case '}':
+                        braceCount--;
+                        if (braceCount < 0){
+                            lookaheadToken = new DToken(DTokens.CloseCurlyBrace, Col, Line);
+                            StartPeek();
+                            return;
+                        }
+                        break;
                 }
-                else if (curToken.Kind == DTokens.CloseCurlyBrace)
-                {
-                    if (--braceCount < 0)
-                        return;
-                }
-                NextToken();
             }
         }
     }

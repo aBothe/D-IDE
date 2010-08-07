@@ -11,7 +11,7 @@ namespace D_Parser
         public TypeDeclaration Type;
         public string Name;
 
-        public List<DNode> TemplateParameters=new List<DNode>(); // Functions, Templates
+        public List<DNode> TemplateParameters=null; // Functions, Templates
 
         public DNode Parent; // Functions, Templates
 
