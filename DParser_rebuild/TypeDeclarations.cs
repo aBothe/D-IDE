@@ -342,7 +342,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return (Value is string)?(string)Value:Value.ToString();
+            return (Base != null ? (Base.ToString() + " ") : "") + ((Value is string) ? (string)Value : Value.ToString());
         }
     }
 
@@ -355,7 +355,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return DParser.GetTokenString(Token);
+            return (Base != null ? (Base.ToString() + " ") : "") + DParser.GetTokenString(Token);
         }
     }
 
@@ -368,7 +368,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Declaration!=null?Declaration.ToString():"";
+            return (Base != null ? (Base.ToString() + " ") : "") + Declaration != null ? Declaration.ToString() : "";
         }
     }
 
@@ -507,6 +507,21 @@ namespace D_Parser
                     break;
             }
             return s;
+        }
+    }
+
+    public class FunctionLiteral : DExpression
+    {
+        public int LiteralToken = DTokens.Delegate;
+
+        public DMethod AnonymousMethod = new DMethod();
+
+        public FunctionLiteral() { }
+        public FunctionLiteral(int InitialLiteral) { LiteralToken = InitialLiteral; }
+
+        public override string ToString()
+        {
+            return (Base != null ? (Base.ToString()+" ") : "") + DTokens.GetTokenString(LiteralToken) + " " + AnonymousMethod.ToString();
         }
     }
     #endregion

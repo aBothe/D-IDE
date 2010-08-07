@@ -107,11 +107,16 @@ namespace D_Parser
 
         void OverPeekBrackets(int OpenBracketKind)
         {
+            OverPeekBrackets(OpenBracketKind, false);
+        }
+
+        void OverPeekBrackets(int OpenBracketKind,bool LAIsOpenBracket)
+        {
             int CloseBracket = CloseParenthesis;
             if (OpenBracketKind == OpenSquareBracket) CloseBracket = CloseSquareBracket;
             else if (OpenBracketKind == OpenCurlyBrace) CloseBracket = CloseCurlyBrace;
 
-            int i = 0;
+            int i = LAIsOpenBracket?1:0;
             while (lexer.CurrentPeekToken.Kind != EOF)
             {
                 if (PK(OpenBracketKind))

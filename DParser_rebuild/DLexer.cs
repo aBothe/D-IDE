@@ -578,8 +578,8 @@ namespace D_Parser
                     peek = (char)ReaderPeek();
                     if (!Char.IsDigit(peek))
                     {
-                        nextToken = new DToken(DTokens.Dot, Col - 1, Line);
-                        peek = '.';
+                        if (peek == '.')
+                            nextToken = new DToken(DTokens.Dot, Col - 1, Line);
                     }
                     else
                     {
@@ -797,7 +797,7 @@ namespace D_Parser
                         }
                     }
                 }
-                //token.next = nextToken;
+                token.next = nextToken;
                 return token;
             }
         }

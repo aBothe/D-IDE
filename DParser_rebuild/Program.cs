@@ -24,7 +24,7 @@ namespace D_Parser
             hp.Stop();
             n.Name = n.ModuleName;
             Console.WriteLine(hp.Duration + "s");
-            //Dump(n,"");
+            Dump(n,"");
 
             return;
         }
