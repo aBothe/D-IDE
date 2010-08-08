@@ -11,16 +11,18 @@ namespace D_Parser
     {
         public static void Main(string[] args)
         {
+            DParser.OnError += new DParser.ErrorHandler(DParser_OnError);
+
             Dictionary<string, string> Files = new Dictionary<string, string>();
             //Files.Add("bind",File.ReadAllText("E:\\dmd2\\src\\phobos\\std\\bind.d"));
-            foreach (string fn in Directory.GetFiles("E:\\dmd2\\src\\phobos", "*.d", SearchOption.AllDirectories))
+            /*foreach (string fn in Directory.GetFiles("E:\\dmd2\\src\\phobos", "*.d", SearchOption.AllDirectories))
             {
                 if (fn.EndsWith("phobos.d")) continue;
                 Files.Add(fn, File.ReadAllText(fn));
             }
 
             HiPerfTimer hp = new HiPerfTimer();
-            DParser.OnError += new DParser.ErrorHandler(DParser_OnError);
+            
 
             hp.Start();
             int i = 0;
@@ -31,7 +33,18 @@ namespace D_Parser
                 DModule n = dp.Parse(false);
             }
             hp.Stop();
-            Console.WriteLine(hp.Duration + "s");
+            Console.WriteLine(hp.Duration + "s");*/
+
+
+            DLexer lex = new DLexer(new StringReader("345.11 .125 0b11 01234"));
+            lex.NextToken();
+            Console.WriteLine(lex.LookAhead.LiteralValue);
+            while (lex.LookAhead.Kind != DTokens.EOF)
+            {
+                lex.NextToken();
+                Console.WriteLine(lex.LookAhead.literalValue);
+            }
+            return;
 
             //Dump(n,"");
             //Console.Read();
