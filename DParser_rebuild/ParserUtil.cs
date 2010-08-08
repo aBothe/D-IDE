@@ -128,13 +128,15 @@ namespace D_Parser
     public enum LiteralFormat : byte
     {
         None,
-        DecimalNumber,
-        HexadecimalNumber,
-        OctalNumber,
+        Integer,
+        Float,
+        Hexadecimal,
+        HexadecimalFLoat,
+        Octal,
+        Binary,
         StringLiteral,
         VerbatimStringLiteral,
         CharLiteral,
-        DateTimeLiteral
     }
 
     public class DToken
