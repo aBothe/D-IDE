@@ -36,7 +36,7 @@ namespace D_Parser
             Console.WriteLine(hp.Duration + "s");*/
 
 
-            DLexer lex = new DLexer(new StringReader("345.11 .125 0b11 01234"));
+            DLexer lex = new DLexer(new StringReader(".125 1024.125 345.11 0b11 01234"));
             lex.NextToken();
             Console.WriteLine(lex.LookAhead.LiteralValue);
             while (lex.LookAhead.Kind != DTokens.EOF)

@@ -432,7 +432,7 @@ namespace D_Parser
                             }
                             return new DToken(DTokens.Identifier, x, y, s);
                         }
-                        else if (Char.IsDigit(ch) || (ch=='.' && Char.IsDigit((char)ReaderPeek())))
+                        else if (Char.IsDigit(ch) || (ch == '.' && Char.IsDigit((char)ReaderPeek())))
                         {
                             token = ReadDigit(ch, Col - 1);
                         }
@@ -544,12 +544,13 @@ namespace D_Parser
                 string suffix = null;
                 int exponent = 1;
 
+                bool HasDot = false;
                 bool isunsigned = false;
                 bool islong = false;
                 bool isfloat = false;
                 bool isreal = false;
                 bool isimaginary = false;
-                LiteralFormat fmt = LiteralFormat.None;
+                int NumBase = 0; // Set it to 0 initially - it'll be set to another value later for sure
 
                 char peek = (char)ReaderPeek();
 
@@ -561,7 +562,7 @@ namespace D_Parser
                         prefix = "0x";
                         ReaderRead(); // skip 'x'
                         sb.Length = 0; // Remove '0' from 0x prefix from the stringvalue
-                        fmt = LiteralFormat.Hexadecimal;
+                        NumBase = 16;
 
                         peek = (char)ReaderPeek();
                         while (IsHex(peek) || peek == '_')
@@ -577,7 +578,7 @@ namespace D_Parser
                         prefix = "0b";
                         ReaderRead(); // skip 'b'
                         sb.Length = 0;
-                        fmt = LiteralFormat.Binary;
+                        NumBase = 2;
 
                         peek = (char)ReaderPeek();
                         while (IsBin(peek) || peek == '_')
@@ -590,7 +591,7 @@ namespace D_Parser
                     }
                     else if (IsOct(peek) || peek == '_') // Oct values
                     {
-                        fmt = LiteralFormat.Octal;
+                        NumBase = 8;
                         prefix = "0";
                         sb.Length = 0;
 
@@ -611,7 +612,7 @@ namespace D_Parser
                 }
                 else if (ch != '.')
                 {
-                    fmt = LiteralFormat.Integer;
+                    NumBase = 10;
                     while (Char.IsDigit(peek) || peek == '_')
                     {
                         if (peek != '_')
@@ -622,11 +623,13 @@ namespace D_Parser
                 }
                 // Read digits that occur after a comma
                 DToken nextToken = null; // if we accidently read a 'dot'
-                if ((fmt == LiteralFormat.None && ch=='.') || (peek == '.' && (fmt == LiteralFormat.Integer || fmt == LiteralFormat.Hexadecimal)))
+                if ((NumBase == 0 && ch == '.') || peek == '.')
                 {
+                    HasDot = true;
                     if (ch != '.') ReaderRead();
                     else
                     {
+                        NumBase = 10;
                         sb.Length = 0;
                         sb.Append('0');
                     }
@@ -640,48 +643,27 @@ namespace D_Parser
                     {
                         sb.Append('.');
 
-                        if (fmt == LiteralFormat.Integer || fmt == LiteralFormat.None)
+                        while ((NumBase == 10 && Char.IsDigit(peek)) || (NumBase == 2 && IsBin(peek)) || (NumBase == 8 && IsOct(peek)) || (NumBase == 16 && IsHex(peek)) || peek == '_')
                         {
-                            fmt = LiteralFormat.Float;
-                            while (Char.IsDigit(peek) || peek == '_')
-                            {
-                                if (peek == '_')
-                                    ReaderRead();
-                                else
-                                    sb.Append((char)ReaderRead());
-                                peek = (char)ReaderPeek();
-                            }
-                        }
-                        else
-                        {
-                            fmt = LiteralFormat.HexadecimalFLoat;
-                            while (IsHex(peek) || peek == '_')
-                            {
-                                if (peek == '_')
-                                    ReaderRead();
-                                else
-                                    sb.Append((char)ReaderRead());
-                                peek = (char)ReaderPeek();
-                            }
-
-                            if (peek != 'p' && peek!='P')
-                            {
-                                OnError(y, x, "Exponent required when parsing a hexadecimal float");
-                            }
+                            if (peek == '_')
+                                ReaderRead();
+                            else
+                                sb.Append((char)ReaderRead());
+                            peek = (char)ReaderPeek();
                         }
                     }
                 }
 
                 // Exponents
-                if ((fmt==LiteralFormat.Hexadecimal || fmt==LiteralFormat.HexadecimalFLoat)?(peek=='p' || peek=='P'):(peek=='e' || peek=='E'))
+                if ((NumBase==16) ? (peek == 'p' || peek == 'P') : (peek == 'e' || peek == 'E'))
                 { // read exponent
-                    expSuffix="e";
+                    expSuffix = "e";
                     peek = (char)ReaderPeek();
 
                     if (peek == '-' || peek == '+')
-                        expSuffix+=(char)ReaderRead();
+                        expSuffix += (char)ReaderRead();
                     peek = (char)ReaderPeek();
-                    while (Char.IsDigit(peek) || peek=='_')
+                    while (Char.IsDigit(peek) || peek == '_')
                     { // read exponent value
                         if (peek == '_')
                             ReaderRead();
@@ -695,7 +677,7 @@ namespace D_Parser
                 }
 
                 // Suffixes
-                if (fmt != LiteralFormat.Float && fmt!=LiteralFormat.HexadecimalFLoat)
+                if (!HasDot)
                 {
                 unsigned:
                     if (peek == 'u' || peek == 'U')
@@ -709,7 +691,7 @@ namespace D_Parser
                     if (peek == 'L')
                     {
                         ReaderRead();
-                        suffix+="L";
+                        suffix += "L";
                         islong = true;
                         peek = (char)ReaderPeek();
                         if (!isunsigned && (peek == 'u' || peek == 'U'))
@@ -727,7 +709,7 @@ namespace D_Parser
                 else if (peek == 'L')
                 { // real value
                     ReaderRead();
-                    suffix+='L';
+                    suffix += 'L';
                     isreal = true;
                 }
 
@@ -738,73 +720,34 @@ namespace D_Parser
                     isimaginary = true;
                 }
 
-
-
                 string digit = sb.ToString();
                 string stringValue = prefix + digit + expSuffix + suffix;
 
-                if (fmt==LiteralFormat.Float)
+                DToken token = null;
+
+                // Parse the digit string
+                double num = 0;
+
+                // This here cares about floating points - it does work!
+                int commaPos = digit.IndexOf('.');
+                int k = digit.Length - 1;
+                if (commaPos >= 0)
+                    k = commaPos-1;
+
+                for (int i = 0; i < digit.Length; i++)
                 {
-                    if(isfloat)
-                    {
-                    float num;
-                    if (float.TryParse(digit, NumberStyles.Any, CultureInfo.InvariantCulture, out num))
-                    {
-                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, fmt);
-                    }
-                    else
-                    {
-                        OnError(y, x, String.Format("Can't parse float {0}", digit));
-                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, 0f, fmt);
-                    }
-                    }
-                    else{
-                        double num;
-                    if (double.TryParse(digit, NumberStyles.Any, CultureInfo.InvariantCulture, out num))
-                    {
-                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, fmt);
-                    }
-                    else
-                    {
-                        OnError(y, x, String.Format("Can't parse double {0}", digit));
-                        return new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, (double)0, fmt);
-                    }
-                    }
+                    if (i == commaPos) { i++; k++; }
+
+                    int n = GetHexNumber(digit[i]);
+                    num += n * Math.Pow(NumBase, (double)(k - i));
                 }
 
-                DToken token=null;
+                if (exponent != 1)
+                    num = Math.Pow(num, exponent);
 
-                if (fmt==LiteralFormat.Hexadecimal || fmt==LiteralFormat.Integer || fmt == LiteralFormat.Octal || fmt == LiteralFormat.Binary)
-                {
-                    ulong num=0;
+                token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.Scalar);
 
-                    int Base = 10;
-                    if (fmt == LiteralFormat.Hexadecimal) Base = 16;
-                    else if (fmt == LiteralFormat.Octal) Base = 8;
-                    else if (fmt == LiteralFormat.Binary) Base = 2;
-
-                    for (int i = digit.Length-1; i >= 0; i--)
-                    {
-                        int n = GetHexNumber(digit[digit.Length-i-1]);
-                        num += (ulong)(n * Math.Pow(Base,(double)i));
-                    }
-
-                    if(islong && !isunsigned)
-                        token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, (long)num, fmt);
-                    else if(!islong && isunsigned)
-                        token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, (uint)num, fmt);
-                    else if(!islong && !isunsigned)
-                        token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, (int)num, fmt);
-                    else
-                        token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, fmt);
-                }
-
-                else if (fmt == LiteralFormat.HexadecimalFLoat)
-                {
-
-                }
-                
-                if(token!=null)token.next = nextToken;
+                if (token != null) token.next = nextToken;
                 return token;
             }
         }

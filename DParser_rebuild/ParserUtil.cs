@@ -128,12 +128,7 @@ namespace D_Parser
     public enum LiteralFormat : byte
     {
         None,
-        Integer,
-        Float,
-        Hexadecimal,
-        HexadecimalFLoat,
-        Octal,
-        Binary,
+        Scalar,
         StringLiteral,
         VerbatimStringLiteral,
         CharLiteral,
