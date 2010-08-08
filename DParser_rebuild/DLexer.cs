@@ -633,6 +633,12 @@ namespace D_Parser
                     suffix = "m";
                     isdecimal = true;
                 }
+                else if (peek == 'i')
+                { // imaginary value
+                    ReaderRead();
+                    isdouble = true;
+                }
+
                 else if (!isdouble)
                 {
                     if (peek == 'u' || peek == 'U')
@@ -800,6 +806,11 @@ namespace D_Parser
                 token.next = nextToken;
                 return token;
             }
+        }
+
+        DToken ReadHexNumber(char ch, int x)
+        {
+
         }
 
         DToken ReadString(int initialChar)

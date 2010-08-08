@@ -1132,6 +1132,8 @@ namespace D_Parser
         {
             if (IsBasicType())
             {
+                bool HadPointerDeclaration = false;
+
                 // uint[]** MyArray;
                 if (!BasicTypes[la.Kind])
                 {
@@ -1170,9 +1172,13 @@ namespace D_Parser
                         }
                     }
                 }
+
                 // Skip basictype2's
                 while (lexer.CurrentPeekToken.Kind==(Times) || lexer.CurrentPeekToken.Kind==(OpenSquareBracket))
                 {
+                    if (PK(Times))
+                        HadPointerDeclaration = true;
+
                     if (lexer.CurrentPeekToken.Kind==(OpenSquareBracket))
                         OverPeekBrackets(OpenSquareBracket);
                     else Peek();
@@ -1180,7 +1186,9 @@ namespace D_Parser
 
                 // And now, after having skipped the basictype and possible trailing basictype2's,
                 // we check for an identifier or delegate declaration to ensure that there's a declaration and not an expression
-                if (lexer.CurrentPeekToken.Kind==(Identifier) || lexer.CurrentPeekToken.Kind==(Delegate) || lexer.CurrentPeekToken.Kind==(Function))
+                // Addition: If a times token ('*') follows an identifier list, we can assume that we have a declaration and NOT an expression!
+                // Example: *a=b is an expression; a*=b is not possible - instead something like A* a should be taken...
+                if (HadPointerDeclaration || lexer.CurrentPeekToken.Kind==(Identifier) || lexer.CurrentPeekToken.Kind==(Delegate) || lexer.CurrentPeekToken.Kind==(Function))
                 {
                     Peek(1);
                     return false;
@@ -1355,15 +1363,14 @@ namespace D_Parser
             if (la.Kind==(OpenParenthesis))
             {
                 Step();
-                if (la.Kind==(CloseParenthesis))
-                    Step();
-                else
+                if (la.Kind!=(CloseParenthesis))
                 {
                     ArrayExpression ae = new ArrayExpression(ClampExpression.ClampType.Round);
                     ae.Base = ex;
                     ae.Expressions = ArgumentList();
                     ex = ae;
                 }
+                Expect(CloseParenthesis);
             }
 
             /*
@@ -1714,8 +1721,15 @@ namespace D_Parser
             // TypeidExpression
             if (la.Kind==(Typeid))
             {
-                //TODO
+                Step();
+                Expect(OpenParenthesis);
+                ClampExpression ce = new ClampExpression(ClampExpression.ClampType.Round);
+                ce.FrontExpression = new TokenExpression(Typeid);
+                ce.InnerExpression = IsAssignExpression()? AssignExpression(): new TypeDeclarationExpression(Type());
+                Expect(CloseParenthesis);
+                return ce;
             }
+
             // IsExpression
             if (la.Kind==(Is))
             {
@@ -2283,11 +2297,23 @@ namespace D_Parser
                 Expect(Semicolon);
             }
 
+            // VersionStatement
+            else if (la.Kind == Version)
+            {
+                Step();
+                Expect(OpenParenthesis);
+                while (!IsEOF && !LA(CloseParenthesis))
+                    Step();
+
+                Expect(CloseParenthesis);
+                if (LA(Colon)) Step();
+            }
+
                 // Blockstatement
             else if (la.Kind == (OpenCurlyBrace))
                 BlockStatement(ref par);
 
-            else if (!(ClassLike[la.Kind] || la.Kind==Enum || MemberFunctionAttribute[la.Kind] || la.Kind == Alias) && IsAssignExpression())
+            else if (!(ClassLike[la.Kind] || la.Kind == Enum || MemberFunctionAttribute[la.Kind] || la.Kind == Alias) && IsAssignExpression())
             {
                 AssignExpression();
                 Expect(Semicolon);
@@ -2823,7 +2849,6 @@ namespace D_Parser
 
         private TypeDeclaration TemplateInstance()
         {
-            if (la.line == 1013) { }
             Expect(Identifier);
             TemplateDecl td = new TemplateDecl(new NormalDeclaration(t.Value));
             Expect(Not);

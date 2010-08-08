@@ -12,12 +12,12 @@ namespace D_Parser
         public static void Main(string[] args)
         {
             Dictionary<string, string> Files = new Dictionary<string, string>();
-            Files.Add("bind",File.ReadAllText("E:\\dmd2\\src\\phobos\\std\\bind.d"));
-            /*foreach (string fn in Directory.GetFiles("E:\\dmd2\\src\\phobos", "*.d", SearchOption.AllDirectories))
+            //Files.Add("bind",File.ReadAllText("E:\\dmd2\\src\\phobos\\std\\bind.d"));
+            foreach (string fn in Directory.GetFiles("E:\\dmd2\\src\\phobos", "*.d", SearchOption.AllDirectories))
             {
                 if (fn.EndsWith("phobos.d")) continue;
                 Files.Add(fn, File.ReadAllText(fn));
-            }*/
+            }
 
             HiPerfTimer hp = new HiPerfTimer();
             DParser.OnError += new DParser.ErrorHandler(DParser_OnError);
@@ -28,7 +28,7 @@ namespace D_Parser
             {
                 i++;
                 DParser dp = DParser.Create(new StringReader(Files[file]));
-                DModule n = dp.Parse(true);
+                DModule n = dp.Parse(false);
             }
             hp.Stop();
             Console.WriteLine(hp.Duration + "s");
