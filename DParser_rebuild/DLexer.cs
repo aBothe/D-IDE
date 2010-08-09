@@ -432,7 +432,7 @@ namespace D_Parser
                             }
                             return new DToken(DTokens.Identifier, x, y, s);
                         }
-                        else if (Char.IsDigit(ch) || (ch == '.' && Char.IsDigit((char)ReaderPeek())))
+                        else if (Char.IsDigit(ch) || ((CurrentToken==null || CurrentToken.Kind!=DTokens.Dot) && ch == '.' && Char.IsDigit((char)ReaderPeek())))
                         {
                             token = ReadDigit(ch, Col - 1);
                         }
@@ -603,6 +603,7 @@ namespace D_Parser
                             peek = (char)ReaderPeek();
                         }
                     }
+                    else NumBase = 10;
 
                     if (sb.Length == 0)
                     {
@@ -621,11 +622,11 @@ namespace D_Parser
                         peek = (char)ReaderPeek();
                     }
                 }
+
                 // Read digits that occur after a comma
                 DToken nextToken = null; // if we accidently read a 'dot'
                 if ((NumBase == 0 && ch == '.') || peek == '.')
                 {
-                    HasDot = true;
                     if (ch != '.') ReaderRead();
                     else
                     {
@@ -637,10 +638,13 @@ namespace D_Parser
                     if (!Char.IsDigit(peek))
                     {
                         if (peek == '.')
+                        {
                             nextToken = new DToken(DTokens.Dot, Col - 1, Line);
+                        }
                     }
                     else
                     {
+                        HasDot = true;
                         sb.Append('.');
 
                         while ((NumBase == 10 && Char.IsDigit(peek)) || (NumBase == 2 && IsBin(peek)) || (NumBase == 8 && IsOct(peek)) || (NumBase == 16 && IsHex(peek)) || peek == '_')
@@ -737,6 +741,9 @@ namespace D_Parser
                 for (int i = 0; i < digit.Length; i++)
                 {
                     if (i == commaPos) { i++; k++; }
+
+                    // Check if digit string contains some digits after the comma
+                    if (i >= digit.Length) break;
 
                     int n = GetHexNumber(digit[i]);
                     num += n * Math.Pow(NumBase, (double)(k - i));
@@ -1238,18 +1245,13 @@ namespace D_Parser
                 case ';':
                     return new DToken(DTokens.Semicolon, x, y);
                 case ':':
-                    if (ReaderPeek() == ':')
-                    {
-                        ReaderRead();
-                        return new DToken(DTokens.DoubleColon, x, y);
-                    }
                     return new DToken(DTokens.Colon, x, y);
                 case ',':
                     return new DToken(DTokens.Comma, x, y);
                 case '.':
                     // Prevent OverflowException when ReaderPeek returns -1
                     int tmp = ReaderPeek();
-                    if (tmp > 0 && Char.IsDigit((char)tmp))
+                    if (tmp > 0 && (CurrentToken==null || CurrentToken.Kind!=DTokens.Dot) && Char.IsDigit((char)tmp))
                     {
                         return ReadDigit('.', Col - 1);
                     }

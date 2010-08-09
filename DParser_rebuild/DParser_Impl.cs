@@ -501,7 +501,7 @@ namespace D_Parser
                 TypeDeclaration ret = null;
 
                 // [ Type ]
-                if (IsBasicType())
+                if (!IsAssignExpression())
                     ret = Type();
                 else
                 {
@@ -1593,7 +1593,7 @@ namespace D_Parser
             }
 
             // Literal
-            if ((la.Kind==Minus && lexer.CurrentPeekToken.Kind==Literal) && la.Kind==(Literal))
+            if ((la.Kind==Minus && lexer.CurrentPeekToken.Kind==Literal) || la.Kind==(Literal))
             {
                 Step();
                 // Concatenate multiple string literals here
