@@ -15,7 +15,7 @@ namespace D_Parser
 
             Dictionary<string, string> Files = new Dictionary<string, string>();
             //Files.Add("bind",File.ReadAllText("E:\\dmd2\\src\\phobos\\std\\bind.d"));
-            /*foreach (string fn in Directory.GetFiles("E:\\dmd2\\src\\phobos", "*.d", SearchOption.AllDirectories))
+            foreach (string fn in Directory.GetFiles("E:\\dmd2\\src\\phobos", "*.d", SearchOption.AllDirectories))
             {
                 if (fn.EndsWith("phobos.d")) continue;
                 Files.Add(fn, File.ReadAllText(fn));
@@ -33,9 +33,9 @@ namespace D_Parser
                 DModule n = dp.Parse(false);
             }
             hp.Stop();
-            Console.WriteLine(hp.Duration + "s");*/
+            Console.WriteLine(hp.Duration + "s");
 
-
+            /*
             DLexer lex = new DLexer(new StringReader(".125 1024.125 345.11 0b11 01234"));
             lex.NextToken();
             Console.WriteLine(lex.LookAhead.LiteralValue);
@@ -43,7 +43,7 @@ namespace D_Parser
             {
                 lex.NextToken();
                 Console.WriteLine(lex.LookAhead.literalValue);
-            }
+            }*/
             return;
 
             //Dump(n,"");

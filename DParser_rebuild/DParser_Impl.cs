@@ -1593,12 +1593,12 @@ namespace D_Parser
             }
 
             // Literal
-            if (la.Kind==(Literal))
+            if ((la.Kind==Minus && lexer.CurrentPeekToken.Kind==Literal) && la.Kind==(Literal))
             {
                 Step();
                 // Concatenate multiple string literals here
                 string a = "";
-                while (la.LiteralFormat == LiteralFormat.StringLiteral || la.LiteralFormat == LiteralFormat.StringLiteral)
+                while (la.LiteralFormat == LiteralFormat.StringLiteral || la.LiteralFormat == LiteralFormat.VerbatimStringLiteral)
                 {
                     Step();
                     a += la.Value;
