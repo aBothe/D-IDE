@@ -14,6 +14,10 @@ namespace D_Parser
         public TypeDeclaration MostBasic
         {
             get { if (Base == null) return this; else return Base.MostBasic; }
+            set
+            {
+                if (Base == null) Base = value; else Base.MostBasic = value ;
+            }
         }
 
         /// <summary>
@@ -52,6 +56,11 @@ namespace D_Parser
         public DTokenDeclaration(int Token)
         { this.Token = Token; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="p">The token</param>
+        /// <param name="td">Its base token</param>
         public DTokenDeclaration(int p, TypeDeclaration td)
         {
             Token = p;

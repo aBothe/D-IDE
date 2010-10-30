@@ -90,6 +90,14 @@ namespace D_Parser
                 //				Console.WriteLine("Call to DToken");
                 return curToken;
             }
+            set
+            {
+                if (value == null) return;
+                curToken = value;
+                lookaheadToken = curToken.next;
+                if (lookaheadToken != null)
+                    peekToken = lookaheadToken.next;
+            }
         }
 
         /// <summary>
@@ -190,22 +198,38 @@ namespace D_Parser
             return char.IsLetterOrDigit((char)ch); // accept unicode letters
         }
 
-        protected static bool IsHex(char digit)
+        public static bool IsHex(char digit)
         {
             return Char.IsDigit(digit) || ('A' <= digit && digit <= 'F') || ('a' <= digit && digit <= 'f');
         }
 
-        protected static bool IsOct(char digit)
+        public static bool IsOct(char digit)
         {
             return Char.IsDigit(digit) && digit != '9' && digit != '8';
         }
 
-        protected static bool IsBin(char digit)
+        public static bool IsBin(char digit)
         {
             return digit == '0' || digit == '1';
         }
 
-        protected int GetHexNumber(char digit)
+        /// <summary>
+        /// Tests if digit <para>d</para> is allowed in the specified numerical base.
+        /// If <para>NumBase</para> is 10, only digits from 0 to 9 would be allowed.
+        /// If NumBase=2, 0 and 1 are legal.
+        /// If NumBase=8, 0 to 7 are legal.
+        /// If NumBase=16, 0 to 9 and a to f are allowed.
+        /// Note: Underscores ('_') are legal everytime!
+        /// </summary>
+        /// <param name="d"></param>
+        /// <param name="NumBase"></param>
+        /// <returns></returns>
+        public static bool IsLegalDigit(char d,int NumBase)
+        {
+            return (NumBase == 10 && Char.IsDigit(d)) || (NumBase == 2 && IsBin(d)) || (NumBase == 8 && IsOct(d)) || (NumBase == 16 && IsHex(d)) || d == '_';
+        }
+
+        public static int GetHexNumber(char digit)
         {
             if (Char.IsDigit(digit))
             {
@@ -222,6 +246,30 @@ namespace D_Parser
             //errors.Error(line, col, String.Format("Invalid hex number '" + digit + "'"));
             return 0;
         }
+
+        public static double ParseDecimalValue(string digit, int NumBase)
+        {
+            double ret = 0;
+
+            int commaPos = digit.IndexOf('.');
+            int k = digit.Length - 1;
+            if (commaPos >= 0)
+                k = commaPos - 1;
+
+            for (int i = 0; i < digit.Length; i++)
+            {
+                if (i == commaPos) { i++; k++; }
+
+                // Check if digit string contains some digits after the comma
+                if (i >= digit.Length) break;
+
+                int n = GetHexNumber(digit[i]);
+                ret += n * Math.Pow(NumBase, (double)(k - i));
+            }
+
+            return ret;
+        }
+
         protected Location lastLineEnd = new Location(1, 1);
         protected Location curLineEnd = new Location(1, 1);
         protected void LineBreak()
@@ -372,7 +420,11 @@ namespace D_Parser
                     case 'r':
                         peek = ReaderPeek();
                         if (peek == '"')
-                            continue;
+                        {
+                            ReaderRead();
+                            token = ReadVerbatimString(peek);
+                            break;
+                        }
                         else
                             goto default;
                     case '`':
@@ -396,16 +448,16 @@ namespace D_Parser
                             int x = Col - 1;
                             int y = Line;
                             ch = (char)next;
-                            if (ch == '"')
-                            {
-                                token = ReadVerbatimString(next);
-                            }
-                            else if (Char.IsLetterOrDigit(ch) || ch == '_')
+                            if (Char.IsLetterOrDigit(ch) || ch == '_')
                             {
                                 bool canBeKeyword;
                                 string ident = ReadIdent(ch, out canBeKeyword);
-                                int tkind = DTokens.GetTokenID("@" + ident);
-                                token = new DToken(tkind < 0 ? DTokens.Identifier : tkind, x - 1, y, (tkind < 0 ? "" : "@") + ident);
+                                //int tkind = DTokens.GetTokenID("@" + ident);
+                                /* 
+                                 * Simply skip all so-called attributes here - there are way to much to enumerate all of them - so just leave them out
+                                */
+                                continue;
+                                //token = new DToken(tkind < 0 ? DTokens.Identifier : tkind, x - 1, y, (tkind < 0 ? "" : "@") + ident);
                             }
                             else
                             {
@@ -416,6 +468,87 @@ namespace D_Parser
                         break;
                     default:
                         ch = (char)nextChar;
+
+                        if (ch == 'x')
+                        {
+                            peek = ReaderPeek();
+                            if (peek == '"') // HexString
+                            {
+                                ReaderRead(); // Skip the "
+
+                                string numString="";
+
+                                while ((next = ReaderRead()) !=-1)
+                                {
+                                    ch = (char)next;
+
+                                    if (IsHex(ch))
+                                        numString += ch;
+                                    else if (!Char.IsWhiteSpace(ch))
+                                        break;
+                                }
+
+                                return new DToken(DTokens.Literal, Col-1, Line, numString, ParseDecimalValue(numString, 16), LiteralFormat.Scalar);
+                            }
+                        }
+                        else if (ch == 'q') // Token strings
+                        {
+                            peek = ReaderPeek();
+                            if (peek == '{'/*q{ ... }*/ || peek == '"'/* q"{{ ...}}   }}"*/)
+                            {
+                                int x=Col-1;
+                                int y=Line;
+                                string initDelim = "";
+                                string endDelim="";
+                                string tokenString="";
+                                initDelim += (char)ReaderRead();
+                                bool IsQuoted = false;
+                                int BracketLevel = 0; // Only needed if IsQuoted is false
+
+                                // Read out initializer
+                                if (initDelim == "\"")
+                                {
+                                    IsQuoted = true;
+                                    initDelim = "";
+
+                                    while ((next = ReaderRead()) != -1)
+                                    {
+                                        ch = (char)next;
+                                        if (!Char.IsWhiteSpace(ch))
+                                            initDelim += ch;
+                                        else
+                                            break;
+                                    }
+                                }
+                                else if(initDelim=="{")
+                                    BracketLevel=1;
+
+                                // Build end delimiter
+                                endDelim = initDelim.Replace('{','}').Replace('[',']').Replace('(',')').Replace('<','>');
+                                if (IsQuoted) endDelim += "\"";
+
+                                // Read tokens
+                                while ((next = ReaderRead()) != -1)
+                                {
+                                    ch = (char)next;
+
+                                    tokenString += ch;
+                                    if (!IsQuoted && ch == '{')
+                                        BracketLevel++;
+                                    if (!IsQuoted && ch == '}')
+                                        BracketLevel--;
+
+                                    if (tokenString.EndsWith(endDelim) && (IsQuoted || BracketLevel<1))
+                                    {
+                                        tokenString = tokenString.Remove(tokenString.Length-endDelim.Length);
+                                        break;
+                                    }
+                                }
+
+                                return new DToken(DTokens.Literal,x,y,tokenString,tokenString,LiteralFormat.VerbatimStringLiteral);
+                            }
+                        }
+
                         if (Char.IsLetter(ch) || ch == '_' || ch == '\\')
                         {
                             int x = Col - 1; // Col was incremented above, but we want the start of the identifier
@@ -432,14 +565,10 @@ namespace D_Parser
                             }
                             return new DToken(DTokens.Identifier, x, y, s);
                         }
-                        else if (Char.IsDigit(ch) || ((CurrentToken==null || CurrentToken.Kind!=DTokens.Dot) && ch == '.' && Char.IsDigit((char)ReaderPeek())))
-                        {
+                        else if (Char.IsDigit(ch))
                             token = ReadDigit(ch, Col - 1);
-                        }
                         else
-                        {
                             token = ReadOperator(ch);
-                        }
                         break;
                 }
 
@@ -623,7 +752,7 @@ namespace D_Parser
                     }
                 }
 
-                // Read digits that occur after a comma
+                #region Read digits that occur after a comma
                 DToken nextToken = null; // if we accidently read a 'dot'
                 if ((NumBase == 0 && ch == '.') || peek == '.')
                 {
@@ -635,11 +764,12 @@ namespace D_Parser
                         sb.Append('0');
                     }
                     peek = (char)ReaderPeek();
-                    if (!Char.IsDigit(peek))
+                    if (!IsLegalDigit(peek,NumBase))
                     {
                         if (peek == '.')
                         {
-                            nextToken = new DToken(DTokens.Dot, Col - 1, Line);
+                            ReaderRead();
+                            nextToken = new DToken(DTokens.DoubleDot, Col - 1, Line);
                         }
                     }
                     else
@@ -647,7 +777,7 @@ namespace D_Parser
                         HasDot = true;
                         sb.Append('.');
 
-                        while ((NumBase == 10 && Char.IsDigit(peek)) || (NumBase == 2 && IsBin(peek)) || (NumBase == 8 && IsOct(peek)) || (NumBase == 16 && IsHex(peek)) || peek == '_')
+                        while (IsLegalDigit(peek,NumBase))
                         {
                             if (peek == '_')
                                 ReaderRead();
@@ -657,11 +787,13 @@ namespace D_Parser
                         }
                     }
                 }
+                #endregion
 
-                // Exponents
+                #region Exponents
                 if ((NumBase==16) ? (peek == 'p' || peek == 'P') : (peek == 'e' || peek == 'E'))
                 { // read exponent
-                    expSuffix = "e";
+                    string suff = "e";
+                    ReaderRead();
                     peek = (char)ReaderPeek();
 
                     if (peek == '-' || peek == '+')
@@ -676,11 +808,14 @@ namespace D_Parser
                         peek = (char)ReaderPeek();
                     }
 
+                    // Exponents just can be decimal integers
                     exponent = int.Parse(expSuffix);
+                    expSuffix = suff + expSuffix;
                     peek = (char)ReaderPeek();
                 }
+                #endregion
 
-                // Suffixes
+                #region Suffixes
                 if (!HasDot)
                 {
                 unsigned:
@@ -709,12 +844,14 @@ namespace D_Parser
                     ReaderRead();
                     suffix += "f";
                     isfloat = true;
+                    peek = (char)ReaderPeek();
                 }
                 else if (peek == 'L')
                 { // real value
                     ReaderRead();
                     suffix += 'L';
                     isreal = true;
+                    peek = (char)ReaderPeek();
                 }
 
                 if (peek == 'i')
@@ -723,34 +860,19 @@ namespace D_Parser
                     suffix += "i";
                     isimaginary = true;
                 }
+                #endregion
 
                 string digit = sb.ToString();
                 string stringValue = prefix + digit + expSuffix + suffix;
 
                 DToken token = null;
 
-                // Parse the digit string
-                double num = 0;
-
-                // This here cares about floating points - it does work!
-                int commaPos = digit.IndexOf('.');
-                int k = digit.Length - 1;
-                if (commaPos >= 0)
-                    k = commaPos-1;
-
-                for (int i = 0; i < digit.Length; i++)
-                {
-                    if (i == commaPos) { i++; k++; }
-
-                    // Check if digit string contains some digits after the comma
-                    if (i >= digit.Length) break;
-
-                    int n = GetHexNumber(digit[i]);
-                    num += n * Math.Pow(NumBase, (double)(k - i));
-                }
+                #region Parse the digit string
+                var num=ParseDecimalValue(digit,NumBase);
 
                 if (exponent != 1)
                     num = Math.Pow(num, exponent);
+                #endregion
 
                 token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.Scalar);
 
@@ -817,13 +939,13 @@ namespace D_Parser
         {
             sb.Length = 0;
             originalValue.Length = 0;
-            int x = Col - 2; // @ and " already read
+            int x = Col - 2; // r and " already read
             int y = Line;
             int nextChar;
 
-            if (EndingChar == (int)'\"')
+            if (EndingChar == (int)'"')
             {
-                originalValue.Append("@\"");
+                originalValue.Append("r\"");
             }
             else
             {
@@ -1110,9 +1232,9 @@ namespace D_Parser
                             ReaderRead();
                             return new DToken(DTokens.XorAssign, x, y);
                         case '^':
+                            ReaderRead();
                             if (ReaderPeek() == '=')
                             {
-                                ReaderRead();
                                 ReaderRead();
                                 return new DToken(DTokens.PowAssign, x, y);
                             }
@@ -1251,9 +1373,17 @@ namespace D_Parser
                 case '.':
                     // Prevent OverflowException when ReaderPeek returns -1
                     int tmp = ReaderPeek();
-                    if (tmp > 0 && (CurrentToken==null || CurrentToken.Kind!=DTokens.Dot) && Char.IsDigit((char)tmp))
-                    {
+                    if (tmp > 0 && Char.IsDigit((char)tmp))
                         return ReadDigit('.', Col - 1);
+                    else if (tmp == (int)'.')
+                    {
+                        ReaderRead();
+                        if ((char)ReaderPeek() == '.') // Triple dot
+                        {
+                            ReaderRead();
+                            return new DToken(DTokens.TripleDot, x, y);
+                        }
+                        return new DToken(DTokens.DoubleDot, x, y);
                     }
                     return new DToken(DTokens.Dot, x, y);
                 case ')':
@@ -1378,6 +1508,14 @@ namespace D_Parser
                         break;
 
                     // handle string literals
+                    case 'r':
+                        int pk = ReaderPeek();
+                        if (pk == '"')
+                        {
+                            ReadVerbatimString('"');
+                            continue;
+                        }
+                        break;
                     case '`':
                         ReadVerbatimString(nextChar);
                         break;

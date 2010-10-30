@@ -256,6 +256,7 @@ namespace D_Parser
 	"@disabled",
     "@safe",
     "@system",
+    "@trusted"
 		};
 
 		static myLookupTable keywords = new myLookupTable(true);

@@ -21,7 +21,7 @@ namespace D_Parser
         public const int Div = 7;
         public const int Mod = 8;
         public const int Colon = 9;
-        public const int DoubleColon = 10;
+        public const int DoubleDot = 10; // ..
         public const int Semicolon = 11;
         public const int Question = 12;
         public const int Dollar = 13;
@@ -187,7 +187,11 @@ namespace D_Parser
         public const int ShiftRightUnsigned = 169; // >>>
         public const int Pow = 170; // ^^
 
-        public const int MaxToken = 171;
+        public const int TripleDot = 171; // ...
+
+        public const int TrustedAttribute = 172; // @trusted
+
+        public const int MaxToken = 173;
         static BitArray NewSet(params int[] values)
         {
             BitArray bitArray = new BitArray(MaxToken);
@@ -198,9 +202,10 @@ namespace D_Parser
             return bitArray;
         }
 
-        public static BitArray FunctionAttribute = NewSet(Pure, Nothrow);
-        public static BitArray MemberFunctionAttribute = NewSet(Const, Immutable, Shared, InOut, Pure, Nothrow);
-        public static BitArray ParamModifiers = NewSet(In, Out, InOut, Ref, Lazy);
+        public static BitArray FunctionAttribute = NewSet(Pure, Nothrow, PropertyAttribute, DisabledAttribute, SafeAttribute, SystemAttribute, TrustedAttribute);
+        public static BitArray MemberFunctionAttribute = NewSet(Const, Immutable, Shared, InOut, Pure, Nothrow,
+            PropertyAttribute,DisabledAttribute,SafeAttribute,SystemAttribute,TrustedAttribute);
+        public static BitArray ParamModifiers = NewSet(In, Out, InOut, Ref, Lazy, Scope);
         public static BitArray ClassLike = NewSet(Class, Template, Interface, Struct, Union);
         public static BitArray BasicTypes = NewSet(Bool, Byte, Ubyte, Short, Ushort, Int, Uint, Long, Ulong, Char, Wchar, Dchar, Float, Double, Real, Ifloat, Idouble, Ireal, Cfloat, Cdouble, Creal, Void);
         public static BitArray AssnStartOp = NewSet(Plus, Minus, Not, Tilde, Times);
@@ -312,7 +317,7 @@ namespace D_Parser
 			"/",
 			"%",
 			":",
-			"::",
+			"..",
 			";",
 			"?",
 			"$",
@@ -496,7 +501,10 @@ namespace D_Parser
         "!<=",
         ">>",
         ">>>",
-        "^^"
+        "^^",
+        "...",
+
+    "@trusted"
 		};
         public static string GetTokenString(int token)
         {
