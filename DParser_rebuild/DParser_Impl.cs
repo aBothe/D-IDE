@@ -310,9 +310,14 @@ namespace D_Parser
             bool HasStorageClassModifiers = false;
             while (IsStorageClass)
             {
-                Step();
-                if (!DeclarationAttributes.Contains(t.Kind))
-                    DeclarationAttributes.Push(t.Kind);
+                if (IsAttributeSpecifier()) // extern, align
+                    AttributeSpecifier();
+                else
+                {
+                    Step();
+                    if (!DeclarationAttributes.Contains(t.Kind))
+                        DeclarationAttributes.Push(t.Kind);
+                }
                 HasStorageClassModifiers = true;
             }
 
@@ -1087,8 +1092,8 @@ namespace D_Parser
             int attr = la.Kind;
             if (la.Kind==(Extern) && lexer.CurrentPeekToken.Kind==(OpenParenthesis))
             {
-                Step();
-                Step();
+                Step(); // Skip extern
+                Step(); // Skip (
                 while (!IsEOF && la.Kind!=(CloseParenthesis))
                     Step();
                 Expect(CloseParenthesis);
@@ -1163,9 +1168,12 @@ namespace D_Parser
                             while (init || lexer.CurrentPeekToken.Kind == (Dot))
                             {
                                 HadTemplateInst = false;
-                                if (!init) Peek();
+                                if (lexer.CurrentPeekToken.Kind ==Dot) Peek();
                                 init = false;
 
+                                if (lexer.CurrentPeekToken.Kind == Identifier)
+                                    Peek();
+                                
                                 if (lexer.CurrentPeekToken.Kind == (Not))
                                 {
                                     HadTemplateInst = true;
@@ -1175,7 +1183,7 @@ namespace D_Parser
                                     else Peek();
                                 }
                             }
-                            if (!init && !HadTemplateInst && lexer.CurrentPeekToken.Kind == (Identifier)) Peek();
+                            //if (!init && !HadTemplateInst) Peek();
                         }
                         else if (la.Kind == (Typeof) || MemberFunctionAttribute[la.Kind])
                         {
@@ -1410,7 +1418,18 @@ namespace D_Parser
 
             /*
              * If here occurs a class keyword, interpretate it as an anonymous class definition
-             * NewArguments ClassArguments BaseClasslist[opt] { DeclDefs } 
+             * http://digitalmars.com/d/2.0/expression.html#NewExpression
+             * 
+             * NewArguments ClassArguments BaseClasslist_opt { DeclDefs } 
+             * 
+             * http://digitalmars.com/d/2.0/class.html#anonymous
+             * 
+                NewAnonClassExpression:
+                    new PerenArgumentListopt class PerenArgumentList_opt SuperClass_opt InterfaceClasses_opt ClassBody
+
+                PerenArgumentList:
+                    (ArgumentList)
+             * 
              */
             if (la.Kind==(Class))
             {
@@ -1426,19 +1445,20 @@ namespace D_Parser
                         Step();
                     else
                     {
-                        ArrayExpression ae = new ArrayExpression(ClampExpression.ClampType.Round);
+                        var ae = new ArrayExpression(ClampExpression.ClampType.Round);
                         ae.Base = ex;
                         ae.Expressions = ArgumentList();
                         ex = ae;
                     }
                 }
 
-                // BaseClasslist[opt]
+                // BaseClasslist_opt
                 if (la.Kind==(Colon))
-                {
-                    //TODO : Add base classes to expression somehow ;-)
+                    //TODO : Add base classes to expression
                     BaseClassList();
-                }
+                // SuperClass_opt InterfaceClasses_opt
+                else if (la.Kind != OpenCurlyBrace)
+                    BaseClassList(false);
 
                 DBlockStatement _block = new DClassLike();
                 _block.fieldtype = FieldType.Class;
@@ -1455,7 +1475,7 @@ namespace D_Parser
                 while (la.Kind==(OpenSquareBracket))
                 {
                     Step();
-                    ClampExpression ce = new ClampExpression();
+                    var ce = new ClampExpression();
                     ce.Base = ex;
                     if(la.Kind!=CloseSquareBracket)
                         ce.InnerExpression = AssignExpression();
@@ -1466,7 +1486,7 @@ namespace D_Parser
                 if (la.Kind==(OpenParenthesis))
                 {
                     Step();
-                    ArrayExpression ae = new ArrayExpression(ClampExpression.ClampType.Round);
+                    var ae = new ArrayExpression(ClampExpression.ClampType.Round);
                     ae.Base = ex;
                     if(la.Kind!=(CloseParenthesis))
                         ae.Expressions = ArgumentList();
@@ -1502,7 +1522,8 @@ namespace D_Parser
              * consist of more than one additional epxression --
              * things like foo()[1] become possible then
              */
-            while (la.Kind==(Dot) || la.Kind==(Increment) || la.Kind==(Decrement) || la.Kind==(OpenParenthesis) || la.Kind==(OpenSquareBracket))
+            while (la.Kind == (Dot) || la.Kind == (Increment) || la.Kind == (Decrement) || la.Kind == (OpenParenthesis) || la.Kind == (OpenSquareBracket) ||
+                    la.Kind == Function || la.Kind == Delegate)
             {
                 // Function call
                 if (la.Kind==(OpenParenthesis))
@@ -1517,16 +1538,26 @@ namespace D_Parser
                     retEx = ae;
                 }
 
+                // int function()
+                else if (la.Kind==Function || la.Kind==Delegate)
+                {
+                    Step();
+                    var de = new FunctionLiteral(t.Kind);
+                    de.Base = retEx;
+                    de.AnonymousMethod.Parameters = Parameters();
+                    retEx = de;
+                }
+
                 // IndexExpression | SliceExpression
-                else if (la.Kind==(OpenSquareBracket))
+                else if (la.Kind == (OpenSquareBracket))
                 {
                     Step();
 
-                    if (la.Kind!=(CloseSquareBracket))
+                    if (la.Kind != (CloseSquareBracket))
                     {
                         var firstEx = AssignExpression();
                         // [ AssignExpression .. AssignExpression ]
-                        if (la.Kind==DoubleDot)
+                        if (la.Kind == DoubleDot)
                         {
                             Step();
                             var from_to_expr = new AssignTokenExpression(DoubleDot);
@@ -1535,38 +1566,38 @@ namespace D_Parser
                             retEx = from_to_expr;
                         }
                         // [ ArgumentList ]
-                        else if (la.Kind==(Comma))
+                        else if (la.Kind == (Comma))
                         {
                             var ae = new ArrayExpression();
                             ae.Expressions.Add(firstEx);
-                            while (la.Kind==(Comma))
+                            while (la.Kind == (Comma))
                             {
                                 Step();
                                 ae.Expressions.Add(AssignExpression());
                             }
                         }
-                        else if (la.Kind!=(CloseSquareBracket))
+                        else if (la.Kind != (CloseSquareBracket))
                             SynErr(CloseSquareBracket);
                     }
 
                     Expect(CloseSquareBracket);
                 }
 
-                else if (la.Kind==(Dot))
+                else if (la.Kind == (Dot))
                 {
                     Step();
                     AssignTokenExpression ae = new AssignTokenExpression(Dot);
                     ae.PrevExpression = retEx;
-                    if (la.Kind==(New))
+                    if (la.Kind == (New))
                         ae.FollowingExpression = NewExpression();
-                    else if (la.Kind==(Identifier))
+                    else if (la.Kind == (Identifier))
                         ae.FollowingExpression = PrimaryExpression();
                     else
                         SynErr(Identifier, "Identifier or new expected");
 
                     retEx = ae;
                 }
-                else if (la.Kind==(Increment) || la.Kind==(Decrement))
+                else if (la.Kind == (Increment) || la.Kind == (Decrement))
                 {
                     Step();
                     DExpression ex2 = new TokenExpression(t.Kind);
@@ -1589,6 +1620,7 @@ namespace D_Parser
                 Step();
                 return new TokenExpression(la.Kind);
             }
+
             // TemplateInstance
             if (la.Kind==(Identifier) && lexer.CurrentPeekToken.Kind==(Not) && (Peek().Kind!=Is && lexer.CurrentPeekToken.Kind!=In) /* Very important: The 'template' could be a '!is' expression - With two tokens! */)
                 return new TypeDeclarationExpression(TemplateInstance());
@@ -1830,23 +1862,22 @@ namespace D_Parser
                 /*
                 TypeSpecialization:
 	                Type
-	                struct
-	                union
-	                class
-	                interface
-	                enum
-	                function
-	                delegate
-	                super
+	                    struct
+	                    union
+	                    class
+	                    interface
+	                    enum
+	                    function
+	                    delegate
+	                    super
 	                const
 	                immutable
 	                inout
 	                shared
-	                return
+	                    return
                 */
 
-                if (ClassLike[la.Kind] || LA(Typedef) || LA(Enum) || LA(Delegate) || LA(Function) || LA(Super) || LA(Shared) || LA(Return)
-                    || (MemberFunctionAttribute[la.Kind] && !PK(OpenParenthesis)))
+                if (ClassLike[la.Kind] || LA(Typedef) || LA(Enum) || LA(Delegate) || LA(Function) || LA(Super)  || LA(Return))
                 {
                     Step();
                     ate.FollowingExpression = new TokenExpression(t.Kind);
@@ -1867,7 +1898,7 @@ namespace D_Parser
             if (la.Kind==(OpenParenthesis))
             {
                 Step();
-                DExpression ret = Expression();
+                var ret = Expression();
                 Expect(CloseParenthesis);
                 return ret;
             }
@@ -2514,7 +2545,7 @@ namespace D_Parser
 
             else if (!(ClassLike[la.Kind] || la.Kind == Enum || Modifiers[la.Kind] || la.Kind == Alias || la.Kind==Typedef) && IsAssignExpression())
             {
-                AssignExpression();
+                var ex=AssignExpression();
                 Expect(Semicolon);
             }
             else
@@ -2603,7 +2634,12 @@ namespace D_Parser
 
         private List<TypeDeclaration> BaseClassList()
         {
-            Expect(Colon);
+            return BaseClassList(true);
+        }
+
+        private List<TypeDeclaration> BaseClassList(bool ExpectColon)
+        {
+            if(ExpectColon)Expect(Colon);
 
             List<TypeDeclaration> ret = new List<TypeDeclaration>();
 
@@ -2880,7 +2916,10 @@ namespace D_Parser
             else if (la.Kind==(Body))
                 Step();
 
-            BlockStatement(ref par);
+            if (la.Kind == Semicolon) // A function declaration can be empty, of course. This here represents a simple abstract or virtual function
+                Step();
+            else
+                BlockStatement(ref par);
 
         }
         #endregion

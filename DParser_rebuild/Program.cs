@@ -19,11 +19,17 @@ namespace D_Parser
             if (a == 0)
                 Files.Add("abc", File.ReadAllText("D:\\dmd2\\src\\phobos\\std\\bigint.d"));
             else
+            {
                 foreach (string fn in Directory.GetFiles("D:\\dmd2\\src\\phobos", "*.d", SearchOption.AllDirectories))
                 {
                     if (fn.EndsWith("phobos.d")) continue;
                     Files.Add(fn, File.ReadAllText(fn));
                 }
+                foreach (string fn in Directory.GetFiles("D:\\dmd2\\src\\druntime\\import", "*.d?", SearchOption.AllDirectories))
+                {
+                    Files.Add(fn, File.ReadAllText(fn));
+                }
+            }
 
             int b = 0;
             if (b == 0)
@@ -35,7 +41,7 @@ namespace D_Parser
                 foreach (string file in Files.Keys)
                 {
                     curFile = file;
-                    if (curFile.Contains("regex.d")) {}
+                    if (curFile.Contains("zlib.d")) {}
                     // if(la.line==827) {}
                     i++;
                     DParser dp = DParser.Create(new StringReader(Files[file]));
@@ -56,10 +62,9 @@ namespace D_Parser
                     Console.WriteLine(lex.LookAhead.ToString());
                 }
             }
+            
+            Console.Read();
             return;
-
-            //Dump(n,"");
-            //Console.Read();
         }
 
         static void DParser_OnError(DModule tempModule, int line, int col, int kindOf, string message)

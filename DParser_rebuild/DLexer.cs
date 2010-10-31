@@ -511,13 +511,28 @@ namespace D_Parser
                                     IsQuoted = true;
                                     initDelim = "";
 
-                                    while ((next = ReaderRead()) != -1)
+                                    int pk = ReaderPeek();
+                                    ch = (char)pk;
+                                    if (Char.IsLetterOrDigit(ch)) // q"EOS EOS"
+                                        while ((next = ReaderRead()) != -1)
+                                        {
+                                            ch = (char)next;
+                                            if (!Char.IsWhiteSpace(ch))
+                                                initDelim += ch;
+                                            else
+                                                break;
+                                        }
+                                    else if (ch == '(' || ch == '<' || ch == '[' || ch=='{')
                                     {
-                                        ch = (char)next;
-                                        if (!Char.IsWhiteSpace(ch))
-                                            initDelim += ch;
-                                        else
-                                            break;
+                                        var firstBracket = ch;
+                                        while ((next = ReaderRead()) != -1)
+                                        {
+                                            ch = (char)next;
+                                            if (ch == firstBracket)
+                                                initDelim += ch;
+                                            else
+                                                break;
+                                        }
                                     }
                                 }
                                 else if(initDelim=="{")
