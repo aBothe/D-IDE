@@ -203,8 +203,7 @@ namespace D_Parser
         }
 
         public static BitArray FunctionAttribute = NewSet(Pure, Nothrow, PropertyAttribute, DisabledAttribute, SafeAttribute, SystemAttribute, TrustedAttribute);
-        public static BitArray MemberFunctionAttribute = NewSet(Const, Immutable, Shared, InOut, Pure, Nothrow,
-            PropertyAttribute,DisabledAttribute,SafeAttribute,SystemAttribute,TrustedAttribute);
+        public static BitArray MemberFunctionAttribute = NewSet(Const, Immutable, Shared, InOut, Pure, Nothrow);
         public static BitArray ParamModifiers = NewSet(In, Out, InOut, Ref, Lazy, Scope);
         public static BitArray ClassLike = NewSet(Class, Template, Interface, Struct, Union);
         public static BitArray BasicTypes = NewSet(Bool, Byte, Ubyte, Short, Ushort, Int, Uint, Long, Ulong, Char, Wchar, Dchar, Float, Double, Real, Ifloat, Idouble, Ireal, Cfloat, Cdouble, Creal, Void);
@@ -279,8 +278,42 @@ namespace D_Parser
             PropertyAttribute,
             DisabledAttribute,
             SafeAttribute,
-            SystemAttribute
+            SystemAttribute,
+            TrustedAttribute
             );
+        public static BitArray StorageClass = NewSet(
+            Abstract
+            ,Auto
+            ,Const
+            ,Deprecated
+            ,Extern
+            ,Final
+            ,Immutable
+            ,InOut
+            ,Shared
+	        ,Nothrow
+            ,Override
+	        ,Pure
+            ,Scope
+            ,Static
+            ,Synchronized
+            );
+
+        /// <summary>
+        /// Checks if modifier array contains member attributes. If so, it returns the last found attribute. Otherwise 0.
+        /// </summary>
+        /// <param name="mods"></param>
+        /// <returns></returns>
+        public static int ContainsStorageClass(int[] mods)
+        {
+            int r = 0;
+            foreach (int m in mods)
+            {
+                if (StorageClass[m])
+                    r = m;
+            }
+            return r;
+        }
 
 
         public static bool ContainsVisMod(List<int> mods)

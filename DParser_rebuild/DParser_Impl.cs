@@ -305,7 +305,7 @@ namespace D_Parser
                 DeclarationAttributes.Push(Ref);
                 Step();
             }
-            if (la.line == 942) { } 
+            
             // Enum possible storage class attributes
             bool HasStorageClassModifiers = false;
             while (IsStorageClass)
@@ -363,18 +363,22 @@ namespace D_Parser
             TypeDeclaration ttd =null;
             
             // Skip ref token
-            if (la.Kind==(Ref) && !DeclarationAttributes.Contains(Ref))
+            if (la.Kind==(Ref))
             {
-                DeclarationAttributes.Push(Ref);
+                if (!DeclarationAttributes.Contains(Ref))
+                    DeclarationAttributes.Push(Ref);
                 Step();
             }
 
             // Autodeclaration
-            if ((DeclarationAttributes.Count>1 && DeclarationAttributes.Contains(Ref)) ||
-                (HasStorageClassModifiers && la.Kind==(Identifier) && DeclarationAttributes.Count > 0 &&
-                (PK(Assign) || PK(OpenParenthesis))))
-            {
-                ttd = new DTokenDeclaration(DeclarationAttributes.Pop());
+            int StorageClass = DTokens.ContainsStorageClass(DeclarationAttributes.ToArray());
+            
+            // If there's no explicit type declaration, leave our node's type empty!
+            if ((StorageClass>0 && la.Kind==(Identifier) && DeclarationAttributes.Count > 0 &&
+                (PK(Assign) || PK(OpenParenthesis)))) // public auto var=0; // const foo(...) {} 
+            {/*
+                string sc = DTokens.GetTokenString(StorageClass);
+                ttd = new DTokenDeclaration(StorageClass);*/
             }
             else 
                 ttd= BasicType();
@@ -512,35 +516,31 @@ namespace D_Parser
                 // [ ]
                 if (la.Kind==(CloseSquareBracket)) { Step(); return new ClampDecl(); }
 
-                TypeDeclaration ret = null;
+                var cd = new ClampDecl();
 
                 // [ Type ]
                 if (!IsAssignExpression())
-                    ret = Type();
+                    cd.KeyType = Type();
                 else
                 {
-                    ret = new DExpressionDecl(AssignExpression());
-
+                    var fromExpression=AssignExpression();
+                    
                     // [ AssignExpression .. AssignExpression ]
                     if (la.Kind==(DoubleDot))
                     {
                         Step();
-                        if (la.Kind == Dollar) // [1 .. $]
-                        {
-                            Step();
-                        }
-                        else
-                        {
-                            Expect(Dot);
+                        var from_to_Expression = new AssignTokenExpression(DoubleDot);
+                        from_to_Expression.PrevExpression = fromExpression;
 
-                            //TODO: do something with the 2nd expression here
-                            AssignExpression();
-                        }
+                        from_to_Expression.FollowingExpression =AssignExpression();
+                        cd.KeyType = new DExpressionDecl(from_to_Expression);
                     }
+                    else
+                        cd.KeyType = new DExpressionDecl(fromExpression);
                 }
 
                 Expect(CloseSquareBracket);
-                return ret;
+                return cd;
             }
 
             // delegate | function
@@ -1529,15 +1529,10 @@ namespace D_Parser
                         if (la.Kind==DoubleDot)
                         {
                             Step();
-                            var tex = new TokenExpression(Dot);
-                            tex.Base = firstEx;
-                            var tex2 = new TokenExpression(Dot);
-                            tex2.Base = tex;
-
-                            DExpression second = AssignExpression();
-                            second.Base = tex2;
-
-                            retEx = second;
+                            var from_to_expr = new AssignTokenExpression(DoubleDot);
+                            from_to_expr.PrevExpression = firstEx;
+                            from_to_expr.FollowingExpression = AssignExpression();
+                            retEx = from_to_expr;
                         }
                         // [ ArgumentList ]
                         else if (la.Kind==(Comma))
@@ -1588,6 +1583,12 @@ namespace D_Parser
             if (la.Kind == Dot)
                 Step();
 
+            // Dollar (== Array length expression)
+            if (la.Kind == Dollar)
+            {
+                Step();
+                return new TokenExpression(la.Kind);
+            }
             // TemplateInstance
             if (la.Kind==(Identifier) && lexer.CurrentPeekToken.Kind==(Not) && (Peek().Kind!=Is && lexer.CurrentPeekToken.Kind!=In) /* Very important: The 'template' could be a '!is' expression - With two tokens! */)
                 return new TypeDeclarationExpression(TemplateInstance());
@@ -1783,12 +1784,13 @@ namespace D_Parser
 
                 AssignTokenExpression ate = new AssignTokenExpression();
                 ce.InnerExpression=ate;
+                TypeDeclaration Type_opt = null;
 
                 // Originally, a Type is required!
                 if (IsAssignExpression()) // Just allow function calls - but even doing this is still a mess :-D
                     ate.PrevExpression = PostfixExpression();
                 else
-                    ate.PrevExpression = new TypeDeclarationExpression( Type());
+                    ate.PrevExpression = new TypeDeclarationExpression( Type_opt=Type() );
 
                 if(la.Kind==CloseParenthesis)
                 {
@@ -1796,28 +1798,54 @@ namespace D_Parser
                     return ce;
                 }
 
-                // Ignore optional following identifier
-                //TODO: Make this identifier become a type which can be used to declare something in the following block
-                /*
-                 * alias int A;
-                 * static if(is(A myInt == int))
-                 * {
-                 *      myInt i=0; // allowed here!
-                 * }
-                 */
-                if (la.Kind == Identifier)
-                    Step();
-
                 // Require a == or : as operator!
-                if (!(la.Kind == Colon || la.Kind == Equal))
-                    SynErr(Equal);
-                else
+                if (!(la.Kind == Colon || la.Kind == Equal || la.Kind==CloseParenthesis))
+                {
+                    // When there's no == or : following the type, we expect a complete declaration here!
+                    var n = Declarator(false);
+                    n.Type = Type_opt;
+
+                    // What's now missing is to add our node to the parent block
+
+                    /*
+                     * alias int A;
+                     * static if(is(A myInt == int))
+                     * {
+                     *      myInt i=0; // allowed here!
+                     * }
+                     */
+                }
+
+                if (la.Kind == Colon || la.Kind == Equal)
                 {
                     Step();
                     ate.Token = t.Kind;
                 }
+                else if (la.Kind == CloseParenthesis)
+                {
+                    Expect(CloseParenthesis);
+                    return ce;
+                }
 
-                if (ClassLike[la.Kind] || LA(Typedef) || LA(Enum) || LA(Delegate) || LA(Function) || LA(Super) || LA(Shared)
+                /*
+                TypeSpecialization:
+	                Type
+	                struct
+	                union
+	                class
+	                interface
+	                enum
+	                function
+	                delegate
+	                super
+	                const
+	                immutable
+	                inout
+	                shared
+	                return
+                */
+
+                if (ClassLike[la.Kind] || LA(Typedef) || LA(Enum) || LA(Delegate) || LA(Function) || LA(Super) || LA(Shared) || LA(Return)
                     || (MemberFunctionAttribute[la.Kind] && !PK(OpenParenthesis)))
                 {
                     Step();
@@ -1926,7 +1954,10 @@ namespace D_Parser
                 else
                     tp = BasicType();
 
-                var n=Declarator(false);
+                DNode n = null;
+            repeated_decl:
+                    n = Declarator(false);
+
                 n.StartLocation = sl;
                 if (n.Type == null)
                     n.Type = tp;
@@ -1941,6 +1972,11 @@ namespace D_Parser
                 }
                 n.EndLocation = t.EndLocation;
                 par.Add(n);
+                if (la.Kind == Comma)
+                {
+                    Step();
+                    goto repeated_decl;
+                }
             }
         }
 

@@ -35,7 +35,7 @@ namespace D_Parser
                 foreach (string file in Files.Keys)
                 {
                     curFile = file;
-                    if (curFile.Contains("random.d")) {}
+                    if (curFile.Contains("regex.d")) {}
                     // if(la.line==827) {}
                     i++;
                     DParser dp = DParser.Create(new StringReader(Files[file]));

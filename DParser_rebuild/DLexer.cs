@@ -985,6 +985,15 @@ namespace D_Parser
                 OnError(y, x, String.Format("End of file reached inside verbatim string literal"));
             }
 
+            // Suffix literal check
+            int pk=ReaderPeek();
+            if(pk!=-1)
+            {
+                nextChar=(char)pk;
+                if (nextChar == 'c' || nextChar == 'w' || nextChar == 'd')
+                    ReaderRead();
+            }
+
             return new DToken(DTokens.Literal, new Location(x, y), new Location(x + originalValue.Length, y), originalValue.ToString(), sb.ToString(), LiteralFormat.VerbatimStringLiteral);
         }
 
