@@ -17,10 +17,9 @@ namespace D_Parser
 
         public string Description="";
 
-        public List<int> Attributes=new List<int>();
+        public List<DAttribute> Attributes = new List<DAttribute>();
 
         public Location StartLocation,EndLocation;
-
 
         public DNode(FieldType ftype)
         {
@@ -44,12 +43,42 @@ namespace D_Parser
         }
 
         public DNode()
+        {}
+
+        public string AttributeString
         {
+            get
+            {
+                string s = "";
+                foreach (var attr in Attributes)
+                    s += attr.ToString() + " ";
+                s.Trim();
+                return s;
+            }
+        }
+
+        /// <summary>
+        /// Returns attributes, type and name combined to one string
+        /// </summary>
+        /// <returns></returns>
+        public string ToDeclarationString()
+        {
+            // Attributes
+            var s = AttributeString+" ";
+
+            // Type
+            if (Type != null)
+                s += Type.ToString()+" ";
+
+            // Name
+            s += Name;
+
+            return s;
         }
 
         public override string ToString()
         {
-            return "[" + fieldtype.ToString() + "] " + (Type!=null?Type.ToString():"") + " " + Name;
+            return "[" + fieldtype.ToString() + "] " + ToDeclarationString();
         }
     }
 

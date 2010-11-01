@@ -236,14 +236,14 @@ namespace D_Parser
             LessEqual,
             GreaterThan,
             GreaterEqual,
-            NotUnequalAssign, // !<>=
+            //NotUnequalAssign, // !<>=
             NotUnequal, // !<>
             Unequal,
             UnequalAssign,
             NotGreaterThan,
-            NotGreaterThanAssign,
-            NotLessThan,
-            NotLessThanAssign
+            //NotGreaterThanAssign,
+            NotLessThan
+            //NotLessThanAssign
             );
         public static BitArray VisModifiers = NewSet(Public, Protected, Private, Package);
         public static BitArray Modifiers = NewSet(

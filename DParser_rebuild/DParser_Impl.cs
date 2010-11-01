@@ -144,8 +144,8 @@ namespace D_Parser
             else if (la.Kind==(OpenCurlyBrace))
             {
                 // Due to having a new attribute scope, we'll have use a new attribute stack here
-                Stack<int> AttrBackup = BlockAttributes;
-                BlockAttributes = new Stack<int>();
+                var AttrBackup = BlockAttributes;
+                BlockAttributes = new Stack<DAttribute>();
 
                 while (DeclarationAttributes.Count > 0)
                     BlockAttributes.Push(DeclarationAttributes.Pop());
@@ -297,17 +297,9 @@ namespace D_Parser
             return la.Kind==(Alias) || IsStorageClass || IsBasicType();
         }
 
-        void Declaration(ref DBlockStatement par)
+        bool CheckForStorageClasses()
         {
-            // Skip ref token
-            if (la.Kind == (Ref))
-            {
-                DeclarationAttributes.Push(Ref);
-                Step();
-            }
-            
-            // Enum possible storage class attributes
-            bool HasStorageClassModifiers = false;
+            bool ret = false;
             while (IsStorageClass)
             {
                 if (IsAttributeSpecifier()) // extern, align
@@ -315,11 +307,25 @@ namespace D_Parser
                 else
                 {
                     Step();
-                    if (!DeclarationAttributes.Contains(t.Kind))
-                        DeclarationAttributes.Push(t.Kind);
+                    if (!DAttribute.ContainsAttribute(DeclarationAttributes.ToArray(), t.Kind))
+                        DeclarationAttributes.Push(new DAttribute(t.Kind));
                 }
-                HasStorageClassModifiers = true;
+                ret = true;
             }
+            return ret;
+        }
+
+        void Declaration(ref DBlockStatement par)
+        {
+            // Skip ref token
+            if (la.Kind == (Ref))
+            {
+                DeclarationAttributes.Push(new DAttribute( Ref));
+                Step();
+            }
+            
+            // Enum possible storage class attributes
+            bool HasStorageClassModifiers = CheckForStorageClasses();            
 
             if (la.Kind==(Alias) || la.Kind==Typedef)
             {
@@ -366,12 +372,13 @@ namespace D_Parser
         void Decl(ref DBlockStatement par, bool HasStorageClassModifiers)
         {
             TypeDeclaration ttd =null;
-            
+
+            CheckForStorageClasses();
             // Skip ref token
             if (la.Kind==(Ref))
             {
-                if (!DeclarationAttributes.Contains(Ref))
-                    DeclarationAttributes.Push(Ref);
+                if (!DAttribute.ContainsAttribute(DeclarationAttributes, Ref))
+                    DeclarationAttributes.Push(new DAttribute( Ref));
                 Step();
             }
 
@@ -786,7 +793,8 @@ namespace D_Parser
             la.Kind==(Scope) ||
             la.Kind==(Static) ||
             la.Kind==(Synchronized) ||
-            la.Kind==__gshared;
+            la.Kind==__gshared||
+            la.Kind==__thread;
             }
         }
 
@@ -1089,7 +1097,7 @@ namespace D_Parser
 
         private void AttributeSpecifier()
         {
-            int attr = la.Kind;
+            var attr = new DAttribute(la.Kind);
             if (la.Kind==(Extern) && lexer.CurrentPeekToken.Kind==(OpenParenthesis))
             {
                 Step(); // Skip extern
@@ -1265,6 +1273,22 @@ namespace D_Parser
             ae.PrevExpression = left;
             ae.FollowingExpression = OrOrExpression();
             return ae;
+        }
+
+        bool IsCmpExression
+        {
+            get
+            {
+                return 
+                    // RelExpression
+                RelationalOperators[la.Kind] ||
+                    // EqualExpression
+                la.Kind == (Equal) || la.Kind == (NotEqual) ||
+                    // IdentityExpression | InExpression
+                la.Kind == (Is) || la.Kind == (In) || (la.Kind == (Not) && (lexer.CurrentPeekToken.Kind == (Is) || lexer.CurrentPeekToken.Kind == In)) ||
+                    // ShiftExpression
+                la.Kind == (ShiftLeft) || la.Kind == (ShiftRight) || la.Kind == (ShiftRightUnsigned);
+            }
         }
 
         DExpression CmpExpression()

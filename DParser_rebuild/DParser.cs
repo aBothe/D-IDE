@@ -25,21 +25,21 @@ namespace D_Parser
         /// <summary>
         /// Modifiers for entire block
         /// </summary>
-        Stack<int> BlockAttributes=new Stack<int>();
+        Stack<DAttribute> BlockAttributes=new Stack<DAttribute>();
         /// <summary>
         /// Modifiers for current expression only
         /// </summary>
-        Stack<int> DeclarationAttributes=new Stack<int>();
+        Stack<DAttribute> DeclarationAttributes=new Stack<DAttribute>();
 
         void ApplyAttributes(ref DNode n)
         {
-            foreach (int attr in BlockAttributes.ToArray())
+            foreach (var attr in BlockAttributes.ToArray())
                 n.Attributes.Add(attr);
 
             while (DeclarationAttributes.Count > 0)
             {
-                int attr = DeclarationAttributes.Pop();
-                if (!n.Attributes.Contains(attr))
+                var attr = DeclarationAttributes.Pop();
+                if (!DAttribute.ContainsAttribute(n.Attributes.ToArray(),attr.Token))
                     n.Attributes.Add(attr);
             }
         }
