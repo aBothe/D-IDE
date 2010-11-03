@@ -267,12 +267,9 @@ namespace D_Parser
             Deprecated,
             Scope,
             __gshared,
+            __thread,
             Lazy,
-            Nothrow,
-            PropertyAttribute,
-            DisabledAttribute,
-            SafeAttribute,
-            SystemAttribute
+            Nothrow
             );
         public static BitArray Attributes = NewSet(
             PropertyAttribute,
@@ -304,13 +301,13 @@ namespace D_Parser
         /// </summary>
         /// <param name="mods"></param>
         /// <returns></returns>
-        public static int ContainsStorageClass(int[] mods)
+        public static DAttribute ContainsStorageClass(DAttribute[] mods)
         {
-            int r = 0;
-            foreach (int m in mods)
+            var r=DAttribute.Empty;
+            foreach (var attr in mods)
             {
-                if (StorageClass[m])
-                    r = m;
+                if (attr.IsStorageClass)
+                    r = attr;
             }
             return r;
         }

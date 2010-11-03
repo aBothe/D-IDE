@@ -10,11 +10,13 @@ namespace D_Parser
     public class DAttribute
     {
         public int Token;
-        public object LiteralContent=null;
+        public object LiteralContent;
+        public static readonly DAttribute Empty = new DAttribute(-1);
 
         public DAttribute(int Token)
         {
             this.Token = Token;
+            LiteralContent = null;
         }
 
         public DAttribute(int Token, object Content)
@@ -23,7 +25,7 @@ namespace D_Parser
             this.LiteralContent = Content;
         }
 
-        public string ToString()
+        public new string ToString()
         {
             if (LiteralContent != null)
                 return DTokens.GetTokenString(Token) + "(" + LiteralContent.ToString() + ")";
@@ -51,6 +53,15 @@ namespace D_Parser
                 if (attr.Token == NeedleToken)
                     return true;
             return false;
+        }
+
+
+        public bool IsStorageClass
+        {
+            get
+            {
+                return DTokens.StorageClass[Token];
+            }
         }
     }
 }

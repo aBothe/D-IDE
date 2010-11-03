@@ -300,7 +300,25 @@ namespace D_Parser
         bool CheckForStorageClasses()
         {
             bool ret = false;
-            while (IsStorageClass)
+            while (IsStorageClass || Attributes[la.Kind])
+            {
+                if (IsAttributeSpecifier()) // extern, align
+                    AttributeSpecifier();
+                else
+                {
+                    Step();
+                    if (!DAttribute.ContainsAttribute(DeclarationAttributes.ToArray(), t.Kind))
+                        DeclarationAttributes.Push(new DAttribute(t.Kind));
+                }
+                ret = true;
+            }
+            return ret;
+        }
+
+        bool CheckForModifiers()
+        {
+            bool ret = false;
+            while (Modifiers[la.Kind] || Attributes[la.Kind])
             {
                 if (IsAttributeSpecifier()) // extern, align
                     AttributeSpecifier();
@@ -383,14 +401,12 @@ namespace D_Parser
             }
 
             // Autodeclaration
-            int StorageClass = DTokens.ContainsStorageClass(DeclarationAttributes.ToArray());
+            var StorageClass = DTokens.ContainsStorageClass(DeclarationAttributes.ToArray());
             
             // If there's no explicit type declaration, leave our node's type empty!
-            if ((StorageClass>0 && la.Kind==(Identifier) && DeclarationAttributes.Count > 0 &&
+            if ((StorageClass.Token!=DAttribute.Empty.Token && la.Kind==(Identifier) && DeclarationAttributes.Count > 0 &&
                 (PK(Assign) || PK(OpenParenthesis)))) // public auto var=0; // const foo(...) {} 
-            {/*
-                string sc = DTokens.GetTokenString(StorageClass);
-                ttd = new DTokenDeclaration(StorageClass);*/
+            {
             }
             else 
                 ttd= BasicType();
@@ -425,7 +441,7 @@ namespace D_Parser
                     Step();
                     Expect(Identifier);
 
-                    DVariable otherNode = new DVariable();
+                    var otherNode = new DVariable();
                     otherNode.Assign(firstNode);
                     otherNode.Name = t.Value;
 
@@ -441,7 +457,7 @@ namespace D_Parser
             // BasicType Declarator FunctionBody
             else if (firstNode is DBlockStatement)
             {
-                DBlockStatement _block = firstNode as DBlockStatement; 
+                var _block = firstNode as DBlockStatement; 
                 FunctionBody(ref _block);
                 par.Add(firstNode);
             }
@@ -711,7 +727,7 @@ namespace D_Parser
             while (la.Kind==(OpenSquareBracket))
             {
                 Step();
-                ClampDecl ad = new ClampDecl(td);
+                var ad = new ClampDecl(td);
                 if (la.Kind!=(CloseSquareBracket))
                 {
                     if (IsAssignExpression())
@@ -733,7 +749,7 @@ namespace D_Parser
                 _Parameters = Parameters();
 
                 //TODO: MemberFunctionAttributes -- add them to the declaration
-                while (MemberFunctionAttribute[la.Kind])
+                while (StorageClass[la.Kind] || Attributes[la.Kind])
                 {
                     Step();
                 }
@@ -910,20 +926,20 @@ namespace D_Parser
 
         private DNode Parameter()
         {
-            var attr = new List<int>();
+            var attr = new List<DAttribute>();
 
             while (ParamModifiers[la.Kind] ||( MemberFunctionAttribute[la.Kind] && !PK(OpenParenthesis)))
             {
                 Step();
-                attr.Add(t.Kind);
+                attr.Add(new DAttribute(t.Kind));
             }
 
             if (la.Kind == Auto && lexer.CurrentPeekToken.Kind == Ref) // functional.d:595 // auto ref F fp
             {
                 Step();
                 Step();
-                attr.Add(Auto);
-                attr.Add(Ref);
+                attr.Add(new DAttribute( Auto));
+                attr.Add(new DAttribute( Ref));
             }
 
             var td = BasicType();
@@ -2225,7 +2241,7 @@ namespace D_Parser
                     if (la.Kind == (Ref))
                     {
                         Step();
-                        forEachVar.Attributes.Add(Ref);
+                        forEachVar.Attributes.Add(new DAttribute( Ref));
                     }
                     if (la.Kind == (Identifier) && (lexer.CurrentPeekToken.Kind == (Semicolon) || lexer.CurrentPeekToken.Kind == Comma))
                     {
@@ -2267,12 +2283,12 @@ namespace D_Parser
             #region [Final] SwitchStatement
             else if ((la.Kind == (Final) && lexer.CurrentPeekToken.Kind == (Switch)) || la.Kind == (Switch))
             {
-                DBlockStatement dbs = new DBlockStatement();
+                var dbs = new DBlockStatement();
                 dbs.StartLocation = la.Location;
 
                 if (la.Kind == (Final))
                 {
-                    dbs.Attributes.Add(Final);
+                    dbs.Attributes.Add(new DAttribute( Final));
                     Step();
                 }
                 Step();
@@ -2567,7 +2583,7 @@ namespace D_Parser
             else if (la.Kind == (OpenCurlyBrace))
                 BlockStatement(ref par);
 
-            else if (!(ClassLike[la.Kind] || la.Kind == Enum || Modifiers[la.Kind] || la.Kind == Alias || la.Kind==Typedef) && IsAssignExpression())
+            else if (!(ClassLike[la.Kind] || la.Kind == Enum || Modifiers[la.Kind] || Attributes[la.Kind] || la.Kind == Alias || la.Kind==Typedef) && IsAssignExpression())
             {
                 var ex=AssignExpression();
                 Expect(Semicolon);
@@ -2827,7 +2843,7 @@ namespace D_Parser
             another_enumvalue:
                 DVariable enumVar = new DVariable();
                 enumVar.Assign(mye);
-                enumVar.Attributes.Add(Enum);
+                enumVar.Attributes.Add(new DAttribute( Enum));
                 if (mye.EnumBaseType != null)
                     enumVar.Type = mye.EnumBaseType;
                 else
