@@ -996,7 +996,7 @@ namespace D_Parser
                 }
 
                 // ArrayMemberInitializations
-                ArrayExpression ae = new ArrayExpression(IsStructInit ? ClampExpression.ClampType.Curly : ClampExpression.ClampType.Square);
+                var ae = new ArrayExpression(IsStructInit ? ClampExpression.ClampType.Curly : ClampExpression.ClampType.Square);
                 DExpression element = null;
 
                 bool IsInit = true;
@@ -1016,7 +1016,7 @@ namespace D_Parser
                         if (la.Kind==(Identifier) && lexer.CurrentPeekToken.Kind==(Colon))
                         {
                             Step();
-                            AssignTokenExpression inh = new AssignTokenExpression(Colon);
+                            var inh = new AssignTokenExpression(Colon);
                             inh.PrevExpression = new IdentExpression(t.Value);
                             Step();
                             inh.FollowingExpression = NonVoidInitializer();
@@ -1035,7 +1035,7 @@ namespace D_Parser
                         if (HasBeenAssExpr && la.Kind==(Colon))
                         {
                             Step();
-                            AssignTokenExpression inhExpr = new AssignTokenExpression(Colon);
+                            var inhExpr = new AssignTokenExpression(Colon);
                             inhExpr.PrevExpression = element;
                             inhExpr.FollowingExpression = NonVoidInitializer();
                             element = inhExpr;
@@ -1046,6 +1046,17 @@ namespace D_Parser
                 }
 
                 Expect(IsStructInit? CloseCurlyBrace:CloseSquareBracket);
+
+                // auto i=[1,2,3].idup;
+                if (la.Kind == Dot)
+                {
+                    Step();
+                    var ae2 = new AssignTokenExpression(t.Kind);
+                    ae2.PrevExpression = ae;
+                    ae2.FollowingExpression = AssignExpression();
+                    return ae2;
+                }
+
                 return ae;
             }
             else
@@ -1712,7 +1723,7 @@ namespace D_Parser
             if (la.Kind==(OpenSquareBracket))
             {
                 Step();
-                ArrayExpression arre = new ArrayExpression();
+                var arre = new ArrayExpression();
 
                 if (LA(CloseSquareBracket)) { Step(); return arre; }
 
@@ -2783,7 +2794,11 @@ namespace D_Parser
             if (la.Kind==(Colon))
                 (dc as DClassLike).BaseClasses = BaseClassList();
 
-            ClassBody(ref dc);
+            // Empty interfaces are allowed
+            if (la.Kind == Semicolon)
+                Step();
+            else
+                ClassBody(ref dc);
 
             dc.EndLocation = t.EndLocation;
             return dc;

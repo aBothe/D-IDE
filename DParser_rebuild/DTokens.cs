@@ -306,7 +306,7 @@ namespace D_Parser
             var r=DAttribute.Empty;
             foreach (var attr in mods)
             {
-                if (attr.IsStorageClass)
+                if (attr.IsStorageClass && !Attributes[attr.Token])
                     r = attr;
             }
             return r;
