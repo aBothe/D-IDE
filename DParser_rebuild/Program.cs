@@ -14,7 +14,7 @@ namespace D_Parser
         {
             DParser.OnError += new DParser.ErrorHandler(DParser_OnError);
 
-            Dictionary<string, string> Files = new Dictionary<string, string>();
+            var Files = new Dictionary<string, string>();
             int a = 1;
             if (a == 0)
                 Files.Add("abc", File.ReadAllText("D:\\dmd2\\src\\phobos\\std\\bigint.d"));
@@ -34,7 +34,7 @@ namespace D_Parser
             int b = 0;
             if (b == 0)
             {
-                HiPerfTimer hp = new HiPerfTimer();
+                var hp = new HiPerfTimer();
 
                 hp.Start();
                 int i = 0;
@@ -44,15 +44,15 @@ namespace D_Parser
                     if (curFile.Contains("zlib.d")) {}
                     // if(la.line==827) {}
                     i++;
-                    DParser dp = DParser.Create(new StringReader(Files[file]));
-                    DModule n = dp.Parse(false);
+                    var dp = DParser.Create(new StringReader(Files[file]));
+                    var n = dp.Parse(false);
                 }
                 hp.Stop();
                 Console.WriteLine(hp.Duration + "s");
             }
             else
             {
-                DLexer lex = new DLexer(new StringReader("fdsa... fgh .. . asdf[0..2] 0.578 .125 1024.125 345.11 0b11 01234"));
+                var lex = new DLexer(new StringReader("fdsa... fgh .. . asdf[0..2] 0.578 .125 1024.125 345.11 0b11 01234"));
                 lex.NextToken();
                 Console.WriteLine(lex.LookAhead.ToString());
 
@@ -80,7 +80,7 @@ namespace D_Parser
             if (n is DBlockStatement)
             {
                 Console.WriteLine(lev + "{");
-                foreach (DNode ch in n as DBlockStatement)
+                foreach (var ch in n as DBlockStatement)
                 {
                     Dump(ch, lev + "  ");
                 }

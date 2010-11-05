@@ -1345,8 +1345,9 @@ namespace D_Parser
             if (IsShift)
             {
                 ae.FollowingExpression = AddExpression();
-                // If a shift expression is followed by an equal expression
-                if (la.Kind == Equal || la.Kind == NotEqual)
+                // A Shift expression can be followed by 1) (Not)Equal expr or 2) Relational expr
+                if (la.Kind == Equal || la.Kind == NotEqual || RelationalOperators[la.Kind] ||
+                    )
                 {
                     Step();
                     var ae2 = new AssignTokenExpression(t.Kind);
@@ -1690,7 +1691,7 @@ namespace D_Parser
                 return new TokenExpression(t.Kind);
             }
 
-            // Literal
+            #region Literal
             if ((la.Kind==Minus && lexer.CurrentPeekToken.Kind==Literal) || la.Kind==(Literal))
             {
                 bool IsMinus = false;
@@ -1718,8 +1719,9 @@ namespace D_Parser
                     return new IdentExpression(t.Value);
                 return new IdentExpression(Convert.ToDouble( t.literalValue)*(IsMinus?-1:1));
             }
+            #endregion
 
-            // ArrayLiteral | AssocArrayLiteral
+            #region ArrayLiteral | AssocArrayLiteral
             if (la.Kind==(OpenSquareBracket))
             {
                 Step();
@@ -1768,6 +1770,7 @@ namespace D_Parser
                 Expect(CloseSquareBracket);
                 return arre;
             }
+            #endregion
 
             // FunctionLiteral
             if (la.Kind==Delegate || la.Kind==Function|| la.Kind == OpenCurlyBrace || (la.Kind==OpenParenthesis && IsFunctionLiteral()))
