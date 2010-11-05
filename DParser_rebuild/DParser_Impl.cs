@@ -1792,14 +1792,16 @@ namespace D_Parser
                     }
                     );
                 */
-                if (!MemberFunctionAttribute[la.Kind] && lexer.CurrentPeekToken.Kind == OpenParenthesis)
-                    fl.AnonymousMethod.Type = BasicType();
-                else if (la.Kind != OpenParenthesis && la.Kind != OpenCurlyBrace)
-                    fl.AnonymousMethod.Type = Type();
+                if (la.Kind != OpenCurlyBrace) // foo( 1, {bar();} ); -> is a legal delegate
+                {
+                    if (!MemberFunctionAttribute[la.Kind] && lexer.CurrentPeekToken.Kind == OpenParenthesis)
+                        fl.AnonymousMethod.Type = BasicType();
+                    else if (la.Kind != OpenParenthesis && la.Kind != OpenCurlyBrace)
+                        fl.AnonymousMethod.Type = Type();
 
-                if (la.Kind == OpenParenthesis)
-                    fl.AnonymousMethod.Parameters = Parameters();
-
+                    if (la.Kind == OpenParenthesis)
+                        fl.AnonymousMethod.Parameters = Parameters();
+                }
                 var dbs = fl.AnonymousMethod as DBlockStatement;
                 FunctionBody(ref dbs);
                 return fl;
@@ -3189,12 +3191,12 @@ namespace D_Parser
         {
             Expect(__traits);
             Expect(OpenParenthesis);
-            ClampExpression ce = new ClampExpression(new TokenExpression(__traits), ClampExpression.ClampType.Round);
+            var ce = new ClampExpression(new TokenExpression(__traits), ClampExpression.ClampType.Round);
 
             //TODO: traits keywords
             Expect(Identifier);
             string TraitKey = t.Value;
-
+            
             while (la.Kind == Comma)
             {
                 Step();

@@ -515,7 +515,7 @@ namespace D_Parser
 	"alias",
 
 	"@property",
-	"@disabled",
+	"@disable",
     "@safe",
     "@system",
 
