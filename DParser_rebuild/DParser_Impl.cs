@@ -1345,11 +1345,15 @@ namespace D_Parser
             if (IsShift)
             {
                 ae.FollowingExpression = AddExpression();
-                // A Shift expression can be followed by 1) (Not)Equal expr or 2) Relational expr
-                if (la.Kind == Equal || la.Kind == NotEqual || RelationalOperators[la.Kind] ||
-                    )
+                // A Shift expression can be followed by 1) (Not)Equal expr or 2) Relational expr or 3) is/!is or 4) in/!in
+                if (la.Kind == Equal || la.Kind == NotEqual || 
+                    RelationalOperators[la.Kind] ||
+                    (la.Kind == Not && lexer.CurrentPeekToken.Kind == In) || la.Kind == In ||
+                    (la.Kind == Not && lexer.CurrentPeekToken.Kind == Is) || la.Kind == Is)
                 {
                     Step();
+                    if (t.Kind == Not)
+                        Step();
                     var ae2 = new AssignTokenExpression(t.Kind);
                     ae2.PrevExpression = ae;
                     ae2.FollowingExpression = CmpExpression();
