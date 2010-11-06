@@ -1503,13 +1503,31 @@ namespace D_Parser
         }
 
         /// <summary>
-        /// Bypass entire code blocks
+        /// Rawly skip the current code block
         /// </summary>
         public override void SkipCurrentBlock()
         {
             int braceCount = 0;
-            if (LookAhead.Kind == DTokens.OpenCurlyBrace) braceCount++;
-            if (CurrentPeekToken.Kind == DTokens.OpenCurlyBrace) braceCount++;
+            // Scan already parsed tokens
+            var tok = lookaheadToken;
+            while (tok!=null)
+            {
+                if (tok.Kind == DTokens.OpenCurlyBrace) 
+                    braceCount++;
+                else if (tok.Kind == DTokens.CloseCurlyBrace)
+                {
+                    braceCount--;
+                    if (braceCount < 0)
+                    {
+                        lookaheadToken = tok;
+                        return;
+                    }
+                }
+                tok = tok.next;
+            }
+
+            // Scan/proceed tokens rawly (skip them only until braceCount<0)
+            prevToken = LookAhead;
             int nextChar;
             while ((nextChar = ReaderRead()) != -1)
             {
@@ -1519,7 +1537,7 @@ namespace D_Parser
                     case '\r':
                     case '\n':
                         HandleLineEnd((char)nextChar);
-                        continue;
+                        break;
 
                     // Handle comments
                     case '/':
@@ -1536,8 +1554,8 @@ namespace D_Parser
                         int pk = ReaderPeek();
                         if (pk == '"')
                         {
+                            ReaderRead();
                             ReadVerbatimString('"');
-                            continue;
                         }
                         break;
                     case '`':
@@ -1557,8 +1575,9 @@ namespace D_Parser
                         braceCount--;
                         if (braceCount < 0)
                         {
-                            lookaheadToken = new DToken(DTokens.CloseCurlyBrace, Col, Line);
+                            lookaheadToken = new DToken(DTokens.CloseCurlyBrace, Col-1, Line);
                             StartPeek();
+                            Peek();
                             return;
                         }
                         break;

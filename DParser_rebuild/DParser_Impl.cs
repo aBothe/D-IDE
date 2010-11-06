@@ -62,7 +62,7 @@ namespace D_Parser
             else if (la.Kind==(Unittest))
             {
                 Step();
-                DBlockStatement dbs = new DBlockStatement(FieldType.Function);
+                var dbs = new DBlockStatement(FieldType.Function);
                 dbs.Type = new DTokenDeclaration(Unittest);
                 dbs.StartLocation = t.Location;
                 FunctionBody(ref dbs);
@@ -1067,7 +1067,7 @@ namespace D_Parser
         {
             Expect(Typeof);
             Expect(OpenParenthesis);
-            MemberFunctionAttributeDecl md = new MemberFunctionAttributeDecl(Typeof);
+            var md = new MemberFunctionAttributeDecl(Typeof);
             if (la.Kind == (Return))
             {
                 Step();
@@ -1776,7 +1776,7 @@ namespace D_Parser
             }
             #endregion
 
-            // FunctionLiteral
+            #region FunctionLiteral
             if (la.Kind==Delegate || la.Kind==Function|| la.Kind == OpenCurlyBrace || (la.Kind==OpenParenthesis && IsFunctionLiteral()))
             {
                 var fl = new FunctionLiteral();
@@ -1813,8 +1813,9 @@ namespace D_Parser
                 FunctionBody(ref dbs);
                 return fl;
             }
+            #endregion
 
-            // AssertExpression
+            #region AssertExpression
             if (la.Kind==(Assert))
             {
                 Step();
@@ -1834,8 +1835,9 @@ namespace D_Parser
                 Expect(CloseParenthesis);
                 return ce;
             }
+            #endregion
 
-            // MixinExpression | ImportExpression
+            #region MixinExpression | ImportExpression
             if (la.Kind==(Mixin) || la.Kind==(Import))
             {
                 Step();
@@ -1847,34 +1849,34 @@ namespace D_Parser
                 Expect(CloseParenthesis);
                 return ce;
             }
+            #endregion
 
-            // Typeof
+            #region Typeof
             if (la.Kind==(Typeof))
-            {
                 return new TypeDeclarationExpression(TypeOf());
-            }
+            #endregion
 
             // TypeidExpression
             if (la.Kind==(Typeid))
             {
                 Step();
                 Expect(OpenParenthesis);
-                ClampExpression ce = new ClampExpression(ClampExpression.ClampType.Round);
+                var ce = new ClampExpression(ClampExpression.ClampType.Round);
                 ce.FrontExpression = new TokenExpression(Typeid);
                 ce.InnerExpression = IsAssignExpression()? AssignExpression(): new TypeDeclarationExpression(Type());
                 Expect(CloseParenthesis);
                 return ce;
             }
 
-            // IsExpression
+            #region IsExpression
             if (la.Kind==(Is))
             {
                 Step();
                 Expect(OpenParenthesis);
-                ClampExpression ce = new ClampExpression(ClampExpression.ClampType.Round);
+                var ce = new ClampExpression(ClampExpression.ClampType.Round);
                 ce.FrontExpression = new TokenExpression(Is);
 
-                AssignTokenExpression ate = new AssignTokenExpression();
+                var ate = new AssignTokenExpression();
                 ce.InnerExpression=ate;
                 TypeDeclaration Type_opt = null;
 
@@ -1954,6 +1956,8 @@ namespace D_Parser
                 Expect(CloseParenthesis);
                 return ce;
             }
+            #endregion
+
             // ( Expression )
             if (la.Kind==(OpenParenthesis))
             {
@@ -1967,7 +1971,7 @@ namespace D_Parser
             if (la.Kind==(__traits))
                 return TraitsExpression();
 
-            // BasicType . Identifier
+            #region BasicType . Identifier
             if (la.Kind==(Const) || la.Kind==(Immutable) || la.Kind==(Shared) || la.Kind==(InOut) || BasicTypes[la.Kind])
             {
                 Step();
@@ -2006,6 +2010,7 @@ namespace D_Parser
                 }
                 return before;
             }
+            #endregion
 
             SynErr(Identifier);
             Step();
@@ -2616,14 +2621,16 @@ namespace D_Parser
         {
             Expect(OpenCurlyBrace);
             par.BlockStartLocation = t.Location;
-
-            if (ParseStructureOnly)
-                lexer.SkipCurrentBlock();
-            else
-                while (!IsEOF && la.Kind != (CloseCurlyBrace))
-                {
-                    Statement(ref par, true, true);
-                }
+            if (la.Kind != CloseCurlyBrace)
+            {
+                if (ParseStructureOnly)
+                    lexer.SkipCurrentBlock();
+                else
+                    while (!IsEOF && la.Kind != (CloseCurlyBrace))
+                    {
+                        Statement(ref par, true, true);
+                    }
+            }
             Expect(CloseCurlyBrace);
             par.EndLocation = t.EndLocation;
         }

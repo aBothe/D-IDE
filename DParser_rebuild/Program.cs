@@ -15,10 +15,12 @@ namespace D_Parser
             DParser.OnError += new DParser.ErrorHandler(DParser_OnError);
 
             var Files = new Dictionary<string, string>();
-            int a = 1;
+            int a = 1; // 0 - Read 1 file; 1 - Read all files; 2 - no action
+            int b = a>1?1:0; // 0 - Parse file(s); 1 - Parse specific text only
+
             if (a == 0)
-                Files.Add("abc", File.ReadAllText("D:\\dmd2\\src\\phobos\\std\\bigint.d"));
-            else
+                Files.Add("abc", File.ReadAllText("D:\\dmd2\\src\\phobos\\std\\path.d"));
+            else if(a==1)
             {
                 foreach (string fn in Directory.GetFiles("D:\\dmd2\\src\\phobos", "*.d", SearchOption.AllDirectories))
                 {
@@ -31,7 +33,7 @@ namespace D_Parser
                 }
             }
 
-            int b = 0;
+            
             if (b == 0)
             {
                 var hp = new HiPerfTimer();
@@ -41,26 +43,30 @@ namespace D_Parser
                 foreach (string file in Files.Keys)
                 {
                     curFile = file;
-                    if (curFile.Contains("zlib.d")) {}
-                    // if(la.line==827) {}
+                    
                     i++;
                     var dp = DParser.Create(new StringReader(Files[file]));
-                    var n = dp.Parse(false);
+                    var n = dp.Parse(true);
                 }
                 hp.Stop();
                 Console.WriteLine(hp.Duration + "s");
             }
-            else
+            else if(b==1)
             {
-                var lex = new DLexer(new StringReader("fdsa... fgh .. . asdf[0..2] 0.578 .125 1024.125 345.11 0b11 01234"));
-                lex.NextToken();
-                Console.WriteLine(lex.LookAhead.ToString());
+                var dp = DParser.Create(new StringReader(
+@"
 
-                while (lex.LookAhead.Kind != DTokens.EOF)
-                {
-                    lex.NextToken();
-                    Console.WriteLine(lex.LookAhead.ToString());
-                }
+unittest
+{
+    assert(dirname() == );
+{
+
+asdasd
+}
+asdasdasd asd
+}
+"));
+                var n = dp.Parse(true);
             }
             
             Console.Read();
