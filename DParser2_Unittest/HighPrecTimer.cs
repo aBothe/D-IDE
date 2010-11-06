@@ -2,9 +2,9 @@
 using System.Runtime.InteropServices;
 using System.ComponentModel;
 using System.Threading;
-namespace PAB
+namespace HighPrecisionTimer
 {
-    public class HiPerfTimer
+    public class HighPrecTimer
     {
         [DllImport("Kernel32.dll")]
         private static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
@@ -17,7 +17,7 @@ namespace PAB
         /// <summary>
         /// ctor
         /// </summary>
-        public HiPerfTimer()
+        public HighPrecTimer()
         {
             startTime = 0;
             stopTime = 0;

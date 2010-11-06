@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using PAB;
+using HighPrecisionTimer;
 using System.Threading;
+using D_Parser;
 
-namespace D_Parser
+namespace ParserTests
 {
     class Program
     {
@@ -36,7 +37,7 @@ namespace D_Parser
             
             if (b == 0)
             {
-                var hp = new HiPerfTimer();
+                var hp = new HighPrecTimer();
 
                 hp.Start();
                 int i = 0;
@@ -45,15 +46,14 @@ namespace D_Parser
                     curFile = file;
                     
                     i++;
-                    var dp = DParser.Create(new StringReader(Files[file]));
-                    var n = dp.Parse(true);
+                    var n = DParser.ParseString(Files[file], false);
                 }
                 hp.Stop();
                 Console.WriteLine(hp.Duration + "s");
             }
             else if(b==1)
             {
-                var dp = DParser.Create(new StringReader(
+                var n = DParser.ParseString(
 @"
 
 unittest
@@ -65,8 +65,7 @@ asdasd
 }
 asdasdasd asd
 }
-"));
-                var n = dp.Parse(true);
+",true);
             }
             
             Console.Read();
