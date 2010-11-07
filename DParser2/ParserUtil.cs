@@ -9,11 +9,11 @@ namespace D_Parser
     /// A line/column position.
     /// NRefactory lines/columns are counting from one.
     /// </summary>
-    public struct Location : IComparable<Location>, IEquatable<Location>
+    public struct CodeLocation : IComparable<CodeLocation>, IEquatable<CodeLocation>
     {
-        public static readonly Location Empty = new Location(-1, -1);
+        public static readonly CodeLocation Empty = new CodeLocation(-1, -1);
 
-        public Location(int column, int line)
+        public CodeLocation(int column, int line)
         {
             x = column;
             y = line;
@@ -65,26 +65,26 @@ namespace D_Parser
 
         public override bool Equals(object obj)
         {
-            if (!(obj is Location)) return false;
-            return (Location)obj == this;
+            if (!(obj is CodeLocation)) return false;
+            return (CodeLocation)obj == this;
         }
 
-        public bool Equals(Location other)
+        public bool Equals(CodeLocation other)
         {
             return this == other;
         }
 
-        public static bool operator ==(Location a, Location b)
+        public static bool operator ==(CodeLocation a, CodeLocation b)
         {
             return a.x == b.x && a.y == b.y;
         }
 
-        public static bool operator !=(Location a, Location b)
+        public static bool operator !=(CodeLocation a, CodeLocation b)
         {
             return a.x != b.x || a.y != b.y;
         }
 
-        public static bool operator <(Location a, Location b)
+        public static bool operator <(CodeLocation a, CodeLocation b)
         {
             if (a.y < b.y)
                 return true;
@@ -94,7 +94,7 @@ namespace D_Parser
                 return false;
         }
 
-        public static bool operator >(Location a, Location b)
+        public static bool operator >(CodeLocation a, CodeLocation b)
         {
             if (a.y > b.y)
                 return true;
@@ -104,17 +104,17 @@ namespace D_Parser
                 return false;
         }
 
-        public static bool operator <=(Location a, Location b)
+        public static bool operator <=(CodeLocation a, CodeLocation b)
         {
             return !(a > b);
         }
 
-        public static bool operator >=(Location a, Location b)
+        public static bool operator >=(CodeLocation a, CodeLocation b)
         {
             return !(a < b);
         }
 
-        public int CompareTo(Location other)
+        public int CompareTo(CodeLocation other)
         {
             if (this == other)
                 return 0;
@@ -143,7 +143,7 @@ namespace D_Parser
         internal readonly object literalValue;
         internal readonly string val;
         internal DToken next;
-        readonly Location endLocation;
+        readonly CodeLocation endLocation;
 
         public readonly int Kind;
 
@@ -162,16 +162,16 @@ namespace D_Parser
             get { return val; }
         }
 
-        public Location EndLocation
+        public CodeLocation EndLocation
         {
             get { return endLocation; }
         }
 
-        public Location Location
+        public CodeLocation Location
         {
             get
             {
-                return new Location(col, line);
+                return new CodeLocation(col, line);
             }
         }
 
@@ -195,14 +195,14 @@ namespace D_Parser
             this.col = col;
             this.line = line;
             this.val = val;
-            this.endLocation = new Location(col + (val == null ? 1 : val.Length), line);
+            this.endLocation = new CodeLocation(col + (val == null ? 1 : val.Length), line);
         }
         public DToken(int kind, int x, int y, string val, object literalValue, LiteralFormat literalFormat)
-            : this(kind, new Location(x, y), new Location(x + val.Length, y), val, literalValue, literalFormat)
+            : this(kind, new CodeLocation(x, y), new CodeLocation(x + val.Length, y), val, literalValue, literalFormat)
         {
         }
 
-        public DToken(int kind, Location startLocation, Location endLocation, string val, object literalValue, LiteralFormat literalFormat)
+        public DToken(int kind, CodeLocation startLocation, CodeLocation endLocation, string val, object literalValue, LiteralFormat literalFormat)
         {
             this.Kind = kind;
             this.col = startLocation.Column;
@@ -225,8 +225,8 @@ namespace D_Parser
 
         public Type CommentType;
         public string CommentText;
-        public Location StartPosition;
-        public Location EndPosition;
+        public CodeLocation StartPosition;
+        public CodeLocation EndPosition;
 
         /// <value>
         /// Is true, when the comment is at line start or only whitespaces
@@ -234,7 +234,7 @@ namespace D_Parser
         /// </value>
         public bool CommentStartsLine;
 
-        public Comment(Type commentType, string comment, bool commentStartsLine, Location startPosition, Location endPosition)
+        public Comment(Type commentType, string comment, bool commentStartsLine, CodeLocation startPosition, CodeLocation endPosition)
         {
             this.CommentType = commentType;
             this.CommentText = comment;

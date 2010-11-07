@@ -249,7 +249,7 @@ namespace D_IDE
             if (diw == null) return;
 
             int line = diw.txt.ActiveTextAreaControl.Caret.Position.Line + 1;
-            Breakpoints.ToggleBreakpoint(diw.fileData.mod_file, line);
+            Breakpoints.ToggleBreakpoint(diw.Module.ModuleFileName, line);
 
             dbgwin.Update();
             diw.DrawBreakPoints();
@@ -474,18 +474,18 @@ namespace D_IDE
         {
             #region Search fitting node
             DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
-            DModule mod = null;
+            CodeModule mod = null;
 
             // Search expression in all superior blocks
-            DNode cblock = DCodeCompletionProvider.GetBlockAt(diw.fileData.dom, new CodeLocation(0, (int)ScopedSrcLine));
-            DNode symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(diw.project != null ? diw.project.Compiler : D_IDE_Properties.Default.DefaultCompiler, cblock, sym.Name);
+            DNode cblock = DCodeCompletionProvider.GetBlockAt(diw.Module.dom, new CodeLocation(0, (int)ScopedSrcLine));
+            DNode symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(diw.OwnerProject != null ? diw.OwnerProject.Compiler : D_IDE_Properties.Default.DefaultCompiler, cblock, sym.Name);
             if (symNode == null)
             {
                 bool b = false;
-                symNode = DCodeCompletionProvider.FindActualExpression(diw.project, diw.fileData, new CodeLocation(0, (int)ScopedSrcLine), SymbolExpressions, false, false, out b, out b, out b, out mod);
+                symNode = DCodeCompletionProvider.FindActualExpression(diw.OwnerProject, diw.Module, new CodeLocation(0, (int)ScopedSrcLine), SymbolExpressions, false, false, out b, out b, out b, out mod);
             }
             // Search expression in current module root first
-            if (symNode == null) symNode = DCodeCompletionProvider.SearchGlobalExpr(diw.project, diw.fileData, sym.Name, true, out mod);
+            if (symNode == null) symNode = DCodeCompletionProvider.SearchGlobalExpr(diw.OwnerProject, diw.Module, sym.Name, true, out mod);
             #endregion
 
             if (symNode != null)

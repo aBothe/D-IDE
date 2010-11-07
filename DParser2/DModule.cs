@@ -10,11 +10,21 @@ namespace D_Parser
     public class DModule : DBlockStatement
     {
         public string ModuleName="";
-        public string ModuleFile="";
+        public string ModuleFileName="";
 
         public List<string> Imports = new List<string>();
 
         public DModule():base(FieldType.Root) { }
+
+        public void ApplyFrom(DModule Other)
+        {
+            ModuleFileName = Other.ModuleFileName;
+            Children.Clear();
+            Children.AddRange(Other.Children);
+            Imports.Clear();
+            Imports.AddRange(Other.Imports);
+            this.fieldtype = Other.fieldtype;
+        }
     }
 
     public class DVariable : DNode
@@ -34,7 +44,7 @@ namespace D_Parser
 
     public class DBlockStatement : DNode, IEnumerable<DNode>
     {
-        public Location BlockStartLocation=new Location();
+        public CodeLocation BlockStartLocation=new CodeLocation();
 
         public DBlockStatement() {}
         public DBlockStatement(FieldType Field) { fieldtype = Field; }

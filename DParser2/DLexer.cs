@@ -67,7 +67,7 @@ namespace D_Parser
             return reader.Peek();
         }
 
-        public void SetInitialLocation(Location location)
+        public void SetInitialLocation(CodeLocation location)
         {
             if (curToken != null || lookaheadToken != null || peekToken != null)
                 throw new InvalidOperationException();
@@ -270,12 +270,12 @@ namespace D_Parser
             return ret;
         }
 
-        protected Location lastLineEnd = new Location(1, 1);
-        protected Location curLineEnd = new Location(1, 1);
+        protected CodeLocation lastLineEnd = new CodeLocation(1, 1);
+        protected CodeLocation curLineEnd = new CodeLocation(1, 1);
         protected void LineBreak()
         {
             lastLineEnd = curLineEnd;
-            curLineEnd = new Location(col - 1, line);
+            curLineEnd = new CodeLocation(col - 1, line);
         }
         protected bool HandleLineEnd(char ch)
         {
@@ -889,7 +889,7 @@ namespace D_Parser
                     num = Math.Pow(num, exponent);
                 #endregion
 
-                token = new DToken(DTokens.Literal, new Location(x, y), new Location(x + stringValue.Length, y), stringValue, num, LiteralFormat.Scalar);
+                token = new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + stringValue.Length, y), stringValue, num, LiteralFormat.Scalar);
 
                 if (token != null) token.next = nextToken;
                 return token;
@@ -947,7 +947,7 @@ namespace D_Parser
                 OnError(y, x, String.Format("End of file reached inside string literal"));
             }
 
-            return new DToken(DTokens.Literal, new Location(x, y), new Location(x + originalValue.Length, y), originalValue.ToString(), sb.ToString(), LiteralFormat.StringLiteral);
+            return new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + originalValue.Length, y), originalValue.ToString(), sb.ToString(), LiteralFormat.StringLiteral);
         }
 
         DToken ReadVerbatimString(int EndingChar)
@@ -1009,7 +1009,7 @@ namespace D_Parser
                     ReaderRead();
             }
 
-            return new DToken(DTokens.Literal, new Location(x, y), new Location(x + originalValue.Length, y), originalValue.ToString(), sb.ToString(), LiteralFormat.VerbatimStringLiteral);
+            return new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + originalValue.Length, y), originalValue.ToString(), sb.ToString(), LiteralFormat.VerbatimStringLiteral);
         }
 
         char[] escapeSequenceBuffer = new char[12];
@@ -1167,7 +1167,7 @@ namespace D_Parser
                     OnError(y, x, String.Format("Char not terminated"));
                 }
             }
-            return new DToken(DTokens.Literal, new Location(x, y), new Location(x + 1, y), "'" + ch + escapeSequence + "'", chValue, LiteralFormat.CharLiteral);
+            return new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + 1, y), "'" + ch + escapeSequence + "'", chValue, LiteralFormat.CharLiteral);
         }
 
         DToken ReadOperator(char ch)
@@ -1461,9 +1461,9 @@ namespace D_Parser
 
         void ReadSingleLineComment(Comment.Type commentType)
         {
-            Location st = new Location(Col, Line);
+            CodeLocation st = new CodeLocation(Col, Line);
             string comm = ReadToEndOfLine().TrimStart('/');
-            Location end = new Location(Col, st.Line);
+            CodeLocation end = new CodeLocation(Col, st.Line);
             Comment nComm = new Comment(commentType, comm.Trim(), st.Column < 2, st, end);
             Comments.Add(nComm);
             OnComment(nComm);
@@ -1473,7 +1473,7 @@ namespace D_Parser
         {
             int nextChar;
             Comment nComm = null;
-            Location st = new Location(Col, Line);
+            CodeLocation st = new CodeLocation(Col, Line);
             StringBuilder scCurWord = new StringBuilder(); // current word, (scTag == null) or comment (when scTag != null)
 
             while ((nextChar = ReaderRead()) != -1)
@@ -1484,7 +1484,7 @@ namespace D_Parser
                 if ((ch == '+' || (ch == '*' && !isNestingComment)) && ReaderPeek() == '/')
                 {
                     ReaderRead(); // Skip "*" or "+"
-                    nComm = new Comment(commentType, scCurWord.ToString().Trim(ch, ' ', '\t', '\r', '\n', '*', '+'), st.Column < 2, st, new Location(Col, Line));
+                    nComm = new Comment(commentType, scCurWord.ToString().Trim(ch, ' ', '\t', '\r', '\n', '*', '+'), st.Column < 2, st, new CodeLocation(Col, Line));
                     Comments.Add(nComm);
                     OnComment(nComm);
                     return;
@@ -1495,7 +1495,7 @@ namespace D_Parser
                 else
                     scCurWord.Append(ch);
             }
-            nComm = new Comment(commentType, scCurWord.ToString().Trim(), st.Column < 2, st, new Location(Col, Line));
+            nComm = new Comment(commentType, scCurWord.ToString().Trim(), st.Column < 2, st, new CodeLocation(Col, Line));
             Comments.Add(nComm);
             OnComment(nComm);
             // Reached EOF before end of multiline comment.

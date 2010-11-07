@@ -117,7 +117,7 @@ namespace D_IDE
 			parsedFileList.Items.Clear();
 			foreach (DModule gpf in D_IDE_Properties.GlobalModules)
 			{
-				parsedFileList.Items.Add(gpf.mod_file);
+				parsedFileList.Items.Add(gpf.ModuleFileName);
 			}*/
 
 			logbuildprogress_chk.Checked = D_IDE_Properties.Default.LogBuildProgress;

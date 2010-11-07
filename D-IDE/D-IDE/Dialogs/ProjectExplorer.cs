@@ -125,7 +125,7 @@ namespace D_IDE
             DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
             if (diw != null)
             {
-                ExpandToFile(diw.project, diw.fileData.mod_file);
+                ExpandToFile(diw.OwnerProject, diw.Module.ModuleFileName);
             }
         }
 
@@ -525,7 +525,7 @@ namespace D_IDE
                                 try
                                 {
                                     // Update tab that may contains moved file
-                                    D_IDEForm.thisForm.FileDataByFile(file).fileData.mod_file = tar;
+                                    D_IDEForm.thisForm.FileDataByFile(file).Module.ModuleFileName = tar;
                                 }
                                 catch { }
 
@@ -611,13 +611,11 @@ namespace D_IDE
 
         private void openInFormsEditorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
             if (!D_IDE_Properties.Default.EnableFXFormsDesigner)
             {
                 MessageBox.Show("This feature will be implemented veeery soon ;-)");
                 return;
             }
-
 
             Point tp = (Point)DSourceMenu.Tag;
             if (tp == null) return;
@@ -662,7 +660,7 @@ namespace D_IDE
 
             string fn = (tn as ProjectNode).ProjectFile;
 
-            DialogResult dr = MessageBox.Show("Remove project directory?", "Remove project", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+            var dr = MessageBox.Show("Remove project directory?", "Remove project", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
             if (dr == DialogResult.Cancel) return;
 
             if (dr == DialogResult.Yes)
@@ -701,13 +699,13 @@ namespace D_IDE
         /// </summary>
         private void openInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Point tp = (Point)(sender as ToolStripItem).Owner.Tag;
+            var tp = (Point)(sender as ToolStripItem).Owner.Tag;
             if (tp == null) return;
-            TreeNode tn = prjFiles.GetNodeAt(tp);
+            var tn = prjFiles.GetNodeAt(tp);
             if (tn == null) return;
 
             //DProject tprj = D_IDE_Properties.GetProject((tn as ProjectNode).ProjectFile);
-            DProject tprj = (tn as ProjectNode).Project;
+            var tprj = (tn as ProjectNode).Project;
             if (tprj == null) return;
 
             string dir = '"' + tprj.basedir + '"';
@@ -723,8 +721,8 @@ namespace D_IDE
         /// </summary>
         private void addFolderToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Point tp = (Point)(sender as ToolStripItem).Owner.Tag;
-            TreeNode tn = prjFiles.GetNodeAt(tp);
+            var tp = (Point)(sender as ToolStripItem).Owner.Tag;
+            var tn = prjFiles.GetNodeAt(tp);
             if (tn == null) return;
 
             //DProject tprj = D_IDE_Properties.GetProject((tn as ProjectNode).ProjectFile);
@@ -744,7 +742,7 @@ namespace D_IDE
             else dirname += "\\New Folder";
             dirname = dirname.TrimStart('\\');
             Directory.CreateDirectory(tprj.basedir + "\\" + dirname);
-            DirectoryTreeNode dnode = new DirectoryTreeNode(tprj, dirname);
+            var dnode = new DirectoryTreeNode(tprj, dirname);
             if (tn is FileTreeNode)
                 tn.Parent.Nodes.Add(dnode);
             else tn.Nodes.Add(dnode);
@@ -762,7 +760,7 @@ namespace D_IDE
                 //Edit
                 if (e.KeyCode == Keys.F2)
                 {
-                    TreeNode node = prjFiles.SelectedNode;
+                    var node = prjFiles.SelectedNode;
                     if (node is DirectoryTreeNode ||
                         node is FileTreeNode ||
                         node is DedicatedProjectNode)
@@ -810,7 +808,7 @@ namespace D_IDE
         public FileTreeNode(DProject Project, string FileName)
             : base(Project)
         {
-            if (DModule.Parsable(FileName)) this.ImageKey = "d_src";
+            if (CodeModule.Parsable(FileName)) this.ImageKey = "d_src";
             if (!String.IsNullOrEmpty(FileName)) Text = Path.GetFileName(FileName);
             FileOrPath = FileName;
         }

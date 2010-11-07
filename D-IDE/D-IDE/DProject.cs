@@ -123,7 +123,7 @@ namespace D_IDE
 		public Dictionary<string, long> LastModifyingDates = new Dictionary<string, long>();
 
 		[NonSerialized()]
-		public List<DModule> files = new List<DModule>();
+		public List<CodeModule> files = new List<CodeModule>();
 		public List<string> resourceFiles = new List<string>();
 		public List<string> FileDependencies = new List<string>();
 		public List<string> ProjectDependencies = new List<string>();
@@ -132,12 +132,12 @@ namespace D_IDE
 
 		public void ParseAll()
 		{
-			if (files == null) files = new List<DModule>();
+			if (files == null) files = new List<CodeModule>();
 			files.Clear();
 			foreach (string fn in resourceFiles)
 			{
-				if (!DModule.Parsable(fn)) continue;
-				files.Add(new DModule(this,GetPhysFilePath(fn)));
+				if (!CodeModule.Parsable(fn)) continue;
+				files.Add(new CodeModule(this,GetPhysFilePath(fn)));
 			}
 		}
 		public string GetPhysFilePath(string file)
@@ -192,7 +192,7 @@ namespace D_IDE
 			targetfilename = "";
 			prjfn = "";
 			basedir = ".";
-			files = new List<DModule>();
+			files = new List<CodeModule>();
 			resourceFiles = new List<string>();
 			lastopen = new List<string>();
 		}
@@ -273,12 +273,12 @@ namespace D_IDE
 			if (!resourceFiles.Contains(from)) return false;
 
 			DModule dm = FileDataByFile(from);
-			if (dm != null) dm.mod_file = to;
+			if (dm != null) dm.ModuleFileName = to;
 
 			DocumentInstanceWindow diw = Form1.thisForm.FileDataByFile(from);
 			if (diw != null)
 			{
-				diw.fileData.mod_file = to;
+				diw.fileData.ModuleFileName = to;
 				diw.Update();
 			}
 
@@ -307,7 +307,7 @@ namespace D_IDE
 					stream.Close();
 					if (ret != null)
 					{
-						ret.files = new List<DModule>();
+						ret.files = new List<CodeModule>();
 						ret.prjfn = fn;
 					}
 					return ret;
@@ -501,13 +501,13 @@ namespace D_IDE
 			}
 			if (ret != null)
 			{
-				ret.files = new List<DModule>();
+				ret.files = new List<CodeModule>();
 				foreach (string f in ret.resourceFiles)
 				{
-					if (!DModule.Parsable(f)) continue;
+					if (!CodeModule.Parsable(f)) continue;
 					try
 					{
-						ret.files.Add(new DModule(ret,ret.GetPhysFilePath(f)));
+						ret.files.Add(new CodeModule(ret,ret.GetPhysFilePath(f)));
 					}
 					catch { }
 				}
@@ -674,11 +674,11 @@ namespace D_IDE
 			xw.Close();
 		}
 		#endregion
-		public DModule FileDataByFile(string fn)
+		public CodeModule FileDataByFile(string fn)
 		{
-			foreach (DModule pf in files)
+			foreach (var pf in files)
 			{
-				if (pf.mod_file == fn) return pf;
+				if (pf.ModuleFileName == fn) return pf;
 			}
 			return null;
 		}

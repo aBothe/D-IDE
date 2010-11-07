@@ -47,7 +47,7 @@ namespace D_IDE
 			
 			try
 			{
-				diw.txt.ActiveTextAreaControl.Caret.Position = new TextLocation(dt.startLoc.Column-1, dt.startLoc.Line-1);
+				diw.txt.ActiveTextAreaControl.Caret.Position = new TextLocation(dt.StartLocation.Column-1, dt.StartLocation.Line-1);
 				diw.txt.ActiveTextAreaControl.TextArea.Focus();
 				diw.txt.ActiveTextAreaControl.Caret.UpdateCaretPosition();
 			}

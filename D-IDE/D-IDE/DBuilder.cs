@@ -184,7 +184,7 @@ namespace D_IDE
                 }
                 #endregion
                 #region Compile D Sources
-                else if (DModule.Parsable(rc))
+                else if (CodeModule.Parsable(rc))
                 {
                     string obj = "obj\\" + tdirname + Path.GetFileNameWithoutExtension(rc) + (IsDebug ? "_dbg" : String.Empty) + ".obj";
 
@@ -325,7 +325,7 @@ namespace D_IDE
 
         public static bool BuildObjFile(string file, CompilerConfiguration cc, string target, string exeDir, string additionalArgs, bool IsDebug)
         {
-            if (!DModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
+            if (!CodeModule.Parsable(file)) { throw new Exception("Cannot build file type of " + file); }
 
             string args = IsDebug ? cc.SoureCompilerDebugArgs : cc.SoureCompilerArgs;
             args = args.Replace("$src", file);

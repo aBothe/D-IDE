@@ -22,7 +22,7 @@ namespace D_IDE
 			key = keyPressed;
 			diw = instWin;
 			data = new List<string>();
-			if (instWin.project != null) cc = instWin.project.Compiler;
+			if (instWin.OwnerProject != null) cc = instWin.OwnerProject.Compiler;
 		}
 
 		#region IInsightDataProvider Member
@@ -131,7 +131,7 @@ namespace D_IDE
 					}
 				}
 
-				CodeLocation caretLocation = new CodeLocation(ta.Caret.Column - 1, ta.Caret.Line - 1);
+				var caretLocation = new Location(ta.Caret.Column - 1, ta.Caret.Line - 1);
 				bool ctor = false;
 				int newOff = initialOffset - 1;
 				int i = 0;
@@ -140,11 +140,11 @@ namespace D_IDE
 				if (expressions == null || expressions.Length < 1) return;
 
 				DNode seldt = null; // Selected DNode
-				DModule module = null;
+				CodeModule module = null;
 
 				if (expressions[0] == "this")
 				{
-					seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
+					seldt = DCodeCompletionProvider.GetClassAt(diw.Module, caretLocation);
 					i++;
 					if (expressions.Length < 2 && seldt != null)
 					{
@@ -157,14 +157,14 @@ namespace D_IDE
 				}
 				else if (expressions[0] == "super")
 				{
-					seldt = DCodeCompletionProvider.GetClassAt(diw.fileData.dom, caretLocation);
+					seldt = DCodeCompletionProvider.GetClassAt(diw.Module.dom, caretLocation);
                     if (seldt is DClassLike && (seldt as DClassLike).BaseClasses.Count>0)
 					{
                         i++;
                         bool do_return = false;
                         foreach (TypeDeclaration td in (seldt as DClassLike).BaseClasses)
                         {
-                            seldt = DCodeCompletionProvider.SearchGlobalExpr(cc, diw.fileData.dom, td.ToString());
+                            seldt = DCodeCompletionProvider.SearchGlobalExpr(cc, diw.Module.dom, td.ToString());
                             if (seldt != null && expressions.Length < 2)
                             {
                                 foreach (DNode dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
@@ -179,7 +179,7 @@ namespace D_IDE
 				}
 				else
 				{
-					foreach (DNode dt in DCodeCompletionProvider.ResolveMultipleNodes(diw.project, diw.fileData, expressions))
+					foreach (DNode dt in DCodeCompletionProvider.ResolveMultipleNodes(diw.OwnerProject, diw.Module, expressions))
 					{
 						data.Add(DCompletionData.BuildDescriptionString(dt));
 					}
@@ -193,9 +193,9 @@ namespace D_IDE
 				if (seldt == null) // if there wasn't still anything found in global space
 				{
 					string modpath = "";
-					List<DModule> dmods = new List<DModule>(cc.GlobalModules),
-						dmods2 = new List<DModule>();
-					if (diw.project != null) dmods.AddRange(diw.project.files);
+					List<CodeModule> dmods = new List<CodeModule>(cc.GlobalModules),
+						dmods2 = new List<CodeModule>();
+					if (diw.OwnerProject != null) dmods.AddRange(diw.OwnerProject.files);
 
 					i = expressions.Length;
 					/*
@@ -215,7 +215,7 @@ namespace D_IDE
 						module = null;
 						seldt = null;
 
-						foreach (DModule gpf in dmods)
+						foreach (CodeModule gpf in dmods)
 						{
 							if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
 							{
@@ -237,7 +237,7 @@ namespace D_IDE
 							break;
 						}
 
-						if ((module = diw.project.FileDataByFile(modpath)) == null)
+						if ((module = diw.OwnerProject.FileDataByFile(modpath)) == null)
 							module = D_IDE_Properties.Default.GetModule(D_IDE_Properties.Default.dmd2, modpath);
 
 						seldt = new DNode(FieldType.Root);
@@ -249,7 +249,7 @@ namespace D_IDE
 							seldt.endLoc = module.dom.endLoc;
 						}
 
-						foreach (DModule dm in dmods2)
+						foreach (CodeModule dm in dmods2)
 						{
 							seldt.Add(dm.dom);
 						}
@@ -277,7 +277,7 @@ namespace D_IDE
 					if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))
 					{
 						DNode seldd = seldt;
-						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.fileData.dom, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.Type.ToString()));
+						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.Module.dom, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.Type.ToString()));
 						if (seldt == null) seldt = seldd;
 					}
 				}

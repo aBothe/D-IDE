@@ -70,7 +70,7 @@ namespace D_IDE
 			if(curToken > 0)
 			{
 				DModule pf = Form1.SelectedTabPage.fileData;
-				CodeLocation tl = new CodeLocation(ta.Caret.Column + 1, ta.Caret.Line + 1);
+				Location tl = new Location(ta.Caret.Column + 1, ta.Caret.Line + 1);
 				DNode seldt;
 				presel = null;
 

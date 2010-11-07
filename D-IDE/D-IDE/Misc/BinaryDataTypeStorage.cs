@@ -68,9 +68,9 @@ namespace D_IDE
         #endregion
 
         #region Modules
-        public void WriteModules(string[] ParsedDirectories, DModule[] Modules) { WriteModules(ParsedDirectories, new List<DModule>(Modules)); }
+        public void WriteModules(string[] ParsedDirectories, CodeModule[] Modules) { WriteModules(ParsedDirectories, new List<CodeModule>(Modules)); }
 
-        public void WriteModules(string[] ParsedDirectories, List<DModule> Modules)
+        public void WriteModules(string[] ParsedDirectories, List<CodeModule> Modules)
         {
             BinaryWriter bs = BinStream;
 
@@ -84,11 +84,11 @@ namespace D_IDE
             }
             else bs.Write((uint)0);
 
-            foreach (DModule mod in Modules)
+            foreach (CodeModule mod in Modules)
             {
                 bs.Write(ModuleInitializer);
                 WriteString(mod.ModuleName);
-                WriteString(mod.mod_file,true);
+                WriteString(mod.ModuleFileName,true);
                 WriteNodes(mod.Children);
                 bs.Flush();
             }
@@ -227,12 +227,12 @@ namespace D_IDE
         #endregion
 
         #region Modules
-        public List<DModule> ReadModules(ref List<string> ParsedDirectories)
+        public List<CodeModule> ReadModules(ref List<string> ParsedDirectories)
         {
             BinaryReader bs = BinStream;
 
             int Count = bs.ReadInt32();
-            List<DModule> ret = new List<DModule>(Count); // Speed improvement caused by given number of modules
+            List<CodeModule> ret = new List<CodeModule>(Count); // Speed improvement caused by given number of modules
 
             uint DirCount = bs.ReadUInt32();
             for (int i = 0; i < DirCount; i++)
@@ -249,9 +249,9 @@ namespace D_IDE
                     throw new Exception("Wrong module definition format!");
                 }
 
-                DModule mod = new DModule();
+                CodeModule mod = new CodeModule();
                 mod.ModuleName = ReadString();
-                mod.mod_file = ReadString(true);
+                mod.ModuleFileName = ReadString(true);
                 mod.dom.name = mod.ModuleName;
                 mod.dom.module = mod.ModuleName;
                 ReadNodes(ref mod.dom.children);
@@ -310,11 +310,11 @@ namespace D_IDE
                 dt.TypeToken = bs.ReadInt32();
                 dt.Type = ReadTypeDecl();
                 dt.desc = ReadString(true);
-                D_Parser.Location startLoc = new D_Parser.Location();
+                D_Parser.CodeLocation startLoc = new D_Parser.CodeLocation();
                 startLoc.X = bs.ReadInt32();
                 startLoc.Y = bs.ReadInt32();
                 dt.StartLocation = startLoc;
-                D_Parser.Location endLoc = new D_Parser.Location();
+                D_Parser.CodeLocation endLoc = new D_Parser.CodeLocation();
                 endLoc.X = bs.ReadInt32();
                 endLoc.Y = bs.ReadInt32();
                 dt.EndLocation = endLoc;

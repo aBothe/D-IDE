@@ -192,12 +192,14 @@ namespace D_IDE
         }
         public static DNode GetBlockAt(DNode env, CodeLocation where)
         {
-            if (env != null && where != null && where >= env.startLoc && where <= env.endLoc && env.Count > 0)
+            var _block = env as DBlockStatement;
+            
+            if (_block != null && where != null && where >= _block.StartLocation && where <= _block.EndLocation && _block.Count > 0)
             {
-                foreach (DNode dt in env)
+                foreach (var dt in _block)
                 {
-                    dt.Parent = env;
-                    if (where >= dt.startLoc && where <= dt.endLoc)
+                    dt.Parent = _block;
+                    if (where >= dt.StartLocation && where <= dt.EndLocation)
                     {
                         return GetBlockAt(dt, where);
                     }
@@ -208,12 +210,14 @@ namespace D_IDE
 
         public static DNode GetClassAt(DNode env, CodeLocation where)
         {
-            if (where >= env.startLoc && where <= env.endLoc && env.Count > 0)
+            var _block = env as DBlockStatement;
+
+            if (_block != null && where != null && where >= _block.StartLocation && where <= _block.EndLocation && _block.Count > 0)
             {
-                foreach (DNode dt in env)
+                foreach (var dt in _block)
                 {
-                    dt.Parent = env;
-                    if (where >= dt.startLoc && where <= dt.endLoc && DTokens.ClassLike[dt.TypeToken])
+                    dt.Parent = _block;
+                    if (where >= dt.StartLocation && where <= dt.EndLocation && DTokens.ClassLike[dt.TypeToken])
                     {
                         return GetClassAt(dt, where);
                     }
@@ -553,14 +557,14 @@ namespace D_IDE
             if (local != null) ret = GetExprByName(local, expr, RootOnly);
             if (ret != null) return ret;
 
-            foreach (DModule gpf in cc.GlobalModules)
+            foreach (CodeModule gpf in cc.GlobalModules)
             {
                 ret = GetExprByName(gpf.dom, expr, RootOnly);
                 if (ret != null) return ret;
             }
             return null;
         }
-        public static DNode SearchGlobalExpr(DProject prj, DModule local, string expr, bool RootOnly, out DModule module)
+        public static DNode SearchGlobalExpr(DProject prj, CodeModule local, string expr, bool RootOnly, out CodeModule module)
         {
             CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
             module = null;
@@ -570,9 +574,9 @@ namespace D_IDE
             if (ret != null) { module = local; return ret; }
 
             if (prj != null)
-                foreach (DModule ppf in prj.files)
+                foreach (CodeModule ppf in prj.files)
                 {
-                    if (local != null && ppf.mod_file == local.mod_file) continue;
+                    if (local != null && ppf.ModuleFileName == local.ModuleFileName) continue;
                     ret = GetExprByName(ppf.dom, expr, RootOnly);
                     if (ret != null)
                     {
@@ -581,7 +585,7 @@ namespace D_IDE
                     }
                 }
 
-            foreach (DModule gpf in cc.GlobalModules)
+            foreach (CodeModule gpf in cc.GlobalModules)
             {
                 ret = GetExprByName(gpf.dom, expr, RootOnly);
                 if (ret != null)
@@ -613,12 +617,12 @@ namespace D_IDE
             if (local != null) ret.AddRange(GetExprsByName(local, expr, RootOnly));
 
             if (prj != null)
-                foreach (DModule ppf in prj.files)
+                foreach (CodeModule ppf in prj.files)
                 {
                     ret.AddRange(GetExprsByName(ppf.dom, expr, RootOnly));
                 }
 
-            foreach (DModule gpf in cc.GlobalModules)
+            foreach (CodeModule gpf in cc.GlobalModules)
             {
                 ret.AddRange(GetExprsByName(gpf.dom, expr, RootOnly));
             }

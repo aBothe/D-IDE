@@ -380,9 +380,9 @@ namespace D_IDE
 		}
 		#endregion
 
-		public DModule GetModule(CompilerConfiguration cc, string moduleName)
+		public CodeModule GetModule(CompilerConfiguration cc, string moduleName)
 		{
-			foreach (DModule dm in cc.GlobalModules)
+			foreach (CodeModule dm in cc.GlobalModules)
 			{
 				if (dm.ModuleName == moduleName) return dm;
 			}
@@ -523,28 +523,28 @@ namespace D_IDE
 			xw.Close();
 		}
 
-		public static bool HasModule(List<DModule> modules, string file)
+		public static bool HasModule(List<CodeModule> modules, string file)
 		{
-			foreach (DModule dpf in modules)
+			foreach (CodeModule dpf in modules)
 			{
-				if (dpf.mod_file == file)
+				if (dpf.ModuleFileName == file)
 				{
 					return true;
 				}
 			}
 			return false;
 		}
-		public static bool AddFileData(CompilerConfiguration cc, DModule pf)
+		public static bool AddFileData(CompilerConfiguration cc, CodeModule pf)
 		{
 			return AddFileData(cc.GlobalModules, pf);
 		}
-		public static bool AddFileData(List<DModule> modules, DModule pf)
+		public static bool AddFileData(List<CodeModule> modules, CodeModule pf)
 		{
 			if (!pf.IsParsable) return false;
 
-			foreach (DModule dpf in modules)
+			foreach (CodeModule dpf in modules)
 			{
-				if (dpf.mod_file == pf.mod_file)
+				if (dpf.ModuleFileName == pf.ModuleFileName)
 				{
 					dpf.dom = pf.dom;
 					dpf.folds = pf.folds;
@@ -610,9 +610,9 @@ namespace D_IDE
 		public CompilerConfiguration dmd1 = new CompilerConfiguration(CompilerConfiguration.DVersion.D1);
 		public CompilerConfiguration dmd2 = new CompilerConfiguration(CompilerConfiguration.DVersion.D2);
 
-		public static List<DModule> D1GlobalModules = new List<DModule>();
+		public static List<CodeModule> D1GlobalModules = new List<CodeModule>();
 		public static List<ICompletionData> D1GlobalCompletionList = new List<ICompletionData>();
-		public static List<DModule> D2GlobalModules = new List<DModule>();
+		public static List<CodeModule> D2GlobalModules = new List<CodeModule>();
 		public static List<ICompletionData> D2GlobalCompletionList = new List<ICompletionData>();
 
 		public CompilerConfiguration Compiler
@@ -637,7 +637,7 @@ namespace D_IDE
 		{
 			return new ICSharpCode.NRefactory.Location(cloc.Column, cloc.Line);
 		}
-        public static CodeLocation toCodeLocation(D_Parser.Location loc)
+        public static CodeLocation toCodeLocation(D_Parser.CodeLocation loc)
         {
             return new CodeLocation(loc.Column, loc.Line);
         }
@@ -666,7 +666,7 @@ namespace D_IDE
 		public DVersion Version = DVersion.D2;
 
 		public string BinDirectory=".";
-		public List<DModule> GlobalModules
+		public List<CodeModule> GlobalModules
 		{
 			get {
 				if (Version == DVersion.D1) return D_IDE_Properties.D1GlobalModules;

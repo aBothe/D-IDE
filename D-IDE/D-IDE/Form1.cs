@@ -159,31 +159,31 @@ namespace D_IDE
             {
                 bpw.Show();
                 DocumentInstanceWindow tp = SelectedTabPage;
-                if (!DModule.Parsable(tp.fileData.mod_file))
+                if (!CodeModule.Parsable(tp.Module.ModuleFileName))
                 {
-                    if (tp.fileData.mod_file.EndsWith(".rc"))
+                    if (tp.Module.ModuleFileName.EndsWith(".rc"))
                     {
                         DBuilder.BuildResFile(
-                            tp.fileData.mod_file, cc,
-                            Path.ChangeExtension(tp.fileData.mod_file, ".res"),
-                            Path.GetDirectoryName(tp.fileData.mod_file)
+                            tp.Module.ModuleFileName, cc,
+                            Path.ChangeExtension(tp.Module.ModuleFileName, ".res"),
+                            Path.GetDirectoryName(tp.Module.ModuleFileName)
                             );
-                        return Path.ChangeExtension(tp.fileData.mod_file, ".res");
+                        return Path.ChangeExtension(tp.Module.ModuleFileName, ".res");
                     }
                     MessageBox.Show("Can only build .d or .rc source files!");
                     return null;
                 }
-                string exe = Path.ChangeExtension(tp.fileData.mod_file, ".exe");
+                string exe = Path.ChangeExtension(tp.Module.ModuleFileName, ".exe");
 
-                Log("Build single " + tp.fileData.mod_file + " to " + exe);
+                Log("Build single " + tp.Module.ModuleFileName + " to " + exe);
                 string args = D_IDE_Properties.Default.DefaultCompiler.ExeLinkerDebugArgs;
-                args = args.Replace("$objs", "\"" + tp.fileData.mod_file + "\"");
+                args = args.Replace("$objs", "\"" + tp.Module.ModuleFileName + "\"");
                 args = args.Replace("$libs", "");
                 args = args.Replace("\"$exe\"","$exe").Replace("$exe", "\"" + exe + "\"");
 
                 try
                 {
-                    Process p = DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.fileData.mod_file), false);
+                    Process p = DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.Module.ModuleFileName), false);
                     if (p != null && !p.WaitForExit(10000))
                     {
                         Log("Execeeded 10 seconds execution time!");
@@ -237,7 +237,7 @@ namespace D_IDE
             {
                 if (SelectedTabPage != null)
                 {
-                    string single_bin = Path.ChangeExtension(SelectedTabPage.fileData.mod_file, ".exe");
+                    string single_bin = Path.ChangeExtension(SelectedTabPage.Module.ModuleFileName, ".exe");
                     if (File.Exists(single_bin))
                     {
                         output.Show();
@@ -305,7 +305,7 @@ namespace D_IDE
             else
             {
                 to += 2;
-                string mod_file = e.Data.Substring(0, to);
+                string ModuleFileName = e.Data.Substring(0, to);
                 to += 1;
                 int to2 = e.Data.IndexOf("):", to);
                 if (to2 < 0) return;
@@ -315,7 +315,7 @@ namespace D_IDE
                 Invoke(
                     new BuildErrorDelegate(
                         AddHighlightedBuildError),
-                        new Object[] { mod_file, lineNumber, errmsg, Color.LightPink });
+                        new Object[] { ModuleFileName, lineNumber, errmsg, Color.LightPink });
             }
         }
         #endregion
@@ -391,10 +391,10 @@ namespace D_IDE
             else
             {
                 mtp.Save();
-                if (!mtp.fileData.IsParsable) return;
+                if (!mtp.Module.IsParsable) return;
                 mtp.ParseFromText(); // Reparse after save
 
-                FXFormsDesigner fd = FXFormDesignerByFile(mtp.fileData.FileName);
+                FXFormsDesigner fd = FXFormDesignerByFile(mtp.Module.FileName);
                 if (fd != null)
                 {
                     fd.Reload();
@@ -407,9 +407,9 @@ namespace D_IDE
         goonwithcc:
             foreach (string dir in cc.ImportDirectories)
             {
-                if (mtp.fileData.mod_file.StartsWith(dir))
+                if (mtp.Module.ModuleFileName.StartsWith(dir))
                 {
-                    D_IDE_Properties.AddFileData(cc, mtp.fileData);
+                    D_IDE_Properties.AddFileData(cc, mtp.Module);
 
                     List<ICompletionData> ilist = new List<ICompletionData>();
                     DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
@@ -430,23 +430,23 @@ namespace D_IDE
         {
             DocumentInstanceWindow tp = SelectedTabPage;
             if (tp == null) return;
-            string bef = tp.fileData.FileName;
+            string bef = tp.Module.FileName;
             sF.FileName = bef;
 
             if (sF.ShowDialog() == DialogResult.OK)
             {
                 if (prj != null)
                 {
-                    if (DModule.Parsable(tp.fileData.FileName))
+                    if (CodeModule.Parsable(tp.Module.FileName))
                     {
-                        if (prj.files.Contains(tp.fileData))
-                            prj.files.Remove(tp.fileData);
+                        if (prj.files.Contains(tp.Module))
+                            prj.files.Remove(tp.Module);
                     }
 
-                    prj.resourceFiles.Remove(prj.GetRelFilePath(tp.fileData.FileName));
+                    prj.resourceFiles.Remove(prj.GetRelFilePath(tp.Module.FileName));
                     prj.AddSrc(sF.FileName);
                 }
-                tp.fileData.FileName = sF.FileName;
+                tp.Module.FileName = sF.FileName;
                 tp.Update();
                 tp.Save();
             }
@@ -772,7 +772,7 @@ namespace D_IDE
             {
                 updateTh.Abort();
                 stopParsingToolStripMenuItem.Enabled = false;
-                DModule.ClearErrorLogBeforeParsing = true;
+                CodeModule.ClearErrorLogBeforeParsing = true;
             }
         }
         #endregion
@@ -811,18 +811,18 @@ namespace D_IDE
         {
             //Log("Text Error in Line "+line.ToString()+", Col "+col.ToString()+": "+message);
         }
-        void DParser_OnError(string file, string module, int line, int col, int kindOf, string msg)
+        void DParser_OnError(DModule tempModule, int line, int col, int kindOf, string msg)
         {
             try
             {
-                errlog.AddParserError(file, line, col, msg);
+                errlog.AddParserError(tempModule.ModuleFileName, line, col, msg);
                 DocumentInstanceWindow mtp;
                 foreach (IDockContent dc in dockPanel.Documents)
                 {
                     if (dc is DocumentInstanceWindow)
                     {
                         mtp = (DocumentInstanceWindow)dc;
-                        if (mtp.fileData.ModuleName == module || mtp.fileData.mod_file == file)
+                        if (mtp.Module.ModuleFileName == tempModule.ModuleName || mtp.Module.ModuleFileName == tempModule.ModuleFileName)
                         {
                             int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
                             mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Red));
@@ -835,24 +835,25 @@ namespace D_IDE
             }
             catch { }
         }
-        void DParser_OnSemanticError(string file, string module, int line, int col, int kindOf, string msg)
+        void DParser_OnSemanticError(DModule tempModule, int line, int col, int kindOf, string msg)
         {
             try
             {
-                errlog.AddParserError(file, line, col, msg);
+                errlog.AddParserError(tempModule.ModuleFileName, line, col, msg);
                 DocumentInstanceWindow mtp;
                 foreach (IDockContent dc in dockPanel.Documents)
                 {
                     if (dc is DocumentInstanceWindow)
                     {
                         mtp = (DocumentInstanceWindow)dc;
-                        if (mtp.fileData.ModuleName == module)
+                        if (mtp.Module.ModuleFileName == tempModule.ModuleName || mtp.Module.ModuleFileName == tempModule.ModuleFileName)
                         {
                             int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
                             mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Blue));
                             mtp.txt.ActiveTextAreaControl.Refresh();
                             break;
                         }
+
                     }
                 }
             }
@@ -894,16 +895,16 @@ namespace D_IDE
                     DocumentInstanceWindow mtp = (DocumentInstanceWindow)tp;
 
                     #region Add file to last open files
-                    string physfile = mtp.fileData.FileName;
-                    if (mtp.project != null) mtp.project.GetPhysFilePath(physfile);
+                    string physfile = mtp.Module.FileName;
+                    if (mtp.OwnerProject != null) mtp.OwnerProject.GetPhysFilePath(physfile);
                     D_IDE_Properties.Default.lastOpenFiles.Add(physfile);
                     #endregion
 
-                    if (mtp.project != null)
+                    if (mtp.OwnerProject != null)
                     {
-                        mtp.project.lastopen.Add(mtp.fileData.FileName);
-                        if (!changedPrjs.Contains(mtp.project))
-                            changedPrjs.Add(mtp.project);
+                        mtp.OwnerProject.lastopen.Add(mtp.Module.FileName);
+                        if (!changedPrjs.Contains(mtp.OwnerProject))
+                            changedPrjs.Add(mtp.OwnerProject);
                     }
                 }
             }

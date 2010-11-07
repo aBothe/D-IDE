@@ -93,7 +93,7 @@ namespace D_IDE
 		/// <param name="local"></param>
 		/// <param name="expressions"></param>
 		/// <returns></returns>
-		public static DNode FindActualExpression(DProject prj, DModule local, CodeLocation caretLocation, string[] expressions, bool dotPressed, bool ResolveBaseType, out bool isSuper, out bool isInstance, out bool isNameSpace, out DModule module)
+		public static DNode FindActualExpression(DProject prj, CodeModule local, CodeLocation caretLocation, string[] expressions, bool dotPressed, bool ResolveBaseType, out bool isSuper, out bool isInstance, out bool isNameSpace, out CodeModule module)
 		{
             CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
 			module = local;
@@ -109,7 +109,7 @@ namespace D_IDE
 
 				if (expressions[0] == "this")
 				{
-					seldt = GetClassAt(local.dom, caretLocation);
+					seldt = GetClassAt(local, caretLocation);
 					i++;
 				}
 				else if (expressions[0] == "super")
@@ -146,8 +146,8 @@ namespace D_IDE
 					{
 						string modpath = "";
 						string[] modpath_packages;
-						List<DModule> dmods = new List<DModule>(cc.GlobalModules),
-							dmods2 = new List<DModule>();
+						List<CodeModule> dmods = new List<CodeModule>(cc.GlobalModules),
+							dmods2 = new List<CodeModule>();
 						if(prj!=null)dmods.AddRange(prj.files);// Very important: add the project's files to the search list
 
 						i = expressions.Length;
@@ -168,7 +168,7 @@ namespace D_IDE
 							module = null;
 							seldt = null;
 
-							foreach (DModule gpf in dmods)
+							foreach (CodeModule gpf in dmods)
 							{
 								if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
 								{
@@ -206,7 +206,7 @@ namespace D_IDE
 								seldt.endLoc = module.dom.endLoc;
 							}
 
-							foreach (DModule dm in dmods2)
+							foreach (CodeModule dm in dmods2)
 							{
 								seldt.Add(dm.dom);
 							}
@@ -239,18 +239,18 @@ namespace D_IDE
 
 		public ICompletionData[] GenerateCompletionData(string fn, TextArea ta, char ch)
 		{
-			ImageList icons = D_IDEForm.icons;
+			var icons = D_IDEForm.icons;
 
-			List<ICompletionData> rl = new List<ICompletionData>();
-			List<string> expressions = new List<string>();
+			var rl = new List<ICompletionData>();
+			var expressions = new List<string>();
 			try
 			{
 				DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
-				DProject project = diw.project;
+				DProject project = diw.OwnerProject;
 				if(project!=null)cc = project.Compiler;
-				DModule pf = diw.fileData;
+				var pf = diw.Module;
 
-				CodeLocation tl = new CodeLocation(ta.Caret.Column + 1, ta.Caret.Line + 1);
+				var tl = new Location(ta.Caret.Column + 1, ta.Caret.Line + 1);
 				DNode seldt, seldd;
 
 				int off = ta.Caret.Offset;
@@ -326,7 +326,7 @@ namespace D_IDE
 				{
 					#region A.B.c>.<
 					presel = null; // Important: After a typed dot ".", set previous selection string to null!
-					DModule gpf = null;
+					CodeModule gpf = null;
 
 					seldt = FindActualExpression(project, pf, tl, expressions.ToArray(), ch == '.', true, out isSuper, out isInst, out isNameSpace, out gpf);
 
@@ -470,11 +470,11 @@ namespace D_IDE
 		public static void AddGlobalSpaceContent(CompilerConfiguration cc,ref List<ICompletionData> rl)
 		{
 			ImageList icons = D_IDEForm.icons;
-			List<string> mods = new List<string>();
+			var mods = new List<string>();
 			string[] tmods;
 			string tmod;
 
-			foreach (DModule gpf in cc.GlobalModules)
+			foreach (CodeModule gpf in cc.GlobalModules)
 			{
 				if (!gpf.IsParsable) continue;
 				if (!String.IsNullOrEmpty(gpf.ModuleName))
@@ -515,12 +515,12 @@ namespace D_IDE
 		/// <param name="owner"></param>
 		/// <param name="isLastInExpressionChain">This value is needed for resolving functions because if this parameter is true then it returns the owner node</param>
 		/// <returns></returns>
-		public static DNode ResolveReturnOrBaseType(DProject prj, DModule local, DNode owner, bool isLastInExpressionChain)
+		public static DNode ResolveReturnOrBaseType(DProject prj, CodeModule local, DNode owner, bool isLastInExpressionChain)
 		{
 			if (owner == null) return null;
             CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
 			DNode ret = owner;
-			DModule mod = null;
+			CodeModule mod = null;
 			if ((!DTokens.BasicTypes[(int)owner.TypeToken] && owner.fieldtype == FieldType.Variable) || ((owner.fieldtype == FieldType.Function || owner.fieldtype == FieldType.AliasDecl) && !isLastInExpressionChain))
 			{
 				ret = DCodeCompletionProvider.SearchExprInClassHierarchy(cc,(DNode)owner.Parent, null, RemoveTemplatePartFromDecl(owner.Type.ToString()));
@@ -539,7 +539,7 @@ namespace D_IDE
 		/// <param name="i"></param>
 		/// <param name="expressions"></param>
 		/// <returns></returns>
-		static List<DNode> _res(DProject prj, DModule local, DNode parent, int i, string[] expressions)
+		static List<DNode> _res(DProject prj, CodeModule local, DNode parent, int i, string[] expressions)
 		{
 			List<DNode> tl = new List<DNode>();
 			if (expressions == null || i >= expressions.Length)
@@ -566,7 +566,7 @@ namespace D_IDE
 		/// <param name="local"></param>
 		/// <param name="expressions"></param>
 		/// <returns></returns>
-		public static List<DNode> ResolveMultipleNodes(DProject prj, DModule local, string[] expressions)
+		public static List<DNode> ResolveMultipleNodes(DProject prj, CodeModule local, string[] expressions)
 		{
 			if (expressions == null || expressions.Length < 1) return new List<DNode>();
 

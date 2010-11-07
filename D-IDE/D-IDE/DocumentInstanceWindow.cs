@@ -30,9 +30,9 @@ namespace D_IDE
 
         private System.Windows.Forms.ContextMenuStrip tcCont;
 
-        public DModule fileData;
+        public CodeModule Module;
         public string ProjectFile;
-        public DProject project
+        public DProject OwnerProject
         {
             get { return D_IDE_Properties.GetProject(ProjectFile); }
         }
@@ -41,7 +41,7 @@ namespace D_IDE
         {
             set
             {
-                if (value != modified) this.Text = Path.GetFileName(fileData.mod_file) + (value ? " *" : "");
+                if (value != modified) this.Text = Path.GetFileName(Module.ModuleFileName) + (value ? " *" : "");
                 modified = value;
             }
             get { return modified; }
@@ -64,7 +64,7 @@ namespace D_IDE
         {
             this.DockAreas = DockAreas.Document;
 
-            fileData = new DModule(project, fn);
+            Module = new CodeModule(OwnerProject, fn);
 
             txt = new TextEditorControl();
 
@@ -98,7 +98,7 @@ namespace D_IDE
             txt.Document.DocumentChanged += new DocumentEventHandler(Document_DocumentChanged);
             txt.Document.LineCountChanged += new EventHandler<LineCountChangeEventArgs>(Document_LineCountChanged);
 
-            if (DModule.Parsable(fn))
+            if (CodeModule.Parsable(fn))
             {
                 txt.Document.FormattingStrategy = new DFormattingStrategy();
                 txt.ActiveTextAreaControl.TextArea.ToolTipRequest += TextArea_ToolTipRequest;
@@ -183,8 +183,8 @@ namespace D_IDE
         {
             get
             {
-                if (D_IDEForm.thisForm.Breakpoints.Breakpoints.ContainsKey(fileData.FileName))
-                    return D_IDEForm.thisForm.Breakpoints.Breakpoints[fileData.FileName];
+                if (D_IDEForm.thisForm.Breakpoints.Breakpoints.ContainsKey(Module.FileName))
+                    return D_IDEForm.thisForm.Breakpoints.Breakpoints[Module.FileName];
                 else return new List<DIDEBreakpoint>();
             }
         }
@@ -236,11 +236,11 @@ namespace D_IDE
         /// <param name="e"></param>
         void Caret_PositionChanged(object sender, EventArgs e)
         {
-            CompilerConfiguration cc = project != null ? project.Compiler : D_IDE_Properties.Default.dmd2;
+            CompilerConfiguration cc = OwnerProject != null ? OwnerProject.Compiler : D_IDE_Properties.Default.dmd2;
             D_IDEForm.thisForm.LineLabel.Text =
                 "Line " + (txt.ActiveTextAreaControl.Caret.Line + 1).ToString() +
                 " Col " + (txt.ActiveTextAreaControl.Caret.Column).ToString();
-            DNode tv = DCodeCompletionProvider.GetBlockAt(fileData.dom, Caret);
+            DNode tv = DCodeCompletionProvider.GetBlockAt(Module.dom, Caret);
 
             if (selectedBlock != tv || selectedBlock == null)
             {
@@ -251,11 +251,11 @@ namespace D_IDE
                     DCodeCompletionProvider.AddAllClassMembers(cc, tv, ref CurrentCompletionData, true);
                 }
 
-                if (project != null)
+                if (OwnerProject != null)
                 {
                     List<string> mods = new List<string>();
                     string tmod;
-                    foreach (DModule ppf in project.files)
+                    foreach (CodeModule ppf in OwnerProject.files)
                     {
                         if (!ppf.IsParsable) continue;
                         if (!String.IsNullOrEmpty(ppf.ModuleName))
@@ -273,7 +273,7 @@ namespace D_IDE
                     }
                 }
                 else // Add classes etc from current module
-                    DCodeCompletionProvider.AddAllClassMembers(cc, fileData.dom, ref CurrentCompletionData, true);
+                    DCodeCompletionProvider.AddAllClassMembers(cc, Module.dom, ref CurrentCompletionData, true);
                 try
                 {
                     CurrentCompletionData.Capacity += cc.GlobalCompletionList.Count;
@@ -297,10 +297,10 @@ namespace D_IDE
 
             int key = DKeywords.GetToken(exprs[0]);
             if (key != -1 && key != DTokens.This && key != DTokens.Super) return;
-            DModule gpf = null;
+            CodeModule gpf = null;
             DNode dt =
-                DCodeCompletionProvider.FindActualExpression(project,
-                    fileData,
+                DCodeCompletionProvider.FindActualExpression(OwnerProject,
+                    Module,
                     D_IDE_Properties.toCodeLocation(Caret),
                     exprs,
                     false,
@@ -313,7 +313,7 @@ namespace D_IDE
 
             if (gpf == null || dt == null) return;
 
-            if (fileData.import.Contains(dt.module))
+            if (Module.import.Contains(dt.module))
             {
                 MessageBox.Show("Import directive is already existing!");
                 return;
@@ -348,7 +348,7 @@ namespace D_IDE
                 dataProvider = new DCodeCompletionProvider();
             else return false;
 
-            ICompletionData[] data = dataProvider.GenerateCompletionData(fileData.FileName, txt.ActiveTextAreaControl.TextArea, key);
+            ICompletionData[] data = dataProvider.GenerateCompletionData(Module.FileName, txt.ActiveTextAreaControl.TextArea, key);
             if (data.Length < 1) return false;
             /*
             D_IDE.CodeCompletion.CodeCompletionWindow ccw = new D_IDE.CodeCompletion.CodeCompletionWindow(data,Form1.icons);
@@ -357,7 +357,7 @@ namespace D_IDE
             DCodeCompletionWindow.ShowCompletionWindow(
                 this,					// The parent window for the completion window
                 txt, 					// The text editor to show the window for
-                fileData.FileName,		// Filename - will be passed back to the provider
+                Module.FileName,		// Filename - will be passed back to the provider
                 dataProvider,		// Provider to get the list of possible completions
                 key							// Key pressed - will be passed to the provider
             );
@@ -379,10 +379,10 @@ namespace D_IDE
 
             int key = DKeywords.GetToken(exprs[0]);
             if (key != -1 && key != DTokens.This && key != DTokens.Super) return;
-            DModule gpf = null;
+            CodeModule gpf = null;
             DNode dt =
-                DCodeCompletionProvider.FindActualExpression(project,
-                    fileData,
+                DCodeCompletionProvider.FindActualExpression(OwnerProject,
+                    Module,
                     D_IDE_Properties.toCodeLocation(Caret),
                     exprs,
                     false,
@@ -395,14 +395,14 @@ namespace D_IDE
 
             if (dt == null || gpf == null) return;
 
-            ErrorLog.OpenError(gpf.mod_file, dt.StartLocation.Line, dt.StartLocation.Column);
+            ErrorLog.OpenError(gpf.ModuleFileName, dt.StartLocation.Line, dt.StartLocation.Column);
         }
 
         void TextArea_ToolTipRequest(object sender, ToolTipRequestEventArgs e)
         {
 			if (!e.InDocument || Program.Parsing) return;
             TextArea ta = (TextArea)sender;
-            if (ta == null || !fileData.IsParsable) return;
+            if (ta == null || !Module.IsParsable) return;
 
             int mouseOffset = 0;
             try
@@ -415,14 +415,14 @@ namespace D_IDE
             }
 			if (mouseOffset < 1 || DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
             bool ctor, super, isInst, isNameSpace;
-            DModule gpf = null;
+            CodeModule gpf = null;
             int off = mouseOffset;
             string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(ta.Document.TextContent, ref off, out ctor, false);
             if (exprs == null || exprs.Length < 1) return;
 
             if (exprs[0] == "__FILE__")
             {
-                e.ShowToolTip(fileData.FileName);
+                e.ShowToolTip(Module.FileName);
                 return;
             }
             if (exprs[0] == "__LINE__")
@@ -469,8 +469,8 @@ namespace D_IDE
             #endregion
 
             DNode dt =
-                DCodeCompletionProvider.FindActualExpression(project,
-                    fileData,
+                DCodeCompletionProvider.FindActualExpression(OwnerProject,
+                    Module,
                     D_IDE_Properties.toCodeLocation(e.LogicalPosition),
                     exprs,
                     false,
@@ -503,7 +503,7 @@ namespace D_IDE
         {
             IW = null;
             IW = new InsightWindow(D_IDEForm.thisForm, txt);
-            IW.AddInsightDataProvider(new InsightWindowProvider(this, key), fileData.mod_file);
+            IW.AddInsightDataProvider(new InsightWindowProvider(this, key), Module.ModuleFileName);
             IW.ShowInsightWindow();
         }
 
@@ -641,14 +641,14 @@ namespace D_IDE
 
         public void Reload()
         {
-            txt.LoadFile(fileData.FileName);
+            txt.LoadFile(Module.FileName);
             ParseFromText();
         }
 
         public void Save()
         {
-            if (fileData.mod_file == "" || fileData.mod_file == null || !Modified) return;
-            File.WriteAllText(fileData.mod_file, txt.Document.TextContent);
+            if (Module.ModuleFileName == "" || Module.ModuleFileName == null || !Modified) return;
+            File.WriteAllText(Module.ModuleFileName, txt.Document.TextContent);
 
             Modified = false;
         }
@@ -660,15 +660,15 @@ namespace D_IDE
 
             txt.Document.MarkerStrategy.RemoveAll(RemoveParserMarkersPred);
 
-            D_IDEForm.thisForm.ProgressStatusLabel.Text = "Parsing " + fileData.ModuleName;
-            fileData.dom = DParser.ParseText(fileData.mod_file, fileData.ModuleName, txt.Text, out fileData.import);
-            D_IDEForm.thisForm.ProgressStatusLabel.Text = "Done parsing " + fileData.ModuleName;
+            D_IDEForm.thisForm.ProgressStatusLabel.Text = "Parsing " + Module.ModuleName;
+            Module.dom = DParser.ParseText(Module.ModuleFileName, Module.ModuleName, txt.Text, out Module.import);
+            D_IDEForm.thisForm.ProgressStatusLabel.Text = "Done parsing " + Module.ModuleName;
 
-            if (project != null)
+            if (OwnerProject != null)
             {
-                try { project.files.Remove(project.FileDataByFile(fileData.mod_file)); }
+                try { OwnerProject.files.Remove(OwnerProject.FileDataByFile(Module.ModuleFileName)); }
                 catch { }
-                project.files.Add(fileData);
+                OwnerProject.files.Add(Module);
             }
 
             ParseFolds();

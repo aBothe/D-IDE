@@ -88,7 +88,7 @@ namespace D_IDE
         {
             return BuildDescriptionString(data, null, true);
         }
-        public static string BuildDescriptionString(DNode data_, DModule mod)
+        public static string BuildDescriptionString(DNode data_, CodeModule mod)
         {
             return BuildDescriptionString(data_, mod, true);
         }
@@ -99,70 +99,61 @@ namespace D_IDE
         /// <param name="data"></param>
         /// <param name="IncludeDesc"></param>
         /// <returns></returns>
-        public static string BuildDescriptionString(DNode data, DModule mod, bool IncludeDesc)
+        public static string BuildDescriptionString(DNode data, CodeModule mod, bool IncludeDesc)
         {
             if (data == null) return "";
             string ret = "";
+            var dataRoot = data.NodeRoot as DModule;
 
             if (data.fieldtype == FieldType.Root)
             {
-                if (data.name != "")
-                    ret += data.name;
-                else
-                    ret += data.module;
+                ret += mod.ModuleName;                
 
                 if (mod != null && IncludeDesc)
                 {
-                    ret += "\r\n\r\n" + mod.FileName;
+                    ret += "\r\n\r\n" + mod.ModuleFileName;
                 }
                 return ret;
             }
 
-            string path = (data.module != null && data.module != "" ? (data.module + ".") : "");
-            DNode tdt = data;
-            while (tdt != null && tdt.Parent != null && (tdt.Parent as DNode).fieldtype != FieldType.Root)
+            string path = (dataRoot != null && dataRoot.ModuleName != "" ? (dataRoot.ModuleName + ".") : "");
+            DNode tdt = data.Parent;
+            while (tdt != null && !(tdt is DModule))
             {
-                path = path.Insert(0, (tdt.Parent as DNode).name + ".");
-                tdt = (tdt.Parent as DNode);
+                path = path.Insert(0, tdt.Name + ".");
+                tdt = tdt.Parent;
             }
 
-
-            foreach (int m in data.modifiers)
-            {
-                ret += DTokens.GetTokenString(m) + " ";
-            }
+            ret += data.AttributeString;
 
             if (data.fieldtype == FieldType.Constructor)
             {
-                ret += data.name;
+                ret += data.Name;
                 goto addparams;
             }
 
             string dataType = data.Type != null ? data.Type.ToString() : "";
             if (data.fieldtype == FieldType.AliasDecl)
             {
-                ret = "alias " + dataType + " " + data.name;
+                ret = "alias " + dataType + " " + data.Name;
                 return ret;
             }
 
             ret +=
                 (dataType == "" && data.TypeToken > 2 ? DTokens.GetTokenString(data.TypeToken) : dataType) + " " + // Type ID
                 (!String.IsNullOrEmpty(path) ? (path) : "") + // Module path
-                (dataType != data.name ? data.name : ""); // int : MyType // Field Name
+                (dataType != data.Name ? data.Name : ""); // int : MyType // Field Name
 
             addparams:
             if (data.TemplateParameters.Count > 0)
             {
                 ret += "(";
-                foreach (DNode p in data.TemplateParameters)
+                foreach (var p in data.TemplateParameters)
                 {
-                    foreach (int m in p.modifiers)
-                    {
-                        ret += DTokens.GetTokenString(m) + " ";
-                    }
-                    if (p.Type != null && p.Type.ToString() != p.name)
-                        ret += p.Type.ToString() + " " + p.name + ",";
-                    else ret += p.name + ",";
+                    ret += p.AttributeString;
+                    if (p.Type != null && p.Type.ToString() != p.Name)
+                        ret += p.Type.ToString() + " " + p.Name + ",";
+                    else ret += p.Name + ",";
                 }
                 ret = ret.Trim(',') + ")";
             }
@@ -187,23 +178,20 @@ namespace D_IDE
             if (data is DMethod)
             {
                 ret += "(";
-                foreach (DNode p in (data as DMethod).Parameters)
+                foreach (var p in (data as DMethod).Parameters)
                 {
-                    foreach (int m in p.modifiers)
-                    {
-                        ret += DTokens.GetTokenString(m) + " ";
-                    }
+                    ret += p.AttributeString;
                     if (p.Type != null)
-                        ret += (p.Type.ToString() != p.name ? p.Type.ToString() + " " : "") + p.name + ",";
-                    else ret += p.name + ",";
+                        ret += (p.Type.ToString() != p.Name ? p.Type.ToString() + " " : "") + p.Name + ",";
+                    else ret += p.Name + ",";
                 }
                 ret = ret.Trim(',') + ")";
             }
 
-            if (data is DVariable && !String.IsNullOrEmpty((data as DVariable).Value))
+            if (data is DVariable && (data as DVariable).Initializer!=null)
             {
                 if (data is DEnumValue)
-                    ret = (data as DEnumValue).Value; // Show its value only
+                    ret = (data as DEnumValue).Initializer; // Show its value only
                 else
                     ret += " =" + (data as DVariable).Value;
             }

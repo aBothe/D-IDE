@@ -21,13 +21,13 @@ namespace D_Parser
         {
             Step();
 
-            DModule module = new DModule();
+            var module = new DModule();
             doc = module;
             // Only one module declaration possible possible!
             if (la.Kind==(Module))
                 module.ModuleName = ModuleDeclaration();
 
-            DBlockStatement _block = module as DBlockStatement;
+            var _block = module as DBlockStatement;
             // Now only declarations or other statements are allowed!
             while (!IsEOF)
             {

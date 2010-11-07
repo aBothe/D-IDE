@@ -10,17 +10,26 @@ using D_Parser;
 
 namespace D_IDE
 {
-    public class DModule
+    public class CodeModule:DModule
     {
-		public static bool ClearErrorLogBeforeParsing = true;
+        public CodeModule(){}
+
+        public CodeModule(DProject Project, string file)
+        {
+            this.Project = Project;
+            Parse(file);
+        }
+
+#region Properties
+        public static bool ClearErrorLogBeforeParsing = true;
 		public DProject Project;
-        public string ModuleName;
-        public string mod_file;
-		public string FileName
+        public List<FoldMarker> FoldMarkers=new List<FoldMarker>();
+
+		public new string ModuleFileName
 		{
-			get { return mod_file; }
+			get { return base.ModuleFileName; }
 			set {
-				mod_file = value;
+				base.ModuleFileName = value;
 				if (Project != null)
 				{
 					ModuleName = Path.ChangeExtension(Project.GetRelFilePath(value), null).Replace('\\', '.');
@@ -28,49 +37,22 @@ namespace D_IDE
 					ModuleName = Path.GetFileNameWithoutExtension(value);
 			}
 		}
-		public List<DNode> Children
-		{
-			get {
-				if(dom!=null)
-					return dom.Children;
-				return new List<DNode>();
-			}
-		}
 
         public bool IsParsable
         {
-            get { return Parsable(mod_file); }
+            get { return Parsable(ModuleFileName); }
         }
 
         public static bool Parsable(string file)
         {
             return file.EndsWith(".d", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".di", StringComparison.OrdinalIgnoreCase);
         }
-
-        private void Init()
-        {
-            dom = new DNode(FieldType.Root);
-            import = new List<string>();
-            folds = new List<FoldMarker>();
-        }
-
-		public DModule()
-		{
-			Init();
-		}
-
-        public DModule(DProject Project,string file)
-        {
-			this.Project = Project;
-            Init();
-            FileName = file;
-            Parse(file);
-        }
+#endregion
 
         public void Parse()
         {
-            if (!File.Exists(mod_file) || !IsParsable) return;
-            Parse(mod_file);
+            if (!File.Exists(ModuleFileName) || !IsParsable) return;
+            
         }
 
         public void Parse(string file)
@@ -82,15 +64,11 @@ namespace D_IDE
 				D_IDEForm.thisForm.errlog.parserErrors.Clear();
 				D_IDEForm.thisForm.errlog.Update();
 			}
-            mod_file = file;
+            ModuleFileName = file;
 
             // try { Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + ModuleName; } catch { } // Perhaps these things here take too much time - so comment it out
-            dom = DParser.ParseFile(ModuleName, file, out import);
+            
             //try { Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + ModuleName; } catch { }
         }
-
-        public DNode dom; // Contains entire data (recursive)
-        public List<string> import;
-        public List<FoldMarker> folds;
     }
 }

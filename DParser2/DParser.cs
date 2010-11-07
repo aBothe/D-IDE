@@ -36,6 +36,22 @@ namespace D_Parser
             return m;
         }
 
+        /// <summary>
+        /// Parses the module again
+        /// </summary>
+        /// <param name="Module"></param>
+        public static void UpdateModule(DModule Module)
+        {
+            var m = DParser.ParseFile(Module.ModuleFileName);
+            Module.ApplyFrom(m);
+        }
+
+        public static void UpdateModuleFromText(DModule Module, string Code)
+        {
+            var m = DParser.ParseString(Code);
+            Module.ApplyFrom(m);
+        }
+
         static DParser Create(TextReader tr)
         {
             return new DParser(new DLexer(tr));

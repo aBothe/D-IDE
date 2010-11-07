@@ -156,7 +156,7 @@ namespace D_IDE
             {
                 if (!(dc is DocumentInstanceWindow)) continue;
                 DocumentInstanceWindow diw = dc as DocumentInstanceWindow;
-                if (diw.fileData.mod_file == fn) return diw;
+                if (diw.Module.ModuleFileName == fn) return diw;
             }
             return null;
         }
@@ -187,8 +187,8 @@ namespace D_IDE
 
         public static void UpdateChacheThread(CompilerConfiguration cc)
         {
-            DModule.ClearErrorLogBeforeParsing = false;
-            List<DModule> ret = new List<DModule>();
+            CodeModule.ClearErrorLogBeforeParsing = false;
+            List<CodeModule> ret = new List<CodeModule>();
 
             if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.stopParsingToolStripMenuItem.Enabled = true;
             //bpw.Clear();
@@ -215,7 +215,7 @@ namespace D_IDE
                     try
                     {
                         string tmodule = Path.ChangeExtension(tf, null).Remove(0, dir.Length + 1).Replace('\\', '.');
-                        DModule gpf = new DModule(dirProject, tf);
+                        CodeModule gpf = new CodeModule(dirProject, tf);
                         gpf.ModuleName = tmodule;
 
                         D_IDE_Properties.AddFileData(ret, gpf);
@@ -241,7 +241,7 @@ namespace D_IDE
                 D_IDEForm.thisForm.Log(D_IDEForm.thisForm.ProgressStatusLabel.Text = "Parsing done!");
                 D_IDEForm.thisForm.stopParsingToolStripMenuItem.Enabled = false;
             }
-            DModule.ClearErrorLogBeforeParsing = true;
+            CodeModule.ClearErrorLogBeforeParsing = true;
             lock (cc.GlobalModules)
             {
                 cc.GlobalModules = null;
@@ -272,7 +272,7 @@ namespace D_IDE
 					if (dc is DocumentInstanceWindow)
 					{
 						diw = (DocumentInstanceWindow)dc;
-						if (diw.fileData.mod_file == file)
+						if (diw.fileData.ModuleFileName == file)
 						{
 							return false;
 						}
@@ -382,7 +382,7 @@ namespace D_IDE
             {
                 if (!(dc is DocumentInstanceWindow)) continue;
                 DocumentInstanceWindow diw = (DocumentInstanceWindow)dc;
-                if (diw.fileData.FileName == file)
+                if (diw.Module.FileName == file)
                 {
                     diw.Activate();
                     Application.DoEvents();
@@ -519,13 +519,13 @@ namespace D_IDE
             hierarchy.hierarchy.Nodes.Clear();
 
             hierarchy.hierarchy.BeginUpdate();
-            TreeNode tn = new TreeNode(mtp.fileData.ModuleName);
+            TreeNode tn = new TreeNode(mtp.Module.ModuleName);
             tn.SelectedImageKey = tn.ImageKey = "namespace";
             int i = 0;
-            if (mtp.fileData.dom != null)
-                foreach (DNode ch in mtp.fileData.dom)
+            if (mtp.Module.dom != null)
+                foreach (DNode ch in mtp.Module.dom)
                 {
-                    TreeNode ctn = GenerateHierarchyData(mtp.fileData.dom, ch,
+                    TreeNode ctn = GenerateHierarchyData(mtp.Module.dom, ch,
                         (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == ch.name) ?
                         oldNode.Nodes[i] : null);
                     ctn.ToolTipText = DCompletionData.BuildDescriptionString(ch);

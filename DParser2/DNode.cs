@@ -19,7 +19,7 @@ namespace D_Parser
 
         public List<DAttribute> Attributes = new List<DAttribute>();
 
-        public Location StartLocation,EndLocation;
+        public CodeLocation StartLocation,EndLocation;
 
         public DNode(FieldType ftype)
         {
@@ -40,6 +40,16 @@ namespace D_Parser
             StartLocation = other.StartLocation;
             EndLocation = other.EndLocation;
             return this;
+        }
+
+        public DNode NodeRoot
+        {
+            get
+            {
+                if (this is DModule || Parent==null)
+                    return this;
+                else return Parent.NodeRoot;
+            }
         }
 
         public DNode()
