@@ -145,7 +145,7 @@ namespace D_IDE
                 (dataType != data.Name ? data.Name : ""); // int : MyType // Field Name
 
             addparams:
-            if (data.TemplateParameters.Count > 0)
+            if (data.TemplateParameters!=null && data.TemplateParameters.Count > 0)
             {
                 ret += "(";
                 foreach (var p in data.TemplateParameters)

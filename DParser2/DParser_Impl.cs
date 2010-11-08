@@ -22,6 +22,7 @@ namespace D_Parser
             Step();
 
             var module = new DModule();
+            module.StartLocation = la.Location;
             doc = module;
             // Only one module declaration possible possible!
             if (la.Kind==(Module))
@@ -33,6 +34,7 @@ namespace D_Parser
             {
                 DeclDef(ref _block);
             }
+            module.EndLocation = la.Location;
             return module;
         }
 

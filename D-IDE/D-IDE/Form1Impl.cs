@@ -512,7 +512,7 @@ namespace D_IDE
 
         private void RefreshClassHierarchy()
         {
-            DocumentInstanceWindow mtp = SelectedTabPage;
+            var mtp = SelectedTabPage;
             if (mtp == null) return;
             TreeNode oldNode = null;
             if (hierarchy.hierarchy.Nodes.Count > 0) oldNode = hierarchy.hierarchy.Nodes[0];
@@ -572,17 +572,18 @@ namespace D_IDE
             ii = icons.Images.IndexOfKey("Icons.16x16.Parameter.png");
             int i = 0;
 
-            foreach (DNode dt in ch.TemplateParameters)
-            {
-                TreeNode tn = GenerateHierarchyData(ch, dt,
-                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?
-                    oldNode.Nodes[i] : null);
-                tn.SelectedImageIndex = tn.ImageIndex = ii;
-                tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
+            if(ch.TemplateParameters!=null)
+                foreach (DNode dt in ch.TemplateParameters)
+                {
+                    TreeNode tn = GenerateHierarchyData(ch, dt,
+                        (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?
+                        oldNode.Nodes[i] : null);
+                    tn.SelectedImageIndex = tn.ImageIndex = ii;
+                    tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
 
-                ret.Nodes.Add(tn);
-                i++;
-            }
+                    ret.Nodes.Add(tn);
+                    i++;
+                }
 
             if(ch is DMethod)
                 foreach (DNode dt in (ch as DMethod).Parameters)
@@ -598,17 +599,17 @@ namespace D_IDE
                 }
             i = 0;
             if(ch is DBlockStatement)
-            foreach (var dt in (ch as DBlockStatement))
-            {
-                ii = DCompletionData.GetImageIndex(icons, ch, dt);
-                var tn = GenerateHierarchyData(ch, dt,
-                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?
-                    oldNode.Nodes[i] : null);
+                foreach (var dt in (ch as DBlockStatement))
+                {
+                    ii = DCompletionData.GetImageIndex(icons, ch, dt);
+                    var tn = GenerateHierarchyData(ch, dt,
+                        (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?
+                        oldNode.Nodes[i] : null);
 
-                tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
-                ret.Nodes.Add(tn);
-                i++;
-            }
+                    tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
+                    ret.Nodes.Add(tn);
+                    i++;
+                }
             if (oldNode != null && oldNode.IsExpanded && oldNode.Text == ch.Name)
                 ret.Expand();
             return ret;
