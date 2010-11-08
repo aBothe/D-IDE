@@ -131,7 +131,7 @@ namespace D_IDE
 					}
 				}
 
-				var caretLocation = new Location(ta.Caret.Column - 1, ta.Caret.Line - 1);
+				var caretLocation = new CodeLocation(ta.Caret.Column - 1, ta.Caret.Line - 1);
 				bool ctor = false;
 				int newOff = initialOffset - 1;
 				int i = 0;
@@ -148,7 +148,7 @@ namespace D_IDE
 					i++;
 					if (expressions.Length < 2 && seldt != null)
 					{
-						foreach (DNode dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
+						foreach (DNode dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.Name, false))
 						{
 							data.Add(DCompletionData.BuildDescriptionString(dt));
 						}
@@ -157,17 +157,17 @@ namespace D_IDE
 				}
 				else if (expressions[0] == "super")
 				{
-					seldt = DCodeCompletionProvider.GetClassAt(diw.Module.dom, caretLocation);
+					seldt = DCodeCompletionProvider.GetClassAt(diw.Module, caretLocation);
                     if (seldt is DClassLike && (seldt as DClassLike).BaseClasses.Count>0)
 					{
                         i++;
                         bool do_return = false;
                         foreach (TypeDeclaration td in (seldt as DClassLike).BaseClasses)
                         {
-                            seldt = DCodeCompletionProvider.SearchGlobalExpr(cc, diw.Module.dom, td.ToString());
+                            seldt = DCodeCompletionProvider.SearchGlobalExpr(cc, diw.Module, td.ToString());
                             if (seldt != null && expressions.Length < 2)
                             {
-                                foreach (DNode dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.name, false))
+                                foreach (DNode dt in DCodeCompletionProvider.GetExprsByName(seldt, seldt.Name, false))
                                 {
                                     data.Add(DCompletionData.BuildDescriptionString(dt));
                                 }
@@ -215,13 +215,13 @@ namespace D_IDE
 						module = null;
 						seldt = null;
 
-						foreach (CodeModule gpf in dmods)
+						foreach (var gpf in dmods)
 						{
 							if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
 							{
 								dmods2.Add(gpf);
 								module = gpf;
-								seldt = gpf.dom;
+								seldt = gpf;
 								if (gpf.ModuleName == modpath) // if this module has the same path as equally typed in the editor, take this as the only one
 								{
 									dmods2.Clear();
@@ -240,18 +240,17 @@ namespace D_IDE
 						if ((module = diw.OwnerProject.FileDataByFile(modpath)) == null)
 							module = D_IDE_Properties.Default.GetModule(D_IDE_Properties.Default.dmd2, modpath);
 
-						seldt = new DNode(FieldType.Root);
-						seldt.module = modpath;
+                        var _m = new DModule();
+                        seldt = _m;
+                        _m.ModuleName = modpath;
 						if (module != null)
 						{
-							seldt.module = module.ModuleName;
-							seldt.children = module.Children;
-							seldt.endLoc = module.dom.endLoc;
+                            _m.ApplyFrom(module);
 						}
 
-						foreach (CodeModule dm in dmods2)
+						foreach (var dm in dmods2)
 						{
-							seldt.Add(dm.dom);
+							_m.Children.AddRange(dm.Children);
 						}
 						break;
 					}
@@ -277,7 +276,7 @@ namespace D_IDE
 					if (i < expressions.Length - 1 && (seldt.fieldtype == FieldType.Function || seldt.fieldtype == FieldType.AliasDecl || (seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])))
 					{
 						DNode seldd = seldt;
-						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.Module.dom, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.Type.ToString()));
+						seldt = DCodeCompletionProvider.SearchGlobalExpr(cc,diw.Module, DCodeCompletionProvider.RemoveTemplatePartFromDecl(seldt.Type.ToString()));
 						if (seldt == null) seldt = seldd;
 					}
 				}

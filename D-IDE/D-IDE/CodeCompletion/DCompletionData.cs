@@ -191,14 +191,14 @@ namespace D_IDE
             if (data is DVariable && (data as DVariable).Initializer!=null)
             {
                 if (data is DEnumValue)
-                    ret = (data as DEnumValue).Initializer; // Show its value only
+                    ret = (data as DEnumValue).Initializer.ToString(); // Show its value only
                 else
-                    ret += " =" + (data as DVariable).Value;
+                    ret += " =" + (data as DVariable).Initializer.ToString();
             }
 
-            if (IncludeDesc && !String.IsNullOrEmpty(data.desc))
+            if (IncludeDesc && !String.IsNullOrEmpty(data.Description))
             {
-                ret += "\n" + data.desc;
+                ret += "\n" + data.Description;
             }
 
             if (ret.Length > 512) { ret = ret.Remove(509); ret += "..."; }
@@ -210,13 +210,14 @@ namespace D_IDE
         {
             if (data == null) return;
             DNode d = data as DNode, par = parent as DNode;
-            if (d.fieldtype == FieldType.Root && par.fieldtype == FieldType.Root
-                && d.name.Length > par.module.Length + 1 && d.name.StartsWith(par.module + "."))
+            var module = d.NodeRoot as DModule;
+            if (d.fieldtype == FieldType.Root && par.fieldtype == FieldType.Root && module!=null
+                && d.Name.Length > module.ModuleName.Length + 1 && d.Name.StartsWith(module.ModuleName + "."))
             {
-                this.text = d.name.Substring(par.module.Length + 1);
+                this.text = d.Name.Substring(module.ModuleName.Length + 1);
             }
             else
-                this.text = d.name;
+                this.text = d.Name;
             description = BuildDescriptionString(data);
         }
 
@@ -228,11 +229,11 @@ namespace D_IDE
             DNode v = (Node as DNode);
             if (v.fieldtype == FieldType.Delegate)
             {
-                if (v.modifiers.Contains(DTokens.Private))
+                if (v.ContainsAttribute(DTokens.Private))
                     return icons.Images.IndexOfKey("Icons.16x16.PrivateDelegate.png");
-                else if (v.modifiers.Contains(DTokens.Protected))
+                else if (v.ContainsAttribute(DTokens.Protected))
                     return icons.Images.IndexOfKey("Icons.16x16.ProtectedDelegate.png");
-                else if (v.modifiers.Contains(DTokens.Package))
+                else if (v.ContainsAttribute(DTokens.Package))
                     return icons.Images.IndexOfKey("Icons.16x16.InternalDelegate.png");
 
                 return icons.Images.IndexOfKey("Icons.16x16.Delegate.png");
@@ -255,11 +256,11 @@ namespace D_IDE
 
             if (v.fieldtype == FieldType.Class || v.fieldtype == FieldType.Template)
             {
-                if (v.modifiers.Contains(DTokens.Private))
+                if (v.ContainsAttribute(DTokens.Private))
                     return icons.Images.IndexOfKey("Icons.16x16.PrivateClass.png");
-                else if (v.modifiers.Contains(DTokens.Protected))
+                else if (v.ContainsAttribute(DTokens.Protected))
                     return icons.Images.IndexOfKey("Icons.16x16.ProtectedClass.png");
-                else if (v.modifiers.Contains(DTokens.Package))
+                else if (v.ContainsAttribute(DTokens.Package))
                     return icons.Images.IndexOfKey("Icons.16x16.InternalClass.png");
 
                 return icons.Images.IndexOfKey("Icons.16x16.Class.png");
@@ -271,11 +272,11 @@ namespace D_IDE
 
             if (v.fieldtype == FieldType.Enum || v.fieldtype == FieldType.EnumValue)
             {
-                if (v.modifiers.Contains(DTokens.Private))
+                if (v.ContainsAttribute(DTokens.Private))
                     return icons.Images.IndexOfKey("Icons.16x16.PrivateEnum.png");
-                else if (v.modifiers.Contains(DTokens.Protected))
+                else if (v.ContainsAttribute(DTokens.Protected))
                     return icons.Images.IndexOfKey("Icons.16x16.ProtectedEnum.png");
-                else if (v.modifiers.Contains(DTokens.Package))
+                else if (v.ContainsAttribute(DTokens.Package))
                     return icons.Images.IndexOfKey("Icons.16x16.InternalEnum.png");
 
                 return icons.Images.IndexOfKey("Icons.16x16.Enum.png");
@@ -283,11 +284,11 @@ namespace D_IDE
 
             if (v.fieldtype == FieldType.Struct)
             {
-                if (v.modifiers.Contains(DTokens.Private))
+                if (v.ContainsAttribute(DTokens.Private))
                     return icons.Images.IndexOfKey("Icons.16x16.PrivateStruct.png");
-                else if (v.modifiers.Contains(DTokens.Protected))
+                else if (v.ContainsAttribute(DTokens.Protected))
                     return icons.Images.IndexOfKey("Icons.16x16.ProtectedStruct.png");
-                else if (v.modifiers.Contains(DTokens.Package))
+                else if (v.ContainsAttribute(DTokens.Package))
                     return icons.Images.IndexOfKey("Icons.16x16.InternalStruct.png");
 
                 return icons.Images.IndexOfKey("Icons.16x16.Struct.png");
@@ -295,11 +296,11 @@ namespace D_IDE
 
             if (v.fieldtype == FieldType.Interface)
             {
-                if (v.modifiers.Contains(DTokens.Private))
+                if (v.ContainsAttribute(DTokens.Private))
                     return icons.Images.IndexOfKey("Icons.16x16.PrivateInterface.png");
-                else if (v.modifiers.Contains(DTokens.Protected))
+                else if (v.ContainsAttribute(DTokens.Protected))
                     return icons.Images.IndexOfKey("Icons.16x16.ProtectedInterface.png");
-                else if (v.modifiers.Contains(DTokens.Package))
+                else if (v.ContainsAttribute(DTokens.Package))
                     return icons.Images.IndexOfKey("Icons.16x16.InternalInterface.png");
 
                 return icons.Images.IndexOfKey("Icons.16x16.Interface.png");
@@ -307,11 +308,11 @@ namespace D_IDE
 
             if (v.fieldtype == FieldType.Function || v.fieldtype == FieldType.Constructor)
             {
-                if (v.modifiers.Contains(DTokens.Private))
+                if (v.ContainsAttribute(DTokens.Private))
                     return icons.Images.IndexOfKey("Icons.16x16.PrivateMethod.png");
-                else if (v.modifiers.Contains(DTokens.Protected))
+                else if (v.ContainsAttribute(DTokens.Protected))
                     return icons.Images.IndexOfKey("Icons.16x16.ProtectedMethod.png");
-                else if (v.modifiers.Contains(DTokens.Package))
+                else if (v.ContainsAttribute(DTokens.Package))
                     return icons.Images.IndexOfKey("Icons.16x16.InternalMethod.png");
 
                 return icons.Images.IndexOfKey("Icons.16x16.Method.png");
@@ -319,21 +320,21 @@ namespace D_IDE
 
             if (v.fieldtype == FieldType.Variable && DTokens.BasicTypes[(int)v.TypeToken])
             {
-                if (v.modifiers.Contains(DTokens.Private))
+                if (v.ContainsAttribute(DTokens.Private))
                     return icons.Images.IndexOfKey("Icons.16x16.PrivateProperty.png");
-                else if (v.modifiers.Contains(DTokens.Protected))
+                else if (v.ContainsAttribute(DTokens.Protected))
                     return icons.Images.IndexOfKey("Icons.16x16.ProtectedProperty.png");
-                else if (v.modifiers.Contains(DTokens.Package))
+                else if (v.ContainsAttribute(DTokens.Package))
                     return icons.Images.IndexOfKey("Icons.16x16.InternalProperty.png");
 
                 return icons.Images.IndexOfKey("Icons.16x16.Property.png");
             }
 
-            if (v.modifiers.Contains(DTokens.Private))
+            if (v.ContainsAttribute(DTokens.Private))
                 return icons.Images.IndexOfKey("Icons.16x16.PrivateField.png");
-            else if (v.modifiers.Contains(DTokens.Protected))
+            else if (v.ContainsAttribute(DTokens.Protected))
                 return icons.Images.IndexOfKey("Icons.16x16.ProtectedField.png");
-            else if (v.modifiers.Contains(DTokens.Package))
+            else if (v.ContainsAttribute(DTokens.Package))
                 return icons.Images.IndexOfKey("Icons.16x16.InternalField.png");
 
             return icons.Images.IndexOfKey("Icons.16x16.Field.png");

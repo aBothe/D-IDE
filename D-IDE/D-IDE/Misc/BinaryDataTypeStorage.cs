@@ -96,9 +96,10 @@ namespace D_IDE
         #endregion
 
         #region Nodes
+        #endregion
         void WriteNodes(List<DNode> Nodes)
-        {
-            BinaryWriter bs = BinStream;
+        {/*
+            var bs = BinStream;
 
             if (Nodes == null || Nodes.Count < 1)
             {
@@ -114,20 +115,25 @@ namespace D_IDE
                 bs.Write(NodeInitializer);
 
                 bs.Write((int)dt.fieldtype);
-                WriteString(dt.name);
+                WriteString(dt.Name);
                 bs.Write((int)dt.TypeToken);
                 WriteTypeDecl(dt.Type);
-                WriteString(dt.desc,true);
+                WriteString(dt.Description,true);
                 bs.Write(dt.StartLocation.X);
                 bs.Write(dt.StartLocation.Y);
                 bs.Write(dt.EndLocation.X);
                 bs.Write(dt.EndLocation.Y);
 
-                bs.Write(dt.modifiers.Count);
-                foreach (int mod in dt.modifiers)
-                    bs.Write(mod);
+                bs.Write(dt.Attributes.Count);
+                foreach (var mod in dt.Attributes)
+                {
+                    bs.Write(mod.Token);
+                    if (mod.LiteralContent != null)
+                        WriteString(mod.LiteralContent.ToString(), true);
+                    else
+                        bs.Write((int)0);
+                }
 
-                WriteString(dt.module);
                 if(dt is DVariable)
                     WriteString((dt as DVariable).Value,true);
 
@@ -184,6 +190,8 @@ namespace D_IDE
             WriteTypeDecl(decl.Base);
         }
         #endregion
+         */
+        }
     }
 
 

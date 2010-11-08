@@ -183,8 +183,8 @@ namespace D_IDE
         {
             get
             {
-                if (D_IDEForm.thisForm.Breakpoints.Breakpoints.ContainsKey(Module.FileName))
-                    return D_IDEForm.thisForm.Breakpoints.Breakpoints[Module.FileName];
+                if (D_IDEForm.thisForm.Breakpoints.Breakpoints.ContainsKey(Module.ModuleFileName))
+                    return D_IDEForm.thisForm.Breakpoints.Breakpoints[Module.ModuleFileName];
                 else return new List<DIDEBreakpoint>();
             }
         }
@@ -240,7 +240,7 @@ namespace D_IDE
             D_IDEForm.thisForm.LineLabel.Text =
                 "Line " + (txt.ActiveTextAreaControl.Caret.Line + 1).ToString() +
                 " Col " + (txt.ActiveTextAreaControl.Caret.Column).ToString();
-            DNode tv = DCodeCompletionProvider.GetBlockAt(Module.dom, Caret);
+            var tv = DCodeCompletionProvider.GetBlockAt(Module, Caret);
 
             if (selectedBlock != tv || selectedBlock == null)
             {
@@ -253,7 +253,7 @@ namespace D_IDE
 
                 if (OwnerProject != null)
                 {
-                    List<string> mods = new List<string>();
+                    var mods = new List<string>();
                     string tmod;
                     foreach (CodeModule ppf in OwnerProject.files)
                     {
@@ -264,7 +264,7 @@ namespace D_IDE
                             if (!mods.Contains(tmod)) mods.Add(tmod);
                         }
                         // Add the content of the module
-                        DCodeCompletionProvider.AddAllClassMembers(cc, ppf.dom, ref CurrentCompletionData, false);
+                        DCodeCompletionProvider.AddAllClassMembers(cc, ppf, ref CurrentCompletionData, false);
                     }
                     // Add all local modules
                     foreach (string mod in mods)
@@ -273,7 +273,7 @@ namespace D_IDE
                     }
                 }
                 else // Add classes etc from current module
-                    DCodeCompletionProvider.AddAllClassMembers(cc, Module.dom, ref CurrentCompletionData, true);
+                    DCodeCompletionProvider.AddAllClassMembers(cc, Module, ref CurrentCompletionData, true);
                 try
                 {
                     CurrentCompletionData.Capacity += cc.GlobalCompletionList.Count;
@@ -312,15 +312,15 @@ namespace D_IDE
                     );
 
             if (gpf == null || dt == null) return;
-
-            if (Module.import.Contains(dt.module))
+            var dt_root = dt.NodeRoot as DModule;
+            if (Module.Imports.Contains(dt_root.ModuleName))
             {
                 MessageBox.Show("Import directive is already existing!");
                 return;
             }
 
             TextLocation tl = txt.ActiveTextAreaControl.Caret.Position;
-            string inss = "import " + dt.module + ";\r\n";
+            string inss = "import " + dt_root.ModuleName + ";\r\n";
             txt.Document.TextContent = txt.Document.TextContent.Insert(0, inss);
             tl.Line++;
             txt.ActiveTextAreaControl.Caret.Position = tl;
@@ -348,7 +348,7 @@ namespace D_IDE
                 dataProvider = new DCodeCompletionProvider();
             else return false;
 
-            ICompletionData[] data = dataProvider.GenerateCompletionData(Module.FileName, txt.ActiveTextAreaControl.TextArea, key);
+            ICompletionData[] data = dataProvider.GenerateCompletionData(Module.ModuleFileName, txt.ActiveTextAreaControl.TextArea, key);
             if (data.Length < 1) return false;
             /*
             D_IDE.CodeCompletion.CodeCompletionWindow ccw = new D_IDE.CodeCompletion.CodeCompletionWindow(data,Form1.icons);
@@ -357,7 +357,7 @@ namespace D_IDE
             DCodeCompletionWindow.ShowCompletionWindow(
                 this,					// The parent window for the completion window
                 txt, 					// The text editor to show the window for
-                Module.FileName,		// Filename - will be passed back to the provider
+                Module.ModuleFileName,		// Filename - will be passed back to the provider
                 dataProvider,		// Provider to get the list of possible completions
                 key							// Key pressed - will be passed to the provider
             );
@@ -422,7 +422,7 @@ namespace D_IDE
 
             if (exprs[0] == "__FILE__")
             {
-                e.ShowToolTip(Module.FileName);
+                e.ShowToolTip(Module.ModuleFileName);
                 return;
             }
             if (exprs[0] == "__LINE__")
@@ -488,8 +488,9 @@ namespace D_IDE
             else
             {
                 string tt = "";
-                if (dt.Count < 1) return;
-                foreach (DNode ch in dt)
+                var _block = dt as DBlockStatement;
+                if (_block!=null || _block.Count < 1) return;
+                foreach (var ch in _block)
                 {
                     if (ch.fieldtype == FieldType.Constructor)
                         tt += DCompletionData.BuildDescriptionString(ch) + "\n\n";
@@ -641,7 +642,7 @@ namespace D_IDE
 
         public void Reload()
         {
-            txt.LoadFile(Module.FileName);
+            txt.LoadFile(Module.ModuleFileName);
             ParseFromText();
         }
 
@@ -661,7 +662,10 @@ namespace D_IDE
             txt.Document.MarkerStrategy.RemoveAll(RemoveParserMarkersPred);
 
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Parsing " + Module.ModuleName;
-            Module.dom = DParser.ParseText(Module.ModuleFileName, Module.ModuleName, txt.Text, out Module.import);
+            var _mn = Module.ModuleFileName;
+            var _m = DParser.ParseString(txt.Text);
+            Module.ApplyFrom(_m);
+            Module.ModuleFileName = _mn;
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Done parsing " + Module.ModuleName;
 
             if (OwnerProject != null)

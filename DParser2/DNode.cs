@@ -18,6 +18,10 @@ namespace D_Parser
         public string Description="";
 
         public List<DAttribute> Attributes = new List<DAttribute>();
+        public bool ContainsAttribute(int Token)
+        {
+            return DAttribute.ContainsAttribute(Attributes, Token);
+        }
 
         public CodeLocation StartLocation,EndLocation;
 

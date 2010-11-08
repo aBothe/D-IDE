@@ -114,7 +114,7 @@ namespace D_IDE
 				}
 				else if (expressions[0] == "super")
 				{
-					seldt = GetClassAt(local.dom, caretLocation);
+					seldt = GetClassAt(local, caretLocation);
 					if (seldt is DClassLike && (seldt as DClassLike).BaseClasses.Count>0)
 					{
                         seldt = SearchGlobalExpr(prj, local, (seldt as DClassLike).BaseClasses[0].ToString(), false, out module);
@@ -125,7 +125,7 @@ namespace D_IDE
 				else
 				{
 					// Search expression in all superior blocks
-					DNode cblock = GetBlockAt(local.dom, caretLocation);
+					DNode cblock = GetBlockAt(local, caretLocation);
 					seldt = SearchExprInClassHierarchyBackward(cc,cblock, RemoveTemplatePartFromDecl(expressions[0]));
 					// Search expression in current module root first
 					if (seldt == null)	seldt = SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(expressions[0]), true, out module);
@@ -168,14 +168,14 @@ namespace D_IDE
 							module = null;
 							seldt = null;
 
-							foreach (CodeModule gpf in dmods)
+							foreach (var gpf in dmods)
 							{
 								if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
 								{
 									string[] path_packages = gpf.ModuleName.Split('.');
 									dmods2.Add(gpf);
 									module = gpf;
-									seldt = gpf.dom;
+									seldt = gpf;
 									if (gpf.ModuleName == modpath) // if this module has the same path as equally typed in the editor, take this as the only one
 									{
 										dmods2.Clear();
@@ -197,18 +197,18 @@ namespace D_IDE
 							}
 
 							//Create a synthetic node which only contains module names
-							seldt = new DNode(FieldType.Root);
-							seldt.module = modpath;
+							var mod = new DModule();
+							mod.ModuleName = modpath;
+                            seldt = mod;
 							if (module != null)
 							{
-								seldt.module = module.ModuleName;
-								seldt.children = module.Children;
-								seldt.endLoc = module.dom.endLoc;
+                                mod.ApplyFrom(module);
 							}
 
-							foreach (CodeModule dm in dmods2)
+                            if(seldt is DBlockStatement)
+							foreach (var dm in dmods2)
 							{
-								seldt.Add(dm.dom);
+								(seldt as DBlockStatement).Children.AddRange(dm.Children);
 							}
 							break;
 						}
