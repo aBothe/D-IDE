@@ -292,18 +292,19 @@ namespace D_IDE
         public static DNode GetExprByName(DNode env, CodeLocation where, string name)
         {
             if (env == null) return null;
-            if (env.name == name) return env;
+            if (env.Name == name) return env;
 
-            if (where >= env.startLoc && where <= env.endLoc)
+            if (where >= env.StartLocation && where <= env.EndLocation)
             {
-                if (env.Count > 0)
+                var _block = env as DBlockStatement;
+                if (_block!=null&& _block.Count > 0)
                 {
-                    foreach (DNode dt in env)
+                    foreach (var dt in _block)
                     {
                         dt.Parent = env;
-                        if (dt.name != name)
+                        if (dt.Name != name)
                         {
-                            if (where >= dt.startLoc && where <= dt.endLoc)
+                            if (where >= dt.StartLocation && where <= dt.EndLocation)
                             {
                                 return GetExprByName(dt, where, name);
                             }

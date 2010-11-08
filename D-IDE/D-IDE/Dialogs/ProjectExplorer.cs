@@ -27,7 +27,7 @@ namespace D_IDE
         public void ReadStructure(ref TreeNode RootNode, DProject prj)
         {
             string ext = "";
-            foreach (string fn in prj.resourceFiles)
+            foreach (string fn in prj.Files)
             {
                 // add file icon if it's not in the image array
                 ext = Path.GetExtension(fn);
@@ -193,7 +193,7 @@ namespace D_IDE
                 {
                     if (MessageBox.Show(fn + " doesn't exist. Do you want to remove it from the project?", "File not found", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
-                        prj.resourceFiles.Remove((e.Node as FileTreeNode).FileOrPath);
+                        prj.Files.Remove((e.Node as FileTreeNode).FileOrPath);
                         e.Node.Remove();
                         prj.Save();
                     }
@@ -277,7 +277,7 @@ namespace D_IDE
                 }
             }
 
-            tprj.resourceFiles.Remove(f);
+            tprj.Files.Remove(f);
             tprj.Save();
             D_IDEForm.thisForm.UpdateFiles();
         }
@@ -375,10 +375,10 @@ namespace D_IDE
                         return;
                     }
 
-                    List<string> nfiles = new List<string>(dtn.Project.resourceFiles);
-                    for (int i = 0; i < dtn.Project.resourceFiles.Count; i++)
+                    List<string> nfiles = new List<string>(dtn.Project.Files);
+                    for (int i = 0; i < dtn.Project.Files.Count; i++)
                     {
-                        string file = dtn.Project.resourceFiles[i];
+                        string file = dtn.Project.Files[i];
                         if (file.StartsWith(dtn.AbsolutePath))
                             nfiles[i] = ndir + file.Substring(dtn.AbsolutePath.Length);
                     }
@@ -396,7 +396,7 @@ namespace D_IDE
                         e.CancelEdit = true;
                         return;
                     }
-                    dtn.Project.resourceFiles = nfiles;
+                    dtn.Project.Files = nfiles;
                     dtn.FileOrPath = ndir;
 
                     return;
@@ -425,7 +425,7 @@ namespace D_IDE
                     {
                         if (MessageBox.Show(fn.AbsolutePath + " doesn't exist. Do you want to remove it from the project?", "File not found", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                         {
-                            fn.Project.resourceFiles.Remove(fn.AbsolutePath);
+                            fn.Project.Files.Remove(fn.AbsolutePath);
                             e.Node.Remove();
                             fn.Project.Save();
                         }
@@ -434,10 +434,10 @@ namespace D_IDE
                     }
 
                     string relfile = fn.AbsolutePath.Replace(fn.Project.basedir, "").TrimStart('\\');
-                    List<string> nfiles = new List<string>(fn.Project.resourceFiles);
-                    for (int i = 0; i < fn.Project.resourceFiles.Count; i++)
+                    List<string> nfiles = new List<string>(fn.Project.Files);
+                    for (int i = 0; i < fn.Project.Files.Count; i++)
                     {
-                        string file = fn.Project.resourceFiles[i];
+                        string file = fn.Project.Files[i];
                         if (file == relfile)
                             nfiles[i] = (relfile.Substring(0, Math.Max(0, relfile.LastIndexOf('\\'))) + "\\" + e.Label).TrimStart('\\');
                     }
@@ -451,7 +451,7 @@ namespace D_IDE
                         e.CancelEdit = true;
                         return;
                     }
-                    fn.Project.resourceFiles = nfiles;
+                    fn.Project.Files = nfiles;
                     fn.FileOrPath = filename;
 
                     return;
@@ -529,7 +529,7 @@ namespace D_IDE
                                 }
                                 catch { }
 
-                                prj.resourceFiles.Remove(prj.GetRelFilePath(file));
+                                prj.Files.Remove(prj.GetRelFilePath(file));
                                 File.Move(file, tar);
                             }
 

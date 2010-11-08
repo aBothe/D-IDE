@@ -70,7 +70,7 @@ namespace D_IDE
             #region Last version storing
             if (prj.LastVersionCount > 0)
             {
-                List<string> tdirs = new List<string>(Directory.GetDirectories(prj.AbsoluteOutputDirectoryWithoutSVN));
+                List<string> tdirs = new List<string>(Directory.GetDirectories(prj.AbsoluteOutputDirectoryWithoutSubversionName));
                 if (tdirs.Count > prj.LastVersionCount)
                 {
                     // Very important: Sort array to ensure the descending order of dates/times
@@ -130,7 +130,7 @@ namespace D_IDE
             #endregion
 
             #region Compile all sources
-            List<string> FilesToCompile = new List<string>(prj.resourceFiles);
+            List<string> FilesToCompile = new List<string>(prj.Files);
 
             if (!Directory.Exists("obj")) Directory.CreateDirectory("obj");
 

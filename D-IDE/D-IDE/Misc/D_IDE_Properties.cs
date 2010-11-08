@@ -352,8 +352,8 @@ namespace D_IDE
 
 			// add all loaded data to the precached completion list
 			cc.GlobalCompletionList.Clear();
-			List<ICompletionData> ilist = new List<ICompletionData>();
-			DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
+			var ilist = new List<ICompletionData>();
+			//DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
 			cc.GlobalCompletionList = ilist;
 
 			Program.Parsing = false;
@@ -368,9 +368,9 @@ namespace D_IDE
 			//cacheTh = new Thread(delegate(object o)			{
             if (cc.GlobalModules != null && cc.GlobalModules.Count > 1)
             {
-                BinaryDataTypeStorageWriter bsw = new BinaryDataTypeStorageWriter();
+                var bsw = new BinaryDataTypeStorageWriter();
                 bsw.WriteModules(cc.ImportDirectories.ToArray(), cc.GlobalModules);
-                MemoryStream ms = (MemoryStream)bsw.BinStream.BaseStream;
+                var ms = bsw.BinStream.BaseStream as MemoryStream;
                 File.WriteAllBytes(file,ms.ToArray());
                 ms.Close();
                 bsw.Close();
@@ -542,14 +542,11 @@ namespace D_IDE
 		{
 			if (!pf.IsParsable) return false;
 
-			foreach (CodeModule dpf in modules)
+			foreach (var dpf in modules)
 			{
 				if (dpf.ModuleFileName == pf.ModuleFileName)
 				{
-					dpf.dom = pf.dom;
-					dpf.folds = pf.folds;
-					dpf.ModuleName = pf.ModuleName;
-					dpf.import = pf.import;
+                    dpf.ApplyFrom(pf);
 					return true;
 				}
 			}

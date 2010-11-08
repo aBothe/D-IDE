@@ -397,6 +397,9 @@ namespace D_IDE
 
         public object[] ExtractArray(ulong Offset, string RawTypeExpression, out bool IsString)
         {
+            IsString = false;
+            return null;
+            /*
             string type = DCodeCompletionProvider.RemoveAttributeFromDecl(RawTypeExpression);
 
             int DimCount = 0;
@@ -412,7 +415,7 @@ namespace D_IDE
             {
                 ret = dbg.Symbols.ReadArrayArray(Offset, t, elsz);
             }
-            return ret;
+            return ret;*/
         }
 
         public string BuildArrayContentString(object[] marr, bool IsString)
@@ -472,6 +475,8 @@ namespace D_IDE
 
         public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym, string[] SymbolExpressions)
         {
+            return "";
+            /*
             #region Search fitting node
             DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
             CodeModule mod = null;
@@ -500,7 +505,7 @@ namespace D_IDE
                     //TODO
                 }
             }
-            return sym.TextValue;
+            return sym.TextValue;*/
         }
 
         public void RefreshLocals()

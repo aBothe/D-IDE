@@ -123,7 +123,7 @@ namespace D_IDE
 				libs.SelectedIndex = 0;
 
 			Files.Items.Clear();
-			foreach (string fn in prj.resourceFiles)
+			foreach (string fn in prj.Files)
 			{
 				ListViewItem lvi = Files.Items.Add((fn.StartsWith(prj.basedir)) ? fn.Substring(prj.basedir.Length + 1) : fn);
 				lvi.Tag = prj.GetPhysFilePath(fn);
@@ -208,9 +208,9 @@ namespace D_IDE
 			foreach (ListViewItem lvi in Files.Items)
 			{
 				string fn = lvi.Text;
-				prj.resourceFiles.Add(prj.GetRelFilePath(fn));
+				prj.Files.Add(prj.GetRelFilePath(fn));
 				if (CodeModule.Parsable(fn) && File.Exists(prj.GetPhysFilePath(fn)))
-					prj.files.Add(new CodeModule(prj,prj.GetPhysFilePath(fn)));
+					prj.Modules.Add(new CodeModule(prj,prj.GetPhysFilePath(fn)));
 			}
 
 			project = prj;

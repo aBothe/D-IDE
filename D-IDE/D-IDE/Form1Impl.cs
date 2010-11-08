@@ -88,7 +88,7 @@ namespace D_IDE
         {
             if (prj == null) return;
 
-            prj.resourceFiles.Remove(file);
+            prj.Files.Remove(file);
 
             UpdateFiles();
         }
@@ -215,7 +215,7 @@ namespace D_IDE
                     try
                     {
                         string tmodule = Path.ChangeExtension(tf, null).Remove(0, dir.Length + 1).Replace('\\', '.');
-                        CodeModule gpf = new CodeModule(dirProject, tf);
+                        var gpf = new CodeModule(dirProject, tf);
                         gpf.ModuleName = tmodule;
 
                         D_IDE_Properties.AddFileData(ret, gpf);
@@ -242,7 +242,7 @@ namespace D_IDE
                 D_IDEForm.thisForm.stopParsingToolStripMenuItem.Enabled = false;
             }
             CodeModule.ClearErrorLogBeforeParsing = true;
-            lock (cc.GlobalModules)
+            /*lock (cc.GlobalModules)
             {
                 cc.GlobalModules = null;
                 cc.GlobalModules = ret;
@@ -250,7 +250,7 @@ namespace D_IDE
                 List<ICompletionData> ilist = new List<ICompletionData>();
                 DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
                 cc.GlobalCompletionList = ilist;
-            }
+            }*/
         }
 
         /*
@@ -368,7 +368,7 @@ namespace D_IDE
         [DebuggerStepThrough()]
         public DocumentInstanceWindow Open(string file, bool silent = false)
         {
-            if (prj != null && prj.resourceFiles.Contains(prj.GetRelFilePath(file)))
+            if (prj != null && prj.Files.Contains(prj.GetRelFilePath(file)))
                 return Open(prj.GetPhysFilePath(file), ProjectFile);
             return Open(file, "", silent);
         }
@@ -382,7 +382,7 @@ namespace D_IDE
             {
                 if (!(dc is DocumentInstanceWindow)) continue;
                 DocumentInstanceWindow diw = (DocumentInstanceWindow)dc;
-                if (diw.Module.FileName == file)
+                if (diw.Module.ModuleFileName == file)
                 {
                     diw.Activate();
                     Application.DoEvents();
@@ -419,11 +419,11 @@ namespace D_IDE
 
                 prj.ParseAll();
 
-                foreach (string f in prj.lastopen)
+                foreach (string f in prj.LastOpenedFiles)
                 {
                     Open(f, ProjectFile);
                 }
-                prj.lastopen.Clear();
+                prj.LastOpenedFiles.Clear();
                 ret = SelectedTabPage;
                 UpdateFiles();
             }
@@ -519,20 +519,19 @@ namespace D_IDE
             hierarchy.hierarchy.Nodes.Clear();
 
             hierarchy.hierarchy.BeginUpdate();
-            TreeNode tn = new TreeNode(mtp.Module.ModuleName);
+            var tn = new TreeNode(mtp.Module.ModuleName);
             tn.SelectedImageKey = tn.ImageKey = "namespace";
             int i = 0;
-            if (mtp.Module.dom != null)
-                foreach (DNode ch in mtp.Module.dom)
-                {
-                    TreeNode ctn = GenerateHierarchyData(mtp.Module.dom, ch,
-                        (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == ch.name) ?
-                        oldNode.Nodes[i] : null);
-                    ctn.ToolTipText = DCompletionData.BuildDescriptionString(ch);
-                    ctn.Tag = ch;
-                    tn.Nodes.Add(ctn);
-                    i++;
-                }
+            foreach (var ch in mtp.Module)
+            {
+                TreeNode ctn = GenerateHierarchyData(mtp.Module, ch,
+                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == ch.Name) ?
+                    oldNode.Nodes[i] : null);
+                ctn.ToolTipText = DCompletionData.BuildDescriptionString(ch);
+                ctn.Tag = ch;
+                tn.Nodes.Add(ctn);
+                i++;
+            }
             tn.Expand();
             hierarchy.hierarchy.Nodes.Add(tn);
             hierarchy.hierarchy.EndUpdate();
@@ -566,7 +565,7 @@ namespace D_IDE
             if (ch == null) return null;
             int ii = DCompletionData.GetImageIndex(icons, env, ch);
 
-            TreeNode ret = new TreeNode(ch.name, ii, ii);
+            TreeNode ret = new TreeNode(ch.Name, ii, ii);
             ret.Tag = ch;
             ret.SelectedImageIndex = ret.ImageIndex = ii;
 
@@ -576,7 +575,7 @@ namespace D_IDE
             foreach (DNode dt in ch.TemplateParameters)
             {
                 TreeNode tn = GenerateHierarchyData(ch, dt,
-                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
+                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?
                     oldNode.Nodes[i] : null);
                 tn.SelectedImageIndex = tn.ImageIndex = ii;
                 tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
@@ -589,7 +588,7 @@ namespace D_IDE
                 foreach (DNode dt in (ch as DMethod).Parameters)
                 {
                     TreeNode tn = GenerateHierarchyData(ch, dt,
-                        (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
+                        (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?
                         oldNode.Nodes[i] : null);
                     tn.SelectedImageIndex = tn.ImageIndex = ii;
                     tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
@@ -598,18 +597,19 @@ namespace D_IDE
                     i++;
                 }
             i = 0;
-            foreach (DNode dt in ch)
+            if(ch is DBlockStatement)
+            foreach (var dt in (ch as DBlockStatement))
             {
                 ii = DCompletionData.GetImageIndex(icons, ch, dt);
-                TreeNode tn = GenerateHierarchyData(ch, dt,
-                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.name) ?
+                var tn = GenerateHierarchyData(ch, dt,
+                    (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?
                     oldNode.Nodes[i] : null);
 
                 tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
                 ret.Nodes.Add(tn);
                 i++;
             }
-            if (oldNode != null && oldNode.IsExpanded && oldNode.Text == ch.name)
+            if (oldNode != null && oldNode.IsExpanded && oldNode.Text == ch.Name)
                 ret.Expand();
             return ret;
         }

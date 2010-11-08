@@ -367,7 +367,7 @@ namespace D_IDE
 
             if (oF.ShowDialog() == DialogResult.OK)
             {
-                foreach (string fn in oF.FileNames) Open(fn);
+                foreach (var fn in oF.FileNames) Open(fn);
                 UpdateFiles();
             }
         }
@@ -394,7 +394,7 @@ namespace D_IDE
                 if (!mtp.Module.IsParsable) return;
                 mtp.ParseFromText(); // Reparse after save
 
-                FXFormsDesigner fd = FXFormDesignerByFile(mtp.Module.FileName);
+                FXFormsDesigner fd = FXFormDesignerByFile(mtp.Module.ModuleFileName);
                 if (fd != null)
                 {
                     fd.Reload();
@@ -411,8 +411,8 @@ namespace D_IDE
                 {
                     D_IDE_Properties.AddFileData(cc, mtp.Module);
 
-                    List<ICompletionData> ilist = new List<ICompletionData>();
-                    DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
+                    var ilist = new List<ICompletionData>();
+                    //DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
                     cc.GlobalCompletionList = ilist;
 
                     break;
@@ -428,25 +428,25 @@ namespace D_IDE
 
         public void SaveAs(object sender, EventArgs e)
         {
-            DocumentInstanceWindow tp = SelectedTabPage;
+            var tp = SelectedTabPage;
             if (tp == null) return;
-            string bef = tp.Module.FileName;
+            string bef = tp.Module.ModuleFileName;
             sF.FileName = bef;
 
             if (sF.ShowDialog() == DialogResult.OK)
             {
                 if (prj != null)
                 {
-                    if (CodeModule.Parsable(tp.Module.FileName))
+                    if (CodeModule.Parsable(tp.Module.ModuleFileName))
                     {
-                        if (prj.files.Contains(tp.Module))
-                            prj.files.Remove(tp.Module);
+                        if (prj.Modules.Contains(tp.Module))
+                            prj.Modules.Remove(tp.Module);
                     }
 
-                    prj.resourceFiles.Remove(prj.GetRelFilePath(tp.Module.FileName));
+                    prj.Files.Remove(prj.GetRelFilePath(tp.Module.ModuleFileName));
                     prj.AddSrc(sF.FileName);
                 }
-                tp.Module.FileName = sF.FileName;
+                tp.Module.ModuleFileName = sF.FileName;
                 tp.Update();
                 tp.Save();
             }
@@ -887,7 +887,7 @@ namespace D_IDE
             #region Save all edited projects and store all opened files into an array
             D_IDE_Properties.Default.lastOpenFiles.Clear();
 
-            List<DProject> changedPrjs = new List<DProject>();
+            var changedPrjs = new List<DProject>();
             foreach (DockContent tp in dockPanel.Documents)
             {
                 if (tp is DocumentInstanceWindow)
@@ -895,14 +895,14 @@ namespace D_IDE
                     DocumentInstanceWindow mtp = (DocumentInstanceWindow)tp;
 
                     #region Add file to last open files
-                    string physfile = mtp.Module.FileName;
+                    string physfile = mtp.Module.ModuleFileName;
                     if (mtp.OwnerProject != null) mtp.OwnerProject.GetPhysFilePath(physfile);
                     D_IDE_Properties.Default.lastOpenFiles.Add(physfile);
                     #endregion
 
                     if (mtp.OwnerProject != null)
                     {
-                        mtp.OwnerProject.lastopen.Add(mtp.Module.FileName);
+                        mtp.OwnerProject.LastOpenedFiles.Add(mtp.Module.ModuleFileName);
                         if (!changedPrjs.Contains(mtp.OwnerProject))
                             changedPrjs.Add(mtp.OwnerProject);
                     }

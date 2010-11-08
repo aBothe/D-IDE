@@ -236,7 +236,8 @@ namespace D_IDE
 
         #region Modules
         public List<CodeModule> ReadModules(ref List<string> ParsedDirectories)
-        {
+        { return new List<CodeModule>();
+            /*
             BinaryReader bs = BinStream;
 
             int Count = bs.ReadInt32();
@@ -403,8 +404,9 @@ namespace D_IDE
             else return null;
 
             ret.Base = ReadTypeDecl();
-            return ret;
+            return ret;*/
         }
         #endregion
+        
     }
 }

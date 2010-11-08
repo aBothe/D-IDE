@@ -115,14 +115,11 @@
     <Compile Include="Dialogs\ClassHierarchy.Designer.cs">
       <DependentUpon>ClassHierarchy.cs</DependentUpon>
     </Compile>
-    <Compile Include="CodeCompletion\AfterSpaceCompletionProvider.cs" />
-    <Compile Include="CodeCompletion\DCodeCompletionProvider_Basics.cs" />
     <Compile Include="CodeCompletion\DCodeCompletionWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="CodeCompletion\DCompletionData.cs" />
     <Compile Include="CodeCompletion\DFormatting.cs" />
-    <Compile Include="CodeCompletion\InsightView.cs" />
     <Compile Include="CodeCompletion\XMLFormatting.cs" />
     <Compile Include="Dialogs\BuildProcessWin.cs">
       <CustomToolNamespace>D_IDE.Dialogs</CustomToolNamespace>
@@ -131,7 +128,6 @@
     <Compile Include="Dialogs\BuildProcessWin.Designer.cs">
       <DependentUpon>BuildProcessWin.cs</DependentUpon>
     </Compile>
-    <Compile Include="CodeCompletion\DCodeCompletionProvider.cs" />
     <Compile Include="DBuilder.cs" />
     <Compile Include="Dialogs\CodeTemplates.cs">
       <SubType>Form</SubType>

@@ -72,6 +72,9 @@ namespace D_IDE
 		}
 
 		public bool EnableSubversioning = false; // Shall this stay activated by default?
+        /// <summary>
+        /// Indicates whether all changed source files are stored into the subversion directories
+        /// </summary>
 		public bool AlsoStoreSources = true;
 		public int LastVersionCount = 10;
 		public string LastBuiltTarget = "";
@@ -105,7 +108,7 @@ namespace D_IDE
 				return basedir + "\\" + od + add;
 			}
 		}
-		public string AbsoluteOutputDirectoryWithoutSVN
+		public string AbsoluteOutputDirectoryWithoutSubversionName
 		{
 			get
 			{
@@ -123,21 +126,21 @@ namespace D_IDE
 		public Dictionary<string, long> LastModifyingDates = new Dictionary<string, long>();
 
 		[NonSerialized()]
-		public List<CodeModule> files = new List<CodeModule>();
-		public List<string> resourceFiles = new List<string>();
+		public List<CodeModule> Modules = new List<CodeModule>();
+		public List<string> Files = new List<string>();
 		public List<string> FileDependencies = new List<string>();
 		public List<string> ProjectDependencies = new List<string>();
-		public List<string> lastopen = new List<string>();
+		public List<string> LastOpenedFiles = new List<string>();
 		#endregion
 
 		public void ParseAll()
 		{
-			if (files == null) files = new List<CodeModule>();
-			files.Clear();
-			foreach (string fn in resourceFiles)
+			if (Modules == null) Modules = new List<CodeModule>();
+			Modules.Clear();
+			foreach (string fn in Files)
 			{
 				if (!CodeModule.Parsable(fn)) continue;
-				files.Add(new CodeModule(this,GetPhysFilePath(fn)));
+				Modules.Add(new CodeModule(this,GetPhysFilePath(fn)));
 			}
 		}
 		public string GetPhysFilePath(string file)
@@ -192,14 +195,14 @@ namespace D_IDE
 			targetfilename = "";
 			prjfn = "";
 			basedir = ".";
-			files = new List<CodeModule>();
-			resourceFiles = new List<string>();
-			lastopen = new List<string>();
+			Modules = new List<CodeModule>();
+			Files = new List<string>();
+			LastOpenedFiles = new List<string>();
 		}
 
 		public bool Contains(string file)
 		{
-			return resourceFiles.Contains(GetRelFilePath( file));
+			return Files.Contains(GetRelFilePath( file));
 		}
 
 		[System.Diagnostics.DebuggerStepThrough()]
@@ -222,12 +225,12 @@ namespace D_IDE
 				fn = fn.Remove(0, basedir.Length + 1);
 			}
 
-			if (resourceFiles.Contains(fn))
+			if (Files.Contains(fn))
 			{
 				MessageBox.Show("File \"" + fn + "\" already exists in project!");
 				return false;
 			}
-			resourceFiles.Add(fn);
+			Files.Add(fn);
 			if (LastModifyingDates.ContainsKey(phys_fn))
 				LastModifyingDates[phys_fn] = lastModified;
 			else
@@ -307,7 +310,7 @@ namespace D_IDE
 					stream.Close();
 					if (ret != null)
 					{
-						ret.files = new List<CodeModule>();
+						ret.Modules = new List<CodeModule>();
 						ret.prjfn = fn;
 					}
 					return ret;
@@ -400,8 +403,8 @@ namespace D_IDE
 								break;
 
 							case "files":
-								if (ret.resourceFiles == null)
-									ret.resourceFiles = new List<string>();
+								if (ret.Files == null)
+									ret.Files = new List<string>();
 
 								xsr = xr.ReadSubtree();
 								while (xsr.Read())
@@ -429,15 +432,15 @@ namespace D_IDE
 								break;
 
 							case "lastopen":
-								if (ret.lastopen == null)
-									ret.lastopen = new List<string>();
+								if (ret.LastOpenedFiles == null)
+									ret.LastOpenedFiles = new List<string>();
 
 								xsr = xr.ReadSubtree();
 								while (xsr.Read())
 								{
 									if (xsr.NodeType == XmlNodeType.CDATA)
 									{
-										ret.lastopen.Add(xr.ReadString());
+										ret.LastOpenedFiles.Add(xr.ReadString());
 									}
 								}
 								break;
@@ -501,13 +504,13 @@ namespace D_IDE
 			}
 			if (ret != null)
 			{
-				ret.files = new List<CodeModule>();
-				foreach (string f in ret.resourceFiles)
+				ret.Modules = new List<CodeModule>();
+				foreach (string f in ret.Files)
 				{
 					if (!CodeModule.Parsable(f)) continue;
 					try
 					{
-						ret.files.Add(new CodeModule(ret,ret.GetPhysFilePath(f)));
+						ret.Modules.Add(new CodeModule(ret,ret.GetPhysFilePath(f)));
 					}
 					catch { }
 				}
@@ -602,10 +605,10 @@ namespace D_IDE
 				xw.WriteEndElement();
 			}
 
-			if (resourceFiles != null && resourceFiles.Count > 0)
+			if (Files != null && Files.Count > 0)
 			{
 				xw.WriteStartElement("files");
-				foreach (string fn in resourceFiles)
+				foreach (string fn in Files)
 				{
 					if (String.IsNullOrEmpty(fn)) continue;
 					xw.WriteStartElement("file");
@@ -620,10 +623,10 @@ namespace D_IDE
 				xw.WriteEndElement();
 			}
 
-			if (lastopen != null && lastopen.Count > 0)
+			if (LastOpenedFiles != null && LastOpenedFiles.Count > 0)
 			{
 				xw.WriteStartElement("lastopen");
-				foreach (string fn in lastopen)
+				foreach (string fn in LastOpenedFiles)
 				{
 					xw.WriteStartElement("file");
 					xw.WriteCData(fn);
@@ -676,7 +679,7 @@ namespace D_IDE
 		#endregion
 		public CodeModule FileDataByFile(string fn)
 		{
-			foreach (var pf in files)
+			foreach (var pf in Modules)
 			{
 				if (pf.ModuleFileName == fn) return pf;
 			}

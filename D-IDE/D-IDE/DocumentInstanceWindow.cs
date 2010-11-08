@@ -235,7 +235,7 @@ namespace D_IDE
         /// <param name="sender"></param>
         /// <param name="e"></param>
         void Caret_PositionChanged(object sender, EventArgs e)
-        {
+        {/*
             CompilerConfiguration cc = OwnerProject != null ? OwnerProject.Compiler : D_IDE_Properties.Default.dmd2;
             D_IDEForm.thisForm.LineLabel.Text =
                 "Line " + (txt.ActiveTextAreaControl.Caret.Line + 1).ToString() +
@@ -280,12 +280,12 @@ namespace D_IDE
                     CurrentCompletionData.AddRange(cc.GlobalCompletionList);
                 }
                 catch { }
-            }
+            }*/
         }
 
         void CreateImportDirective_Click(object sender, EventArgs e)
         {
-            int off = txt.ActiveTextAreaControl.Caret.Offset;
+            /*int off = txt.ActiveTextAreaControl.Caret.Offset;
             bool ctor, super, isInst, isNameSpace;
 
             string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(txt.Document.TextContent, ref off, out ctor, false);
@@ -298,7 +298,7 @@ namespace D_IDE
             int key = DKeywords.GetToken(exprs[0]);
             if (key != -1 && key != DTokens.This && key != DTokens.Super) return;
             CodeModule gpf = null;
-            DNode dt =
+            var dt =
                 DCodeCompletionProvider.FindActualExpression(OwnerProject,
                     Module,
                     D_IDE_Properties.toCodeLocation(Caret),
@@ -323,14 +323,14 @@ namespace D_IDE
             string inss = "import " + dt_root.ModuleName + ";\r\n";
             txt.Document.TextContent = txt.Document.TextContent.Insert(0, inss);
             tl.Line++;
-            txt.ActiveTextAreaControl.Caret.Position = tl;
+            txt.ActiveTextAreaControl.Caret.Position = tl;*/
         }
 
         /// <summary>
         /// Return true to handle the keypress, return false to let the text area handle the keypress
         /// </summary>
         public bool TextAreaKeyEventHandler(char key)
-        {
+        {/*
             if (Program.Parsing ||
                 DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, txt.ActiveTextAreaControl.Caret.Offset))
                 return false;
@@ -348,11 +348,8 @@ namespace D_IDE
                 dataProvider = new DCodeCompletionProvider();
             else return false;
 
-            ICompletionData[] data = dataProvider.GenerateCompletionData(Module.ModuleFileName, txt.ActiveTextAreaControl.TextArea, key);
+            var data = dataProvider.GenerateCompletionData(Module.ModuleFileName, txt.ActiveTextAreaControl.TextArea, key);
             if (data.Length < 1) return false;
-            /*
-            D_IDE.CodeCompletion.CodeCompletionWindow ccw = new D_IDE.CodeCompletion.CodeCompletionWindow(data,Form1.icons);
-            ccw.Show();*/
 
             DCodeCompletionWindow.ShowCompletionWindow(
                 this,					// The parent window for the completion window
@@ -360,12 +357,14 @@ namespace D_IDE
                 Module.ModuleFileName,		// Filename - will be passed back to the provider
                 dataProvider,		// Provider to get the list of possible completions
                 key							// Key pressed - will be passed to the provider
-            );
+            );*/
             return false;
         }
 
         private void GoToDefinition_Click(object sender, EventArgs e)
         {
+            return;
+            /*
             if (Program.Parsing) return;
             int off = txt.ActiveTextAreaControl.Caret.Offset;
             bool ctor, super, isInst, isNameSpace;
@@ -395,11 +394,12 @@ namespace D_IDE
 
             if (dt == null || gpf == null) return;
 
-            ErrorLog.OpenError(gpf.ModuleFileName, dt.StartLocation.Line, dt.StartLocation.Column);
+            ErrorLog.OpenError(gpf.ModuleFileName, dt.StartLocation.Line, dt.StartLocation.Column);*/
         }
 
         void TextArea_ToolTipRequest(object sender, ToolTipRequestEventArgs e)
         {
+            /*
 			if (!e.InDocument || Program.Parsing) return;
             TextArea ta = (TextArea)sender;
             if (ta == null || !Module.IsParsable) return;
@@ -497,15 +497,16 @@ namespace D_IDE
                 }
                 if (tt != "") e.ShowToolTip(tt);
             }
+            */
         }
 
         internal static InsightWindow IW;
         public void ShowFunctionParameterToolTip(char key)
         {
-            IW = null;
+            IW = null;/*
             IW = new InsightWindow(D_IDEForm.thisForm, txt);
             IW.AddInsightDataProvider(new InsightWindowProvider(this, key), Module.ModuleFileName);
-            IW.ShowInsightWindow();
+            IW.ShowInsightWindow();*/
         }
 
         #region Commenting
@@ -522,11 +523,11 @@ namespace D_IDE
             }
             else
             {
-                ISelection isel = txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
+                var isel = txt.ActiveTextAreaControl.SelectionManager.SelectionCollection[0];
                 txt.Document.UndoStack.StartUndoGroup();
 
-                bool a, b, IsInBlock, IsInNested, HasBeenCommented=false;
-                DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Text, isel.Offset, out a, out b, out IsInBlock, out IsInNested);
+                bool a=false, b=false, IsInBlock=false, IsInNested=false, HasBeenCommented=false;
+                //DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Text, isel.Offset, out a, out b, out IsInBlock, out IsInNested);
 
                 if (!IsInBlock && !IsInNested)
                 {
@@ -552,6 +553,7 @@ namespace D_IDE
 
         public void UncommentBlock(object o, EventArgs ea)
         {
+            /*
             #region Remove line comments first
             LineSegment ls = txt.Document.LineSegmentCollection[Caret.Line];
             int commStart = CaretOffset;
@@ -592,7 +594,7 @@ namespace D_IDE
             txt.Document.Remove(commEnd, 2);
             txt.Document.Remove(commStart, 2);
 
-            if(commStart!=off)txt.ActiveTextAreaControl.Caret.Position = txt.ActiveTextAreaControl.Document.OffsetToPosition(off/*-2*/);
+            if(commStart!=off)txt.ActiveTextAreaControl.Caret.Position = txt.ActiveTextAreaControl.Document.OffsetToPosition(off);
 
             if (txt.ActiveTextAreaControl.SelectionManager.SelectionCollection.Count > 0)
             {
@@ -606,7 +608,7 @@ namespace D_IDE
             txt.Document.UndoStack.EndUndoGroup();
             #endregion
             Refresh();
-
+            */
         }
         #endregion
 
@@ -670,9 +672,9 @@ namespace D_IDE
 
             if (OwnerProject != null)
             {
-                try { OwnerProject.files.Remove(OwnerProject.FileDataByFile(Module.ModuleFileName)); }
+                try { OwnerProject.Modules.Remove(OwnerProject.FileDataByFile(Module.ModuleFileName)); }
                 catch { }
-                OwnerProject.files.Add(Module);
+                OwnerProject.Modules.Add(Module);
             }
 
             ParseFolds();
