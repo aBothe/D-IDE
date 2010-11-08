@@ -49,19 +49,19 @@ namespace D_Parser
                 ImportDeclaration();
 
             //Constructor
-            else if (la.Kind==(This))
+            else if (la.Kind == (This))
                 module.Add(Constructor(module.fieldtype == FieldType.Struct));
 
             //Destructor
-            else if (la.Kind==(Tilde) && lexer.CurrentPeekToken.Kind==(This))
+            else if (la.Kind == (Tilde) && lexer.CurrentPeekToken.Kind == (This))
                 module.Add(Destructor());
 
             //Invariant
-            else if (la.Kind==(Invariant))
+            else if (la.Kind == (Invariant))
                 module.Add(_Invariant());
 
             //UnitTest
-            else if (la.Kind==(Unittest))
+            else if (la.Kind == (Unittest))
             {
                 Step();
                 var dbs = new DBlockStatement(FieldType.Function);
@@ -69,27 +69,28 @@ namespace D_Parser
                 dbs.StartLocation = t.Location;
                 FunctionBody(ref dbs);
                 dbs.EndLocation = t.EndLocation;
+                module.Add(dbs);
             }
 
             //ConditionalDeclaration
-            else if (la.Kind==(Version) || la.Kind==(Debug) || la.Kind==(If))
+            else if (la.Kind == (Version) || la.Kind == (Debug) || la.Kind == (If))
             {
                 Step();
-                string n = t.ToString();
+                var n = t.ToString();
 
-                if (t.Kind==(If))
+                if (t.Kind == (If))
                 {
                     Expect(OpenParenthesis);
                     AssignExpression();
                     Expect(CloseParenthesis);
                 }
-                else if (la.Kind==(Assign))
+                else if (la.Kind == (Assign))
                 {
                     Step();
                     Step();
                     Expect(Semicolon);
                 }
-                else if (t.Kind==(Version))
+                else if (t.Kind == (Version))
                 {
                     Expect(OpenParenthesis);
                     n += "(";
@@ -98,7 +99,7 @@ namespace D_Parser
                     Expect(CloseParenthesis);
                     n += ")";
                 }
-                else if (t.Kind==(Debug) && la.Kind==(OpenParenthesis))
+                else if (t.Kind == (Debug) && la.Kind == (OpenParenthesis))
                 {
                     Expect(OpenParenthesis);
                     n += "(";
@@ -108,23 +109,23 @@ namespace D_Parser
                     n += ")";
                 }
 
-                if (la.Kind==(Colon))
+                if (la.Kind == (Colon))
                     Step();
             }
 
             //TODO
-            else if (la.Kind==(Else))
+            else if (la.Kind == (Else))
             {
                 Step();
             }
 
             //StaticAssert
-            else if (la.Kind==(Assert))
+            else if (la.Kind == (Assert))
             {
                 Step();
                 Expect(OpenParenthesis);
                 AssignExpression();
-                if (la.Kind==(Comma))
+                if (la.Kind == (Comma))
                 {
                     Step();
                     AssignExpression();
@@ -135,15 +136,15 @@ namespace D_Parser
             //TemplateMixin
 
             //MixinDeclaration
-            else if (la.Kind==(Mixin))
+            else if (la.Kind == (Mixin))
                 MixinDeclaration();
 
             //;
-            else if (la.Kind==(Semicolon))
+            else if (la.Kind == (Semicolon))
                 Step();
 
             // {
-            else if (la.Kind==(OpenCurlyBrace))
+            else if (la.Kind == (OpenCurlyBrace))
             {
                 // Due to having a new attribute scope, we'll have use a new attribute stack here
                 var AttrBackup = BlockAttributes;
@@ -160,17 +161,17 @@ namespace D_Parser
 
             // Class Allocators
             // Note: Although occuring in global scope, parse it anyway but declare it as semantic nonsense;)
-            else if (la.Kind==(New))
+            else if (la.Kind == (New))
             {
                 Step();
 
-                DMethod dm = new DMethod();
+                var dm = new DMethod();
                 dm.Name = "new";
-                DNode dn = dm as DNode;
+                var dn = dm as DNode;
                 ApplyAttributes(ref dn);
 
                 dm.Parameters = Parameters();
-                DBlockStatement dbs = dm as DBlockStatement;
+                var dbs = dm as DBlockStatement;
                 FunctionBody(ref dbs);
 
             }
@@ -350,20 +351,22 @@ namespace D_Parser
             if (la.Kind==(Alias) || la.Kind==Typedef)
             {
                 Step();
-                DBlockStatement _t = new DBlockStatement();
-                DNode dn = _t as DNode;
+                // _t is just a synthetic node
+                var _t = new DBlockStatement();
+                var dn = _t as DNode;
                 ApplyAttributes(ref dn);
 
                 // AliasThis
                 if (la.Kind == Identifier && PK(This))
                 {
                     Step();
-                    DVariable dv = new DVariable();
+                    var dv = new DVariable();
                     dv.StartLocation = lexer.LastToken.Location;
                     dv.fieldtype = FieldType.AliasDecl; // TODO: Distinguish between an alias and a typedef
                     dv.Name = "this";
                     dv.Type = new NormalDeclaration(t.Value);
                     dv.EndLocation = t.EndLocation;
+                    par.Add(dv);
                     Step();
                     Expect(Semicolon);
                     return;
@@ -373,7 +376,7 @@ namespace D_Parser
                 foreach (DNode n in _t)
                     n.fieldtype = FieldType.AliasDecl;
 
-                par.Children.AddRange(_t);
+                par.AddRange(_t);
             }
             else if (la.Kind==(Struct) || la.Kind==(Union))
                 par.Add(AggregateDeclaration());
@@ -391,6 +394,7 @@ namespace D_Parser
 
         void Decl(ref DBlockStatement par, bool HasStorageClassModifiers)
         {
+            var startLocation = la.Location;
             TypeDeclaration ttd =null;
 
             CheckForStorageClasses();
@@ -415,6 +419,7 @@ namespace D_Parser
 
             // Declarators
             var firstNode = Declarator(false);
+            firstNode.StartLocation = startLocation;
 
             if (firstNode.Type == null)
                 firstNode.Type = ttd;
@@ -434,7 +439,7 @@ namespace D_Parser
                 // DeclaratorInitializer
                 if (la.Kind==(Assign))
                     (firstNode as DVariable).Initializer = Initializer();
-
+                firstNode.EndLocation = t.EndLocation;
                 par.Add(firstNode);
 
                 // DeclaratorIdentifierList
@@ -445,11 +450,12 @@ namespace D_Parser
 
                     var otherNode = new DVariable();
                     otherNode.Assign(firstNode);
+                    otherNode.StartLocation = t.Location;
                     otherNode.Name = t.Value;
 
                     if (la.Kind==(Assign))
                         otherNode.Initializer = Initializer();
-
+                    otherNode.EndLocation = t.EndLocation;
                     par.Add(otherNode);
                 }
 

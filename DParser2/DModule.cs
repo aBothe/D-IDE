@@ -97,6 +97,16 @@ namespace D_Parser
         public void Add(DNode v)
         {
             children.Add(v);
+            v.Parent = this;
+        }
+        /// <summary>
+        /// Adds children of <para>ItemOwner</para> to the node's children
+        /// </summary>
+        /// <param name="ItemOwner"></param>
+        public void AddRange(DBlockStatement ItemOwner)
+        {
+            foreach (var n in ItemOwner)
+                Add(n);
         }
 
         public List<DNode> Children
@@ -113,7 +123,6 @@ namespace D_Parser
         {
             return children.GetEnumerator();
         }
-
     }
 
     public class DMethod : DBlockStatement
