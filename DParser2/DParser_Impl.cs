@@ -467,6 +467,7 @@ namespace D_Parser
             {
                 var _block = firstNode as DBlockStatement; 
                 FunctionBody(ref _block);
+                
                 par.Add(firstNode);
             }
             else

@@ -602,12 +602,20 @@ namespace D_IDE
                 foreach (var dt in (ch as DBlockStatement))
                 {
                     ii = DCompletionData.GetImageIndex(icons, ch, dt);
+
                     var tn = GenerateHierarchyData(ch, dt,
                         (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?
                         oldNode.Nodes[i] : null);
 
                     tn.ToolTipText = DCompletionData.BuildDescriptionString(dt);
-                    ret.Nodes.Add(tn);
+                    // if it is a statement block only
+                    if (dt is DBlockStatement && !(dt is DMethod || dt is DClassLike || dt is DEnum))
+                    {
+                        foreach(TreeNode stn in tn.Nodes)
+                            ret.Nodes.Add(stn);
+                    }
+                    else
+                        ret.Nodes.Add(tn);
                     i++;
                 }
             if (oldNode != null && oldNode.IsExpanded && oldNode.Text == ch.Name)
