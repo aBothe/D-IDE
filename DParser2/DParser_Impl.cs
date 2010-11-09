@@ -936,6 +936,7 @@ namespace D_Parser
         private DNode Parameter()
         {
             var attr = new List<DAttribute>();
+            var startLocation = la.Location;
 
             while (ParamModifiers[la.Kind] ||( MemberFunctionAttribute[la.Kind] && !PK(OpenParenthesis)))
             {
@@ -954,6 +955,7 @@ namespace D_Parser
             var td = BasicType();
 
             var ret = Declarator(true);
+            ret.StartLocation = startLocation;
             if (attr.Count > 0) ret.Attributes.AddRange(attr);
             if (ret.Type == null)
                 ret.Type = td;
@@ -973,6 +975,7 @@ namespace D_Parser
                 if (ret is DVariable)
                     (ret as DVariable).Initializer = defInit;
             }
+            ret.EndLocation = t.EndLocation;
 
             return ret;
         }
@@ -2747,7 +2750,8 @@ namespace D_Parser
         DNode Constructor(bool IsStruct)
         {
             Expect(This);
-            DMethod dm = new DMethod();
+            var dm = new DMethod();
+            dm.StartLocation = t.Location;
             dm.Type = new NormalDeclaration("this");
             dm.Name = "this";
 
@@ -2780,7 +2784,8 @@ namespace D_Parser
         {
             Expect(Tilde);
             Expect(This);
-            DMethod dm = new DMethod();
+            var dm = new DMethod();
+            dm.StartLocation = lexer.LastToken.Location;
             dm.Type = new NormalDeclaration("~this");
             dm.Name = "~this";
 
@@ -2792,7 +2797,7 @@ namespace D_Parser
             if (la.Kind==(If))
                 Constraint();
 
-            DBlockStatement dm_ = dm as DBlockStatement;
+            var dm_ = dm as DBlockStatement;
             FunctionBody(ref dm_);
             return dm;
         }

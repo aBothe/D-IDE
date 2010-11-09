@@ -620,7 +620,7 @@ namespace D_IDE
             {
                 if (File.Exists(filename))
                 {
-                    FileStream tfs = File.OpenRead(filename);
+                    var tfs = File.OpenRead(filename);
                     if (tfs.Length > (1024 * 1024 * 2))
                     {
                         tfs.Close();

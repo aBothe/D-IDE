@@ -32,6 +32,7 @@ namespace D_Parser
             var s=new FileStream(File,FileMode.Open,FileAccess.Read,FileShare.ReadWrite);
             var p=Create(new StreamReader(s));
             var m = p.Parse(SkipFunctionBodies);
+            m.ModuleFileName = File;
             s.Close();
             return m;
         }

@@ -52,7 +52,9 @@ namespace D_IDE
         public void Parse()
         {
             if (!File.Exists(ModuleFileName) || !IsParsable) return;
-            
+
+            var m = DParser.ParseFile(ModuleFileName);
+            ApplyFrom(m);
         }
 
         public void Parse(string file)
@@ -67,7 +69,7 @@ namespace D_IDE
             ModuleFileName = file;
 
             // try { Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + ModuleName; } catch { } // Perhaps these things here take too much time - so comment it out
-            
+            Parse();
             //try { Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + ModuleName; } catch { }
         }
     }

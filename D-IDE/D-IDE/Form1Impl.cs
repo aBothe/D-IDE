@@ -378,10 +378,10 @@ namespace D_IDE
 
             DocumentInstanceWindow ret = null;
 
-            foreach (DockContent dc in dockPanel.Documents)
+            foreach (var dc in dockPanel.Documents)
             {
                 if (!(dc is DocumentInstanceWindow)) continue;
-                DocumentInstanceWindow diw = (DocumentInstanceWindow)dc;
+                var diw = dc as DocumentInstanceWindow;
                 if (diw.Module.ModuleFileName == file)
                 {
                     diw.Activate();
@@ -429,7 +429,7 @@ namespace D_IDE
             }
             else
             {
-                DocumentInstanceWindow mtp = new DocumentInstanceWindow(file, owner);
+                var mtp = new DocumentInstanceWindow(file, owner);
 
                 if (D_IDE_Properties.Default.lastFiles.Contains(file))
                 {
@@ -443,7 +443,7 @@ namespace D_IDE
                 mtp.Show(dockPanel);
                 ret = mtp;
             }
-            RefreshClassHierarchy();
+            //RefreshClassHierarchy();
             UpdateLastFilesMenu();
 
             // Important: set Read-Only flag if Debugger is running currently
