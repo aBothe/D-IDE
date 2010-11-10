@@ -11,6 +11,20 @@ namespace D_Parser
     /// </summary>
     public partial class DParser:DTokens
     {
+        public static DExpression ParseExpression(string Code)
+        {
+            var p = Create(new StringReader(Code));
+            p.Step();
+            return p.Expression();
+        }
+
+        public static TypeDeclaration ParseBasicType(string Code)
+        {
+            var p = Create(new StringReader(Code));
+            p.Step();
+            return p.BasicType();
+        }
+
         public static DModule ParseString(string ModuleCode)
         {
             return ParseString(ModuleCode,false);

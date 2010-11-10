@@ -399,9 +399,8 @@ namespace D_IDE
 
         void TextArea_ToolTipRequest(object sender, ToolTipRequestEventArgs e)
         {
-            /*
 			if (!e.InDocument || Program.Parsing) return;
-            TextArea ta = (TextArea)sender;
+            var ta = sender as TextArea;
             if (ta == null || !Module.IsParsable) return;
 
             int mouseOffset = 0;
@@ -413,7 +412,13 @@ namespace D_IDE
             {
                 return;
             }
-			if (mouseOffset < 1 || DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
+
+            var expr = CodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset);
+            if (expr != null)
+            {
+                e.ShowToolTip(expr.ToString());
+            }
+			/*if (mouseOffset < 1 || DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
             bool ctor, super, isInst, isNameSpace;
             CodeModule gpf = null;
             int off = mouseOffset;
