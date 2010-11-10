@@ -413,7 +413,7 @@ namespace D_IDE
                 return;
             }
 
-            var expr = CodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset);
+            var expr = CodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false);
             if (expr != null)
             {
                 e.ShowToolTip(expr.ToString());

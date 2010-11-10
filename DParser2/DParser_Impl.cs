@@ -493,7 +493,7 @@ namespace D_Parser
             if (MemberFunctionAttribute[la.Kind])
             {
                 Step();
-                MemberFunctionAttributeDecl md = new MemberFunctionAttributeDecl(t.Kind);
+                var md = new MemberFunctionAttributeDecl(t.Kind);
                 bool p = false;
                 
                 if (la.Kind == OpenParenthesis)
@@ -527,7 +527,7 @@ namespace D_Parser
             if (td == null)
                 td = IdentifierList();
             else
-                td.Base = IdentifierList();
+                td.MostBasic = IdentifierList();
 
             return td;
         }

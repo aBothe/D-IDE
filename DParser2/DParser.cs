@@ -22,6 +22,7 @@ namespace D_Parser
         {
             var p = Create(new StringReader(Code));
             p.Step();
+
             return p.BasicType();
         }
 

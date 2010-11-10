@@ -8,7 +8,7 @@ namespace D_IDE.CodeCompletion
 {
     public class CodeResolver
     {
-        public static TypeDeclaration BuildIdentifierList(string Text, int CaretOffset)
+        public static TypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly)
         {
             // At first we only want to find the beginning of our identifier list
             // later we will pass the text beyond the beginning to the parser - there we parse all needed expressions from it
@@ -114,11 +114,12 @@ namespace D_IDE.CodeCompletion
             if (!stopSeeking || IdentListStart < 0) 
                 return null;
 
+            // If code e.g. starts with a bracket, increment IdentListStart
             var ch = Text[IdentListStart];
             if (!Char.IsLetterOrDigit(ch) && ch != '_' && ch!='.')
                 IdentListStart++;
 
-            var psr = DParser.ParseBasicType(Text.Substring(IdentListStart));
+            var psr = DParser.ParseBasicType(BackwardOnly?Text.Substring(IdentListStart,CaretOffset-IdentListStart): Text.Substring(IdentListStart));
             return psr;
         }
     }
