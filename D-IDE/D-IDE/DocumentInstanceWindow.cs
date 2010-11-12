@@ -21,6 +21,7 @@ using System.Globalization;
 using System.Text;
 using ICSharpCode.NRefactory.Ast;
 using DebugEngineWrapper;
+using D_IDE.Misc;
 
 namespace D_IDE
 {
@@ -414,9 +415,11 @@ namespace D_IDE
             }
 
             var expr = CodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false);
-            if (expr != null)
+            var bs = CodeResolver.SearchBlockAt(Module, Util.ToCodeLocation( e.LogicalPosition));
+            var DeclNode = CodeResolver.ResolveTypeDeclaration(bs, expr);
+            if (DeclNode != null)
             {
-                e.ShowToolTip(expr.ToString());
+                e.ShowToolTip(DeclNode.ToString());
             }
 			/*if (mouseOffset < 1 || DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
             bool ctor, super, isInst, isNameSpace;

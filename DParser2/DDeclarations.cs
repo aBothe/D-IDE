@@ -294,20 +294,60 @@ namespace D_Parser
     }
 
     /// <summary>
-    /// Base.AccessedMember
+    /// Probably a more efficient way to store identifier lists like a.b.c.d
     /// </summary>
-    public class DotCombinedDeclaration : TypeDeclaration
+    public class IdentifierList : TypeDeclaration
     {
         public static byte GetDeclarationClassTypeId { get { return 10; } }
         public override byte TypeId { get { return GetDeclarationClassTypeId; } }
-        public TypeDeclaration AccessedMember;
+        protected List<TypeDeclaration> parts = new List<TypeDeclaration>();
 
-        public DotCombinedDeclaration() { }
-        public DotCombinedDeclaration(TypeDeclaration Base) { this.Base = Base; }
+        public List<TypeDeclaration> Parts
+        {
+            get { return parts; }
+        }
+
+        public TypeDeclaration this[int i]
+        {
+            get { return parts[i]; }
+            set { parts[i] = value;}
+        }
+
+        public void Add(TypeDeclaration Part)
+        {
+            parts.Add(Part);
+        }
+
+        public void Add(string Identifier)
+        {
+            parts.Add(new NormalDeclaration(Identifier));
+        }
 
         public override string ToString()
         {
-            return (Base != null ? Base.ToString() : "") + "." + (AccessedMember != null ? AccessedMember.ToString() : "");
+            var s = "";
+            foreach (var p in parts)
+                s += "." + p.ToString();
+            return s.TrimStart('.');
+        }
+
+        public string ToString(int start)
+        {
+            return ToString(start,parts.Count-start);
+        }
+
+        public string ToString(int start, int length)
+        {
+            var s = "";
+            if (start <= 0 || length <= 0) 
+                throw new ArgumentNullException("Parameter must not be 0");
+            if (start > parts.Count || (start + length) > parts.Count) 
+                throw new ArgumentOutOfRangeException();
+
+            for (int i = start; i < (start + length);i++ )
+                s += "." + parts[i].ToString();
+
+            return s.TrimStart('.');
         }
     }
 

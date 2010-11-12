@@ -136,6 +136,17 @@ namespace D_Parser
         }
     }
 
+    public class DStatementBlock : DBlockStatement
+    {
+        public int Token;
+        public DExpression Expression;
+
+        public DStatementBlock() :
+            base(FieldType.Block)
+        {
+        }
+    }
+
     public class DClassLike : DBlockStatement
     {
         public List<TypeDeclaration> BaseClasses=new List<TypeDeclaration>();

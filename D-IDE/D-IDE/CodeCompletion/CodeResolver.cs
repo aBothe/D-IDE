@@ -10,6 +10,7 @@ namespace D_IDE.CodeCompletion
     {
         public static TypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly)
         {
+            if (String.IsNullOrEmpty(Text) || CaretOffset >= Text.Length) return null;
             // At first we only want to find the beginning of our identifier list
             // later we will pass the text beyond the beginning to the parser - there we parse all needed expressions from it
             int IdentListStart = -1;
@@ -121,6 +122,88 @@ namespace D_IDE.CodeCompletion
 
             var psr = DParser.ParseBasicType(BackwardOnly?Text.Substring(IdentListStart,CaretOffset-IdentListStart): Text.Substring(IdentListStart));
             return psr;
+        }
+
+        public static DBlockStatement SearchBlockAt(DBlockStatement Parent, CodeLocation Where)
+        {
+            foreach (var n in Parent)
+            {
+                if (!(n is DBlockStatement)) continue;
+
+                var b = n as DBlockStatement;
+                if (Where > b.BlockStartLocation && Where < b.EndLocation)
+                    return SearchBlockAt(b, Where);
+            }
+
+            return Parent;
+        }
+
+        /// <summary>
+        /// Finds the location (module node) where a type (TypeExpression) has been declared.
+        /// </summary>
+        /// <param name="Module"></param>
+        /// <param name="IdentifierList"></param>
+        /// <returns>When a type was found, the declaration entry will be returned. Otherwise, it'll return null.</returns>
+        public static DNode ResolveTypeDeclaration(DBlockStatement BlockNode, TypeDeclaration IdentifierList)
+        {
+            if (BlockNode == null || IdentifierList == null) return null;
+
+            // Modules    Declaration
+            // |---------|-----|
+            // std.stdio.writeln();
+            if (IdentifierList is IdentifierList)
+            {
+                var il = IdentifierList as IdentifierList;
+                var skippedIds = 0;
+
+                // Now search the entire block
+                var istr = il.ToString();
+
+                var mod = BlockNode.NodeRoot as DModule;
+                /* If the id list start with the name of BlockNode's root module, 
+                 * skip those first identifiers to proceed seeking the rest of the list
+                 */
+                if (mod != null && istr.StartsWith(mod.ModuleName))
+                {
+                    skippedIds += mod.ModuleName.Split('.').Length;
+                    istr = il.ToString(skippedIds);
+                }
+
+                // Now move stepwise deeper calling ResolveTypeDeclaration recursively
+                DNode currentNode = BlockNode;
+                while (skippedIds < il.Parts.Count && currentNode is DBlockStatement)
+                {
+                    // As long as our node can contain other nodes, scan it
+                    currentNode = ResolveTypeDeclaration(currentNode as DBlockStatement, il[skippedIds]);
+                    skippedIds++;
+                }
+                return currentNode;
+            }
+
+            if (IdentifierList is NormalDeclaration)
+            {
+                var nameIdent = IdentifierList as NormalDeclaration;
+
+                // Scan from the inner to the outer level
+                var currentParent = BlockNode;
+                while (currentParent != null)
+                {
+                    foreach (var ch in currentParent)
+                    {
+                        if (nameIdent.Name == ch.Name)
+                            return ch;
+                    }
+                    currentParent = currentParent.Parent as DBlockStatement;
+                }
+            }
+
+            if (IdentifierList is TemplateDecl)
+            {
+                var template = IdentifierList as TemplateDecl;
+                
+            }
+
+            return null;
         }
     }
 }

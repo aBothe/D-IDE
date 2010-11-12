@@ -473,6 +473,7 @@
     <Resource Include="d.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+    <Content Include="CodeCompletion\Notes.txt" />
     <Content Include="dbgeng.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
