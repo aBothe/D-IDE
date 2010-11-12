@@ -22,8 +22,15 @@ namespace D_Parser
         {
             var p = Create(new StringReader(Code));
             p.Step();
-
-            return p.BasicType();
+            
+            var bt= p.BasicType();
+            while (p.IsBasicType2())
+            {
+                var bt2 = p.BasicType2();
+                bt2.MostBasic = bt;
+                bt = bt2;
+            }
+            return bt;
         }
 
         public static DModule ParseString(string ModuleCode)

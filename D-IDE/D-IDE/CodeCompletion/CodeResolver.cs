@@ -180,9 +180,24 @@ namespace D_IDE.CodeCompletion
                 return currentNode;
             }
 
-            if (IdentifierList is NormalDeclaration)
+            // Scan the type declaration list for any NormalDeclarations
+            var td = IdentifierList;
+            while (td != null && !(td is NormalDeclaration))
             {
-                var nameIdent = IdentifierList as NormalDeclaration;
+                if (td is ClampDecl)
+                {
+                    var cd = td as ClampDecl;
+                    if (cd.IsArrayDecl)
+                    {
+                        
+                    }
+                }
+                td = td.Base;
+            }
+
+            if (td is NormalDeclaration)
+            {
+                var nameIdent = td as NormalDeclaration;
 
                 // Scan from the inner to the outer level
                 var currentParent = BlockNode;
@@ -195,12 +210,6 @@ namespace D_IDE.CodeCompletion
                     }
                     currentParent = currentParent.Parent as DBlockStatement;
                 }
-            }
-
-            if (IdentifierList is TemplateDecl)
-            {
-                var template = IdentifierList as TemplateDecl;
-                
             }
 
             return null;
