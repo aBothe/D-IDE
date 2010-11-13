@@ -108,7 +108,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeCompletion\CodeResolver.cs" />
+    <Compile Include="CodeCompletion\IDECodeResolver.cs" />
     <Compile Include="CodeTemplates\CodeTemplate.cs" />
     <Compile Include="Dialogs\ClassHierarchy.cs">
       <SubType>Form</SubType>
