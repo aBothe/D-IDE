@@ -6,6 +6,48 @@ using System.IO;
 
 namespace D_IDE.CodeCompletion
 {
+    public class D_IDECodeResolver:CodeResolver
+    {
+        /// <summary>
+        /// Returns all imports of a module.
+        /// </summary>
+        /// <param name="cc"></param>
+        /// <param name="ActualModule"></param>
+        /// <returns></returns>
+        public static List<CodeModule> ResolveImports(CompilerConfiguration cc, DModule ActualModule, bool PublicOnly)
+        {
+            var ret = new List<CodeModule>();
+
+            var localImps = new List<string>();
+            foreach (var v in ActualModule.Imports.Keys)
+                localImps.Add(v);
+
+            foreach (var m in cc.GlobalModules)
+                if (localImps.Contains(m.ModuleName))
+                    ret.Add(m);
+
+            return ret;
+        }
+
+        public static void ResolveImports(ref List<CodeModule> ImportModules,CompilerConfiguration cc, DModule ActualModule, bool PublicOnly)
+        {
+            var localImps = new List<string>();
+            foreach (var kv in ActualModule.Imports)
+                if((PublicOnly && kv.Value) || !PublicOnly)
+                    localImps.Add(kv.Key);
+
+            foreach (var m in cc.GlobalModules)
+                if (localImps.Contains(m.ModuleName) && !ImportModules.Contains(m))
+                    ImportModules.Add(m);
+        }
+
+        public static TypeDeclaration ResolveTypeDeclaration(CompilerConfiguration cc, TypeDeclaration IdentifierList)
+        {
+
+            return null;
+        }
+    }
+
     public class CodeResolver
     {
         public static TypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly)

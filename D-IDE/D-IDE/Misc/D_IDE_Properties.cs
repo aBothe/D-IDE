@@ -380,11 +380,11 @@ namespace D_IDE
 		}
 		#endregion
 
-		public CodeModule GetModule(CompilerConfiguration cc, string moduleName)
+		public static CodeModule GetModule(CompilerConfiguration cc, string moduleName)
 		{
-			foreach (CodeModule dm in cc.GlobalModules)
+			foreach (var m in cc.GlobalModules)
 			{
-				if (dm.ModuleName == moduleName) return dm;
+				if (m.ModuleName == moduleName) return m;
 			}
 			return null;
 		}

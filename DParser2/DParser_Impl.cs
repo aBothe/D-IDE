@@ -205,6 +205,9 @@ namespace D_Parser
 
         void ImportDeclaration()
         {
+            bool IsPublic = DeclarationAttributes.Count > 0 && DAttribute.ContainsAttribute(DeclarationAttributes,Public);
+            DeclarationAttributes.Clear();
+
             Expect(Import);
 
             _Import();
@@ -224,7 +227,7 @@ namespace D_Parser
                 while (la.Kind==(Comma))
                 {
                     Step();
-                    doc.Imports.Add(_Import());
+                    doc.Imports.Add(_Import(),IsPublic);
                 }
 
             Expect(Semicolon);

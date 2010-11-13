@@ -12,7 +12,10 @@ namespace D_Parser
         public string ModuleName="";
         public string ModuleFileName="";
 
-        public List<string> Imports = new List<string>();
+        /// <summary>
+        /// Contains all done imports whereas the key contains the module path and the value equals the public state of the import
+        /// </summary>
+        public Dictionary<string,bool> Imports = new Dictionary<string,bool>();
 
         public DModule():base(FieldType.Root) { }
 
@@ -21,8 +24,7 @@ namespace D_Parser
             ModuleFileName = Other.ModuleFileName;
             Children.Clear();
             Children.AddRange(Other.Children);
-            Imports.Clear();
-            Imports.AddRange(Other.Imports);
+            Imports=new Dictionary<string,bool>(Other.Imports);
             this.fieldtype = Other.fieldtype;
         }
     }
