@@ -414,8 +414,8 @@ namespace D_IDE
                 return;
             }
 
-            var expr = CodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false);
-            var bs = CodeResolver.SearchBlockAt(Module, Util.ToCodeLocation( e.LogicalPosition));
+            var expr = DCodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false);
+            var bs = DCodeResolver.SearchBlockAt(Module, Util.ToCodeLocation( e.LogicalPosition));
             var DeclNode = Module.Project!=null? 
                 D_IDECodeResolver.ResolveTypeDeclaration(Module.Project.Compiler.GlobalModules,Module.Project.Modules,bs,expr):
                 D_IDECodeResolver.ResolveTypeDeclaration(D_IDE_Properties.Default.DefaultCompiler.GlobalModules,bs,expr);

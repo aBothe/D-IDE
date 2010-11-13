@@ -1,0 +1,19 @@
+﻿
+
+When resolving a type, what is needed to do this?
+
+Go from the most inner scope level to the outmost level.
+
+class A
+{
+}
+
+void main()
+{
+	if()
+	{
+		A ma=new A();
+	}
+}
+
+1) The identifier(-list) of the wanted type

@@ -1,38 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using D_Parser;
-using System.IO;
 
-namespace D_IDE.CodeCompletion
+namespace D_Parser
 {
-    public class D_IDECodeResolver:CodeResolver
+    /// <summary>
+    /// Generic class for resolve module relations and/or declarations
+    /// </summary>
+    public class DCodeResolver
     {
-        public static DNode ResolveTypeDeclaration(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
-        {
-            var SearchArea = new List<DModule>(GlobalModules.Count+LocalModules.Count);
-
-            foreach (var m in GlobalModules)
-                SearchArea.Add(m);
-            foreach (var m in LocalModules)
-                SearchArea.Add(m);
-
-            return ResolveTypeDeclaration(SearchArea, CurrentlyScopedBlock, IdentifierList);
-        }
-
-        public static DNode ResolveTypeDeclaration(List<CodeModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
-        {
-            var SearchArea = new List<DModule>(ModuleCache.Count);
-
-            foreach (var m in ModuleCache)
-                SearchArea.Add(m);
-
-            return ResolveTypeDeclaration(SearchArea, CurrentlyScopedBlock, IdentifierList);
-        }
-    }
-
-    public class CodeResolver
-    {
+        #region Direct Code search
         public static TypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly)
         {
             if (String.IsNullOrEmpty(Text) || CaretOffset >= Text.Length) return null;
@@ -45,35 +22,35 @@ namespace D_IDE.CodeCompletion
              */
 
             int isComment = 0;
-            bool isString = false, expectDot=false, hadDot=true;
+            bool isString = false, expectDot = false, hadDot = true;
             var bracketStack = new Stack<char>();
-            bool stopSeeking=false;
+            bool stopSeeking = false;
 
-            for (int i = CaretOffset; i >=0 && !stopSeeking; i--)
+            for (int i = CaretOffset; i >= 0 && !stopSeeking; i--)
             {
                 IdentListStart = i;
                 var c = Text[i];
                 var str = Text.Substring(i);
-                char p=' ';
+                char p = ' ';
                 if (i > 0) p = Text[i - 1];
 
                 // Primitive comment check
-                if(!isString && c=='/' && (p=='*' || p=='+'))
+                if (!isString && c == '/' && (p == '*' || p == '+'))
                     isComment++;
                 if (!isString && isComment > 0 && (c == '+' || c == '*') && p == '/')
                     isComment--;
 
                 // Primitive string check
                 //TODO: "blah">.<
-                if (isComment<1 && c == '"' && p!='\\')
+                if (isComment < 1 && c == '"' && p != '\\')
                     isString = !isString;
 
                 // If string or comment, just continue
-                if (isString || isComment>0)
+                if (isString || isComment > 0)
                     continue;
 
                 // If between brackets, skip
-                if (bracketStack.Count > 0 && c!=bracketStack.Peek())
+                if (bracketStack.Count > 0 && c != bracketStack.Peek())
                     continue;
 
                 // Bracket check
@@ -92,11 +69,13 @@ namespace D_IDE.CodeCompletion
                     case '[':
                     case '(':
                     case '{':
-                        if (bracketStack.Count>0 && bracketStack.Peek() == c){
+                        if (bracketStack.Count > 0 && bracketStack.Peek() == c)
+                        {
                             bracketStack.Pop();
-                            if(p=='!') // Skip template stuff
+                            if (p == '!') // Skip template stuff
                                 i--;
-                        }else
+                        }
+                        else
                         {
                             // Stop if we reached the most left existing bracket
                             // e.g. foo>(< bar| )
@@ -111,7 +90,7 @@ namespace D_IDE.CodeCompletion
 
                 if (c == '.')
                 {
-                    expectDot=false;
+                    expectDot = false;
                     hadDot = true;
                     continue;
                 }
@@ -131,21 +110,21 @@ namespace D_IDE.CodeCompletion
                     else
                         IdentListStart++;
                 }
-                
+
                 stopSeeking = true;
             }
 
 
             // Part 2: Init the parser
-            if (!stopSeeking || IdentListStart < 0) 
+            if (!stopSeeking || IdentListStart < 0)
                 return null;
 
             // If code e.g. starts with a bracket, increment IdentListStart
             var ch = Text[IdentListStart];
-            if (!Char.IsLetterOrDigit(ch) && ch != '_' && ch!='.')
+            if (!Char.IsLetterOrDigit(ch) && ch != '_' && ch != '.')
                 IdentListStart++;
 
-            var psr = DParser.ParseBasicType(BackwardOnly?Text.Substring(IdentListStart,CaretOffset-IdentListStart): Text.Substring(IdentListStart));
+            var psr = DParser.ParseBasicType(BackwardOnly ? Text.Substring(IdentListStart, CaretOffset - IdentListStart) : Text.Substring(IdentListStart));
             return psr;
         }
 
@@ -161,6 +140,88 @@ namespace D_IDE.CodeCompletion
             }
 
             return Parent;
+        }
+        #endregion
+
+        #region Import path resolving
+        /// <summary>
+        /// Returns all imports of a module and those public ones of the imported modules
+        /// </summary>
+        /// <param name="cc"></param>
+        /// <param name="ActualModule"></param>
+        /// <returns></returns>
+        public static List<DModule> ResolveImports(List<DModule> CodeCache, DModule ActualModule)
+        {
+            var ret = new List<DModule>();
+            if (CodeCache == null || ActualModule == null) return ret;
+
+            // First add all local imports
+            var localImps = new List<string>();
+            foreach (var kv in ActualModule.Imports)
+                localImps.Add(kv.Key);
+
+            foreach (var m in CodeCache)
+                if (localImps.Contains(m.ModuleName) && !ret.Contains(m))
+                {
+                    ret.Add(m);
+                    /* 
+                     * dmd-feature: public imports only affect the directly superior module
+                     *
+                     * Module A:
+                     * import B;
+                     * 
+                     * foo(); // Will fail, because foo wasn't found
+                     * 
+                     * Module B:
+                     * import C;
+                     * 
+                     * Module C:
+                     * public import D;
+                     * 
+                     * Module D:
+                     * void foo() {}
+                     * 
+                     * 
+                     * Whereas
+                     * Module B:
+                     * public import C;
+                     * 
+                     * will succeed because we have a closed import hierarchy in which all imports are public.
+                     * 
+                     */
+
+                    // So if there aren't any public imports in our import, continue without doing anything
+                    ResolveImports(ref ret, CodeCache, m);
+                }
+
+            return ret;
+        }
+
+        public static void ResolveImports(ref List<DModule> ImportModules, List<DModule> CodeCache, DModule ActualModule)
+        {
+            var localImps = new List<string>();
+            foreach (var kv in ActualModule.Imports)
+                if (kv.Value)
+                    localImps.Add(kv.Key);
+
+            foreach (var m in CodeCache)
+                if (localImps.Contains(m.ModuleName) && !ImportModules.Contains(m))
+                {
+                    ImportModules.Add(m);
+                    ResolveImports(ref ImportModules, CodeCache, m);
+                }
+        }
+        #endregion
+
+        #region Declaration resolving
+
+        public static DModule SearchModuleInCache(List<DModule> HayStack,string ModuleName)
+        {
+            foreach (var m in HayStack)
+            {
+                if (m.ModuleName == ModuleName) return m;
+            }
+            return null;
         }
 
         /// <summary>
@@ -230,46 +291,6 @@ namespace D_IDE.CodeCompletion
             return null;
         }
 
-        /// <summary>
-        /// Returns all imports of a module and those public ones of the imported modules
-        /// </summary>
-        /// <param name="cc"></param>
-        /// <param name="ActualModule"></param>
-        /// <returns></returns>
-        public static List<DModule> ResolveImports(List<DModule> CodeCache, DModule ActualModule)
-        {
-            var ret = new List<DModule>();
-            if (CodeCache == null || ActualModule == null) return ret;
-
-            var localImps = new List<string>();
-            foreach (var kv in ActualModule.Imports)
-                    localImps.Add(kv.Key);
-
-            foreach (var m in CodeCache)
-                if (localImps.Contains(m.ModuleName) && !ret.Contains(m))
-                {
-                    ret.Add(m);
-                    ResolveImports(ref ret, CodeCache, m);
-                }
-
-            return ret;
-        }
-
-        public static void ResolveImports(ref List<DModule> ImportModules, List<DModule> CodeCache, DModule ActualModule)
-        {
-            var localImps = new List<string>();
-            foreach (var kv in ActualModule.Imports)
-                if (kv.Value)
-                    localImps.Add(kv.Key);
-
-            foreach (var m in CodeCache)
-                if (localImps.Contains(m.ModuleName) && !ImportModules.Contains(m))
-                {
-                    ImportModules.Add(m);
-                    ResolveImports(ref ImportModules, CodeCache, m);
-                }
-        }
-
         public static DNode ResolveTypeDeclaration(List<DModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
         {
             var ThisModule = CurrentlyScopedBlock.NodeRoot as DModule;
@@ -284,7 +305,7 @@ namespace D_IDE.CodeCompletion
             }
 
             // Important: Implicitly add the object module
-            var objmod = D_IDE_Properties.GetModule(ModuleCache, "object");
+            var objmod = SearchModuleInCache(ModuleCache, "object");
             if (!LookupModules.Contains(objmod))
                 LookupModules.Add(objmod);
 
@@ -307,5 +328,6 @@ namespace D_IDE.CodeCompletion
 
             return ResolveTypeDeclaration(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
+        #endregion
     }
 }
