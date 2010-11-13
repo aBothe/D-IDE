@@ -382,12 +382,26 @@ namespace D_IDE
 
 		public static CodeModule GetModule(CompilerConfiguration cc, string moduleName)
 		{
-			foreach (var m in cc.GlobalModules)
-			{
-				if (m.ModuleName == moduleName) return m;
-			}
-			return null;
+            return GetModule(cc.GlobalModules, moduleName);
 		}
+
+        public static CodeModule GetModule(List<CodeModule> HayStack, string moduleName)
+        {
+            foreach (var m in HayStack)
+            {
+                if (m.ModuleName == moduleName) return m;
+            }
+            return null;
+        }
+
+        public static DModule GetModule(List<DModule> HayStack, string moduleName)
+        {
+            foreach (var m in HayStack)
+            {
+                if (m.ModuleName == moduleName) return m;
+            }
+            return null;
+        }
 
 		public static void Save(string fn)
 		{

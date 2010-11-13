@@ -339,8 +339,8 @@ namespace D_Parser
         public string ToString(int start, int length)
         {
             var s = "";
-            if (start <= 0 || length <= 0) 
-                throw new ArgumentNullException("Parameter must not be 0");
+            if (start <= 0 || length < 0) 
+                throw new ArgumentNullException("Parameter must not be 0 or less");
             if (start > parts.Count || (start + length) > parts.Count) 
                 throw new ArgumentOutOfRangeException();
 

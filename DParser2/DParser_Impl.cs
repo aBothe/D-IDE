@@ -210,7 +210,9 @@ namespace D_Parser
 
             Expect(Import);
 
-            _Import();
+            var imp = _Import();
+            if (!doc.Imports.ContainsKey(imp)) // Check if import is already done
+                doc.Imports.Add(imp, IsPublic);
 
             // ImportBindings
             if (la.Kind==(Colon))
@@ -227,7 +229,9 @@ namespace D_Parser
                 while (la.Kind==(Comma))
                 {
                     Step();
-                    doc.Imports.Add(_Import(),IsPublic);
+                    imp = _Import();
+                    if(!doc.Imports.ContainsKey(imp)) // Check if import is already done
+                        doc.Imports.Add(imp,IsPublic);
                 }
 
             Expect(Semicolon);

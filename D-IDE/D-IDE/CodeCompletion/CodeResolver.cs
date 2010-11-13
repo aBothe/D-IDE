@@ -8,43 +8,26 @@ namespace D_IDE.CodeCompletion
 {
     public class D_IDECodeResolver:CodeResolver
     {
-        /// <summary>
-        /// Returns all imports of a module.
-        /// </summary>
-        /// <param name="cc"></param>
-        /// <param name="ActualModule"></param>
-        /// <returns></returns>
-        public static List<CodeModule> ResolveImports(CompilerConfiguration cc, DModule ActualModule, bool PublicOnly)
+        public static DNode ResolveTypeDeclaration(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
         {
-            var ret = new List<CodeModule>();
+            var SearchArea = new List<DModule>(GlobalModules.Count+LocalModules.Count);
 
-            var localImps = new List<string>();
-            foreach (var v in ActualModule.Imports.Keys)
-                localImps.Add(v);
+            foreach (var m in GlobalModules)
+                SearchArea.Add(m);
+            foreach (var m in LocalModules)
+                SearchArea.Add(m);
 
-            foreach (var m in cc.GlobalModules)
-                if (localImps.Contains(m.ModuleName))
-                    ret.Add(m);
-
-            return ret;
+            return ResolveTypeDeclaration(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
 
-        public static void ResolveImports(ref List<CodeModule> ImportModules,CompilerConfiguration cc, DModule ActualModule, bool PublicOnly)
+        public static DNode ResolveTypeDeclaration(List<CodeModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
         {
-            var localImps = new List<string>();
-            foreach (var kv in ActualModule.Imports)
-                if((PublicOnly && kv.Value) || !PublicOnly)
-                    localImps.Add(kv.Key);
+            var SearchArea = new List<DModule>(ModuleCache.Count);
 
-            foreach (var m in cc.GlobalModules)
-                if (localImps.Contains(m.ModuleName) && !ImportModules.Contains(m))
-                    ImportModules.Add(m);
-        }
+            foreach (var m in ModuleCache)
+                SearchArea.Add(m);
 
-        public static TypeDeclaration ResolveTypeDeclaration(CompilerConfiguration cc, TypeDeclaration IdentifierList)
-        {
-
-            return null;
+            return ResolveTypeDeclaration(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
     }
 
@@ -225,17 +208,7 @@ namespace D_IDE.CodeCompletion
             // Scan the type declaration list for any NormalDeclarations
             var td = IdentifierList;
             while (td != null && !(td is NormalDeclaration))
-            {
-                if (td is ClampDecl)
-                {
-                    var cd = td as ClampDecl;
-                    if (cd.IsArrayDecl)
-                    {
-                        
-                    }
-                }
                 td = td.Base;
-            }
 
             if (td is NormalDeclaration)
             {
@@ -255,6 +228,84 @@ namespace D_IDE.CodeCompletion
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Returns all imports of a module and those public ones of the imported modules
+        /// </summary>
+        /// <param name="cc"></param>
+        /// <param name="ActualModule"></param>
+        /// <returns></returns>
+        public static List<DModule> ResolveImports(List<DModule> CodeCache, DModule ActualModule)
+        {
+            var ret = new List<DModule>();
+            if (CodeCache == null || ActualModule == null) return ret;
+
+            var localImps = new List<string>();
+            foreach (var kv in ActualModule.Imports)
+                    localImps.Add(kv.Key);
+
+            foreach (var m in CodeCache)
+                if (localImps.Contains(m.ModuleName) && !ret.Contains(m))
+                {
+                    ret.Add(m);
+                    ResolveImports(ref ret, CodeCache, m);
+                }
+
+            return ret;
+        }
+
+        public static void ResolveImports(ref List<DModule> ImportModules, List<DModule> CodeCache, DModule ActualModule)
+        {
+            var localImps = new List<string>();
+            foreach (var kv in ActualModule.Imports)
+                if (kv.Value)
+                    localImps.Add(kv.Key);
+
+            foreach (var m in CodeCache)
+                if (localImps.Contains(m.ModuleName) && !ImportModules.Contains(m))
+                {
+                    ImportModules.Add(m);
+                    ResolveImports(ref ImportModules, CodeCache, m);
+                }
+        }
+
+        public static DNode ResolveTypeDeclaration(List<DModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
+        {
+            var ThisModule = CurrentlyScopedBlock.NodeRoot as DModule;
+            var LookupModules = ResolveImports(ModuleCache, ThisModule);
+
+            // Of course it's needed to scan our own module at first
+            if (ThisModule != null)
+            {
+                var typeNode = ResolveTypeDeclaration(CurrentlyScopedBlock, IdentifierList);
+                if (typeNode != null)
+                    return typeNode;
+            }
+
+            // Important: Implicitly add the object module
+            var objmod = D_IDE_Properties.GetModule(ModuleCache, "object");
+            if (!LookupModules.Contains(objmod))
+                LookupModules.Add(objmod);
+
+            // Then search within the imports for our IdentifierList
+            foreach (var m in LookupModules)
+            {
+                var typeNode = ResolveTypeDeclaration(m, IdentifierList);
+                // If we found a match, return the first we get
+                if (typeNode != null)
+                    return typeNode;
+            }
+
+            return null;
+        }
+
+        public static DNode ResolveTypeDeclaration(List<DModule> GlobalModules, List<DModule> LocalModules, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
+        {
+            var SearchArea = new List<DModule>(LocalModules);
+            SearchArea.AddRange(GlobalModules);
+
+            return ResolveTypeDeclaration(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
     }
 }

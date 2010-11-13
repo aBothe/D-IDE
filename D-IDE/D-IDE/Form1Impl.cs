@@ -188,7 +188,7 @@ namespace D_IDE
         public static void UpdateChacheThread(CompilerConfiguration cc)
         {
             CodeModule.ClearErrorLogBeforeParsing = false;
-            List<CodeModule> ret = new List<CodeModule>();
+            var ret = new List<CodeModule>();
 
             if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.stopParsingToolStripMenuItem.Enabled = true;
             //bpw.Clear();
@@ -196,7 +196,7 @@ namespace D_IDE
 
             foreach (string dir in cc.ImportDirectories)
             {
-                DProject dirProject = new DProject();
+                var dirProject = new DProject();
                 dirProject.basedir = dir;
 
                 if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.Log("Parse directory " + dir);
@@ -205,35 +205,41 @@ namespace D_IDE
                     if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.Log("Directory \"" + dir + "\" does not exist!");
                     continue;
                 }
-                string[] files = Directory.GetFiles(dir, "*.d?", SearchOption.AllDirectories);
+                var files = Directory.GetFiles(dir, "*.d?", SearchOption.AllDirectories);
                 foreach (string tf in files)
                 {
                     if (tf.EndsWith("phobos.d")) continue; // Skip phobos.d
 
                     if (D_IDE_Properties.HasModule(ret, tf)) { if (D_IDEForm.thisForm != null)D_IDEForm.thisForm.Log(tf + " already parsed!"); continue; }
 
-                    try
+                    string tmodule = Path.ChangeExtension(tf, null).Remove(0, dir.Length + 1).Replace('\\', '.');
+                    CodeModule gpf = null;
+                    if (Debugger.IsAttached)
+                        gpf = new CodeModule(dirProject, tf);
+                    else
                     {
-                        string tmodule = Path.ChangeExtension(tf, null).Remove(0, dir.Length + 1).Replace('\\', '.');
-                        var gpf = new CodeModule(dirProject, tf);
-                        gpf.ModuleName = tmodule;
-
-                        D_IDE_Properties.AddFileData(ret, gpf);
-                    }
-                    catch (Exception ex)
-                    {
-                        //if (Debugger.IsAttached) throw ex;
                         try
                         {
-                            if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.Log(tf);
+                            gpf = new CodeModule(dirProject, tf);
                         }
-                        catch { }
-                        if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n" + ex.Source, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        catch (Exception ex)
                         {
-                            if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.stopParsingToolStripMenuItem.Enabled = false;
-                            return;
+                            if (Debugger.IsAttached) throw ex;
+                            try
+                            {
+                                if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.Log(tf);
+                            }
+                            catch { }
+                            if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n" + ex.Source, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.stopParsingToolStripMenuItem.Enabled = false;
+                                return;
+                            }
                         }
                     }
+                    if (gpf == null) continue;
+                    gpf.ModuleName = tmodule;
+                    D_IDE_Properties.AddFileData(ret, gpf);
                 }
             }
             if (D_IDEForm.thisForm != null)
@@ -242,15 +248,14 @@ namespace D_IDE
                 D_IDEForm.thisForm.stopParsingToolStripMenuItem.Enabled = false;
             }
             CodeModule.ClearErrorLogBeforeParsing = true;
-            /*lock (cc.GlobalModules)
+            lock (cc.GlobalModules)
             {
-                cc.GlobalModules = null;
                 cc.GlobalModules = ret;
 
-                List<ICompletionData> ilist = new List<ICompletionData>();
-                DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
+                var ilist = new List<ICompletionData>();
+                //DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
                 cc.GlobalCompletionList = ilist;
-            }*/
+            }
         }
 
         /*
