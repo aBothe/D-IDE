@@ -413,15 +413,70 @@ namespace D_IDE
             {
                 return;
             }
+            if (mouseOffset < 1 || DCodeResolver.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
 
-            var expr = DCodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false);
+
+            // Our finally resolved node
+            DNode DeclarationNode = null;
+
+            // Retrieve the identifierlist that's located beneath the cursor
+            DToken ExtraOrdniaryToken = null;
+            var expr = DCodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false,out ExtraOrdniaryToken);
+
+            /*
+             * 1) Normally we don't have any extra tokens here, e.g. Object1.ObjProp1.MyProp.
+             * 2) Otherwise we check if there's a 'this' or 'super' at the very beginning of our ident list - then retrieve the fitting (base-)class and go on searching within these.
+             * 3) On totally different tokens (like hovering a 'for' or '__FILE__') we react just by showing a description or some example code.
+             */
+
+            // Handle cases 2 and 3
+            if (ExtraOrdniaryToken != null)
+            {
+                // Handle case 2
+                if (ExtraOrdniaryToken.Kind == DTokens.This || ExtraOrdniaryToken.Kind==DTokens.Super)
+                {
+                    var ClassDef = D_IDECodeResolver.SearchClassLikeAt(Module, Util.ToCodeLocation(e.LogicalPosition)) as DClassLike;
+
+                    // If 'this'
+                    DeclarationNode = ClassDef;
+
+                    // If we have a 'super' token, look for ClassDef's superior classes
+                    if (ClassDef != null && ExtraOrdniaryToken.Kind == DTokens.Super)
+                    {
+                        var BaseClass = Module.Project != null?
+                            D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, Module.Project.Modules, ClassDef):
+                            D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, ClassDef);
+
+                        // Now search in every base class for our type
+                        if(expr!=null && BaseClass!=null)
+                        {
+                            DeclarationNode = Module.Project != null ?
+                                D_IDECodeResolver.ResolveTypeDeclaration(Module.Project.Compiler.GlobalModules, Module.Project.Modules, BaseClass as DBlockStatement, expr) :
+                                D_IDECodeResolver.ResolveTypeDeclaration(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, BaseClass as DBlockStatement, expr);
+
+                            // Return if we found a match
+                            if (DeclarationNode != null)
+                                goto do_show; 
+                        }
+                    }
+                }
+            }
+
             var bs = DCodeResolver.SearchBlockAt(Module, Util.ToCodeLocation( e.LogicalPosition));
-            var DeclNode = Module.Project!=null? 
+            /*
+             * Notes:
+             * We also need to follow class heritages
+             */
+
+            DeclarationNode = Module.Project!=null? 
                 D_IDECodeResolver.ResolveTypeDeclaration(Module.Project.Compiler.GlobalModules,Module.Project.Modules,bs,expr):
                 D_IDECodeResolver.ResolveTypeDeclaration(D_IDE_Properties.Default.DefaultCompiler.GlobalModules,bs,expr);
-            if (DeclNode != null)
+
+            do_show:
+
+            if (DeclarationNode != null)
             {
-                e.ShowToolTip(DeclNode.ToString());
+                e.ShowToolTip(DeclarationNode.ToString());
             }
 			/*if (mouseOffset < 1 || DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
             bool ctor, super, isInst, isNameSpace;

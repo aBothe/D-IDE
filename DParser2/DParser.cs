@@ -18,10 +18,23 @@ namespace D_Parser
             return p.Expression();
         }
 
-        public static TypeDeclaration ParseBasicType(string Code)
+        public static TypeDeclaration ParseBasicType(string Code,out DToken OptionalToken)
         {
+            OptionalToken = null;
+
             var p = Create(new StringReader(Code));
             p.Step();
+
+            // Exception: If we haven't got any basic types as our first token, return this token via OptionalToken
+            if (!p.IsBasicType())
+            {
+                p.Step();
+                OptionalToken = p.t;
+
+                // Only if a dot follows a 'this' or 'super' token we go on parsing; Return otherwise
+                if (!((p.t.Kind == This || p.t.Kind == Super) && p.la.Kind == Dot))
+                    return null;
+            }
             
             var bt= p.BasicType();
             while (p.IsBasicType2())
