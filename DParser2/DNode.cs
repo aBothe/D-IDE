@@ -82,7 +82,11 @@ namespace D_Parser
             var curParent=this;
             while (curParent != null)
             {
-                path = curParent.Name + "." + path;
+                // Also include module path
+                if (curParent is DModule)
+                    path = (curParent as DModule).ModuleName + "." + path;
+                else
+                    path = curParent.Name + "." + path;
                 curParent = curParent.Parent;
             }
             s += path.Trim('.');

@@ -420,8 +420,8 @@ namespace D_IDE
             DNode DeclarationNode = DCodeResolver.SearchBlockAt(Module, Util.ToCodeLocation(e.LogicalPosition));
 
             // Retrieve the identifierlist that's located beneath the cursor
-            DToken ExtraOrdniaryToken = null;
-            var expr = DCodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false,out ExtraOrdniaryToken);
+            DToken ExtraOrdinaryToken = null;
+            var expr = DCodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false,out ExtraOrdinaryToken);
 
             /*
              * 1) Normally we don't have any extra tokens here, e.g. Object1.ObjProp1.MyProp.
@@ -430,10 +430,10 @@ namespace D_IDE
              */
 
             // Handle cases 2 and 3
-            if (ExtraOrdniaryToken != null)
+            if (ExtraOrdinaryToken != null)
             {
                 // Handle case 2
-                if (ExtraOrdniaryToken.Kind == DTokens.This || ExtraOrdniaryToken.Kind == DTokens.Super)
+                if (ExtraOrdinaryToken.Kind == DTokens.This || ExtraOrdinaryToken.Kind == DTokens.Super)
                 {
                     var ClassDef = D_IDECodeResolver.SearchClassLikeAt(Module, Util.ToCodeLocation(e.LogicalPosition)) as DClassLike;
 
@@ -441,7 +441,7 @@ namespace D_IDE
                     DeclarationNode = ClassDef;
 
                     // If we have a 'super' token, look for ClassDef's superior classes
-                    if (ClassDef != null && ExtraOrdniaryToken.Kind == DTokens.Super)
+                    if (ClassDef != null && ExtraOrdinaryToken.Kind == DTokens.Super)
                     {
                         DeclarationNode = Module.Project != null ?
                             D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, Module.Project.Modules, ClassDef) :
@@ -450,7 +450,13 @@ namespace D_IDE
                 }
                 else // Other tokens (or even literals!)
                 {
-                    e.ShowToolTip(ExtraOrdniaryToken.ToString());
+                    var tt = "";
+                    if (ExtraOrdinaryToken.Value == "__FILE__")
+                        tt = Module.ModuleFileName;
+                    else if (ExtraOrdinaryToken.Value == "__LINE__")
+                        tt = (e.LogicalPosition.Y).ToString();
+                    else tt = DTokens.GetDescription(ExtraOrdinaryToken.Kind);
+                    e.ShowToolTip(tt);
                     return;
                 }
             }
@@ -474,41 +480,17 @@ namespace D_IDE
                     return;
                 }
             }
-
-			/*if (mouseOffset < 1 || DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
-            bool ctor, super, isInst, isNameSpace;
-            CodeModule gpf = null;
-            int off = mouseOffset;
-            string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(ta.Document.TextContent, ref off, out ctor, false);
-            if (exprs == null || exprs.Length < 1) return;
-
-            if (exprs[0] == "__FILE__")
-            {
-                e.ShowToolTip(Module.ModuleFileName);
-                return;
-            }
-            if (exprs[0] == "__LINE__")
-            {
-                e.ShowToolTip((e.LogicalPosition.Line + 1).ToString());
-                return;
-            }
-
-            int key = DKeywords.GetToken(exprs[0]);
-            if (key != -1 && key != DTokens.This && key != DTokens.Super)
-            {
-                e.ShowToolTip(DTokens.GetDescription(key));
-                return;
-            }
             
             #region If debugging, check if a local fits to one of the scoped symbols and show its value if possible
-            if (D_IDEForm.thisForm.IsDebugging)
+            /*if (D_IDEForm.thisForm.IsDebugging)
             {
-                DebugScopedSymbol[] syms = D_IDEForm.thisForm.dbg.Symbols.ScopeLocalSymbols;
-                if (syms != null)
+               var syms = D_IDEForm.thisForm.dbg.Symbols.ScopeLocalSymbols;
+                if (syms != null && expr is IdentifierList)
                 {
+                    var ids = expr as IdentifierList;
                     DebugScopedSymbol cursym = null;
                     string desc = "";
-                    foreach (string exp in exprs)
+                    foreach (string exp in ids.)
                     {
                         foreach (DebugScopedSymbol sym in syms)
                         {
@@ -527,39 +509,8 @@ namespace D_IDE
                         return;
                     }
                 }
-            }
+            }*/
             #endregion
-
-            DNode dt =
-                DCodeCompletionProvider.FindActualExpression(OwnerProject,
-                    Module,
-                    D_IDE_Properties.toCodeLocation(e.LogicalPosition),
-                    exprs,
-                    false,
-                    false,
-                    out super,
-                    out isInst,
-                    out isNameSpace,
-                    out gpf
-                    );
-
-            if (dt == null) return;
-
-            if (!ctor)
-                e.ShowToolTip(DCompletionData.BuildDescriptionString(dt, gpf));
-            else
-            {
-                string tt = "";
-                var _block = dt as DBlockStatement;
-                if (_block!=null || _block.Count < 1) return;
-                foreach (var ch in _block)
-                {
-                    if (ch.fieldtype == FieldType.Constructor)
-                        tt += DCompletionData.BuildDescriptionString(ch) + "\n\n";
-                }
-                if (tt != "") e.ShowToolTip(tt);
-            }
-            */
         }
 
         internal static InsightWindow IW;
