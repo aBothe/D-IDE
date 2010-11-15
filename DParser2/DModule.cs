@@ -24,8 +24,9 @@ namespace D_Parser
         public void ApplyFrom(DModule Other)
         {
             ModuleFileName = Other.ModuleFileName;
-            Children.Clear();
-            Children.AddRange(Other.Children);
+            children = new List<DNode>(Other.Children);
+            foreach (var ch in Children)
+                ch.Parent = this;
             Imports=new Dictionary<string,bool>(Other.Imports);
         }
 
@@ -66,7 +67,7 @@ namespace D_Parser
             return base.Assign(block as DNode);
         }
 
-        public List<DNode> children = new List<DNode>();
+        protected List<DNode> children = new List<DNode>();
 
         public int Count
         {
