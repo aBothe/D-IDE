@@ -568,7 +568,7 @@ namespace D_IDE
         TreeNode GenerateHierarchyData(DNode env, DNode ch, TreeNode oldNode)
         {
             if (ch == null) return null;
-            int ii = DCompletionData.GetImageIndex(icons, env, ch);
+            int ii = DCompletionData.GetImageIndex(icons, ch);
 
             TreeNode ret = new TreeNode(ch.Name, ii, ii);
             ret.Tag = ch;
@@ -606,7 +606,7 @@ namespace D_IDE
             if(ch is DBlockStatement)
                 foreach (var dt in (ch as DBlockStatement))
                 {
-                    ii = DCompletionData.GetImageIndex(icons, ch, dt);
+                    ii = DCompletionData.GetImageIndex(icons, dt);
 
                     var tn = GenerateHierarchyData(ch, dt,
                         (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?

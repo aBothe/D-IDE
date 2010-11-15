@@ -17,39 +17,47 @@ namespace D_Parser
         /// </summary>
         public Dictionary<string,bool> Imports = new Dictionary<string,bool>();
 
-        public DModule():base(FieldType.Root) { }
-
+        /// <summary>
+        /// Applies file name, children and imports from an other module instance
+         /// </summary>
+        /// <param name="Other"></param>
         public void ApplyFrom(DModule Other)
         {
             ModuleFileName = Other.ModuleFileName;
             Children.Clear();
             Children.AddRange(Other.Children);
             Imports=new Dictionary<string,bool>(Other.Imports);
-            this.fieldtype = Other.fieldtype;
+        }
+
+        /// <summary>
+        /// Returns the module name
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return ModuleName;
+        }
+
+        public string ToString(bool IncludeFileName)
+        {
+            return ModuleName+(IncludeFileName?(" ("+ModuleFileName+")"):"");
         }
     }
 
     public class DVariable : DNode
     {
         public DExpression Initializer; // Variable
-
-        public DVariable()
-            :base(FieldType.Variable)
-        {
-        }
+        public bool IsAlias = false;
 
         public override string ToString()
         {
-            return base.ToString()+(Initializer!=null?(" = "+Initializer.ToString()):"");
+            return (IsAlias?"alias ":"")+base.ToString()+(Initializer!=null?(" = "+Initializer.ToString()):"");
         }
     }
 
-    public class DBlockStatement : DNode, IEnumerable<DNode>
+    public abstract class DBlockStatement : DNode, IEnumerable<DNode>
     {
         public CodeLocation BlockStartLocation=new CodeLocation();
-
-        public DBlockStatement() {}
-        public DBlockStatement(FieldType Field) { fieldtype = Field; }
 
         public DNode Assign(DBlockStatement block)
         {
@@ -130,11 +138,14 @@ namespace D_Parser
     public class DMethod : DBlockStatement
     {
         public List<DNode> Parameters=new List<DNode>();
+        public MethodType SpecialType = MethodType.Normal;
 
-        public DMethod()
-            : base(FieldType.Function)
+        public enum MethodType
         {
-
+            Normal=0,
+            Delegate,
+            Constructor,
+            Destructor
         }
 
         public override string ToString()
@@ -151,10 +162,12 @@ namespace D_Parser
         public int Token;
         public DExpression Expression;
 
-        public DStatementBlock() :
-            base(FieldType.Block)
+        public DStatementBlock(int Token)
         {
+            this.Token = Token;
         }
+
+        public DStatementBlock() { }
 
         public override string ToString()
         {
@@ -165,16 +178,17 @@ namespace D_Parser
     public class DClassLike : DBlockStatement
     {
         public List<TypeDeclaration> BaseClasses=new List<TypeDeclaration>();
+        public int ClassType=DTokens.Class;
 
-        public DClassLike()
-            : base(FieldType.Class)
+        public DClassLike() { }
+        public DClassLike(int ClassType)
         {
-
+            this.ClassType = ClassType;
         }
 
         public override string ToString()
         {
-            string ret= AttributeString+" "+ DTokens.GetTokenString(TypeToken) +" "+ToDeclarationString(false);
+            string ret = AttributeString + " " + DTokens.GetTokenString(ClassType) + " " + ToDeclarationString(false);
             if (BaseClasses.Count > 0)
                 ret += ":";
             foreach (var c in BaseClasses)
@@ -188,12 +202,6 @@ namespace D_Parser
     {
         public TypeDeclaration EnumBaseType;
 
-        public DEnum()
-            : base(FieldType.Enum)
-        {
-
-        }
-
         public override string ToString()
         {
             return "enum "+ToDeclarationString(false)+(EnumBaseType!=null?(":"+EnumBaseType.ToString()):"");
@@ -202,9 +210,5 @@ namespace D_Parser
 
     public class DEnumValue : DVariable
     {
-        public DEnumValue()
-        {
-            fieldtype = FieldType.EnumValue;
-        }
     }
 }

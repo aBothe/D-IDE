@@ -50,7 +50,7 @@ namespace D_Parser
 
             //Constructor
             else if (la.Kind == (This))
-                module.Add(Constructor(module.fieldtype == FieldType.Struct));
+                module.Add(Constructor(module is DClassLike?(module as DClassLike).ClassType==DTokens.Struct:false));
 
             //Destructor
             else if (la.Kind == (Tilde) && lexer.CurrentPeekToken.Kind == (This))
@@ -64,7 +64,7 @@ namespace D_Parser
             else if (la.Kind == (Unittest))
             {
                 Step();
-                var dbs = new DBlockStatement(FieldType.Function);
+                var dbs = new DMethod() as DBlockStatement;
                 dbs.Type = new DTokenDeclaration(Unittest);
                 dbs.StartLocation = t.Location;
                 FunctionBody(ref dbs);
@@ -359,7 +359,7 @@ namespace D_Parser
             {
                 Step();
                 // _t is just a synthetic node
-                var _t = new DBlockStatement();
+                var _t = new DStatementBlock() as DBlockStatement;
                 var dn = _t as DNode;
                 ApplyAttributes(ref dn);
 
@@ -369,7 +369,7 @@ namespace D_Parser
                     Step();
                     var dv = new DVariable();
                     dv.StartLocation = lexer.LastToken.Location;
-                    dv.fieldtype = FieldType.AliasDecl; // TODO: Distinguish between an alias and a typedef
+                    dv.IsAlias=true;
                     dv.Name = "this";
                     dv.Type = new NormalDeclaration(t.Value);
                     dv.EndLocation = t.EndLocation;
@@ -380,8 +380,11 @@ namespace D_Parser
                 }
 
                 Decl(ref _t,HasStorageClassModifiers);
-                foreach (DNode n in _t)
-                    n.fieldtype = FieldType.AliasDecl;
+                foreach (var n in _t)
+                {
+                    if (n is DVariable)
+                        (n as DVariable).IsAlias = true;
+                }
 
                 par.AddRange(_t);
             }
@@ -1541,8 +1544,8 @@ namespace D_Parser
                 else if (la.Kind != OpenCurlyBrace)
                     BaseClassList(false);
 
-                DBlockStatement _block = new DClassLike();
-                _block.fieldtype = FieldType.Class;
+                //TODO: Add the parsed results to node tree somehow
+                var _block = new DClassLike() as DBlockStatement;
                 ClassBody(ref _block);
 
                 return ex;
@@ -2137,8 +2140,7 @@ namespace D_Parser
                 if (la.Kind == Static)
                     Step();
                 Step();
-                var dbs = new DStatementBlock();
-                dbs.Token = If;
+                var dbs = new DStatementBlock(If);
                 var bs = dbs as DBlockStatement;
                 dbs.StartLocation = t.Location;
                 Expect(OpenParenthesis);
@@ -2156,7 +2158,7 @@ namespace D_Parser
                 if (la.Kind == (Else))
                 {
                     Step();
-                    dbs = new DStatementBlock();
+                    dbs = new DStatementBlock(Else);
                     dbs.StartLocation = t.Location;
                     bs = dbs as DBlockStatement;
                     Statement(ref bs, false, true);
@@ -2171,8 +2173,7 @@ namespace D_Parser
             {
                 Step();
 
-                var dbs = new DStatementBlock();
-                dbs.Token = While;
+                var dbs = new DStatementBlock(While);
                 var bs = dbs as DBlockStatement;
                 dbs.StartLocation = t.Location;
 
@@ -2191,15 +2192,13 @@ namespace D_Parser
             {
                 Step();
 
-                var dbs = new DStatementBlock();
-                dbs.Token = Do;
-                var bs = dbs as DBlockStatement;
+                var dbs = new DStatementBlock(Do) as DBlockStatement;
                 dbs.StartLocation = t.Location;
-                Statement(ref bs, false, true);
+                Statement(ref dbs, false, true);
 
                 Expect(While);
                 Expect(OpenParenthesis);
-                IfCondition(ref bs);
+                IfCondition(ref dbs);
                 Expect(CloseParenthesis);
 
                 dbs.EndLocation = t.EndLocation;
@@ -2212,21 +2211,19 @@ namespace D_Parser
             {
                 Step();
 
-                var dbs = new DStatementBlock();
-                dbs.Token = For;
-                var bs = dbs as DBlockStatement;
+                var dbs = new DStatementBlock(For) as DBlockStatement;
                 dbs.StartLocation = t.Location;
 
                 Expect(OpenParenthesis);
 
                 // Initialize
                 if (la.Kind != Semicolon)
-                    IfCondition(ref bs,true);
+                    IfCondition(ref dbs,true);
                 Expect(Semicolon);
 
                 // Test
                 if (la.Kind != (Semicolon))
-                    Expression();
+                    (dbs as DStatementBlock).Expression=Expression();
 
                 Expect(Semicolon);
 
@@ -2236,7 +2233,7 @@ namespace D_Parser
 
                 Expect(CloseParenthesis);
 
-                Statement(ref bs, false, true);
+                Statement(ref dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
                 if (dbs.Count > 0) par.Add(dbs);
             }
@@ -2247,9 +2244,7 @@ namespace D_Parser
             {
                 Step();
 
-                var dbs = new DStatementBlock();
-                dbs.Token = While;
-                var bs = dbs as DBlockStatement;
+                var dbs = new DStatementBlock(t.Kind) as DBlockStatement;
                 dbs.StartLocation = t.Location;
 
                 Expect(OpenParenthesis);
@@ -2287,7 +2282,7 @@ namespace D_Parser
                 }
 
                 Expect(Semicolon);
-                dbs.Expression=Expression();
+                (dbs as DStatementBlock).Expression=Expression();
 
                 // ForeachRangeStatement
                 if (la.Kind == DoubleDot)
@@ -2299,7 +2294,7 @@ namespace D_Parser
 
                 Expect(CloseParenthesis);
 
-                Statement(ref bs, false, true);
+                Statement(ref dbs, false, true);
 
                 dbs.EndLocation = t.EndLocation;
                 if (dbs.Count > 0) par.Add(dbs);
@@ -2309,7 +2304,7 @@ namespace D_Parser
             #region [Final] SwitchStatement
             else if ((la.Kind == (Final) && lexer.CurrentPeekToken.Kind == (Switch)) || la.Kind == (Switch))
             {
-                var dbs = new DBlockStatement();
+                var dbs = new DStatementBlock(Switch) as DBlockStatement;
                 dbs.StartLocation = la.Location;
 
                 if (la.Kind == (Final))
@@ -2319,7 +2314,7 @@ namespace D_Parser
                 }
                 Step();
                 Expect(OpenParenthesis);
-                Expression();
+                (dbs as DStatementBlock).Expression=Expression();
                 Expect(CloseParenthesis);
                 Statement(ref dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
@@ -2333,10 +2328,10 @@ namespace D_Parser
             {
                 Step();
 
-                DBlockStatement dbs = new DBlockStatement();
+                var dbs = new DStatementBlock(Case) as DBlockStatement;
                 dbs.StartLocation = la.Location;
 
-                AssignExpression();
+                (dbs as DStatementBlock).Expression=AssignExpression();
 
                 if (!(la.Kind == (Colon) && lexer.CurrentPeekToken.Kind == (Dot) && Peek().Kind == Dot))
                     while (la.Kind == (Comma))
@@ -2368,7 +2363,7 @@ namespace D_Parser
             {
                 Step();
 
-                DBlockStatement dbs = new DBlockStatement();
+                DBlockStatement dbs = new DStatementBlock(Default);
                 dbs.StartLocation = la.Location;
 
                 Expect(Colon);
@@ -2424,13 +2419,13 @@ namespace D_Parser
             {
                 Step();
 
-                DBlockStatement dbs = new DBlockStatement();
+                DBlockStatement dbs = new DStatementBlock(With);
                 dbs.StartLocation = t.Location;
 
                 Expect(OpenParenthesis);
 
                 // Symbol
-                Expression();
+                (dbs as DStatementBlock).Expression=Expression();
 
                 Expect(CloseParenthesis);
                 Statement(ref dbs, false, true);
@@ -2444,13 +2439,13 @@ namespace D_Parser
             else if (la.Kind == (Synchronized))
             {
                 Step();
-                DBlockStatement dbs = new DBlockStatement();
+                DBlockStatement dbs = new DStatementBlock(Synchronized);
                 dbs.StartLocation = t.Location;
 
                 if (la.Kind == (OpenParenthesis))
                 {
                     Step();
-                    Expression();
+                    (dbs as DStatementBlock).Expression=Expression();
                     Expect(CloseParenthesis);
                 }
                 Statement(ref dbs, false, true);
@@ -2465,7 +2460,7 @@ namespace D_Parser
             {
                 Step();
 
-                DBlockStatement dbs = new DBlockStatement();
+                DBlockStatement dbs = new DStatementBlock(Try);
                 dbs.StartLocation = t.Location;
                 Statement(ref dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
@@ -2479,14 +2474,14 @@ namespace D_Parser
                 if (la.Kind == (Catch))
                 {
                     Step();
-                    dbs = new DBlockStatement();
+                    dbs = new DStatementBlock(Catch);
                     dbs.StartLocation = t.Location;
 
                     // CatchParameter
                     if (la.Kind == (OpenParenthesis))
                     {
                         Step();
-                        DVariable catchVar = new DVariable();
+                        var catchVar = new DVariable();
                         DToken tt = t;
                         catchVar.Type = BasicType();
                         if (la.Kind != Identifier)
@@ -2512,7 +2507,7 @@ namespace D_Parser
                 {
                     Step();
 
-                    dbs = new DBlockStatement();
+                    dbs = new DStatementBlock(Finally);
                     dbs.StartLocation = t.Location;
                     Statement(ref dbs, false, true);
                     dbs.EndLocation = t.EndLocation;
@@ -2644,10 +2639,7 @@ namespace D_Parser
                 SynErr(t.Kind, "union or struct required");
             Step();
 
-            DBlockStatement ret = new DClassLike();
-            ret.fieldtype = FieldType.Struct;
-            ret.Type = new DTokenDeclaration(t.Kind);
-            ret.TypeToken = t.Kind;
+            DBlockStatement ret = new DClassLike(t.Kind);
 
             // Allow anonymous structs&unions
             if (la.Kind == Identifier)
@@ -2682,7 +2674,8 @@ namespace D_Parser
         private DNode ClassDeclaration()
         {
             Expect(Class);
-            DBlockStatement dc = new DClassLike();
+
+            DBlockStatement dc = new DClassLike(Class);
             dc.StartLocation = t.Location;
 
             Expect(Identifier);
@@ -2709,7 +2702,7 @@ namespace D_Parser
         {
             if(ExpectColon)Expect(Colon);
 
-            List<TypeDeclaration> ret = new List<TypeDeclaration>();
+            var ret = new List<TypeDeclaration>();
 
             bool init = true;
             while (init || la.Kind==(Comma))
@@ -3006,9 +2999,8 @@ namespace D_Parser
         private DNode TemplateDeclaration()
         {
             Expect(Template);
-            DBlockStatement dc = new DClassLike();
-            dc.fieldtype = FieldType.Template;
-            DNode n = dc as DNode;
+            DBlockStatement dc = new DClassLike(Template);
+            var n = dc as DNode;
             ApplyAttributes(ref n);
             dc.StartLocation = t.Location;
 

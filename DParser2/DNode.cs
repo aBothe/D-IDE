@@ -6,8 +6,6 @@ namespace D_Parser
 {
     public abstract class DNode
     {
-        public FieldType fieldtype = FieldType.Variable;
-        public int TypeToken=0;
         public TypeDeclaration Type;
         public string Name;
 
@@ -25,15 +23,12 @@ namespace D_Parser
 
         public CodeLocation StartLocation,EndLocation;
 
-        public DNode(FieldType ftype)
+        public DNode()
         {
-            fieldtype = ftype;
         }
 
         public DNode Assign(DNode other)
         {
-            //fieldtype = other.fieldtype;
-            TypeToken = other.TypeToken;
             Type = other.Type;
             Name = other.Name;
             TemplateParameters = other.TemplateParameters;
@@ -56,9 +51,6 @@ namespace D_Parser
             }
         }
 
-        public DNode()
-        {}
-
         public string AttributeString
         {
             get
@@ -66,8 +58,7 @@ namespace D_Parser
                 string s = "";
                 foreach (var attr in Attributes)
                     s += attr.ToString() + " ";
-                s.Trim();
-                return s;
+                return s.Trim();
             }
         }
 
@@ -94,7 +85,16 @@ namespace D_Parser
                 path = curParent.Name + "." + path;
                 curParent = curParent.Parent;
             }
-            s += path;
+            s += path.Trim('.');
+
+            // Template parameters
+            if (TemplateParameters!=null && TemplateParameters.Count > 0)
+            {
+                s += "!(";
+                foreach (var p in TemplateParameters)
+                    s += p.ToString() + ",";
+                s = s.Trim(',')+ ")";
+            }
             
             return s;
         }
