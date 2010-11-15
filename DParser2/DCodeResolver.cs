@@ -250,9 +250,11 @@ namespace D_Parser
         /// <param name="Module"></param>
         /// <param name="IdentifierList"></param>
         /// <returns>When a type was found, the declaration entry will be returned. Otherwise, it'll return null.</returns>
-        public static DNode ResolveTypeDeclaration_ModuleOnly(List<DModule> BaseClassCache,DBlockStatement BlockNode, TypeDeclaration IdentifierList)
+        public static DNode[] ResolveTypeDeclarations_ModuleOnly(List<DModule> ImportCache,DBlockStatement BlockNode, TypeDeclaration IdentifierList)
         {
-            if (BlockNode == null || IdentifierList == null) return null;
+            var ret = new List<DNode>();
+
+            if (BlockNode == null || IdentifierList == null) return ret.ToArray();
 
             // Modules    Declaration
             // |---------|-----|
@@ -276,14 +278,17 @@ namespace D_Parser
                 }
 
                 // Now move stepwise deeper calling ResolveTypeDeclaration recursively
-                DNode currentNode = BlockNode;
-                while (skippedIds < il.Parts.Count && currentNode is DBlockStatement)
+                var CurrentNodes = new List<DNode>();
+                CurrentNodes.Add(BlockNode);
+
+                while (skippedIds < il.Parts.Count && CurrentNodes.Count>0)
                 {
                     // As long as our node can contain other nodes, scan it
-                    currentNode = ResolveTypeDeclaration_ModuleOnly(BaseClassCache,currentNode as DBlockStatement, il[skippedIds]);
+                    currentNode = ResolveTypeDeclaration_ModuleOnly(ImportCache,currentNode as DBlockStatement, il[skippedIds]);
                     skippedIds++;
                 }
-                return currentNode;
+
+                return ret.ToArray();
             }
 
             //HACK: Scan the type declaration list for any NormalDeclarations
@@ -309,9 +314,9 @@ namespace D_Parser
                     // If our current Level node is a class-like, also attempt to parse its baseclass
                     if (currentParent is DClassLike)
                     {
-                        var baseClass = ResolveBaseClass(BaseClassCache,currentParent as DClassLike);
+                        var baseClass = ResolveBaseClass(ImportCache,currentParent as DClassLike);
 
-                        var BaseClassMatch = ResolveTypeDeclaration_ModuleOnly(BaseClassCache, baseClass, nameIdent);
+                        var BaseClassMatch = ResolveTypeDeclaration_ModuleOnly(ImportCache, baseClass, nameIdent);
                         if (BaseClassMatch != null) // If we found a match, return it
                             return BaseClassMatch;
                     }
@@ -329,55 +334,47 @@ namespace D_Parser
         /// <summary>
         /// Search a type within an entire Module Cache.
         /// </summary>
-        /// <param name="ModuleCache"></param>
+        /// <param name="ImportCache"></param>
         /// <param name="CurrentlyScopedBlock"></param>
         /// <param name="IdentifierList"></param>
         /// <returns></returns>
-        public static DNode ResolveTypeDeclaration(List<DModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
+        public static DNode[] ResolveTypeDeclarations(List<DModule> ImportCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
         {
+            var ret = new List<DNode>();
+
             var ThisModule = CurrentlyScopedBlock.NodeRoot as DModule;
-            var LookupModules = ResolveImports(ModuleCache, ThisModule);
 
             // Of course it's needed to scan our own module at first
             if (ThisModule != null)
-            {
-                var typeNode = ResolveTypeDeclaration_ModuleOnly(ModuleCache,CurrentlyScopedBlock, IdentifierList);
-                if (typeNode != null)
-                    return typeNode;
-            }
+                ret.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache,CurrentlyScopedBlock, IdentifierList));
 
             // Important: Implicitly add the object module
-            var objmod = SearchModuleInCache(ModuleCache, "object");
+            /*var objmod = SearchModuleInCache(ModuleCache, "object");
             if (!LookupModules.Contains(objmod))
-                LookupModules.Add(objmod);
+                LookupModules.Add(objmod);*/
 
             // Then search within the imports for our IdentifierList
-            foreach (var m in LookupModules)
-            {
-                var typeNode = ResolveTypeDeclaration_ModuleOnly(ModuleCache,m, IdentifierList);
-                // If we found a match, return the first we get
-                if (typeNode != null)
-                    return typeNode;
-            }
+            foreach (var m in ImportCache)
+                ret.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,m, IdentifierList));
 
-            return null;
+            return ret.ToArray();
         }
 
         /// <summary>
         /// Combines LocalModules and GlobalModules to one array and then search a type in it.
         /// Note: LocalModules will be searched first!
         /// </summary>
-        /// <param name="GlobalModules"></param>
+        /// <param name="ImportModules"></param>
         /// <param name="LocalModules"></param>
         /// <param name="CurrentlyScopedBlock"></param>
         /// <param name="IdentifierList"></param>
         /// <returns></returns>
-        public static DNode ResolveTypeDeclaration(List<DModule> GlobalModules, List<DModule> LocalModules, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
+        public static DNode[] ResolveTypeDeclarations(List<DModule> ImportModules, List<DModule> LocalModules, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
         {
             var SearchArea = new List<DModule>(LocalModules);
-            SearchArea.AddRange(GlobalModules);
+            SearchArea.AddRange(ImportModules);
 
-            return ResolveTypeDeclaration(SearchArea, CurrentlyScopedBlock, IdentifierList);
+            return ResolveTypeDeclarations(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
 
         /// <summary>

@@ -11,7 +11,7 @@ namespace D_IDE.CodeCompletion
     /// </summary>
     public class D_IDECodeResolver:DCodeResolver
     {
-        public static DNode ResolveTypeDeclaration(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
+        public static DNode[] ResolveTypeDeclarations(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
         {
             var SearchArea = new List<DModule>(GlobalModules.Count+LocalModules.Count);
 
@@ -20,17 +20,17 @@ namespace D_IDE.CodeCompletion
             foreach (var m in LocalModules)
                 SearchArea.Add(m);
 
-            return ResolveTypeDeclaration(SearchArea, CurrentlyScopedBlock, IdentifierList);
+            return ResolveTypeDeclarations(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
 
-        public static DNode ResolveTypeDeclaration(List<CodeModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
+        public static DNode[] ResolveTypeDeclarations(List<CodeModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
         {
             var SearchArea = new List<DModule>(ModuleCache.Count);
 
             foreach (var m in ModuleCache)
                 SearchArea.Add(m);
 
-            return ResolveTypeDeclaration(SearchArea, CurrentlyScopedBlock, IdentifierList);
+            return ResolveTypeDeclarations(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
 
 
