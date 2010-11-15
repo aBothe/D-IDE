@@ -136,6 +136,14 @@ namespace D_Parser
         {
 
         }
+
+        public override string ToString()
+        {
+            var s= base.ToString()+"(";
+            foreach (var p in Parameters)
+                s += p.ToString()+",";
+            return s.Trim(',')+")";
+        }
     }
 
     public class DStatementBlock : DBlockStatement
@@ -146,6 +154,11 @@ namespace D_Parser
         public DStatementBlock() :
             base(FieldType.Block)
         {
+        }
+
+        public override string ToString()
+        {
+            return DTokens.GetTokenString(Token)+(Expression!=null?("("+Expression.ToString()+")"):"");
         }
     }
 
@@ -158,6 +171,17 @@ namespace D_Parser
         {
 
         }
+
+        public override string ToString()
+        {
+            string ret= AttributeString+" "+ DTokens.GetTokenString(TypeToken) +" "+ToDeclarationString(false);
+            if (BaseClasses.Count > 0)
+                ret += ":";
+            foreach (var c in BaseClasses)
+                ret += c.ToString()+", ";
+
+            return ret.Trim().TrimEnd(',');
+        }
     }
 
     public class DEnum : DBlockStatement
@@ -168,6 +192,11 @@ namespace D_Parser
             : base(FieldType.Enum)
         {
 
+        }
+
+        public override string ToString()
+        {
+            return "enum "+ToDeclarationString(false)+(EnumBaseType!=null?(":"+EnumBaseType.ToString()):"");
         }
     }
 

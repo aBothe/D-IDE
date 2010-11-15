@@ -4,7 +4,7 @@ using System.Text;
 
 namespace D_Parser
 {
-    public class DNode
+    public abstract class DNode
     {
         public FieldType fieldtype = FieldType.Variable;
         public int TypeToken=0;
@@ -75,24 +75,33 @@ namespace D_Parser
         /// Returns attributes, type and name combined to one string
         /// </summary>
         /// <returns></returns>
-        public string ToDeclarationString()
+        public string ToDeclarationString(bool Attributes)
         {
+            string s = "";
             // Attributes
-            var s = AttributeString+" ";
+            if(Attributes)
+                s = AttributeString+" ";
 
             // Type
             if (Type != null)
                 s += Type.ToString()+" ";
 
-            // Name
-            s += Name;
-
+            // Path + Name
+            string path="";
+            var curParent=this;
+            while (curParent != null)
+            {
+                path = curParent.Name + "." + path;
+                curParent = curParent.Parent;
+            }
+            s += path;
+            
             return s;
         }
 
         public override string ToString()
         {
-            return "[" + fieldtype.ToString() + "] " + ToDeclarationString();
+            return ToDeclarationString(true);
         }
     }
 

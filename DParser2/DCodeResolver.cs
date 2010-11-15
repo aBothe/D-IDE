@@ -278,14 +278,16 @@ namespace D_Parser
                 }
 
                 // Now move stepwise deeper calling ResolveTypeDeclaration recursively
-                var CurrentNodes = new List<DNode>();
-                CurrentNodes.Add(BlockNode);
+                ret. Add(BlockNode);
 
-                while (skippedIds < il.Parts.Count && CurrentNodes.Count>0)
+                while (skippedIds < il.Parts.Count && ret.Count>0)
                 {
+                    var DeeperLevel = new List<DNode>();
                     // As long as our node can contain other nodes, scan it
-                    currentNode = ResolveTypeDeclaration_ModuleOnly(ImportCache,currentNode as DBlockStatement, il[skippedIds]);
+                    foreach(var n in ret)
+                        DeeperLevel.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,n as DBlockStatement, il[skippedIds]));
                     skippedIds++;
+                    ret = DeeperLevel;
                 }
 
                 return ret.ToArray();
@@ -308,17 +310,15 @@ namespace D_Parser
                     foreach (var ch in currentParent)
                     {
                         if (nameIdent.Name == ch.Name)
-                            return ch;
+                            ret.Add(ch);
                     }
 
                     // If our current Level node is a class-like, also attempt to parse its baseclass
                     if (currentParent is DClassLike)
                     {
                         var baseClass = ResolveBaseClass(ImportCache,currentParent as DClassLike);
-
-                        var BaseClassMatch = ResolveTypeDeclaration_ModuleOnly(ImportCache, baseClass, nameIdent);
-                        if (BaseClassMatch != null) // If we found a match, return it
-                            return BaseClassMatch;
+                        if(baseClass!=null)
+                            ret.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache, baseClass, nameIdent));
                     }
 
                     // Move root-ward
@@ -328,7 +328,7 @@ namespace D_Parser
 
             //TODO: Here a lot of additional checks and more detailed type evaluations are missing!
 
-            return null;
+            return ret.ToArray();
         }
 
         /// <summary>
@@ -355,7 +355,8 @@ namespace D_Parser
 
             // Then search within the imports for our IdentifierList
             foreach (var m in ImportCache)
-                ret.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,m, IdentifierList));
+                if(m.ModuleFileName!=ThisModule.ModuleFileName) // We already parsed this module
+                    ret.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,m, IdentifierList));
 
             return ret.ToArray();
         }
@@ -388,12 +389,16 @@ namespace D_Parser
             // Implicitly set the object class to the inherited class if no explicit one was done
             if (ActualClass.BaseClasses.Count < 1)
             {
-                var ObjectClass = ResolveTypeDeclaration(ModuleCache, ActualClass.NodeRoot as DBlockStatement, new NormalDeclaration("Object")) as DClassLike;
-                if (ObjectClass != ActualClass) // Yes, it can be null - like the Object class which can't inherit itself
-                    return ObjectClass;
+                var ObjectClass = ResolveTypeDeclarations(ModuleCache, ActualClass.NodeRoot as DBlockStatement, new NormalDeclaration("Object"));
+                if (ObjectClass.Length > 0 && ObjectClass[0] != ActualClass) // Yes, it can be null - like the Object class which can't inherit itself
+                    return ObjectClass[0] as DClassLike;
             }
-            else // Take the first only (since D forces single inheritance
-                return ResolveTypeDeclaration(ModuleCache, ActualClass.NodeRoot as DBlockStatement, ActualClass.BaseClasses[0]) as DClassLike;
+            else // Take the first only (since D forces single inheritance)
+            {
+                var ClassMatches = ResolveTypeDeclarations(ModuleCache, ActualClass.NodeRoot as DBlockStatement, ActualClass.BaseClasses[0]);
+                if (ClassMatches.Length > 0)
+                    return ClassMatches[0] as DClassLike;
+            }
 
             return null;
         }

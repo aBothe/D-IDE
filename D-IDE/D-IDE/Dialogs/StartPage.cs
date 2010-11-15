@@ -40,7 +40,11 @@ namespace D_IDE
                 new Thread(() =>
                 {
                     Thread.CurrentThread.IsBackground = true;
-                    ParseNews(webclient.DownloadString(new Uri(Program.news_php + "?xml=1&max=30&fromIDE=1")));
+                    try
+                    {
+                        ParseNews(webclient.DownloadString(new Uri(Program.news_php + "?xml=1&max=30&fromIDE=1")));
+                    }
+                    catch { }
                     downloading = false;
                     lNews.Hide();
                 }).Start();

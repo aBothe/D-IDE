@@ -417,7 +417,7 @@ namespace D_IDE
 
 
             // Our finally resolved node
-            DNode DeclarationNode = null;
+            DNode DeclarationNode = DCodeResolver.SearchBlockAt(Module, Util.ToCodeLocation(e.LogicalPosition));
 
             // Retrieve the identifierlist that's located beneath the cursor
             DToken ExtraOrdniaryToken = null;
@@ -433,7 +433,7 @@ namespace D_IDE
             if (ExtraOrdniaryToken != null)
             {
                 // Handle case 2
-                if (ExtraOrdniaryToken.Kind == DTokens.This || ExtraOrdniaryToken.Kind==DTokens.Super)
+                if (ExtraOrdniaryToken.Kind == DTokens.This || ExtraOrdniaryToken.Kind == DTokens.Super)
                 {
                     var ClassDef = D_IDECodeResolver.SearchClassLikeAt(Module, Util.ToCodeLocation(e.LogicalPosition)) as DClassLike;
 
@@ -443,41 +443,38 @@ namespace D_IDE
                     // If we have a 'super' token, look for ClassDef's superior classes
                     if (ClassDef != null && ExtraOrdniaryToken.Kind == DTokens.Super)
                     {
-                        var BaseClass = Module.Project != null?
-                            D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, Module.Project.Modules, ClassDef):
+                        DeclarationNode = Module.Project != null ?
+                            D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, Module.Project.Modules, ClassDef) :
                             D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, ClassDef);
-
-                        // Now search in every base class for our type
-                        if(expr!=null && BaseClass!=null)
-                        {
-                            DeclarationNode = Module.Project != null ?
-                                D_IDECodeResolver.ResolveTypeDeclaration(Module.Project.Compiler.GlobalModules, Module.Project.Modules, BaseClass as DBlockStatement, expr) :
-                                D_IDECodeResolver.ResolveTypeDeclaration(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, BaseClass as DBlockStatement, expr);
-
-                            // Return if we found a match
-                            if (DeclarationNode != null)
-                                goto do_show; 
-                        }
                     }
+                }
+                else // Other tokens (or even literals!)
+                {
+                    e.ShowToolTip(ExtraOrdniaryToken.ToString());
+                    return;
                 }
             }
 
-            var bs = DCodeResolver.SearchBlockAt(Module, Util.ToCodeLocation( e.LogicalPosition));
             /*
              * Notes:
              * We also need to follow class heritages
              */
-
-            DeclarationNode = Module.Project!=null? 
-                D_IDECodeResolver.ResolveTypeDeclaration(Module.Project.Compiler.GlobalModules,Module.Project.Modules,bs,expr):
-                D_IDECodeResolver.ResolveTypeDeclaration(D_IDE_Properties.Default.DefaultCompiler.GlobalModules,bs,expr);
-
-            do_show:
-
-            if (DeclarationNode != null)
+            if (expr != null)
             {
-                e.ShowToolTip(DeclarationNode.ToString());
+                var Matches = Module.Project != null ?
+                    D_IDECodeResolver.ResolveTypeDeclarations(Module.Project.Compiler.GlobalModules, Module.Project.Modules, DeclarationNode as DBlockStatement, expr) :
+                    D_IDECodeResolver.ResolveTypeDeclarations(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, DeclarationNode as DBlockStatement, expr);
+                string ToolTip="";
+                if (Matches.Length > 0)
+                    foreach (var n in Matches)
+                        ToolTip += n.ToString() + "\r\n";
+                if (!String.IsNullOrEmpty(ToolTip))
+                {
+                    e.ShowToolTip(ToolTip);
+                    return;
+                }
             }
+
 			/*if (mouseOffset < 1 || DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
             bool ctor, super, isInst, isNameSpace;
             CodeModule gpf = null;
