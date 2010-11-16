@@ -423,6 +423,14 @@ namespace D_IDE
             DToken ExtraOrdinaryToken = null;
             var expr = DCodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false,out ExtraOrdinaryToken);
 
+            if (expr is NormalDeclaration)
+            {
+                if ((expr as NormalDeclaration).Name == "__FILE__")
+                {e.ShowToolTip(Module.ModuleFileName); return;}
+                else if ((expr as NormalDeclaration).Name == "__LINE__")
+                { e.ShowToolTip((e.LogicalPosition.Line+1).ToString()); return; }
+            }
+
             /*
              * 1) Normally we don't have any extra tokens here, e.g. Object1.ObjProp1.MyProp.
              * 2) Otherwise we check if there's a 'this' or 'super' at the very beginning of our ident list - then retrieve the fitting (base-)class and go on searching within these.
@@ -450,12 +458,7 @@ namespace D_IDE
                 }
                 else // Other tokens (or even literals!)
                 {
-                    var tt = "";
-                    if (ExtraOrdinaryToken.Value == "__FILE__")
-                        tt = Module.ModuleFileName;
-                    else if (ExtraOrdinaryToken.Value == "__LINE__")
-                        tt = (e.LogicalPosition.Y).ToString();
-                    else tt = DTokens.GetDescription(ExtraOrdinaryToken.Kind);
+                    var tt = DTokens.GetDescription(ExtraOrdinaryToken.Kind);
                     e.ShowToolTip(tt);
                     return;
                 }
