@@ -470,13 +470,17 @@ namespace D_IDE
              */
             if (expr != null)
             {
-                var Matches = Module.Project != null ?
-                    D_IDECodeResolver.ResolveTypeDeclarations(Module.Project.Compiler.GlobalModules, Module.Project.Modules, DeclarationNode as DBlockStatement, expr) :
-                    D_IDECodeResolver.ResolveTypeDeclarations(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, DeclarationNode as DBlockStatement, expr);
+                // Get imported modules first
+                var Imports = Module.Project != null ?
+                    D_IDECodeResolver.ResolveImports(Module.Project.Compiler.GlobalModules, Module.Project.Modules,Module):
+                    D_IDECodeResolver.ResolveImports(D_IDE_Properties.Default.DefaultCompiler.GlobalModules,Module);
+
+                var Matches = DCodeResolver.ResolveTypeDeclarations(Imports, DeclarationNode as DBlockStatement, expr);
+
                 string ToolTip="";
                 if (Matches.Length > 0)
                     foreach (var n in Matches)
-                        ToolTip += n.ToString() + "\r\n";
+                        ToolTip += n.ToString() + "\r\n" + (n.Description.Length>500?(n.Description.Substring(0,500)+"..."):n.Description);
                 if (!String.IsNullOrEmpty(ToolTip))
                 {
                     e.ShowToolTip(ToolTip);

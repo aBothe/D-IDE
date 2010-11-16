@@ -365,12 +365,13 @@ namespace D_Parser
     {
         public DLexer(TextReader reader)
             : base(reader)
-        {
-            Comments = new List<Comment>();
-        }
+        {}
 
         #region Abstract Lexer Props & Methods
-        public List<Comment> Comments;
+        /// <summary>
+        /// A temporary storage for DDoc comments
+        /// </summary>
+        public Stack<Comment> Comments= new Stack<Comment>();
         public override event AbstractLexer.CommentHandler OnComment;
         void OnError(int line, int col, string message)
         {
@@ -1433,17 +1434,13 @@ namespace D_Parser
             {
                 case '+':
                     if (ReaderPeek() == '+')// DDoc
-                    {
                         ReadMultiLineComment(Comment.Type.Documentation, true);
-                    }
                     else
                         ReadMultiLineComment(Comment.Type.Block, true);
                     break;
                 case '*':
                     if (ReaderPeek() == '*')// DDoc
-                    {
                         ReadMultiLineComment(Comment.Type.Documentation, false);
-                    }
                     else
                         ReadMultiLineComment(Comment.Type.Block, false);
                     break;
@@ -1461,11 +1458,12 @@ namespace D_Parser
 
         void ReadSingleLineComment(Comment.Type commentType)
         {
-            CodeLocation st = new CodeLocation(Col, Line);
+            var st = new CodeLocation(Col, Line);
             string comm = ReadToEndOfLine().TrimStart('/');
-            CodeLocation end = new CodeLocation(Col, st.Line);
-            Comment nComm = new Comment(commentType, comm.Trim(), st.Column < 2, st, end);
-            Comments.Add(nComm);
+            var end = new CodeLocation(Col, st.Line);
+            var nComm = new Comment(commentType, comm.Trim(), st.Column < 2, st, end);
+            if(commentType==Comment.Type.Documentation)
+                Comments.Push(nComm);
             OnComment(nComm);
         }
 
@@ -1485,7 +1483,8 @@ namespace D_Parser
                 {
                     ReaderRead(); // Skip "*" or "+"
                     nComm = new Comment(commentType, scCurWord.ToString().Trim(ch, ' ', '\t', '\r', '\n', '*', '+'), st.Column < 2, st, new CodeLocation(Col, Line));
-                    Comments.Add(nComm);
+                    if(commentType==Comment.Type.Documentation)
+                        Comments.Push(nComm);
                     OnComment(nComm);
                     return;
                 }
@@ -1495,10 +1494,13 @@ namespace D_Parser
                 else
                     scCurWord.Append(ch);
             }
-            nComm = new Comment(commentType, scCurWord.ToString().Trim(), st.Column < 2, st, new CodeLocation(Col, Line));
-            Comments.Add(nComm);
-            OnComment(nComm);
             // Reached EOF before end of multiline comment.
+
+            nComm = new Comment(commentType, scCurWord.ToString().Trim(), st.Column < 2, st, new CodeLocation(Col, Line));
+            if (commentType == Comment.Type.Documentation)
+                Comments.Push(nComm);
+            OnComment(nComm);
+            
             OnError(Line, Col, String.Format("Reached EOF before the end of a multiline comment"));
         }
 

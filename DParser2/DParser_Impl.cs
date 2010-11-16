@@ -25,9 +25,12 @@ namespace D_Parser
             module.StartLocation = la.Location;
             doc = module;
             // Only one module declaration possible possible!
-            if (la.Kind==(Module))
+            if (la.Kind == (Module))
+            {
+                module.Description = GetComments();
                 module.ModuleName = ModuleDeclaration();
-
+                module.Description = CheckForPostSemicolonComment();
+            }
             var _block = module as DBlockStatement;
             // Now only declarations or other statements are allowed!
             while (!IsEOF)
@@ -37,6 +40,70 @@ namespace D_Parser
             module.EndLocation = la.Location;
             return module;
         }
+
+        #region Comments
+        string PreviousComment = "";
+
+        string GetComments()
+        {
+            string ret = "";
+
+            while (lexer.Comments.Count > 0)
+            {
+                var c = lexer.Comments.Pop();
+
+                foreach (var line in c.CommentText.Split('\n'))
+                    ret += line.Trim().TrimStart('*') + "\r\n";
+                ret += "\r\n";
+            }
+
+            ret = ret.Trim().Trim('*', '+');
+
+            if (String.IsNullOrEmpty(ret)) return "";
+
+            // Overwrite only if comment is not 'ditto'
+            if (ret.ToLower() != "ditto")
+                PreviousComment=ret;
+
+            return PreviousComment;
+        }
+
+        /// <summary>
+        /// Returns the pre- and post-declaration comment
+        /// </summary>
+        /// <returns></returns>
+        string CheckForPostSemicolonComment()
+        {
+            int ExpectedLine = t.line;
+
+            string ret = "";
+
+            while (lexer.Comments.Count > 0 && lexer.Comments.Peek().StartPosition.Line == ExpectedLine)
+            {
+                var c = lexer.Comments.Pop();
+
+                foreach (var line in c.CommentText.Split('\n'))
+                    ret += line.Trim().TrimStart('*') + "\n";
+                ret += "\n";
+            }
+
+            ret = ret.Trim().Trim('*', '+');
+
+            // Add post-declaration string only if comment is not 'ditto'
+            if (ret.ToLower() != "ditto")
+            {
+                PreviousComment +="\n"+ ret;
+                PreviousComment = PreviousComment.Trim();
+            }
+
+            return PreviousComment;
+        }
+
+        void ClearCommentCache()
+        {
+            lexer.Comments.Clear();
+        }
+        #endregion
 
         void DeclDef(ref DBlockStatement module)
         {
@@ -207,7 +274,7 @@ namespace D_Parser
         {
             bool IsPublic = DeclarationAttributes.Count > 0 && DAttribute.ContainsAttribute(DeclarationAttributes,Public);
             DeclarationAttributes.Clear();
-
+            CheckForDocComments();
             Expect(Import);
 
             var imp = _Import();
@@ -429,6 +496,7 @@ namespace D_Parser
 
             // Declarators
             var firstNode = Declarator(false);
+            firstNode.Description = GetComments();
             firstNode.StartLocation = startLocation;
 
             if (firstNode.Type == null)
@@ -470,6 +538,7 @@ namespace D_Parser
                 }
 
                 Expect(Semicolon);
+                par[par.Count - 1].Description = CheckForPostSemicolonComment();
             }
 
             // BasicType Declarator FunctionBody
@@ -2615,6 +2684,10 @@ namespace D_Parser
 
         void BlockStatement(ref DBlockStatement par)
         {
+            if(String.IsNullOrEmpty( par.Description))par.Description = GetComments();
+            var OldPreviousCommentString = PreviousComment;
+            PreviousComment = "";
+
             Expect(OpenCurlyBrace);
             par.BlockStartLocation = t.Location;
             if (la.Kind != CloseCurlyBrace)
@@ -2629,6 +2702,8 @@ namespace D_Parser
             }
             Expect(CloseCurlyBrace);
             par.EndLocation = t.EndLocation;
+
+            PreviousComment = OldPreviousCommentString;
         }
         #endregion
 
@@ -2757,7 +2832,7 @@ namespace D_Parser
             if (la.Kind==(If))
                 Constraint();
 
-            DBlockStatement dm_ = dm as DBlockStatement;
+            var dm_ = dm as DBlockStatement;
             FunctionBody(ref dm_);
             return dm;
         }
@@ -2984,7 +3059,10 @@ namespace D_Parser
                 Step();
 
             if (la.Kind == Semicolon) // A function declaration can be empty, of course. This here represents a simple abstract or virtual function
+            {
                 Step();
+                par.Description = CheckForPostSemicolonComment();
+            }
             else
                 BlockStatement(ref par);
 

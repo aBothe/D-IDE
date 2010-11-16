@@ -179,6 +179,11 @@ namespace D_Parser
             foreach (var kv in ActualModule.Imports)
                 localImps.Add(kv.Key);
 
+            // Then try to add the 'object' module
+            var objmod = SearchModuleInCache(CodeCache, "object");
+            if (objmod!=null && !ret.Contains(objmod))
+                ret.Add(objmod);
+
             foreach (var m in CodeCache)
                 if (localImps.Contains(m.ModuleName) && !ret.Contains(m))
                 {
@@ -348,34 +353,12 @@ namespace D_Parser
             if (ThisModule != null)
                 ret.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache,CurrentlyScopedBlock, IdentifierList));
 
-            // Important: Implicitly add the object module
-            /*var objmod = SearchModuleInCache(ModuleCache, "object");
-            if (!LookupModules.Contains(objmod))
-                LookupModules.Add(objmod);*/
-
             // Then search within the imports for our IdentifierList
             foreach (var m in ImportCache)
                 if(m.ModuleFileName!=ThisModule.ModuleFileName) // We already parsed this module
                     ret.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,m, IdentifierList));
 
             return ret.ToArray();
-        }
-
-        /// <summary>
-        /// Combines LocalModules and GlobalModules to one array and then search a type in it.
-        /// Note: LocalModules will be searched first!
-        /// </summary>
-        /// <param name="ImportModules"></param>
-        /// <param name="LocalModules"></param>
-        /// <param name="CurrentlyScopedBlock"></param>
-        /// <param name="IdentifierList"></param>
-        /// <returns></returns>
-        public static DNode[] ResolveTypeDeclarations(List<DModule> ImportModules, List<DModule> LocalModules, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
-        {
-            var SearchArea = new List<DModule>(LocalModules);
-            SearchArea.AddRange(ImportModules);
-
-            return ResolveTypeDeclarations(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
 
         /// <summary>

@@ -17,3 +17,16 @@ void main()
 }
 
 1) The identifier(-list) of the wanted type
+
+
+
+
+Commenting:
+
+/** Comment A*/
+int a; /**
+	even more stuff
+*/
+
+/// Comment B
+int b;
