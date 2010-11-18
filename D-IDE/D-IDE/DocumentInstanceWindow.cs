@@ -364,38 +364,14 @@ namespace D_IDE
 
         private void GoToDefinition_Click(object sender, EventArgs e)
         {
-            return;
-            /*
-            if (Program.Parsing) return;
-            int off = txt.ActiveTextAreaControl.Caret.Offset;
-            bool ctor, super, isInst, isNameSpace;
-
-            string[] exprs = DCodeCompletionProvider.GetExpressionStringsAtOffset(txt.Document.TextContent, ref off, out ctor, false);
-            if (exprs == null || exprs.Length < 1)
+            var Matches = D_IDECodeResolver.ResolveTypeDeclarations(Module, txt.ActiveTextAreaControl.TextArea,Caret);
+            if (Matches != null && Matches.Length>0)
             {
-                MessageBox.Show("Nothing selected!");
-                return;
+                var m = Matches[0];
+                var mod = m.NodeRoot as DModule;
+                if(mod!=null)
+                    ErrorLog.OpenError(mod.ModuleFileName,m.StartLocation.Line,m.StartLocation.Column);
             }
-
-            int key = DKeywords.GetToken(exprs[0]);
-            if (key != -1 && key != DTokens.This && key != DTokens.Super) return;
-            CodeModule gpf = null;
-            DNode dt =
-                DCodeCompletionProvider.FindActualExpression(OwnerProject,
-                    Module,
-                    D_IDE_Properties.toCodeLocation(Caret),
-                    exprs,
-                    false,
-                    true,
-                    out super,
-                    out isInst,
-                    out isNameSpace,
-                    out gpf
-                    );
-
-            if (dt == null || gpf == null) return;
-
-            ErrorLog.OpenError(gpf.ModuleFileName, dt.StartLocation.Line, dt.StartLocation.Column);*/
         }
 
         void TextArea_ToolTipRequest(object sender, ToolTipRequestEventArgs e)

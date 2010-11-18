@@ -24,7 +24,6 @@ namespace D_Parser
 
             var p = Create(new StringReader(Code));
             p.Step();
-            var la = p.la;
             // Exception: If we haven't got any basic types as our first token, return this token via OptionalToken
             if (!p.IsBasicType() || p.LA(__LINE__) || p.LA(__FILE__))
             {
