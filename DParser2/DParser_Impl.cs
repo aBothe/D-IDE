@@ -29,7 +29,7 @@ namespace D_Parser
             {
                 module.Description = GetComments();
                 module.ModuleName = ModuleDeclaration();
-                module.Description = CheckForPostSemicolonComment();
+                module.Description += CheckForPostSemicolonComment();
             }
             var _block = module as DBlockStatement;
             // Now only declarations or other statements are allowed!
@@ -92,11 +92,17 @@ namespace D_Parser
             // Add post-declaration string only if comment is not 'ditto'
             if (ret.ToLower() != "ditto")
             {
-                PreviousComment +="\n"+ ret;
-                PreviousComment = PreviousComment.Trim();
+                if (!String.IsNullOrEmpty(ret))
+                {
+                    PreviousComment += "\n" + ret;
+                    PreviousComment = PreviousComment.Trim();
+                    return ret;
+                }
             }
+            else 
+                return PreviousComment;
 
-            return PreviousComment;
+            return "";
         }
 
         void ClearCommentCache()
@@ -435,6 +441,7 @@ namespace D_Parser
                 {
                     Step();
                     var dv = new DVariable();
+                    dv.Description = GetComments();
                     dv.StartLocation = lexer.LastToken.Location;
                     dv.IsAlias=true;
                     dv.Name = "this";
@@ -443,6 +450,7 @@ namespace D_Parser
                     par.Add(dv);
                     Step();
                     Expect(Semicolon);
+                    dv.Description += CheckForPostSemicolonComment();
                     return;
                 }
 
@@ -538,7 +546,7 @@ namespace D_Parser
                 }
 
                 Expect(Semicolon);
-                par[par.Count - 1].Description = CheckForPostSemicolonComment();
+                par[par.Count - 1].Description += CheckForPostSemicolonComment();
             }
 
             // BasicType Declarator FunctionBody
@@ -2800,6 +2808,10 @@ namespace D_Parser
 
         private void ClassBody(ref DBlockStatement ret)
         {
+            if (String.IsNullOrEmpty(ret.Description)) ret.Description = GetComments();
+            var OldPreviousCommentString = PreviousComment;
+            PreviousComment = "";
+
             Expect(OpenCurlyBrace);
             ret.BlockStartLocation = t.Location;
             while (!IsEOF && la.Kind!=(CloseCurlyBrace))
@@ -2808,6 +2820,7 @@ namespace D_Parser
             }
             Expect(CloseCurlyBrace);
             ret.EndLocation = t.EndLocation;
+            PreviousComment = OldPreviousCommentString;
         }
 
         DNode Constructor(bool IsStruct)
@@ -3067,7 +3080,7 @@ namespace D_Parser
             if (la.Kind == Semicolon) // A function declaration can be empty, of course. This here represents a simple abstract or virtual function
             {
                 Step();
-                par.Description = CheckForPostSemicolonComment();
+                par.Description += CheckForPostSemicolonComment();
             }
             else
                 BlockStatement(ref par);

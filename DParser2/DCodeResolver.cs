@@ -57,6 +57,7 @@ namespace D_Parser
                     continue;
 
                 // Bracket check
+                if(hadDot)
                 switch (c)
                 {
                     case ']':
@@ -124,8 +125,11 @@ namespace D_Parser
 
             // If code e.g. starts with a bracket, increment IdentListStart
             var ch = Text[IdentListStart];
-            if (!Char.IsLetterOrDigit(ch) && ch != '_' && ch != '.')
+            while (IdentListStart<Text.Length-1 && !Char.IsLetterOrDigit(ch) && ch != '_' && ch != '.')
+            {
                 IdentListStart++;
+                ch = Text[IdentListStart];
+            }
 
             var psr = DParser.ParseBasicType(BackwardOnly ? Text.Substring(IdentListStart, CaretOffset - IdentListStart) : Text.Substring(IdentListStart),out OptionalInitToken);
             #endregion
@@ -140,7 +144,7 @@ namespace D_Parser
                 if (!(n is DBlockStatement)) continue;
 
                 var b = n as DBlockStatement;
-                if (Where > b.BlockStartLocation && Where < b.EndLocation)
+                if (Where > b.StartLocation && Where < b.EndLocation)
                     return SearchBlockAt(b, Where);
             }
 
@@ -314,7 +318,7 @@ namespace D_Parser
                     // Scan the node's children for a match - return if we found one
                     foreach (var ch in currentParent)
                     {
-                        if (nameIdent.Name == ch.Name)
+                        if (nameIdent.Name == ch.Name && !ret.Contains(ch))
                             ret.Add(ch);
                     }
 
@@ -325,6 +329,22 @@ namespace D_Parser
                         if(baseClass!=null)
                             ret.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache, baseClass, nameIdent));
                     }
+
+                    // Check parameters
+                    if(currentParent is DMethod)
+                        foreach (var ch in (currentParent as DMethod).Parameters)
+                        {
+                            if (nameIdent.Name == ch.Name)
+                                ret.Add(ch);
+                        }
+
+                    // and template parameters
+                    if(currentParent.TemplateParameters!=null)
+                        foreach (var ch in currentParent.TemplateParameters)
+                        {
+                            if (nameIdent.Name == ch.Name)
+                                ret.Add(ch);
+                        }
 
                     // Move root-ward
                     currentParent = currentParent.Parent as DBlockStatement;

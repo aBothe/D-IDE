@@ -109,6 +109,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeCompletion\IDECodeResolver.cs" />
+    <Compile Include="CodeCompletion\InsightView.cs" />
     <Compile Include="CodeTemplates\CodeTemplate.cs" />
     <Compile Include="Dialogs\ClassHierarchy.cs">
       <SubType>Form</SubType>

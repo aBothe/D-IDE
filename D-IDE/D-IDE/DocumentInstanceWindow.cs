@@ -331,9 +331,8 @@ namespace D_IDE
         /// Return true to handle the keypress, return false to let the text area handle the keypress
         /// </summary>
         public bool TextAreaKeyEventHandler(char key)
-        {/*
-            if (Program.Parsing ||
-                DCodeCompletionProvider.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, txt.ActiveTextAreaControl.Caret.Offset))
+        {
+            if (D_IDECodeResolver. Commenting.IsInCommentAreaOrString(txt.Document.TextContent, txt.ActiveTextAreaControl.Caret.Offset))
                 return false;
 
             //if (key == '(')txt.Document.Insert(CaretOffset, ")");
@@ -342,7 +341,7 @@ namespace D_IDE
                 ShowFunctionParameterToolTip(key);
                 return false;
             }
-
+/*
             ICompletionDataProvider dataProvider = null;
 
             if (Char.IsLetterOrDigit(key) || key == '_' || key == '.' || key == ' ' || key == '\0')
@@ -449,10 +448,9 @@ namespace D_IDE
         internal static InsightWindow IW;
         public void ShowFunctionParameterToolTip(char key)
         {
-            IW = null;/*
             IW = new InsightWindow(D_IDEForm.thisForm, txt);
             IW.AddInsightDataProvider(new InsightWindowProvider(this, key), Module.ModuleFileName);
-            IW.ShowInsightWindow();*/
+            IW.ShowInsightWindow();
         }
 
         #region Commenting
