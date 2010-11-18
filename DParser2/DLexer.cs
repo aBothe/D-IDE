@@ -571,13 +571,11 @@ namespace D_Parser
                             int y = Line;
                             bool canBeKeyword;
                             string s = ReadIdent(ch, out canBeKeyword);
-                            if (canBeKeyword)
+                            if (canBeKeyword && DTokens.Keywords.ContainsValue(s))
                             {
-                                int keyWordToken = DKeywords.GetToken(s);
-                                if (keyWordToken >= 0)
-                                {
-                                    return new DToken(keyWordToken, x, y);
-                                }
+                                foreach(var kv in DTokens.Keywords)
+                                    if (s == kv.Value)
+                                        return new DToken(kv.Key, x, y);
                             }
                             return new DToken(DTokens.Identifier, x, y, s);
                         }

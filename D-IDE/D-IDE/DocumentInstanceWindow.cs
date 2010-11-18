@@ -403,89 +403,39 @@ namespace D_IDE
 			if (!e.InDocument || Program.Parsing) return;
             var ta = sender as TextArea;
             if (ta == null || !Module.IsParsable) return;
-
-            int mouseOffset = 0;
-            try
-            {
-                mouseOffset = ta.TextView.Document.PositionToOffset(e.LogicalPosition);
-            }
-            catch
-            {
-                return;
-            }
-            if (mouseOffset < 1 || DCodeResolver.Commenting.IsInCommentAreaOrString(txt.Document.TextContent, mouseOffset)) return;
-
-
-            // Our finally resolved node
-            DNode DeclarationNode = DCodeResolver.SearchBlockAt(Module, Util.ToCodeLocation(e.LogicalPosition));
-
+            
             // Retrieve the identifierlist that's located beneath the cursor
             DToken ExtraOrdinaryToken = null;
-            var expr = DCodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent,mouseOffset,false,out ExtraOrdinaryToken);
+            var Matches = D_IDECodeResolver.ResolveTypeDeclarations(Module,ta,e.LogicalPosition,out ExtraOrdinaryToken);
 
-            if (expr is NormalDeclaration)
-            {
-                if ((expr as NormalDeclaration).Name == "__FILE__")
-                {e.ShowToolTip(Module.ModuleFileName); return;}
-                else if ((expr as NormalDeclaration).Name == "__LINE__")
-                { e.ShowToolTip((e.LogicalPosition.Line+1).ToString()); return; }
-            }
-
-            /*
-             * 1) Normally we don't have any extra tokens here, e.g. Object1.ObjProp1.MyProp.
-             * 2) Otherwise we check if there's a 'this' or 'super' at the very beginning of our ident list - then retrieve the fitting (base-)class and go on searching within these.
-             * 3) On totally different tokens (like hovering a 'for' or '__FILE__') we react just by showing a description or some example code.
-             */
-
-            // Handle cases 2 and 3
+            // Check for extra ordinary tokens like __FILE__ or __LINE__
             if (ExtraOrdinaryToken != null)
             {
-                // Handle case 2
-                if (ExtraOrdinaryToken.Kind == DTokens.This || ExtraOrdinaryToken.Kind == DTokens.Super)
-                {
-                    var ClassDef = D_IDECodeResolver.SearchClassLikeAt(Module, Util.ToCodeLocation(e.LogicalPosition)) as DClassLike;
-
-                    // If 'this'
-                    DeclarationNode = ClassDef;
-
-                    // If we have a 'super' token, look for ClassDef's superior classes
-                    if (ClassDef != null && ExtraOrdinaryToken.Kind == DTokens.Super)
-                    {
-                        DeclarationNode = Module.Project != null ?
-                            D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, Module.Project.Modules, ClassDef) :
-                            D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, ClassDef);
-                    }
+                if (ExtraOrdinaryToken.Kind==DTokens.__FILE__)
+                { 
+                    e.ShowToolTip(Module.ModuleFileName); 
+                    return; 
                 }
-                else // Other tokens (or even literals!)
+                else if (ExtraOrdinaryToken.Kind==DTokens.__LINE__)
+                { 
+                    e.ShowToolTip((e.LogicalPosition.Line + 1).ToString()); 
+                    return; 
+                }
+                else if (Matches == null)
                 {
-                    var tt = DTokens.GetDescription(ExtraOrdinaryToken.Kind);
-                    e.ShowToolTip(tt);
+                    e.ShowToolTip(DTokens.GetDescription(ExtraOrdinaryToken.Kind));
                     return;
                 }
             }
 
-            /*
-             * Notes:
-             * We also need to follow class heritages
-             */
-            if (expr != null)
+            string ToolTip = "";
+            if (Matches!=null && Matches.Length > 0)
+                foreach (var n in Matches)
+                    ToolTip += n.ToString() + "\r\n" + (n.Description.Length > 500 ? (n.Description.Substring(0, 500) + "...") : n.Description);
+            if (!String.IsNullOrEmpty(ToolTip))
             {
-                // Get imported modules first
-                var Imports = Module.Project != null ?
-                    D_IDECodeResolver.ResolveImports(Module.Project.Compiler.GlobalModules, Module.Project.Modules,Module):
-                    D_IDECodeResolver.ResolveImports(D_IDE_Properties.Default.DefaultCompiler.GlobalModules,Module);
-
-                var Matches = DCodeResolver.ResolveTypeDeclarations(Imports, DeclarationNode as DBlockStatement, expr);
-
-                string ToolTip="";
-                if (Matches.Length > 0)
-                    foreach (var n in Matches)
-                        ToolTip += n.ToString() + "\r\n" + (n.Description.Length>500?(n.Description.Substring(0,500)+"..."):n.Description);
-                if (!String.IsNullOrEmpty(ToolTip))
-                {
-                    e.ShowToolTip(ToolTip);
-                    return;
-                }
+                e.ShowToolTip(ToolTip);
+                return;
             }
             
             #region If debugging, check if a local fits to one of the scoped symbols and show its value if possible

@@ -1767,6 +1767,12 @@ namespace D_Parser
             if (la.Kind == Dot)
                 Step();
 
+            if (la.Kind == __FILE__ || la.Kind == __LINE__)
+            {
+                Step();
+                return new IdentExpression(t.Kind==__FILE__? doc.ModuleFileName:(object)t.line);
+            }
+
             // Dollar (== Array length expression)
             if (la.Kind == Dollar)
             {

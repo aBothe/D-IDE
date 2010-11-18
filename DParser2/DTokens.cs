@@ -189,8 +189,10 @@ namespace D_Parser
         public const int TripleDot = 171; // ...
 
         public const int TrustedAttribute = 172; // @trusted
+        public const int __FILE__ = 173;
+        public const int __LINE__ = 174;
 
-        public const int MaxToken = 173;
+        public const int MaxToken = 175;
         static BitArray NewSet(params int[] values)
         {
             BitArray bitArray = new BitArray(MaxToken);
@@ -200,6 +202,140 @@ namespace D_Parser
             }
             return bitArray;
         }
+
+        public static readonly Dictionary<int, string> Keywords = new Dictionary<int, string>
+        {
+            {__gshared,"__gshared"},
+            {__thread,	    "__thread"},
+            {__traits,	    "__traits"},
+
+            {PropertyAttribute,"@property"},
+            {DisabledAttribute,	        "@disabled"},
+            {SafeAttribute,            "@safe"},
+            {SystemAttribute,            "@system"},
+            {TrustedAttribute,            "@trusted"},
+            {__LINE__,"__LINE__"},
+            {__FILE__,"__FILE__"},
+
+            {Abstract,"abstract"},
+            {Alias,"alias"},
+            {Align,"align"},
+            {Asm,"asm"},
+            {Assert,"assert"},
+            {Auto,"auto"},
+            {Body,"body"},
+            {Bool,"bool"},
+            {Break,"break"},
+            {Byte,"byte"},
+
+            {Case,"case"},
+            {Cast,"cast"},
+            {Catch,"catch"},{Cdouble,	"cdouble"},
+            {Cent,	"cent"},
+            {Cfloat,	"cfloat"},
+            {Char,
+	"char"},{Class,
+	"class"},{Const,
+	"const"},{Continue,
+	"continue"},{Creal,
+	"creal"},{Dchar,
+	"dchar"},{Debug,
+	"debug"},{Default,
+	"default"},{Delegate,
+	"delegate"},{Delete,
+	"delete"},{Deprecated,
+	"deprecated"},{Do,
+	"do"},{Double,
+	"double"},{Else,
+
+	"else"},{Enum,
+	"enum"},{Export,
+	"export"},{Extern,
+	"extern"},{False,
+
+	"false"},{Final,
+	"final"},{Finally,
+	"finally"},{Float,
+	"float"},{For,
+	"for"},{Foreach,
+	"foreach"},{Foreach_Reverse,
+	"foreach_reverse"},{Function,
+	"function"},{Goto,
+
+	"goto"},{Idouble,
+
+	"idouble"},{If,
+	"if"},{Ifloat,
+	"ifloat"},{Import,
+	"import"},{Immutable,
+	"immutable"},{In,
+	"in"},{InOut,
+	"inout"},{Int,
+	"int"},{Interface,
+	"interface"},{Invariant,
+	"invariant"},{Ireal,
+	"ireal"},{Is,
+	"is"},{Lazy,
+
+	"lazy"},{Long,
+	"long"},{Macro,
+
+	"macro"},{Mixin,
+	"mixin"},{Module,
+	"module"},{New,
+
+	"new"},{Nothrow,
+	"nothrow"},{Null,
+	"null"},{Out,
+
+	"out"},{Override,
+	"override"},{Package,
+
+	"package"},{Pragma,
+	"pragma"},{Private,
+	"private"},{Protected,
+	"protected"},{Public,
+	"public"},{Pure,
+	"pure"},{Real,
+
+	"real"},{Ref,
+	"ref"},{Return,
+	"return"},{Scope,
+
+	"scope"},{Shared,
+	"shared"},{Short,
+	"short"},{Static,
+	"static"},{Struct,
+	"struct"},{Super,
+	"super"},{Switch,
+	"switch"},{Synchronized,
+	"synchronized"},{Template,
+
+	"template"},{This,
+	"this"},{Throw,
+	"throw"},{True,
+	"true"},{Try,
+	"try"},{Typedef,
+	"typedef"},{Typeid,
+	"typeid"},{Typeof,
+	"typeof"},
+    
+    {Ubyte,	"ubyte"},
+    {Ucent,	"ucent"},
+    {Uint,	"uint"},
+    {Ulong,	"ulong"},
+    {Union,	"union"},
+    {Unittest,	"unittest"},
+    {Ushort,	"ushort"},
+
+    {Version,	"version"},
+    {Void,	"void"},
+    {Volatile,	"volatile"},
+
+    {Wchar,	"wchar"},
+    {While,	"while"},
+    {With,	"with"}
+        };
 
         public static BitArray FunctionAttribute = NewSet(Pure, Nothrow, PropertyAttribute, DisabledAttribute, SafeAttribute, SystemAttribute, TrustedAttribute);
         public static BitArray MemberFunctionAttribute = NewSet(Const, Immutable, Shared, InOut, Pure, Nothrow);

@@ -50,7 +50,6 @@
     <Compile Include="DCodeResolver.cs" />
     <Compile Include="DAttribute.cs" />
     <Compile Include="DModule.cs" />
-    <Compile Include="DKeywords.cs" />
     <Compile Include="DLexer.cs" />
     <Compile Include="DNode.cs" />
     <Compile Include="DParser.cs" />
