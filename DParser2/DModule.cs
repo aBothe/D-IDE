@@ -146,8 +146,12 @@ namespace D_Parser
             Normal=0,
             Delegate,
             Constructor,
-            Destructor
+            Destructor,
+            Unittest
         }
+
+        public DMethod() { }
+        public DMethod(MethodType Type) { SpecialType = Type; }
 
         public override string ToString()
         {

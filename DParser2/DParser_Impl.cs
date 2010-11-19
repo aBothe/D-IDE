@@ -137,8 +137,7 @@ namespace D_Parser
             else if (la.Kind == (Unittest))
             {
                 Step();
-                var dbs = new DMethod() as DBlockStatement;
-                dbs.Type = new DTokenDeclaration(Unittest);
+                var dbs = new DMethod(DMethod.MethodType.Unittest) as DBlockStatement;
                 dbs.StartLocation = t.Location;
                 FunctionBody(ref dbs);
                 dbs.EndLocation = t.EndLocation;
