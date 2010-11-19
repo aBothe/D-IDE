@@ -67,6 +67,12 @@ namespace D_Parser
                         bracketStack.Push('(');
                         continue;
                     case '}':
+                        if (bracketStack.Count < 1)
+                        {
+                            IdentListStart++;
+                            stopSeeking = true;
+                            continue;
+                        }
                         bracketStack.Push('{');
                         continue;
 
@@ -130,6 +136,9 @@ namespace D_Parser
                 IdentListStart++;
                 ch = Text[IdentListStart];
             }
+
+            if (BackwardOnly && IdentListStart >= CaretOffset)
+                return null;
 
             var psr = DParser.ParseBasicType(BackwardOnly ? Text.Substring(IdentListStart, CaretOffset - IdentListStart) : Text.Substring(IdentListStart),out OptionalInitToken);
             #endregion

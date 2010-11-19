@@ -25,11 +25,11 @@ namespace D_IDE
 		
 		public static DCodeCompletionWindow ShowCompletionWindow(Form parent, TextEditorControl control, string fileName, ICompletionDataProvider completionDataProvider, char firstChar)
 		{
-			ICompletionData[] completionData = completionDataProvider.GenerateCompletionData(fileName, control.ActiveTextAreaControl.TextArea, firstChar);
-			if (completionData == null || completionData.Length == 0) {
+			var completionData = completionDataProvider.GenerateCompletionData(fileName, control.ActiveTextAreaControl.TextArea, firstChar);
+			if (completionData == null || completionData.Length < 1) {
 				return null;
 			}
-			DCodeCompletionWindow codeCompletionWindow = new DCodeCompletionWindow(completionDataProvider, completionData, parent, control);
+			var codeCompletionWindow = new DCodeCompletionWindow(completionDataProvider, completionData, parent, control);
 			codeCompletionWindow.ShowCompletionWindow();
 			return codeCompletionWindow;
 		}

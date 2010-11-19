@@ -135,7 +135,7 @@ namespace D_IDE
                 var Matches = D_IDECodeResolver.ResolveTypeDeclarations(diw.Module, ta, ta.Document.OffsetToPosition(initialOffset-1));
                 if (Matches != null && Matches.Length > 0)
                     foreach (var m in Matches)
-                        data.Add(m.ToString()+ m.Description!=null?("\n"+m.Description):"");
+                        data.Add(m.ToString()+ (m.Description!=null?("\n"+m.Description):""));
 			}
 			catch (Exception ex) { D_IDEForm.thisForm.Log(ex.Message+ " ("+ex.Source+")"); }
 		}

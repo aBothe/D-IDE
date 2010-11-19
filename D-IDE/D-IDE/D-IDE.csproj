@@ -108,6 +108,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodeCompletion\DCodeCompletionProvider.cs" />
     <Compile Include="CodeCompletion\IDECodeResolver.cs" />
     <Compile Include="CodeCompletion\InsightView.cs" />
     <Compile Include="CodeTemplates\CodeTemplate.cs" />

@@ -228,7 +228,7 @@ namespace D_IDE
         }
 
         DNode selectedBlock = null;
-        public List<ICompletionData> CurrentCompletionData = new List<ICompletionData>();
+        public ICompletionData[] CurrentCompletionData=null;
 
         /// <summary>
         /// Updates the local completion data cache
@@ -236,52 +236,18 @@ namespace D_IDE
         /// <param name="sender"></param>
         /// <param name="e"></param>
         void Caret_PositionChanged(object sender, EventArgs e)
-        {/*
+        {
             CompilerConfiguration cc = OwnerProject != null ? OwnerProject.Compiler : D_IDE_Properties.Default.dmd2;
             D_IDEForm.thisForm.LineLabel.Text =
                 "Line " + (txt.ActiveTextAreaControl.Caret.Line + 1).ToString() +
                 " Col " + (txt.ActiveTextAreaControl.Caret.Column).ToString();
-            var tv = DCodeCompletionProvider.GetBlockAt(Module, Caret);
+            var tv = D_IDECodeResolver.SearchBlockAt(Module, Util.ToCodeLocation( Caret));
 
             if (selectedBlock != tv || selectedBlock == null)
             {
                 selectedBlock = tv;
-                CurrentCompletionData.Clear();
-                if (tv != null)
-                {
-                    DCodeCompletionProvider.AddAllClassMembers(cc, tv, ref CurrentCompletionData, true);
-                }
-
-                if (OwnerProject != null)
-                {
-                    var mods = new List<string>();
-                    string tmod;
-                    foreach (CodeModule ppf in OwnerProject.files)
-                    {
-                        if (!ppf.IsParsable) continue;
-                        if (!String.IsNullOrEmpty(ppf.ModuleName))
-                        {
-                            tmod = ppf.ModuleName.Split('.')[0];
-                            if (!mods.Contains(tmod)) mods.Add(tmod);
-                        }
-                        // Add the content of the module
-                        DCodeCompletionProvider.AddAllClassMembers(cc, ppf, ref CurrentCompletionData, false);
-                    }
-                    // Add all local modules
-                    foreach (string mod in mods)
-                    {
-                        CurrentCompletionData.Add(new DCompletionData(mod, "Project Module", D_IDEForm.icons.Images.IndexOfKey("namespace")));
-                    }
-                }
-                else // Add classes etc from current module
-                    DCodeCompletionProvider.AddAllClassMembers(cc, Module, ref CurrentCompletionData, true);
-                try
-                {
-                    CurrentCompletionData.Capacity += cc.GlobalCompletionList.Count;
-                    CurrentCompletionData.AddRange(cc.GlobalCompletionList);
-                }
-                catch { }
-            }*/
+                CurrentCompletionData = DCodeCompletionProvider.GenerateAfterSpaceClompletionData(this);
+            }
         }
 
         void CreateImportDirective_Click(object sender, EventArgs e)
@@ -341,15 +307,12 @@ namespace D_IDE
                 ShowFunctionParameterToolTip(key);
                 return false;
             }
-/*
+
             ICompletionDataProvider dataProvider = null;
 
             if (Char.IsLetterOrDigit(key) || key == '_' || key == '.' || key == ' ' || key == '\0')
-                dataProvider = new DCodeCompletionProvider();
+                dataProvider = new DCodeCompletionProvider(this);
             else return false;
-
-            var data = dataProvider.GenerateCompletionData(Module.ModuleFileName, txt.ActiveTextAreaControl.TextArea, key);
-            if (data.Length < 1) return false;
 
             DCodeCompletionWindow.ShowCompletionWindow(
                 this,					// The parent window for the completion window
@@ -357,7 +320,7 @@ namespace D_IDE
                 Module.ModuleFileName,		// Filename - will be passed back to the provider
                 dataProvider,		// Provider to get the list of possible completions
                 key							// Key pressed - will be passed to the provider
-            );*/
+            );
             return false;
         }
 
