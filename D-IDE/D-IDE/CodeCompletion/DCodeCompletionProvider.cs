@@ -141,12 +141,23 @@ namespace D_IDE
              *  - Perhaps the already found identifiers represent a module path (!)
              */
 
-
-            // first build pre-comma identifier list
             if (ch == '.')
             {
+                presel = null;
                 DToken tk = null;
-                var ids = D_IDECodeResolver.BuildIdentifierList(ta.Document.TextContent, DocWindow.CaretOffset, true, out tk);
+                
+                var matches = D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module, ta, DocWindow.Caret,out tk);
+
+                // return all its children
+                // Note: also include the base classes' children
+
+                foreach (var m in matches)
+                {
+                    if(m is DBlockStatement)
+                    foreach (var n in (m as DBlockStatement))
+                        rl.Add(new DCompletionData(n));
+                }
+
             }
             else
             {
