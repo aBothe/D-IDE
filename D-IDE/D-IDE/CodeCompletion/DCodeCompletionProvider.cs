@@ -89,7 +89,7 @@ namespace D_IDE
                     //TODO: Allow special node types
                     if (String.IsNullOrEmpty(n.Name)) continue;
                     //if(n.ContainsAttribute(DTokens.Public))
-                    rl.Add(new DCompletionData(n));
+                    Add(ref rl,n);
                 }
             }
 
@@ -97,22 +97,40 @@ namespace D_IDE
             // Get currently scoped block
             var curBlock = D_IDECodeResolver.SearchBlockAt(DocWindow.Module, Util.ToCodeLocation(DocWindow.Caret));
 
-            // Go higher
+            // Go rootward
             while (curBlock != null)
             {
                 // Normal children
                 foreach (var n in curBlock)
-                    rl.Add(new DCompletionData(n));
+                    Add(ref rl,n);
 
                 // Template arguments
                 if (curBlock.TemplateParameters != null)
                     foreach (var n in curBlock.TemplateParameters)
-                        rl.Add(new DCompletionData(n));
+                        Add(ref rl,n);
 
                 // Parameters
                 if (curBlock is DMethod)
                     foreach (var n in (curBlock as DMethod).Parameters)
-                        rl.Add(new DCompletionData(n));
+                        Add(ref rl,n);
+
+                // Members of base classes
+                if (curBlock is DClassLike)
+                {
+                    DClassLike baseClass = curBlock as DClassLike;
+                    while (true)
+                    {
+                        baseClass =
+                            DocWindow.Module.Project != null ?
+                            D_IDECodeResolver.ResolveBaseClass(DocWindow.Module.Project.Compiler.GlobalModules, DocWindow.Module.Project.Modules, baseClass) :
+                            D_IDECodeResolver.ResolveBaseClass(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, baseClass);
+
+                        if (baseClass == null) break;
+
+                        foreach (var n in baseClass)
+                            Add(ref rl, n);
+                    }
+                }
 
                 curBlock = curBlock.Parent as DBlockStatement;
             }
@@ -145,24 +163,44 @@ namespace D_IDE
             {
                 presel = null;
                 DToken tk = null;
-                
-                var matches = D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module, ta, DocWindow.Caret,out tk);
+
+                var cursor = DocWindow.Caret;
+                cursor.X--;
+                var matches = D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module, ta, cursor,out tk);
 
                 // return all its children
                 // Note: also include the base classes' children
-
+                if(matches!=null)
                 foreach (var m in matches)
                 {
-                    if(m is DBlockStatement)
-                    foreach (var n in (m as DBlockStatement))
-                        rl.Add(new DCompletionData(n));
+                    if (m is DBlockStatement)
+                    {
+                        foreach (var n in (m as DBlockStatement))
+                            Add(ref rl,n);
+                    }
+
+                    if (m is DClassLike)
+                    {
+                        DClassLike baseClass = m as DClassLike;
+                        while (true)
+                        {
+                            baseClass =
+                                DocWindow.Module.Project != null ?
+                                D_IDECodeResolver.ResolveBaseClass(DocWindow.Module.Project.Compiler.GlobalModules, DocWindow.Module.Project.Modules, baseClass) :
+                                D_IDECodeResolver.ResolveBaseClass(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, baseClass);
+
+                            if (baseClass == null) break;
+
+                            foreach (var n in baseClass)
+                                Add(ref rl,n);
+                        }
+                    }
                 }
 
             }
             else
             {
-                DToken tk = null;
-                var modCode = ta.Document.TextContent;//.Insert(DocWindow.CaretOffset,ch.ToString());
+                var modCode = ta.Document.TextContent;
 
                 string initIdentifier = "";
                 
@@ -170,7 +208,7 @@ namespace D_IDE
                 while (i>0)
                 {
                     char c = ta.Document.TextContent[i];
-                    if (!Char.IsLetter(c)) break;
+                    if (!Char.IsLetter(c) || c!='_') break;
 
                     initIdentifier = c + initIdentifier;
 
@@ -189,6 +227,11 @@ namespace D_IDE
 
 			return rl.ToArray();
 		}
+
+        static void Add(ref List<ICompletionData> rl, DNode n)
+        {
+            rl.Add(new DCompletionData(n));
+        }
 
         /// <summary>
         /// Adds module name stubs to completion list

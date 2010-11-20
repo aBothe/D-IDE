@@ -162,6 +162,11 @@ namespace D_Parser
             get { return val; }
         }
 
+        public DToken Next
+        {
+            get { return next; }
+        }
+
         public CodeLocation EndLocation
         {
             get { return endLocation; }

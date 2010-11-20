@@ -331,7 +331,7 @@ namespace D_Parser
                             ret.Add(ch);
                     }
 
-                    // If our current Level node is a class-like, also attempt to parse its baseclass
+                    // If our current Level node is a class-like, also attempt to search in its baseclass!
                     if (currentParent is DClassLike)
                     {
                         var baseClass = ResolveBaseClass(ImportCache,currentParent as DClassLike);
@@ -384,8 +384,14 @@ namespace D_Parser
 
             // Then search within the imports for our IdentifierList
             foreach (var m in ImportCache)
-                if(m.ModuleFileName!=ThisModule.ModuleFileName) // We already parsed this module
-                    ret.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,m, IdentifierList));
+            {
+                // Add the module itself to the returned list if its name starts with the identifierlist
+                if (m.ModuleName.StartsWith(IdentifierList.ToString()))
+                    ret.Add(m);
+                
+                else if (m.ModuleFileName != ThisModule.ModuleFileName) // We already parsed this module
+                    ret.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, m, IdentifierList));
+            }
 
             return ret.ToArray();
         }

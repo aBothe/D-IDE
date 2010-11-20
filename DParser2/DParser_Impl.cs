@@ -671,7 +671,7 @@ namespace D_Parser
             {
                 Step();
                 TypeDeclaration td = null;
-                DelegateDeclaration dd = new DelegateDeclaration();
+                var dd = new DelegateDeclaration();
                 dd.IsFunction = t.Kind == Function;
 
                 dd.Parameters = Parameters();
@@ -2826,13 +2826,13 @@ namespace D_Parser
         {
             Expect(This);
             var dm = new DMethod();
+            dm.SpecialType = DMethod.MethodType.Constructor;
             dm.StartLocation = t.Location;
-            dm.Type = new NormalDeclaration("this");
             dm.Name = "this";
 
             if (IsStruct && lexer.CurrentPeekToken.Kind==(This) && la.Kind==(OpenParenthesis))
             {
-                DVariable dv = new DVariable();
+                var dv = new DVariable();
                 dv.Name = "this";
                 dm.Parameters.Add(dv);
                 Step();
@@ -2860,8 +2860,8 @@ namespace D_Parser
             Expect(Tilde);
             Expect(This);
             var dm = new DMethod();
+            dm.SpecialType = DMethod.MethodType.Destructor;
             dm.StartLocation = lexer.LastToken.Location;
-            dm.Type = new NormalDeclaration("~this");
             dm.Name = "~this";
 
             if (IsTemplateParameterList())

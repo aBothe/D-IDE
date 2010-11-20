@@ -59,6 +59,23 @@ namespace D_IDE.CodeCompletion
                             D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, Module.Project.Modules, ClassDef) :
                             D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, ClassDef);
                     }
+
+                    // If '(' follows, return ctors
+                    if (ExtraOrdinaryToken.Next != null && ExtraOrdinaryToken.Next.Kind == DTokens.OpenParenthesis)
+                    {
+                        var rl = new List<DNode>();
+
+                        foreach (var n in DeclarationBlock as DBlockStatement)
+                            if (n is DMethod && (n as DMethod).SpecialType == DMethod.MethodType.Constructor)
+                            
+                                rl.Add(n);
+                            
+                        return rl.ToArray();
+                    }
+
+                    // If there are any other identifiers, return our looked-up block
+                    if (expr == null)
+                        return new DNode[] { DeclarationBlock};
                 }
                 else // Other tokens
                     return null;

@@ -28,6 +28,7 @@ namespace D_Parser
             if (!p.IsBasicType() || p.LA(__LINE__) || p.LA(__FILE__))
             {
                 p.Step();
+                p.Peek(1);
                 OptionalToken = p.t;
 
                 // Only if a dot follows a 'this' or 'super' token we go on parsing; Return otherwise
