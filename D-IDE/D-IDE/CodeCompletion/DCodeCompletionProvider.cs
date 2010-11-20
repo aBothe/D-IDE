@@ -163,16 +163,23 @@ namespace D_IDE
             {
                 presel = null;
                 DToken tk = null;
+                TypeDeclaration ids = null;
 
                 var cursor = DocWindow.Caret;
                 cursor.X--;
-                var matches = D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module, ta, cursor,out tk);
+                var matches = D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module, ta, cursor,out tk,out ids);
 
                 // return all its children
                 // Note: also include the base classes' children
                 if(matches!=null)
                 foreach (var m in matches)
                 {
+                    if (m is DModule && ids.ToString()!=(m as DModule).ModuleName)
+                    {
+                        Add(ref rl, m);
+                        continue;
+                    }
+
                     if (m is DBlockStatement)
                     {
                         foreach (var n in (m as DBlockStatement))
@@ -200,15 +207,15 @@ namespace D_IDE
             }
             else
             {
-                var modCode = ta.Document.TextContent;
-
                 string initIdentifier = "";
-                
+
                 int i=DocWindow.CaretOffset-1;
+                bool followsDot = false;
                 while (i>0)
                 {
                     char c = ta.Document.TextContent[i];
-                    if (!Char.IsLetter(c) || c!='_') break;
+                    if (c == '.') { followsDot = true; break; }
+                    if (!Char.IsLetter(c) && c!='_') break;
 
                     initIdentifier = c + initIdentifier;
 
@@ -217,7 +224,7 @@ namespace D_IDE
 
                 if (!String.IsNullOrEmpty(initIdentifier))
                 {
-                    if (initIdentifier.Length > 1) return null;
+                    if (initIdentifier.Length > 1 || followsDot) return null;
                     presel = initIdentifier;
                 }
                 else { presel = null; return null; }
@@ -230,6 +237,7 @@ namespace D_IDE
 
         static void Add(ref List<ICompletionData> rl, DNode n)
         {
+            if(n is DModule || !String.IsNullOrEmpty(n.Name))
             rl.Add(new DCompletionData(n));
         }
 

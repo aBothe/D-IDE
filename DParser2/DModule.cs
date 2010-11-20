@@ -24,6 +24,7 @@ namespace D_Parser
         public void ApplyFrom(DModule Other)
         {
             ModuleFileName = Other.ModuleFileName;
+            Name = Other.Name;
             children = new List<DNode>(Other.Children);
             foreach (var ch in Children)
                 ch.Parent = this;

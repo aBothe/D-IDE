@@ -16,24 +16,38 @@ namespace D_IDE.CodeCompletion
         public static DNode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta, TextLocation CursorLocation)
         {
             DToken t = null;
-            return ResolveTypeDeclarations(Module, ta, CursorLocation, out t);
+            TypeDeclaration ids = null;
+            return ResolveTypeDeclarations(Module, ta, CursorLocation, out t,out ids);
         }
 
-        public static DNode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta,TextLocation CursorLocation, out DToken ExtraOrdinaryToken)
+        public static DNode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta, TextLocation CursorLocation, out TypeDeclaration Identifiers)
         {
-            // Prerequisites
+            DToken t = null;
+            return ResolveTypeDeclarations(Module, ta, CursorLocation, out t, out Identifiers);
+        }
+
+        public static DNode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta, TextLocation CursorLocation, out DToken ExtraOrdinaryToken)
+        {
+            TypeDeclaration ids = null;
+            return ResolveTypeDeclarations(Module, ta, CursorLocation, out ExtraOrdinaryToken, out ids);
+        }
+
+        public static DNode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta,TextLocation CursorLocation, out DToken ExtraOrdinaryToken, out TypeDeclaration Identifiers)
+        {
             ExtraOrdinaryToken = null;
+            Identifiers = null;
+
             int mouseOffset = ta.TextView.Document.PositionToOffset(CursorLocation);
 
             // To save time, look if we are within a comment or a string literal first - if so, return
-            if (mouseOffset < 1 || DCodeResolver.Commenting.IsInCommentAreaOrString(ta.TextView.Document.TextContent, mouseOffset)) 
+            if (mouseOffset < 1 || Commenting.IsInCommentAreaOrString(ta.TextView.Document.TextContent, mouseOffset)) 
                 return null;
 
             // Our finally resolved node
-            DNode DeclarationBlock = DCodeResolver.SearchBlockAt(Module, Util.ToCodeLocation(CursorLocation));
+            DNode DeclarationBlock = SearchBlockAt(Module, Util.ToCodeLocation(CursorLocation));
 
             // Retrieve the identifierlist that's located beneath the cursor
-            var expr = DCodeResolver.BuildIdentifierList(ta.TextView.Document.TextContent, mouseOffset, false, out ExtraOrdinaryToken);
+            Identifiers = BuildIdentifierList(ta.TextView.Document.TextContent, mouseOffset, false, out ExtraOrdinaryToken);
 
             /*
              * 1) Normally we don't have any extra tokens here, e.g. Object1.ObjProp1.MyProp.
@@ -47,17 +61,18 @@ namespace D_IDE.CodeCompletion
                 // Handle case 2
                 if (ExtraOrdinaryToken.Kind == DTokens.This || ExtraOrdinaryToken.Kind == DTokens.Super)
                 {
-                    var ClassDef = D_IDECodeResolver.SearchClassLikeAt(Module, Util.ToCodeLocation(CursorLocation)) as DClassLike;
+                    var ClassDef = SearchClassLikeAt(Module, Util.ToCodeLocation(CursorLocation)) as DClassLike;
 
                     // If 'this'
                     DeclarationBlock = ClassDef;
+                    if (DeclarationBlock == null) return null;
 
                     // If we have a 'super' token, look for ClassDef's superior classes
                     if (ClassDef != null && ExtraOrdinaryToken.Kind == DTokens.Super)
                     {
                         DeclarationBlock = Module.Project != null ?
-                            D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, Module.Project.Modules, ClassDef) :
-                            D_IDECodeResolver.ResolveBaseClass(Module.Project.Compiler.GlobalModules, ClassDef);
+                            ResolveBaseClass(Module.Project.Compiler.GlobalModules, Module.Project.Modules, ClassDef) :
+                            ResolveBaseClass(Module.Project.Compiler.GlobalModules, ClassDef);
                     }
 
                     // If '(' follows, return ctors
@@ -67,14 +82,13 @@ namespace D_IDE.CodeCompletion
 
                         foreach (var n in DeclarationBlock as DBlockStatement)
                             if (n is DMethod && (n as DMethod).SpecialType == DMethod.MethodType.Constructor)
-                            
                                 rl.Add(n);
                             
                         return rl.ToArray();
                     }
 
                     // If there are any other identifiers, return our looked-up block
-                    if (expr == null)
+                    if (Identifiers== null)
                         return new DNode[] { DeclarationBlock};
                 }
                 else // Other tokens
@@ -82,17 +96,30 @@ namespace D_IDE.CodeCompletion
             }
 
             /*
-             * Notes:
-             * We also need to follow class heritages
+             * Note: We also need to follow class heritages and module paths!
              */
-            if (expr != null)
+            if (Identifiers != null)
             {
+                var istr = Identifiers.ToString();
+                var rl = new List<DNode>();
+
+                foreach (var m in Module.Project != null ? Module.Project.Compiler.GlobalModules : D_IDE_Properties.Default.DefaultCompiler.GlobalModules)
+                {
+                    // If our module name totally equals our id string, go on with returning all its children and not the module itself!
+                    if (m.ModuleName.StartsWith(istr))
+                        rl.Add(m);
+                    else if (istr.StartsWith(m.ModuleName))
+                        return ResolveTypeDeclarations_ModuleOnly(new List<DModule>(),m,Identifiers);
+                }
+                if (rl.Count > 0)
+                    return rl.ToArray();
+
                 // Get imported modules first
                 var Imports = Module.Project != null ?
-                    D_IDECodeResolver.ResolveImports(Module.Project.Compiler.GlobalModules, Module.Project.Modules, Module) :
-                    D_IDECodeResolver.ResolveImports(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, Module);
+                    ResolveImports(Module.Project.Compiler.GlobalModules, Module.Project.Modules, Module) :
+                    ResolveImports(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, Module);
 
-                return DCodeResolver.ResolveTypeDeclarations(Imports, DeclarationBlock as DBlockStatement, expr);
+                return ResolveTypeDeclarations(Imports, DeclarationBlock as DBlockStatement, Identifiers);
             }
             return null;
         }

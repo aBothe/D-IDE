@@ -101,7 +101,15 @@ namespace D_IDE
         private void Init()
         {
             if (data == null) return;
-            this.text = data.Name;
+            // Show the last part of the module name if data is a module
+            if (data is DModule)
+            {
+                var m=(data as DModule);
+                var parts = m.ModuleName.Split('.');
+
+                text=parts[parts.Length-1];
+            }else
+                this.text = data.Name;
             description = BuildDescriptionString(data);
         }
 
