@@ -287,7 +287,7 @@ namespace D_Parser
 
                 var mod = BlockNode.NodeRoot as DModule;
                 /* If the id list start with the name of BlockNode's root module, 
-                 * skip those first identifiers to proceed seeking the rest of the list
+                 * skip those identifiers first to proceed seeking the rest of the list
                  */
                 if (mod != null && istr.StartsWith(mod.ModuleName))
                 {
@@ -304,6 +304,16 @@ namespace D_Parser
                     // As long as our node can contain other nodes, scan it
                     foreach(var n in ret)
                         DeeperLevel.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,n as DBlockStatement, il[skippedIds]));
+                    
+                    // If a variable is given and if it's not the last identifier, return it's definition type
+                    if (DeeperLevel.Count > 0 && DeeperLevel[0] is DVariable && skippedIds<il.Parts.Count-1)
+                    {
+                        var v = DeeperLevel[0] as DVariable;
+                        DeeperLevel.Clear();
+
+                        DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, v.Parent as DBlockStatement, v.Type));
+                    }
+                    
                     skippedIds++;
                     ret = DeeperLevel;
                 }

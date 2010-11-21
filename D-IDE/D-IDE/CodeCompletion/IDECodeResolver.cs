@@ -101,8 +101,9 @@ namespace D_IDE.CodeCompletion
             if (Identifiers != null)
             {
                 var istr = Identifiers.ToString();
-                var rl = new List<DNode>();
 
+                // Look for module paths and if they fit to our identifier path or not
+                var rl = new List<DNode>();
                 foreach (var m in Module.Project != null ? Module.Project.Compiler.GlobalModules : D_IDE_Properties.Default.DefaultCompiler.GlobalModules)
                 {
                     // If our module name totally equals our id string, go on with returning all its children and not the module itself!
@@ -113,6 +114,7 @@ namespace D_IDE.CodeCompletion
                 }
                 if (rl.Count > 0)
                     return rl.ToArray();
+
 
                 // Get imported modules first
                 var Imports = Module.Project != null ?

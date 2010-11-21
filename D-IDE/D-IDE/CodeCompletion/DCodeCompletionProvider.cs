@@ -167,43 +167,59 @@ namespace D_IDE
 
                 var cursor = DocWindow.Caret;
                 cursor.X--;
+                /*
+                 * Theoretically only one item should be returned here because e.g. a variable definition is unique. Perhaps the user entered a part of a module path. In that case, several module nodes are returned.
+                 */
                 var matches = D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module, ta, cursor,out tk,out ids);
 
                 // return all its children
                 // Note: also include the base classes' children
-                if(matches!=null)
-                foreach (var m in matches)
+                if (matches != null)
                 {
-                    if (m is DModule && ids.ToString()!=(m as DModule).ModuleName)
+                parse_again:
+                    foreach (var m in matches)
                     {
-                        Add(ref rl, m);
-                        continue;
-                    }
-
-                    if (m is DBlockStatement)
-                    {
-                        foreach (var n in (m as DBlockStatement))
-                            Add(ref rl,n);
-                    }
-
-                    if (m is DClassLike)
-                    {
-                        DClassLike baseClass = m as DClassLike;
-                        while (true)
+                        if (m is DModule && ids.ToString() != (m as DModule).ModuleName)
                         {
-                            baseClass =
-                                DocWindow.Module.Project != null ?
-                                D_IDECodeResolver.ResolveBaseClass(DocWindow.Module.Project.Compiler.GlobalModules, DocWindow.Module.Project.Modules, baseClass) :
-                                D_IDECodeResolver.ResolveBaseClass(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, baseClass);
+                            Add(ref rl, m);
+                            continue;
+                        }
 
-                            if (baseClass == null) break;
+                        if (m is DVariable)
+                        {
+                            // If it's a variable (this case happens really often ;) ), resolve its base type and print its properties
+                            var t = (m as DVariable).Type;
 
-                            foreach (var n in baseClass)
-                                Add(ref rl,n);
+                            matches = DocWindow.Module.Project != null ?
+                                    D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module.Project.Compiler.GlobalModules, DocWindow.Module.Project.Modules, m.NodeRoot as DBlockStatement,t) :
+                                    D_IDECodeResolver.ResolveTypeDeclarations(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, m.NodeRoot as DBlockStatement, t);
+                            goto parse_again;
+                        }
+
+                        if (m is DBlockStatement)
+                        {
+                            foreach (var n in (m as DBlockStatement))
+                                Add(ref rl, n);
+                        }
+
+                        if (m is DClassLike)
+                        {
+                            var baseClass = m as DClassLike;
+                            while (true)
+                            {
+                                baseClass =
+                                    DocWindow.Module.Project != null ?
+                                    D_IDECodeResolver.ResolveBaseClass(DocWindow.Module.Project.Compiler.GlobalModules, DocWindow.Module.Project.Modules, baseClass) :
+                                    D_IDECodeResolver.ResolveBaseClass(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, baseClass);
+
+                                if (baseClass == null) break;
+
+                                foreach (var n in baseClass)
+                                    Add(ref rl, n);
+                            }
                         }
                     }
                 }
-
             }
             else
             {
@@ -214,6 +230,7 @@ namespace D_IDE
                 while (i>0)
                 {
                     char c = ta.Document.TextContent[i];
+                    //TODO: Make this more flexible - add comment & string tests
                     if (c == '.') { followsDot = true; break; }
                     if (!Char.IsLetter(c) && c!='_') break;
 
@@ -224,6 +241,7 @@ namespace D_IDE
 
                 if (!String.IsNullOrEmpty(initIdentifier))
                 {
+                    // If a dot is in front of our id list OR the id is longer than 1 character, return null to keep the current completion window open
                     if (initIdentifier.Length > 1 || followsDot) return null;
                     presel = initIdentifier;
                 }
