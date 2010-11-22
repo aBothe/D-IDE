@@ -108,26 +108,4 @@ namespace D_Parser
             return ToDeclarationString(true);
         }
     }
-
-    public enum FieldType
-    {
-        AliasDecl,
-        Constructor,
-
-        EnumValue, // enum item
-        Delegate,
-
-        Variable,
-        Function, // is treated as a block statement
-
-        Root, // root element
-        Block, // a field that is able to contain some children
-
-        // Special kinds of blocks
-        Class,
-        Template,
-        Struct,
-        Enum,
-        Interface
-    }
 }

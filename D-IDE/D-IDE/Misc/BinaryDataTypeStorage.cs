@@ -96,9 +96,8 @@ namespace D_IDE
         #endregion
 
         #region Nodes
-        #endregion
         void WriteNodes(List<DNode> Nodes)
-        {/*
+        {
             var bs = BinStream;
 
             if (Nodes == null || Nodes.Count < 1)
@@ -114,50 +113,95 @@ namespace D_IDE
             {
                 bs.Write(NodeInitializer);
 
-                bs.Write((int)dt.fieldtype);
-                WriteString(dt.Name);
-                bs.Write((int)dt.TypeToken);
-                WriteTypeDecl(dt.Type);
+                // Here it can be a variable or a block statement derivate only
+                if(dt is DVariable)
+                {
+                    bs.Write((byte)0);
+
+                    byte subtype=0;
+                    if(dt is DEnumValue) subtype=1;
+                    bs.Write(subtype);
+
+                    // Now write type specific properties
+                    bs.Write((dt as DVariable).IsAlias);
+                    WriteExpression((dt as DVariable).Initializer);
+                }
+                else if(dt is DBlockStatement)
+                {
+                    bs.Write((byte)1);
+
+                    byte subtype=0;
+                    if(dt is DMethod) subtype=1;
+                    else if(dt is DStatementBlock) subtype=2;
+                    else if(dt is DClassLike) subtype=3;
+                    else if(dt is DEnum) subtype=4;
+                    bs.Write(subtype);
+
+                    // Now write type specific properties
+                    if(dt is DMethod)
+                    {
+                        var n=dt as DMethod;
+                        WriteNodes(n.Parameters);
+                        bs.Write((int)n.SpecialType);
+                    }
+                    else if(dt is DStatementBlock)
+                    {
+                        var n=dt as DStatementBlock;
+                        bs.Write(n.Token);
+                        WriteExpression(n.Expression);
+                    }
+                    else if(dt is DClassLike)
+                    {
+                        var n=dt as DClassLike;
+
+                        bs.Write(n.ClassType);
+                        bs.Write(n.BaseClasses.Count);
+                        foreach(var t in n.BaseClasses)
+                            WriteTypeDecl(t);
+                    }
+                    // No extra fields for DEnum types
+
+                    // Write block statement properties
+                    var bl=dt as DBlockStatement;
+                    bs.Write(bl.BlockStartLocation.X);
+                    bs.Write(bl.BlockStartLocation.Y);
+
+                    WriteNodes(bl.Children);
+                }
+                else throw new InvalidCastException("Unknown node type");
+
+                // Write (general) node props
+                bs.Write(dt.Attributes.Count);
+                foreach(var a in dt.Attributes)
+                {
+                    bs.Write(a.Token);
+                    if(a.LiteralContent == null)
+                        WriteString(null);
+                    else
+                        WriteString(a.LiteralContent.ToString());
+                }
+
+                WriteString(dt.Name,true);
+                WriteNodes(dt.TemplateParameters);
                 WriteString(dt.Description,true);
+
                 bs.Write(dt.StartLocation.X);
                 bs.Write(dt.StartLocation.Y);
                 bs.Write(dt.EndLocation.X);
                 bs.Write(dt.EndLocation.Y);
-
-                bs.Write(dt.Attributes.Count);
-                foreach (var mod in dt.Attributes)
-                {
-                    bs.Write(mod.Token);
-                    if (mod.LiteralContent != null)
-                        WriteString(mod.LiteralContent.ToString(), true);
-                    else
-                        bs.Write((int)0);
-                }
-
-                if(dt is DVariable)
-                    WriteString((dt as DVariable).Value,true);
-
-                if (dt is DClassLike)
-                {
-                    bs.Write((byte)(dt as DClassLike).BaseClasses.Count);
-                    foreach(TypeDeclaration td in (dt as DClassLike).BaseClasses)
-                        WriteTypeDecl(td);
-                }
-
-                if (dt is DEnum)
-                    WriteTypeDecl((dt as DEnum).EnumBaseType);
-
-                WriteNodes(dt.TemplateParameters);
-                if(dt is DMethod)WriteNodes((dt as DMethod).Parameters);
-                WriteNodes(dt.Children);
             }
 
             bs.Flush();
         }
 
+        void WriteExpression(DExpression Expr)
+        {
+            var bs = BinStream;
+        }
+
         void WriteTypeDecl(TypeDeclaration decl)
         {
-            BinaryWriter bs = BinStream;
+            var bs = BinStream;
 
             if (decl == null) // If there's no type, simply write a 0 to the file
             {
@@ -190,7 +234,7 @@ namespace D_IDE
             WriteTypeDecl(decl.Base);
         }
         #endregion
-         */
+         
         }
     }
 

@@ -60,6 +60,7 @@ namespace D_Parser
     public abstract class DBlockStatement : DNode, IEnumerable<DNode>
     {
         public CodeLocation BlockStartLocation=new CodeLocation();
+        protected List<DNode> children = new List<DNode>();
 
         public DNode Assign(DBlockStatement block)
         {
@@ -67,8 +68,6 @@ namespace D_Parser
             BlockStartLocation = block.BlockStartLocation;
             return base.Assign(block as DNode);
         }
-
-        protected List<DNode> children = new List<DNode>();
 
         public int Count
         {
@@ -206,11 +205,9 @@ namespace D_Parser
 
     public class DEnum : DBlockStatement
     {
-        public TypeDeclaration EnumBaseType;
-
         public override string ToString()
         {
-            return "enum "+ToDeclarationString(false)+(EnumBaseType!=null?(":"+EnumBaseType.ToString()):"");
+            return "enum "+ToDeclarationString(false);
         }
     }
 

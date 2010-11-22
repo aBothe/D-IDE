@@ -2929,11 +2929,11 @@ namespace D_Parser
             ApplyAttributes(ref n);
 
             if (IsBasicType() && la.Kind != Identifier)
-                mye.EnumBaseType = Type();
+                mye.Type = Type();
             else if (la.Kind == Auto)
             {
                 Step();
-                mye.EnumBaseType = new DTokenDeclaration(Auto);
+                mye.Type = new DTokenDeclaration(Auto);
             }
 
             if (la.Kind==(Identifier))
@@ -2945,7 +2945,7 @@ namespace D_Parser
                 }
                 else
                 {
-                    mye.EnumBaseType = Type();
+                    mye.Type = Type();
 
                     Expect(Identifier);
                     mye.Name = t.Value;
@@ -2955,7 +2955,7 @@ namespace D_Parser
             if (la.Kind==(Colon))
             {
                 Step();
-                mye.EnumBaseType = Type();
+                mye.Type = Type();
             }
 
             if (la.Kind==(Assign) || la.Kind==(Semicolon))
@@ -2964,8 +2964,8 @@ namespace D_Parser
                 DVariable enumVar = new DVariable();
                 enumVar.Assign(mye);
                 enumVar.Attributes.Add(new DAttribute( Enum));
-                if (mye.EnumBaseType != null)
-                    enumVar.Type = mye.EnumBaseType;
+                if (mye.Type != null)
+                    enumVar.Type = mye.Type;
                 else
                     enumVar.Type = new DTokenDeclaration(Enum);
 
