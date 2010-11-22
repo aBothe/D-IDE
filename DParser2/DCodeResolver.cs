@@ -306,12 +306,16 @@ namespace D_Parser
                         DeeperLevel.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,n as DBlockStatement, il[skippedIds]));
                     
                     // If a variable is given and if it's not the last identifier, return it's definition type
-                    if (DeeperLevel.Count > 0 && DeeperLevel[0] is DVariable && skippedIds<il.Parts.Count-1)
+                    // If a method is given, search for its return type
+                    if (DeeperLevel.Count > 0 && skippedIds<il.Parts.Count-1)
                     {
-                        var v = DeeperLevel[0] as DVariable;
-                        DeeperLevel.Clear();
+                        if (DeeperLevel[0] is DVariable || DeeperLevel[0] is DMethod)
+                        {
+                            var v = DeeperLevel[0];
+                            DeeperLevel.Clear();
 
-                        DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, v.Parent as DBlockStatement, v.Type));
+                            DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, v.Parent as DBlockStatement, v.Type));
+                        }
                     }
                     
                     skippedIds++;

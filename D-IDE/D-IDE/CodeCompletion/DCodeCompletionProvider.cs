@@ -185,10 +185,10 @@ namespace D_IDE
                             continue;
                         }
 
-                        if (m is DVariable)
+                        if (m is DVariable || m is DMethod)
                         {
                             // If it's a variable (this case happens really often ;) ), resolve its base type and print its properties
-                            var t = (m as DVariable).Type;
+                            var t = m.Type;
 
                             matches = DocWindow.Module.Project != null ?
                                     D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module.Project.Compiler.GlobalModules, DocWindow.Module.Project.Modules, m.NodeRoot as DBlockStatement,t) :
