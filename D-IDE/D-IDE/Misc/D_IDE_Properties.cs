@@ -339,15 +339,14 @@ namespace D_IDE
 			Program.Parsing = true;
 
 			//cacheTh = new Thread(delegate(object o)			{
-			BinaryDataTypeStorageReader bsr = new BinaryDataTypeStorageReader(file);
-			try
-			{
-				cc.GlobalModules = bsr.ReadModules(ref cc.ImportDirectories);
-			}
-			catch (Exception ex) {
-                Program.StartScreen.Close();
-                if (System.Diagnostics.Debugger.IsAttached) throw ex;
-                MessageBox.Show(ex.Message); }
+			var bsr = new BinaryDataTypeStorageReader(file);
+            if (bsr.BinStream.BaseStream.Length >0)
+            {
+                //try	{
+                var CacheProject = new DProject();
+                cc.GlobalModules = bsr.ReadModules(CacheProject,ref cc.ImportDirectories);
+                //}catch (Exception ex) { Program.StartScreen.Close(); MessageBox.Show(ex.Message); }
+            }
 			bsr.Close();
 
 			// add all loaded data to the precached completion list
@@ -716,6 +715,7 @@ namespace D_IDE
 			else BinDirectory = "C:\\dmd2\\windows\\bin";
             GuessBinFromPath();
 		}
+
         private void GuessBinFromPath()
         {
             string[] paths = Environment.GetEnvironmentVariable("PATH").Split(';');

@@ -6,8 +6,6 @@ namespace D_Parser
 {
     public abstract class TypeDeclaration
     {
-        public abstract byte TypeId { get; }
-
         public TypeDeclaration Base;
         public TypeDeclaration ParentDecl { get { return Base; } set { Base = value; } }
 
@@ -32,8 +30,6 @@ namespace D_Parser
     /// </summary>
     public class NormalDeclaration : TypeDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 1; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public string Name;
 
         public NormalDeclaration() { }
@@ -48,8 +44,6 @@ namespace D_Parser
 
     public class DTokenDeclaration : NormalDeclaration
     {
-        public static new byte GetDeclarationClassTypeId { get { return 2; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public int Token;
 
         public DTokenDeclaration() { }
@@ -84,8 +78,6 @@ namespace D_Parser
     /// </summary>
     public class ClampDecl : TypeDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 3; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         /// <summary>
         /// Equals <see cref="Base" />
         /// </summary>
@@ -145,8 +137,6 @@ namespace D_Parser
 
     public class DelegateDeclaration : TypeDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 4; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public TypeDeclaration ReturnType
         {
             get { return Base; }
@@ -186,8 +176,6 @@ namespace D_Parser
     /// </summary>
     public class PointerDecl : TypeDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 5; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public PointerDecl() { }
         public PointerDecl(TypeDeclaration BaseType) { Base = BaseType; }
 
@@ -202,8 +190,6 @@ namespace D_Parser
     /// </summary>
     public class MemberFunctionAttributeDecl : DTokenDeclaration
     {
-        public static new byte GetDeclarationClassTypeId { get { return 6; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         /// <summary>
         /// Equals <see cref="Token"/>
         /// </summary>
@@ -226,8 +212,6 @@ namespace D_Parser
 
     public class VarArgDecl : TypeDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 7; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public VarArgDecl() { }
         public VarArgDecl(TypeDeclaration BaseIdentifier) { Base = BaseIdentifier; }
 
@@ -243,8 +227,6 @@ namespace D_Parser
     /// </summary>
     public class InheritanceDecl : TypeDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 8; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public TypeDeclaration InheritedClass;
         public TypeDeclaration InheritedInterface;
 
@@ -271,8 +253,6 @@ namespace D_Parser
     /// </summary>
     public class TemplateDecl : TypeDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 9; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         public List<TypeDeclaration> Template=new List<TypeDeclaration>();
 
         public TemplateDecl() { }
@@ -298,8 +278,6 @@ namespace D_Parser
     /// </summary>
     public class IdentifierList : TypeDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 10; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
         protected List<TypeDeclaration> parts = new List<TypeDeclaration>();
 
         public List<TypeDeclaration> Parts
@@ -355,9 +333,6 @@ namespace D_Parser
     #region Expressions
     public class DExpressionDecl : TypeDeclaration
     {
-        public static byte GetDeclarationClassTypeId { get { return 11; } }
-        public override byte TypeId { get { return GetDeclarationClassTypeId; } }
-
         public DExpression Expression;
 
         public DExpressionDecl() { }
@@ -517,6 +492,9 @@ namespace D_Parser
         }
     }
 
+    /// <summary>
+    /// auto arr= [1,2,3,4,5,6];
+    /// </summary>
     public class ArrayExpression : DExpression
     {
         public ClampExpression.ClampType Clamps = ClampExpression.ClampType.Square;

@@ -22,7 +22,7 @@ namespace D_IDE
 
         public BinaryDataTypeStorageWriter(string file)
         {
-            FileStream fs = new FileStream(file, FileMode.Create, FileAccess.Write);
+            var fs = new FileStream(file, FileMode.Create, FileAccess.Write);
             BinStream = new BinaryWriter(fs);
         }
 
@@ -72,7 +72,7 @@ namespace D_IDE
 
         public void WriteModules(string[] ParsedDirectories, List<CodeModule> Modules)
         {
-            BinaryWriter bs = BinStream;
+            var bs = BinStream;
 
             bs.Write(Modules.Count); // To know how many modules we've saved
 
@@ -84,10 +84,10 @@ namespace D_IDE
             }
             else bs.Write((uint)0);
 
-            foreach (CodeModule mod in Modules)
+            foreach (var mod in Modules)
             {
                 bs.Write(ModuleInitializer);
-                WriteString(mod.ModuleName);
+                WriteString(mod.ModuleName,true);
                 WriteString(mod.ModuleFileName,true);
                 WriteNodes(mod.Children);
                 bs.Flush();
@@ -96,27 +96,23 @@ namespace D_IDE
         #endregion
 
         #region Nodes
-        void WriteNodes(List<DNode> Nodes)
+        void WriteNode(DNode dt)
         {
-            var bs = BinStream;
+            var bs=BinStream;
 
-            if (Nodes == null || Nodes.Count < 1)
+            bs.Write(NodeInitializer);
+
+            if (dt==null)
             {
-                bs.Write((int)0);
+                bs.Write((byte)0);
                 bs.Flush();
                 return;
             }
 
-            bs.Write(Nodes.Count);
-
-            foreach (DNode dt in Nodes)
-            {
-                bs.Write(NodeInitializer);
-
                 // Here it can be a variable or a block statement derivate only
                 if(dt is DVariable)
                 {
-                    bs.Write((byte)0);
+                    bs.Write((byte)1);
 
                     byte subtype=0;
                     if(dt is DEnumValue) subtype=1;
@@ -128,7 +124,7 @@ namespace D_IDE
                 }
                 else if(dt is DBlockStatement)
                 {
-                    bs.Write((byte)1);
+                    bs.Write((byte)2);
 
                     byte subtype=0;
                     if(dt is DMethod) subtype=1;
@@ -178,7 +174,7 @@ namespace D_IDE
                     if(a.LiteralContent == null)
                         WriteString(null);
                     else
-                        WriteString(a.LiteralContent.ToString());
+                        WriteString(a.LiteralContent.ToString(),true);
                 }
 
                 WriteString(dt.Name,true);
@@ -191,12 +187,105 @@ namespace D_IDE
                 bs.Write(dt.EndLocation.Y);
             }
 
-            bs.Flush();
-        }
-
-        void WriteExpression(DExpression Expr)
+        void WriteNodes(List<DNode> Nodes)
         {
             var bs = BinStream;
+
+            if (Nodes == null || Nodes.Count < 1)
+            {
+                bs.Write((int)0);
+                bs.Flush();
+                return;
+            }
+
+            bs.Write(Nodes.Count);
+
+            foreach (DNode dt in Nodes)
+                WriteNode(dt);
+
+            bs.Flush();
+        }
+        #endregion
+
+        void WriteExpression(DExpression e)
+        {
+            var bs = BinStream;
+
+            if(e == null)
+            {
+                bs.Write((byte)0);
+                return;
+            }
+
+            if(e is IdentExpression)
+            {
+                bs.Write((byte)1);
+                WriteString((e as IdentExpression).Value.ToString());
+            }
+
+            else if(e is TokenExpression)
+            {
+                bs.Write((byte)2);
+                bs.Write((e as TokenExpression).Token);
+            }
+
+            else if(e is TypeDeclarationExpression)
+            {
+                bs.Write((byte)3);
+                WriteTypeDecl((e as TypeDeclarationExpression).Declaration);
+            }
+
+            else if(e is ClampExpression)
+            {
+                bs.Write((byte)4);
+
+                var c=e as ClampExpression;
+                bs.Write((byte)c.Clamps);
+                WriteExpression(c.InnerExpression);
+            }
+
+            else if(e is AssignTokenExpression)
+            {
+                bs.Write((byte)5);
+
+                var a=e as AssignTokenExpression;
+
+                bs.Write(a.Token);
+                WriteExpression(a.FollowingExpression);
+            }
+
+            else if(e is SwitchExpression)
+            {
+                bs.Write((byte)6);
+
+                var s=e as SwitchExpression;
+                WriteExpression(s.FalseCase);
+                WriteExpression(s.TrueCase);
+            }
+
+            else if(e is ArrayExpression)
+            {
+                bs.Write((byte)7);
+
+                var a=e as ArrayExpression;
+                bs.Write((byte)a.Clamps);
+
+                bs.Write(a.Expressions.Count);
+                foreach(var ex in a.Expressions)
+                    WriteExpression(ex);
+            }
+
+            else if(e is FunctionLiteral)
+            {
+                bs.Write((byte)8);
+
+                var f=e as FunctionLiteral;
+                bs.Write(f.LiteralToken);
+
+                WriteNode(f.AnonymousMethod);
+            }
+
+            WriteExpression(e.Base);
         }
 
         void WriteTypeDecl(TypeDeclaration decl)
@@ -208,33 +297,81 @@ namespace D_IDE
                 bs.Write((byte)0); 
                 return; 
             }
-            bs.Write(decl.TypeId);
 
-            if (decl is DTokenDeclaration)
+            if (decl is DTokenDeclaration){
+                bs.Write((byte)1);
                 bs.Write((decl as DTokenDeclaration).Token);
-            else if (decl is NormalDeclaration)
-                WriteString((decl as NormalDeclaration).Name, true);
-            else if (decl is ArrayDecl)
-                WriteTypeDecl((decl as ArrayDecl).KeyType);
-            else if (decl is DelegateDeclaration)
-            {
-                bs.Write((decl as DelegateDeclaration).IsFunction);
-                WriteNodes((decl as DelegateDeclaration).Parameters);
             }
+
+            else if (decl is NormalDeclaration){
+                bs.Write((byte)2);
+                WriteString((decl as NormalDeclaration).Name, true);}
+
+            else if (decl is ClampDecl)
+            {
+                bs.Write((byte)3);
+
+                var cd=decl as ClampDecl;
+                bs.Write((byte)cd.Clamps);
+                WriteTypeDecl(cd.KeyType);
+            }
+
+            else if(decl is PointerDecl)
+                bs.Write((byte)4);
+
+            else if(decl is MemberFunctionAttributeDecl)
+            {
+                var mf=decl as MemberFunctionAttributeDecl;
+
+                bs.Write((byte)5);
+                bs.Write(mf.Token);
+                WriteTypeDecl(mf.InnerType);
+            }
+
+            else if(decl is VarArgDecl)
+                bs.Write((byte)6);
+
             else if (decl is InheritanceDecl)
             {
+                bs.Write((byte)7);
+
                 WriteTypeDecl((decl as InheritanceDecl).InheritedClass);
                 WriteTypeDecl((decl as InheritanceDecl).InheritedInterface);
             }
+
             else if (decl is TemplateDecl)
-                WriteTypeDecl((decl as TemplateDecl).Template);
-            else if (decl is DotCombinedDeclaration)
-                WriteTypeDecl((decl as DotCombinedDeclaration).AccessedMember);
+            {
+                bs.Write((byte)8);
+
+                bs.Write((decl as TemplateDecl).Template.Count);
+                foreach(var td in (decl as TemplateDecl).Template)
+                    WriteTypeDecl(td);
+            }
+
+            else if (decl is IdentifierList){
+                bs.Write((byte)9);
+
+                bs.Write((decl as IdentifierList).Parts.Count);
+                foreach(var td in (decl as IdentifierList).Parts)
+                    WriteTypeDecl(td);
+            }
+
+            else if(decl is DExpressionDecl)
+            {
+                bs.Write((byte)10);
+
+                WriteExpression((decl as DExpressionDecl).Expression);
+            }
+
+            else if (decl is DelegateDeclaration)
+            {
+                bs.Write((byte)11);
+
+                bs.Write((decl as DelegateDeclaration).IsFunction);
+                WriteNodes((decl as DelegateDeclaration).Parameters);
+            }
 
             WriteTypeDecl(decl.Base);
-        }
-        #endregion
-         
         }
     }
 
@@ -279,178 +416,280 @@ namespace D_IDE
         #endregion
 
         #region Modules
-        public List<CodeModule> ReadModules(ref List<string> ParsedDirectories)
-        { return new List<CodeModule>();
-            /*
-            BinaryReader bs = BinStream;
+        public List<CodeModule> ReadModules(DProject Project,ref List<string> ParsedDirectories)
+        { 
+            var bs=BinStream;
 
-            int Count = bs.ReadInt32();
-            List<CodeModule> ret = new List<CodeModule>(Count); // Speed improvement caused by given number of modules
+            // Module count
+            int ModuleCount=bs.ReadInt32();
 
-            uint DirCount = bs.ReadUInt32();
-            for (int i = 0; i < DirCount; i++)
+            var ret=new List<CodeModule>();
+
+            // Parsed directories
+            uint DirCount=bs.ReadUInt32();
+
+            for(int i=0;i<DirCount;i++)
             {
-                string dir = ReadString(true);
-                if (!ParsedDirectories.Contains(dir)) ParsedDirectories.Add(dir);
+                string d=ReadString(true);
+                if(!ParsedDirectories.Contains(d))
+                    ParsedDirectories.Add(d);
             }
 
-            for (int i = 0; i < Count; i++)
+            for(int i=0;i<ModuleCount;i++)
             {
-                uint mi = bs.ReadUInt32();
-                if (mi != BinaryDataTypeStorageWriter.ModuleInitializer)
-                {
-                    throw new Exception("Wrong module definition format!");
-                }
+                if(bs.ReadInt32()!=BinaryDataTypeStorageWriter.ModuleInitializer)
+                    throw new Exception("Wrong data format");
 
-                CodeModule mod = new CodeModule();
-                mod.ModuleName = ReadString();
-                mod.ModuleFileName = ReadString(true);
-                mod.dom.name = mod.ModuleName;
-                mod.dom.module = mod.ModuleName;
-                ReadNodes(ref mod.dom.children);
-                ret.Add(mod);
+                string mod_name=ReadString(true);
+                string mod_fn=ReadString(true);
+
+                var cm=new CodeModule();
+                cm.Project = Project;
+                cm.ModuleFileName = mod_fn;
+                cm.ModuleName=mod_name;
+
+                var bl=cm as DBlockStatement;
+                ReadNodes(ref bl);
             }
+
             return ret;
         }
         #endregion
 
         #region Nodes
-        void ReadNodes(ref List<DNode> Nodes)
+        public void ReadNodes(ref DBlockStatement Parent)
         {
-            BinaryReader bs = BinStream;
+            var bs = BinStream;
 
-            int Count = bs.ReadInt32();
-            Nodes.Capacity = Count;
-            Nodes.Clear();
+            int NodeCount=bs.ReadInt32();
 
-            for (int i = 0; i < Count; i++)
-            {
-                uint ni = bs.ReadUInt32();
-                if (ni != BinaryDataTypeStorageWriter.NodeInitializer)
-                {
-                    throw new Exception("Wrong node definition format!");
-                }
-
-                DNode dt = new DNode();
-
-                dt.fieldtype = (FieldType)bs.ReadInt32();
-                switch (dt.fieldtype)
-                {
-                    default: break;
-                    case FieldType.Class:
-                    case FieldType.Interface:
-                    case FieldType.Struct:
-                    case FieldType.Template:
-                        dt = new DClassLike();
-                        break;
-                    case FieldType.Enum:
-                        dt = new DEnum();
-                        break;
-                    case FieldType.EnumValue:
-                        dt = new DEnumValue();
-                        break;
-                    case FieldType.Delegate:
-                    case FieldType.Constructor: // Also a ctor is treated as a method here
-                    case FieldType.Function:
-                        dt = new DMethod();
-                        break;
-                    case FieldType.AliasDecl:
-                    case FieldType.Variable:
-                        dt = new DVariable();
-                        break;
-                }
-                dt.name = ReadString();
-                dt.TypeToken = bs.ReadInt32();
-                dt.Type = ReadTypeDecl();
-                dt.desc = ReadString(true);
-                D_Parser.CodeLocation startLoc = new D_Parser.CodeLocation();
-                startLoc.X = bs.ReadInt32();
-                startLoc.Y = bs.ReadInt32();
-                dt.StartLocation = startLoc;
-                D_Parser.CodeLocation endLoc = new D_Parser.CodeLocation();
-                endLoc.X = bs.ReadInt32();
-                endLoc.Y = bs.ReadInt32();
-                dt.EndLocation = endLoc;
-
-                int modCount = bs.ReadInt32();
-                for (int j = 0; j < modCount; j++)
-                    dt.modifiers.Add(bs.ReadInt32());
-
-                dt.module = ReadString();
-                if(dt is DVariable)
-                    (dt as DVariable).Value = ReadString(true);
-
-                if (dt is DClassLike)
-                {
-                    byte InhCount = bs.ReadByte();
-                    for (int j = 0; j < InhCount; j++)
-                        (dt as DClassLike).BaseClasses.Add(ReadTypeDecl());
-                }
-
-                if (dt is DEnum)
-                    (dt as DEnum).EnumBaseType = ReadTypeDecl();
-
-                ReadNodes(ref dt.TemplateParameters);
-                if (dt is DMethod) ReadNodes(ref (dt as DMethod).Parameters);
-                ReadNodes(ref dt.children);
-
-                Nodes.Add(dt);
-            }
+            for(int i=0;i<NodeCount;i++)
+                Parent.Add(ReadNode());
         }
 
-        TypeDeclaration ReadTypeDecl()
+        public DNode ReadNode()
         {
-            TypeDeclaration ret = null;
-            BinaryReader bs = BinStream;
+            int x=0,y=0;
 
-            byte declType = bs.ReadByte();
-            if (declType < 1) return null;
+            var s = BinStream;
 
-            if (declType == DTokenDeclaration.GetDeclarationClassTypeId)
-                ret = new DTokenDeclaration(bs.ReadInt32());
-            else if (declType == NormalDeclaration.GetDeclarationClassTypeId)
-                ret = new NormalDeclaration(ReadString(true));
-            else if (declType == ArrayDecl.GetDeclarationClassTypeId)
-            {
-                ret = new ArrayDecl();
-                (ret as ArrayDecl).KeyType = ReadTypeDecl();
-            }
-            else if (declType == DelegateDeclaration.GetDeclarationClassTypeId)
-            {
-                DelegateDeclaration dd = new DelegateDeclaration();
-                ret = dd;
-                dd.IsFunction = bs.ReadBoolean();
-                ReadNodes(ref dd.Parameters);
-            }
-            else if (declType == PointerDecl.GetDeclarationClassTypeId)
-                ret = new PointerDecl();
-            else if (declType == MemberFunctionAttributeDecl.GetDeclarationClassTypeId)
-                ret = new MemberFunctionAttributeDecl(bs.ReadInt32());
-            else if (declType == VarArgDecl.GetDeclarationClassTypeId)
-                ret = new VarArgDecl();
-            else if (declType == InheritanceDecl.GetDeclarationClassTypeId)
-            {
-                InheritanceDecl id = new InheritanceDecl();
-                id.InheritedClass = ReadTypeDecl();
-                id.InheritedInterface = ReadTypeDecl();
-                ret = id;
-            }
-            else if (declType == TemplateDecl.GetDeclarationClassTypeId)
-            {
-                ret = new TemplateDecl();
-                (ret as TemplateDecl).Template = ReadTypeDecl();
-            }
-            else if (declType == DotCombinedDeclaration.GetDeclarationClassTypeId)
-            {
-                ret = new DotCombinedDeclaration();
-                (ret as DotCombinedDeclaration).AccessedMember = ReadTypeDecl();
-            }
-            else return null;
+            if(s.ReadInt32()!=BinaryDataTypeStorageWriter.NodeInitializer)
+                    throw new Exception("Node parsing error");
 
-            ret.Base = ReadTypeDecl();
-            return ret;*/
+            DNode ret=null;
+
+            int MainType=s.ReadByte();
+            int SubType=s.ReadByte();
+
+            if(MainType<1) return ret;
+            
+            // Variable
+            if(MainType==1)
+            {
+                if(SubType==1)
+                    ret=new DEnumValue();
+                else
+                    ret=new DVariable();
+
+                (ret as DVariable).IsAlias=s.ReadBoolean();
+                (ret as DVariable).Initializer=ReadExpression();
+            }
+            // Block
+            else if(MainType==2)
+            {
+                if(SubType<1)
+                    throw new Exception("Block subtype must not be 0");
+                    // DMethod
+                else if(SubType==1)
+                {
+                    ret=new DMethod();
+                    
+                    // Synthetic node
+                    var tbl=new DStatementBlock() as DBlockStatement;
+                    ReadNodes(ref tbl);
+
+                    (ret as DMethod).Parameters.AddRange(tbl.Children);
+                }
+                    // DStatementBlock
+                else if(SubType==2)
+                {
+                    ret=new DStatementBlock();
+
+                    (ret as DStatementBlock).Token=s.ReadInt32();
+                    (ret as DStatementBlock).Expression=ReadExpression();
+                }
+                    // DClassLike
+                else if(SubType==3)
+                {
+                    ret=new DClassLike();
+
+                    (ret as DClassLike).ClassType=s.ReadByte();
+
+                    int BaseClassCount=s.ReadInt32();
+                    for(int j=0;j<BaseClassCount;j++)
+                        (ret as DClassLike).BaseClasses.Add(ReadTypeDeclaration());
+                }
+
+                else if(SubType==4)
+                {
+                    ret=new DEnum();
+                }
+
+
+                var bl=ret as DBlockStatement;
+                x=s.ReadInt32();
+                y=s.ReadInt32();
+                bl.BlockStartLocation=new CodeLocation(x,y);
+
+                ReadNodes(ref bl);
+            }
+
+            int AttributeCount=s.ReadInt32();
+            for(int j=0;j<AttributeCount;j++)
+            {
+                var attr=new DAttribute(s.ReadInt32());
+                attr.LiteralContent=ReadString(true);
+                ret.Attributes.Add(attr);
+            }
+
+            ret.Name=ReadString(true);
+            var tp=new DStatementBlock() as DBlockStatement;
+                    ReadNodes(ref tp);
+
+            if(tp.Children.Count>0)
+                ret.TemplateParameters.AddRange(tp.Children);
+            ret.Description=ReadString(true);
+
+            x=s.ReadInt32();
+            y=s.ReadInt32();
+            ret.StartLocation=new CodeLocation(x,y);
+            x=s.ReadInt32();
+            y=s.ReadInt32();
+            ret.EndLocation=new CodeLocation(x,y);
+
+            return ret;
         }
         #endregion
+
+        public TypeDeclaration ReadTypeDeclaration()
+        {
+            var s=BinStream;
+
+            TypeDeclaration ret=null;
+
+            int type=s.ReadInt32();
+
+            if(type==0)
+                return null;
+            if(type==1)
+                ret=new DTokenDeclaration(s.ReadInt32());
+            else if(type==2)
+                ret=new NormalDeclaration(ReadString(true));
+            else if(type==3)
+            {
+                ret=new ClampDecl();
+                (ret as ClampDecl).Clamps=(ClampDecl.ClampType)s.ReadByte();
+                (ret as ClampDecl).KeyType=ReadTypeDeclaration();
+            }
+            else if(type==4)
+            ret=new PointerDecl();
+            else if(type==5)
+            {
+                ret=new MemberFunctionAttributeDecl(s.ReadInt32());
+                (ret as MemberFunctionAttributeDecl).InnerType=ReadTypeDeclaration();
+            }
+            else if(type==6)
+                ret=new VarArgDecl();
+            else if(type==7)
+            {
+                ret=new InheritanceDecl();
+
+                (ret as InheritanceDecl).InheritedClass=ReadTypeDeclaration();
+                (ret as InheritanceDecl).InheritedInterface=ReadTypeDeclaration();
+            }
+            else if(type==8)
+            {
+                ret=new TemplateDecl();
+
+                int cnt=s.ReadInt32();
+                for(int j=0;j<cnt;j++)
+                    (ret as TemplateDecl).Template.Add(ReadTypeDeclaration());
+            }
+            else if(type==9)
+            {
+                ret=new IdentifierList();
+
+                int cnt=s.ReadInt32();
+                for(int j=0;j<cnt;j++)
+                    (ret as IdentifierList).Parts.Add(ReadTypeDeclaration());
+            }
+            else if(type==10)
+                ret=new DExpressionDecl(ReadExpression());
+            else if(type==11)
+            {
+                ret=new DelegateDeclaration();
+
+                (ret as DelegateDeclaration).IsFunction=s.ReadBoolean();
+
+                var bl=new DStatementBlock() as DBlockStatement;
+                ReadNodes(ref bl);
+
+                (ret as DelegateDeclaration).Parameters.AddRange(bl.Children);
+            }
+
+            ret.Base=ReadTypeDeclaration();
+
+            return ret;
+        }
+
+        public DExpression ReadExpression()
+        {
+            var s=BinStream;
+            DExpression e=null;
+
+            int type=s.ReadByte();
+            if(type<1) return null;
+
+            if(type==1)
+                e=new IdentExpression(ReadString(true));
+            else if(type==2)
+                e=new TokenExpression(s.ReadInt32());
+            else if(type==3)
+                e=new TypeDeclarationExpression(ReadTypeDeclaration());
+            else if(type==4)
+            {
+                e=new ClampExpression((ClampExpression.ClampType)s.ReadByte());
+                (e as ClampExpression).InnerExpression=ReadExpression();
+            }
+            else if(type==5)
+            {
+                e=new AssignTokenExpression(s.ReadInt32());
+                (e as AssignTokenExpression).FollowingExpression=ReadExpression();
+            }
+            else if(type==6)
+            {
+                e=new SwitchExpression();
+                (e as SwitchExpression).FalseCase=ReadExpression();
+                (e as SwitchExpression).TrueCase=ReadExpression();
+            }
+            else if(type==7)
+            {
+                e=new ArrayExpression((ClampExpression.ClampType)s.ReadByte());
+
+                int cnt=s.ReadInt32();
+                for(int j=0;j<cnt;j++)
+                    (e as ArrayExpression).Expressions.Add(ReadExpression());
+            }
+            else if(type==8)
+            {
+                e=new FunctionLiteral(s.ReadInt32());
+
+                (e as FunctionLiteral).AnonymousMethod=ReadNode() as DMethod;
+            }
+
+            e.Base=ReadExpression();
+            return e;
+        }
         
     }
 }
