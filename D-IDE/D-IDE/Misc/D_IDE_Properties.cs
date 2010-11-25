@@ -337,16 +337,7 @@ namespace D_IDE
 
 			//Program.Parsing = true;
 
-			//cacheTh = new Thread(delegate(object o)			{
-			var bsr = new BinaryDataTypeStorageReader(file);
-            if (bsr.BinStream.BaseStream.Length >0)
-            {
-                //try	{
-                var CacheProject = new DProject();
-                cc.GlobalModules = bsr.ReadModules(CacheProject,ref cc.ImportDirectories);
-                //}              catch (Exception ex) { Program.StartScreen.Close(); throw ex; MessageBox.Show(ex.Message); }
-            }
-			bsr.Close();
+            cc.GlobalModules=D_IDENodeStorage.ReadModules(file, ref cc.ImportDirectories);
 
 			// add all loaded data to the precached completion list
 			cc.GlobalCompletionList.Clear();
@@ -361,19 +352,18 @@ namespace D_IDE
 		static Thread cacheTh;
 		public static void SaveGlobalCache(CompilerConfiguration cc, string file)
 		{
-			Program.Parsing = true;
-
 			//cacheTh = new Thread(delegate(object o)			{
             if (cc.GlobalModules != null && cc.GlobalModules.Count > 1)
             {
-                var bsw = new BinaryDataTypeStorageWriter();
-                bsw.WriteModules(cc.ImportDirectories.ToArray(), cc.GlobalModules);
-                var ms = bsw.BinStream.BaseStream as MemoryStream;
+                // Take a memory stream due to its speed
+                // -- A file stream would take to much time
+                var ms = new MemoryStream();
+
+                D_IDENodeStorage.WriteModules(cc.ImportDirectories.ToArray(), cc.GlobalModules, ms);
+
                 File.WriteAllBytes(file,ms.ToArray());
                 ms.Close();
-                bsw.Close();
             }
-			Program.Parsing = false;
 			//});			cacheTh.Start();
 		}
 		#endregion
