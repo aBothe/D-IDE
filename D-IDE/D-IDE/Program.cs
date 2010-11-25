@@ -58,6 +58,10 @@ namespace D_IDE
         {
             List<string> args = new List<string>();
             args.AddRange(CommandLineArgs);
+
+            // Init global properties
+            D_IDE_Properties.Init();
+
             this.MainForm = new D_IDEForm(args.ToArray());
         }
 

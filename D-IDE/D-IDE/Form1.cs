@@ -38,6 +38,8 @@ namespace D_IDE
         {
             thisForm = this;
 
+            
+
             Breakpoints = new BreakpointHelper(this);
 
             Form.CheckForIllegalCrossThreadCalls = false;

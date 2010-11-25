@@ -172,7 +172,7 @@ namespace D_IDE
                 {
                     bs.Write(a.Token);
                     if(a.LiteralContent == null)
-                        WriteString(null);
+                        WriteString(null,true);
                     else
                         WriteString(a.LiteralContent.ToString(),true);
                 }
@@ -220,7 +220,7 @@ namespace D_IDE
             if(e is IdentExpression)
             {
                 bs.Write((byte)1);
-                WriteString((e as IdentExpression).Value.ToString());
+                WriteString((e as IdentExpression).Value.ToString(),true);
             }
 
             else if(e is TokenExpression)
@@ -450,6 +450,8 @@ namespace D_IDE
 
                 var bl=cm as DBlockStatement;
                 ReadNodes(ref bl);
+
+                ret.Add(cm);
             }
 
             return ret;
@@ -463,8 +465,10 @@ namespace D_IDE
 
             int NodeCount=bs.ReadInt32();
 
-            for(int i=0;i<NodeCount;i++)
+            for (int i = 0; i < NodeCount; i++)
+            {
                 Parent.Add(ReadNode());
+            }
         }
 
         public DNode ReadNode()
@@ -508,7 +512,12 @@ namespace D_IDE
                     var tbl=new DStatementBlock() as DBlockStatement;
                     ReadNodes(ref tbl);
 
-                    (ret as DMethod).Parameters.AddRange(tbl.Children);
+                    foreach (var p in tbl)
+                    {
+                        p.Parent = ret;
+                        (ret as DMethod).Parameters.Add(p);
+                    }
+                    (ret as DMethod).SpecialType = (DMethod.MethodType)s.ReadInt32();
                 }
                     // DStatementBlock
                 else if(SubType==2)
@@ -523,7 +532,7 @@ namespace D_IDE
                 {
                     ret=new DClassLike();
 
-                    (ret as DClassLike).ClassType=s.ReadByte();
+                    (ret as DClassLike).ClassType=s.ReadInt32();
 
                     int BaseClassCount=s.ReadInt32();
                     for(int j=0;j<BaseClassCount;j++)
@@ -548,16 +557,19 @@ namespace D_IDE
             for(int j=0;j<AttributeCount;j++)
             {
                 var attr=new DAttribute(s.ReadInt32());
-                attr.LiteralContent=ReadString(true);
+                var o=ReadString(true);
+                if (!String.IsNullOrEmpty(o))
+                    attr.LiteralContent = o;
                 ret.Attributes.Add(attr);
             }
 
             ret.Name=ReadString(true);
+            // Template parameters
             var tp=new DStatementBlock() as DBlockStatement;
-                    ReadNodes(ref tp);
+            ReadNodes(ref tp);
 
             if(tp.Children.Count>0)
-                ret.TemplateParameters.AddRange(tp.Children);
+                ret.TemplateParameters=new List<DNode>(tp.Children);
             ret.Description=ReadString(true);
 
             x=s.ReadInt32();
@@ -577,65 +589,66 @@ namespace D_IDE
 
             TypeDeclaration ret=null;
 
-            int type=s.ReadInt32();
+            byte type=s.ReadByte();
 
             if(type==0)
                 return null;
-            if(type==1)
-                ret=new DTokenDeclaration(s.ReadInt32());
-            else if(type==2)
-                ret=new NormalDeclaration(ReadString(true));
-            else if(type==3)
+            if (type == 1)
+                ret = new DTokenDeclaration(s.ReadInt32());
+            else if (type == 2)
+                ret = new NormalDeclaration(ReadString(true));
+            else if (type == 3)
             {
-                ret=new ClampDecl();
-                (ret as ClampDecl).Clamps=(ClampDecl.ClampType)s.ReadByte();
-                (ret as ClampDecl).KeyType=ReadTypeDeclaration();
+                ret = new ClampDecl();
+                (ret as ClampDecl).Clamps = (ClampDecl.ClampType)s.ReadByte();
+                (ret as ClampDecl).KeyType = ReadTypeDeclaration();
             }
-            else if(type==4)
-            ret=new PointerDecl();
-            else if(type==5)
+            else if (type == 4)
+                ret = new PointerDecl();
+            else if (type == 5)
             {
-                ret=new MemberFunctionAttributeDecl(s.ReadInt32());
-                (ret as MemberFunctionAttributeDecl).InnerType=ReadTypeDeclaration();
+                ret = new MemberFunctionAttributeDecl(s.ReadInt32());
+                (ret as MemberFunctionAttributeDecl).InnerType = ReadTypeDeclaration();
             }
-            else if(type==6)
-                ret=new VarArgDecl();
-            else if(type==7)
+            else if (type == 6)
+                ret = new VarArgDecl();
+            else if (type == 7)
             {
-                ret=new InheritanceDecl();
+                ret = new InheritanceDecl();
 
-                (ret as InheritanceDecl).InheritedClass=ReadTypeDeclaration();
-                (ret as InheritanceDecl).InheritedInterface=ReadTypeDeclaration();
+                (ret as InheritanceDecl).InheritedClass = ReadTypeDeclaration();
+                (ret as InheritanceDecl).InheritedInterface = ReadTypeDeclaration();
             }
-            else if(type==8)
+            else if (type == 8)
             {
-                ret=new TemplateDecl();
+                ret = new TemplateDecl();
 
-                int cnt=s.ReadInt32();
-                for(int j=0;j<cnt;j++)
+                int cnt = s.ReadInt32();
+                for (int j = 0; j < cnt; j++)
                     (ret as TemplateDecl).Template.Add(ReadTypeDeclaration());
             }
-            else if(type==9)
+            else if (type == 9)
             {
-                ret=new IdentifierList();
+                ret = new IdentifierList();
 
-                int cnt=s.ReadInt32();
-                for(int j=0;j<cnt;j++)
+                int cnt = s.ReadInt32();
+                for (int j = 0; j < cnt; j++)
                     (ret as IdentifierList).Parts.Add(ReadTypeDeclaration());
             }
-            else if(type==10)
-                ret=new DExpressionDecl(ReadExpression());
-            else if(type==11)
+            else if (type == 10)
+                ret = new DExpressionDecl(ReadExpression());
+            else if (type == 11)
             {
-                ret=new DelegateDeclaration();
+                ret = new DelegateDeclaration();
 
-                (ret as DelegateDeclaration).IsFunction=s.ReadBoolean();
+                (ret as DelegateDeclaration).IsFunction = s.ReadBoolean();
 
-                var bl=new DStatementBlock() as DBlockStatement;
+                // Parameters
+                var bl = new DStatementBlock() as DBlockStatement;
                 ReadNodes(ref bl);
-
                 (ret as DelegateDeclaration).Parameters.AddRange(bl.Children);
             }
+            else throw new Exception("Unknown type type");
 
             ret.Base=ReadTypeDeclaration();
 

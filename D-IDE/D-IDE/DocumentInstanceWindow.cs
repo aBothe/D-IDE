@@ -338,7 +338,7 @@ namespace D_IDE
 
         void TextArea_ToolTipRequest(object sender, ToolTipRequestEventArgs e)
         {
-			if (!e.InDocument || Program.Parsing) return;
+			if (!e.InDocument) return;
             var ta = sender as TextArea;
             if (ta == null || !Module.IsParsable) return;
             

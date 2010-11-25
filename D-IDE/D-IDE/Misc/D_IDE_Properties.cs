@@ -33,7 +33,7 @@ namespace D_IDE
         /// <summary>
         /// Globally initializes all settings and essential properties
         /// </summary>
-        static D_IDE_Properties()
+        public static void Init()
         {
             // Determine config path
             cfgDir = (File.Exists(UserDocStorageFile)?Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments):Application.StartupPath) + "\\" + cfgDirName;
@@ -43,8 +43,7 @@ namespace D_IDE
                 DBuilder.CreateDirectoryRecursively(cfgDir);
 
             bool UpdateD2Cache = true;
-            try
-            {
+            //try {
                 // Load global settings
                 if (!Load(cfgDir + "\\" + prop_file))
                 {
@@ -69,12 +68,12 @@ namespace D_IDE
 
                 LoadGlobalCache(Default.dmd1, cfgDir + "\\" + D1ModuleCacheFile);
                 if(UpdateD2Cache)LoadGlobalCache(Default.dmd2, cfgDir + "\\" + D2ModuleCacheFile);
-            }
+            /*}
             catch (Exception ex)
             {
                 Program.StartScreen.Close();
                 MessageBox.Show(ex.Message + " (" + ex.Source + ")" + "\n\n" + ex.StackTrace, "Error while loading global settings");
-            }
+            }*/
         }
 
 
@@ -336,7 +335,7 @@ namespace D_IDE
 			if (!File.Exists(file)) return;
 			if (cacheTh != null && cacheTh.IsAlive) return;
 
-			Program.Parsing = true;
+			//Program.Parsing = true;
 
 			//cacheTh = new Thread(delegate(object o)			{
 			var bsr = new BinaryDataTypeStorageReader(file);
@@ -345,7 +344,7 @@ namespace D_IDE
                 //try	{
                 var CacheProject = new DProject();
                 cc.GlobalModules = bsr.ReadModules(CacheProject,ref cc.ImportDirectories);
-                //}catch (Exception ex) { Program.StartScreen.Close(); MessageBox.Show(ex.Message); }
+                //}              catch (Exception ex) { Program.StartScreen.Close(); throw ex; MessageBox.Show(ex.Message); }
             }
 			bsr.Close();
 
