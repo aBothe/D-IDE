@@ -335,18 +335,7 @@ namespace D_IDE
 			if (!File.Exists(file)) return;
 			if (cacheTh != null && cacheTh.IsAlive) return;
 
-			//Program.Parsing = true;
-
             cc.GlobalModules=D_IDENodeStorage.ReadModules(file, ref cc.ImportDirectories);
-
-			// add all loaded data to the precached completion list
-			cc.GlobalCompletionList.Clear();
-			var ilist = new List<ICompletionData>();
-			//DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
-			cc.GlobalCompletionList = ilist;
-
-			Program.Parsing = false;
-			//});			cacheTh.Start();
 		}
 
 		static Thread cacheTh;
@@ -675,18 +664,6 @@ namespace D_IDE
 			{
 				if (Version == DVersion.D1) D_IDE_Properties.D1GlobalModules = value;
 				else D_IDE_Properties.D2GlobalModules = value;
-			}
-		}
-		public List<ICompletionData> GlobalCompletionList
-		{
-			get {
-				if (Version == DVersion.D1) return D_IDE_Properties.D1GlobalCompletionList;
-				else return D_IDE_Properties.D2GlobalCompletionList;
-			}
-			set
-			{
-				if (Version == DVersion.D1) D_IDE_Properties.D1GlobalCompletionList = value;
-				else D_IDE_Properties.D2GlobalCompletionList = value;
 			}
 		}
 		public List<string> ImportDirectories = new List<string>();

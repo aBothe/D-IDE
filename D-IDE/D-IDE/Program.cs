@@ -11,7 +11,6 @@ namespace D_IDE
         public const string news_php = "http://d-ide.sourceforge.net/classes/news.php";
         public const string ver_txt = "http://d-ide.svn.sourceforge.net/viewvc/d-ide/ver.txt";
         public static App app;
-        public static bool Parsing = false;
 
         public static CachingScreen StartScreen;
         public static DateTime tdate;
@@ -58,10 +57,6 @@ namespace D_IDE
         {
             List<string> args = new List<string>();
             args.AddRange(CommandLineArgs);
-
-            // Init global properties
-            D_IDE_Properties.Init();
-
             this.MainForm = new D_IDEForm(args.ToArray());
         }
 

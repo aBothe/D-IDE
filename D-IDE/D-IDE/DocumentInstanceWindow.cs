@@ -558,6 +558,7 @@ namespace D_IDE
         public void Save()
         {
             if (Module.ModuleFileName == "" || Module.ModuleFileName == null || !Modified) return;
+
             File.WriteAllText(Module.ModuleFileName, txt.Document.TextContent);
 
             Modified = false;

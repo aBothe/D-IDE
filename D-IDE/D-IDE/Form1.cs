@@ -38,7 +38,8 @@ namespace D_IDE
         {
             thisForm = this;
 
-            
+            // Init global properties
+            D_IDE_Properties.Init();
 
             Breakpoints = new BreakpointHelper(this);
 
@@ -111,10 +112,7 @@ namespace D_IDE
 
             DParser.OnError += DParser_OnError;
             DParser.OnSemanticError += DParser_OnSemanticError;
-            /*
-            webclient.DownloadFileCompleted += new AsyncCompletedEventHandler(wc_DownloadFileCompleted);
-            webclient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(wc_DownloadStringCompleted);
-            */
+
             DBuilder.OnOutput += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnOutput);
             DBuilder.OnError += new System.Diagnostics.DataReceivedEventHandler(DBuilder_OnError);
             DBuilder.OnExit += new EventHandler(DBuilder_OnExit);
@@ -412,11 +410,6 @@ namespace D_IDE
                 if (mtp.Module.ModuleFileName.StartsWith(dir))
                 {
                     D_IDE_Properties.AddFileData(cc, mtp.Module);
-
-                    var ilist = new List<ICompletionData>();
-                    //DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
-                    cc.GlobalCompletionList = ilist;
-
                     break;
                 }
             }

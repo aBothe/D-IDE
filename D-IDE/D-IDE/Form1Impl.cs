@@ -230,7 +230,7 @@ namespace D_IDE
                                 if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.Log(tf);
                             }
                             catch { }
-                            if (MessageBox.Show(ex.Message + "\n\nStop parsing process?+\n" + ex.Source, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            if (MessageBox.Show(ex.Message + "\n\nStop parsing process?\n\n" + ex.Source, "Error at " + tf, MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 if (D_IDEForm.thisForm != null) D_IDEForm.thisForm.stopParsingToolStripMenuItem.Enabled = false;
                                 return;
@@ -251,10 +251,6 @@ namespace D_IDE
             lock (cc.GlobalModules)
             {
                 cc.GlobalModules = ret;
-
-                var ilist = new List<ICompletionData>();
-                //DCodeCompletionProvider.AddGlobalSpaceContent(cc, ref ilist);
-                cc.GlobalCompletionList = ilist;
             }
         }
 

@@ -198,6 +198,8 @@ namespace D_Parser.NodeStorage
             }
             else throw new InvalidCastException("Unknown node type");
 
+            WriteTypeDecl(dt.Type);
+
             // Write (general) node props
             bs.Write(dt.Attributes.Count);
             foreach (var a in dt.Attributes)
@@ -534,6 +536,8 @@ namespace D_Parser.NodeStorage
 
                 ReadNodes(ref bl);
             }
+
+            ret.Type = ReadTypeDeclaration();
 
             int AttributeCount = s.ReadInt32();
             for (int j = 0; j < AttributeCount; j++)
