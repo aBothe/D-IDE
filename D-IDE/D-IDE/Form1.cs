@@ -607,11 +607,6 @@ namespace D_IDE
             if (diw != null) diw.UncommentBlock(sender, e);
         }
         #endregion
-
-        private void showCompletionWindowToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (SelectedTabPage != null) SelectedTabPage.TextAreaKeyEventHandler('\0');
-        }
         #endregion
 
         #region View menu

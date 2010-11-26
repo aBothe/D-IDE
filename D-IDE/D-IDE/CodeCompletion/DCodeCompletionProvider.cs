@@ -245,7 +245,7 @@ namespace D_IDE
                     if (initIdentifier.Length > 1 || followsDot) return null;
                     presel = initIdentifier;
                 }
-                else { presel = null; return null; }
+                else { presel = null; if(ch!='\0')return null; }
 
                 return DocWindow.CurrentCompletionData;
             }
