@@ -16,7 +16,7 @@ namespace D_Parser
         public string Description="";
 
         public List<DAttribute> Attributes = new List<DAttribute>();
-        public bool ContainsAttribute(int Token)
+        public bool ContainsAttribute(params int[] Token)
         {
             return DAttribute.ContainsAttribute(Attributes, Token);
         }
@@ -106,6 +106,22 @@ namespace D_Parser
         public override string ToString()
         {
             return ToDeclarationString(true);
+        }
+
+        public bool IsPublic
+        {
+            get
+            {
+                return !ContainsAttribute(DTokens.Private, DTokens.Protected);
+            }
+        }
+
+        public bool IsStatic
+        {
+            get
+            {
+                return ContainsAttribute(DTokens.Static);
+            }
         }
     }
 }

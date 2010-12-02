@@ -30,3 +30,7 @@ int a; /**
 
 /// Comment B
 int b;
+
+
+// >this< check -> scan for all members of the current class and its base class -> found obj -> resolve type node -> scan for all public members -> found propA
+this.obj.propA;

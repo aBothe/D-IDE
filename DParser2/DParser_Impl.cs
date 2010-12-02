@@ -1560,24 +1560,19 @@ namespace D_Parser
         DExpression NewExpression()
         {
             Expect(New);
-            DExpression ex = new TokenExpression(New);
+            var ex = new InitializerExpression(null);
 
             // NewArguments
             if (la.Kind==(OpenParenthesis))
             {
                 Step();
                 if (la.Kind!=(CloseParenthesis))
-                {
-                    ArrayExpression ae = new ArrayExpression(ClampExpression.ClampType.Round);
-                    ae.Base = ex;
-                    ae.Expressions = ArgumentList();
-                    ex = ae;
-                }
+                    ex.NewArguments = ArgumentList().ToArray();
                 Expect(CloseParenthesis);
             }
 
             /*
-             * If here occurs a class keyword, interpretate it as an anonymous class definition
+             * If there occurs a class keyword here, interpretate it as an anonymous class definition
              * http://digitalmars.com/d/2.0/expression.html#NewExpression
              * 
              * NewArguments ClassArguments BaseClasslist_opt { DeclDefs } 
@@ -1596,7 +1591,7 @@ namespace D_Parser
                 Step();
                 DExpression ex2 = new TokenExpression(Class);
                 ex2.Base = ex;
-                ex = ex2;
+                ex.Initializer = ex2;
 
                 // ClassArguments
                 if (la.Kind==(OpenParenthesis))
@@ -1606,9 +1601,9 @@ namespace D_Parser
                     else
                     {
                         var ae = new ArrayExpression(ClampExpression.ClampType.Round);
-                        ae.Base = ex;
+                        ae.Base = ex2;
                         ae.Expressions = ArgumentList();
-                        ex = ae;
+                        ex.Initializer = ae;
                     }
                 }
 
@@ -1630,29 +1625,34 @@ namespace D_Parser
             // NewArguments Type
             else
             {
-                ex = new TypeDeclarationExpression(BasicType());
+                DExpression InitExpr = new TypeDeclarationExpression(BasicType());
 
                 while (la.Kind==(OpenSquareBracket))
                 {
                     Step();
                     var ce = new ClampExpression();
-                    ce.Base = ex;
+                    ce.Base = InitExpr;
                     if(la.Kind!=CloseSquareBracket)
                         ce.InnerExpression = AssignExpression();
-                    ex = ce;
+                    InitExpr = ce;
                     Expect(CloseSquareBracket);
                 }
                 
                 if (la.Kind==(OpenParenthesis))
                 {
                     Step();
-                    var ae = new ArrayExpression(ClampExpression.ClampType.Round);
-                    ae.Base = ex;
-                    if(la.Kind!=(CloseParenthesis))
-                        ae.Expressions = ArgumentList();
-                    ex = ae;
+                    if (la.Kind != CloseParenthesis)
+                    {
+                        var ae = new ArrayExpression(ClampExpression.ClampType.Round);
+                        ae.Base = InitExpr;
+                        if (la.Kind != (CloseParenthesis))
+                            ae.Expressions = ArgumentList();
+                        InitExpr = ae;
+                    }
                     Expect(CloseParenthesis);
                 }
+
+                ex.Initializer = InitExpr;
             }
             return ex;
         }

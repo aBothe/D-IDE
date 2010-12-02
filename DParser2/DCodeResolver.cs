@@ -251,6 +251,42 @@ namespace D_Parser
         #endregion
 
         #region Declaration resolving
+        public enum NodeFilter
+        {
+            /// <summary>
+            /// Returns all static and public children of a node
+            /// </summary>
+            PublicStaticOnly, 
+            /// <summary>
+            /// Returns all public members e.g. of an object
+            /// </summary>
+            PublicOnly,
+
+            /// <summary>
+            /// e.g. in class hierarchies: Returns all public and protected members
+            /// </summary>
+            NonPrivate,
+            /// <summary>
+            /// Returns all members
+            /// </summary>
+            All
+        }
+
+        public static bool MatchesFilter(NodeFilter Filter, DNode n)
+        {
+            switch (Filter)
+            {
+                case NodeFilter.All:
+                    return true;
+                case NodeFilter.PublicOnly:
+                    return n.IsPublic;
+                case NodeFilter.NonPrivate:
+                    return !n.ContainsAttribute(DTokens.Private);
+                case NodeFilter.PublicStaticOnly:
+                    return n.IsPublic && n.IsStatic;
+            }
+            return false;
+        }
 
         public static DModule SearchModuleInCache(List<DModule> HayStack,string ModuleName)
         {
@@ -268,7 +304,7 @@ namespace D_Parser
         /// <param name="Module"></param>
         /// <param name="IdentifierList"></param>
         /// <returns>When a type was found, the declaration entry will be returned. Otherwise, it'll return null.</returns>
-        public static DNode[] ResolveTypeDeclarations_ModuleOnly(List<DModule> ImportCache,DBlockStatement BlockNode, TypeDeclaration IdentifierList)
+        public static DNode[] ResolveTypeDeclarations_ModuleOnly(List<DModule> ImportCache,DBlockStatement BlockNode, TypeDeclaration IdentifierList, NodeFilter Filter)
         {
             var ret = new List<DNode>();
 
@@ -296,14 +332,15 @@ namespace D_Parser
                 }
 
                 // Now move stepwise deeper calling ResolveTypeDeclaration recursively
-                ret. Add(BlockNode);
+                ret. Add(BlockNode); // Temporarily add the block node to the return array - it gets proceeded in the next while loop
 
+                var tFilter = Filter;
                 while (skippedIds < il.Parts.Count && ret.Count>0)
                 {
                     var DeeperLevel = new List<DNode>();
-                    // As long as our node can contain other nodes, scan it
+                    // As long as our node(s) can contain other nodes, scan it
                     foreach(var n in ret)
-                        DeeperLevel.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,n as DBlockStatement, il[skippedIds]));
+                        DeeperLevel.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,n as DBlockStatement, il[skippedIds], tFilter));
                     
                     // If a variable is given and if it's not the last identifier, return it's definition type
                     // If a method is given, search for its return type
@@ -311,10 +348,12 @@ namespace D_Parser
                     {
                         if (DeeperLevel[0] is DVariable || DeeperLevel[0] is DMethod)
                         {
+                            // If we retrieve deeper levels, we are only allowed to scan for public members
+                            tFilter = NodeFilter.PublicOnly;
                             var v = DeeperLevel[0];
                             DeeperLevel.Clear();
 
-                            DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, v.Parent as DBlockStatement, v.Type));
+                            DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, v.Parent as DBlockStatement, v.Type, NodeFilter.PublicOnly));
                         }
                     }
                     
@@ -341,7 +380,7 @@ namespace D_Parser
                     // Scan the node's children for a match - return if we found one
                     foreach (var ch in currentParent)
                     {
-                        if (nameIdent.Name == ch.Name && !ret.Contains(ch))
+                        if (nameIdent.Name == ch.Name && !ret.Contains(ch) && MatchesFilter(Filter,ch))
                             ret.Add(ch);
                     }
 
@@ -350,7 +389,7 @@ namespace D_Parser
                     {
                         var baseClass = ResolveBaseClass(ImportCache,currentParent as DClassLike);
                         if(baseClass!=null)
-                            ret.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache, baseClass, nameIdent));
+                            ret.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache, baseClass, nameIdent, NodeFilter.NonPrivate));
                     }
 
                     // Check parameters
@@ -394,7 +433,7 @@ namespace D_Parser
 
             // Of course it's needed to scan our own module at first
             if (ThisModule != null)
-                ret.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache,CurrentlyScopedBlock, IdentifierList));
+                ret.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache,CurrentlyScopedBlock, IdentifierList, NodeFilter.All));
 
             // Then search within the imports for our IdentifierList
             foreach (var m in ImportCache)
@@ -404,7 +443,7 @@ namespace D_Parser
                     ret.Add(m);
                 
                 else if (m.ModuleFileName != ThisModule.ModuleFileName) // We already parsed this module
-                    ret.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, m, IdentifierList));
+                    ret.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, m, IdentifierList, NodeFilter.PublicOnly));
             }
 
             return ret.ToArray();

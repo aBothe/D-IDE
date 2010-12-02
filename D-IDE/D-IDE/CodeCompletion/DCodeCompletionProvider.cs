@@ -164,6 +164,7 @@ namespace D_IDE
                 presel = null;
                 DToken tk = null;
                 TypeDeclaration ids = null;
+                bool IsInstance = false;
 
                 var cursor = DocWindow.Caret;
                 cursor.X--;
@@ -189,6 +190,31 @@ namespace D_IDE
                         {
                             // If it's a variable (this case happens really often ;) ), resolve its base type and print its properties
                             var t = m.Type;
+                            IsInstance = true;
+
+                            if (m.ContainsAttribute(DTokens.Auto) && m is DVariable)
+                            {
+                                var init = (m as DVariable).Initializer;
+
+                                /*
+                                 * TODO: Scan all kinds of initializers to find out correctly what the inititalizer type is.
+                                 * For now it's enough to retrieve the identifier part of the initializer
+                                 */
+                                if (init is InitializerExpression)
+                                {
+                                    DExpression tex = (init as InitializerExpression).Initializer;
+                                    while (tex != null)
+                                    {
+                                        if (tex is TypeDeclarationExpression)
+                                        {
+                                            t = (tex as TypeDeclarationExpression).Declaration;
+                                            break;
+                                        }
+
+                                        tex = tex.Base;
+                                    }
+                                }
+                            }
 
                             matches = DocWindow.Module.Project != null ?
                                     D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module.Project.Compiler.GlobalModules, DocWindow.Module.Project.Modules, m.NodeRoot as DBlockStatement,t) :
@@ -199,7 +225,9 @@ namespace D_IDE
                         if (m is DBlockStatement)
                         {
                             foreach (var n in (m as DBlockStatement))
-                                Add(ref rl, n);
+                                if(IsInstance?(DCodeResolver.MatchesFilter(DCodeResolver.NodeFilter.PublicOnly,n) && (n is DVariable || n is DMethod)):
+                                    (DCodeResolver.MatchesFilter(DCodeResolver.NodeFilter.PublicStaticOnly,n)))
+                                    Add(ref rl, n);
                         }
 
                         if (m is DClassLike)
@@ -215,7 +243,9 @@ namespace D_IDE
                                 if (baseClass == null) break;
 
                                 foreach (var n in baseClass)
-                                    Add(ref rl, n);
+                                    if (IsInstance ? (DCodeResolver.MatchesFilter(DCodeResolver.NodeFilter.PublicOnly, n) && (n is DVariable || n is DMethod)) :
+                                    (DCodeResolver.MatchesFilter(DCodeResolver.NodeFilter.PublicStaticOnly, n)))
+                                        Add(ref rl, n);
                             }
                         }
                     }

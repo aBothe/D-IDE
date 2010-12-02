@@ -33,24 +33,27 @@ namespace D_Parser
                 return DTokens.GetTokenString(Token);
         }
 
-        public static bool ContainsAttribute(DAttribute[] HayStack, int NeedleToken)
+        public static bool ContainsAttribute(DAttribute[] HayStack,params int[] NeedleToken)
         {
+            var l = new List<int>(NeedleToken);
             foreach (var attr in HayStack)
-                if (attr.Token == NeedleToken)
+                if (l.Contains(attr.Token))
                     return true;
             return false;
         }
-        public static bool ContainsAttribute(List<DAttribute> HayStack, int NeedleToken)
+        public static bool ContainsAttribute(List<DAttribute> HayStack,params int[] NeedleToken)
         {
+            var l = new List<int>(NeedleToken);
             foreach (var attr in HayStack)
-                if (attr.Token == NeedleToken)
+                if (l.Contains(attr.Token))
                     return true;
             return false;
         }
-        public static bool ContainsAttribute(Stack<DAttribute> HayStack, int NeedleToken)
+        public static bool ContainsAttribute(Stack<DAttribute> HayStack,params int[] NeedleToken)
         {
+            var l = new List<int>(NeedleToken);
             foreach (var attr in HayStack)
-                if (attr.Token == NeedleToken)
+                if (l.Contains(attr.Token))
                     return true;
             return false;
         }

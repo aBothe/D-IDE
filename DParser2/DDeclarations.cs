@@ -551,6 +551,22 @@ namespace D_Parser
             return (Base != null ? (Base.ToString()+" ") : "") + DTokens.GetTokenString(LiteralToken) + " " + AnonymousMethod.ToString();
         }
     }
+
+    public class InitializerExpression : DExpression
+    {
+        public DExpression Initializer;
+        public DExpression[] NewArguments = null;
+
+        public InitializerExpression(DExpression InitExpression)
+        {
+            Initializer = InitExpression;
+        }
+
+        public override string ToString()
+        {
+            return "new "+Initializer.ToString();
+        }
+    }
     #endregion
 
 

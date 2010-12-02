@@ -110,7 +110,7 @@ namespace D_IDE.CodeCompletion
                     if (m.ModuleName.StartsWith(istr))
                         rl.Add(m);
                     else if (istr.StartsWith(m.ModuleName))
-                        return ResolveTypeDeclarations_ModuleOnly(new List<DModule>(),m,Identifiers);
+                        return ResolveTypeDeclarations_ModuleOnly(new List<DModule>(),m,Identifiers,NodeFilter.PublicOnly);
                 }
                 if (rl.Count > 0)
                     return rl.ToArray();

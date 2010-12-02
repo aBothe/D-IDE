@@ -16,7 +16,7 @@ namespace D_IDE.Misc
 
         public static CodeLocation ToCodeLocation(TextLocation loc)
         {
-            return new CodeLocation(loc.Column+1, loc.Line+1);
+            return new CodeLocation(loc.Column, loc.Line);
         }
     }
 

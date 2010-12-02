@@ -317,6 +317,12 @@ namespace D_Parser.NodeStorage
 
                 WriteNode(f.AnonymousMethod);
             }
+            else if (e is InitializerExpression)
+            {
+                bs.Write((byte)9);
+
+                WriteExpression((e as InitializerExpression).Initializer);
+            }
 
             WriteExpression(e.Base);
         }
@@ -683,6 +689,10 @@ namespace D_Parser.NodeStorage
                 e = new FunctionLiteral(s.ReadInt32());
 
                 (e as FunctionLiteral).AnonymousMethod = ReadNode() as DMethod;
+            }
+            else if (type == 9)
+            {
+                e = new InitializerExpression(ReadExpression());
             }
 
             e.Base = ReadExpression();
