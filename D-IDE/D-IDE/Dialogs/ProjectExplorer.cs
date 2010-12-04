@@ -233,11 +233,6 @@ namespace D_IDE
                     ProjectMenu.Tag = e.Location;
                 }
             }
-            else if (e.Button == MouseButtons.Left && e.Clicks < 2 && e.X > e.Node.Bounds.Left - 16)
-            {
-                if (e.Node is DedicatedProjectNode)
-                    e.Node.Toggle();
-            }
         }
 
         private void RemoveFile(object sender, EventArgs e)
