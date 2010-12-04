@@ -19,7 +19,6 @@ using ICSharpCode.TextEditor.Gui.InsightWindow;
 using WeifenLuo.WinFormsUI.Docking;
 using System.Globalization;
 using System.Text;
-using ICSharpCode.NRefactory.Ast;
 using DebugEngineWrapper;
 using D_IDE.Misc;
 
@@ -344,7 +343,8 @@ namespace D_IDE
             
             // Retrieve the identifierlist that's located beneath the cursor
             DToken ExtraOrdinaryToken = null;
-            var Matches = D_IDECodeResolver.ResolveTypeDeclarations(Module,ta,e.LogicalPosition,out ExtraOrdinaryToken);
+			D_Parser.TypeDeclaration ids = null;
+            var Matches = D_IDECodeResolver.ResolveTypeDeclarations(Module,ta,e.LogicalPosition,out ExtraOrdinaryToken,out ids);
 
             // Check for extra ordinary tokens like __FILE__ or __LINE__
             if (ExtraOrdinaryToken != null)
@@ -366,6 +366,49 @@ namespace D_IDE
                 }
             }
 
+			#region If debugging, check if a local fits to one of the scoped symbols and show its value if possible
+			if (D_IDEForm.thisForm.IsDebugging)
+            {
+               var syms = D_IDEForm.thisForm.dbg.Symbols.ScopeLocalSymbols;
+                if (syms != null && ids!=null)
+                {
+                    DebugScopedSymbol cursym = null;
+
+					// If it's a single identifier, show its value
+					// Note: when looking for a single id, we are independent of any matches the CodeResolver might found 
+					if (ids is NormalDeclaration)
+					{
+						foreach (var sym in syms)
+						{
+							if (sym.Name == (ids as NormalDeclaration).Name)
+							{
+								cursym = sym;
+								break;
+							}
+						}
+					}
+					// Otherwise we require a match to get able to work with it
+					else if (ids is IdentifierList && Matches!=null && Matches.Length>0)
+					{
+						foreach (var sym in syms)
+						{
+							if (sym.Name == Matches[0].Name)
+							{
+								cursym = sym;
+								break;
+							}
+						}
+					}
+
+                    if (cursym != null)
+                    {
+                        e.ShowToolTip(cursym.TypeName + " " + cursym.Name + " = " + D_IDEForm.thisForm.BuildSymbolValueString((uint)e.LogicalPosition.Line - 1, cursym));
+                        return;
+                    }
+                }
+            }
+			#endregion
+
             string ToolTip = "";
             if (Matches!=null && Matches.Length > 0)
                 foreach (var n in Matches)
@@ -375,37 +418,6 @@ namespace D_IDE
                 e.ShowToolTip(ToolTip);
                 return;
             }
-            
-            #region If debugging, check if a local fits to one of the scoped symbols and show its value if possible
-            /*if (D_IDEForm.thisForm.IsDebugging)
-            {
-               var syms = D_IDEForm.thisForm.dbg.Symbols.ScopeLocalSymbols;
-                if (syms != null && expr is IdentifierList)
-                {
-                    var ids = expr as IdentifierList;
-                    DebugScopedSymbol cursym = null;
-                    string desc = "";
-                    foreach (string exp in ids.)
-                    {
-                        foreach (DebugScopedSymbol sym in syms)
-                        {
-                            if (cursym != null && sym.ParentId != cursym.Id) continue;
-
-                            if (sym.Name == exp)
-                            {
-                                desc += "." + sym.Name;
-                                cursym = sym;
-                            }
-                        }
-                    }
-                    if (desc != "" && cursym != null)
-                    {
-                        e.ShowToolTip(cursym.TypeName + " " + desc.Trim('.') + " = " + D_IDEForm.thisForm.BuildSymbolValueString((uint)ta.Caret.Line - 1, cursym, exprs));
-                        return;
-                    }
-                }
-            }*/
-            #endregion
         }
 
         internal static InsightWindow IW;

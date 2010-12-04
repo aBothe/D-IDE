@@ -494,7 +494,7 @@ namespace D_IDE
             return ret;
         }
 
-        public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym, string[] SymbolExpressions)
+        public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym)
         {
             #region Search fitting node
             DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
@@ -583,22 +583,7 @@ namespace D_IDE
                 lvi.Text = n;
                 lvi.Tag = sym;
 
-                List<string> exprs = new List<string>();
-                if (sym.Depth > 0)
-                {
-                    DebugScopedSymbol dss = sym;
-                    while (dss != null)
-                    {
-                        if (!dss.Name.Contains(".")) // To get sure that just instance names and _not_ type names become inserted
-                            exprs.Insert(0, dss.Name);
-                        else
-                        {
-
-                        }
-                        dss = dss.Parent;
-                    }
-                }
-                lvi.SubItems.Add(BuildSymbolValueString(ln, sym, exprs.ToArray()));
+                lvi.SubItems.Add(BuildSymbolValueString(ln, sym));
                 dbgLocalswin.list.Items.Add(lvi);
             }
 
