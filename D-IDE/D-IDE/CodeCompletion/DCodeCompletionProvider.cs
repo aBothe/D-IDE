@@ -202,7 +202,7 @@ namespace D_IDE
                                  */
                                 if (init is InitializerExpression)
                                 {
-                                    DExpression tex = (init as InitializerExpression).Initializer;
+                                    var tex = (init as InitializerExpression).Initializer;
                                     while (tex != null)
                                     {
                                         if (tex is TypeDeclarationExpression)

@@ -351,9 +351,30 @@ namespace D_Parser
                             // If we retrieve deeper levels, we are only allowed to scan for public members
                             tFilter = NodeFilter.PublicOnly;
                             var v = DeeperLevel[0];
+                            var newType = v.Type;
                             DeeperLevel.Clear();
 
-                            DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, v.Parent as DBlockStatement, v.Type, NodeFilter.PublicOnly));
+                            // If our node contains an auto attribute, expect that there is an initializer that implies its type
+                            if (v is DVariable && v.ContainsAttribute(DTokens.Auto))
+							{
+								var init = (v as DVariable).Initializer;
+								if (init is InitializerExpression)
+								{
+									var tex = (init as InitializerExpression).Initializer;
+									while (tex != null)
+									{
+										if (tex is TypeDeclarationExpression)
+										{
+											newType = (tex as TypeDeclarationExpression).Declaration;
+											break;
+										}
+
+										tex = tex.Base;
+									}
+								}
+                            }
+
+                            DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, v.Parent as DBlockStatement, newType, NodeFilter.PublicOnly));
                         }
                     }
                     
