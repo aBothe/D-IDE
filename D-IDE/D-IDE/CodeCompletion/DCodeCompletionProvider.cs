@@ -135,6 +135,13 @@ namespace D_IDE
                 curBlock = curBlock.Parent as DBlockStatement;
             }
 
+			// Optional but useful: Add Keywords
+			int keyIcon=D_IDEForm.icons.Images.IndexOfKey("code");
+			foreach (var kv in DTokens.Keywords)
+			{
+				rl.Add(new DCompletionData(kv.Value,DTokens.GetDescription(kv.Key),keyIcon));
+			}
+
             return rl.ToArray();
         }
 

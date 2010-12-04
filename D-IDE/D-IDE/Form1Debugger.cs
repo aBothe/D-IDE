@@ -574,7 +574,6 @@ namespace D_IDE
 
             foreach (DebugScopedSymbol sym in locals)
             {
-
                 ListViewItem lvi = new ListViewItem();
                 string n = "";
                 for (int i = 0; i < (int)sym.Depth; i++)
