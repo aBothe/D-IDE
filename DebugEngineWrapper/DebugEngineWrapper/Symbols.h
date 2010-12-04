@@ -254,7 +254,7 @@ namespace DebugEngineWrapper
 				Line=line;
 		}
 
-
+		/// Reads an array e.g. char[]
 		array<Object^>^ ReadArray(ULONG64 Offset,Type^ type,ULONG ElementSize)
 		{
 			DArray str;
@@ -279,12 +279,14 @@ namespace DebugEngineWrapper
 			return ret;
 		}
 
+		/// Reads an array of arrays e.g. char[][]
 		array<Object^>^ ReadArrayArray(ULONG64 Offset,Type^ type,ULONG ElementSize)
 		{
 			DArray arr;
 			if(ds->ReadVirtual(Offset,&arr,sizeof(arr),nullptr)!=S_OK) return nullptr;
 			if(arr.Length<1) return nullptr;
 
+			//HACK: Only retrieve maximum 10k items to limit memory use
 			UINT c=arr.Length>10000?10000:arr.Length;
 
 			array<Object^>^ ret= gcnew array<Object^>(c);

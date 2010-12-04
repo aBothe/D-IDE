@@ -71,10 +71,6 @@
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
-    <Reference Include="DebugEngineWrapper, Version=1.0.3831.24408, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\externalDeps\DebugEngineWrapper.dll</HintPath>
-    </Reference>
     <Reference Include="ICSharpCode.Core">
       <HintPath>..\..\externalDeps\ICSharpCode.Core.dll</HintPath>
     </Reference>
@@ -491,6 +487,10 @@
     <None Include="Resources\copy.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\DebugEngineWrapper\DebugEngineWrapper\DebugEngineWrapper.vcxproj">
+      <Project>{A0025FA2-93AC-4F77-AEDE-78969DB73B5E}</Project>
+      <Name>DebugEngineWrapper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\DParser2\DParser2.csproj">
       <Project>{0290A229-9AA1-41C3-B525-CAFB86D8BC42}</Project>
       <Name>DParser2</Name>

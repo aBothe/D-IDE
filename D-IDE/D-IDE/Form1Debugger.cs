@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Runtime.InteropServices;
 using ICSharpCode.TextEditor.Document;
+using D_IDE.CodeCompletion;
 
 namespace D_IDE
 {
@@ -333,7 +334,7 @@ namespace D_IDE
         }        
 
         #region Exression evaluation
-        public static Type DetermineArrayType(string type, out uint size, out bool IsString)
+        public static Type DetermineArrayElementType(string type, out uint size, out bool IsString)
         {
             IsString = false;
             Type t = typeof(int);
@@ -343,79 +344,99 @@ namespace D_IDE
                 default:
                     break;
                 case "string":
-                case "char[]":
+                case "char":
                     IsString = true;
                     t = typeof(byte);
                     size = 1;
                     break;
                 case "wstring":
-                case "wchar[]":
+                case "wchar":
                     IsString = true;
                     t = typeof(ushort);
                     size = 2;
                     break;
                 case "dstring":
-                case "dchar[]":
+                case "dchar":
                     IsString = true;
                     t = typeof(uint);
                     size = 4;
                     break;
 
-                case "ubyte[]":
+                case "ubyte":
                     t = typeof(byte); size = 1;
                     break;
-                case "ushort[]":
+                case "ushort":
                     t = typeof(ushort); size = 2;
                     break;
-                case "uint[]":
+                case "uint":
                     t = typeof(uint); size = 4;
                     break;
-                case "int[]":
+                case "int":
                     t = typeof(int); size = 4;
                     break;
-                case "short[]":
+                case "short":
                     t = typeof(short); size = 2;
                     break;
-                case "byte[]":
+                case "byte":
                     t = typeof(sbyte); size = 1;
                     break;
-                case "float[]":
+                case "float":
                     t = typeof(float); size = 4;
                     break;
-                case "double[]":
+                case "double":
                     t = typeof(double); size = 8;
                     break;
-                case "ulong[]":
+                case "ulong":
                     t = typeof(ulong); size = 8;
                     break;
-                case "long[]":
+                case "long":
                     t = typeof(long); size = 8;
                     break;
             }
             return t;
         }
 
-        public object[] ExtractArray(ulong Offset, string RawTypeExpression, out bool IsString)
+        public object[] ExtractArray(ulong Offset, TypeDeclaration RawTypeExpression, out bool IsString)
         {
             IsString = false;
-            return null;
-            /*
-            string type = DCodeCompletionProvider.RemoveAttributeFromDecl(RawTypeExpression);
 
-            int DimCount = 0;
+            var type=RawTypeExpression;
+
+			int DimCount = 0;
+			while(type!=null)
+			{
+				if(type is ClampDecl)
+					DimCount++;
+
+				if (type is NormalDeclaration)
+				{
+					var id = (type as NormalDeclaration).Name;
+
+					/*
+					 * TODO: [w,d]string are aliases! So later it'll be also required to resolve the basic types of them...
+					 */
+
+					if (id == "string" || id == "wstring" || id == "dstring")
+						DimCount++;
+					break;
+				}
+
+				type=type.Base;
+			}
+			if (type == null || DimCount<1)
+				return null;
+            
             uint elsz = 4;
-            foreach (char c in RawTypeExpression) if (c == '[') DimCount++;
+            Type t = DetermineArrayElementType(type.ToString(), out elsz, out IsString);
 
-            Type t = DetermineArrayType(type, out elsz, out IsString);
             object[] ret = null;
-            if (!IsString) t = DetermineArrayType(DCodeCompletionProvider.RemoveArrayPartFromDecl(type), out elsz, out IsString);
-            if ((IsString && DimCount < 1) || (!IsString && DimCount < 2))
+            if(DimCount==1)
                 ret = dbg.Symbols.ReadArray(Offset, t, elsz);
             else
             {
                 ret = dbg.Symbols.ReadArrayArray(Offset, t, elsz);
             }
-            return ret;*/
+            return ret;
         }
 
         public string BuildArrayContentString(object[] marr, bool IsString)
@@ -459,7 +480,7 @@ namespace D_IDE
             return str;
         }
 
-        public string BuildArrayContentString(ulong Offset, string type)
+        public string BuildArrayContentString(ulong Offset, TypeDeclaration type)
         {
             bool IsString;
             object[] marr = ExtractArray(Offset, type, out IsString);
@@ -475,37 +496,63 @@ namespace D_IDE
 
         public string BuildSymbolValueString(uint ScopedSrcLine, DebugScopedSymbol sym, string[] SymbolExpressions)
         {
-            return "";
-            /*
             #region Search fitting node
             DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
-            CodeModule mod = null;
 
-            // Search expression in all superior blocks
-            DNode cblock = DCodeCompletionProvider.GetBlockAt(diw.Module.dom, new CodeLocation(0, (int)ScopedSrcLine));
-            DNode symNode = DCodeCompletionProvider.SearchExprInClassHierarchyBackward(diw.OwnerProject != null ? diw.OwnerProject.Compiler : D_IDE_Properties.Default.DefaultCompiler, cblock, sym.Name);
-            if (symNode == null)
-            {
-                bool b = false;
-                symNode = DCodeCompletionProvider.FindActualExpression(diw.OwnerProject, diw.Module, new CodeLocation(0, (int)ScopedSrcLine), SymbolExpressions, false, false, out b, out b, out b, out mod);
-            }
-            // Search expression in current module root first
-            if (symNode == null) symNode = DCodeCompletionProvider.SearchGlobalExpr(diw.OwnerProject, diw.Module, sym.Name, true, out mod);
-            #endregion
+			// Note: Build symbol path to retrieve a symbol node exactly
+			var tsym = sym;
+			var idList=new List<string>();
 
-            if (symNode != null)
-            {
-                string type = symNode.Type.ToString();
-                if (sym.Size == 8 && sym.TextValue.IndexOfAny("`".ToCharArray()) > 0) // If it's an array
-                {
-                    return BuildArrayContentString(sym.Offset, type);
-                }else if(type.IndexOf('[')>0)
-                {
-                    int i = type.IndexOf('[');
-                    //TODO
-                }
-            }
-            return sym.TextValue;*/
+			while (tsym != null)
+			{
+				if (String.IsNullOrEmpty(tsym.Name) || tsym.Name=="*") 
+					break;
+				// Quite often names with a '.' somewhere inside represent a type within a module
+				// - so ignore it since we only want the variable name and it's accessed properties
+				if(!tsym.Name.Contains("."))
+					idList.Add(tsym.Name);
+				tsym = tsym.Parent;
+			}
+
+			TypeDeclaration nodeType = null;
+			if (idList.Count == 1)
+				nodeType = new NormalDeclaration(idList[0]);
+			else if(idList.Count>1)
+			{
+				nodeType = new IdentifierList();
+				idList.Reverse();
+
+				foreach (var s in idList)
+					(nodeType as IdentifierList).Add(s);
+			}
+
+			if (nodeType != null)
+			{
+				// Search expression called sym.Name in all superior blocks
+				var matches = D_IDECodeResolver.ResolveTypeDeclarations(
+					new List<CodeModule> { diw.Module },
+					D_IDECodeResolver.SearchBlockAt(diw.Module, new CodeLocation(0, (int)ScopedSrcLine)),
+					nodeType);
+				if (matches == null || matches.Length < 1)
+					return String.Empty;
+				var symNode = matches[0];
+
+				if (symNode != null && symNode.Type != null)
+				{
+					string type = symNode.Type.ToString();
+					if (sym.Size == 8 && sym.TextValue.IndexOfAny("`".ToCharArray()) > 0) // If it's an array
+					{
+						return BuildArrayContentString(sym.Offset, symNode.Type);
+					}
+					else if (type.IndexOf('[') > 0)
+					{
+						int i = type.IndexOf('[');
+						//TODO
+					}
+				}
+			}
+			#endregion
+            return sym.TextValue;
         }
 
         public void RefreshLocals()
