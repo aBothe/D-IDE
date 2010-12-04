@@ -38,14 +38,13 @@ namespace D_IDE
         {
             thisForm = this;
 
+			Form.CheckForIllegalCrossThreadCalls = false;
+			InitializeComponent();
+
             // Init global properties
             D_IDE_Properties.Init();
 
             Breakpoints = new BreakpointHelper(this);
-
-            Form.CheckForIllegalCrossThreadCalls = false;
-            InitializeComponent();
-
 
             /*if (D_IDE_Properties.Default.UseRibbonMenu)
             {

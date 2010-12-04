@@ -17,10 +17,6 @@ goto :x64
 %DEVENV% "..\D-IDE\D-IDE.sln"
 
 REM copy ".\TestInstallerHelper\bin\Release\DIDE.Installer.dll" .
-copy CLR.dll "%MAKENSIS%\Plugins\"
-copy nsisunz.dll "%MAKENSIS%\Plugins\"
-copy inetc.dll "%MAKENSIS%\Plugins\"
-copy NsisUrlLib.dll"%MAKENSIS%\Plugins\"
 
 "%MAKENSIS%\makensis.exe" ".\d-ide.nsi" > ".\installer_build.log"
 
