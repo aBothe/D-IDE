@@ -1,0 +1,40 @@
+﻿<ribbon:RibbonWindow x:Class="D_IDE.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ribbon="clr-namespace:Microsoft.Windows.Controls.Ribbon;assembly=RibbonControlsLibrary"
+        Title="D-IDE"
+		x:Name="RibbonWindow"
+		Width="754" Height="480" MinWidth="640" MinHeight="480" xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock">
+
+	<Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ribbon:Ribbon x:Name="Ribbon">
+			<ribbon:Ribbon.ApplicationMenu>
+				<ribbon:RibbonApplicationMenu>
+					<ribbon:RibbonApplicationMenuItem Header="New">
+						<ribbon:RibbonApplicationMenuItem Header="Source" Click="NewSource" />
+						<ribbon:RibbonApplicationMenuItem Header="Project" Click="NewProject" />
+					</ribbon:RibbonApplicationMenuItem>
+					<ribbon:RibbonApplicationMenuItem Header="Open" Click="Open" />
+					<ribbon:RibbonSeparator />
+					<ribbon:RibbonApplicationMenuItem Header="Save" Click="Save" />
+					<ribbon:RibbonApplicationMenuItem Header="Save as" Click="SaveAs" />
+					<ribbon:RibbonSeparator />
+<ribbon:RibbonApplicationMenuItem Header="Settings" Click="Settings" />
+					<ribbon:RibbonSeparator />
+					<ribbon:RibbonApplicationMenuItem Header="Exit" Click="Exit" />
+				</ribbon:RibbonApplicationMenu>
+			</ribbon:Ribbon.ApplicationMenu>
+		</ribbon:Ribbon>
+		<StatusBar Grid.Row="1" Name="statusBar1" VerticalAlignment="Bottom">
+			<TextBlock Name="StatusLabel1">Status 1</TextBlock>
+			<Separator />
+			<TextBlock Name="StatusLabel2">Status 2</TextBlock>
+		</StatusBar>
+		<my:DockingManager Grid.Row="1" Name="DockMgr" Margin="0,0,0,22" />
+	</Grid>
+</ribbon:RibbonWindow>
