@@ -29,6 +29,24 @@
 					<ribbon:RibbonApplicationMenuItem Header="Exit" Click="Exit" />
 				</ribbon:RibbonApplicationMenu>
 			</ribbon:Ribbon.ApplicationMenu>
+			
+			<ribbon:RibbonTab Header="Edit">
+				<ribbon:RibbonGroup Header="Search">
+					<ribbon:RibbonButton Label="Search &amp; Replace"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Find Next"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Go to line"></ribbon:RibbonButton>
+				</ribbon:RibbonGroup>
+				
+				<ribbon:RibbonGroup Header="Code">
+					<ribbon:RibbonButton Label="Comment selection"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Uncomment selection"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Double line"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Reformat document"></ribbon:RibbonButton>
+				</ribbon:RibbonGroup>
+				
+				
+				
+			</ribbon:RibbonTab>
 		</ribbon:Ribbon>
 		<StatusBar Grid.Row="1" Name="statusBar1" VerticalAlignment="Bottom">
 			<TextBlock Name="StatusLabel1">Status 1</TextBlock>
