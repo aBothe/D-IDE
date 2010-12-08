@@ -13,6 +13,7 @@
         </Grid.RowDefinitions>
 
         <ribbon:Ribbon x:Name="Ribbon">
+			
 			<ribbon:Ribbon.ApplicationMenu>
 				<ribbon:RibbonApplicationMenu>
 					<ribbon:RibbonApplicationMenuItem Header="New">
@@ -21,33 +22,108 @@
 					</ribbon:RibbonApplicationMenuItem>
 					<ribbon:RibbonApplicationMenuItem Header="Open" Click="Open" />
 					<ribbon:RibbonSeparator />
-					<ribbon:RibbonApplicationMenuItem Header="Save" Click="Save" />
+					<ribbon:RibbonApplicationMenuItem Header="Save" Click="Save">
+					</ribbon:RibbonApplicationMenuItem>
 					<ribbon:RibbonApplicationMenuItem Header="Save as" Click="SaveAs" />
 					<ribbon:RibbonSeparator />
-<ribbon:RibbonApplicationMenuItem Header="Settings" Click="Settings" />
+					<ribbon:RibbonApplicationMenuItem Header="Last open files" Name="Menu_LastOpenFiles" />
+					<ribbon:RibbonApplicationMenuItem Header="Last open projects" Name="Menu_LastOpenProjects" />
+					<ribbon:RibbonApplicationMenuItem Header="Settings" Click="Settings" />
 					<ribbon:RibbonSeparator />
-					<ribbon:RibbonApplicationMenuItem Header="Exit" Click="Exit" />
+					<ribbon:RibbonApplicationMenuItem Header="Exit" Click="Exit" ImageSource="Resources/close.png" />
 				</ribbon:RibbonApplicationMenu>
 			</ribbon:Ribbon.ApplicationMenu>
+
 			
-			<ribbon:RibbonTab Header="Edit">
+			
+
+			<ribbon:RibbonTab Header="Module">
+				<ribbon:RibbonGroup Header="Edit">
+					<ribbon:RibbonButton Label="Cut" />
+					<ribbon:RibbonButton Label="Copy" />
+					<ribbon:RibbonButton Label="Paste" />
+				</ribbon:RibbonGroup>
+				
 				<ribbon:RibbonGroup Header="Search">
 					<ribbon:RibbonButton Label="Search &amp; Replace"></ribbon:RibbonButton>
 					<ribbon:RibbonButton Label="Find Next"></ribbon:RibbonButton>
 					<ribbon:RibbonButton Label="Go to line"></ribbon:RibbonButton>
 				</ribbon:RibbonGroup>
-				
+
 				<ribbon:RibbonGroup Header="Code">
 					<ribbon:RibbonButton Label="Comment selection"></ribbon:RibbonButton>
 					<ribbon:RibbonButton Label="Uncomment selection"></ribbon:RibbonButton>
 					<ribbon:RibbonButton Label="Double line"></ribbon:RibbonButton>
 					<ribbon:RibbonButton Label="Reformat document"></ribbon:RibbonButton>
 				</ribbon:RibbonGroup>
-				
-				
-				
 			</ribbon:RibbonTab>
+			
+			
+			
+			
+			<ribbon:RibbonTab Header="Project">
+				<ribbon:RibbonGroup Header="Project">
+					<ribbon:RibbonButton Label="Settings" />
+					<ribbon:RibbonButton Label="Open directory in Explorer" />
+				</ribbon:RibbonGroup>
+			</ribbon:RibbonTab>
+
+
+			
+
+			<ribbon:RibbonTab Header="Build &amp; Debug">
+				<ribbon:RibbonGroup Header="Build">
+					<ribbon:RibbonButton Label="Build Project" />
+					<ribbon:RibbonButton Label="Build Current Module" />
+					<ribbon:RibbonButton Label="Stop Building" IsEnabled="False" Name="Button_StopBuilding" />
+				</ribbon:RibbonGroup>
+				
+				<ribbon:RibbonGroup Header="Run">
+					<ribbon:RibbonButton Label="Launch Debugger" />
+					<ribbon:RibbonButton Label="Run without Debugger" />
+					<ribbon:RibbonButton Label="Stop execution" IsEnabled="False" Name="Button_StopExecution" />
+				</ribbon:RibbonGroup>
+				
+				<ribbon:RibbonGroup Header="Debugging">
+					<ribbon:RibbonButton Label="Run until main()" />
+					<ribbon:RibbonButton Label="Step in" />
+					<ribbon:RibbonButton Label="Step over" />
+					<ribbon:RibbonButton Label="Step out" />
+				</ribbon:RibbonGroup>
+				
+				<ribbon:RibbonGroup Header="Breakpoints" >
+					<ribbon:RibbonButton Label="Toggle Breakpoint" />
+					<ribbon:RibbonButton Label="Refresh Breakpoints" />
+				</ribbon:RibbonGroup>
+			</ribbon:RibbonTab>
+
+
+			
+			
+			<ribbon:RibbonTab Header="View">
+				<ribbon:RibbonGroup Header="View">
+					<ribbon:RibbonSplitButton Label="Panels" LabelPosition="DropDown">
+						<ribbon:RibbonMenuItem Header="Project Explorer"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Document Outline"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Start Page"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonSeparator />
+						<ribbon:RibbonMenuItem Header="Build Log"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Output"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Error Log"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonSeparator />
+						<ribbon:RibbonMenuItem Header="Locals"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Breakpoints"></ribbon:RibbonMenuItem>
+					</ribbon:RibbonSplitButton>
+
+					<ribbon:RibbonButton Label="Reload Project tree"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Restore default layout"></ribbon:RibbonButton>
+				</ribbon:RibbonGroup>
+			</ribbon:RibbonTab>
+			
+			
+			
 		</ribbon:Ribbon>
+		
 		<StatusBar Grid.Row="1" Name="statusBar1" VerticalAlignment="Bottom">
 			<TextBlock Name="StatusLabel1">Status 1</TextBlock>
 			<Separator />

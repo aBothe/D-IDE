@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Windows.Controls.Ribbon;
+using System.IO;
 
 namespace D_IDE
 {
@@ -20,13 +21,23 @@ namespace D_IDE
 	/// </summary>
 	public partial class MainWindow : RibbonWindow
 	{
+		#region Properties
+
+		#endregion
+
 		public MainWindow()
 		{
 			InitializeComponent();
 
 			var src = new DSourceDocument();
 			src.ShowAsDocument(DockMgr);
+
+			UpdateLastFilesMenus();
+
+			
 		}
+
+		#region Ribbon buttons
 
 		private void NewSource(object sender, RoutedEventArgs e)
 		{
@@ -62,5 +73,24 @@ namespace D_IDE
 		{
 
 		}
+
+		#endregion
+
+		#region GUI-related stuff
+		public void UpdateLastFilesMenus()
+		{
+			Menu_LastOpenFiles.Items.Clear();
+
+			var l = new List<string> { "aa","bbbb","ccc" };
+
+			foreach (var i in l)
+			{
+				var mi = new RibbonApplicationMenuItem();
+				mi.Header = System.IO.Path.GetFileName( i);
+				mi.Tag = i;
+				Menu_LastOpenFiles.Items.Add(mi);
+			}
+		}
+		#endregion
 	}
 }
