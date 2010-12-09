@@ -35,6 +35,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>d-ide.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="AvalonDock, Version=1.3.3571.0, Culture=neutral, PublicKeyToken=85a1e0ada7ec13e4" />
     <Reference Include="ICSharpCode.AvalonEdit">
@@ -101,11 +104,17 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="D.xshd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <None Include="RC.xshd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="CodeCompletion\" />
@@ -113,7 +122,78 @@
     <Folder Include="Panels\" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\close.png" />
+    <Resource Include="Resources\d.ico" />
+    <Resource Include="Resources\dir.gif" />
+    <Resource Include="Resources\dir_open.gif" />
+    <Resource Include="Resources\dproj.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\application-exit-3.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\goto.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\format-indent-more-2.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\list-drop-down.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="d-ide.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\debug-step-into.ico" />
+    <Resource Include="Resources\debug-step-out.ico" />
+    <Resource Include="Resources\debug-step-over.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Icons.16x16.BuildCurrentSelectedProject.png" />
+    <Resource Include="Resources\Icons.16x16.CommentRegion.png" />
+    <Resource Include="Resources\Icons.16x16.CopyIcon.png" />
+    <Resource Include="Resources\Icons.16x16.CutIcon.png" />
+    <Resource Include="Resources\Icons.16x16.FindIcon.png" />
+    <Resource Include="Resources\Icons.16x16.FindInFiles.png" />
+    <Resource Include="Resources\Icons.16x16.FindNextIcon.png" />
+    <Resource Include="Resources\Icons.16x16.PasteIcon.png" />
+    <Resource Include="Resources\Icons.16x16.RunProgramIcon.png" />
+    <Resource Include="Resources\Icons.16x16.StopProcess.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Icons.16x16.Debug.Start.png" />
+    <Resource Include="Resources\Icons.16x16.Debug.StartWithoutDebugging.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Icons.16x16.BrowserRefresh.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\breakpoint.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\OpenPH.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\NewDocument_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\SaveAllHH.png" />
+    <Resource Include="Resources\SaveAsHH.png" />
+    <Resource Include="Resources\SaveHH.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\settings_32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Computer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\112_RefreshArrow_Blue_32x32_72.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\109_AllAnnotations_Default_16x16_72.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\panel.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

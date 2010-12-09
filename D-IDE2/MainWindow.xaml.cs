@@ -59,6 +59,11 @@ namespace D_IDE
 
 		}
 
+		private void SaveAll(object sender, RoutedEventArgs e)
+		{
+
+		}
+
 		private void SaveAs(object sender, RoutedEventArgs e)
 		{
 
@@ -79,8 +84,9 @@ namespace D_IDE
 		#region GUI-related stuff
 		public void UpdateLastFilesMenus()
 		{
-			Menu_LastOpenFiles.Items.Clear();
+			Button_Open.Items.Clear();
 
+			// First add recent files
 			var l = new List<string> { "aa","bbbb","ccc" };
 
 			foreach (var i in l)
@@ -88,8 +94,11 @@ namespace D_IDE
 				var mi = new RibbonApplicationMenuItem();
 				mi.Header = System.IO.Path.GetFileName( i);
 				mi.Tag = i;
-				Menu_LastOpenFiles.Items.Add(mi);
+				Button_Open.Items.Add(mi);
 			}
+
+			// Then add recent projects
+			
 		}
 		#endregion
 	}

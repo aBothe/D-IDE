@@ -4,6 +4,7 @@
         xmlns:ribbon="clr-namespace:Microsoft.Windows.Controls.Ribbon;assembly=RibbonControlsLibrary"
         Title="D-IDE"
 		x:Name="RibbonWindow"
+		Icon="d-ide.ico"
 		Width="754" Height="480" MinWidth="640" MinHeight="480" xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock">
 
 	<Grid x:Name="LayoutRoot">
@@ -15,22 +16,20 @@
         <ribbon:Ribbon x:Name="Ribbon">
 			
 			<ribbon:Ribbon.ApplicationMenu>
-				<ribbon:RibbonApplicationMenu>
-					<ribbon:RibbonApplicationMenuItem Header="New">
-						<ribbon:RibbonApplicationMenuItem Header="Source" Click="NewSource" />
-						<ribbon:RibbonApplicationMenuItem Header="Project" Click="NewProject" />
+				<ribbon:RibbonApplicationMenu SmallImageSource="Resources/list-drop-down.png">
+					<ribbon:RibbonApplicationMenuItem Header="New" ImageSource="Resources/NewDocument_32x32.png">
+						<ribbon:RibbonApplicationMenuItem Header="Source" ImageSource="Resources/d.ico"  Click="NewSource" />
+						<ribbon:RibbonApplicationMenuItem Header="Project" ImageSource="Resources/dproj.ico" Click="NewProject" />
 					</ribbon:RibbonApplicationMenuItem>
-					<ribbon:RibbonApplicationMenuItem Header="Open" Click="Open" />
+					<ribbon:RibbonApplicationMenuItem Header="Open" Click="Open" ImageSource="Resources/OpenPH.png" Name="Button_Open" />
 					<ribbon:RibbonSeparator />
-					<ribbon:RibbonApplicationMenuItem Header="Save" Click="Save">
-					</ribbon:RibbonApplicationMenuItem>
-					<ribbon:RibbonApplicationMenuItem Header="Save as" Click="SaveAs" />
+					<ribbon:RibbonApplicationMenuItem Header="Save" Click="Save" ImageSource="Resources/SaveHH.png" />
+					<ribbon:RibbonApplicationMenuItem Header="Save All" Click="SaveAll" ImageSource="Resources/SaveAllHH.png" />
+					<ribbon:RibbonApplicationMenuItem Header="Save as" Click="SaveAs" ImageSource="Resources/SaveAsHH.png" />
 					<ribbon:RibbonSeparator />
-					<ribbon:RibbonApplicationMenuItem Header="Last open files" Name="Menu_LastOpenFiles" />
-					<ribbon:RibbonApplicationMenuItem Header="Last open projects" Name="Menu_LastOpenProjects" />
-					<ribbon:RibbonApplicationMenuItem Header="Settings" Click="Settings" />
+					<ribbon:RibbonApplicationMenuItem Header="Settings" ImageSource="Resources/settings_32.png" Click="Settings" />
 					<ribbon:RibbonSeparator />
-					<ribbon:RibbonApplicationMenuItem Header="Exit" Click="Exit" ImageSource="Resources/close.png" />
+					<ribbon:RibbonApplicationMenuItem Header="Exit" Click="Exit" ImageSource="Resources/application-exit-3.ico" />
 				</ribbon:RibbonApplicationMenu>
 			</ribbon:Ribbon.ApplicationMenu>
 
@@ -39,15 +38,15 @@
 
 			<ribbon:RibbonTab Header="Module">
 				<ribbon:RibbonGroup Header="Edit">
-					<ribbon:RibbonButton Label="Cut" />
-					<ribbon:RibbonButton Label="Copy" />
-					<ribbon:RibbonButton Label="Paste" />
+					<ribbon:RibbonButton SmallImageSource="Resources/Icons.16x16.CutIcon.png" Label="Cut" />
+					<ribbon:RibbonButton SmallImageSource="Resources/Icons.16x16.CopyIcon.png" Label="Copy" />
+					<ribbon:RibbonButton SmallImageSource="Resources/Icons.16x16.PasteIcon.png" Label="Paste" />
 				</ribbon:RibbonGroup>
 				
 				<ribbon:RibbonGroup Header="Search">
-					<ribbon:RibbonButton Label="Search &amp; Replace"></ribbon:RibbonButton>
-					<ribbon:RibbonButton Label="Find Next"></ribbon:RibbonButton>
-					<ribbon:RibbonButton Label="Go to line"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Search &amp; Replace" SmallImageSource="Resources/Icons.16x16.FindInFiles.png"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Find Next" SmallImageSource="Resources/Icons.16x16.FindIcon.png"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Go to line" SmallImageSource="Resources/goto.ico"></ribbon:RibbonButton>
 				</ribbon:RibbonGroup>
 
 				<ribbon:RibbonGroup Header="Code">
@@ -63,8 +62,8 @@
 			
 			<ribbon:RibbonTab Header="Project">
 				<ribbon:RibbonGroup Header="Project">
-					<ribbon:RibbonButton Label="Settings" />
-					<ribbon:RibbonButton Label="Open directory in Explorer" />
+					<ribbon:RibbonButton Label="Project Settings" LargeImageSource="Resources/settings_32.png" />
+					<ribbon:RibbonButton Label="Open directory in Explorer" LargeImageSource="Resources/Computer.png" />
 				</ribbon:RibbonGroup>
 			</ribbon:RibbonTab>
 
@@ -73,27 +72,28 @@
 
 			<ribbon:RibbonTab Header="Build &amp; Debug">
 				<ribbon:RibbonGroup Header="Build">
-					<ribbon:RibbonButton Label="Build Project" />
-					<ribbon:RibbonButton Label="Build Current Module" />
-					<ribbon:RibbonButton Label="Stop Building" IsEnabled="False" Name="Button_StopBuilding" />
+					<ribbon:RibbonButton Label="Build Project" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
+					<ribbon:RibbonButton Label="Build Current Module" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
+					<ribbon:RibbonButton Label="Stop Building" IsEnabled="False" Name="Button_StopBuilding" SmallImageSource="Resources/Icons.16x16.StopProcess.png" />
 				</ribbon:RibbonGroup>
 				
 				<ribbon:RibbonGroup Header="Run">
-					<ribbon:RibbonButton Label="Launch Debugger" />
-					<ribbon:RibbonButton Label="Run without Debugger" />
-					<ribbon:RibbonButton Label="Stop execution" IsEnabled="False" Name="Button_StopExecution" />
+					<ribbon:RibbonSplitButton Label="Launch Debugger" SmallImageSource="Resources/Icons.16x16.Debug.Start.png">
+						<ribbon:RibbonMenuItem Header="Run until main()"></ribbon:RibbonMenuItem>
+					</ribbon:RibbonSplitButton>
+					<ribbon:RibbonButton Label="Run without Debugger" SmallImageSource="Resources/Icons.16x16.Debug.StartWithoutDebugging.png" />
+					<ribbon:RibbonButton Label="Stop execution" IsEnabled="False" Name="Button_StopExecution" SmallImageSource="Resources/Icons.16x16.StopProcess.png" />
 				</ribbon:RibbonGroup>
 				
 				<ribbon:RibbonGroup Header="Debugging">
-					<ribbon:RibbonButton Label="Run until main()" />
-					<ribbon:RibbonButton Label="Step in" />
-					<ribbon:RibbonButton Label="Step over" />
-					<ribbon:RibbonButton Label="Step out" />
+					<ribbon:RibbonButton Label="Step in" LargeImageSource="Resources/debug-step-into.ico" />
+					<ribbon:RibbonButton Label="Step over" LargeImageSource="Resources/debug-step-over.ico" />
+					<ribbon:RibbonButton Label="Step out" LargeImageSource="Resources/debug-step-out.ico" />
 				</ribbon:RibbonGroup>
 				
 				<ribbon:RibbonGroup Header="Breakpoints" >
-					<ribbon:RibbonButton Label="Toggle Breakpoint" />
-					<ribbon:RibbonButton Label="Refresh Breakpoints" />
+					<ribbon:RibbonButton Label="Toggle Breakpoint" SmallImageSource="Resources/breakpoint.png" />
+					<ribbon:RibbonButton Label="Refresh Breakpoints" SmallImageSource="Resources/Icons.16x16.BrowserRefresh.png" />
 				</ribbon:RibbonGroup>
 			</ribbon:RibbonTab>
 
@@ -102,7 +102,7 @@
 			
 			<ribbon:RibbonTab Header="View">
 				<ribbon:RibbonGroup Header="View">
-					<ribbon:RibbonSplitButton Label="Panels" LabelPosition="DropDown">
+					<ribbon:RibbonMenuButton Label="Panels" LargeImageSource="Resources/panel.png">
 						<ribbon:RibbonMenuItem Header="Project Explorer"></ribbon:RibbonMenuItem>
 						<ribbon:RibbonMenuItem Header="Document Outline"></ribbon:RibbonMenuItem>
 						<ribbon:RibbonMenuItem Header="Start Page"></ribbon:RibbonMenuItem>
@@ -113,10 +113,10 @@
 						<ribbon:RibbonSeparator />
 						<ribbon:RibbonMenuItem Header="Locals"></ribbon:RibbonMenuItem>
 						<ribbon:RibbonMenuItem Header="Breakpoints"></ribbon:RibbonMenuItem>
-					</ribbon:RibbonSplitButton>
+					</ribbon:RibbonMenuButton>
 
-					<ribbon:RibbonButton Label="Reload Project tree"></ribbon:RibbonButton>
-					<ribbon:RibbonButton Label="Restore default layout"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Reload Project tree" LargeImageSource="Resources/112_RefreshArrow_Blue_32x32_72.png"></ribbon:RibbonButton>
+					<ribbon:RibbonButton Label="Restore default layout" SmallImageSource="Resources/109_AllAnnotations_Default_16x16_72.png"></ribbon:RibbonButton>
 				</ribbon:RibbonGroup>
 			</ribbon:RibbonTab>
 			
