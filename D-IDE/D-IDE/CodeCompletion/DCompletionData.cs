@@ -1,18 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ICSharpCode.NRefactory;
-using ICSharpCode.TextEditor.Gui.CompletionWindow;
-using ICSharpCode.TextEditor;
 using System.Windows.Forms;
 using D_Parser;
-using ICSharpCode.NRefactory.Ast;
+using ICSharpCode.TextEditor;
+using ICSharpCode.TextEditor.Gui.CompletionWindow;
+using Parser.Core;
 
 namespace D_IDE
 {
     public class DCompletionData : ICompletionData, IComparable
     {
-        public DNode data;
+        public INode data;
 
         public string text;
         public string description;
@@ -63,20 +60,20 @@ namespace D_IDE
             this.ImageIndex = i;
         }
 
-        public DCompletionData(DNode data, int Icon)
+        public DCompletionData(INode data, int Icon)
         {
             this.data = data;
             this.ImageIndex = Icon;
             Init();
         }
 
-        public DCompletionData(DNode data)
+        public DCompletionData(INode data)
         {
             this.data = data;
             Init();
         }
 
-        public static string BuildDescriptionString(DNode data)
+        public static string BuildDescriptionString(INode data)
         {
             return BuildDescriptionString(data, true);
         }
@@ -84,7 +81,7 @@ namespace D_IDE
         /// <summary>
         /// Builds expression description string
         /// </summary>
-        public static string BuildDescriptionString(DNode data, bool IncludeDesc)
+        public static string BuildDescriptionString(INode data, bool IncludeDesc)
         {
             var ret = data.ToString();
 
@@ -113,9 +110,11 @@ namespace D_IDE
             description = BuildDescriptionString(data);
         }
 
-        static public int GetImageIndex(ImageList icons, DNode Node)
+        static public int GetImageIndex(ImageList icons, INode _Node)
         {
             if (icons == null) return -1;
+
+			var Node = _Node as DNode;
 
             if (Node == null)
                 return icons.Images.IndexOfKey("Icons.16x16.Local.png");

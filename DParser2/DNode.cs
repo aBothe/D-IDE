@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Parser.Core;
 
 namespace D_Parser
 {
-    public abstract class DNode
+    public abstract class DNode :Node
     {
-        public TypeDeclaration Type;
-        public string Name;
+        public INode[] TemplateParameters=null; // Functions, Templates
 
-        public List<DNode> TemplateParameters=null; // Functions, Templates
-
-        public DNode Parent; // Functions, Templates
-
-        public string Description="";
+        public IBlockNode Parent; // Functions, Templates
 
         public List<DAttribute> Attributes = new List<DAttribute>();
         public bool ContainsAttribute(params int[] Token)
@@ -21,34 +17,16 @@ namespace D_Parser
             return DAttribute.ContainsAttribute(Attributes, Token);
         }
 
-        public CodeLocation StartLocation,EndLocation;
-
         public DNode()
         {
         }
 
         public DNode Assign(DNode other)
         {
-            Type = other.Type;
-            Name = other.Name;
             TemplateParameters = other.TemplateParameters;
-
-            Parent = other.Parent;
-            Description = other.Description;
             Attributes = other.Attributes;
-            StartLocation = other.StartLocation;
-            EndLocation = other.EndLocation;
+			base.Assign(other);
             return this;
-        }
-
-        public DNode NodeRoot
-        {
-            get
-            {
-                if (this is DModule || Parent==null)
-                    return this;
-                else return Parent.NodeRoot;
-            }
         }
 
         public string AttributeString
@@ -79,7 +57,7 @@ namespace D_Parser
 
             // Path + Name
             string path="";
-            var curParent=this;
+            var curParent=this as INode;
             while (curParent != null)
             {
                 // Also include module path
@@ -92,7 +70,7 @@ namespace D_Parser
             s += path.Trim('.');
 
             // Template parameters
-            if (TemplateParameters!=null && TemplateParameters.Count > 0)
+            if (TemplateParameters!=null && TemplateParameters.Length > 0)
             {
                 s += "!(";
                 foreach (var p in TemplateParameters)
@@ -123,5 +101,5 @@ namespace D_Parser
                 return ContainsAttribute(DTokens.Static);
             }
         }
-    }
+	}
 }

@@ -5,6 +5,7 @@ using D_Parser;
 using System.IO;
 using ICSharpCode.TextEditor;
 using D_IDE.Misc;
+using Parser.Core;
 
 namespace D_IDE.CodeCompletion
 {
@@ -13,26 +14,26 @@ namespace D_IDE.CodeCompletion
     /// </summary>
     public class D_IDECodeResolver:DCodeResolver
     {
-        public static DNode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta, TextLocation CursorLocation)
+        public static INode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta, TextLocation CursorLocation)
         {
             DToken t = null;
-            TypeDeclaration ids = null;
+            ITypeDeclaration ids = null;
             return ResolveTypeDeclarations(Module, ta, CursorLocation, out t,out ids);
         }
 
-        public static DNode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta, TextLocation CursorLocation, out TypeDeclaration Identifiers)
+        public static INode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta, TextLocation CursorLocation, out ITypeDeclaration Identifiers)
         {
             DToken t = null;
             return ResolveTypeDeclarations(Module, ta, CursorLocation, out t, out Identifiers);
         }
 
-        public static DNode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta, TextLocation CursorLocation, out DToken ExtraOrdinaryToken)
+        public static INode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta, TextLocation CursorLocation, out DToken ExtraOrdinaryToken)
         {
-            TypeDeclaration ids = null;
+            ITypeDeclaration ids = null;
             return ResolveTypeDeclarations(Module, ta, CursorLocation, out ExtraOrdinaryToken, out ids);
         }
 
-        public static DNode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta,TextLocation CursorLocation, out DToken ExtraOrdinaryToken, out TypeDeclaration Identifiers)
+        public static INode[] ResolveTypeDeclarations(CodeModule Module, TextArea ta,TextLocation CursorLocation, out DToken ExtraOrdinaryToken, out ITypeDeclaration Identifiers)
         {
             ExtraOrdinaryToken = null;
             Identifiers = null;
@@ -78,7 +79,7 @@ namespace D_IDE.CodeCompletion
                     // If '(' follows, return ctors
                     if (ExtraOrdinaryToken.Next != null && ExtraOrdinaryToken.Next.Kind == DTokens.OpenParenthesis)
                     {
-                        var rl = new List<DNode>();
+                        var rl = new List<INode>();
 
                         foreach (var n in DeclarationBlock as DBlockStatement)
                             if (n is DMethod && (n as DMethod).SpecialType == DMethod.MethodType.Constructor)
@@ -103,7 +104,7 @@ namespace D_IDE.CodeCompletion
                 var istr = Identifiers.ToString();
 
                 // Look for module paths and if they fit to our identifier path or not
-                var rl = new List<DNode>();
+                var rl = new List<INode>();
                 foreach (var m in Module.Project != null ? Module.Project.Compiler.GlobalModules : D_IDE_Properties.Default.DefaultCompiler.GlobalModules)
                 {
                     // If our module name totally equals our id string, go on with returning all its children and not the module itself!
@@ -152,7 +153,7 @@ namespace D_IDE.CodeCompletion
             return ResolveImports(SearchArea, CurrentModule);
         }
 
-        public static DNode[] ResolveTypeDeclarations(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
+        public static INode[] ResolveTypeDeclarations(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, DBlockStatement CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
         {
             var SearchArea = new List<DModule>(GlobalModules.Count+LocalModules.Count);
 
@@ -164,7 +165,7 @@ namespace D_IDE.CodeCompletion
             return ResolveTypeDeclarations(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
 
-        public static DNode[] ResolveTypeDeclarations(List<CodeModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
+        public static INode[] ResolveTypeDeclarations(List<CodeModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
         {
             var SearchArea = new List<DModule>(ModuleCache.Count);
 

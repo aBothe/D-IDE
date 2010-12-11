@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
+using Parser.Core;
 
 namespace D_Parser
 {
@@ -28,10 +29,10 @@ namespace D_Parser
             if (la.Kind == (Module))
             {
                 module.Description = GetComments();
-                module.ModuleName = ModuleDeclaration();
+                module.ModuleName = ModuleDeclaration().ToString();
                 module.Description += CheckForPostSemicolonComment();
             }
-            var _block = module as DBlockStatement;
+            var _block = module as IBlockNode;
             // Now only declarations or other statements are allowed!
             while (!IsEOF)
             {
@@ -111,7 +112,7 @@ namespace D_Parser
         }
         #endregion
 
-        void DeclDef(ref DBlockStatement module)
+        void DeclDef(ref IBlockNode module)
         {
             //AttributeSpecifier
             if (IsAttributeSpecifier())
@@ -137,7 +138,7 @@ namespace D_Parser
             else if (la.Kind == (Unittest))
             {
                 Step();
-                var dbs = new DMethod(DMethod.MethodType.Unittest) as DBlockStatement;
+                var dbs = new DMethod(DMethod.MethodType.Unittest) as IBlockNode;
                 dbs.StartLocation = t.Location;
                 FunctionBody(ref dbs);
                 dbs.EndLocation = t.EndLocation;
@@ -243,7 +244,7 @@ namespace D_Parser
                 ApplyAttributes(ref dn);
 
                 dm.Parameters = Parameters();
-                var dbs = dm as DBlockStatement;
+                var dbs = dm as IBlockNode;
                 FunctionBody(ref dbs);
 
             }
@@ -252,27 +253,32 @@ namespace D_Parser
             else Declaration(ref module);
         }
 
-        string ModuleDeclaration()
+        TypeDeclaration ModuleDeclaration()
         {
             Expect(Module);
-            string ret = ModuleFullyQualifiedName();
+            var ret = ModuleFullyQualifiedName();
             Expect(Semicolon);
             return ret;
         }
 
-        string ModuleFullyQualifiedName()
+        TypeDeclaration ModuleFullyQualifiedName()
         {
             Expect(Identifier);
-            string ret = t.Value;
+
+			if (la.Kind != Dot)
+				return new NormalDeclaration(t.Value);
+
+			var il = new D_Parser.IdentifierList();
+			il.Add(t.Value);
 
             while (la.Kind == Dot)
             {
                 Step();
                 Expect(Identifier);
 
-                ret += "." + t.Value;
+                il.Add(t.Value);
             }
-            return ret;
+            return il;
         }
 
         void ImportDeclaration()
@@ -283,7 +289,7 @@ namespace D_Parser
             Expect(Import);
 
             var imp = _Import();
-            if (!doc.Imports.ContainsKey(imp)) // Check if import is already done
+            if (!doc.ContainsImport(imp)) // Check if import is already done
                 doc.Imports.Add(imp, IsPublic);
 
             // ImportBindings
@@ -302,14 +308,14 @@ namespace D_Parser
                 {
                     Step();
                     imp = _Import();
-                    if(!doc.Imports.ContainsKey(imp)) // Check if import is already done
+                    if(!doc.ContainsImport(imp)) // Check if import is already done
                         doc.Imports.Add(imp,IsPublic);
                 }
 
             Expect(Semicolon);
         }
 
-        string _Import()
+        TypeDeclaration _Import()
         {
             // ModuleAliasIdentifier
             if (lexer.CurrentPeekToken.Kind==(Assign))
@@ -337,7 +343,7 @@ namespace D_Parser
         }
 
 
-        DNode MixinDeclaration()
+        INode MixinDeclaration()
         {
             Expect(Mixin);
 
@@ -415,7 +421,7 @@ namespace D_Parser
             return ret;
         }
 
-        void Declaration(ref DBlockStatement par)
+        void Declaration(ref IBlockNode par)
         {
             // Skip ref token
             if (la.Kind == (Ref))
@@ -431,7 +437,7 @@ namespace D_Parser
             {
                 Step();
                 // _t is just a synthetic node
-                var _t = new DStatementBlock() as DBlockStatement;
+                var _t = new DStatementBlock() as IBlockNode;
                 var dn = _t as DNode;
                 ApplyAttributes(ref dn);
 
@@ -476,10 +482,10 @@ namespace D_Parser
                 Decl(ref par,HasStorageClassModifiers);
         }
 
-        void Decl(ref DBlockStatement par, bool HasStorageClassModifiers)
+        void Decl(ref IBlockNode par, bool HasStorageClassModifiers)
         {
             var startLocation = la.Location;
-            TypeDeclaration ttd =null;
+            ITypeDeclaration ttd =null;
 
             CheckForStorageClasses();
             // Skip ref token
@@ -511,7 +517,8 @@ namespace D_Parser
             else
                 firstNode.Type.MostBasic = ttd;
 
-            ApplyAttributes(ref firstNode);
+			var iN = firstNode as DNode;
+            ApplyAttributes(ref iN);
 
             // Check for declaration constraints
             if (la.Kind == (If))
@@ -545,13 +552,14 @@ namespace D_Parser
                 }
 
                 Expect(Semicolon);
-                par[par.Count - 1].Description += CheckForPostSemicolonComment();
+				var pb=(par as IBlockNode);
+                pb[pb.Count - 1].Description += CheckForPostSemicolonComment();
             }
 
             // BasicType Declarator FunctionBody
-            else if (firstNode is DBlockStatement)
+            else if (firstNode is IBlockNode)
             {
-                var _block = firstNode as DBlockStatement; 
+                var _block = firstNode as IBlockNode; 
                 FunctionBody(ref _block);
                 
                 par.Add(firstNode);
@@ -567,9 +575,9 @@ namespace D_Parser
             return BasicTypes[la.Kind] || la.Kind==(Typeof) || MemberFunctionAttribute[la.Kind] || (la.Kind==(Dot) && lexer.CurrentPeekToken.Kind==(Identifier)) || la.Kind==(Identifier);
         }
 
-        TypeDeclaration BasicType()
+        ITypeDeclaration BasicType()
         {
-            TypeDeclaration td = null;
+            ITypeDeclaration td = null;
             if (BasicTypes[la.Kind])
             {
                 Step();
@@ -611,9 +619,9 @@ namespace D_Parser
                 Step();
 
             if (td == null)
-                td = IdentifierList();
+                td = IdentifierList() as ITypeDeclaration;
             else
-                td.MostBasic = IdentifierList();
+                td.MostBasic = IdentifierList() as ITypeDeclaration;
 
             return td;
         }
@@ -623,7 +631,7 @@ namespace D_Parser
             return la.Kind==(Times) || la.Kind==(OpenSquareBracket) || la.Kind==(Delegate) || la.Kind==(Function);
         }
 
-        TypeDeclaration BasicType2()
+        ITypeDeclaration BasicType2()
         {
             // *
             if (la.Kind==(Times))
@@ -670,7 +678,7 @@ namespace D_Parser
             else if (la.Kind==(Delegate) || la.Kind==(Function))
             {
                 Step();
-                TypeDeclaration td = null;
+                ITypeDeclaration td = null;
                 var dd = new DelegateDeclaration();
                 dd.IsFunction = t.Kind == Function;
 
@@ -693,10 +701,10 @@ namespace D_Parser
         /// Parses a type declarator
         /// </summary>
         /// <returns>A dummy node that contains the return type, the variable name and possible parameters of a function declaration</returns>
-        DNode Declarator(bool IsParam)
+        INode Declarator(bool IsParam)
         {
-            DNode ret = new DVariable();
-            TypeDeclaration ttd = null;
+            INode ret = new DVariable();
+            ITypeDeclaration ttd = null;
 
             while (IsBasicType2())
             {
@@ -753,8 +761,9 @@ namespace D_Parser
                          */
                         if (la.Kind!=(CloseParenthesis))
                         {
-                            List<DNode> _unused = null;
-                            ttd = DeclaratorSuffixes(out _unused, out _unused);
+							INode[] _unused2 = null;
+                            List<INode> _unused = null;
+                            ttd = DeclaratorSuffixes(out _unused2, out _unused);
 
                             if (cd.KeyType == null) cd.KeyType = ttd;
                             else
@@ -780,8 +789,8 @@ namespace D_Parser
             if (IsDeclaratorSuffix)
             {
                 // DeclaratorSuffixes
-                List<DNode> _Parameters;
-                ttd = DeclaratorSuffixes(out ret.TemplateParameters, out _Parameters);
+                List<INode> _Parameters;
+                ttd = DeclaratorSuffixes(out (ret as DNode).TemplateParameters, out _Parameters);
                 if (ttd != null)
                 {
                     ttd.Base = ret.Type;
@@ -790,7 +799,7 @@ namespace D_Parser
 
                 if (_Parameters != null)
                 {
-                    DMethod dm = new DMethod();
+                    var dm = new DMethod();
                     dm.Assign(ret);
                     dm.Parameters = _Parameters;
                     ret = dm;
@@ -813,10 +822,10 @@ namespace D_Parser
         /// 
         /// TemplateParameterList[opt] Parameters MemberFunctionAttributes[opt]
         /// </summary>
-        TypeDeclaration DeclaratorSuffixes(out List<DNode> TemplateParameters, out List<DNode> _Parameters)
+        ITypeDeclaration DeclaratorSuffixes(out INode[] TemplateParameters, out List<INode> _Parameters)
         {
-            TypeDeclaration td = null;
-            TemplateParameters = new List<DNode>();
+            ITypeDeclaration td = null;
+            TemplateParameters = null;
             _Parameters = null;
 
             while (la.Kind==(OpenSquareBracket))
@@ -852,9 +861,9 @@ namespace D_Parser
             return td;
         }
 
-        TypeDeclaration IdentifierList()
+        ITypeDeclaration IdentifierList()
         {
-            TypeDeclaration td = null;
+            ITypeDeclaration td = null;
 
             if (la.Kind!=(Identifier))
                 SynErr(Identifier);
@@ -915,7 +924,7 @@ namespace D_Parser
             }
         }
 
-        TypeDeclaration Type()
+        ITypeDeclaration Type()
         {
             var td = BasicType();
 
@@ -944,9 +953,9 @@ namespace D_Parser
         /// So here I think that a Declarator2 only consists of a couple of BasicType2's and some DeclaratorSuffixes
         /// </summary>
         /// <returns></returns>
-        TypeDeclaration Declarator2()
+        ITypeDeclaration Declarator2()
         {
-            TypeDeclaration td = null;
+            ITypeDeclaration td = null;
             if (la.Kind==(OpenParenthesis))
             {
                 Step();
@@ -957,15 +966,16 @@ namespace D_Parser
                 // DeclaratorSuffixes
                 if (la.Kind==(OpenSquareBracket))
                 {
-                    List<DNode> _unused = null, _unused2 = null;
-                    DeclaratorSuffixes(out _unused, out _unused2);
+					List<INode> _unused = null;
+					INode[] _unused2 = null;
+                    DeclaratorSuffixes(out _unused2, out _unused);
                 }
                 return td;
             }
 
             while (IsBasicType2())
             {
-                TypeDeclaration ttd = BasicType2();
+                var ttd = BasicType2();
                 ttd.Base = td;
                 td = ttd;
             }
@@ -976,9 +986,9 @@ namespace D_Parser
         /// <summary>
         /// Parse parameters
         /// </summary>
-        List<DNode> Parameters()
+        List<INode> Parameters()
         {
-            List<DNode> ret = new List<DNode>();
+            var ret = new List<INode>();
             Expect(OpenParenthesis);
 
             // Empty parameter list
@@ -1011,11 +1021,11 @@ namespace D_Parser
 
                 if (!HadComma && ret.Count > 0)
                 {
-                    ret[ret.Count - 1].Type = new VarArgDecl(ret[ret.Count - 1].Type);
+					((ret as IBlockNode)[(ret as IBlockNode).Count - 1] as IBlockNode).Type = new VarArgDecl((ret as IBlockNode)[(ret as IBlockNode).Count - 1].Type);
                 }
                 else
                 {
-                    DVariable dv = new DVariable();
+                    var dv = new DVariable();
                     dv.Type = new VarArgDecl();
                     ret.Add(dv);
                 }
@@ -1025,7 +1035,7 @@ namespace D_Parser
             return ret;
         }
 
-        private DNode Parameter()
+        private INode Parameter()
         {
             var attr = new List<DAttribute>();
             var startLocation = la.Location;
@@ -1048,7 +1058,7 @@ namespace D_Parser
 
             var ret = Declarator(true);
             ret.StartLocation = startLocation;
-            if (attr.Count > 0) ret.Attributes.AddRange(attr);
+            if (attr.Count > 0) (ret as DNode).Attributes.AddRange(attr);
             if (ret.Type == null)
                 ret.Type = td;
             else
@@ -1167,7 +1177,7 @@ namespace D_Parser
                 return AssignExpression();
         }
 
-        TypeDeclaration TypeOf()
+        ITypeDeclaration TypeOf()
         {
             Expect(Typeof);
             Expect(OpenParenthesis);
@@ -1187,9 +1197,9 @@ namespace D_Parser
 
         #region Attributes
 
-        DBlockStatement _Invariant()
+        IBlockNode _Invariant()
         {
-            DBlockStatement inv = new DMethod();
+            IBlockNode inv = new DMethod();
             inv.Name = "invariant";
 
             Expect(Invariant);
@@ -1519,7 +1529,7 @@ namespace D_Parser
             {
                 Step();
                 Expect(OpenParenthesis);
-                TypeDeclaration castType=null;
+                ITypeDeclaration castType=null;
                 if(la.Kind!=CloseParenthesis) // Yes, it is possible that a cast() can contain an empty type!
                     castType = Type();
                 Expect(CloseParenthesis);
@@ -1616,7 +1626,7 @@ namespace D_Parser
                     BaseClassList(false);
 
                 //TODO: Add the parsed results to node tree somehow
-                var _block = new DClassLike() as DBlockStatement;
+                var _block = new DClassLike() as IBlockNode;
                 ClassBody(ref _block);
 
                 return ex;
@@ -1659,7 +1669,7 @@ namespace D_Parser
 
         List<DExpression> ArgumentList()
         {
-            List<DExpression> ret = new List<DExpression>();
+            var ret = new List<DExpression>();
 
             ret.Add(AssignExpression());
 
@@ -1777,7 +1787,7 @@ namespace D_Parser
             if (la.Kind == __FILE__ || la.Kind == __LINE__)
             {
                 Step();
-                return new IdentExpression(t.Kind==__FILE__? doc.ModuleFileName:(object)t.line);
+                return new IdentExpression(t.Kind==__FILE__? doc.FileName:(object)t.line);
             }
 
             // Dollar (== Array length expression)
@@ -1919,7 +1929,7 @@ namespace D_Parser
                     if (la.Kind == OpenParenthesis)
                         fl.AnonymousMethod.Parameters = Parameters();
                 }
-                var dbs = fl.AnonymousMethod as DBlockStatement;
+                var dbs = fl.AnonymousMethod as IBlockNode;
                 FunctionBody(ref dbs);
                 return fl;
             }
@@ -1988,7 +1998,7 @@ namespace D_Parser
 
                 var ate = new AssignTokenExpression();
                 ce.InnerExpression=ate;
-                TypeDeclaration Type_opt = null;
+                ITypeDeclaration Type_opt = null;
 
                 // Originally, a Type is required!
                 if (IsAssignExpression()) // Just allow function calls - but even doing this is still a mess :-D
@@ -2139,11 +2149,11 @@ namespace D_Parser
         #endregion
 
         #region Statements
-        void IfCondition(ref DBlockStatement par)
+        void IfCondition(ref IBlockNode par)
         {
             IfCondition(ref par, false);
         }
-        void IfCondition(ref DBlockStatement par,bool IsFor)
+        void IfCondition(ref IBlockNode par,bool IsFor)
         {
             var stmtBlock = par as DStatementBlock;
 
@@ -2158,7 +2168,7 @@ namespace D_Parser
             {
                 var sl = la.Location;
 
-                TypeDeclaration tp = null;
+                ITypeDeclaration tp = null;
                 if (la.Kind == Auto)
                 {
                     tp = new DTokenDeclaration(la.Kind);
@@ -2167,7 +2177,7 @@ namespace D_Parser
                 else
                     tp = BasicType();
 
-                DNode n = null;
+                INode n = null;
             repeated_decl:
                 n = Declarator(false);
 
@@ -2193,7 +2203,7 @@ namespace D_Parser
             }
         }
 
-        void Statement(ref DBlockStatement par, bool CanBeEmpty, bool BlocksAllowed)
+        void Statement(ref IBlockNode par, bool CanBeEmpty, bool BlocksAllowed)
         {
             if (CanBeEmpty && la.Kind == (Semicolon))
             {
@@ -2223,7 +2233,7 @@ namespace D_Parser
                     Step();
                 Step();
                 var dbs = new DStatementBlock(If);
-                var bs = dbs as DBlockStatement;
+                var bs = dbs as IBlockNode;
                 dbs.StartLocation = t.Location;
                 Expect(OpenParenthesis);
                 
@@ -2234,7 +2244,7 @@ namespace D_Parser
                 // ThenStatement
 
                 Statement(ref bs, false, true);
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
 
                 // ElseStatement
                 if (la.Kind == (Else))
@@ -2242,10 +2252,10 @@ namespace D_Parser
                     Step();
                     dbs = new DStatementBlock(Else);
                     dbs.StartLocation = t.Location;
-                    bs = dbs as DBlockStatement;
+                    bs = dbs as IBlockNode;
                     Statement(ref bs, false, true);
                     dbs.EndLocation = t.EndLocation;
-                    if (dbs.Count > 0) par.Add(dbs);
+					if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
                 }
             }
             #endregion
@@ -2256,7 +2266,7 @@ namespace D_Parser
                 Step();
 
                 var dbs = new DStatementBlock(While);
-                var bs = dbs as DBlockStatement;
+                var bs = dbs as IBlockNode;
                 dbs.StartLocation = t.Location;
 
                 Expect(OpenParenthesis);
@@ -2265,7 +2275,7 @@ namespace D_Parser
 
                 Statement(ref bs, false, true);
                 dbs.EndLocation = t.EndLocation;
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
             #endregion
 
@@ -2274,7 +2284,7 @@ namespace D_Parser
             {
                 Step();
 
-                var dbs = new DStatementBlock(Do) as DBlockStatement;
+                var dbs = new DStatementBlock(Do) as IBlockNode;
                 dbs.StartLocation = t.Location;
                 Statement(ref dbs, false, true);
 
@@ -2284,7 +2294,7 @@ namespace D_Parser
                 Expect(CloseParenthesis);
 
                 dbs.EndLocation = t.EndLocation;
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
             #endregion
 
@@ -2293,7 +2303,7 @@ namespace D_Parser
             {
                 Step();
 
-                var dbs = new DStatementBlock(For) as DBlockStatement;
+                var dbs = new DStatementBlock(For) as IBlockNode;
                 dbs.StartLocation = t.Location;
 
                 Expect(OpenParenthesis);
@@ -2317,7 +2327,7 @@ namespace D_Parser
 
                 Statement(ref dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
             #endregion
 
@@ -2326,7 +2336,7 @@ namespace D_Parser
             {
                 Step();
 
-                var dbs = new DStatementBlock(t.Kind) as DBlockStatement;
+                var dbs = new DStatementBlock(t.Kind) as IBlockNode;
                 dbs.StartLocation = t.Location;
 
                 Expect(OpenParenthesis);
@@ -2379,19 +2389,19 @@ namespace D_Parser
                 Statement(ref dbs, false, true);
 
                 dbs.EndLocation = t.EndLocation;
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
             #endregion
 
             #region [Final] SwitchStatement
             else if ((la.Kind == (Final) && lexer.CurrentPeekToken.Kind == (Switch)) || la.Kind == (Switch))
             {
-                var dbs = new DStatementBlock(Switch) as DBlockStatement;
+                var dbs = new DStatementBlock(Switch) as IBlockNode;
                 dbs.StartLocation = la.Location;
 
                 if (la.Kind == (Final))
                 {
-                    dbs.Attributes.Add(new DAttribute( Final));
+                    (dbs as DNode).Attributes.Add(new DAttribute( Final));
                     Step();
                 }
                 Step();
@@ -2401,7 +2411,7 @@ namespace D_Parser
                 Statement(ref dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
 
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
             #endregion
 
@@ -2410,7 +2420,7 @@ namespace D_Parser
             {
                 Step();
 
-                var dbs = new DStatementBlock(Case) as DBlockStatement;
+                var dbs = new DStatementBlock(Case) as IBlockNode;
                 dbs.StartLocation = la.Location;
 
                 (dbs as DStatementBlock).Expression=AssignExpression();
@@ -2436,7 +2446,7 @@ namespace D_Parser
                     Statement(ref dbs, true, true);
                 dbs.EndLocation = t.EndLocation;
 
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
             #endregion
 
@@ -2445,7 +2455,7 @@ namespace D_Parser
             {
                 Step();
 
-                DBlockStatement dbs = new DStatementBlock(Default);
+                IBlockNode dbs = new DStatementBlock(Default);
                 dbs.StartLocation = la.Location;
 
                 Expect(Colon);
@@ -2453,7 +2463,7 @@ namespace D_Parser
                     Statement(ref dbs, true, true);
                 dbs.EndLocation = t.EndLocation;
 
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
             #endregion
 
@@ -2501,7 +2511,7 @@ namespace D_Parser
             {
                 Step();
 
-                DBlockStatement dbs = new DStatementBlock(With);
+                IBlockNode dbs = new DStatementBlock(With);
                 dbs.StartLocation = t.Location;
 
                 Expect(OpenParenthesis);
@@ -2513,7 +2523,7 @@ namespace D_Parser
                 Statement(ref dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
 
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
             #endregion
 
@@ -2521,7 +2531,7 @@ namespace D_Parser
             else if (la.Kind == (Synchronized))
             {
                 Step();
-                DBlockStatement dbs = new DStatementBlock(Synchronized);
+                IBlockNode dbs = new DStatementBlock(Synchronized);
                 dbs.StartLocation = t.Location;
 
                 if (la.Kind == (OpenParenthesis))
@@ -2533,7 +2543,7 @@ namespace D_Parser
                 Statement(ref dbs, false, true);
 
                 dbs.EndLocation = t.EndLocation;
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
             #endregion
 
@@ -2542,11 +2552,11 @@ namespace D_Parser
             {
                 Step();
 
-                DBlockStatement dbs = new DStatementBlock(Try);
+                IBlockNode dbs = new DStatementBlock(Try);
                 dbs.StartLocation = t.Location;
                 Statement(ref dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
-                if (dbs.Count > 0) par.Add(dbs);
+                if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
 
                 if (!(la.Kind == (Catch) || la.Kind == (Finally)))
                     SynErr(Catch, "catch or finally expected");
@@ -2579,7 +2589,7 @@ namespace D_Parser
 
                     Statement(ref dbs, false, true);
                     dbs.EndLocation = t.EndLocation;
-                    if (dbs.Count > 0) par.Add(dbs);
+                    if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
 
                     if (la.Kind == (Catch))
                         goto do_catch;
@@ -2593,7 +2603,7 @@ namespace D_Parser
                     dbs.StartLocation = t.Location;
                     Statement(ref dbs, false, true);
                     dbs.EndLocation = t.EndLocation;
-                    if (dbs.Count > 0) par.Add(dbs);
+                    if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
                 }
             }
             #endregion
@@ -2695,7 +2705,7 @@ namespace D_Parser
                 Declaration(ref par);
         }
 
-        void BlockStatement(ref DBlockStatement par)
+        void BlockStatement(ref IBlockNode par)
         {
             if(String.IsNullOrEmpty( par.Description))par.Description = GetComments();
             var OldPreviousCommentString = PreviousComment;
@@ -2721,13 +2731,13 @@ namespace D_Parser
         #endregion
 
         #region Structs & Unions
-        private DNode AggregateDeclaration()
+        private INode AggregateDeclaration()
         {
             if (!(la.Kind==(Union) || la.Kind==(Struct)))
                 SynErr(t.Kind, "union or struct required");
             Step();
 
-            DBlockStatement ret = new DClassLike(t.Kind);
+            IBlockNode ret = new DClassLike(t.Kind);
 
             // Allow anonymous structs&unions
             if (la.Kind == Identifier)
@@ -2745,7 +2755,7 @@ namespace D_Parser
             // StructTemplateDeclaration
             if (la.Kind==(OpenParenthesis))
             {
-                ret.TemplateParameters = TemplateParameterList();
+                (ret as DNode).TemplateParameters = TemplateParameterList();
 
                 // Constraint[opt]
                 if (la.Kind==(If))
@@ -2759,18 +2769,18 @@ namespace D_Parser
         #endregion
 
         #region Classes
-        private DNode ClassDeclaration()
+        private INode ClassDeclaration()
         {
             Expect(Class);
 
-            DBlockStatement dc = new DClassLike(Class);
+            IBlockNode dc = new DClassLike(Class);
             dc.StartLocation = t.Location;
 
             Expect(Identifier);
             dc.Name = t.Value;
 
             if (la.Kind==(OpenParenthesis))
-                dc.TemplateParameters = TemplateParameterList();
+                (dc as DNode).TemplateParameters = TemplateParameterList();
 
             if (la.Kind==(Colon))
                 (dc as DClassLike).BaseClasses = BaseClassList();
@@ -2781,16 +2791,16 @@ namespace D_Parser
             return dc;
         }
 
-        private List<TypeDeclaration> BaseClassList()
+        private List<ITypeDeclaration> BaseClassList()
         {
             return BaseClassList(true);
         }
 
-        private List<TypeDeclaration> BaseClassList(bool ExpectColon)
+        private List<ITypeDeclaration> BaseClassList(bool ExpectColon)
         {
             if(ExpectColon)Expect(Colon);
 
-            var ret = new List<TypeDeclaration>();
+            var ret = new List<ITypeDeclaration>();
 
             bool init = true;
             while (init || la.Kind==(Comma))
@@ -2805,7 +2815,7 @@ namespace D_Parser
             return ret;
         }
 
-        private void ClassBody(ref DBlockStatement ret)
+        private void ClassBody(ref IBlockNode ret)
         {
             if (String.IsNullOrEmpty(ret.Description)) ret.Description = GetComments();
             var OldPreviousCommentString = PreviousComment;
@@ -2822,7 +2832,7 @@ namespace D_Parser
             PreviousComment = OldPreviousCommentString;
         }
 
-        DNode Constructor(bool IsStruct)
+        INode Constructor(bool IsStruct)
         {
             Expect(This);
             var dm = new DMethod();
@@ -2850,12 +2860,12 @@ namespace D_Parser
             if (la.Kind==(If))
                 Constraint();
 
-            var dm_ = dm as DBlockStatement;
+            var dm_ = dm as IBlockNode;
             FunctionBody(ref dm_);
             return dm;
         }
 
-        DNode Destructor()
+        INode Destructor()
         {
             Expect(Tilde);
             Expect(This);
@@ -2872,17 +2882,17 @@ namespace D_Parser
             if (la.Kind==(If))
                 Constraint();
 
-            var dm_ = dm as DBlockStatement;
+            var dm_ = dm as IBlockNode;
             FunctionBody(ref dm_);
             return dm;
         }
         #endregion
 
         #region Interfaces
-        private DBlockStatement InterfaceDeclaration()
+        private IBlockNode InterfaceDeclaration()
         {
             Expect(Interface);
-            DBlockStatement dc = new DClassLike();
+            IBlockNode dc = new DClassLike();
             dc.StartLocation = t.Location;
             DNode n = dc as DNode;
             ApplyAttributes(ref n);
@@ -2891,7 +2901,7 @@ namespace D_Parser
             dc.Name = t.Value;
 
             if (la.Kind==(OpenParenthesis))
-                dc.TemplateParameters = TemplateParameterList();
+                (dc as DNode).TemplateParameters = TemplateParameterList();
 
             if (la.Kind==(If))
                 Constraint();
@@ -2919,7 +2929,7 @@ namespace D_Parser
         #endregion
 
         #region Enums
-        private void EnumDeclaration(ref DBlockStatement par)
+        private void EnumDeclaration(ref IBlockNode par)
         {
             Expect(Enum);
 
@@ -3038,7 +3048,7 @@ namespace D_Parser
         #endregion
 
         #region Functions
-        void FunctionBody(ref DBlockStatement par)
+        void FunctionBody(ref IBlockNode par)
         {
             bool HadIn = false, HadOut = false;
 
@@ -3092,10 +3102,10 @@ namespace D_Parser
          * American beer is like sex on a boat - Fucking close to water;)
          */
 
-        private DNode TemplateDeclaration()
+        private INode TemplateDeclaration()
         {
             Expect(Template);
-            DBlockStatement dc = new DClassLike(Template);
+            IBlockNode dc = new DClassLike(Template);
             var n = dc as DNode;
             ApplyAttributes(ref n);
             dc.StartLocation = t.Location;
@@ -3103,7 +3113,7 @@ namespace D_Parser
             Expect(Identifier);
             dc.Name = t.Value;
 
-            dc.TemplateParameters = TemplateParameterList();
+            (dc as DNode).TemplateParameters = TemplateParameterList();
 
             if (la.Kind==(If))
                 Constraint();
@@ -3140,21 +3150,21 @@ namespace D_Parser
             return false;
         }
 
-        private List<DNode> TemplateParameterList()
+        private INode[] TemplateParameterList()
         {
             return TemplateParameterList(true);
         }
 
-        private List<DNode> TemplateParameterList(bool MustHaveSurroundingBrackets)
+        private INode[] TemplateParameterList(bool MustHaveSurroundingBrackets)
         {
             if(MustHaveSurroundingBrackets) Expect(OpenParenthesis);
 
-            List<DNode> ret = new List<DNode>();
+            var ret = new List<INode>();
 
             if (la.Kind==(CloseParenthesis))
             {
                 Step();
-                return ret;
+                return ret.ToArray();
             }
 
             bool init = true;
@@ -3163,7 +3173,7 @@ namespace D_Parser
                 if (!init) Step();
                 init = false;
 
-                DNode dv = new DVariable();
+                INode dv = new DVariable();
 
                 // TemplateThisParameter
                 if (la.Kind==(This))
@@ -3230,7 +3240,7 @@ namespace D_Parser
 
                 else
                 {
-                    TypeDeclaration bt = BasicType();
+                    var bt = BasicType();
                     dv = Declarator(false);
 
                     if (dv.Type == null)
@@ -3252,7 +3262,7 @@ namespace D_Parser
 
             if (MustHaveSurroundingBrackets) Expect(CloseParenthesis);
 
-            return ret;
+            return ret.ToArray();
         }
 
         private TypeDeclaration TemplateInstance()

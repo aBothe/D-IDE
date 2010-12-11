@@ -74,15 +74,18 @@
 				<ribbon:RibbonGroup Header="Build">
 					<ribbon:RibbonButton Label="Build Project" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
 					<ribbon:RibbonButton Label="Build Current Module" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
-					<ribbon:RibbonButton Label="Stop Building" IsEnabled="False" Name="Button_StopBuilding" SmallImageSource="Resources/Icons.16x16.StopProcess.png" />
+					<ribbon:RibbonButton Label="Stop Building" IsEnabled="False" Name="Button_StopBuilding" SmallImageSource="Resources/stop_build.png" />
 				</ribbon:RibbonGroup>
 				
 				<ribbon:RibbonGroup Header="Run">
-					<ribbon:RibbonSplitButton Label="Launch Debugger" SmallImageSource="Resources/Icons.16x16.Debug.Start.png">
+					<ribbon:RibbonSplitButton Label="Launch Debugger" SmallImageSource="Resources/build_dbg.png">
 						<ribbon:RibbonMenuItem Header="Run until main()"></ribbon:RibbonMenuItem>
 					</ribbon:RibbonSplitButton>
-					<ribbon:RibbonButton Label="Run without Debugger" SmallImageSource="Resources/Icons.16x16.Debug.StartWithoutDebugging.png" />
-					<ribbon:RibbonButton Label="Stop execution" IsEnabled="False" Name="Button_StopExecution" SmallImageSource="Resources/Icons.16x16.StopProcess.png" />
+					<ribbon:RibbonButton Label="Run without Debugger" SmallImageSource="Resources/build.png" />
+					<ribbon:RibbonSeparator />
+					<ribbon:RibbonButton Label="Pause execution" IsEnabled="False" Name="Button_PauseExecution" SmallImageSource="Resources/pause.png" />
+					<ribbon:RibbonButton Label="Stop execution" IsEnabled="False" Name="Button_StopExecution" SmallImageSource="Resources/stop.png" />
+					<ribbon:RibbonButton Label="Restart" IsEnabled="False" Name="Button_RestartExecution" SmallImageSource="Resources/restart.png" />
 				</ribbon:RibbonGroup>
 				
 				<ribbon:RibbonGroup Header="Debugging">

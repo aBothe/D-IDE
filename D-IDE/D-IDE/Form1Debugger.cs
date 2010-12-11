@@ -12,6 +12,7 @@ using System.Threading;
 using System.Runtime.InteropServices;
 using ICSharpCode.TextEditor.Document;
 using D_IDE.CodeCompletion;
+using Parser.Core;
 
 namespace D_IDE
 {
@@ -396,7 +397,7 @@ namespace D_IDE
             return t;
         }
 
-        public object[] ExtractArray(ulong Offset, TypeDeclaration RawTypeExpression, out bool IsString)
+        public object[] ExtractArray(ulong Offset, ITypeDeclaration RawTypeExpression, out bool IsString)
         {
             IsString = false;
 
@@ -480,7 +481,7 @@ namespace D_IDE
             return str;
         }
 
-        public string BuildArrayContentString(ulong Offset, TypeDeclaration type)
+        public string BuildArrayContentString(ulong Offset, ITypeDeclaration type)
         {
             bool IsString;
             object[] marr = ExtractArray(Offset, type, out IsString);
@@ -514,7 +515,7 @@ namespace D_IDE
 				tsym = tsym.Parent;
 			}
 
-			TypeDeclaration nodeType = null;
+			ITypeDeclaration nodeType = null;
 			if (idList.Count == 1)
 				nodeType = new NormalDeclaration(idList[0]);
 			else if(idList.Count>1)

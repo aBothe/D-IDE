@@ -6,6 +6,7 @@ using D_Parser;
 using D_Parser.NodeStorage;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
+using Parser.Core;
 
 namespace D_IDE
 {
@@ -64,7 +65,7 @@ namespace D_IDE
                 bs.Write(ModuleInitializer);
                 WriteString(mod.ModuleName,true);
                 WriteString(mod.ModuleFileName,true);
-                WriteNodes(mod.Children);
+                WriteNodes((mod as IBlockNode).Children);
                 bs.Flush();
             }
         }

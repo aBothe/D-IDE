@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using ICSharpCode.TextEditor;
 using D_Parser;
+using Parser.Core;
 
 namespace D_IDE.Misc
 {

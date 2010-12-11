@@ -13,6 +13,9 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Windows.Controls.Ribbon;
 using System.IO;
+using System.Reflection;
+using Parser.Core;
+using D_Parser;
 
 namespace D_IDE
 {
@@ -29,12 +32,10 @@ namespace D_IDE
 		{
 			InitializeComponent();
 
-			var src = new DSourceDocument();
+			var src = new EditorDocument();
 			src.ShowAsDocument(DockMgr);
-
-			UpdateLastFilesMenus();
-
 			
+			UpdateLastFilesMenus();
 		}
 
 		#region Ribbon buttons

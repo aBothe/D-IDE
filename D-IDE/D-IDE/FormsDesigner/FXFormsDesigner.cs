@@ -3,14 +3,8 @@ using WeifenLuo.WinFormsUI.Docking;
 using D_IDE.FormsDesigner;
 using System.Drawing;
 using System.ComponentModel.Design;
-using D_Parser;
 using System;
-using ICSharpCode.NRefactory.Ast;
-using ICSharpCode.TextEditor.Util;
 using System.IO;
-using System.Collections.Generic;
-using ICSharpCode.NRefactory.Parser;
-using System.ComponentModel;
 
 namespace D_IDE
 {

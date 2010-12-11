@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -9,14 +8,13 @@ using ICSharpCode.TextEditor.Document;
 using System.IO;
 using System.Xml;
 using D_Parser;
-using ICSharpCode.NRefactory;
 using ICSharpCode.TextEditor.Gui.CompletionWindow;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using ICSharpCode.TextEditor;
 using D_IDE.Properties;
 using ICSharpCode.SharpDevelop.Dom;
-using System.Diagnostics;
+using Parser.Core;
 
 namespace D_IDE
 {
@@ -537,7 +535,7 @@ namespace D_IDE
 			{
 				if (dpf.ModuleFileName == pf.ModuleFileName)
 				{
-                    dpf.ApplyFrom(pf);
+                    dpf.Assign(pf);
 					return true;
 				}
 			}
@@ -621,18 +619,10 @@ namespace D_IDE
 
 		public string lastSearchDir = Application.StartupPath;
 
-		public static ICSharpCode.NRefactory.Location fromCodeLocation(CodeLocation cloc)
-		{
-			return new ICSharpCode.NRefactory.Location(cloc.Column, cloc.Line);
-		}
-        public static CodeLocation toCodeLocation(D_Parser.CodeLocation loc)
+        public static CodeLocation toCodeLocation(CodeLocation loc)
         {
             return new CodeLocation(loc.Column, loc.Line);
         }
-		public static CodeLocation toCodeLocation(ICSharpCode.NRefactory.Location loc)
-		{
-			return new CodeLocation(loc.Column, loc.Line);
-		}
 		public static DateTime DateFromUnixTime(long t)
 		{
 			DateTime ret = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);

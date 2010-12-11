@@ -2,25 +2,17 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 using System.Windows.Forms;
-using System.Xml;
 using D_IDE.CodeCompletion;
 using D_Parser;
-using D_IDE.Properties;
-using ICSharpCode.NRefactory;
-using ICSharpCode.SharpDevelop.Dom;
 using ICSharpCode.TextEditor;
 using ICSharpCode.TextEditor.Document;
 using ICSharpCode.TextEditor.Gui.CompletionWindow;
 using ICSharpCode.TextEditor.Gui.InsightWindow;
 using WeifenLuo.WinFormsUI.Docking;
-using System.Globalization;
-using System.Text;
 using DebugEngineWrapper;
 using D_IDE.Misc;
+using Parser.Core;
 
 namespace D_IDE
 {
@@ -226,7 +218,7 @@ namespace D_IDE
             get { return txt.ActiveTextAreaControl.Caret.Position; }
         }
 
-        DNode selectedBlock = null;
+        INode selectedBlock = null;
         public ICompletionData[] CurrentCompletionData=null;
 
         /// <summary>
@@ -329,7 +321,7 @@ namespace D_IDE
             if (Matches != null && Matches.Length>0)
             {
                 var m = Matches[0];
-                var mod = m.NodeRoot as DModule;
+                var mod = (m as DNode).NodeRoot as DModule;
                 if(mod!=null)
                     ErrorLog.OpenError(mod.ModuleFileName,m.StartLocation.Line,m.StartLocation.Column);
             }
@@ -343,7 +335,7 @@ namespace D_IDE
             
             // Retrieve the identifierlist that's located beneath the cursor
             DToken ExtraOrdinaryToken = null;
-			D_Parser.TypeDeclaration ids = null;
+			ITypeDeclaration ids = null;
             var Matches = D_IDECodeResolver.ResolveTypeDeclarations(Module,ta,e.LogicalPosition,out ExtraOrdinaryToken,out ids);
 
             // Check for extra ordinary tokens like __FILE__ or __LINE__
@@ -586,7 +578,7 @@ namespace D_IDE
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Parsing " + Module.ModuleName;
             var _mn = Module.ModuleFileName;
             var _m = DParser.ParseString(txt.Text);
-            Module.ApplyFrom(_m);
+            Module.Assign(_m);
             Module.ModuleFileName = _mn;
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Done parsing " + Module.ModuleName;
 

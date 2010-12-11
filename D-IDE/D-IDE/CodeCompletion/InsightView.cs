@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using ICSharpCode.TextEditor.Gui.InsightWindow;
 using ICSharpCode.TextEditor;
-using ICSharpCode.NRefactory;
-using D_Parser;
-using System.Windows.Forms;
 using D_IDE.CodeCompletion;
 
 namespace D_IDE

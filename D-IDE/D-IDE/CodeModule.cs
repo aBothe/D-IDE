@@ -54,7 +54,7 @@ namespace D_IDE
             if (!File.Exists(ModuleFileName) || !IsParsable) return;
 
             var m = DParser.ParseFile(ModuleFileName);
-            ApplyFrom(m);
+            Assign(m);
         }
 
         public void Parse(string file)

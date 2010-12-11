@@ -1,50 +1,168 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Parser.Core;
 
 namespace D_Parser
 {
     /// <summary>
     /// Encapsules an entire document and represents the root node
     /// </summary>
-    public class DModule : DBlockStatement
+    public class DModule : DBlockStatement, ISourceModule
     {
-        public string ModuleName="";
-        public string ModuleFileName="";
-
-        /// <summary>
-        /// Contains all done imports whereas the key contains the module path and the value equals the public state of the import
-        /// </summary>
-        public Dictionary<string,bool> Imports = new Dictionary<string,bool>();
+		public bool ContainsImport(ITypeDeclaration type)
+		{
+			foreach (var kv in _Imports)
+				if (kv.Key.ToString() == type.ToString())
+					return true;
+			return false;
+		}
 
         /// <summary>
         /// Applies file name, children and imports from an other module instance
          /// </summary>
         /// <param name="Other"></param>
-        public void ApplyFrom(DModule Other)
+        public void Assign(DModule Other)
         {
-            ModuleFileName = Other.ModuleFileName;
-            Name = Other.Name;
-            children = new List<DNode>(Other.Children);
-            foreach (var ch in Children)
-                ch.Parent = this;
-            Imports=new Dictionary<string,bool>(Other.Imports);
+			FileName = Other.FileName;
+			base.Assign(Other as IBlockNode);
         }
 
-        /// <summary>
-        /// Returns the module name
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return ModuleName;
-        }
+		string _FileName;
+		Dictionary<ITypeDeclaration, bool> _Imports = new Dictionary<ITypeDeclaration, bool>();
+		List<ParserError> LastParseErrors = new List<ParserError>();
 
-        public string ToString(bool IncludeFileName)
-        {
-            return ModuleName+(IncludeFileName?(" ("+ModuleFileName+")"):"");
-        }
-    }
+		/// <summary>
+		/// Name alias
+		/// </summary>
+		public string ModuleName
+		{
+			get { return Name; }
+			set { Name = value; }
+		}
+
+		public string FileName
+		{
+			get
+			{
+				return _FileName;
+			}
+			set
+			{
+				_FileName = value;
+			}
+		}
+
+		public List<ParserError> ParseErrors
+		{
+			get { return LastParseErrors; }
+		}
+
+		public Dictionary<ITypeDeclaration, bool> Imports
+		{
+			get
+			{
+				return _Imports;
+			}
+			set
+			{
+				_Imports = value;
+			}
+		}
+	}
+
+	public class DBlockStatement : DNode, IBlockNode
+	{
+		CodeLocation _BlockStart;
+		List<INode> _Children = new List<INode>();
+
+		public CodeLocation BlockStartLocation
+		{
+			get
+			{
+				return _BlockStart;
+			}
+			set
+			{
+				_BlockStart = value;
+			}
+		}
+
+		public INode[] Children
+		{
+			get { return _Children.ToArray(); }
+		}
+
+		public void Add(INode Node)
+		{
+			Node.Parent = this;
+			if (_Children.Contains(Node))
+				_Children.Add(Node);
+		}
+
+		public void AddRange(IEnumerable<INode> Nodes)
+		{
+			foreach (var Node in Nodes)
+				Add(Node);
+		}
+
+		public int Count
+		{
+			get { return _Children.Count; }
+		}
+
+		public void Clear()
+		{
+			_Children.Clear();
+		}
+
+		public INode this[int i]
+		{
+			get { if (Count > i)return _Children[i]; else return null; }
+			set { if (Count > i) _Children[i] = value; }
+		}
+
+		public INode this[string Name]
+		{
+			get
+			{
+				if (Count > 1)
+					foreach (var n in _Children)
+						if (n.Name == Name) return n;
+				return null;
+			}
+			set
+			{
+				if (Count > 1)
+					for (int i = 0; i < Count; i++)
+						if (this[i].Name == Name) this[i] = value;
+			}
+		}
+
+		public IEnumerator<INode> GetEnumerator()
+		{
+			return _Children.GetEnumerator();
+		}
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+		{
+			return _Children.GetEnumerator();
+		}
+
+		public void Assign(IBlockNode other)
+		{
+			BlockStartLocation = other.BlockStartLocation;
+			Clear();
+			AddRange(other);
+
+			base.Assign(other);
+		}
+
+		public override string ToString()
+		{
+			return Name;
+		}
+	}
 
     public class DVariable : DNode
     {
@@ -57,88 +175,9 @@ namespace D_Parser
         }
     }
 
-    public abstract class DBlockStatement : DNode, IEnumerable<DNode>
-    {
-        public CodeLocation BlockStartLocation=new CodeLocation();
-        protected List<DNode> children = new List<DNode>();
-
-        public DNode Assign(DBlockStatement block)
-        {
-            children = block.children;
-            BlockStartLocation = block.BlockStartLocation;
-            return base.Assign(block as DNode);
-        }
-
-        public int Count
-        {
-            get { return children.Count; }
-        }
-
-        public DNode this[int i]
-        {
-            get { if (children.Count > i)return (DNode)children[i]; else return null; }
-            set { if (children.Count > i) children[i] = value; }
-        }
-
-        public DNode this[string name]
-        {
-            get
-            {
-                if (children.Count > 1)
-                {
-                    foreach (DNode n in Children)
-                    {
-                        if ((n as DNode).Name == name) return (n as DNode);
-                    }
-                }
-                return null;
-            }
-            set
-            {
-                if (children.Count > 1)
-                {
-                    for (int i = 0; i < Count; i++)
-                    {
-                        if (this[i].Name == name) this[i] = value;
-                    }
-                }
-            }
-        }
-
-        public void Add(DNode v)
-        {
-            children.Add(v);
-            v.Parent = this;
-        }
-        /// <summary>
-        /// Adds children of <para>ItemOwner</para> to the node's children
-        /// </summary>
-        /// <param name="ItemOwner"></param>
-        public void AddRange(DBlockStatement ItemOwner)
-        {
-            foreach (var n in ItemOwner)
-                Add(n);
-        }
-
-        public List<DNode> Children
-        {
-            get { return children; }
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return children.GetEnumerator();
-        }
-
-        IEnumerator<DNode> IEnumerable<DNode>.GetEnumerator()
-        {
-            return children.GetEnumerator();
-        }
-    }
-
     public class DMethod : DBlockStatement
     {
-        public List<DNode> Parameters=new List<DNode>();
+        public List<INode> Parameters=new List<INode>();
         public MethodType SpecialType = MethodType.Normal;
 
         public enum MethodType
@@ -182,7 +221,7 @@ namespace D_Parser
 
     public class DClassLike : DBlockStatement
     {
-        public List<TypeDeclaration> BaseClasses=new List<TypeDeclaration>();
+        public List<ITypeDeclaration> BaseClasses=new List<ITypeDeclaration>();
         public int ClassType=DTokens.Class;
 
         public DClassLike() { }

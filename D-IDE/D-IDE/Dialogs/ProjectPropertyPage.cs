@@ -1,23 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 using System.Windows.Forms;
-using System.Xml;
-using D_IDE.CodeCompletion;
-using D_Parser;
-using D_IDE.Properties;
-using ICSharpCode.NRefactory;
-using ICSharpCode.SharpDevelop.Dom;
-using ICSharpCode.TextEditor;
-using ICSharpCode.TextEditor.Document;
-using ICSharpCode.TextEditor.Gui.CompletionWindow;
-using ICSharpCode.TextEditor.Gui.InsightWindow;
 using WeifenLuo.WinFormsUI.Docking;
-using System.Drawing.Drawing2D;
 
 namespace D_IDE
 {

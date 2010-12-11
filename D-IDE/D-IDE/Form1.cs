@@ -1,34 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net;
-using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading;
 using System.Windows.Forms;
-using System.Xml;
-using D_IDE.CodeCompletion;
 using D_IDE.Dialogs;
 using D_Parser;
-using D_IDE.Properties;
-using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.Ast;
-using ICSharpCode.SharpDevelop.Dom;
 using ICSharpCode.TextEditor;
 using ICSharpCode.TextEditor.Document;
-using ICSharpCode.TextEditor.Gui.CompletionWindow;
-using ICSharpCode.TextEditor.Util;
-using WeifenLuo.WinFormsUI;
 using WeifenLuo.WinFormsUI.Docking;
-using System.Runtime.InteropServices;
-using DebugEngineWrapper;
-using D_IDE.Misc;
 
 namespace D_IDE
 {

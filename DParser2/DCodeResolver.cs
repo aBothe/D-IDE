@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Parser.Core;
 
 namespace D_Parser
 {
@@ -10,7 +11,7 @@ namespace D_Parser
     public class DCodeResolver
     {
         #region Direct Code search
-        public static TypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly, out DToken OptionalInitToken)
+        public static ITypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly, out DToken OptionalInitToken)
         {
             OptionalInitToken = null;
 
@@ -146,13 +147,13 @@ namespace D_Parser
             return psr;
         }
 
-        public static DBlockStatement SearchBlockAt(DBlockStatement Parent, CodeLocation Where)
+        public static IBlockNode SearchBlockAt(IBlockNode Parent, CodeLocation Where)
         {
             foreach (var n in Parent)
             {
-                if (!(n is DBlockStatement)) continue;
+                if (!(n is IBlockNode)) continue;
 
-                var b = n as DBlockStatement;
+                var b = n as IBlockNode;
                 if (Where > b.StartLocation && Where < b.EndLocation)
                     return SearchBlockAt(b, Where);
             }
@@ -160,13 +161,13 @@ namespace D_Parser
             return Parent;
         }
 
-        public static DBlockStatement SearchClassLikeAt(DBlockStatement Parent, CodeLocation Where)
+        public static IBlockNode SearchClassLikeAt(IBlockNode Parent, CodeLocation Where)
         {
             foreach (var n in Parent)
             {
                 if (!(n is DClassLike)) continue;
 
-                var b = n as DBlockStatement;
+                var b = n as IBlockNode;
                 if (Where > b.BlockStartLocation && Where < b.EndLocation)
                     return SearchClassLikeAt(b, Where);
             }
@@ -190,7 +191,7 @@ namespace D_Parser
             // First add all local imports
             var localImps = new List<string>();
             foreach (var kv in ActualModule.Imports)
-                localImps.Add(kv.Key);
+                localImps.Add(kv.Key.ToString());
 
             // Then try to add the 'object' module
             var objmod = SearchModuleInCache(CodeCache, "object");
@@ -239,7 +240,7 @@ namespace D_Parser
             var localImps = new List<string>();
             foreach (var kv in ActualModule.Imports)
                 if (kv.Value)
-                    localImps.Add(kv.Key);
+                    localImps.Add(kv.Key.ToString());
 
             foreach (var m in CodeCache)
                 if (localImps.Contains(m.ModuleName) && !ImportModules.Contains(m))
@@ -272,18 +273,18 @@ namespace D_Parser
             All
         }
 
-        public static bool MatchesFilter(NodeFilter Filter, DNode n)
+        public static bool MatchesFilter(NodeFilter Filter, INode n)
         {
             switch (Filter)
             {
                 case NodeFilter.All:
                     return true;
                 case NodeFilter.PublicOnly:
-                    return n.IsPublic;
+                    return (n as DNode).IsPublic;
                 case NodeFilter.NonPrivate:
-                    return !n.ContainsAttribute(DTokens.Private);
+					return !(n as DNode).ContainsAttribute(DTokens.Private);
                 case NodeFilter.PublicStaticOnly:
-                    return n.IsPublic && n.IsStatic;
+					return (n as DNode).IsPublic && (n as DNode).IsStatic;
             }
             return false;
         }
@@ -304,9 +305,9 @@ namespace D_Parser
         /// <param name="Module"></param>
         /// <param name="IdentifierList"></param>
         /// <returns>When a type was found, the declaration entry will be returned. Otherwise, it'll return null.</returns>
-        public static DNode[] ResolveTypeDeclarations_ModuleOnly(List<DModule> ImportCache,DBlockStatement BlockNode, TypeDeclaration IdentifierList, NodeFilter Filter)
+        public static INode[] ResolveTypeDeclarations_ModuleOnly(List<DModule> ImportCache,IBlockNode BlockNode, ITypeDeclaration IdentifierList, NodeFilter Filter)
         {
-            var ret = new List<DNode>();
+            var ret = new List<INode>();
 
             if (BlockNode == null || IdentifierList == null) return ret.ToArray();
 
@@ -332,15 +333,15 @@ namespace D_Parser
                 }
 
                 // Now move stepwise deeper calling ResolveTypeDeclaration recursively
-                ret. Add(BlockNode); // Temporarily add the block node to the return array - it gets proceeded in the next while loop
+                ret.Add(BlockNode); // Temporarily add the block node to the return array - it gets proceeded in the next while loop
 
                 var tFilter = Filter;
                 while (skippedIds < il.Parts.Count && ret.Count>0)
                 {
-                    var DeeperLevel = new List<DNode>();
+                    var DeeperLevel = new List<INode>();
                     // As long as our node(s) can contain other nodes, scan it
                     foreach(var n in ret)
-                        DeeperLevel.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,n as DBlockStatement, il[skippedIds], tFilter));
+                        DeeperLevel.AddRange( ResolveTypeDeclarations_ModuleOnly(ImportCache,n as IBlockNode, il[skippedIds], tFilter));
                     
                     // If a variable is given and if it's not the last identifier, return it's definition type
                     // If a method is given, search for its return type
@@ -355,7 +356,7 @@ namespace D_Parser
                             DeeperLevel.Clear();
 
                             // If our node contains an auto attribute, expect that there is an initializer that implies its type
-                            if (v is DVariable && v.ContainsAttribute(DTokens.Auto))
+                            if (v is DVariable && (v as DNode).ContainsAttribute(DTokens.Auto))
 							{
 								var init = (v as DVariable).Initializer;
 								if (init is InitializerExpression)
@@ -374,7 +375,7 @@ namespace D_Parser
 								}
                             }
 
-                            DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, v.Parent as DBlockStatement, newType, NodeFilter.PublicOnly));
+                            DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, v.Parent as IBlockNode, newType, NodeFilter.PublicOnly));
                         }
                     }
                     
@@ -422,15 +423,15 @@ namespace D_Parser
                         }
 
                     // and template parameters
-                    if(currentParent.TemplateParameters!=null)
-                        foreach (var ch in currentParent.TemplateParameters)
+                    if(currentParent is DNode && (currentParent as DNode).TemplateParameters!=null)
+						foreach (var ch in (currentParent as DNode).TemplateParameters)
                         {
                             if (nameIdent.Name == ch.Name)
                                 ret.Add(ch);
                         }
 
                     // Move root-ward
-                    currentParent = currentParent.Parent as DBlockStatement;
+                    currentParent = currentParent.Parent as IBlockNode;
                 }
             }
 
@@ -446,9 +447,9 @@ namespace D_Parser
         /// <param name="CurrentlyScopedBlock"></param>
         /// <param name="IdentifierList"></param>
         /// <returns></returns>
-        public static DNode[] ResolveTypeDeclarations(List<DModule> ImportCache, DBlockStatement CurrentlyScopedBlock, TypeDeclaration IdentifierList)
+        public static INode[] ResolveTypeDeclarations(List<DModule> ImportCache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
         {
-            var ret = new List<DNode>();
+            var ret = new List<INode>();
 
             var ThisModule = CurrentlyScopedBlock.NodeRoot as DModule;
 
@@ -463,7 +464,7 @@ namespace D_Parser
                 if (m.ModuleName.StartsWith(IdentifierList.ToString()))
                     ret.Add(m);
                 
-                else if (m.ModuleFileName != ThisModule.ModuleFileName) // We already parsed this module
+                else if (m.FileName != ThisModule.FileName) // We already parsed this module
                     ret.AddRange(ResolveTypeDeclarations_ModuleOnly(ImportCache, m, IdentifierList, NodeFilter.PublicOnly));
             }
 
@@ -481,13 +482,13 @@ namespace D_Parser
             // Implicitly set the object class to the inherited class if no explicit one was done
             if (ActualClass.BaseClasses.Count < 1)
             {
-                var ObjectClass = ResolveTypeDeclarations(ModuleCache, ActualClass.NodeRoot as DBlockStatement, new NormalDeclaration("Object"));
+                var ObjectClass = ResolveTypeDeclarations(ModuleCache, ActualClass.NodeRoot as IBlockNode, new NormalDeclaration("Object"));
                 if (ObjectClass.Length > 0 && ObjectClass[0] != ActualClass) // Yes, it can be null - like the Object class which can't inherit itself
                     return ObjectClass[0] as DClassLike;
             }
             else // Take the first only (since D forces single inheritance)
             {
-                var ClassMatches = ResolveTypeDeclarations(ModuleCache, ActualClass.NodeRoot as DBlockStatement, ActualClass.BaseClasses[0]);
+                var ClassMatches = ResolveTypeDeclarations(ModuleCache, ActualClass.NodeRoot as IBlockNode, ActualClass.BaseClasses[0]);
                 if (ClassMatches.Length > 0)
                     return ClassMatches[0] as DClassLike;
             }

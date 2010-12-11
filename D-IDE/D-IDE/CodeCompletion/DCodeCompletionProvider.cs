@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Windows.Forms;
 using ICSharpCode.TextEditor;
 using ICSharpCode.TextEditor.Gui.CompletionWindow;
-using ICSharpCode.NRefactory;
 
 using D_Parser;
-using ICSharpCode.TextEditor.Document;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
 using D_IDE.CodeCompletion;
 using D_IDE.Misc;
+using Parser.Core;
 
 namespace D_IDE
 {
@@ -170,7 +165,7 @@ namespace D_IDE
             {
                 presel = null;
                 DToken tk = null;
-                TypeDeclaration ids = null;
+                ITypeDeclaration ids = null;
                 bool IsInstance = false;
 
                 var cursor = DocWindow.Caret;
@@ -196,10 +191,10 @@ namespace D_IDE
                         if (m is DVariable || m is DMethod)
                         {
                             // If it's a variable (this case happens really often ;) ), resolve its base type and print its properties
-                            var t = m.Type;
+                            var t = m.Type as ITypeDeclaration;
                             IsInstance = true;
 
-                            if (m.ContainsAttribute(DTokens.Auto) && m is DVariable)
+                            if ((m as DNode).ContainsAttribute(DTokens.Auto) && m is DVariable)
                             {
                                 var init = (m as DVariable).Initializer;
 
@@ -224,8 +219,8 @@ namespace D_IDE
                             }
 
                             matches = DocWindow.Module.Project != null ?
-                                    D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module.Project.Compiler.GlobalModules, DocWindow.Module.Project.Modules, m.NodeRoot as DBlockStatement,t) :
-                                    D_IDECodeResolver.ResolveTypeDeclarations(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, m.NodeRoot as DBlockStatement, t);
+									D_IDECodeResolver.ResolveTypeDeclarations(DocWindow.Module.Project.Compiler.GlobalModules, DocWindow.Module.Project.Modules, (m as DNode).NodeRoot as DBlockStatement, t) :
+                                    D_IDECodeResolver.ResolveTypeDeclarations(D_IDE_Properties.Default.DefaultCompiler.GlobalModules, (m as DNode).NodeRoot as DBlockStatement, t);
                             goto parse_again;
                         }
 
@@ -290,7 +285,7 @@ namespace D_IDE
 			return rl.ToArray();
 		}
 
-        static void Add(ref List<ICompletionData> rl, DNode n)
+        static void Add(ref List<ICompletionData> rl, INode n)
         {
             if(n is DModule || !String.IsNullOrEmpty(n.Name))
             rl.Add(new DCompletionData(n));

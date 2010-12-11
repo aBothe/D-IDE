@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using Parser.Core;
 
 namespace D_Parser.NodeStorage
 {
@@ -122,13 +123,13 @@ namespace D_Parser.NodeStorage
             {
                 bs.Write(ModuleInitializer);
                 WriteString(mod.ModuleName, true);
-                WriteString(mod.ModuleFileName, true);
+                WriteString(mod.FileName, true);
                 WriteNodes(mod.Children);
                 bs.Flush();
             }
         }
 
-        public void WriteNode(DNode dt)
+        public void WriteNode(INode dt)
         {
             var bs = BinWriter;
 
@@ -154,7 +155,7 @@ namespace D_Parser.NodeStorage
                 bs.Write((dt as DVariable).IsAlias);
                 WriteExpression((dt as DVariable).Initializer);
             }
-            else if (dt is DBlockStatement)
+            else if (dt is IBlockNode)
             {
                 bs.Write((byte)2);
 
@@ -169,7 +170,7 @@ namespace D_Parser.NodeStorage
                 if (dt is DMethod)
                 {
                     var n = dt as DMethod;
-                    WriteNodes(n.Parameters);
+                    WriteNodes(n.Parameters.ToArray());
                     bs.Write((int)n.SpecialType);
                 }
                 else if (dt is DStatementBlock)
@@ -190,7 +191,7 @@ namespace D_Parser.NodeStorage
                 // No extra fields for DEnum types
 
                 // Write block statement properties
-                var bl = dt as DBlockStatement;
+                var bl = dt as IBlockNode;
                 bs.Write(bl.BlockStartLocation.X);
                 bs.Write(bl.BlockStartLocation.Y);
 
@@ -201,18 +202,26 @@ namespace D_Parser.NodeStorage
             WriteTypeDecl(dt.Type);
 
             // Write (general) node props
-            bs.Write(dt.Attributes.Count);
-            foreach (var a in dt.Attributes)
-            {
-                bs.Write(a.Token);
-                if (a.LiteralContent == null)
-                    WriteString(null, true);
-                else
-                    WriteString(a.LiteralContent.ToString(), true);
-            }
+			if (dt is DNode)
+			{
+				bs.Write((dt as DNode).Attributes.Count);
+				foreach (var a in (dt as DNode).Attributes)
+				{
+					bs.Write(a.Token);
+					if (a.LiteralContent == null)
+						WriteString(null, true);
+					else
+						WriteString(a.LiteralContent.ToString(), true);
+				}
+			}
+			else bs.Write((int)0);
 
             WriteString(dt.Name, true);
-            WriteNodes(dt.TemplateParameters);
+			if (dt is DNode)
+				WriteNodes((dt as DNode).TemplateParameters);
+			else 
+				bs.Write((int)0);
+
             WriteString(dt.Description, true);
 
             bs.Write(dt.StartLocation.X);
@@ -221,20 +230,20 @@ namespace D_Parser.NodeStorage
             bs.Write(dt.EndLocation.Y);
         }
 
-        public void WriteNodes(List<DNode> Nodes)
+        public void WriteNodes(INode[] Nodes)
         {
             var bs = BinWriter;
 
-            if (Nodes == null || Nodes.Count < 1)
+            if (Nodes == null || Nodes.Length < 1)
             {
                 bs.Write((int)0);
                 bs.Flush();
                 return;
             }
 
-            bs.Write(Nodes.Count);
+            bs.Write(Nodes.Length);
 
-            foreach (DNode dt in Nodes)
+            foreach (var dt in Nodes)
                 WriteNode(dt);
 
             bs.Flush();
@@ -327,7 +336,7 @@ namespace D_Parser.NodeStorage
             WriteExpression(e.Base);
         }
 
-        public void WriteTypeDecl(TypeDeclaration decl)
+        public void WriteTypeDecl(ITypeDeclaration decl)
         {
             var bs = BinWriter;
 
@@ -411,7 +420,7 @@ namespace D_Parser.NodeStorage
                 bs.Write((byte)11);
 
                 bs.Write((decl as DelegateDeclaration).IsFunction);
-                WriteNodes((decl as DelegateDeclaration).Parameters);
+                WriteNodes((decl as DelegateDeclaration).Parameters.ToArray());
             }
 
             WriteTypeDecl(decl.Base);
@@ -437,10 +446,10 @@ namespace D_Parser.NodeStorage
                 string mod_fn = ReadString(true);
 
                 var cm = new DModule();
-                cm.ModuleFileName = mod_fn;
+                cm.FileName = mod_fn;
                 cm.ModuleName = mod_name;
 
-                var bl = cm as DBlockStatement;
+                var bl = cm as IBlockNode;
                 ReadNodes(ref bl);
 
                 ret.Add(cm);
@@ -449,7 +458,7 @@ namespace D_Parser.NodeStorage
             return ret;
         }
 
-        public void ReadNodes(ref DBlockStatement Parent)
+        public void ReadNodes(ref IBlockNode Parent)
         {
             var bs = BinReader;
 
@@ -499,12 +508,12 @@ namespace D_Parser.NodeStorage
                     ret = new DMethod();
 
                     // Synthetic node
-                    var tbl = new DStatementBlock() as DBlockStatement;
+                    var tbl = new DStatementBlock() as IBlockNode;
                     ReadNodes(ref tbl);
 
                     foreach (var p in tbl)
                     {
-                        p.Parent = ret;
+                        (p as DNode).Parent = ret as IBlockNode;
                         (ret as DMethod).Parameters.Add(p);
                     }
                     (ret as DMethod).SpecialType = (DMethod.MethodType)s.ReadInt32();
@@ -535,7 +544,7 @@ namespace D_Parser.NodeStorage
                 }
 
 
-                var bl = ret as DBlockStatement;
+                var bl = ret as IBlockNode;
                 x = s.ReadInt32();
                 y = s.ReadInt32();
                 bl.BlockStartLocation = new CodeLocation(x, y);
@@ -557,11 +566,11 @@ namespace D_Parser.NodeStorage
 
             ret.Name = ReadString(true);
             // Template parameters
-            var tp = new DStatementBlock() as DBlockStatement;
+            var tp = new DStatementBlock() as IBlockNode;
             ReadNodes(ref tp);
 
-            if (tp.Children.Count > 0)
-                ret.TemplateParameters = new List<DNode>(tp.Children);
+            if ((tp as IBlockNode).Count > 0)
+                ret.TemplateParameters = (tp as IBlockNode).Children;
             ret.Description = ReadString(true);
 
             x = s.ReadInt32();
@@ -574,11 +583,11 @@ namespace D_Parser.NodeStorage
             return ret;
         }
 
-        public TypeDeclaration ReadTypeDeclaration()
+        public ITypeDeclaration ReadTypeDeclaration()
         {
             var s = BinReader;
 
-            TypeDeclaration ret = null;
+            ITypeDeclaration ret = null;
 
             byte type = s.ReadByte();
 
@@ -635,7 +644,7 @@ namespace D_Parser.NodeStorage
                 (ret as DelegateDeclaration).IsFunction = s.ReadBoolean();
 
                 // Parameters
-                var bl = new DStatementBlock() as DBlockStatement;
+                var bl = new DStatementBlock() as IBlockNode;
                 ReadNodes(ref bl);
                 (ret as DelegateDeclaration).Parameters.AddRange(bl.Children);
             }

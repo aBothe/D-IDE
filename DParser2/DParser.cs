@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
+using Parser.Core;
 
 namespace D_Parser
 {
@@ -18,7 +19,7 @@ namespace D_Parser
             return p.Expression();
         }
 
-        public static TypeDeclaration ParseBasicType(string Code,out DToken OptionalToken)
+        public static ITypeDeclaration ParseBasicType(string Code,out DToken OptionalToken)
         {
             OptionalToken = null;
 
@@ -46,28 +47,28 @@ namespace D_Parser
             return bt;
         }
 
-        public static DModule ParseString(string ModuleCode)
+        public static ISourceModule ParseString(string ModuleCode)
         {
             return ParseString(ModuleCode,false);
         }
 
-        public static DModule ParseString(string ModuleCode,bool SkipFunctionBodies)
+        public static ISourceModule ParseString(string ModuleCode,bool SkipFunctionBodies)
         {
             var p = Create(new StringReader(ModuleCode));
             return p.Parse(SkipFunctionBodies);
         }
 
-        public static DModule ParseFile(string File)
+        public static ISourceModule ParseFile(string File)
         {
             return ParseFile(File, false);
         }
 
-        public static DModule ParseFile(string File, bool SkipFunctionBodies)
+        public static ISourceModule ParseFile(string File, bool SkipFunctionBodies)
         {
             var s=new FileStream(File,FileMode.Open,FileAccess.Read,FileShare.ReadWrite);
             var p=Create(new StreamReader(s));
             var m = p.Parse(SkipFunctionBodies);
-            m.ModuleFileName = File;
+            m.FileName = File;
             s.Close();
             return m;
         }
@@ -78,14 +79,14 @@ namespace D_Parser
         /// <param name="Module"></param>
         public static void UpdateModule(DModule Module)
         {
-            var m = DParser.ParseFile(Module.ModuleFileName);
-            Module.ApplyFrom(m);
+            var m = DParser.ParseFile(Module.FileName);
+            Module.Assign(m);
         }
 
         public static void UpdateModuleFromText(DModule Module, string Code)
         {
             var m = DParser.ParseString(Code);
-            Module.ApplyFrom(m);
+            Module.Assign(m);
         }
 
         static DParser Create(TextReader tr)

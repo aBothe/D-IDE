@@ -1,34 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Xml;
-using D_IDE.CodeCompletion;
-using D_IDE.Dialogs;
 using D_Parser;
-using D_IDE.Properties;
-using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.Ast;
-using ICSharpCode.SharpDevelop.Dom;
-using ICSharpCode.TextEditor;
-using ICSharpCode.TextEditor.Document;
-using ICSharpCode.TextEditor.Gui.CompletionWindow;
-using ICSharpCode.TextEditor.Util;
-using WeifenLuo.WinFormsUI;
 using WeifenLuo.WinFormsUI.Docking;
-using System.Runtime.InteropServices;
-using DebugEngineWrapper;
-using D_IDE.Misc;
+using Parser.Core;
 
 namespace D_IDE
 {
@@ -561,7 +541,7 @@ namespace D_IDE
             return ret;
         }
 
-        TreeNode GenerateHierarchyData(DNode env, DNode ch, TreeNode oldNode)
+        TreeNode GenerateHierarchyData(INode env, INode ch, TreeNode oldNode)
         {
             if (ch == null) return null;
             int ii = DCompletionData.GetImageIndex(icons, ch);
@@ -573,8 +553,8 @@ namespace D_IDE
             ii = icons.Images.IndexOfKey("Icons.16x16.Parameter.png");
             int i = 0;
 
-            if(ch.TemplateParameters!=null)
-                foreach (DNode dt in ch.TemplateParameters)
+            if(ch is DNode && (ch as DNode).TemplateParameters!=null)
+                foreach (DNode dt in (ch as DNode).TemplateParameters)
                 {
                     TreeNode tn = GenerateHierarchyData(ch, dt,
                         (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?
@@ -587,7 +567,7 @@ namespace D_IDE
                 }
 
             if(ch is DMethod)
-                foreach (DNode dt in (ch as DMethod).Parameters)
+                foreach (var dt in (ch as DMethod).Parameters)
                 {
                     TreeNode tn = GenerateHierarchyData(ch, dt,
                         (oldNode != null && oldNode.Nodes.Count >= i + 1 && oldNode.Nodes[i].Text == dt.Name) ?

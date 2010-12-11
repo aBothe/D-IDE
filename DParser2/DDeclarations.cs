@@ -1,30 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Parser.Core;
 
 namespace D_Parser
 {
-    public abstract class TypeDeclaration
-    {
-        public TypeDeclaration Base;
-        public TypeDeclaration ParentDecl { get { return Base; } set { Base = value; } }
-
-        public TypeDeclaration MostBasic
-        {
-            get { if (Base == null) return this; else return Base.MostBasic; }
-            set
-            {
-                if (Base == null) Base = value; else Base.MostBasic = value ;
-            }
-        }
-
-        /// <summary>
-        /// Returns a string which represents the current type
-        /// </summary>
-        /// <returns></returns>
-        public new abstract string ToString();
-    }
-
     /// <summary>
     /// Basic type, e.g. &gt;int&lt;
     /// </summary>
@@ -55,7 +35,7 @@ namespace D_Parser
         /// </summary>
         /// <param name="p">The token</param>
         /// <param name="td">Its base token</param>
-        public DTokenDeclaration(int p, TypeDeclaration td)
+        public DTokenDeclaration(int p, ITypeDeclaration td)
         {
             Token = p;
             Base = td;
@@ -81,12 +61,12 @@ namespace D_Parser
         /// <summary>
         /// Equals <see cref="Base" />
         /// </summary>
-        public TypeDeclaration ValueType
+        public ITypeDeclaration ValueType
         {
             get { return Base; }
             set { Base = value; }
         }
-        public TypeDeclaration KeyType;
+        public ITypeDeclaration KeyType;
         public enum ClampType
         {
             Round = 0,
@@ -100,8 +80,8 @@ namespace D_Parser
         }
 
         public ClampDecl() { }
-        public ClampDecl(TypeDeclaration ValueType) { this.ValueType = ValueType; }
-        public ClampDecl(TypeDeclaration ValueType, ClampType clamps) { this.ValueType = ValueType; Clamps = clamps; }
+        public ClampDecl(ITypeDeclaration ValueType) { this.ValueType = ValueType; }
+        public ClampDecl(ITypeDeclaration ValueType, ClampType clamps) { this.ValueType = ValueType; Clamps = clamps; }
 
         public override string ToString()
         {
@@ -137,7 +117,7 @@ namespace D_Parser
 
     public class DelegateDeclaration : TypeDeclaration
     {
-        public TypeDeclaration ReturnType
+        public ITypeDeclaration ReturnType
         {
             get { return Base; }
             set { Base = value; }
@@ -147,7 +127,7 @@ namespace D_Parser
         /// </summary>
         public bool IsFunction = false;
 
-        public List<DNode> Parameters = new List<DNode>();
+        public List<INode> Parameters = new List<INode>();
 
         public override string ToString()
         {
@@ -177,7 +157,7 @@ namespace D_Parser
     public class PointerDecl : TypeDeclaration
     {
         public PointerDecl() { }
-        public PointerDecl(TypeDeclaration BaseType) { Base = BaseType; }
+        public PointerDecl(ITypeDeclaration BaseType) { Base = BaseType; }
 
         public override string ToString()
         {
@@ -199,7 +179,7 @@ namespace D_Parser
             set { Token = value; }
         }
 
-        public TypeDeclaration InnerType;
+        public ITypeDeclaration InnerType;
 
         public MemberFunctionAttributeDecl() { }
         public MemberFunctionAttributeDecl(int ModifierToken) { this.Modifier = ModifierToken; }
@@ -213,7 +193,7 @@ namespace D_Parser
     public class VarArgDecl : TypeDeclaration
     {
         public VarArgDecl() { }
-        public VarArgDecl(TypeDeclaration BaseIdentifier) { Base = BaseIdentifier; }
+        public VarArgDecl(ITypeDeclaration BaseIdentifier) { Base = BaseIdentifier; }
 
         public override string ToString()
         {
@@ -227,11 +207,11 @@ namespace D_Parser
     /// </summary>
     public class InheritanceDecl : TypeDeclaration
     {
-        public TypeDeclaration InheritedClass;
-        public TypeDeclaration InheritedInterface;
+        public ITypeDeclaration InheritedClass;
+        public ITypeDeclaration InheritedInterface;
 
         public InheritanceDecl() { }
-        public InheritanceDecl(TypeDeclaration Base) { this.Base = Base; }
+        public InheritanceDecl(ITypeDeclaration Base) { this.Base = Base; }
 
         public override string ToString()
         {
@@ -253,10 +233,10 @@ namespace D_Parser
     /// </summary>
     public class TemplateDecl : TypeDeclaration
     {
-        public List<TypeDeclaration> Template=new List<TypeDeclaration>();
+        public List<ITypeDeclaration> Template=new List<ITypeDeclaration>();
 
         public TemplateDecl() { }
-        public TemplateDecl(TypeDeclaration Base)
+        public TemplateDecl(ITypeDeclaration Base)
         {
             this.Base = Base;
         }
@@ -265,7 +245,7 @@ namespace D_Parser
         {
             string s = (Base != null ? Base.ToString() : "").ToString() + "!(";
 
-            foreach (TypeDeclaration t in Template)
+            foreach (var t in Template)
                 s += t.ToString()+",";
             s=s.TrimEnd(',',' ');
             s+=")";
@@ -278,40 +258,35 @@ namespace D_Parser
     /// </summary>
     public class IdentifierList : TypeDeclaration
     {
-        protected List<TypeDeclaration> parts = new List<TypeDeclaration>();
+        public readonly List<ITypeDeclaration> Parts = new List<ITypeDeclaration>();
 
-        public List<TypeDeclaration> Parts
+        public ITypeDeclaration this[int i]
         {
-            get { return parts; }
+            get { return Parts[i]; }
+            set { Parts[i] = value;}
         }
 
-        public TypeDeclaration this[int i]
+        public void Add(ITypeDeclaration Part)
         {
-            get { return parts[i]; }
-            set { parts[i] = value;}
-        }
-
-        public void Add(TypeDeclaration Part)
-        {
-            parts.Add(Part);
+            Parts.Add(Part);
         }
 
         public void Add(string Identifier)
         {
-            parts.Add(new NormalDeclaration(Identifier));
+            Parts.Add(new NormalDeclaration(Identifier));
         }
 
         public override string ToString()
         {
             var s = "";
-            foreach (var p in parts)
+            foreach (var p in Parts)
                 s += "." + p.ToString();
             return s.TrimStart('.');
         }
 
         public string ToString(int start)
         {
-            return ToString(start,parts.Count-start);
+            return ToString(start,Parts.Count-start);
         }
 
         public string ToString(int start, int length)
@@ -319,11 +294,11 @@ namespace D_Parser
             var s = "";
             if (start <= 0 || length < 0) 
                 throw new ArgumentNullException("Parameter must not be 0 or less");
-            if (start > parts.Count || (start + length) > parts.Count) 
+            if (start > Parts.Count || (start + length) > Parts.Count) 
                 throw new ArgumentOutOfRangeException();
 
             for (int i = start; i < (start + length);i++ )
-                s += "." + parts[i].ToString();
+                s += "." + Parts[i].ToString();
 
             return s.TrimStart('.');
         }
@@ -348,14 +323,11 @@ namespace D_Parser
         }
     }
 
-
-    public abstract class DExpression
-    {
-        public DExpression() { }
-        public DExpression Base;
-
-        public new abstract string ToString();
-    }
+	public abstract class DExpression
+	{
+		public DExpression Base;
+		public new abstract string ToString();
+	}
 
     public class IdentExpression : DExpression
     {
@@ -385,10 +357,10 @@ namespace D_Parser
 
     public class TypeDeclarationExpression : DExpression
     {
-        public TypeDeclaration Declaration;
+        public ITypeDeclaration Declaration;
 
         public TypeDeclarationExpression() { }
-        public TypeDeclarationExpression(TypeDeclaration td) { Declaration = td; }
+        public TypeDeclarationExpression(ITypeDeclaration td) { Declaration = td; }
 
         public override string ToString()
         {
