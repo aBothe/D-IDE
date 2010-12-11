@@ -11,28 +11,17 @@ namespace D_IDE
 {
 	public class EditorDocument:AbstractEditorDocument
 	{
-		public readonly TextEditor _editor = new ICSharpCode.AvalonEdit.TextEditor();
-		public readonly IModule _module;
+		public EditorDocument() { _Module = new DefaultModule(); }
 
-		public override IModule Module
+		public EditorDocument(IModule Module)
 		{
-			get { return _module; }
-		}
-
-		public override TextEditor Editor
-		{
-			get { return _editor; }
-		}
-
-		public EditorDocument()
-		{
-			AddChild(Editor);
-
+			_Module = Module;
 			Init();
 		}
 
 		void Init()
 		{
+			AddChild(Editor);
 			Editor.ShowLineNumbers = true;
 		}
 	}

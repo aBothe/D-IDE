@@ -40,6 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DefaultModule.cs" />
+    <Compile Include="IBuilder.cs" />
     <Compile Include="IModule.cs" />
     <Compile Include="IProject.cs" />
     <Compile Include="ISolution.cs" />

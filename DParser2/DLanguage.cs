@@ -8,6 +8,8 @@ namespace D_Parser
 {
 	public class DLanguage:ILanguage
 	{
+		public string DefaultFileExtension { get { return ".d"; } }
+
 		public IParser CreateParser()
 		{
 			return new DParserWrapper();

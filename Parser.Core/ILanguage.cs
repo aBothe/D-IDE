@@ -6,6 +6,8 @@ namespace Parser.Core
 {
 	public interface ILanguage
 	{
+		string DefaultFileExtension { get; }
+
 		IParser CreateParser();
 		ICodeResolver CreateCodeResolver();
 

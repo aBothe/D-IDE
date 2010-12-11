@@ -10,7 +10,10 @@ namespace D_IDE
 {
 	public abstract class AbstractEditorDocument:DockableContent
 	{
-		public abstract TextEditor Editor { get; }
-		public abstract IModule Module { get; }
+		protected TextEditor _Editor=new TextEditor();
+		protected IModule _Module;
+
+		public TextEditor Editor { get { return _Editor; } }
+		public IModule Module { get { return _Module; } }
 	}
 }

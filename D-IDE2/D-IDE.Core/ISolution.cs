@@ -10,6 +10,13 @@ namespace D_IDE.Core
 		string Name { get; set; }
 		string FileName { get; set; }
 		IProject StartProject { get; set; }
-		IProject[] Projects { get; set; }
+		List<IProject> Projects { get; }
+
+		void Save();
+		void LoadFromFile(string FileName);
+
+		void Build();
+		void BuildIncrementally();
+		void CleanUp();
 	}
 }

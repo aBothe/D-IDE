@@ -16,6 +16,7 @@ using System.IO;
 using System.Reflection;
 using Parser.Core;
 using D_Parser;
+using D_IDE.Core;
 
 namespace D_IDE
 {
@@ -25,24 +26,29 @@ namespace D_IDE
 	public partial class MainWindow : RibbonWindow
 	{
 		#region Properties
-
+		AbstractEditorDocument SelectedDocument
+		{
+			get {
+				return DockMgr.ActiveDocument as AbstractEditorDocument;
+				}
+		}
 		#endregion
 
 		public MainWindow()
 		{
 			InitializeComponent();
 
-			var src = new EditorDocument();
-			src.ShowAsDocument(DockMgr);
-			
 			UpdateLastFilesMenus();
+
+			var d = new EditorDocument();
+			d.ShowAsDocument(DockMgr);
 		}
 
 		#region Ribbon buttons
 
 		private void NewSource(object sender, RoutedEventArgs e)
 		{
-
+			
 		}
 
 		private void NewProject(object sender, RoutedEventArgs e)
