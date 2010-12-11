@@ -44,8 +44,13 @@ namespace Parser.Core
 		CodeLocation StartLocation { get; set; }
 		CodeLocation EndLocation { get; set; }
 
-		INode Parent { get; set; }
+		/// <summary>
+		/// Assigns a node's properties
+		/// </summary>
+		/// <param name="Other"></param>
+		void Assign(INode Other);
 
+		INode Parent { get; set; }
 		INode NodeRoot { get; set; }
 	}
 

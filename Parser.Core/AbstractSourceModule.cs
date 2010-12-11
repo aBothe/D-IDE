@@ -4,8 +4,7 @@ using System.Text;
 
 namespace Parser.Core
 {
-	/*
-	public abstract class SourceModule:BlockNode, ISourceModule
+	public abstract class AbstractSourceModule:AbstractBlockNode, ISourceModule
 	{
 		string _FileName;
 		Dictionary<ITypeDeclaration, bool> _Imports = new Dictionary<ITypeDeclaration, bool>();
@@ -48,5 +47,13 @@ namespace Parser.Core
 				_Imports = value;
 			}
 		}
+
+		public bool ContainsImport(ITypeDeclaration type)
+		{
+			foreach (var kv in _Imports)
+				if (kv.Key.ToString() == type.ToString())
+					return true;
+			return false;
+		}
 	}
-*/}
+}

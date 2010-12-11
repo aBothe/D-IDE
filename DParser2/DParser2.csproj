@@ -50,6 +50,7 @@
     <Compile Include="BinaryNodeStorage.cs" />
     <Compile Include="DCodeResolver.cs" />
     <Compile Include="DAttribute.cs" />
+    <Compile Include="DLanguage.cs" />
     <Compile Include="DModule.cs" />
     <Compile Include="DLexer.cs" />
     <Compile Include="DNode.cs" />

@@ -27,14 +27,6 @@ namespace D_IDE
 
             Breakpoints = new BreakpointHelper(this);
 
-            /*if (D_IDE_Properties.Default.UseRibbonMenu)
-            {
-                this.MainMenuStrip.Visible = false;
-                this.TBS.Visible = false;
-                this.dockPanel.Top = 0;
-                RibbonSetup=new RibbonSetup(this);
-            }*/
-
             this.WindowState = D_IDE_Properties.Default.lastFormState;
             if (D_IDE_Properties.Default.lastFormState != FormWindowState.Maximized)
             {

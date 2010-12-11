@@ -5,7 +5,7 @@ using Parser.Core;
 
 namespace D_Parser
 {
-    public abstract class DNode :Node
+    public abstract class DNode :AbstractNode
     {
         public INode[] TemplateParameters=null; // Functions, Templates
 
@@ -65,7 +65,7 @@ namespace D_Parser
                 s = s.Trim(',')+ ")";
             }
             
-            return s;
+            return s.Trim();
         }
 
         public override string ToString()

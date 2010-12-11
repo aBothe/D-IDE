@@ -4,7 +4,7 @@ using System.Text;
 using System.IO;
 using Parser.Core;
 
-namespace D_Parser.NodeStorage
+namespace D_Parser
 {
     /// <summary>
     /// (De-)Serializes node trees to binary files
@@ -12,8 +12,8 @@ namespace D_Parser.NodeStorage
     public class BinaryNodeStorage
     {
         #region General
-        protected BinaryWriter BinWriter;
-        protected BinaryReader BinReader;
+        public readonly BinaryWriter BinWriter;
+        public readonly BinaryReader BinReader;
 
         public readonly bool IsWriting;
 

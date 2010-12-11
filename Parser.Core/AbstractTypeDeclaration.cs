@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Parser.Core
 {
-	public abstract class TypeDeclaration:ITypeDeclaration
+	public abstract class AbstractTypeDeclaration:ITypeDeclaration
 	{
 		private ITypeDeclaration _Base;
 		public new abstract string ToString();

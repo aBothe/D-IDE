@@ -4,9 +4,10 @@ using System.Text;
 
 namespace Parser.Core
 {
-	public interface _IParserUtilities
+	public interface IParser
 	{
-		
+		ITypeDeclaration ParseType(string Code, out object OptionalToken);
+
 		ISourceModule ParseString(string Code, bool OuterStructureOnly);
 		ISourceModule ParseFile(string FileName, bool OuterStructureOnly);
 

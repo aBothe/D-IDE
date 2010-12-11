@@ -3266,7 +3266,7 @@ namespace D_Parser
             return ret.ToArray();
         }
 
-        private TypeDeclaration TemplateInstance()
+        private AbstractTypeDeclaration TemplateInstance()
         {
             Expect(Identifier);
             var td = new TemplateDecl(new NormalDeclaration(t.Value));

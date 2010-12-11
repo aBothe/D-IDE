@@ -160,11 +160,6 @@ namespace D_Parser
 
 			base.Assign(other);
 		}
-
-		public override string ToString()
-		{
-			return Name;
-		}
 	}
 
     public class DVariable : DNode

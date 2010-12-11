@@ -37,24 +37,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeLocation.cs" />
+    <Compile Include="ILanguage.cs" />
     <Compile Include="NodeInterfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="BlockNode.cs">
+    <Compile Include="AbstractBlockNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="_ICodeResolver.cs">
+    <Compile Include="ICodeResolver.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Node.cs">
+    <Compile Include="AbstractNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="_IParserUtilities.cs">
+    <Compile Include="IParser.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SourceModule.cs">
+    <Compile Include="AbstractSourceModule.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TypeDeclaration.cs">
+    <Compile Include="AbstractTypeDeclaration.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

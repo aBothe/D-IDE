@@ -7,6 +7,37 @@ using Parser.Core;
 
 namespace D_Parser
 {
+	public class DParserWrapper : IParser
+	{
+		public ITypeDeclaration ParseType(string Code, out object OptToken)
+		{
+			DToken tk = null;
+			var t=DParser.ParseBasicType(Code, out tk);
+			OptToken = tk;
+			return t;
+		}
+
+		public ISourceModule ParseString(string Code, bool OuterStructureOnly)
+		{
+			return DParser.ParseString(Code, OuterStructureOnly);
+		}
+
+		public ISourceModule ParseFile(string FileName, bool OuterStructureOnly)
+		{
+			return DParser.ParseFile(FileName, OuterStructureOnly);
+		}
+
+		public void UpdateModule(ISourceModule Module)
+		{
+			DParser.UpdateModule(Module);
+		}
+
+		public void UpdateModuleFromText(string Code, ISourceModule Module)
+		{
+			DParser.UpdateModuleFromText(Module, Code);
+		}
+	}
+
     /// <summary>
     /// Parser for D Code
     /// </summary>
@@ -77,13 +108,13 @@ namespace D_Parser
         /// Parses the module again
         /// </summary>
         /// <param name="Module"></param>
-        public static void UpdateModule(DModule Module)
+        public static void UpdateModule(ISourceModule Module)
         {
             var m = DParser.ParseFile(Module.FileName);
             Module.Assign(m);
         }
 
-        public static void UpdateModuleFromText(DModule Module, string Code)
+        public static void UpdateModuleFromText(ISourceModule Module, string Code)
         {
             var m = DParser.ParseString(Code);
             Module.Assign(m);

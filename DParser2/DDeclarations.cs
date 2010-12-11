@@ -8,7 +8,7 @@ namespace D_Parser
     /// <summary>
     /// Basic type, e.g. &gt;int&lt;
     /// </summary>
-    public class NormalDeclaration : TypeDeclaration
+    public class NormalDeclaration : AbstractTypeDeclaration
     {
         public string Name;
 
@@ -56,7 +56,7 @@ namespace D_Parser
     /// <summary>
     /// Array decl, e.g. &gt;int[string]&lt; myArray;
     /// </summary>
-    public class ClampDecl : TypeDeclaration
+    public class ClampDecl : AbstractTypeDeclaration
     {
         /// <summary>
         /// Equals <see cref="Base" />
@@ -115,7 +115,7 @@ namespace D_Parser
         }
     }
 
-    public class DelegateDeclaration : TypeDeclaration
+    public class DelegateDeclaration : AbstractTypeDeclaration
     {
         public ITypeDeclaration ReturnType
         {
@@ -154,7 +154,7 @@ namespace D_Parser
     /// <summary>
     /// int* ptr;
     /// </summary>
-    public class PointerDecl : TypeDeclaration
+    public class PointerDecl : AbstractTypeDeclaration
     {
         public PointerDecl() { }
         public PointerDecl(ITypeDeclaration BaseType) { Base = BaseType; }
@@ -190,7 +190,7 @@ namespace D_Parser
         }
     }
 
-    public class VarArgDecl : TypeDeclaration
+    public class VarArgDecl : AbstractTypeDeclaration
     {
         public VarArgDecl() { }
         public VarArgDecl(ITypeDeclaration BaseIdentifier) { Base = BaseIdentifier; }
@@ -205,7 +205,7 @@ namespace D_Parser
     /// <summary>
     /// class ABC: &gt;A, C&lt;
     /// </summary>
-    public class InheritanceDecl : TypeDeclaration
+    public class InheritanceDecl : AbstractTypeDeclaration
     {
         public ITypeDeclaration InheritedClass;
         public ITypeDeclaration InheritedInterface;
@@ -231,7 +231,7 @@ namespace D_Parser
     /// <summary>
     /// List&lt;T:base&gt; myList;
     /// </summary>
-    public class TemplateDecl : TypeDeclaration
+    public class TemplateDecl : AbstractTypeDeclaration
     {
         public List<ITypeDeclaration> Template=new List<ITypeDeclaration>();
 
@@ -256,7 +256,7 @@ namespace D_Parser
     /// <summary>
     /// Probably a more efficient way to store identifier lists like a.b.c.d
     /// </summary>
-    public class IdentifierList : TypeDeclaration
+    public class IdentifierList : AbstractTypeDeclaration
     {
         public readonly List<ITypeDeclaration> Parts = new List<ITypeDeclaration>();
 
@@ -306,7 +306,7 @@ namespace D_Parser
 
 
     #region Expressions
-    public class DExpressionDecl : TypeDeclaration
+    public class DExpressionDecl : AbstractTypeDeclaration
     {
         public DExpression Expression;
 

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Parser.Core
 {
-	public abstract class Node:INode
+	public abstract class AbstractNode:INode
 	{
 		ITypeDeclaration _Type;
 		string _Name="";
@@ -70,7 +70,7 @@ namespace Parser.Core
 			}
 			s += path.Trim('.');
 
-			return s;
+			return s.Trim();
 		}
 
 		public void Assign(INode other)

@@ -8,7 +8,7 @@ namespace D_Parser
     /// <summary>
     /// Generic class for resolve module relations and/or declarations
     /// </summary>
-    public class DCodeResolver
+    public class DCodeResolver:ICodeResolver
     {
         #region Direct Code search
         public static ITypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly, out DToken OptionalInitToken)
@@ -662,5 +662,35 @@ namespace D_Parser
                 return a || b || c || d;
             }
         }
-    }
+
+		#region Interface implementation
+		public ITypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly, out object OptionalInitToken)
+		{
+			DToken tk=null;
+			var t=BuildIdentifierList(Text, CaretOffset, BackwardOnly, out tk);
+			OptionalInitToken = tk;
+			return t;
+		}
+
+		public INode[] ResolveTypes(ISourceModule[] Cache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
+		{
+			return ResolveTypes(Cache, CurrentlyScopedBlock, IdentifierList);
+		}
+
+		public INode[] ResolveImports(ISourceModule[] Cache, ISourceModule CurrentModule)
+		{
+			return ResolveImports(Cache, CurrentModule);
+		}
+
+		public void IsInCommentAreaOrString(string Text, int Offset, out bool IsInString, out bool IsInLineComment, out bool IsInBlockComment, out bool IsInNestedBlockComment)
+		{
+			Commenting.IsInCommentAreaOrString(Text, Offset, out IsInString, out IsInLineComment, out IsInBlockComment, out IsInNestedBlockComment);
+		}
+
+		public bool IsInCommentOrString(string Text, int Offset)
+		{
+			return Commenting.IsInCommentAreaOrString(Text, Offset);
+		}
+		#endregion
+	}
 }
