@@ -251,7 +251,7 @@ namespace D_IDE
             if (diw == null) return;
 
             int line = diw.txt.ActiveTextAreaControl.Caret.Position.Line + 1;
-            Breakpoints.ToggleBreakpoint(diw.Module.ModuleFileName, line);
+            Breakpoints.ToggleBreakpoint(diw.Module.FileName, line);
 
             dbgwin.Update();
             diw.DrawBreakPoints();

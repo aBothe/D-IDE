@@ -7,10 +7,10 @@ namespace Parser.Core
 	public interface _IParserUtilities
 	{
 		
-		SourceModule ParseString(string Code, bool OuterStructureOnly);
-		SourceModule ParseFile(string FileName, bool OuterStructureOnly);
+		ISourceModule ParseString(string Code, bool OuterStructureOnly);
+		ISourceModule ParseFile(string FileName, bool OuterStructureOnly);
 
-		void UpdateModule(SourceModule Module);
-		void UpdateModuleFromText(string Code,SourceModule Module);
+		void UpdateModule(ISourceModule Module);
+		void UpdateModuleFromText(string Code,ISourceModule Module);
 	}
 }

@@ -7,9 +7,9 @@ namespace Parser.Core
 	public abstract class Node:INode
 	{
 		ITypeDeclaration _Type;
-		string _Name;
+		string _Name="";
 		INode _Parent;
-		string _Description;
+		string _Description="";
 		CodeLocation _StartLocation;
 		CodeLocation _EndLocation;
 
@@ -48,8 +48,30 @@ namespace Parser.Core
 			get { return _Parent; }
 			set { _Parent = value; }
 		}
-		
-		public new abstract string ToString();
+
+		public override string ToString()
+		{
+			string s = "";
+			// Type
+			if (Type != null)
+				s += Type.ToString() + " ";
+
+			// Path + Name
+			string path = "";
+			var curParent = this as INode;
+			while (curParent != null)
+			{
+				// Also include module path
+				if (curParent is ISourceModule)
+					path = (curParent as ISourceModule).ModuleName + "." + path;
+				else
+					path = curParent.Name + "." + path;
+				curParent = curParent.Parent;
+			}
+			s += path.Trim('.');
+
+			return s;
+		}
 
 		public void Assign(INode other)
 		{

@@ -7,8 +7,10 @@ namespace Parser.Core
 	public interface ISourceModule: IBlockNode
 	{
 		string FileName { get; set; }
+		string ModuleName { get; set; }
 		List<ParserError> ParseErrors { get; }
-		Dictionary<ITypeDeclaration, bool> Imports { get; set; }	
+		Dictionary<ITypeDeclaration, bool> Imports { get; set; }
+		bool ContainsImport(ITypeDeclaration ImportIdentifier);
 	}
 
 	public class ParserError

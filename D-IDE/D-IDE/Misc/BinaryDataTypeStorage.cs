@@ -64,7 +64,7 @@ namespace D_IDE
             {
                 bs.Write(ModuleInitializer);
                 WriteString(mod.ModuleName,true);
-                WriteString(mod.ModuleFileName,true);
+                WriteString(mod.FileName,true);
                 WriteNodes((mod as IBlockNode).Children);
                 bs.Flush();
             }
@@ -99,10 +99,10 @@ namespace D_IDE
 
                 var cm = new CodeModule();
                 //cm.Project = Project;
-                cm.ModuleFileName = mod_fn;
+                cm.FileName = mod_fn;
                 cm.ModuleName = mod_name;
 
-                var bl = cm as DBlockStatement;
+                var bl = cm as IBlockNode;
                 ReadNodes(ref bl);
 
                 ret.Add(cm);

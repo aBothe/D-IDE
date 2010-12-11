@@ -100,8 +100,8 @@ namespace D_IDE
                     Add(ref rl,n);
 
                 // Template arguments
-                if (curBlock.TemplateParameters != null)
-                    foreach (var n in curBlock.TemplateParameters)
+                if (curBlock is DNode && (curBlock as DNode).TemplateParameters != null)
+					foreach (var n in (curBlock as DNode).TemplateParameters)
                         Add(ref rl,n);
 
                 // Parameters

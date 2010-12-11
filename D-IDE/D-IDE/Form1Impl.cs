@@ -136,7 +136,7 @@ namespace D_IDE
             {
                 if (!(dc is DocumentInstanceWindow)) continue;
                 DocumentInstanceWindow diw = dc as DocumentInstanceWindow;
-                if (diw.Module.ModuleFileName == fn) return diw;
+                if (diw.Module.FileName == fn) return diw;
             }
             return null;
         }
@@ -253,7 +253,7 @@ namespace D_IDE
 					if (dc is DocumentInstanceWindow)
 					{
 						diw = (DocumentInstanceWindow)dc;
-						if (diw.fileData.ModuleFileName == file)
+						if (diw.fileData.FileName == file)
 						{
 							return false;
 						}
@@ -363,7 +363,7 @@ namespace D_IDE
             {
                 if (!(dc is DocumentInstanceWindow)) continue;
                 var diw = dc as DocumentInstanceWindow;
-                if (diw.Module.ModuleFileName == file)
+                if (diw.Module.FileName == file)
                 {
                     diw.Activate();
                     Application.DoEvents();

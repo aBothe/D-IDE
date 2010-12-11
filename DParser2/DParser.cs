@@ -97,7 +97,7 @@ namespace D_Parser
         /// <summary>
         /// Encapsules whole document structure
         /// </summary>
-        DModule doc;
+        ISourceModule doc;
 
         /// <summary>
         /// Modifiers for entire block
@@ -121,7 +121,7 @@ namespace D_Parser
             }
         }
 
-        public DModule Document
+        public ISourceModule Document
         {
             get { return doc; }
         }
@@ -324,7 +324,7 @@ namespace D_Parser
         DToken Step() { lexer.NextToken(); Peek(1); return t; }
 
         [DebuggerStepThrough()]
-        public DModule Parse()
+        public ISourceModule Parse()
         {
             return Parse(false);
         }
@@ -335,7 +335,7 @@ namespace D_Parser
         /// <param name="imports">List of imports in the module</param>
         /// <param name="ParseStructureOnly">If true, all statements and non-declarations are ignored - useful for analysing libraries</param>
         /// <returns>Completely parsed module structure</returns>
-        public DModule Parse(bool ParseStructureOnly)
+        public ISourceModule Parse(bool ParseStructureOnly)
         {
             this.ParseStructureOnly = ParseStructureOnly;
             doc=Root();
@@ -343,7 +343,7 @@ namespace D_Parser
         }
         
         #region Error handlers
-        public delegate void ErrorHandler(DModule tempModule, int line, int col, int kindOf, string message);
+        public delegate void ErrorHandler(ISourceModule tempModule, int line, int col, int kindOf, string message);
         static public event ErrorHandler OnError, OnSemanticError;
 
         void SynErr(int n, string msg)

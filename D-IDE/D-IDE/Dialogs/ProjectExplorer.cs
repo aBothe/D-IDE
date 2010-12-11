@@ -125,7 +125,7 @@ namespace D_IDE
             DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
             if (diw != null)
             {
-                ExpandToFile(diw.OwnerProject, diw.Module.ModuleFileName);
+                ExpandToFile(diw.OwnerProject, diw.Module.FileName);
             }
         }
 
@@ -520,7 +520,7 @@ namespace D_IDE
                                 try
                                 {
                                     // Update tab that may contains moved file
-                                    D_IDEForm.thisForm.FileDataByFile(file).Module.ModuleFileName = tar;
+                                    D_IDEForm.thisForm.FileDataByFile(file).Module.FileName = tar;
                                 }
                                 catch { }
 

@@ -20,11 +20,14 @@ namespace D_Parser
         public DNode()
         {
         }
-
-        public DNode Assign(DNode other)
+		
+        public new INode Assign(INode other)
         {
-            TemplateParameters = other.TemplateParameters;
-            Attributes = other.Attributes;
+			if (other is DNode)
+			{
+				TemplateParameters = (other as DNode).TemplateParameters;
+				Attributes = (other as DNode).Attributes;
+			}
 			base.Assign(other);
             return this;
         }
@@ -44,30 +47,14 @@ namespace D_Parser
         /// Returns attributes, type and name combined to one string
         /// </summary>
         /// <returns></returns>
-        public string ToDeclarationString(bool Attributes)
+        public string ToString(bool Attributes)
         {
             string s = "";
             // Attributes
             if(Attributes)
                 s = AttributeString+" ";
 
-            // Type
-            if (Type != null)
-                s += Type.ToString()+" ";
-
-            // Path + Name
-            string path="";
-            var curParent=this as INode;
-            while (curParent != null)
-            {
-                // Also include module path
-                if (curParent is DModule)
-                    path = (curParent as DModule).ModuleName + "." + path;
-                else
-                    path = curParent.Name + "." + path;
-                curParent = curParent.Parent;
-            }
-            s += path.Trim('.');
+			s += base.ToString();
 
             // Template parameters
             if (TemplateParameters!=null && TemplateParameters.Length > 0)
@@ -83,7 +70,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return ToDeclarationString(true);
+            return ToString(true);
         }
 
         public bool IsPublic

@@ -183,9 +183,9 @@ namespace D_Parser
         /// <param name="cc"></param>
         /// <param name="ActualModule"></param>
         /// <returns></returns>
-        public static List<DModule> ResolveImports(List<DModule> CodeCache, DModule ActualModule)
+        public static List<ISourceModule> ResolveImports(List<ISourceModule> CodeCache, ISourceModule ActualModule)
         {
-            var ret = new List<DModule>();
+            var ret = new List<ISourceModule>();
             if (CodeCache == null || ActualModule == null) return ret;
 
             // First add all local imports
@@ -199,7 +199,7 @@ namespace D_Parser
                 ret.Add(objmod);
 
             foreach (var m in CodeCache)
-                if (localImps.Contains(m.ModuleName) && !ret.Contains(m))
+                if (localImps.Contains(m.Name) && !ret.Contains(m))
                 {
                     ret.Add(m);
                     /* 
@@ -235,7 +235,7 @@ namespace D_Parser
             return ret;
         }
 
-        public static void ResolveImports(ref List<DModule> ImportModules, List<DModule> CodeCache, DModule ActualModule)
+        public static void ResolveImports(ref List<ISourceModule> ImportModules, List<ISourceModule> CodeCache, ISourceModule ActualModule)
         {
             var localImps = new List<string>();
             foreach (var kv in ActualModule.Imports)
@@ -243,7 +243,7 @@ namespace D_Parser
                     localImps.Add(kv.Key.ToString());
 
             foreach (var m in CodeCache)
-                if (localImps.Contains(m.ModuleName) && !ImportModules.Contains(m))
+                if (localImps.Contains(m.Name) && !ImportModules.Contains(m))
                 {
                     ImportModules.Add(m);
                     ResolveImports(ref ImportModules, CodeCache, m);
@@ -289,11 +289,11 @@ namespace D_Parser
             return false;
         }
 
-        public static DModule SearchModuleInCache(List<DModule> HayStack,string ModuleName)
+        public static ISourceModule SearchModuleInCache(List<ISourceModule> HayStack,string ModuleName)
         {
             foreach (var m in HayStack)
             {
-                if (m.ModuleName == ModuleName) return m;
+                if (m.Name == ModuleName) return m;
             }
             return null;
         }
@@ -305,7 +305,7 @@ namespace D_Parser
         /// <param name="Module"></param>
         /// <param name="IdentifierList"></param>
         /// <returns>When a type was found, the declaration entry will be returned. Otherwise, it'll return null.</returns>
-        public static INode[] ResolveTypeDeclarations_ModuleOnly(List<DModule> ImportCache,IBlockNode BlockNode, ITypeDeclaration IdentifierList, NodeFilter Filter)
+        public static INode[] ResolveTypeDeclarations_ModuleOnly(List<ISourceModule> ImportCache,IBlockNode BlockNode, ITypeDeclaration IdentifierList, NodeFilter Filter)
         {
             var ret = new List<INode>();
 
@@ -447,7 +447,7 @@ namespace D_Parser
         /// <param name="CurrentlyScopedBlock"></param>
         /// <param name="IdentifierList"></param>
         /// <returns></returns>
-        public static INode[] ResolveTypeDeclarations(List<DModule> ImportCache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
+        public static INode[] ResolveTypeDeclarations(List<ISourceModule> ImportCache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
         {
             var ret = new List<INode>();
 
@@ -461,7 +461,7 @@ namespace D_Parser
             foreach (var m in ImportCache)
             {
                 // Add the module itself to the returned list if its name starts with the identifierlist
-                if (m.ModuleName.StartsWith(IdentifierList.ToString()))
+                if (m.Name.StartsWith(IdentifierList.ToString()))
                     ret.Add(m);
                 
                 else if (m.FileName != ThisModule.FileName) // We already parsed this module
@@ -477,7 +477,7 @@ namespace D_Parser
         /// <param name="ModuleCache"></param>
         /// <param name="ActualClass"></param>
         /// <returns></returns>
-        public static DClassLike ResolveBaseClass(List<DModule> ModuleCache,DClassLike ActualClass)
+        public static DClassLike ResolveBaseClass(List<ISourceModule> ModuleCache,DClassLike ActualClass)
         {
             // Implicitly set the object class to the inherited class if no explicit one was done
             if (ActualClass.BaseClasses.Count < 1)

@@ -45,7 +45,7 @@ namespace D_IDE.CodeCompletion
                 return null;
 
             // Our finally resolved node
-            DNode DeclarationBlock = SearchBlockAt(Module, Util.ToCodeLocation(CursorLocation));
+            var DeclarationBlock = SearchBlockAt(Module, Util.ToCodeLocation(CursorLocation));
 
             // Retrieve the identifierlist that's located beneath the cursor
             Identifiers = BuildIdentifierList(ta.TextView.Document.TextContent, mouseOffset, false, out ExtraOrdinaryToken);
@@ -90,7 +90,7 @@ namespace D_IDE.CodeCompletion
 
                     // If there are any other identifiers, return our looked-up block
                     if (Identifiers== null)
-                        return new DNode[] { DeclarationBlock};
+                        return new INode[] { DeclarationBlock};
                 }
                 else // Other tokens
                     return null;
@@ -111,7 +111,7 @@ namespace D_IDE.CodeCompletion
                     if (m.ModuleName.StartsWith(istr))
                         rl.Add(m);
                     else if (istr.StartsWith(m.ModuleName))
-                        return ResolveTypeDeclarations_ModuleOnly(new List<DModule>(),m,Identifiers,NodeFilter.PublicOnly);
+                        return ResolveTypeDeclarations_ModuleOnly(new List<ISourceModule>(),m,Identifiers,NodeFilter.PublicOnly);
                 }
                 if (rl.Count > 0)
                     return rl.ToArray();
@@ -131,9 +131,9 @@ namespace D_IDE.CodeCompletion
 
 
 
-        public static List<DModule> ResolveImports(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, DModule CurrentModule)
+        public static List<ISourceModule> ResolveImports(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, ISourceModule CurrentModule)
         {
-            var SearchArea = new List<DModule>(GlobalModules.Count + LocalModules.Count);
+            var SearchArea = new List<ISourceModule>(GlobalModules.Count + LocalModules.Count);
 
             foreach (var m in GlobalModules)
                 SearchArea.Add(m);
@@ -143,9 +143,9 @@ namespace D_IDE.CodeCompletion
             return ResolveImports(SearchArea, CurrentModule);
         }
 
-        public static List<DModule> ResolveImports(List<CodeModule> ModuleCache, DModule CurrentModule)
+        public static List<ISourceModule> ResolveImports(List<CodeModule> ModuleCache, ISourceModule CurrentModule)
         {
-            var SearchArea = new List<DModule>(ModuleCache.Count);
+            var SearchArea = new List<ISourceModule>(ModuleCache.Count);
 
             foreach (var m in ModuleCache)
                 SearchArea.Add(m);
@@ -153,9 +153,9 @@ namespace D_IDE.CodeCompletion
             return ResolveImports(SearchArea, CurrentModule);
         }
 
-        public static INode[] ResolveTypeDeclarations(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, DBlockStatement CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
+        public static INode[] ResolveTypeDeclarations(List<CodeModule> GlobalModules, List<CodeModule> LocalModules, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
         {
-            var SearchArea = new List<DModule>(GlobalModules.Count+LocalModules.Count);
+            var SearchArea = new List<ISourceModule>(GlobalModules.Count+LocalModules.Count);
 
             foreach (var m in GlobalModules)
                 SearchArea.Add(m);
@@ -165,9 +165,9 @@ namespace D_IDE.CodeCompletion
             return ResolveTypeDeclarations(SearchArea, CurrentlyScopedBlock, IdentifierList);
         }
 
-        public static INode[] ResolveTypeDeclarations(List<CodeModule> ModuleCache, DBlockStatement CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
+        public static INode[] ResolveTypeDeclarations(List<CodeModule> ModuleCache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
         {
-            var SearchArea = new List<DModule>(ModuleCache.Count);
+            var SearchArea = new List<ISourceModule>(ModuleCache.Count);
 
             foreach (var m in ModuleCache)
                 SearchArea.Add(m);
@@ -177,7 +177,7 @@ namespace D_IDE.CodeCompletion
 
         public static DClassLike ResolveBaseClass(List<CodeModule> ModuleCache, DClassLike ActualClass)
         {
-            var SearchArea = new List<DModule>(ModuleCache.Count);
+            var SearchArea = new List<ISourceModule>(ModuleCache.Count);
 
             foreach (var m in ModuleCache)
                 SearchArea.Add(m);
@@ -187,7 +187,7 @@ namespace D_IDE.CodeCompletion
 
         public static DClassLike ResolveBaseClass(List<CodeModule> GlobalModules, List<CodeModule> LocalModules,DClassLike ActualClass)
         {
-            var SearchArea = new List<DModule>(GlobalModules.Count + LocalModules.Count);
+            var SearchArea = new List<ISourceModule>(GlobalModules.Count + LocalModules.Count);
 
             foreach (var m in GlobalModules)
                 SearchArea.Add(m);

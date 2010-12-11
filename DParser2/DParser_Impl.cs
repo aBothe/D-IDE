@@ -18,7 +18,7 @@ namespace D_Parser
         /// <summary>
         /// Module entry point
         /// </summary>
-        DModule Root()
+        ISourceModule Root()
         {
             Step();
 
@@ -253,7 +253,7 @@ namespace D_Parser
             else Declaration(ref module);
         }
 
-        TypeDeclaration ModuleDeclaration()
+        ITypeDeclaration ModuleDeclaration()
         {
             Expect(Module);
             var ret = ModuleFullyQualifiedName();
@@ -261,7 +261,7 @@ namespace D_Parser
             return ret;
         }
 
-        TypeDeclaration ModuleFullyQualifiedName()
+        ITypeDeclaration ModuleFullyQualifiedName()
         {
             Expect(Identifier);
 
@@ -315,7 +315,7 @@ namespace D_Parser
             Expect(Semicolon);
         }
 
-        TypeDeclaration _Import()
+        ITypeDeclaration _Import()
         {
             // ModuleAliasIdentifier
             if (lexer.CurrentPeekToken.Kind==(Assign))
@@ -553,6 +553,7 @@ namespace D_Parser
 
                 Expect(Semicolon);
 				var pb=(par as IBlockNode);
+				if(pb.Count>0)
                 pb[pb.Count - 1].Description += CheckForPostSemicolonComment();
             }
 

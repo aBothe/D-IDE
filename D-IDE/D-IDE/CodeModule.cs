@@ -25,22 +25,21 @@ namespace D_IDE
 		public DProject Project;
         public List<FoldMarker> FoldMarkers=new List<FoldMarker>();
 
-		public new string ModuleFileName
+		public new string FileName
 		{
-			get { return base.ModuleFileName; }
+			get { return base.FileName; }
 			set {
-				base.ModuleFileName = value;
+				base.FileName = value;
 				if (Project != null)
-				{
 					ModuleName = Path.ChangeExtension(Project.GetRelFilePath(value), null).Replace('\\', '.');
-				}else
+				else
 					ModuleName = Path.GetFileNameWithoutExtension(value);
 			}
 		}
 
         public bool IsParsable
         {
-            get { return Parsable(ModuleFileName); }
+            get { return Parsable(FileName); }
         }
 
         public static bool Parsable(string file)
@@ -51,10 +50,13 @@ namespace D_IDE
 
         public void Parse()
         {
-            if (!File.Exists(ModuleFileName) || !IsParsable) return;
+            if (!File.Exists(FileName) || !IsParsable) return;
 
-            var m = DParser.ParseFile(ModuleFileName);
+			string lastModuleName = ModuleName;
+            var m = DParser.ParseFile(FileName);
             Assign(m);
+			if (m != null && String.IsNullOrEmpty(m.ModuleName))
+				ModuleName = lastModuleName;
         }
 
         public void Parse(string file)
@@ -66,11 +68,8 @@ namespace D_IDE
 				D_IDEForm.thisForm.errlog.parserErrors.Clear();
 				D_IDEForm.thisForm.errlog.Update();
 			}
-            ModuleFileName = file;
-
-            // try { Form1.thisForm.ProgressStatusLabel.Text = "Parsing " + ModuleName; } catch { } // Perhaps these things here take too much time - so comment it out
-            Parse();
-            //try { Form1.thisForm.ProgressStatusLabel.Text = "Done parsing " + ModuleName; } catch { }
+            FileName = file;
+			Parse();
         }
     }
 }

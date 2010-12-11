@@ -9,6 +9,7 @@ using D_Parser;
 using ICSharpCode.TextEditor;
 using ICSharpCode.TextEditor.Document;
 using WeifenLuo.WinFormsUI.Docking;
+using Parser.Core;
 
 namespace D_IDE
 {
@@ -138,31 +139,31 @@ namespace D_IDE
             {
                 bpw.Show();
                 DocumentInstanceWindow tp = SelectedTabPage;
-                if (!CodeModule.Parsable(tp.Module.ModuleFileName))
+                if (!CodeModule.Parsable(tp.Module.FileName))
                 {
-                    if (tp.Module.ModuleFileName.EndsWith(".rc"))
+                    if (tp.Module.FileName.EndsWith(".rc"))
                     {
                         DBuilder.BuildResFile(
-                            tp.Module.ModuleFileName, cc,
-                            Path.ChangeExtension(tp.Module.ModuleFileName, ".res"),
-                            Path.GetDirectoryName(tp.Module.ModuleFileName)
+                            tp.Module.FileName, cc,
+                            Path.ChangeExtension(tp.Module.FileName, ".res"),
+                            Path.GetDirectoryName(tp.Module.FileName)
                             );
-                        return Path.ChangeExtension(tp.Module.ModuleFileName, ".res");
+                        return Path.ChangeExtension(tp.Module.FileName, ".res");
                     }
                     MessageBox.Show("Can only build .d or .rc source files!");
                     return null;
                 }
-                string exe = Path.ChangeExtension(tp.Module.ModuleFileName, ".exe");
+                string exe = Path.ChangeExtension(tp.Module.FileName, ".exe");
 
-                Log("Build single " + tp.Module.ModuleFileName + " to " + exe);
+                Log("Build single " + tp.Module.FileName + " to " + exe);
                 string args = D_IDE_Properties.Default.DefaultCompiler.ExeLinkerDebugArgs;
-                args = args.Replace("$objs", "\"" + tp.Module.ModuleFileName + "\"");
+                args = args.Replace("$objs", "\"" + tp.Module.FileName + "\"");
                 args = args.Replace("$libs", "");
                 args = args.Replace("\"$exe\"","$exe").Replace("$exe", "\"" + exe + "\"");
 
                 try
                 {
-                    Process p = DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.Module.ModuleFileName), false);
+                    Process p = DBuilder.Exec(Path.IsPathRooted(cc.ExeLinker) ? cc.ExeLinker : (cc.BinDirectory + "\\" + cc.ExeLinker), args, Path.GetDirectoryName(tp.Module.FileName), false);
                     if (p != null && !p.WaitForExit(10000))
                     {
                         Log("Execeeded 10 seconds execution time!");
@@ -216,7 +217,7 @@ namespace D_IDE
             {
                 if (SelectedTabPage != null)
                 {
-                    string single_bin = Path.ChangeExtension(SelectedTabPage.Module.ModuleFileName, ".exe");
+                    string single_bin = Path.ChangeExtension(SelectedTabPage.Module.FileName, ".exe");
                     if (File.Exists(single_bin))
                     {
                         output.Show();
@@ -284,7 +285,7 @@ namespace D_IDE
             else
             {
                 to += 2;
-                string ModuleFileName = e.Data.Substring(0, to);
+                string FileName = e.Data.Substring(0, to);
                 to += 1;
                 int to2 = e.Data.IndexOf("):", to);
                 if (to2 < 0) return;
@@ -294,7 +295,7 @@ namespace D_IDE
                 Invoke(
                     new BuildErrorDelegate(
                         AddHighlightedBuildError),
-                        new Object[] { ModuleFileName, lineNumber, errmsg, Color.LightPink });
+                        new Object[] { FileName, lineNumber, errmsg, Color.LightPink });
             }
         }
         #endregion
@@ -373,7 +374,7 @@ namespace D_IDE
                 if (!mtp.Module.IsParsable) return;
                 mtp.ParseFromText(); // Reparse after save
 
-                FXFormsDesigner fd = FXFormDesignerByFile(mtp.Module.ModuleFileName);
+                FXFormsDesigner fd = FXFormDesignerByFile(mtp.Module.FileName);
                 if (fd != null)
                 {
                     fd.Reload();
@@ -386,7 +387,7 @@ namespace D_IDE
         goonwithcc:
             foreach (string dir in cc.ImportDirectories)
             {
-                if (mtp.Module.ModuleFileName.StartsWith(dir))
+                if (mtp.Module.FileName.StartsWith(dir))
                 {
                     D_IDE_Properties.AddFileData(cc, mtp.Module);
                     break;
@@ -404,23 +405,23 @@ namespace D_IDE
         {
             var tp = SelectedTabPage;
             if (tp == null) return;
-            string bef = tp.Module.ModuleFileName;
+            string bef = tp.Module.FileName;
             sF.FileName = bef;
 
             if (sF.ShowDialog() == DialogResult.OK)
             {
                 if (prj != null)
                 {
-                    if (CodeModule.Parsable(tp.Module.ModuleFileName))
+                    if (CodeModule.Parsable(tp.Module.FileName))
                     {
                         if (prj.Modules.Contains(tp.Module))
                             prj.Modules.Remove(tp.Module);
                     }
 
-                    prj.Files.Remove(prj.GetRelFilePath(tp.Module.ModuleFileName));
+                    prj.Files.Remove(prj.GetRelFilePath(tp.Module.FileName));
                     prj.AddSrc(sF.FileName);
                 }
-                tp.Module.ModuleFileName = sF.FileName;
+                tp.Module.FileName = sF.FileName;
                 tp.Update();
                 tp.Save();
             }
@@ -780,18 +781,18 @@ namespace D_IDE
         {
             //Log("Text Error in Line "+line.ToString()+", Col "+col.ToString()+": "+message);
         }
-        void DParser_OnError(DModule tempModule, int line, int col, int kindOf, string msg)
+        void DParser_OnError(ISourceModule tempModule, int line, int col, int kindOf, string msg)
         {
             try
             {
-                errlog.AddParserError(tempModule.ModuleFileName, line, col, msg);
+                errlog.AddParserError(tempModule.FileName, line, col, msg);
                 DocumentInstanceWindow mtp;
                 foreach (IDockContent dc in dockPanel.Documents)
                 {
                     if (dc is DocumentInstanceWindow)
                     {
                         mtp = (DocumentInstanceWindow)dc;
-                        if (mtp.Module.ModuleFileName == tempModule.ModuleName || mtp.Module.ModuleFileName == tempModule.ModuleFileName)
+                        if (mtp.Module.FileName == tempModule.ModuleName || mtp.Module.FileName == tempModule.FileName)
                         {
                             int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
                             mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Red));
@@ -804,18 +805,18 @@ namespace D_IDE
             }
             catch { }
         }
-        void DParser_OnSemanticError(DModule tempModule, int line, int col, int kindOf, string msg)
+        void DParser_OnSemanticError(ISourceModule tempModule, int line, int col, int kindOf, string msg)
         {
             try
             {
-                errlog.AddParserError(tempModule.ModuleFileName, line, col, msg);
+                errlog.AddParserError(tempModule.FileName, line, col, msg);
                 DocumentInstanceWindow mtp;
                 foreach (IDockContent dc in dockPanel.Documents)
                 {
                     if (dc is DocumentInstanceWindow)
                     {
                         mtp = (DocumentInstanceWindow)dc;
-                        if (mtp.Module.ModuleFileName == tempModule.ModuleName || mtp.Module.ModuleFileName == tempModule.ModuleFileName)
+                        if (mtp.Module.FileName == tempModule.ModuleName || mtp.Module.FileName == tempModule.FileName)
                         {
                             int offset = mtp.txt.Document.PositionToOffset(new TextLocation(col - 1, line - 1));
                             mtp.txt.Document.MarkerStrategy.AddMarker(new TextMarker(offset, 1, TextMarkerType.WaveLine, Color.Blue));
@@ -864,14 +865,14 @@ namespace D_IDE
                     DocumentInstanceWindow mtp = (DocumentInstanceWindow)tp;
 
                     #region Add file to last open files
-                    string physfile = mtp.Module.ModuleFileName;
+                    string physfile = mtp.Module.FileName;
                     if (mtp.OwnerProject != null) mtp.OwnerProject.GetPhysFilePath(physfile);
                     D_IDE_Properties.Default.lastOpenFiles.Add(physfile);
                     #endregion
 
                     if (mtp.OwnerProject != null)
                     {
-                        mtp.OwnerProject.LastOpenedFiles.Add(mtp.Module.ModuleFileName);
+                        mtp.OwnerProject.LastOpenedFiles.Add(mtp.Module.FileName);
                         if (!changedPrjs.Contains(mtp.OwnerProject))
                             changedPrjs.Add(mtp.OwnerProject);
                     }

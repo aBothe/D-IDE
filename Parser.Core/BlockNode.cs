@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Parser.Core
 {
+	/*
 	public abstract class BlockNode:Node,IBlockNode
 	{
 		CodeLocation _BlockStart;
@@ -98,4 +99,4 @@ namespace Parser.Core
 			return Name;
 		}
 	}
-}
+*/}

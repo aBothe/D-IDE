@@ -33,7 +33,7 @@ namespace D_IDE
         {
             set
             {
-                if (value != modified) this.Text = Path.GetFileName(Module.ModuleFileName) + (value ? " *" : "");
+                if (value != modified) this.Text = Path.GetFileName(Module.FileName) + (value ? " *" : "");
                 modified = value;
             }
             get { return modified; }
@@ -175,8 +175,8 @@ namespace D_IDE
         {
             get
             {
-                if (D_IDEForm.thisForm.Breakpoints.Breakpoints.ContainsKey(Module.ModuleFileName))
-                    return D_IDEForm.thisForm.Breakpoints.Breakpoints[Module.ModuleFileName];
+                if (D_IDEForm.thisForm.Breakpoints.Breakpoints.ContainsKey(Module.FileName))
+                    return D_IDEForm.thisForm.Breakpoints.Breakpoints[Module.FileName];
                 else return new List<DIDEBreakpoint>();
             }
         }
@@ -308,7 +308,7 @@ namespace D_IDE
             DCodeCompletionWindow.ShowCompletionWindow(
                 this,					// The parent window for the completion window
                 txt, 					// The text editor to show the window for
-                Module.ModuleFileName,		// Filename - will be passed back to the provider
+                Module.FileName,		// Filename - will be passed back to the provider
                 dataProvider,		// Provider to get the list of possible completions
                 key							// Key pressed - will be passed to the provider
             );
@@ -321,9 +321,9 @@ namespace D_IDE
             if (Matches != null && Matches.Length>0)
             {
                 var m = Matches[0];
-                var mod = (m as DNode).NodeRoot as DModule;
+                var mod = m.NodeRoot as DModule;
                 if(mod!=null)
-                    ErrorLog.OpenError(mod.ModuleFileName,m.StartLocation.Line,m.StartLocation.Column);
+                    ErrorLog.OpenError(mod.FileName,m.StartLocation.Line,m.StartLocation.Column);
             }
         }
 
@@ -343,7 +343,7 @@ namespace D_IDE
             {
                 if (ExtraOrdinaryToken.Kind==DTokens.__FILE__)
                 { 
-                    e.ShowToolTip(Module.ModuleFileName); 
+                    e.ShowToolTip(Module.FileName); 
                     return; 
                 }
                 else if (ExtraOrdinaryToken.Kind==DTokens.__LINE__)
@@ -416,7 +416,7 @@ namespace D_IDE
         public void ShowFunctionParameterToolTip(char key)
         {
             IW = new InsightWindow(D_IDEForm.thisForm, txt);
-            IW.AddInsightDataProvider(new InsightWindowProvider(this, key), Module.ModuleFileName);
+            IW.AddInsightDataProvider(new InsightWindowProvider(this, key), Module.FileName);
             IW.ShowInsightWindow();
         }
 
@@ -555,15 +555,15 @@ namespace D_IDE
 
         public void Reload()
         {
-            txt.LoadFile(Module.ModuleFileName);
+            txt.LoadFile(Module.FileName);
             ParseFromText();
         }
 
         public void Save()
         {
-            if (Module.ModuleFileName == "" || Module.ModuleFileName == null || !Modified) return;
+            if (Module.FileName == "" || Module.FileName == null || !Modified) return;
 
-            File.WriteAllText(Module.ModuleFileName, txt.Document.TextContent);
+            File.WriteAllText(Module.FileName, txt.Document.TextContent);
 
             Modified = false;
         }
@@ -576,15 +576,15 @@ namespace D_IDE
             txt.Document.MarkerStrategy.RemoveAll(RemoveParserMarkersPred);
 
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Parsing " + Module.ModuleName;
-            var _mn = Module.ModuleFileName;
+            var _mn = Module.FileName;
             var _m = DParser.ParseString(txt.Text);
             Module.Assign(_m);
-            Module.ModuleFileName = _mn;
+            Module.FileName = _mn;
             D_IDEForm.thisForm.ProgressStatusLabel.Text = "Done parsing " + Module.ModuleName;
 
             if (OwnerProject != null)
             {
-                try { OwnerProject.Modules.Remove(OwnerProject.FileDataByFile(Module.ModuleFileName)); }
+                try { OwnerProject.Modules.Remove(OwnerProject.FileDataByFile(Module.FileName)); }
                 catch { }
                 OwnerProject.Modules.Add(Module);
             }

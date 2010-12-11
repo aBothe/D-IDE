@@ -276,12 +276,12 @@ namespace D_IDE
 			if (!resourceFiles.Contains(from)) return false;
 
 			DModule dm = FileDataByFile(from);
-			if (dm != null) dm.ModuleFileName = to;
+			if (dm != null) dm.FileName = to;
 
 			DocumentInstanceWindow diw = Form1.thisForm.FileDataByFile(from);
 			if (diw != null)
 			{
-				diw.fileData.ModuleFileName = to;
+				diw.fileData.FileName = to;
 				diw.Update();
 			}
 
@@ -681,7 +681,7 @@ namespace D_IDE
 		{
 			foreach (var pf in Modules)
 			{
-				if (pf.ModuleFileName == fn) return pf;
+				if (pf.FileName == fn) return pf;
 			}
 			return null;
 		}

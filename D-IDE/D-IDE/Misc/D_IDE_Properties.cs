@@ -516,7 +516,7 @@ namespace D_IDE
 		{
 			foreach (CodeModule dpf in modules)
 			{
-				if (dpf.ModuleFileName == file)
+				if (dpf.FileName == file)
 				{
 					return true;
 				}
@@ -533,7 +533,7 @@ namespace D_IDE
 
 			foreach (var dpf in modules)
 			{
-				if (dpf.ModuleFileName == pf.ModuleFileName)
+				if (dpf.FileName == pf.FileName)
 				{
                     dpf.Assign(pf);
 					return true;

@@ -96,7 +96,7 @@ namespace D_Parser
 		public void Add(INode Node)
 		{
 			Node.Parent = this;
-			if (_Children.Contains(Node))
+			if (!_Children.Contains(Node))
 				_Children.Add(Node);
 		}
 
@@ -118,8 +118,8 @@ namespace D_Parser
 
 		public INode this[int i]
 		{
-			get { if (Count > i)return _Children[i]; else return null; }
-			set { if (Count > i) _Children[i] = value; }
+			get { if (i>=0 && Count > i)return _Children[i]; else return null; }
+			set { if (i >= 0 && Count > i) _Children[i] = value; }
 		}
 
 		public INode this[string Name]
@@ -149,11 +149,14 @@ namespace D_Parser
 			return _Children.GetEnumerator();
 		}
 
-		public void Assign(IBlockNode other)
+		public new void Assign(INode other)
 		{
-			BlockStartLocation = other.BlockStartLocation;
-			Clear();
-			AddRange(other);
+			if (other is IBlockNode)
+			{
+				BlockStartLocation = (other as IBlockNode).BlockStartLocation;
+				Clear();
+				AddRange(other as IBlockNode);
+			}
 
 			base.Assign(other);
 		}
@@ -232,7 +235,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            string ret = AttributeString + " " + DTokens.GetTokenString(ClassType) + " " + ToDeclarationString(false);
+            string ret = AttributeString + " " + DTokens.GetTokenString(ClassType) + " " + ToString(false);
             if (BaseClasses.Count > 0)
                 ret += ":";
             foreach (var c in BaseClasses)
@@ -246,7 +249,7 @@ namespace D_Parser
     {
         public override string ToString()
         {
-            return "enum "+ToDeclarationString(false);
+            return "enum "+ToString(false);
         }
     }
 
