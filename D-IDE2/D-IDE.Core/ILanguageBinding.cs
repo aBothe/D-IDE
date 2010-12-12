@@ -3,15 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Parser.Core;
-using System.Windows;
 
 namespace D_IDE.Core
 {
 	public interface ILanguageBinding
 	{
+		/// <summary>
+		/// This is the very basic interface which lets a ILanguageBinding interact with D-IDE.
+		/// </summary>
+		IDEInterface IDE { get; set; }
+
 		#region Generic properties
 		string LanguageName { get; }
-		string[] LanguageExtensions { get; }
+		/// <summary>
+		/// File types and extensions supported by this language
+		/// </summary>
+		SourceFileType[] ModuleTypes { get; }
+		SourceFileType[] ProjectTypes { get; }
 
 		/// <summary>
 		/// If true, D-IDE can create Language specific projects. 
@@ -29,22 +37,6 @@ namespace D_IDE.Core
 		/// </summary>
 		ILanguage Language { get; }
 
-
-		/// <summary>
-		/// Icon getter for projects. Can return null if <see cref="ProjectsSupported"/> is set to false.
-		/// Should return an Icon or Image object.
-		/// </summary>
-		/// <returns></returns>
-		object GetProjectIcon();
-		object GetProjectIcon(IProject Project);
-
-		/// <summary>
-		/// Get standard module icon.
-		/// </summary>
-		/// <returns></returns>
-		object GetModuleIcon();
-		object GetModuleIcon(IModule Module);
-
 		/// <summary>
 		/// Used for outline and for code completion features.
 		/// Returns an icon or image that indicates a specific node type.
@@ -55,12 +47,22 @@ namespace D_IDE.Core
 		object GetNodeIcon(INode Node);
 
 
-		IProject CreateEmptyProject();
+		IProject CreateEmptyProject(SourceFileType ProjectType);
 		IProject OpenProject(string FileName);
 
-		IModule CreateEmptyModule();
+		IModule CreateEmptyModule(SourceFileType FileType);
 		IModule OpenModule(string FileName);
 
 		IDebugProvider DebugProvider { get; }
+	}
+
+	public class SourceFileType
+	{
+		public string Name;
+		public string Description;
+		public string[] Extensions;
+
+		public object LargeImage;
+		public object SmallImage;
 	}
 }

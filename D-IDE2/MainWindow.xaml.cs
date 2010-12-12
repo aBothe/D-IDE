@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using Microsoft.Windows.Controls.Ribbon;
+using System.Windows.Media;
+using System;
+using System.Windows.Media.Imaging;
 
 namespace D_IDE
 {

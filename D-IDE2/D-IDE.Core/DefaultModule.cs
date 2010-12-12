@@ -77,5 +77,11 @@ namespace D_IDE.Core
 		{
 			get { throw new NotImplementedException(); }
 		}
+
+
+		public SourceFileType FileType
+		{
+			get { return null; }
+		}
 	}
 }

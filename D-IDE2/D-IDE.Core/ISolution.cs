@@ -12,6 +12,8 @@ namespace D_IDE.Core
 		IProject StartProject { get; set; }
 		List<IProject> Projects { get; }
 
+		IProject[] GetProjectDependencies(IProject Project);
+
 		void Save();
 		void Reload();
 		void LoadFromFile(string FileName);

@@ -11,7 +11,7 @@ namespace D_IDE
 {
 	public class EditorDocument:AbstractEditorDocument
 	{
-		public EditorDocument() { _Module = new DefaultModule(); }
+		public EditorDocument() { Init(); _Module = new DefaultModule(); }
 
 		public EditorDocument(IModule Module)
 		{

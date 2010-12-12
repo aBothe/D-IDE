@@ -34,8 +34,6 @@
     <Reference Include="DebugEngineWrapper">
       <HintPath>..\..\externalDeps\DebugEngineWrapper.dll</HintPath>
     </Reference>
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -45,7 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BindingProvider.cs" />
+    <Compile Include="IDEInterface.cs" />
     <Compile Include="DefaultModule.cs" />
     <Compile Include="IBuildProvider.cs" />
     <Compile Include="IDebugProvider.cs" />

@@ -8,6 +8,8 @@ namespace D_IDE.Core
 	public interface IModule
 	{
 		string FileName { get; set; }
+		SourceFileType FileType { get; }
+
 		/// <summary>
 		/// Can be null if it's a stand-alone module
 		/// </summary>
