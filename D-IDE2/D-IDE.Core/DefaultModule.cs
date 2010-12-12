@@ -37,14 +37,45 @@ namespace D_IDE.Core
 		/// </summary>
 		public void Refresh(){}
 
-		/// <summary>
-		/// ditto
-		/// </summary>
-		/// <param name="OutputFile"></param>
-		public void Build(string OutputFile){}
-
-		public bool BuildIncrementally() { return false; }
+		public void BuildIncrementally() { }
 
 		public ISourceModule CodeNode		{ get { return null; }	}
+
+		public ILanguageBinding LanguageBinding
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public string OutputFile
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		public bool WasBuiltSuccessfully
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public void Build()
+		{
+			throw new NotImplementedException();
+		}
+
+		public void CleanUpOutput()
+		{
+			throw new NotImplementedException();
+		}
+
+		public List<BuildError> LastBuildErrors
+		{
+			get { throw new NotImplementedException(); }
+		}
 	}
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Parser.Core;
+using System.Windows;
 
 namespace D_IDE.Core
 {
@@ -10,9 +11,9 @@ namespace D_IDE.Core
 		string Name { get; set; }
 		string FileName { get; set; }
 		ISolution Solution { get; }
-		List<IProject> DependentProjects { get; }
 
 		bool Save();
+		void Reload();
 		void LoadFromFile(string FileName);
 
 		Dictionary<ILanguage, IModule[]> ModulesByLanguage { get; }
@@ -25,14 +26,25 @@ namespace D_IDE.Core
 		void Remove(string FileName);
 		void Rename(string OldFileName, string NewFileName);
 
-		#region Build properties & methods
-		string BaseDirectory { get; set; }
-		string OutputFile { get; set; }
-		string OutputDirectory { get; set; }
+		object ProjectIcon { get; }
 
-		void Build();
+		#region Build properties
+		string BaseDirectory { get; }
+		string OutputFile { get; }
+		string OutputDirectory { get; }
+
 		void BuildIncrementally();
-		void CleanUpOutputDirectory();
+		void Build();
+		void CleanUpOutput();
+		List<BuildError> LastBuildErrors { get; }
 		#endregion
+
+		void ShowProjectSettingsDialog();
+	}
+
+	public class BuildError
+	{
+		public readonly string Message;
+		public readonly CodeLocation Location;
 	}
 }

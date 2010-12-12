@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Parser.Core;
 
 namespace D_IDE.Core
 {
-	public interface IBuilder
+	public class BindingProvider
 	{
-		ILanguage Language { get; }
-
-
+		public static List<ILanguageBinding> Bindings = new List<ILanguageBinding>();
 	}
 }

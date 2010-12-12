@@ -13,10 +13,11 @@ namespace D_IDE.Core
 		List<IProject> Projects { get; }
 
 		void Save();
+		void Reload();
 		void LoadFromFile(string FileName);
 
 		void Build();
 		void BuildIncrementally();
-		void CleanUp();
+		void CleanUpOutput();
 	}
 }
