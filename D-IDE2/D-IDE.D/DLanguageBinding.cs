@@ -11,6 +11,18 @@ namespace D_IDE.D
 {
 	public class DLanguageBinding:ILanguageBinding
 	{
+		public IDEInterface IDE
+		{
+			get { return IDEInterface.Current; }
+			set { IDEInterface.Current = value; }
+		}
+
+		BitmapImage _LanguageIcon = new BitmapImage(new Uri("Resources/d.ico", UriKind.Relative));
+		public object LanguageIcon
+		{
+			get { return _LanguageIcon; }
+		}
+
 		public DLanguageBinding()
 		{
 			// Files
@@ -110,18 +122,6 @@ namespace D_IDE.D
 		public IDebugProvider DebugProvider
 		{
 			get { throw new NotImplementedException(); }
-		}
-
-		public IDEInterface IDE
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
 		}
 	}
 }

@@ -12,9 +12,11 @@ namespace D_IDE.Core
 		/// This is the very basic interface which lets a ILanguageBinding interact with D-IDE.
 		/// </summary>
 		IDEInterface IDE { get; set; }
+		
 
 		#region Generic properties
 		string LanguageName { get; }
+		object LanguageIcon { get; }
 		/// <summary>
 		/// File types and extensions supported by this language
 		/// </summary>

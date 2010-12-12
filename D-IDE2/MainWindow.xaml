@@ -17,10 +17,7 @@
 			
 			<ribbon:Ribbon.ApplicationMenu>
 				<ribbon:RibbonApplicationMenu SmallImageSource="Resources/list-drop-down.png">
-					<ribbon:RibbonApplicationMenuItem Header="New" Name="Button_New" ImageSource="Resources/NewDocument_32x32.png"><!--
-						<ribbon:RibbonApplicationMenuItem Header="Source" ImageSource="Resources/d.ico"  Click="NewSource" />
-						<ribbon:RibbonApplicationMenuItem Header="Project" ImageSource="Resources/dproj.ico" Click="NewProject" />-->
-					</ribbon:RibbonApplicationMenuItem>
+					<ribbon:RibbonApplicationMenuItem Header="New" Name="Button_New" ImageSource="Resources/NewDocument_32x32.png" />
 					<ribbon:RibbonApplicationMenuItem Header="Open" Click="Open" ImageSource="Resources/OpenPH.png" Name="Button_Open" />
 					<ribbon:RibbonSeparator />
 					<ribbon:RibbonApplicationMenuItem Header="Save" Click="Save" ImageSource="Resources/SaveHH.png" />
