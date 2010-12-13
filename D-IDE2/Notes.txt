@@ -1,0 +1,23 @@
+﻿
+
+D-IDE2 Roadmap:
+
+(+ = Done; - = To do)
+
++ Create D-IDE GUI
+- Enable Global Settings Management
+- Enable generic project management
+- Enable generic build support
+- Enable generic debug support
+
+- Enable D support
+	- General settings
+	- Project management
+	- Build support
+	- Debug support
+	- Code Completion
+
+- Enable Resource files support
+	- General settings
+	- Build support
+	(- Code Completion)

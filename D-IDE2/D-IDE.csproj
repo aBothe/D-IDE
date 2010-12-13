@@ -134,6 +134,7 @@
     <Folder Include="Controls\Dialogs\" />
     <Folder Include="Controls\Panels\" />
     <Folder Include="Debugging\" />
+    <Folder Include="Dialogs\" />
     <Folder Include="Misc\" />
   </ItemGroup>
   <ItemGroup>
@@ -232,6 +233,9 @@
       <Project>{97A8A088-8820-4A2D-82F4-2AA5CBDE093F}</Project>
       <Name>D-IDE.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Notes.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

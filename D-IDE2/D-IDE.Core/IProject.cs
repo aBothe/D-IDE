@@ -38,6 +38,7 @@ namespace D_IDE.Core
 		/// These files get copied into the output directory before compiling
 		/// </summary>
 		string[] ExternalDependencies { get; }
+		IProject[] ProjectDependencies { get; }
 
 		void BuildIncrementally();
 		void Build();
