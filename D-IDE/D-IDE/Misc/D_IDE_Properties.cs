@@ -81,9 +81,6 @@ namespace D_IDE
 
             try
             {
-
-                BinaryFormatter formatter = new BinaryFormatter();
-
                 Stream stream = File.Open(fn, FileMode.Open);
 
                 XmlTextReader xr = new XmlTextReader(stream);

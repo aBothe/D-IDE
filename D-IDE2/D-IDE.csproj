@@ -90,6 +90,7 @@
     </Compile>
     <Compile Include="Controls\EditorDocument.cs" />
     <Compile Include="GlobalProperties.cs" />
+    <Compile Include="IDEUtil.cs" />
     <Compile Include="LanguageLoader.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

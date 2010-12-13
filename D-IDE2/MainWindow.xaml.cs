@@ -6,6 +6,8 @@ using System;
 using System.Windows.Media.Imaging;
 using System.Diagnostics;
 using D_IDE.Core;
+using Microsoft.Win32;
+using System.IO;
 
 namespace D_IDE
 {
@@ -30,14 +32,14 @@ namespace D_IDE
 			// Init the IDE interface
 			IDEInterface.Current = new IDEInterface();
 
+            // Load global settings
+            GlobalProperties.Init();
+
 			LanguageLoader.LoadLanguageInterface("D-IDE.D.dll","D_IDE.D.DLanguageBinding");
 
 			UpdateNewMenuButton();
 
 			UpdateLastFilesMenus();
-
-			var d = new EditorDocument();
-			d.ShowAsDocument(DockMgr);
 		}
 
 		/// <summary>
@@ -63,8 +65,10 @@ namespace D_IDE
 					var i=new RibbonApplicationMenuItem()
 					{
 						Header = ft.Name,
-						ToolTipDescription=ft.Description,
-						ImageSource = ft.SmallImage as ImageSource,
+                        ToolTipImageSource=ft.LargeImage as ImageSource,
+						ToolTipTitle=ft.Name,
+                        ToolTipDescription=ft.Description,
+                        ImageSource = ft.SmallImage as ImageSource,
 						Tag=ft
 					};
 					i.Click+=NewLanguageSource;
@@ -83,7 +87,9 @@ namespace D_IDE
 						var i = new RibbonApplicationMenuItem()
 						{
 							Header = ft.Name,
-							ToolTipDescription = ft.Description,
+                            ToolTipImageSource=ft.LargeImage as ImageSource,
+							ToolTipTitle = ft.Name,
+                            ToolTipDescription=ft.Description,
 							ImageSource = ft.SmallImage as ImageSource,
 							Tag = ft
 						};
@@ -111,8 +117,16 @@ namespace D_IDE
 			
 		}
 
+        /// <summary>
+        /// Creates a new text file.
+        /// We'll ask the user for a save location first
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
 		void NewGenericSource(object sender, RoutedEventArgs e)
 		{
+            var of = new OpenFileDialog();
+            of.Filter = "All Files (*.*)|*.*";
 
 		}
 

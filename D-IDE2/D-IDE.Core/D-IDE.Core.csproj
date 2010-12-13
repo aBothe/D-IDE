@@ -52,6 +52,7 @@
     <Compile Include="IProject.cs" />
     <Compile Include="ISolution.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Parser.Core\Parser.Core.csproj">
