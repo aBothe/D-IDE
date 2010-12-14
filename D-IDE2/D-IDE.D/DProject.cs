@@ -164,5 +164,11 @@ namespace D_IDE.D
 		{
 			get { throw new NotImplementedException(); }
 		}
+
+
+		public IProject[] ProjectDependencies
+		{
+			get { throw new NotImplementedException(); }
+		}
 	}
 }

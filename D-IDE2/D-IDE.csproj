@@ -80,6 +80,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Controls\AbstractEditorDocument.cs" />
+    <Page Include="Dialogs\NewProjectDlg.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -89,6 +93,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Controls\EditorDocument.cs" />
+    <Compile Include="Dialogs\NewProjectDlg.xaml.cs">
+      <DependentUpon>NewProjectDlg.xaml</DependentUpon>
+    </Compile>
     <Compile Include="GlobalProperties.cs" />
     <Compile Include="IDEUtil.cs" />
     <Compile Include="LanguageLoader.cs" />
@@ -134,7 +141,6 @@
     <Folder Include="Controls\Dialogs\" />
     <Folder Include="Controls\Panels\" />
     <Folder Include="Debugging\" />
-    <Folder Include="Dialogs\" />
     <Folder Include="Misc\" />
   </ItemGroup>
   <ItemGroup>
