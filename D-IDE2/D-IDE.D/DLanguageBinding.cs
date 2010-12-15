@@ -29,7 +29,7 @@ namespace D_IDE.D
 		{
 			// Files
 			var exts = new string[] { ".d",".di" };
-			var img=new BitmapImage(new Uri("Resources/d.ico", UriKind.Relative));
+			var img = Util.FromDrawingImage(DIcons.dfile);
 			_FileTypes.Add(new SourceFileType
 			{
 				Name="D Module",
@@ -41,7 +41,7 @@ namespace D_IDE.D
 
 			//Projects
 			exts = new string[] { ".dprj" };
-			img = new BitmapImage(new Uri("Resources/dproj.ico", UriKind.Relative));
+			img = Util.FromDrawingImage(DIcons.dproj);
 			_ProjectTypes.Add(new SourceFileType
 			{
 				Name = "Console Application",
