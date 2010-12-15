@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using D_IDE.Core;
 using Parser.Core;
 using D_Parser;
 using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace D_IDE.D
 {
@@ -17,10 +16,13 @@ namespace D_IDE.D
 			set { IDEInterface.Current = value; }
 		}
 
-		BitmapImage _LanguageIcon = new BitmapImage(new Uri("Resources/d.ico", UriKind.Relative));
+		BitmapImage _LanguageIcon = Util.FromDrawingImage(DIcons.dproj);
 		public object LanguageIcon
 		{
-			get { return _LanguageIcon; }
+			get
+			{
+				return _LanguageIcon; 
+			}
 		}
 
 		public DLanguageBinding()

@@ -35,6 +35,7 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -45,6 +46,11 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DIcons.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DIcons.resx</DependentUpon>
+    </Compile>
     <Compile Include="DLanguageBinding.cs" />
     <Compile Include="DModule.cs" />
     <Compile Include="DProject.cs" />
@@ -66,10 +72,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\d.ico" />
+    <EmbeddedResource Include="Resources\dfile.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\dproj.ico" />
+    <EmbeddedResource Include="Resources\dproj.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DIcons.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>DIcons.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

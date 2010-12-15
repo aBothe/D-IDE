@@ -1,13 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using Microsoft.Windows.Controls.Ribbon;
-using System.Windows.Media;
-using System;
-using System.Windows.Media.Imaging;
-using System.Diagnostics;
 using D_IDE.Core;
-using Microsoft.Win32;
-using System.IO;
 using D_IDE.Dialogs;
 
 namespace D_IDE
@@ -36,7 +30,7 @@ namespace D_IDE
             // Load global settings
             GlobalProperties.Init();
 
-			LanguageLoader.LoadLanguageInterface("D-IDE.D.dll","D_IDE.D.DLanguageBinding");
+			LanguageLoader.LoadLanguageInterface("D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
 
 			UpdateLastFilesMenus();
 		}
@@ -59,12 +53,12 @@ namespace D_IDE
 
 		private void Open(object sender, RoutedEventArgs e)
 		{
-
+			
 		}
 
 		private void Save(object sender, RoutedEventArgs e)
 		{
-
+			
 		}
 
 		private void SaveAll(object sender, RoutedEventArgs e)

@@ -144,10 +144,8 @@
     <Folder Include="Misc\" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\d.ico" />
     <Resource Include="Resources\dir.gif" />
     <Resource Include="Resources\dir_open.gif" />
-    <Resource Include="Resources\dproj.ico" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\application-exit-3.ico" />

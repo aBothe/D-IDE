@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
+using System.Reflection;
+using System.Windows.Media.Imaging;
 
 namespace D_IDE.Core
 {
@@ -44,8 +43,36 @@ namespace D_IDE.Core
             var ret = new DateTime(1970, 1, 1, 0, 0, 0, 0);
             return (long)(t - ret).TotalSeconds;
         }
-        
-    }
+
+		#region Icons
+		public static BitmapImage FromDrawingImage(System.Drawing.Icon ico)
+		{
+			var ms = new MemoryStream();
+			ico.Save(ms);
+
+			var bImg = new BitmapImage();
+			bImg.BeginInit();
+			bImg.StreamSource = new MemoryStream( ms.ToArray());
+			bImg.EndInit();
+
+			return bImg;
+		}
+
+		public static BitmapImage FromDrawingImage(System.Drawing.Image img)
+		{
+			var ms = new MemoryStream();
+			// Temporarily save it as png image
+			img.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+
+			var bImg = new BitmapImage();
+			bImg.BeginInit();
+			bImg.StreamSource = new MemoryStream(ms.ToArray());
+			bImg.EndInit();
+
+			return bImg;
+		}
+		#endregion
+	}
 
     public class ErrorLogger
     {
