@@ -56,11 +56,16 @@ namespace D_IDE.Core
 
 	public class SourceFileType
 	{
-		public string Name;
-		public string Description;
-		public string[] Extensions;
+		public string Name { get; set; }
+		public string Description { get; set; }
+		public string[] Extensions { get; set; }
 
-		public object LargeImage;
-		public object SmallImage;
+		/// <summary>
+		/// For project/file creation purposes; Can be null
+		/// </summary>
+		public string DefaultFilePrefix { get; set; }
+
+		public object LargeImage { get; set; }
+		public object SmallImage { get; set; }
 	}
 }

@@ -41,32 +41,37 @@ namespace D_IDE.D
 
 			//Projects
 			exts = new string[] { ".dprj" };
-			img = Util.FromDrawingImage(DIcons.dproj);
+			img = Util.FromDrawingImage(DIcons.cmd);
 			_ProjectTypes.Add(new SourceFileType
 			{
 				Name = "Console Application",
 				Description = "Console-based application",
 				Extensions = exts,
 				SmallImage = img,
-				LargeImage = img
+				LargeImage = img,
+				DefaultFilePrefix="ConsoleApp"
 			});
 
+			img = Util.FromDrawingImage(DIcons.Generic_Application);
 			_ProjectTypes.Add(new SourceFileType
 			{
 				Name = "Window Application",
 				Description = "Win32-based application",
 				Extensions = exts,
 				SmallImage = img,
-				LargeImage = img
+				LargeImage = img,
+				DefaultFilePrefix="Win32App"
 			});
 
+			img = Util.FromDrawingImage(DIcons.dll48);
 			_ProjectTypes.Add(new SourceFileType
 			{
 				Name = "Dynamic Link Library",
 				Description = "Win32 DLL project",
 				Extensions = exts,
 				SmallImage = img,
-				LargeImage = img
+				LargeImage = img,
+				DefaultFilePrefix="DynamicLinkLib"
 			});
 
 			_ProjectTypes.Add(new SourceFileType
@@ -75,7 +80,8 @@ namespace D_IDE.D
 				Description = "Project which outputs a .lib file",
 				Extensions = exts,
 				SmallImage = img,
-				LargeImage = img
+				LargeImage = img,
+				DefaultFilePrefix="StaticLib"
 			});
 		}
 

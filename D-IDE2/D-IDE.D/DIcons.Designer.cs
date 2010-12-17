@@ -60,6 +60,13 @@ namespace D_IDE.D {
             }
         }
         
+        internal static System.Drawing.Bitmap cmd {
+            get {
+                object obj = ResourceManager.GetObject("cmd", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Icon dfile {
             get {
                 object obj = ResourceManager.GetObject("dfile", resourceCulture);
@@ -67,10 +74,31 @@ namespace D_IDE.D {
             }
         }
         
+        internal static System.Drawing.Bitmap dll48 {
+            get {
+                object obj = ResourceManager.GetObject("dll48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Icon dproj {
             get {
                 object obj = ResourceManager.GetObject("dproj", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap dproj48 {
+            get {
+                object obj = ResourceManager.GetObject("dproj48", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Generic_Application {
+            get {
+                object obj = ResourceManager.GetObject("Generic_Application", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

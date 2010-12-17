@@ -44,7 +44,7 @@ namespace D_IDE
 
 		private void NewProject(object sender, RoutedEventArgs e)
 		{
-			var pdlg = new NewProjectDlg();
+			var pdlg = new NewProjectDlg(Manager.CurrentSolution!=null);
 			if (pdlg.ShowDialog().Value)
 			{
 

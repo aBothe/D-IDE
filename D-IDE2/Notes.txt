@@ -21,3 +21,13 @@ D-IDE2 Roadmap:
 	- General settings
 	- Build support
 	(- Code Completion)
+
+
+
+Hey, Alex, this is not anything Major, just looks wierd, you might want to fix this little thing: when pointing with a mouse to uint or wchar, I get a popping window saying where wchar is, in the popping window I see, foreach(str) say if I use foreach loop, than std.ctype() about 13 std.stdio() includes and at end the std.uni. Now, why them, because my first line of code is : import std.stdio, std.cstream, std.ctype, std.uni.
+[12:22:06] Dima Dimov: So, my question is: 1) Why can I not see, in the popping window say: all of what I included, if that is what the popping window supposed to show.
+[12:22:34] Dima Dimov: Another strange thing, above the foreach loop, I see the same popping message as when I point my mouse to wchar.init
+[12:22:49] Dima Dimov: and only when I point to the return type, say my function is
+[12:23:44] Dima Dimov: uint Words(wchar[] str) when I point with my mouse to either uint or wchar I see, std.ctype(), a huge amount of std.stdio()s and std.uni().
+[12:24:26] Dima Dimov: 2) What information do these pop ups for uint,wchar, etc supposed to tell?
+[12:27:36] Dima Dimov: 3) The Tree thing now works fine, but 1 little problem: when repeatedly clicking the same spot in square the Outline Window starts changing colors as if I clicked on it, and the function main starts being highlighted, so what happends is that to close the tree, I have to either double or tripple click. Could you please fix that? 
