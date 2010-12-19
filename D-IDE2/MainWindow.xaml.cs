@@ -30,6 +30,7 @@ namespace D_IDE
             // Load global settings
             GlobalProperties.Init();
 
+			LanguageLoader.Bindings.Add(new GenericFileBinding());
 			LanguageLoader.LoadLanguageInterface("D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
 
 			UpdateLastFilesMenus();
@@ -39,12 +40,16 @@ namespace D_IDE
 
 		private void NewSource(object sender, RoutedEventArgs e)
 		{
-			
+			var sdlg = new NewSrcDlg();
+			if (sdlg.ShowDialog().Value)
+			{
+
+			}
 		}
 
 		private void NewProject(object sender, RoutedEventArgs e)
 		{
-			var pdlg = new NewProjectDlg(Manager.CurrentSolution!=null);
+			var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.CreateNew | (Manager.CurrentSolution!=null?NewProjectDlg.DialogMode.Add:0));
 			if (pdlg.ShowDialog().Value)
 			{
 

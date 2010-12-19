@@ -36,7 +36,8 @@ namespace D_IDE.D
 				Description = "D Source Module",
 				Extensions = exts,
 				SmallImage = img,
-				LargeImage=img
+				LargeImage=img,
+				DefaultFilePrefix="Module"
 			});
 
 			//Projects

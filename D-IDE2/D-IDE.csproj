@@ -81,6 +81,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Controls\AbstractEditorDocument.cs" />
+    <Page Include="Dialogs\NewSrcDlg.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Dialogs\NewProjectDlg.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -94,9 +98,13 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Controls\EditorDocument.cs" />
+    <Compile Include="Dialogs\NewSrcDlg.xaml.cs">
+      <DependentUpon>NewSrcDlg.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\NewProjectDlg.xaml.cs">
       <DependentUpon>NewProjectDlg.xaml</DependentUpon>
     </Compile>
+    <Compile Include="GenericFileBinding.cs" />
     <Compile Include="GlobalProperties.cs" />
     <Compile Include="IDEUtil.cs" />
     <Compile Include="LanguageLoader.cs" />
@@ -245,6 +253,13 @@
   <ItemGroup>
     <Resource Include="Resources\prj_16.png" />
     <Resource Include="Resources\prj_32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\file.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\txt16.png" />
+    <Resource Include="Resources\txt32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
