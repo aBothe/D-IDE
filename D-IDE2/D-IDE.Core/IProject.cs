@@ -10,7 +10,8 @@ namespace D_IDE.Core
 		string Name { get; set; }
 		string FileName { get; set; }
 		SourceFileType ProjectType { get; }
-		ISolution Solution { get; }
+
+		ISolution Solution { get; set; }
 
 		bool Save();
 		void Reload();

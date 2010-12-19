@@ -11,5 +11,15 @@ namespace D_IDE
 		/// Stand-alone modules are opened independently of any other open solutions, projects or modules
 		/// </summary>
 		public static ISolution CurrentSolution;
+
+		public static ISolution CreateNewProjectAndSolution(
+			ILanguageBinding Binding,
+			SourceFileType ProjectType,
+			string Name,
+			string BaseDir,
+			string SolutionName)
+		{
+			
+		}
 	}
 }
