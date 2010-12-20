@@ -45,6 +45,7 @@ namespace D_IDE.Dialogs
 			}
 			set
 			{
+                if (value == null) return;
 				if (SelectedFileType != null)
 				{
 					string defExt = (SelectedFileType.Extensions!=null&& SelectedFileType.Extensions.Length>0)? SelectedFileType.Extensions[0]:"";
@@ -129,5 +130,11 @@ namespace D_IDE.Dialogs
 		{
 			DialogResult = true;
 		}
+
+        private void List_Languages_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (CreationAllowed)
+                DialogResult = true;
+        }
 	}
 }

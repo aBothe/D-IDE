@@ -7,6 +7,16 @@ namespace D_IDE.Core
 {
 	public class Solution
 	{
+		public Solution LoadFromFile(string FileName)
+		{
+
+		}
+
+		public void Save()
+		{
+
+		}
+
 		#region Properties
 		public string Name { get; set; }
 		public string FileName { get; set; }
@@ -28,7 +38,9 @@ namespace D_IDE.Core
 			if (!_ProjectFiles.Contains(Project))
 				return null;
 
+			IDEInterface.Current.LoadProject(Project);
 
+            return null;
 		}
 
 		public IProject StartProject

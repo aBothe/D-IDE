@@ -68,6 +68,6 @@ namespace D_IDE
 		public IProject OpenProject(string FileName)		{			return null;		}
 		public IModule CreateEmptyModule(SourceFileType FileType)		{			throw new NotImplementedException();}
 		public IModule OpenModule(string FileName)		{			throw new NotImplementedException();		}
-		public IDebugProvider DebugProvider		{			get { return null; }		}	
+		public IDebugProvider DebugProvider		{			get { return null; }		}
 	}
 }

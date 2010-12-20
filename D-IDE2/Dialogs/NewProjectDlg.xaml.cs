@@ -213,5 +213,11 @@ namespace D_IDE.Dialogs
 		{
 			DialogResult = true;
 		}
+
+        private void List_FileTypes_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if(CreationAllowed)
+                DialogResult = true;
+        }
 	}
 }

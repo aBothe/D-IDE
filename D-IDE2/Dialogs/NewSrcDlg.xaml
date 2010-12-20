@@ -2,9 +2,13 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="New Source" Height="421" Width="687" MinWidth="600" MinHeight="300" 
-		Icon="../Resources/prj_16.png" WindowStartupLocation="CenterScreen" Topmost="True">
+		Icon="../Resources/prj_16.png" WindowStartupLocation="CenterScreen">
     <Grid Background="#FF3B3B3B">
-		<ListBox ItemsSource="{Binding Languages}" SelectionChanged="View_Languages_SelectionChanged" HorizontalAlignment="Left" Name="List_Languages" Width="200" Margin="0,0,0,41" BorderBrush="{x:Null}" Padding="0">
+		<ListBox ItemsSource="{Binding Languages}" 
+                 SelectionChanged="View_Languages_SelectionChanged" 
+                 HorizontalAlignment="Left" Name="List_Languages" Width="200" Margin="0,0,0,41" 
+                 BorderBrush="{x:Null}" Padding="0"
+                 MouseDoubleClick="List_Languages_MouseDoubleClick">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<StackPanel Orientation="Horizontal" Background="{x:Null}">

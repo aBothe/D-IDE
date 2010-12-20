@@ -19,7 +19,7 @@ namespace D_IDE
 			string BaseDir,
 			string SolutionName)
 		{
-			
+            return null;
 		}
 	}
 }

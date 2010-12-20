@@ -32,10 +32,11 @@ namespace D_IDE.D
 			}
 		}
 
-		public ISolution Solution
-		{
-			get { throw new NotImplementedException(); }
-		}
+        public ISolution Solution
+        {
+            get;
+            set;
+        }
 
 		public bool Save()
 		{
