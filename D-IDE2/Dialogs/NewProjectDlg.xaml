@@ -1,0 +1,45 @@
+﻿<Window x:Class="D_IDE.Dialogs.NewProjectDlg"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New Project" Height="421" Width="687" MinWidth="600" MinHeight="300" 
+		Icon="../Resources/prj_16.png" WindowStartupLocation="CenterScreen" Topmost="True">
+    <Grid Background="#FF3B3B3B">
+		<ListBox ItemsSource="{Binding Languages}" SelectionChanged="View_Languages_SelectionChanged" HorizontalAlignment="Left" Name="List_Languages" Width="200" Margin="0,0,0,99" BorderBrush="{x:Null}" Padding="0">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<StackPanel Orientation="Horizontal" Background="{x:Null}">
+						<Image Source="{Binding LanguageIcon}" />
+						<Label Content="{Binding LanguageName}" />
+					</StackPanel>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+		<ListBox Margin="200,0,0,99" Name="List_FileTypes" SelectedItem="{Binding SelectedProjectType,Mode=OneWayToSource,UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding FileTypes}" BorderBrush="{x:Null}">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<StackPanel Orientation="Horizontal" Background="{x:Null}">
+						<Image Source="{Binding LargeImage}" Width="32" Height="32" />
+						<StackPanel Margin="6,0,0,0" Orientation="Vertical">
+							<Label Content="{Binding Name}" Padding="0" />
+							<Label Content="{Binding Description}" Padding="0" Foreground="#444444" FontSize="11" />
+						</StackPanel>
+					</StackPanel>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+		<TextBox Text="{Binding ProjectName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="23" Margin="330,0,12,70" Name="TextBox_Name" VerticalAlignment="Bottom" />
+		<Label Content="Project Name" HorizontalAlignment="Left" Margin="12,0,0,70" Name="label1" Width="148" Foreground="White" Height="20" VerticalAlignment="Bottom" Padding="0" />
+		<TextBox Height="23" Margin="330,0,44,41" Name="TextBox_ProjectDir" VerticalAlignment="Bottom" />
+		<Button Content="..." Margin="0,0,12,42" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="26" Click="ExploreProjectDir" />
+		<Label Content="Directory" Foreground="White" Height="20" HorizontalAlignment="Left" Margin="12,0,0,41" Name="label2" VerticalAlignment="Bottom" Width="150" Padding="0" />
+		<TextBox Margin="330,0,164,12" Name="TextBox_SolutionName" Height="23" VerticalAlignment="Bottom" />
+		<Label Content="Solution Name" Foreground="White" Height="20" HorizontalAlignment="Left" Margin="12,0,0,12" Name="label3" VerticalAlignment="Bottom" Width="148" Padding="0" />
+		<CheckBox Content="Create Project Directory" Foreground="White" Height="16" HorizontalAlignment="Left" Margin="168,0,0,45" Name="Check_CreateSolutionDir" VerticalAlignment="Bottom" Width="157" IsChecked="True" />
+		<ComboBox Margin="168,0,0,12" Name="ComboBox_CreateSolution" SelectedIndex="0" IsEditable="False" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="157" SelectionChanged="ComboBox_CreateSolution_SelectionChanged">
+			<ComboBoxItem Content="Create" />
+			<ComboBoxItem Content="Add" />
+		</ComboBox>
+		<Button Content="Cancel" Height="23" Margin="0,0,12,12" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="65" IsCancel="True" />
+		<Button Name="Button_Create" IsEnabled="{Binding CreationAllowed, Mode=OneWay}" Content="Create" Height="23" Margin="0,0,83,12" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" IsDefault="True" Click="OK_Click" />
+	</Grid>
+</Window>
