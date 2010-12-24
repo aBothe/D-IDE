@@ -8,35 +8,9 @@ namespace D_IDE.D
 {
 	public class DProject : IProject
 	{
-		public string Name
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		public string FileName
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-        public ISolution Solution
-        {
-            get;
-            set;
-        }
+		public string Name		{			get;			set;		}
+		public string FileName		{			get;			set;		}
+        public Solution Solution{get;      set;        }
 
 		public bool Save()
 		{
@@ -93,11 +67,6 @@ namespace D_IDE.D
 		public void Rename(string OldFileName, string NewFileName)
 		{
 			throw new NotImplementedException();
-		}
-
-		public object ProjectIcon
-		{
-			get { throw new NotImplementedException(); }
 		}
 
 		public string BaseDirectory

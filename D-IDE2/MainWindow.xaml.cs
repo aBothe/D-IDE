@@ -24,12 +24,10 @@ namespace D_IDE
 		{
 			InitializeComponent();
 
-			// Init the IDE interface
-			IDEInterface.Current = new IDEInterface();
-
             // Load global settings
             GlobalProperties.Init();
 
+			// Load language bindings
 			LanguageLoader.Bindings.Add(new GenericFileBinding());
 			LanguageLoader.LoadLanguageInterface("D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
 
@@ -52,7 +50,14 @@ namespace D_IDE
 			var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.CreateNew | (Manager.CurrentSolution!=null?NewProjectDlg.DialogMode.Add:0));
 			if (pdlg.ShowDialog().Value)
 			{
-
+				if (Manager.CurrentSolution!=null && pdlg.AddToCurrentSolution)
+				{
+					Manager.AddNewProject(
+						pdlg.SelectedLanguageBinding,
+						pdlg.SelectedProjectType,
+						pdlg.ProjectName,
+						pdlg.ProjectDir);
+				}
 			}
 		}
 

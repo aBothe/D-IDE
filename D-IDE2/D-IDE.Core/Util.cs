@@ -6,8 +6,9 @@ using System.Windows.Media.Imaging;
 namespace D_IDE.Core
 {
     public class Util
-    {
-        public static readonly string ApplicationStartUpPath = Directory.GetCurrentDirectory();
+	{
+		#region File I/O
+		public static readonly string ApplicationStartUpPath = Directory.GetCurrentDirectory();
 
         /// <summary>
         /// Helper function to check if directory exists. Otherwise the directory will be created.
@@ -32,7 +33,16 @@ namespace D_IDE.Core
             }
         }
 
-        public static DateTime DateFromUnixTime(long t)
+		public static string PurifyFileName(string file)
+		{
+			string r = file;
+			foreach (var c in Path.GetInvalidFileNameChars())
+				r = r.Replace(c, '_');
+			return r;
+		}
+		#endregion
+
+		public static DateTime DateFromUnixTime(long t)
         {
             var ret = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             return ret.AddSeconds(t);

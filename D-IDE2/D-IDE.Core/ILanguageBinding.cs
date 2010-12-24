@@ -4,12 +4,6 @@ namespace D_IDE.Core
 {
 	public interface ILanguageBinding
 	{
-		/// <summary>
-		/// This is the very basic interface which lets a ILanguageBinding interact with D-IDE.
-		/// </summary>
-		IDEInterface IDE { get; set; }
-		
-
 		#region Generic properties
 		string LanguageName { get; }
 		object LanguageIcon { get; }

@@ -10,12 +10,6 @@ namespace D_IDE.D
 {
 	public class DLanguageBinding:ILanguageBinding
 	{
-		public IDEInterface IDE
-		{
-			get { return IDEInterface.Current; }
-			set { IDEInterface.Current = value; }
-		}
-
 		BitmapImage _LanguageIcon = Util.FromDrawingImage(DIcons.dproj);
 		public object LanguageIcon
 		{

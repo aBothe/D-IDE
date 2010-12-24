@@ -55,7 +55,6 @@
     <Compile Include="ILanguageBinding.cs" />
     <Compile Include="IModule.cs" />
     <Compile Include="IProject.cs" />
-    <Compile Include="ISolution.cs" />
     <Compile Include="LanguageLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Solution.cs" />
