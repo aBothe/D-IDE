@@ -86,7 +86,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\cmd.png" />
+    <Content Include="Resources\dfile16.png" />
+    <Content Include="Resources\dfile32.png" />
     <Content Include="Resources\dll48.png" />
+    <Content Include="Resources\dproj16.png" />
+    <Content Include="Resources\dproj32.png" />
     <Content Include="Resources\dproj48.png" />
     <Content Include="Resources\Generic_Application.png" />
   </ItemGroup>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using D_IDE.Core;
+using Parser.Core;
 
 namespace D_IDE.D
 {
@@ -11,6 +12,12 @@ namespace D_IDE.D
 		public string Name		{			get;			set;		}
 		public string FileName		{			get;			set;		}
         public Solution Solution{get;      set;        }
+		public readonly List<string> _Files = new List<string>();
+
+		public DProject(SourceFileType ft)
+		{
+			ProjectType = ft;
+		}
 
 		public bool Save()
 		{
@@ -27,19 +34,19 @@ namespace D_IDE.D
 			throw new NotImplementedException();
 		}
 
-		public Dictionary<Parser.Core.ILanguage, IModule[]> ModulesByLanguage
+		public Dictionary<ILanguage, IModule[]> ModulesByLanguage
 		{
 			get { throw new NotImplementedException(); }
 		}
 
-		public List<IModule> Modules
+		public List<IModule> ModuleCache
 		{
 			get { throw new NotImplementedException(); }
 		}
-
+		
 		public string[] Files
 		{
-			get { throw new NotImplementedException(); }
+			get { return _Files.ToArray(); }
 		}
 
 		public IModule this[string FileName]
@@ -69,29 +76,24 @@ namespace D_IDE.D
 			throw new NotImplementedException();
 		}
 
-		public string BaseDirectory
-		{
-			get { throw new NotImplementedException(); }
-		}
-
 		public string OutputFile
 		{
-			get { throw new NotImplementedException(); }
+			get;
+			set;
 		}
 
 		public string OutputDirectory
 		{
-			get { throw new NotImplementedException(); }
+			get;
+			set;
 		}
 
-		public OutputTypes OutputType
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public OutputTypes OutputType { get; set; }
 
 		public string[] ExternalDependencies
 		{
-			get { throw new NotImplementedException(); }
+			set;
+			get;
 		}
 
 		public void BuildIncrementally()
@@ -132,13 +134,21 @@ namespace D_IDE.D
 
 		public SourceFileType ProjectType
 		{
-			get { throw new NotImplementedException(); }
+			get;
+			set;
 		}
 
 
 		public IProject[] ProjectDependencies
 		{
-			get { throw new NotImplementedException(); }
+			get;
+			set;
+		}
+
+		List<string> subdirs = new List<string>();
+		public List<string> SubDirectories
+		{
+			get { return subdirs; }
 		}
 	}
 }

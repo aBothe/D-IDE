@@ -39,6 +39,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -48,6 +49,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CoreIcons.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CoreIcons.resx</DependentUpon>
+    </Compile>
     <Compile Include="IDEInterface.cs" />
     <Compile Include="DefaultModule.cs" />
     <Compile Include="IBuildProvider.cs" />
@@ -65,6 +71,18 @@
       <Project>{650AD5E8-B84B-45E7-B42B-0AA72199252C}</Project>
       <Name>Parser.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="CoreIcons.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CoreIcons.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\file16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\file32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -2,6 +2,9 @@
 using System.IO;
 using System.Reflection;
 using System.Windows.Media.Imaging;
+using System.Windows.Data;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace D_IDE.Core
 {
@@ -81,6 +84,36 @@ namespace D_IDE.Core
 
 			return bImg;
 		}
+
+		/*public unsafe static System.Drawing.Bitmap BitmapSourceToBitmap(BitmapSource src)
+		{
+			System.Drawing.Bitmap btm = null;
+			int width = src.PixelWidth;
+			int height = src.PixelHeight;
+			int stride = width * ((src.Format.BitsPerPixel + 7) / 8);
+			var bits = new byte[height * stride];
+			src.CopyPixels(bits, stride, 0);
+
+			fixed (byte* pB = bits)
+			{
+				var ptr = new IntPtr(pB);
+
+				btm = new System.Drawing.Bitmap(
+				width,height,stride,
+				System.Drawing.Imaging.PixelFormat.Format32bppPArgb,
+				ptr);
+			}
+
+			return btm;
+		}*/
+
+		public static void AddGDIImageToImageList(ImageList il,string key,object imgObj)
+		{
+			if (imgObj is System.Drawing.Image)
+				il.Images.Add(key, imgObj as System.Drawing.Image);
+			else if (imgObj is System.Drawing.Icon)
+				il.Images.Add(key,imgObj as System.Drawing.Icon);
+		}
 		#endregion
 	}
 
@@ -91,4 +124,96 @@ namespace D_IDE.Core
 
         }
     }
+
+	/// <summary>
+	/// A converter for WPF controls.
+	/// Converts GDI Image to WPf BitmapImage objects
+	/// </summary>
+	[ValueConversion(typeof(System.Drawing.Image), typeof(BitmapImage))]
+	[ValueConversion(typeof(System.Drawing.Icon), typeof(BitmapImage))]
+	public class GDIToImageSrcConverter : IValueConverter
+	{
+		public object Convert(object v, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		{
+			if (v is System.Drawing.Image)
+				return Util.FromDrawingImage(v as System.Drawing.Image);
+			else if (v is System.Drawing.Icon)
+				return Util.FromDrawingImage(v as System.Drawing.Icon);
+
+			return null;
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
+#region LowLevel
+	/// <summary>
+	/// DLL Definition für IconExtract.
+	/// </summary>
+	public class Win32
+	{
+		/// <summary>
+		/// Methode zum extrahieren von einem Icon aus einer Datei.
+		/// </summary>
+		/// <param name="FilePath">Hier übergeben Sie den Pfad der Datei von dem das Icon extrahiert werden soll.</param>
+		/// <param name="Small">Bei übergabe von true wird ein kleines und bei false ein großes Icon zurück gegeben.</param>
+		public static System.Drawing.Image GetIcon(string FilePath, bool Small)
+		{
+			IntPtr hImgSmall;
+			IntPtr hImgLarge;
+			SHFILEINFO shinfo = new SHFILEINFO();
+			if (Small)
+			{
+				hImgSmall = SHGetFileInfo(Path.GetFileName(FilePath), 0,
+					ref shinfo, (uint)Marshal.SizeOf(shinfo),
+					SHGFI_ICON | SHGFI_SMALLICON |SHGFI_USEFILEATTRIBUTES);
+			}
+			else
+			{
+				hImgLarge = SHGetFileInfo(Path.GetFileName(FilePath), 0,
+					ref shinfo, (uint)Marshal.SizeOf(shinfo),
+					SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES);
+			}
+			if (shinfo.hIcon == null) return Small ? CoreIcons.file16 : CoreIcons.file32;
+			try
+			{
+				return System.Drawing.Icon.FromHandle(shinfo.hIcon).ToBitmap();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.Message + "\n\n" + ex.StackTrace, FilePath);
+				return Small ? CoreIcons.file16 : CoreIcons.file32;
+			}
+		}
+
+		public const uint SHGFI_ICON = 0x100;
+		public const uint SHGFI_LARGEICON = 0x0;
+		public const uint SHGFI_SMALLICON = 0x1;
+		public const uint SHGFI_USEFILEATTRIBUTES = 0x000000010;
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct SHFILEINFO
+		{
+			public IntPtr hIcon;
+			public IntPtr iIcon;
+			public uint dwAttributes;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+			public string szDisplayName;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
+			public string szTypeName;
+		}
+
+		[DllImport("shell32.dll")]
+		public static extern IntPtr SHGetFileInfo(string pszPath,
+			uint dwFileAttributes,
+			ref SHFILEINFO psfi,
+			uint cbSizeFileInfo,
+			uint uFlags);
+		[DllImport("user32.dll")]
+		public static extern int DestroyIcon(IntPtr hIcon);
+	}
+#endregion
 }

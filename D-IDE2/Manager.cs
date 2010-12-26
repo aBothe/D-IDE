@@ -4,24 +4,24 @@ using System.IO;
 
 namespace D_IDE
 {
-	class Manager
+	class IDEManager
 	{
+		#region Properties
 		public static MainWindow MainWindow;
 		/// <summary>
 		/// There can be only one open solution. 
 		/// Stand-alone modules are opened independently of any other open solutions, projects or modules
 		/// </summary>
 		public static Solution CurrentSolution;
+		#endregion
 
+		#region Project management
 		/// <summary>
 		/// Creates a new project.
 		/// Doesn't add it to the current solution.
 		/// Doesn't modify the current solution.
 		/// </summary>
-		public static IProject CreateNewProject(ILanguageBinding Binding,
-			SourceFileType ProjectType,
-			string Name,
-			string BaseDir)
+		public static IProject CreateNewProject(ILanguageBinding Binding,SourceFileType ProjectType,string Name,string BaseDir)
 		{
 			var prj = Binding.CreateEmptyProject(ProjectType);
 			prj.Name = Name;
@@ -36,12 +36,7 @@ namespace D_IDE
 			return prj;
 		}
 
-		public static Solution CreateNewProjectAndSolution(
-			ILanguageBinding Binding,
-			SourceFileType ProjectType,
-			string Name,
-			string BaseDir,
-			string SolutionName)
+		public static Solution CreateNewProjectAndSolution(			ILanguageBinding Binding,			SourceFileType ProjectType,			string Name,			string BaseDir,			string SolutionName)
 		{
 			var sln = new Solution();
 			sln.Name = SolutionName;
@@ -57,17 +52,18 @@ namespace D_IDE
 		/// <summary>
 		/// Creates a new project and adds it to the current solution
 		/// </summary>
-		public static IProject AddNewProjectToSolution(
-			Solution sln,
-			ILanguageBinding Binding, 
-			SourceFileType ProjectType,
-			string Name,
-			string BaseDir)
+		public static IProject AddNewProjectToSolution(			Solution sln,			ILanguageBinding Binding,			SourceFileType ProjectType,			string Name,			string BaseDir)
 		{
 			var prj = CreateNewProject(Binding, ProjectType, Name, BaseDir);
 			sln.AddProject(prj);
 
 			return prj;
 		}
+
+		public static IProject AddNewProjectToCurrentSolution(ILanguageBinding Binding,			SourceFileType ProjectType,			string Name,			string BaseDir)
+		{
+			return AddNewProjectToSolution(CurrentSolution,Binding,ProjectType,Name,BaseDir);
+		}
+		#endregion
 	}
 }

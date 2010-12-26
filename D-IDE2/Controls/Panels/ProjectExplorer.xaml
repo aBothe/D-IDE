@@ -1,0 +1,16 @@
+﻿<DockableContent x:Class="D_IDE.Controls.Panels.ProjectExplorer"
+        xmlns="clr-namespace:AvalonDock;assembly=AvalonDock"
+		xmlns:w="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Solution Explorer" Height="300" Width="300">
+    <w:Grid>
+		<w:Menu Height="22" Name="menu1" VerticalAlignment="Top" Padding="1">
+			<w:MenuItem ToolTip="Refresh" Click="Refresh_Click">
+				<w:MenuItem.Header>
+					<w:Image Height="16" Width="16" Source="../../Resources/Refresh.png" />
+				</w:MenuItem.Header>
+			</w:MenuItem>
+		</w:Menu>
+		<w:WindowsFormsHost Margin="0,21,0,0" Name="winFormsHost" />
+	</w:Grid>
+</DockableContent>

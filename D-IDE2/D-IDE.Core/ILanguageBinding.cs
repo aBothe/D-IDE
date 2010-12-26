@@ -34,10 +34,7 @@ namespace D_IDE.Core
 		/// Returns an icon or image that indicates a specific node type.
 		/// Only called if <see cref="CanUseCodeCompletion"/> is set to true
 		/// </summary>
-		/// <param name="Node"></param>
-		/// <returns></returns>
 		object GetNodeIcon(INode Node);
-
 
 		IProject CreateEmptyProject(SourceFileType ProjectType);
 		IProject OpenProject(string FileName);

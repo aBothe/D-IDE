@@ -1,9 +1,14 @@
 ﻿<Window x:Class="D_IDE.Dialogs.NewSrcDlg"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:core="clr-namespace:D_IDE.Core;assembly=d-ide.core"
         Title="New Source" Height="421" Width="687" MinWidth="600" MinHeight="300" 
 		Icon="../Resources/prj_16.png" WindowStartupLocation="CenterScreen">
-    <Grid Background="#FF3B3B3B">
+	<Window.Resources>
+		<core:GDIToImageSrcConverter x:Key="imgConverter" />
+	</Window.Resources>
+
+	<Grid Background="#FF3B3B3B">
 		<ListBox ItemsSource="{Binding Languages}" 
                  SelectionChanged="View_Languages_SelectionChanged" 
                  HorizontalAlignment="Left" Name="List_Languages" Width="200" Margin="0,0,0,41" 
@@ -12,7 +17,7 @@
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<StackPanel Orientation="Horizontal" Background="{x:Null}">
-						<Image Source="{Binding LanguageIcon}" />
+						<Image Source="{Binding LanguageIcon,Converter={StaticResource imgConverter}}" />
 						<Label Content="{Binding LanguageName}" />
 					</StackPanel>
 				</DataTemplate>
@@ -22,7 +27,7 @@
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<StackPanel Orientation="Horizontal" Background="{x:Null}">
-						<Image Source="{Binding LargeImage}" Width="32" Height="32" />
+						<Image Source="{Binding LargeImage,Converter={StaticResource imgConverter}}" Width="32" Height="32" />
 						<StackPanel Margin="6,0,0,0" Orientation="Vertical">
 							<Label Content="{Binding Name}" Padding="0" />
 							<Label Content="{Binding Description}" Padding="0" Foreground="#444444" FontSize="11" />

@@ -10,12 +10,11 @@ namespace D_IDE.D
 {
 	public class DLanguageBinding:ILanguageBinding
 	{
-		BitmapImage _LanguageIcon = Util.FromDrawingImage(DIcons.dproj);
 		public object LanguageIcon
 		{
 			get
 			{
-				return _LanguageIcon; 
+				return DIcons.dproj; 
 			}
 		}
 
@@ -23,49 +22,47 @@ namespace D_IDE.D
 		{
 			// Files
 			var exts = new string[] { ".d",".di" };
-			var img = Util.FromDrawingImage(DIcons.dfile);
 			_FileTypes.Add(new SourceFileType
 			{
 				Name="D Module",
 				Description = "D Source Module",
 				Extensions = exts,
-				SmallImage = img,
-				LargeImage=img,
+				SmallImage = DIcons.dfile16,
+				LargeImage = DIcons.dfile32,
 				DefaultFilePrefix="Module"
 			});
 
 			//Projects
-			exts = new string[] { ".dprj" };
-			img = Util.FromDrawingImage(DIcons.cmd);
+			exts = new string[] { ".dprj" }; // All projects of the D language have the same extension
 			_ProjectTypes.Add(new SourceFileType
 			{
 				Name = "Console Application",
 				Description = "Console-based application",
 				Extensions = exts,
-				SmallImage = img,
-				LargeImage = img,
+				SmallImage = DIcons.dproj16,
+				LargeImage = DIcons.dproj32,
 				DefaultFilePrefix="ConsoleApp"
 			});
 
-			img = Util.FromDrawingImage(DIcons.Generic_Application);
+			var img2 =DIcons.Generic_Application;
 			_ProjectTypes.Add(new SourceFileType
 			{
 				Name = "Window Application",
 				Description = "Win32-based application",
 				Extensions = exts,
-				SmallImage = img,
-				LargeImage = img,
+				SmallImage = img2,
+				LargeImage = img2,
 				DefaultFilePrefix="Win32App"
 			});
 
-			img = Util.FromDrawingImage(DIcons.dll48);
+			img2 = DIcons.dll48;
 			_ProjectTypes.Add(new SourceFileType
 			{
 				Name = "Dynamic Link Library",
 				Description = "Win32 DLL project",
 				Extensions = exts,
-				SmallImage = img,
-				LargeImage = img,
+				SmallImage = img2,
+				LargeImage = img2,
 				DefaultFilePrefix="DynamicLinkLib"
 			});
 
@@ -74,8 +71,8 @@ namespace D_IDE.D
 				Name = "Static Link Library",
 				Description = "Project which outputs a .lib file",
 				Extensions = exts,
-				SmallImage = img,
-				LargeImage = img,
+				SmallImage = img2,
+				LargeImage = img2,
 				DefaultFilePrefix="StaticLib"
 			});
 		}
@@ -104,7 +101,27 @@ namespace D_IDE.D
 
 		public IProject CreateEmptyProject(SourceFileType FileType)
 		{
-			throw new NotImplementedException();
+			var prj=new DProject(FileType);
+
+			switch (_ProjectTypes.IndexOf(FileType))
+			{
+				case 0: // Console app
+					prj.OutputType = OutputTypes.Executable;
+					break;
+				case 1: // Win32 app
+					prj.OutputType = OutputTypes.CommandWindowLessExecutable;
+					break;
+				case 2: // DLL
+					prj.OutputType = OutputTypes.DynamicLibary;
+					break;
+				case 3:// Lib
+					prj.OutputType = OutputTypes.Other;
+					break;
+				default:
+					return null;
+			}
+
+			return prj;
 		}
 
 		public IProject OpenProject(string FileName)

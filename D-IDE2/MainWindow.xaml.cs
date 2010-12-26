@@ -3,6 +3,7 @@ using System.Windows;
 using Microsoft.Windows.Controls.Ribbon;
 using D_IDE.Core;
 using D_IDE.Dialogs;
+using D_IDE.Controls.Panels;
 
 namespace D_IDE
 {
@@ -18,11 +19,22 @@ namespace D_IDE
 				return DockMgr.ActiveDocument as AbstractEditorDocument;
 				}
 		}
+
+		ProjectExplorer Panel_ProjectExplorer = new ProjectExplorer();
+		#endregion
+
+		#region GUI Interactions
+		public void UpdateProjectExplorer()
+		{
+			Panel_ProjectExplorer.Update();
+		}
 		#endregion
 
 		public MainWindow()
 		{
 			InitializeComponent();
+
+			IDEManager.MainWindow = this;
 
             // Load global settings
             GlobalProperties.Init();
@@ -32,6 +44,9 @@ namespace D_IDE
 			LanguageLoader.LoadLanguageInterface("D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
 
 			UpdateLastFilesMenus();
+
+			// Init panels and their layouts
+			Panel_ProjectExplorer.Show(DockMgr,AvalonDock.AnchorStyle.Left);
 		}
 
 		#region Ribbon buttons
@@ -47,17 +62,27 @@ namespace D_IDE
 
 		private void NewProject(object sender, RoutedEventArgs e)
 		{
-			var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.CreateNew | (Manager.CurrentSolution!=null?NewProjectDlg.DialogMode.Add:0));
+			var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.CreateNew | (IDEManager.CurrentSolution!=null?NewProjectDlg.DialogMode.Add:0));
+
+			pdlg.ProjectDir = GlobalProperties.Current.DefaultProjectDirectory;
+			
 			if (pdlg.ShowDialog().Value)
 			{
-				if (Manager.CurrentSolution!=null && pdlg.AddToCurrentSolution)
-				{
-					Manager.AddNewProject(
+				if (IDEManager.CurrentSolution != null && pdlg.AddToCurrentSolution)
+					IDEManager.AddNewProjectToCurrentSolution(
 						pdlg.SelectedLanguageBinding,
 						pdlg.SelectedProjectType,
 						pdlg.ProjectName,
 						pdlg.ProjectDir);
-				}
+				else if (!pdlg.AddToCurrentSolution)
+					IDEManager.CurrentSolution = IDEManager.CreateNewProjectAndSolution(
+						pdlg.SelectedLanguageBinding,
+						pdlg.SelectedProjectType,
+						pdlg.ProjectName,
+						pdlg.ProjectDir,
+						pdlg.SolutionName);
+
+				UpdateProjectExplorer();
 			}
 		}
 

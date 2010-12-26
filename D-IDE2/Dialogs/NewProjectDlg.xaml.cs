@@ -75,13 +75,11 @@ namespace D_IDE.Dialogs
 			{
 				if (SelectedProjectType != null)
 				{
-					string defExt = SelectedProjectType.Extensions.Length > 0 ? SelectedProjectType.Extensions[0] : "";
-					string DummyName = SelectedProjectType.DefaultFilePrefix + "1"+defExt;
+					string DummyName = SelectedProjectType.DefaultFilePrefix + "1";
 
 					if (String.IsNullOrEmpty(ProjectName) || ProjectName == DummyName)
 					{
-						ProjectName = value.DefaultFilePrefix + "1"+
-							((value.Extensions != null && value.Extensions.Length > 0) ? value.Extensions[0] : "");
+						ProjectName = value.DefaultFilePrefix + "1";
 						PropChanged("ProjectName");
 					}
 				}

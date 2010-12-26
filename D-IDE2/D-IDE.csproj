@@ -80,7 +80,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CommonIcons.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CommonIcons.resx</DependentUpon>
+    </Compile>
     <Compile Include="Controls\AbstractEditorDocument.cs" />
+    <Page Include="Controls\Panels\ProjectExplorer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\NewSrcDlg.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -98,6 +107,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Controls\EditorDocument.cs" />
+    <Compile Include="Controls\Panels\ProjectExplorer.xaml.cs">
+      <DependentUpon>ProjectExplorer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\NewSrcDlg.xaml.cs">
       <DependentUpon>NewSrcDlg.xaml</DependentUpon>
     </Compile>
@@ -127,6 +139,10 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <EmbeddedResource Include="CommonIcons.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommonIcons.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -146,8 +162,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="CodeCompletion\" />
-    <Folder Include="Controls\Dialogs\" />
-    <Folder Include="Controls\Panels\" />
     <Folder Include="Debugging\" />
     <Folder Include="Misc\" />
   </ItemGroup>
@@ -259,6 +273,13 @@
   <ItemGroup>
     <Resource Include="Resources\txt16.png" />
     <Resource Include="Resources\txt32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Icons.16x16.CombineIcon.png" />
+    <Resource Include="Resources\Icons.32x32.CombineIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Refresh.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

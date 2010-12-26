@@ -12,15 +12,6 @@ namespace D_IDE
 	/// </summary>
 	internal class GenericFileBinding:ILanguageBinding
 	{
-		public IDEInterface IDE
-		{
-			get
-			{
-				return IDEInterface.Current;
-			}
-			set{}
-		}
-
 		public GenericFileBinding()
 		{
 			var exts=new string[]{".txt"};
@@ -29,8 +20,9 @@ namespace D_IDE
 				Description="Empty text file",
 				Extensions=exts,
 				DefaultFilePrefix="TextFile",
-				LargeImage=new BitmapImage(new Uri("../Resources/txt32.png",UriKind.Relative)),
-				SmallImage=new BitmapImage(new Uri("../Resources/txt16.png",UriKind.Relative))
+
+				LargeImage=CommonIcons.txt32,
+				SmallImage=CommonIcons.txt16
 			});
 
 			_moduletypes.Add(new SourceFileType()

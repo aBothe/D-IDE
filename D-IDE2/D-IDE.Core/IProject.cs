@@ -14,8 +14,15 @@ namespace D_IDE.Core
 		Solution Solution { get; set; }
 
 		Dictionary<ILanguage, IModule[]> ModulesByLanguage { get; }
-		List<IModule> Modules { get; }
+		List<IModule> ModuleCache { get; }
+		/// <summary>
+		/// Contain all project files including the file paths of the modules
+		/// </summary>
 		string[] Files { get; }
+		/// <summary>
+		/// Contains relative paths of empty but used directories
+		/// </summary>
+		List<string> SubDirectories { get; }
 		#endregion
 
 		#region Build properties

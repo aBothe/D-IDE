@@ -32,7 +32,6 @@ namespace D_IDE
 			if (lang == null)
 				throw new Exception("Could not instantiate " + LanguageInterface + " of " + file);
 
-			lang.IDE = IDEInterface.Current;
 			Bindings.Add(lang);
 
 			return lang;

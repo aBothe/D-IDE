@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace D_IDE.D {
+namespace D_IDE.Core {
     using System;
     
     
@@ -22,14 +22,14 @@ namespace D_IDE.D {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class DIcons {
+    internal class CoreIcons {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal DIcons() {
+        internal CoreIcons() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace D_IDE.D {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("D_IDE.D.DIcons", typeof(DIcons).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("D_IDE.Core.CoreIcons", typeof(CoreIcons).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -60,72 +60,16 @@ namespace D_IDE.D {
             }
         }
         
-        internal static System.Drawing.Bitmap cmd {
+        internal static System.Drawing.Bitmap file16 {
             get {
-                object obj = ResourceManager.GetObject("cmd", resourceCulture);
+                object obj = ResourceManager.GetObject("file16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
         
-        internal static System.Drawing.Icon dfile {
+        internal static System.Drawing.Bitmap file32 {
             get {
-                object obj = ResourceManager.GetObject("dfile", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        internal static System.Drawing.Bitmap dfile16 {
-            get {
-                object obj = ResourceManager.GetObject("dfile16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        internal static System.Drawing.Bitmap dfile32 {
-            get {
-                object obj = ResourceManager.GetObject("dfile32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        internal static System.Drawing.Bitmap dll48 {
-            get {
-                object obj = ResourceManager.GetObject("dll48", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        internal static System.Drawing.Icon dproj {
-            get {
-                object obj = ResourceManager.GetObject("dproj", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        internal static System.Drawing.Bitmap dproj16 {
-            get {
-                object obj = ResourceManager.GetObject("dproj16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        internal static System.Drawing.Bitmap dproj32 {
-            get {
-                object obj = ResourceManager.GetObject("dproj32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        internal static System.Drawing.Bitmap dproj48 {
-            get {
-                object obj = ResourceManager.GetObject("dproj48", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        internal static System.Drawing.Bitmap Generic_Application {
-            get {
-                object obj = ResourceManager.GetObject("Generic_Application", resourceCulture);
+                object obj = ResourceManager.GetObject("file32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
