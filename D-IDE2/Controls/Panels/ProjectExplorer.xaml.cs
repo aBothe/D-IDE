@@ -62,6 +62,39 @@ namespace D_IDE.Controls.Panels
 			{
 				// Get hovered node
 				var n = MainTree.GetNodeAt(e.Location);
+				if (n == null) return;
+				
+				// Build context menu
+				var cm = new ContextMenuStrip();
+				// Set node tag to our node
+				cm.Tag = n;
+
+				#region At first add node specific items
+				if (n is FileNode)
+				{
+					var fn=n as FileNode;
+					IProject prj = fn.ParentProjectNode.Project;
+
+					cm.Items.Add("Open", CommonIcons.open16,delegate(Object o, EventArgs _e)
+					{
+						IDEManager.OpenFile(prj,fn.FileName);
+					});
+
+					cm.Items.Add(new ToolStripSeparator());
+
+					cm.Items.Add("Exlude from project", CommonIcons.open16, delegate(Object o, EventArgs _e)
+					{
+						prj.Remove(fn.FileName);
+					});
+				}
+				#endregion
+
+				// Then add general items
+				if (cm.Items.Count > 0)
+					cm.Items.Add(new ToolStripSeparator());
+
+				// Show it
+				cm.Show(MainTree, e.Location);
 			}
 		}
 
@@ -304,6 +337,22 @@ namespace D_IDE.Controls.Panels
 		public class FileNode : TreeNode
 		{
 			public string FileName{get;set;}
+
+			public ProjectNode ParentProjectNode
+			{
+				get
+				{
+					var curNode = Parent;
+
+					while (curNode != null)
+					{
+						if (curNode is ProjectNode)
+							return curNode as ProjectNode;
+						curNode = curNode.Parent;
+					}
+					return null;
+				}
+			}
 		}
 
 		public class ModuleNode : FileNode

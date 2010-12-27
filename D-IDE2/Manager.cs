@@ -65,5 +65,17 @@ namespace D_IDE
 			return AddNewProjectToSolution(CurrentSolution,Binding,ProjectType,Name,BaseDir);
 		}
 		#endregion
+
+		#region Module & File management
+		public static EditorDocument OpenFile(IProject Project, string FileName)
+		{
+			return null;
+		}
+
+		public static EditorDocument OpenFile(string FileName)
+		{
+			return OpenFile(null, FileName);
+		}
+		#endregion
 	}
 }

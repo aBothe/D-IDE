@@ -263,6 +263,13 @@ namespace D_IDE {
             }
         }
         
+        internal static System.Drawing.Bitmap open16 {
+            get {
+                object obj = ResourceManager.GetObject("open16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap OpenPH {
             get {
                 object obj = ResourceManager.GetObject("OpenPH", resourceCulture);
