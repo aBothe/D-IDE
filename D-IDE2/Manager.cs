@@ -64,6 +64,11 @@ namespace D_IDE
 		{
 			return AddNewProjectToSolution(CurrentSolution,Binding,ProjectType,Name,BaseDir);
 		}
+
+		public static void ShowProjectDepsDialogue(IProject Project)
+		{
+
+		}
 		#endregion
 
 		#region Module & File management

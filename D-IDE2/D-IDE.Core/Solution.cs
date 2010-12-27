@@ -9,7 +9,7 @@ namespace D_IDE.Core
 {
 	public class Solution:IEnumerable<IProject>
 	{
-		public const string SolutionExtension = "idesln";
+		public const string SolutionExtension = ".idesln";
 
 		public static Solution LoadFromFile(string FileName)
 		{
@@ -150,6 +150,11 @@ namespace D_IDE.Core
 		#region Properties
 		public string Name { get; set; }
 		public string FileName { get; set; }
+		public string BaseDir {
+			get {
+				return Path.GetDirectoryName(FileName);
+			}
+		}
 
 		readonly List<string> _ProjectFiles = new List<string>();
 		int _StartPrjIndex = 0;
@@ -188,6 +193,43 @@ namespace D_IDE.Core
 			}
 		}
 		#endregion
+
+		/// <summary>
+		/// Builds the solution incrementally
+		/// </summary>
+		public void Build()
+		{
+
+		}
+
+		/// <summary>
+		/// Cleans the output and build the solution again
+		/// </summary>
+		public void Rebuild()
+		{
+
+		}
+
+		/// <summary>
+		/// Cleans the output/ Removes output directory
+		/// </summary>
+		public void CleanUpOutput()
+		{
+
+		}
+
+		public Dictionary<IProject, List<BuildError>> LastBuildErrors
+		{
+			get
+			{
+				var ret = new Dictionary<IProject, List<BuildError>>(ProjectCache.Count);
+
+				foreach (var p in ProjectCache)
+					ret.Add(p,p.LastBuildErrors);
+
+				return ret;
+			}
+		}
 
 		public IEnumerator<IProject> GetEnumerator()
 		{

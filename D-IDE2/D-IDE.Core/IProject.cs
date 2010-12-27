@@ -40,8 +40,8 @@ namespace D_IDE.Core
 		string[] ExternalDependencies { get; set; }
 		IProject[] ProjectDependencies { get; set; }
 
-		void BuildIncrementally();
 		void Build();
+		void Rebuild();
 		void CleanUpOutput();
 		List<BuildError> LastBuildErrors { get; }
 		#endregion

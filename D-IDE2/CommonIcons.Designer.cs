@@ -81,6 +81,13 @@ namespace D_IDE {
             }
         }
         
+        internal static System.Drawing.Bitmap addfile16 {
+            get {
+                object obj = ResourceManager.GetObject("addfile16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Icon application_exit_3 {
             get {
                 object obj = ResourceManager.GetObject("application_exit_3", resourceCulture);

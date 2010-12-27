@@ -96,12 +96,12 @@ namespace D_IDE.D
 			get;
 		}
 
-		public void BuildIncrementally()
+		public void Build()
 		{
 			throw new NotImplementedException();
 		}
 
-		public void Build()
+		public void Rebuild()
 		{
 			throw new NotImplementedException();
 		}

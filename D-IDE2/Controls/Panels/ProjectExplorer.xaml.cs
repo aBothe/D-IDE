@@ -13,6 +13,7 @@ using System.Windows.Shapes;
 using D_IDE.Core;
 using System.Windows.Forms;
 using System.IO;
+using D_IDE.Dialogs;
 
 namespace D_IDE.Controls.Panels
 {
@@ -82,10 +83,82 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add(new ToolStripSeparator());
 
-					cm.Items.Add("Exlude from project", CommonIcons.open16, delegate(Object o, EventArgs _e)
+					cm.Items.Add("Exlude", CommonIcons.open16, delegate(Object o, EventArgs _e)
 					{
 						prj.Remove(fn.FileName);
 					});
+				}
+				else if (n is SolutionNode)
+				{
+					var sln = (n as SolutionNode).Solution;
+
+					cm.Items.Add("Build", CommonIcons.Icons_16x16_BuildCurrentSelectedProject, delegate(Object o, EventArgs _e)
+					{
+						sln.Build();
+					});
+
+					cm.Items.Add("Rebuild",null, delegate(Object o, EventArgs _e)
+					{
+						sln.Rebuild();
+					});
+
+					cm.Items.Add("CleanUp", null, delegate(Object o, EventArgs _e)
+					{
+						sln.CleanUpOutput();
+					});
+
+					cm.Items.Add(new ToolStripSeparator());
+
+					cm.Items.Add("Add Project", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
+					{
+						var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.Add)
+							{
+								ProjectDir=sln.BaseDir
+							};
+
+						if (pdlg.ShowDialog().Value)
+							IDEManager.AddNewProjectToSolution(
+								sln,
+								pdlg.SelectedLanguageBinding,
+								pdlg.SelectedProjectType,
+								pdlg.ProjectName,
+								pdlg.ProjectDir);
+					});
+				}
+				else if (n is ProjectNode)
+				{
+					var prj = (n as ProjectNode).Project;
+
+					cm.Items.Add("Build", CommonIcons.Icons_16x16_BuildCurrentSelectedProject, delegate(Object o, EventArgs _e)
+					{
+						prj.Build();
+					});
+
+					cm.Items.Add("Rebuild", null, delegate(Object o, EventArgs _e)
+					{
+						prj.Rebuild();
+					});
+
+					cm.Items.Add("CleanUp", null, delegate(Object o, EventArgs _e)
+					{
+						prj.CleanUpOutput();
+					});
+
+					cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.ShowProjectDepsDialogue(prj);
+					});
+				}
+
+				if (n is ProjectNode || n is DirectoryNode)
+				{
+					if (cm.Items.Count > 0)
+						cm.Items.Add(new ToolStripSeparator());
+
+					cm.Items.Add("Add File", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
+					{
+
+					}
 				}
 				#endregion
 
