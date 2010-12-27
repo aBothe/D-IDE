@@ -21,6 +21,11 @@ namespace D_IDE.Controls.Panels
 	/// </summary>
 	public partial class ProjectExplorer : AvalonDock.DockableContent
 	{
+		#region Properties
+		System.Windows.Forms.TreeView MainTree = new System.Windows.Forms.TreeView();
+		static readonly ImageList TreeIcons = new ImageList();
+		#endregion
+
 		public ProjectExplorer()
 		{
 			InitializeComponent();
@@ -30,60 +35,34 @@ namespace D_IDE.Controls.Panels
 			MainTree.ImageList = TreeIcons;
 			MainTree.StateImageList = TreeIcons;
 
-			MainTree.BeforeCollapse += new TreeViewCancelEventHandler(MainTree_BeforeCollapse);
-			MainTree.BeforeExpand += new TreeViewCancelEventHandler(MainTree_BeforeExpand);
+			MainTree.BeforeExpand += delegate(object sender, TreeViewCancelEventArgs e)
+			{
+				if (e.Node is DirectoryNode)
+					e.Node.ImageKey = e.Node.SelectedImageKey = "dir_open";
+			};
+			MainTree.BeforeCollapse += delegate(object sender, TreeViewCancelEventArgs e)
+			{
+				if (e.Node is DirectoryNode)
+					e.Node.ImageKey = e.Node.SelectedImageKey = "dir";
+			};
+
+			MainTree.MouseClick += new System.Windows.Forms.MouseEventHandler(MainTree_MouseClick);
 
 			MainTree.BorderStyle = BorderStyle.None;
 		}
 
-		void MainTree_BeforeExpand(object sender, TreeViewCancelEventArgs e)
+		/// <summary>
+		/// Handles context menu
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		void MainTree_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
 		{
-			if (e.Node is DirectoryNode)
-				e.Node.ImageKey = e.Node.SelectedImageKey = "dir_open";
-		}
-
-		void MainTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
-		{
-			if (e.Node is DirectoryNode)
-				e.Node.ImageKey = e.Node.SelectedImageKey = "dir";
-		}
-
-		System.Windows.Forms.TreeView MainTree = new System.Windows.Forms.TreeView();
-		static readonly ImageList TreeIcons = new ImageList();
-
-		public static void SetupTreeIcons()
-		{
-			TreeIcons.Images.Clear();
-
-			TreeIcons.Images.Add("solution", CommonIcons.Icons_16x16_CombineIcon);
-			TreeIcons.Images.Add("dir", CommonIcons.dir);
-			TreeIcons.Images.Add("dir_open", CommonIcons.dir_open);
-
-			foreach (var lang in LanguageLoader.Bindings)
+			if (e.Button == MouseButtons.Right)
 			{
-				if (lang.ProjectsSupported)
-					foreach (var pt in lang.ProjectTypes)
-						if(pt.SmallImage!=null && pt.Extensions!=null)
-							foreach(var ext in pt.Extensions)
-								Util.AddGDIImageToImageList(TreeIcons, ext, pt.SmallImage);
-
-				foreach (var mt in lang.ModuleTypes)
-					if (mt.SmallImage != null && mt.Extensions != null)
-						foreach (var ext in mt.Extensions)
-							Util.AddGDIImageToImageList(TreeIcons, ext, mt.SmallImage);
+				// Get hovered node
+				var n = MainTree.GetNodeAt(e.Location);
 			}
-		}
-
-		static string GetFileIconKey(string FileName)
-		{
-			var ext = System.IO.Path.GetExtension(FileName);
-
-			if (!TreeIcons.Images.ContainsKey(ext))
-			{
-				TreeIcons.Images.Add(ext, Win32.GetIcon(FileName,true));
-			}
-
-			return ext;
 		}
 
 		private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -104,6 +83,44 @@ namespace D_IDE.Controls.Panels
 			MainTree.EndUpdate();
 		}
 
+		#region Icons
+		public static void SetupTreeIcons()
+		{
+			TreeIcons.Images.Clear();
+
+			TreeIcons.Images.Add("solution", CommonIcons.Icons_16x16_CombineIcon);
+			TreeIcons.Images.Add("dir", CommonIcons.dir);
+			TreeIcons.Images.Add("dir_open", CommonIcons.dir_open);
+
+			foreach (var lang in LanguageLoader.Bindings)
+			{
+				if (lang.ProjectsSupported)
+					foreach (var pt in lang.ProjectTypes)
+						if (pt.SmallImage != null && pt.Extensions != null)
+							foreach (var ext in pt.Extensions)
+								Util.AddGDIImageToImageList(TreeIcons, ext, pt.SmallImage);
+
+				foreach (var mt in lang.ModuleTypes)
+					if (mt.SmallImage != null && mt.Extensions != null)
+						foreach (var ext in mt.Extensions)
+							Util.AddGDIImageToImageList(TreeIcons, ext, mt.SmallImage);
+			}
+		}
+
+		static string GetFileIconKey(string FileName)
+		{
+			var ext = System.IO.Path.GetExtension(FileName);
+
+			if (!TreeIcons.Images.ContainsKey(ext))
+			{
+				TreeIcons.Images.Add(ext, Win32.GetIcon(FileName, true));
+			}
+
+			return ext;
+		}
+		#endregion
+
+		#region Node classes
 		public class SolutionNode : TreeNode
 		{
 			public Solution Solution;
@@ -297,5 +314,6 @@ namespace D_IDE.Controls.Panels
 				get { return Module.FileName; }
 			}
 		}
+		#endregion
 	}
 }
