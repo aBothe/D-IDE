@@ -69,13 +69,13 @@ namespace D_IDE
 			if (pdlg.ShowDialog().Value)
 			{
 				if (IDEManager.CurrentSolution != null && pdlg.AddToCurrentSolution)
-					IDEManager.AddNewProjectToCurrentSolution(
+					IDEManager.ProjectManagement.AddNewProjectToCurrentSolution(
 						pdlg.SelectedLanguageBinding,
 						pdlg.SelectedProjectType,
 						pdlg.ProjectName,
 						pdlg.ProjectDir);
 				else if (!pdlg.AddToCurrentSolution)
-					IDEManager.CurrentSolution = IDEManager.CreateNewProjectAndSolution(
+					IDEManager.CurrentSolution = IDEManager.ProjectManagement.CreateNewProjectAndSolution(
 						pdlg.SelectedLanguageBinding,
 						pdlg.SelectedProjectType,
 						pdlg.ProjectName,

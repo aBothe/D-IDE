@@ -83,11 +83,14 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add(new ToolStripSeparator());
 
-					cm.Items.Add("Exlude", CommonIcons.open16, delegate(Object o, EventArgs _e)
+					cm.Items.Add("Exlude", null, delegate(Object o, EventArgs _e)
 					{
 						prj.Remove(fn.FileName);
+						Update();
 					});
 				}
+
+
 				else if (n is SolutionNode)
 				{
 					var sln = (n as SolutionNode).Solution;
@@ -117,14 +120,24 @@ namespace D_IDE.Controls.Panels
 							};
 
 						if (pdlg.ShowDialog().Value)
-							IDEManager.AddNewProjectToSolution(
+							IDEManager.ProjectManagement.AddNewProjectToSolution(
 								sln,
 								pdlg.SelectedLanguageBinding,
 								pdlg.SelectedProjectType,
 								pdlg.ProjectName,
 								pdlg.ProjectDir);
+
+						Update();
+					});
+
+					cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.ProjectManagement.ShowProjectDependenciesDialogue(sln);
+						Update();
 					});
 				}
+
+
 				else if (n is ProjectNode)
 				{
 					var prj = (n as ProjectNode).Project;
@@ -146,9 +159,11 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
 					{
-						IDEManager.ShowProjectDepsDialogue(prj);
+						IDEManager.ProjectManagement.ShowProjectDependenciesDialogue(prj);
+						Update();
 					});
 				}
+
 
 				if (n is ProjectNode || n is DirectoryNode)
 				{
@@ -158,7 +173,28 @@ namespace D_IDE.Controls.Panels
 					cm.Items.Add("Add File", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
 					{
 
-					}
+						Update();
+					});
+				}
+
+				if (n is DirectoryNode)
+				{
+					var dn = n as DirectoryNode;
+					cm.Items.Add(new ToolStripSeparator());
+
+					cm.Items.Add("Exclude", null, delegate(Object o, EventArgs _e)
+					{
+						var prj = dn.ParentProjectNode.Project;
+						var relDir=dn.RelativePath;
+
+						if (prj.SubDirectories.Contains(relDir))
+							prj.SubDirectories.Remove(relDir);
+
+						foreach (var s in prj.Files)
+						{
+							
+						}
+					});
 				}
 				#endregion
 

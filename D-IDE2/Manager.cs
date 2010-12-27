@@ -15,7 +15,8 @@ namespace D_IDE
 		public static Solution CurrentSolution;
 		#endregion
 
-		#region Project management
+		public class ProjectManagement
+		{
 		/// <summary>
 		/// Creates a new project.
 		/// Doesn't add it to the current solution.
@@ -59,17 +60,44 @@ namespace D_IDE
 
 			return prj;
 		}
-
 		public static IProject AddNewProjectToCurrentSolution(ILanguageBinding Binding,			SourceFileType ProjectType,			string Name,			string BaseDir)
 		{
 			return AddNewProjectToSolution(CurrentSolution,Binding,ProjectType,Name,BaseDir);
 		}
-
-		public static void ShowProjectDepsDialogue(IProject Project)
+		
+		
+		public static void ExludeFileFromProject(IProject Project, string file)
 		{
 
 		}
+
+		public static void RemoveDirectoryFromProject(IProject Project, string RelativePath)
+		{
+
+		}
+
+		public static void RemoveFileFromProject(IProject Project, string file)
+		{
+
+		}
+
+		#region Project Dependencies dialogue
+		static void ShowProjectDependenciesDialogue(Solution sln,IProject Project)
+		{
+
+		}
+
+		public static void ShowProjectDependenciesDialogue(IProject Project)
+		{
+			ShowProjectDependenciesDialogue(Project.Solution,Project);
+		}
+
+		public static void ShowProjectDependenciesDialogue(Solution sln)
+		{
+			ShowProjectDependenciesDialogue(sln,null);
+		}
 		#endregion
+		}
 
 		#region Module & File management
 		public static EditorDocument OpenFile(IProject Project, string FileName)
