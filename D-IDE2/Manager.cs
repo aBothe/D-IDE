@@ -144,22 +144,22 @@ namespace D_IDE
 
 
 
-			public static void CopyFile(IProject Project, string FileName, string NewFileName)
+			public static void CopyFile(IProject Project, string FileName, IProject TargetProject, string NewDirectory)
 			{
 
 			}
 
-			public static void CopyDirectory(IProject Project, string RelativeDir, string NewDir)
+			public static void CopyDirectory(IProject Project, string RelativeDir, IProject TargetProject, string NewDir)
 			{
 
 			}
 
-			public static void MoveFile(IProject Project, string FileName, string NewFileName)
+			public static void MoveFile(IProject Project, string FileName, IProject TargetProject, string NewDirectory)
 			{
 
 			}
 
-			public static void MoveDirectory(IProject Project, string RelativeDir, string NewDir)
+			public static void MoveDirectory(IProject Project, string RelativeDir, IProject TargetProject, string NewDir)
 			{
 
 			}

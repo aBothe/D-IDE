@@ -82,9 +82,10 @@ namespace D_IDE.Controls.Panels
 
 		void MainTree_DragOver(object sender, System.Windows.Forms.DragEventArgs e)
 		{
-			if (e.Data.GetDataPresent(typeof(TreeNode)))
+			var n = e.Data.GetData(e.Data.GetFormats()[0]) as TreeNode;
+
+			if (n!=null)
 			{
-				var n = e.Data.GetData(typeof(TreeNode)) as TreeNode;
 				if (IsDropAllowed(n, MainTree.GetNodeAt(new System.Drawing.Point(e.X, e.Y))))
 					if ((e.KeyState & 8) == 8) // If ctrl got pressed
 						e.Effect = System.Windows.Forms.DragDropEffects.Copy;
@@ -97,31 +98,124 @@ namespace D_IDE.Controls.Panels
 
 		void MainTree_ItemDrag(object sender, ItemDragEventArgs e)
 		{
-			if (e.Item is TreeNode)
+			var n = e.Item as TreeNode;
+			if (n!=null)
 			{
-				MainTree.SelectedNode = e.Item as TreeNode;
+				MainTree.SelectedNode = n;
 
 				if (e.Button == MouseButtons.Left && !(e.Item is SolutionNode))
-					MainTree.DoDragDrop(e.Item, System.Windows.Forms.DragDropEffects.All);
+					MainTree.DoDragDrop(new System.Windows.Forms.DataObject( n as object), System.Windows.Forms.DragDropEffects.All);
 			}
 		}
 		#endregion
 
+		#region Node copying & moving
 		public static bool IsDropAllowed(TreeNode src, TreeNode dropNode)
 		{
-			return true;
+			// A directory node can be dropped on an other directory node or a project node
+			if (src is DirectoryNode &&
+				src != dropNode &&(
+				(dropNode is DirectoryNode && 
+					!(dropNode as DirectoryNode).RelativePath // Ensure that the drop node is no subdirectory of our source node
+						.Contains((src as DirectoryNode).RelativePath)) || // e.g. src - FolderA, dropNode - FolderA/FolderB/FolderC  ->> dropNode path contains src path ->> return false;
+				(dropNode is ProjectNode && 
+					src.Parent!=dropNode) // Ensure that the directory's root is not the original
+				))
+				return true;
+
+			if (src is FileNode &&
+				(dropNode is DirectoryNode || dropNode is ProjectNode) &&
+				src.Parent!=dropNode.Parent) // Ensure the file gets moved either to an other directory or project
+				return true;
+
+			if (src is ProjectNode &&
+				dropNode is SolutionNode &&
+				src.Parent != dropNode)
+				return true;
+
+			return false;
 		}
 
 		public void DoPaste(TreeNode src, TreeNode dropNode)
 		{
+			if (src is DirectoryNode)
+			{
+				var src_dn = src as DirectoryNode;
+				var src_path = src_dn.RelativePath;
+				var src_prj = src_dn.ParentProjectNode.Project;
 
+				var dest_path = "";
+				IProject dest_prj = null;
+
+				if (dropNode is ProjectNode)
+					dest_prj = (dropNode as ProjectNode).Project;
+				else if (dropNode is DirectoryNode)
+				{
+					dest_path = (dropNode as DirectoryNode).RelativePath;
+					dest_prj = (dropNode as DirectoryNode).ParentProjectNode.Project;
+				}
+
+				if (dest_prj != null)
+					if (IsCut) IDEManager.FileManagement.MoveDirectory(src_prj, src_path, dest_prj, dest_path);
+					else IDEManager.FileManagement.CopyDirectory(src_prj,src_path,dest_prj,dest_path);
+			}
+
+			else if (src is FileNode)
+			{
+				var src_fn = src as FileNode;
+				var src_path = src_fn.FileName;
+				var src_prj = src_fn.ParentProjectNode.Project;
+
+				var dest_path = "";
+				IProject dest_prj = null;
+
+				if (dropNode is ProjectNode)
+					dest_prj = (dropNode as ProjectNode).Project;
+				else if (dropNode is DirectoryNode)
+				{
+					dest_path = (dropNode as DirectoryNode).RelativePath;
+					dest_prj = (dropNode as DirectoryNode).ParentProjectNode.Project;
+				}
+
+				if (dest_prj != null)
+					if (IsCut) IDEManager.FileManagement.MoveFile(src_prj, src_path, dest_prj, dest_path);
+					else IDEManager.FileManagement.CopyFile(src_prj, src_path, dest_prj, dest_path);
+			}
+
+			else if (src is ProjectNode && dropNode is SolutionNode && src.Parent!=dropNode)
+				IDEManager.ProjectManagement.ReassignProject((src as ProjectNode).Project,(dropNode as SolutionNode).Solution);
 		}
 
+		void AddCutCopyPasteButtons(ContextMenuStrip cm, TreeNode node, bool CutAllowed, bool CopyAllowed, bool PasteAllowed)
+		{
+			if (CutAllowed || CopyAllowed || (PasteAllowed && IsDropAllowed(CutCopyNode, node)))
+				cm.Items.Add(new ToolStripSeparator());
+
+
+			if (CutAllowed)
+				cm.Items.Add("Cut", CommonIcons.Icons_16x16_CutIcon, delegate(Object o, EventArgs _e)
+				{
+					IsCut = true;
+					CutCopyNode = node;
+				});
+
+			if (CopyAllowed)
+				cm.Items.Add("Copy", CommonIcons.Icons_16x16_CopyIcon, delegate(Object o, EventArgs _e)
+				{
+					IsCut = false;
+					CutCopyNode = node;
+				});
+
+			if (PasteAllowed && IsDropAllowed(CutCopyNode, node))
+				cm.Items.Add("Paste", CommonIcons.Icons_16x16_PasteIcon, delegate(Object o, EventArgs _e)
+				{
+					DoPaste(CutCopyNode, node);
+				});
+		}
+		#endregion
 		/// <summary>
-		/// Handles context menu
+		/// Handles context menu creation, contains click event handlers
 		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
 		void MainTree_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
 		{
 			if (e.Button == MouseButtons.Right)
@@ -314,33 +408,6 @@ namespace D_IDE.Controls.Panels
 			}
 		}
 
-		void AddCutCopyPasteButtons(ContextMenuStrip cm,TreeNode node, bool CutAllowed, bool CopyAllowed, bool PasteAllowed)
-		{
-			if (CutAllowed || CopyAllowed || (PasteAllowed && IsDropAllowed(CutCopyNode, node)))
-				cm.Items.Add(new ToolStripSeparator());
-
-
-			if(CutAllowed)
-			cm.Items.Add("Cut", CommonIcons.Icons_16x16_CutIcon, delegate(Object o, EventArgs _e)
-			{
-				IsCut = true;
-				CutCopyNode = node;
-			});
-
-			if(CopyAllowed)
-			cm.Items.Add("Copy", CommonIcons.Icons_16x16_CopyIcon, delegate(Object o, EventArgs _e)
-			{
-				IsCut = false;
-				CutCopyNode = node;
-			});
-
-			if (PasteAllowed && IsDropAllowed(CutCopyNode, node))
-				cm.Items.Add("Paste", CommonIcons.Icons_16x16_PasteIcon, delegate(Object o, EventArgs _e)
-				{
-					DoPaste(CutCopyNode, node);
-				});
-		}
-
 		private void Refresh_Click(object sender, RoutedEventArgs e)
 		{
 			Update();
@@ -481,7 +548,7 @@ namespace D_IDE.Controls.Panels
 			{
 				get
 				{
-					string ret = DirectoryName;
+					string ret = "";
 
 					var n = this;
 					while (n!=null)
@@ -490,7 +557,7 @@ namespace D_IDE.Controls.Panels
 						n = n.Parent as DirectoryNode;
 					}
 
-					return ret;
+					return ret.Trim(' ','\\');
 				}
 			}
 			public ProjectNode ParentProjectNode
