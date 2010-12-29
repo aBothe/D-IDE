@@ -1,6 +1,7 @@
 ﻿using Parser.Core;
 using D_IDE.Core;
 using System.IO;
+using System.Linq;
 
 namespace D_IDE
 {
@@ -27,7 +28,7 @@ namespace D_IDE
 			var prj = Binding.CreateEmptyProject(ProjectType);
 			prj.Name = Name;
 			prj.FileName =
-				BaseDir + "\\" +
+				BaseDir.Trim('\\', ' ', '\t') + "\\" +
 				Path.ChangeExtension(Util.PurifyFileName(Name), ProjectType.Extensions[0]);
 
 			// Set the output dir to 'bin' by default
@@ -42,12 +43,28 @@ namespace D_IDE
 			var sln = new Solution();
 			sln.Name = SolutionName;
 			sln.FileName =
-				BaseDir + "\\" +
+				BaseDir.Trim('\\',' ','\t')+ "\\" +
 				Path.ChangeExtension(Util.PurifyFileName(Name), Solution.SolutionExtension);
 
 			AddNewProjectToSolution(sln, Binding, ProjectType, Name, BaseDir);
 
 			return sln;
+		}
+
+		/// <summary>
+		/// Central method to load a project whereas its file extension is used to identify
+		/// the generic project type.
+		/// </summary>
+		public static IProject LoadProjectFromFile(string FileName)
+		{
+			string ls = FileName.ToLower();
+
+			foreach (var lang in from l in LanguageLoader.Bindings where l.ProjectsSupported select l)
+				foreach (var pt in lang.ProjectTypes)
+					foreach (var ext in pt.Extensions)
+						if (ls.EndsWith(ext))
+							return lang.OpenProject(FileName);
+			return null;
 		}
 
 		/// <summary>
@@ -64,51 +81,156 @@ namespace D_IDE
 		{
 			return AddNewProjectToSolution(CurrentSolution,Binding,ProjectType,Name,BaseDir);
 		}
-		
-		
-		public static void ExludeFileFromProject(IProject Project, string file)
+
+		public static void ReassignProject(IProject Project, Solution NewSolution)
 		{
 
 		}
 
-		public static void RemoveDirectoryFromProject(IProject Project, string RelativePath)
+		public static string ProjectBaseDirectory(IProject Project)
+		{
+			return System.IO.Path.GetDirectoryName(Project.FileName);
+		}
+
+		#region Project Dependencies dialog
+		static void ShowProjectDependenciesDialog(Solution sln,IProject Project)
 		{
 
 		}
 
-		public static void RemoveFileFromProject(IProject Project, string file)
+		public static void ShowProjectDependenciesDialog(IProject Project)
 		{
-
+			ShowProjectDependenciesDialog(Project.Solution,Project);
 		}
 
-		#region Project Dependencies dialogue
-		static void ShowProjectDependenciesDialogue(Solution sln,IProject Project)
+		public static void ShowProjectDependenciesDialog(Solution sln)
 		{
-
+			ShowProjectDependenciesDialog(sln,null);
 		}
 
-		public static void ShowProjectDependenciesDialogue(IProject Project)
+		public static void ShowProjectPropertiesDialog(IProject Project)
 		{
-			ShowProjectDependenciesDialogue(Project.Solution,Project);
-		}
 
-		public static void ShowProjectDependenciesDialogue(Solution sln)
-		{
-			ShowProjectDependenciesDialogue(sln,null);
 		}
 		#endregion
 		}
 
-		#region Module & File management
-		public static EditorDocument OpenFile(IProject Project, string FileName)
+		public class FileManagement
 		{
-			return null;
+			/// <summary>
+			/// Opens a new-source dialog
+			/// </summary>
+			public static void AddNewSourceToProject(IProject Project, string RelativeDir)
+			{
+
+			}
+
+			public static void AddNewDirectoryToProject(IProject Project, string RelativeDir, string DirName)
+			{
+
+			}
+
+
+
+			public static void AddExistingSourceToProject(string FileName ,IProject Project,string RelativeDir)
+			{
+
+			}
+
+			public static void AddExistingDirectoryToProject(string DirectoryPath,IProject Project, string RelativeDir)
+			{
+
+			}
+
+
+
+			public static void CopyFile(IProject Project, string FileName, string NewFileName)
+			{
+
+			}
+
+			public static void CopyDirectory(IProject Project, string RelativeDir, string NewDir)
+			{
+
+			}
+
+			public static void MoveFile(IProject Project, string FileName, string NewFileName)
+			{
+
+			}
+
+			public static void MoveDirectory(IProject Project, string RelativeDir, string NewDir)
+			{
+
+			}
+
+			public static void ExcludeDirectoryFromProject(IProject prj, string RelativePath)
+			{
+				if (prj.SubDirectories.Contains(RelativePath))
+					prj.SubDirectories.Remove(RelativePath);
+
+				foreach (var s in prj.Files)
+				{
+
+				}
+			}
+
+
+
+			public static void ExludeFileFromProject(IProject Project, string file)
+			{
+
+			}
+
+			public static void RemoveDirectoryFromProject(IProject Project, string RelativePath)
+			{
+
+			}
+
+			public static void RemoveFileFromProject(IProject Project, string file)
+			{
+
+			}
+
+
+
+			public static string GetAbsoluteFileName(IProject Project, string file)
+			{
+				if (Path.IsPathRooted(file))
+					return file;
+				return ProjectManagement.ProjectBaseDirectory(Project) + file;
+			}
 		}
 
-		public static EditorDocument OpenFile(string FileName)
+		public class BuildManagement
 		{
-			return OpenFile(null, FileName);
+			public static bool BuildSolution(Solution sln)
+			{
+				return false;
+			}
+
+			public static bool BuildProject(IProject Project)
+			{
+				return false;
+			}
+
+			public static bool BuildSingleModule(IModule Module)
+			{
+				return false;
+			}
 		}
-		#endregion
+
+		public class EditingManagement
+		{
+			public static EditorDocument OpenFile(IProject Project, string FileName)
+			{
+				return null;
+			}
+
+			public static EditorDocument OpenFile(string FileName)
+			{
+				return OpenFile(null, FileName);
+			}
+		}
 	}
 }

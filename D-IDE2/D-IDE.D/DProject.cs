@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using D_IDE.Core;
 using Parser.Core;
+using System.IO;
 
 namespace D_IDE.D
 {

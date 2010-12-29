@@ -25,12 +25,16 @@ namespace D_IDE.Controls.Panels
 		#region Properties
 		System.Windows.Forms.TreeView MainTree = new System.Windows.Forms.TreeView();
 		static readonly ImageList TreeIcons = new ImageList();
+
+		bool IsCut = false;
+		TreeNode CutCopyNode =null;
 		#endregion
 
 		public ProjectExplorer()
 		{
 			InitializeComponent();
 
+			#region Manual WinForms Code
 			winFormsHost.Child = MainTree;
 
 			MainTree.ImageList = TreeIcons;
@@ -41,6 +45,7 @@ namespace D_IDE.Controls.Panels
 				if (e.Node is DirectoryNode)
 					e.Node.ImageKey = e.Node.SelectedImageKey = "dir_open";
 			};
+
 			MainTree.BeforeCollapse += delegate(object sender, TreeViewCancelEventArgs e)
 			{
 				if (e.Node is DirectoryNode)
@@ -49,7 +54,67 @@ namespace D_IDE.Controls.Panels
 
 			MainTree.MouseClick += new System.Windows.Forms.MouseEventHandler(MainTree_MouseClick);
 
+			MainTree.AllowDrop = true;
+			MainTree.ItemDrag += new ItemDragEventHandler(MainTree_ItemDrag);
+			MainTree.DragOver += new System.Windows.Forms.DragEventHandler(MainTree_DragOver);
+			MainTree.DragDrop += new System.Windows.Forms.DragEventHandler(MainTree_DragDrop);
+
 			MainTree.BorderStyle = BorderStyle.None;
+			MainTree.HideSelection = false;
+			#endregion
+		}
+
+		#region Drag'n'Drop
+		void MainTree_DragDrop(object sender, System.Windows.Forms.DragEventArgs e)
+		{
+			bool LastState = IsCut;
+
+			if (e.Effect!=System.Windows.Forms.DragDropEffects.None && e.Data.GetDataPresent(typeof(TreeNode)))
+			{
+				var n = e.Data.GetData(typeof(TreeNode)) as TreeNode;
+				IsCut = e.Effect == System.Windows.Forms.DragDropEffects.Move;
+
+				DoPaste(n, MainTree.GetNodeAt(new System.Drawing.Point(e.X, e.Y)));
+			}
+
+			IsCut = LastState;
+		}
+
+		void MainTree_DragOver(object sender, System.Windows.Forms.DragEventArgs e)
+		{
+			if (e.Data.GetDataPresent(typeof(TreeNode)))
+			{
+				var n = e.Data.GetData(typeof(TreeNode)) as TreeNode;
+				if (IsDropAllowed(n, MainTree.GetNodeAt(new System.Drawing.Point(e.X, e.Y))))
+					if ((e.KeyState & 8) == 8) // If ctrl got pressed
+						e.Effect = System.Windows.Forms.DragDropEffects.Copy;
+					else
+						e.Effect = System.Windows.Forms.DragDropEffects.Move; // Move file/dir by default
+				else 
+					e.Effect = System.Windows.Forms.DragDropEffects.None;
+			}
+		}
+
+		void MainTree_ItemDrag(object sender, ItemDragEventArgs e)
+		{
+			if (e.Item is TreeNode)
+			{
+				MainTree.SelectedNode = e.Item as TreeNode;
+
+				if (e.Button == MouseButtons.Left && !(e.Item is SolutionNode))
+					MainTree.DoDragDrop(e.Item, System.Windows.Forms.DragDropEffects.All);
+			}
+		}
+		#endregion
+
+		public static bool IsDropAllowed(TreeNode src, TreeNode dropNode)
+		{
+			return true;
+		}
+
+		public void DoPaste(TreeNode src, TreeNode dropNode)
+		{
+
 		}
 
 		/// <summary>
@@ -64,13 +129,15 @@ namespace D_IDE.Controls.Panels
 				// Get hovered node
 				var n = MainTree.GetNodeAt(e.Location);
 				if (n == null) return;
-				
-				// Build context menu
+				MainTree.SelectedNode = n;
+
 				var cm = new ContextMenuStrip();
 				// Set node tag to our node
 				cm.Tag = n;
 
-				#region At first add node specific items
+				#region Build context menu
+
+				#region File Node
 				if (n is FileNode)
 				{
 					var fn=n as FileNode;
@@ -78,19 +145,67 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Open", CommonIcons.open16,delegate(Object o, EventArgs _e)
 					{
-						IDEManager.OpenFile(prj,fn.FileName);
+						IDEManager.EditingManagement.OpenFile(prj,fn.FileName);
 					});
 
 					cm.Items.Add(new ToolStripSeparator());
 
+					AddCutCopyPasteButtons(cm, n, true, true, false);
+
 					cm.Items.Add("Exlude", null, delegate(Object o, EventArgs _e)
 					{
-						prj.Remove(fn.FileName);
-						Update();
+						IDEManager.FileManagement.ExludeFileFromProject(prj, fn.FileName);
+					});
+
+					cm.Items.Add("Delete", CommonIcons.delete16, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.FileManagement.RemoveFileFromProject(prj, fn.FileName);
+					});
+
+					cm.Items.Add(new ToolStripSeparator());
+
+					cm.Items.Add("Open File Path", null, delegate(Object o, EventArgs _e)
+					{
+						System.Diagnostics.Process.Start("explorer",System.IO.Path.GetDirectoryName( fn.FileName));
 					});
 				}
+				#endregion
 
+				#region Directory Node
+				else if (n is DirectoryNode)
+				{
+					var dn = n as DirectoryNode;
 
+					cm.Items.Add("Add File", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.FileManagement.AddNewSourceToProject(dn.ParentProjectNode.Project, dn.RelativePath);
+					});
+
+					cm.Items.Add(new ToolStripSeparator());
+
+					cm.Items.Add("Exclude", null, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.FileManagement.ExcludeDirectoryFromProject(
+							dn.ParentProjectNode.Project, dn.RelativePath);
+					});
+
+					cm.Items.Add("Delete", CommonIcons.delete16, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.FileManagement.RemoveDirectoryFromProject(dn.ParentProjectNode.Project, dn.RelativePath);
+					});
+
+					AddCutCopyPasteButtons(cm, n, true, true, true);
+
+					cm.Items.Add(new ToolStripSeparator());
+
+					cm.Items.Add("Open Path", null, delegate(Object o, EventArgs _e)
+					{
+						System.Diagnostics.Process.Start("explorer", dn.AbsolutePath);
+					});
+				}
+				#endregion
+
+				#region Solution Node
 				else if (n is SolutionNode)
 				{
 					var sln = (n as SolutionNode).Solution;
@@ -126,18 +241,25 @@ namespace D_IDE.Controls.Panels
 								pdlg.SelectedProjectType,
 								pdlg.ProjectName,
 								pdlg.ProjectDir);
-
-						Update();
 					});
 
 					cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
 					{
-						IDEManager.ProjectManagement.ShowProjectDependenciesDialogue(sln);
-						Update();
+						IDEManager.ProjectManagement.ShowProjectDependenciesDialog(sln);
+					});
+
+					AddCutCopyPasteButtons(cm, n, false, false, true);
+
+					cm.Items.Add(new ToolStripSeparator());
+
+					cm.Items.Add("Open File Path", null, delegate(Object o, EventArgs _e)
+					{
+						System.Diagnostics.Process.Start("explorer",System.IO.Path.GetDirectoryName(sln.FileName));
 					});
 				}
+				#endregion
 
-
+				#region Project Node
 				else if (n is ProjectNode)
 				{
 					var prj = (n as ProjectNode).Project;
@@ -157,54 +279,66 @@ namespace D_IDE.Controls.Panels
 						prj.CleanUpOutput();
 					});
 
-					cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
-					{
-						IDEManager.ProjectManagement.ShowProjectDependenciesDialogue(prj);
-						Update();
-					});
-				}
-
-
-				if (n is ProjectNode || n is DirectoryNode)
-				{
-					if (cm.Items.Count > 0)
-						cm.Items.Add(new ToolStripSeparator());
+					cm.Items.Add(new ToolStripSeparator());
 
 					cm.Items.Add("Add File", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
 					{
-
-						Update();
+						IDEManager.FileManagement.AddNewSourceToProject(prj,".");
 					});
-				}
 
-				if (n is DirectoryNode)
-				{
-					var dn = n as DirectoryNode;
+					cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.ProjectManagement.ShowProjectDependenciesDialog(prj);
+					});
+
+					AddCutCopyPasteButtons(cm, n, true, false, true);
+
 					cm.Items.Add(new ToolStripSeparator());
 
-					cm.Items.Add("Exclude", null, delegate(Object o, EventArgs _e)
+					cm.Items.Add("Open File Path", null, delegate(Object o, EventArgs _e)
 					{
-						var prj = dn.ParentProjectNode.Project;
-						var relDir=dn.RelativePath;
+						System.Diagnostics.Process.Start("explorer",IDEManager.ProjectManagement.ProjectBaseDirectory(prj));
+					});
 
-						if (prj.SubDirectories.Contains(relDir))
-							prj.SubDirectories.Remove(relDir);
-
-						foreach (var s in prj.Files)
-						{
-							
-						}
+					cm.Items.Add("Properties", CommonIcons.properties16, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.ProjectManagement.ShowProjectPropertiesDialog(prj);
 					});
 				}
 				#endregion
 
-				// Then add general items
-				if (cm.Items.Count > 0)
-					cm.Items.Add(new ToolStripSeparator());
+				#endregion
 
 				// Show it
 				cm.Show(MainTree, e.Location);
 			}
+		}
+
+		void AddCutCopyPasteButtons(ContextMenuStrip cm,TreeNode node, bool CutAllowed, bool CopyAllowed, bool PasteAllowed)
+		{
+			if (CutAllowed || CopyAllowed || (PasteAllowed && IsDropAllowed(CutCopyNode, node)))
+				cm.Items.Add(new ToolStripSeparator());
+
+
+			if(CutAllowed)
+			cm.Items.Add("Cut", CommonIcons.Icons_16x16_CutIcon, delegate(Object o, EventArgs _e)
+			{
+				IsCut = true;
+				CutCopyNode = node;
+			});
+
+			if(CopyAllowed)
+			cm.Items.Add("Copy", CommonIcons.Icons_16x16_CopyIcon, delegate(Object o, EventArgs _e)
+			{
+				IsCut = false;
+				CutCopyNode = node;
+			});
+
+			if (PasteAllowed && IsDropAllowed(CutCopyNode, node))
+				cm.Items.Add("Paste", CommonIcons.Icons_16x16_PasteIcon, delegate(Object o, EventArgs _e)
+				{
+					DoPaste(CutCopyNode, node);
+				});
 		}
 
 		private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -381,7 +515,7 @@ namespace D_IDE.Controls.Panels
 				{
 					// get project node
 					var prj = ParentProjectNode.Project;
-					return System.IO.Path.GetDirectoryName(prj.FileName)+"\\"+RelativePath;
+					return IDEManager.ProjectManagement.ProjectBaseDirectory(prj)+"\\"+RelativePath;
 				}
 			}
 			#endregion

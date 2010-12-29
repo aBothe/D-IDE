@@ -41,22 +41,6 @@ namespace D_IDE.Core
 
 		#region Project management
 		/// <summary>
-		/// Central method to load a project whereas its file extension is used to identify
-		/// the generic project type.
-		/// </summary>
-		public static IProject LoadProjectFromFile(string FileName)
-		{
-			string ls = FileName.ToLower();
-
-			foreach (var lang in from l in LanguageLoader.Bindings where l.ProjectsSupported select l)
-				foreach (var pt in lang.ProjectTypes)
-					foreach (var ext in pt.Extensions)
-						if (ls.EndsWith(ext))
-							return lang.OpenProject(FileName);
-			return null;
-		}
-
-		/// <summary>
 		/// Adds a project to the solution.
 		/// Sets its solution property to 'this' solution.
 		/// Adds it to the project cache.
@@ -114,6 +98,16 @@ namespace D_IDE.Core
 		public bool UnloadProject(IProject Project)
 		{
 			return ProjectCache.Remove(Project);
+		}
+
+		public void ExcludeProject(string file)
+		{
+
+		}
+
+		public void RemoveProject(string file)
+		{
+
 		}
 		#endregion
 

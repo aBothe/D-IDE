@@ -144,6 +144,13 @@ namespace D_IDE {
             }
         }
         
+        internal static System.Drawing.Bitmap delete16 {
+            get {
+                object obj = ResourceManager.GetObject("delete16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap dir {
             get {
                 object obj = ResourceManager.GetObject("dir", resourceCulture);
@@ -308,6 +315,13 @@ namespace D_IDE {
         internal static System.Drawing.Bitmap prj_32 {
             get {
                 object obj = ResourceManager.GetObject("prj_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap properties16 {
+            get {
+                object obj = ResourceManager.GetObject("properties16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
