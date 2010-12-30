@@ -43,7 +43,7 @@ namespace D_IDE
 		public override object LargeProjectIcon		{			get { throw new NotImplementedException(); }		}
 		public override FileTemplate[] ProjectTemplates		{			get { throw new NotImplementedException(); }		}
 		public override Project CreateEmptyProject(FileTemplate ProjectType)		{			throw new NotImplementedException();		}
-		public override Project OpenProject(string FileName)		{			throw new NotImplementedException();		}
+		public override Project OpenProject(Solution sln,string FileName)		{			throw new NotImplementedException();		}
 		public override Parser.Core.ILanguage Language { get { throw new NotImplementedException(); } }
 		public override bool BuildProject(Project Project)		{			throw new NotImplementedException();		}
 		public override BuildError[] BuildSingleModule(string FileName)		{			throw new NotImplementedException();		}

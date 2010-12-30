@@ -53,6 +53,7 @@ namespace D_IDE.Controls.Panels
 			};
 
 			MainTree.MouseClick += new System.Windows.Forms.MouseEventHandler(MainTree_MouseClick);
+			MainTree.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(MainTree_MouseDoubleClick);
 
 			MainTree.AllowDrop = true;
 			MainTree.ItemDrag += new ItemDragEventHandler(MainTree_ItemDrag);
@@ -62,6 +63,17 @@ namespace D_IDE.Controls.Panels
 			MainTree.BorderStyle = BorderStyle.None;
 			MainTree.HideSelection = false;
 			#endregion
+		}
+
+		void MainTree_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
+		{
+			// Get hovered node
+			var n = MainTree.GetNodeAt(e.Location);
+			if (n == null) return;
+			MainTree.SelectedNode = n;
+
+			if (n is FileNode)
+				IDEManager.EditingManagement.OpenFile((n as FileNode).ParentProjectNode.Project,(n as FileNode).FileName);
 		}
 
 		#region Drag'n'Drop
@@ -191,7 +203,6 @@ namespace D_IDE.Controls.Panels
 			if (CutAllowed || CopyAllowed || (PasteAllowed && IsDropAllowed(CutCopyNode, node)))
 				cm.Items.Add(new ToolStripSeparator());
 
-
 			if (CutAllowed)
 				cm.Items.Add("Cut", CommonIcons.Icons_16x16_CutIcon, delegate(Object o, EventArgs _e)
 				{
@@ -272,7 +283,8 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Add File", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
 					{
-						IDEManager.FileManagement.AddNewSourceToProject(dn.ParentProjectNode.Project, dn.RelativePath);
+						IDEManager.FileManagement.AddNewSourceToProject(
+							dn.ParentProjectNode.Project, dn.RelativePath);
 					});
 
 					cm.Items.Add(new ToolStripSeparator());
@@ -285,7 +297,8 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Delete", CommonIcons.delete16, delegate(Object o, EventArgs _e)
 					{
-						IDEManager.FileManagement.RemoveDirectoryFromProject(dn.ParentProjectNode.Project, dn.RelativePath);
+						IDEManager.FileManagement.RemoveDirectoryFromProject(
+							dn.ParentProjectNode.Project, dn.RelativePath);
 					});
 
 					AddCutCopyPasteButtons(cm, n, true, true, true);
@@ -306,27 +319,24 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Build", CommonIcons.Icons_16x16_BuildCurrentSelectedProject, delegate(Object o, EventArgs _e)
 					{
-						sln.Build();
+						IDEManager.BuildManagement.Build(sln, true);
 					});
 
 					cm.Items.Add("Rebuild",null, delegate(Object o, EventArgs _e)
 					{
-						sln.Rebuild();
+						IDEManager.BuildManagement.Build(sln, false);
 					});
 
 					cm.Items.Add("CleanUp", null, delegate(Object o, EventArgs _e)
 					{
-						sln.CleanUpOutput();
+						IDEManager.BuildManagement.CleanUpOutput(sln);
 					});
 
 					cm.Items.Add(new ToolStripSeparator());
 
 					cm.Items.Add("Add Project", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
 					{
-						var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.Add)
-							{
-								ProjectDir=sln.BaseDir
-							};
+						var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.Add) {ProjectDir=sln.BaseDirectory};
 
 						if (pdlg.ShowDialog().Value)
 							IDEManager.ProjectManagement.AddNewProjectToSolution(
@@ -377,7 +387,7 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Add File", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
 					{
-						IDEManager.FileManagement.AddNewSourceToProject(prj,".");
+						IDEManager.FileManagement.AddNewSourceToProject(prj,"");
 					});
 
 					cm.Items.Add("Add Existing", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
@@ -423,12 +433,25 @@ namespace D_IDE.Controls.Panels
 			MainTree.BeginUpdate();
 			SetupTreeIcons();
 
+			var expandedNodes = new List<string>();
+			foreach (TreeNode n in MainTree.Nodes)
+				_CheckForExpansionStates(n, ref expandedNodes);
+
 			MainTree.Nodes.Clear();
 
 			if (IDEManager.CurrentSolution != null)
 				MainTree.Nodes.Add(new SolutionNode(IDEManager.CurrentSolution));
 
 			MainTree.EndUpdate();
+		}
+
+		void _CheckForExpansionStates(TreeNode node, ref List<string> lst)
+		{
+			if (node.IsExpanded)
+				lst.Add(node.FullPath);
+
+			foreach (TreeNode n in node.Nodes)
+				_CheckForExpansionStates(n, ref lst);
 		}
 
 		#region Icons
@@ -476,6 +499,8 @@ namespace D_IDE.Controls.Panels
 			public SolutionNode() { }
 			public SolutionNode(Solution solution)
 			{
+				Expand();
+
 				this.Solution = solution;
 				Text = "Solution "+solution.Name;
 
@@ -517,7 +542,7 @@ namespace D_IDE.Controls.Panels
 					DirectoryNode.CheckIfSubDirExists(this,d.StartsWith(baseDir)?d.Substring(baseDir.Length):d);
 
 				// Then add modules/files
-				foreach (var f in Project.Files)
+				foreach (var f in from m in Project.Files select m.FileName)
 				{
 					// Create directory node
 					var fDir=System.IO.Path.GetDirectoryName(f);
@@ -634,15 +659,17 @@ namespace D_IDE.Controls.Panels
 				return CurNode;
 			}
 
-			public DirectoryNode()
+			public DirectoryNode(string DirName)
 			{
+				DirectoryName = DirName;
 				ImageKey =SelectedImageKey = "dir";
 			}
 		}
 
 		public class FileNode : TreeNode
 		{
-			public string FileName{get;set;}
+			string _FileName;
+			public string FileName { get { return _FileName; } set { _FileName = value; Text = System.IO.Path.GetFileName(value); } }
 
 			public ProjectNode ParentProjectNode
 			{

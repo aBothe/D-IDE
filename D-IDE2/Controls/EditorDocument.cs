@@ -6,6 +6,7 @@ using ICSharpCode.AvalonEdit;
 using AvalonDock;
 using D_IDE.Core;
 using System.IO;
+using D_IDE.Controls;
 
 namespace D_IDE
 {
@@ -50,7 +51,7 @@ namespace D_IDE
 		}
 		#endregion
 
-		public override void Save()
+		public override bool Save()
 		{
 			/*
 			 * If the file is still undefined, open a save file dialog
@@ -61,13 +62,17 @@ namespace D_IDE
 				sf.FileName = AbsoluteFilePath;
 
 				if (!sf.ShowDialog().Value)
-					return;
+					return false;
 				else 
 					AbsoluteFilePath = sf.FileName;
 			}
-
-			Editor.Save(AbsoluteFilePath);
+			try
+			{
+				Editor.Save(AbsoluteFilePath);
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); return false; }
 			Modified = false;
+			return true;
 		}
 
 		public override void Reload()

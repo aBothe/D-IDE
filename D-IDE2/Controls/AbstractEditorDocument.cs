@@ -33,6 +33,15 @@ namespace D_IDE
 				if (String.IsNullOrEmpty(value)) // Enforce not-empty filenames
 					_FileName = "Undefined";
 				Modified = false;
+
+				// Automatically search for the best-fitting language binding
+				LanguageBinding = null;
+				foreach (var lang in LanguageLoader.Bindings)
+					if (lang.CanHandleFile(FileName))
+					{
+						LanguageBinding = lang;
+						break;
+					}
 			}
 		}
 
@@ -72,7 +81,10 @@ namespace D_IDE
 			set { Title = Path.GetFileName(FileName) + (value ? "*" : ""); }
 		}
 
-		public abstract void Save();
+		public abstract bool Save();
 		public abstract void Reload();
+
+
+		public AbstractLanguageBinding LanguageBinding		{			get;	private set;		}
 	}
 }

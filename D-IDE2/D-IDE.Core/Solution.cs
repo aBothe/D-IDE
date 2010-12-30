@@ -46,13 +46,17 @@ namespace D_IDE.Core
 			x.Close();
 		}
 
-		public string GetSolutionRelatedPath(string path)
+		public string ToAbsoluteFileName(string file)
 		{
-			if (!Path.IsPathRooted(path))
-				return path;
-			if (path.StartsWith(BaseDir))
-				return path.Substring(BaseDir.Length).Trim('\\');
-			return path;
+			if (Path.IsPathRooted(file))
+				return file;
+			return BaseDirectory + "\\" + file;
+		}
+		public string ToRelativeFileName(string file)
+		{
+			if (Path.IsPathRooted(file))
+				return file.Remove(0, BaseDirectory.Length).Trim('\\');
+			return file;
 		}
 
 		#region Project management
@@ -67,7 +71,7 @@ namespace D_IDE.Core
 			if (ProjectCache.Contains(Project))
 				return;
 
-			var prjPath = GetSolutionRelatedPath(Project.FileName);
+			var prjPath = ToRelativeFileName(Project.FileName);
 			if (!_ProjectFiles.Contains(prjPath))
 				_ProjectFiles.Add(prjPath);
 
@@ -106,42 +110,63 @@ namespace D_IDE.Core
 		/// <summary>
 		/// Saves the solution to file named <see cref="FileName"/>
 		/// </summary>
-		public void Save()
+		public bool Save()
 		{
-			var x = XmlTextWriter.Create(FileName);
-
-			x.WriteStartDocument();
-			x.WriteStartElement("solution");
-
-			x.WriteStartElement("name");
-			x.WriteCData(Name);
-			x.WriteEndElement();
-
-			x.WriteStartElement("projects");
-
-			foreach (var s in _ProjectFiles)
+			/*
+			 * If the file is still undefined, open a save file dialog
+			 */
+			if (String.IsNullOrEmpty(FileName))
 			{
-				x.WriteStartElement("project");
-				if (s == _StartPrjFile)
-					x.WriteAttributeString("isStartProject","true");
-				x.WriteCData(s);
-				x.WriteEndElement();
+				var sf = new Microsoft.Win32.SaveFileDialog();
+				sf.Filter="Solution (*"+SolutionExtension+")|*"+SolutionExtension;
+
+				if (!sf.ShowDialog().Value)
+					return false;
+				else
+					FileName = sf.FileName;
 			}
+			Util.CreateDirectoryRecursively(Path.GetDirectoryName(FileName));
 
-			x.WriteEndElement(); // projects
-			x.WriteEndElement(); // solution
 
-			x.Flush();
-			x.Close();
+			try
+			{
+				var x = XmlTextWriter.Create(FileName);
+
+				x.WriteStartDocument();
+				x.WriteStartElement("solution");
+
+				x.WriteStartElement("name");
+				x.WriteCData(Name);
+				x.WriteEndElement();
+
+				x.WriteStartElement("projects");
+
+				foreach (var s in _ProjectFiles)
+				{
+					x.WriteStartElement("project");
+					if (s == _StartPrjFile)
+						x.WriteAttributeString("isStartProject", "true");
+					x.WriteCData(s);
+					x.WriteEndElement();
+				}
+
+				x.WriteEndElement(); // projects
+				x.WriteEndElement(); // solution
+
+				x.Flush();
+				x.Close();
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); return false; }
+			return true;
 		}
 
 		#region Properties
-		public string Name { get; set; }
-		public string FileName { get; set; }
-		public string BaseDir {
-			get {
-				return Path.GetDirectoryName(FileName);
-			}
+		public string Name;
+		public string FileName;
+		public string BaseDirectory
+		{
+			get { return Path.GetDirectoryName(FileName); }
+			set { FileName = value + Path.GetFileName(FileName); }
 		}
 
 		readonly List<string> _ProjectFiles = new List<string>();
@@ -177,30 +202,6 @@ namespace D_IDE.Core
 			}
 		}
 		#endregion
-
-		/// <summary>
-		/// Builds the solution incrementally
-		/// </summary>
-		public void Build()
-		{
-
-		}
-
-		/// <summary>
-		/// Cleans the output and build the solution again
-		/// </summary>
-		public void Rebuild()
-		{
-
-		}
-
-		/// <summary>
-		/// Cleans the output/ Removes output directory
-		/// </summary>
-		public void CleanUpOutput()
-		{
-
-		}
 
 		public Dictionary<Project, BuildError[]> LastBuildErrors
 		{

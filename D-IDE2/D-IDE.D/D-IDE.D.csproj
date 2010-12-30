@@ -56,6 +56,7 @@
       <DependentUpon>DIcons.resx</DependentUpon>
     </Compile>
     <Compile Include="DLanguageBinding.cs" />
+    <Compile Include="DProject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -2,6 +2,9 @@
 using D_IDE.Core;
 using System.IO;
 using System.Linq;
+using Microsoft.Win32;
+using D_IDE.Dialogs;
+using System;
 
 namespace D_IDE
 {
@@ -110,12 +113,21 @@ namespace D_IDE
 			/// </summary>
 			public static void AddNewSourceToProject(Project Project, string RelativeDir)
 			{
-
+				var sdlg = new NewSrcDlg();
+				if (sdlg.ShowDialog().Value)
+				{
+					var file = (String.IsNullOrEmpty(RelativeDir) ? "" : (RelativeDir + "\\")) + sdlg.FileName;
+					File.WriteAllText(Project.BaseDirectory+"\\"+file,"");
+					Project.Add(file);
+					Project.Save();
+					MainWindow.UpdateGUIElements();
+				}
 			}
 
 			public static void AddNewDirectoryToProject(Project Project, string RelativeDir, string DirName)
 			{
-
+				string absDir = Project.BaseDirectory + "\\" + (String.IsNullOrEmpty(RelativeDir) ? "" : (RelativeDir + "\\")) + DirName;
+				Util.CreateDirectoryRecursively(absDir);
 			}
 
 
@@ -124,7 +136,28 @@ namespace D_IDE
 			/// </summary>
 			public static void AddExistingSourceToProject(Project Project, string RelativeDir)
 			{
+				var dlg = new OpenFileDialog();
+				var absPath = (Project.BaseDirectory + "\\" + RelativeDir).Trim('\\');
+				dlg.InitialDirectory = absPath;
+				dlg.Multiselect = true;
 
+				if (dlg.ShowDialog().Value)
+				{
+					/*
+					 * - If not in the same directory, copy the selected file into ours
+					 * - Add it to the project
+					 */
+					foreach (var file in dlg.FileNames)
+					{
+						var newFile=absPath+"\\"+Path.GetFileName(file);
+
+						if (Path.GetDirectoryName(file) != absPath)
+							File.Copy(file,newFile);
+
+						Project.Add(newFile);
+					}
+					MainWindow.UpdateGUIElements();
+				}
 			}
 
 			public static void AddExistingSourceToProject(string FileName ,Project Project,string RelativeDir)
@@ -254,18 +287,17 @@ namespace D_IDE
 					CurrentSolution =new Solution(FileName);
 
 					foreach (var f in CurrentSolution.ProjectFiles)
-						CurrentSolution.ProjectCache.Add(Project.LoadProjectFromFile(f));
+						CurrentSolution.ProjectCache.Add(Project.LoadProjectFromFile(CurrentSolution,f));
 
 					foreach (var prj in CurrentSolution)
 						foreach (var fn in prj.LastOpenedFiles)
 							OpenFile(prj,fn);
-
+					MainWindow.UpdateGUIElements();
 					return null;
 				}
 
-
-				var LoadedPrj = Project.LoadProjectFromFile(FileName);
-				if (LoadedPrj != null)
+				var langs=LanguageLoader.Bindings.Where(l => l.CanHandleProject(FileName)).ToArray();
+				if (langs.Length>0)
 				{
 					/* 
 					 * - Load project
@@ -273,13 +305,17 @@ namespace D_IDE
 					 * - Open last opened files
 					 */
 					CurrentSolution = new Solution();
+					CurrentSolution.FileName = Path.ChangeExtension(FileName, Solution.SolutionExtension);
+
+					var LoadedPrj = langs[0].OpenProject(CurrentSolution, FileName);
+
 					CurrentSolution.Name = LoadedPrj.Name;
 					CurrentSolution.AddProject(LoadedPrj);
 
 					foreach (var prj in CurrentSolution)
 						foreach (var fn in prj.LastOpenedFiles)
 							OpenFile(prj,fn);
-
+					MainWindow.UpdateGUIElements();
 					return null;
 				}
 
@@ -304,7 +340,7 @@ namespace D_IDE
 
 				var newEd = new EditorDocument(_prj, absPath);
 				newEd.Show(DockMgr);
-
+				MainWindow.UpdateGUIElements();
 				return newEd;
 			}
 
@@ -318,9 +354,15 @@ namespace D_IDE
 			{
 				foreach (var doc in DockMgr.Documents)
 					if (doc is AbstractEditorDocument)
-					{
 						(doc as AbstractEditorDocument).Save();
-					}
+
+				if (CurrentSolution != null)
+				{
+					CurrentSolution.Save();
+
+					foreach (var p in CurrentSolution)
+						p.Save();
+				}
 			}
 
 			/// <summary>

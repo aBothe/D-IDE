@@ -42,7 +42,7 @@ namespace D_IDE.Core
 		public abstract ILanguage Language { get; }
 
 		public abstract Project CreateEmptyProject(FileTemplate ProjectType);
-		public abstract Project OpenProject(string FileName);
+		public abstract Project OpenProject(Solution Solution,string FileName);
 
 		public abstract bool BuildProject(Project Project);
 		public abstract BuildError[] BuildSingleModule(string FileName);

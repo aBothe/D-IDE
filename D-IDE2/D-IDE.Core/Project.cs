@@ -4,17 +4,17 @@ using System.Text;
 using Parser.Core;
 using System.Linq;
 using System.IO;
+using System.Xml;
 
 namespace D_IDE.Core
 {
-	public class Project:IEnumerable<string>
+	public class Project:IEnumerable<ProjectModule>
 	{
 		public Project() { }
-		public Project(string prjFile) { FileName = prjFile; ReloadProject(); }
 		public Project(Solution sln, string prjFile)
 		{
 			Solution = sln;
-			FileName = prjFile;
+			FileName = sln.ToAbsoluteFileName( prjFile);
 
 			ReloadProject();
 		}
@@ -24,7 +24,7 @@ namespace D_IDE.Core
 		/// Central method to load a project whereas its file extension is used to identify
 		/// the generic project type.
 		/// </summary>
-		public static Project LoadProjectFromFile(string FileName)
+		public static Project LoadProjectFromFile(Solution sln,string FileName)
 		{
 			string ls = FileName.ToLower();
 
@@ -33,7 +33,7 @@ namespace D_IDE.Core
 					if(pt.Extensions!=null)
 						foreach (var ext in pt.Extensions)
 							if (ls.EndsWith(ext))
-								return lang.OpenProject(FileName);
+								return lang.OpenProject(sln,FileName);
 			return null;
 		}
 
@@ -46,17 +46,22 @@ namespace D_IDE.Core
 		}
 		public Solution Solution;
 
-		protected readonly List<string> _Files = new List<string>();
+		protected readonly List<ProjectModule> _Files = new List<ProjectModule>();
 
 		/// <summary>
 		/// Contain all project files including the file paths of the modules.
 		/// All paths should be relative to the project base directory
 		/// </summary>
-		public string[] Files { get { return _Files.ToArray(); } }
+		public ProjectModule[] Files { get { return _Files.ToArray(); } }
+		public IEnumerable<ProjectModule> CompilableFiles
+		{
+			get { return from f in _Files where f.Action == ProjectModule.BuildAction.Compile select f; }
+		}
+
 		public bool ContainsFile(string file)
 		{
 			var relPath = ToRelativeFileName(file);
-			return _Files.Contains(relPath);
+			return _Files.Count(o => o.FileName==relPath)>0;
 		}
 		/// <summary>
 		/// Contains relative paths of empty but used directories
@@ -70,7 +75,6 @@ namespace D_IDE.Core
 				return file;
 			return BaseDirectory + "\\" + file;
 		}
-
 		public string ToRelativeFileName(string file)
 		{
 			if (Path.IsPathRooted(file))
@@ -78,46 +82,220 @@ namespace D_IDE.Core
 			return file;
 		}
 
-		public IEnumerator<string> GetEnumerator() { return _Files.GetEnumerator(); }
+		public IEnumerator<ProjectModule> GetEnumerator() { return _Files.GetEnumerator(); }
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()	{	return _Files.GetEnumerator();	}
 		#endregion
 
+		#region Saving & Loading
+		protected delegate void CustomReadEventHandler(XmlReader reader) ;
+		protected delegate void CustomWriteEventHandler(XmlWriter writer);
+		/// <summary>
+		/// Enables custom data reading when reading from a project file.
+		/// Gets called after every XmlReader.Read();
+		/// </summary>
+		protected CustomReadEventHandler OnReadElementFromFile;
+		protected CustomWriteEventHandler OnWriteToFile;
+
 		public bool Save()
 		{
+			if (String.IsNullOrEmpty(FileName))
+				return false;
+
+			var xw = XmlWriter.Create(FileName);
+			xw.WriteStartDocument();
+
+			xw.WriteStartElement("project");
+
+			xw.WriteStartElement("name");
+			xw.WriteCData(Name);
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("files");
+			foreach (var m in _Files)
+			{
+				xw.WriteStartElement("file");
+				xw.WriteAttributeString("lastModified", m.LastModified.ToString());
+				xw.WriteAttributeString("buildAction", ((int)m.Action).ToString());
+				xw.WriteCData(m.FileName);
+				xw.WriteEndElement();
+			}
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("lastopen");
+			foreach (var s in LastOpenedFiles)
+			{
+				xw.WriteStartElement("file");
+				xw.WriteCData(s);
+				xw.WriteEndElement();
+			}
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("deps");
+			foreach (var s in RequiredProjects)
+			{
+				xw.WriteStartElement("file");
+				xw.WriteCData(s);
+				xw.WriteEndElement();
+			}
+			xw.WriteEndElement();
+
+				xw.WriteStartElement("enablesubversioning");
+				xw.WriteAttributeString("value", EnableBuildVersioning ? "true" : "false");
+				xw.WriteEndElement();
+
+				xw.WriteStartElement("alsostoresources");
+				xw.WriteAttributeString("value", AlsoStoreChangedSources?"true":"false");
+				xw.WriteEndElement();
+
+				xw.WriteStartElement("lastversioncount");
+				xw.WriteAttributeString("value", LastBuildVersionCount.ToString());
+				xw.WriteEndElement();
+
+			if (OnWriteToFile != null)
+				OnWriteToFile(xw);
+
+			xw.WriteEndDocument();
+			xw.Close();
+
 			return true;
 		}
 
-		public void ReloadProject()
+		public bool ReloadProject()
 		{
+			var absPath = FileName;
+			if (Solution != null)
+				absPath = Solution.ToAbsoluteFileName(absPath);
 
+			if (!File.Exists(absPath))
+				return false;
+
+			var xr = new XmlTextReader(absPath);
+			XmlReader xsr = null;
+
+			while (xr.Read())
+			{
+				if (OnReadElementFromFile != null)
+					OnReadElementFromFile(xr);
+
+				if (xr.NodeType == XmlNodeType.Element)
+				{
+					switch (xr.LocalName)
+					{
+						default: break;
+						case "name":
+							xr.Read();
+							Name = xr.ReadString();
+							break;
+
+						case "files":
+							_Files.Clear();
+
+							xsr = xr.ReadSubtree();
+							while (xsr.Read())
+							{
+								if (xsr.LocalName != "file") continue;
+									long mod = 0;
+									ProjectModule.BuildAction act =  ProjectModule.BuildAction.Compile;
+									if (xsr.MoveToAttribute("lastModified"))
+										mod = Convert.ToInt64(xsr.Value);
+									if (xsr.MoveToAttribute("buildAction"))
+										act=(ProjectModule.BuildAction)Convert.ToInt32(xsr.Value);
+									xsr.MoveToElement();
+
+									try
+									{
+										string _fn = xsr.ReadString();
+										_Files.Add(new ProjectModule() { FileName=_fn, Action=act, LastModified=mod});
+									}
+									catch { }
+							}
+							break;
+
+						case "lastopen":
+							LastOpenedFiles.Clear();
+
+							xsr = xr.ReadSubtree();
+							while (xsr.Read())
+							{
+								if (xsr.NodeType == XmlNodeType.CDATA)
+								{
+									LastOpenedFiles.Add(xr.ReadString());
+								}
+							}
+							break;
+
+						case "deps":
+							RequiredProjects.Clear();
+
+							xsr = xr.ReadSubtree();
+							while (xsr.Read())
+							{
+								if (xsr.NodeType == XmlNodeType.CDATA)
+								{
+									RequiredProjects.Add(xr.ReadString());
+								}
+							}
+							break;
+
+						case "enablesubversioning":
+							if (xr.MoveToAttribute("value"))
+							{
+								EnableBuildVersioning = xr.Value == "true";
+							}
+							break;
+
+						case "alsostoresources":
+							if (xr.MoveToAttribute("value"))
+							{
+								AlsoStoreChangedSources = xr.Value == "true";
+							}
+							break;
+
+						case "lastversioncount":
+							if (xr.MoveToAttribute("value"))
+							{
+								try
+								{
+									LastBuildVersionCount = Convert.ToInt32(xr.Value);
+								}
+								catch { }
+							}
+							break;
+					}
+				}
+			}
+			xr.Close();
+			return true;
 		}
+		#endregion
 
 		public bool Add(string FileName)
 		{
+			if (ContainsFile(FileName))
+				return false;
+
+			_Files.Add(new ProjectModule() {  FileName=ToRelativeFileName(FileName), Action=ProjectModule.BuildAction.Compile});
 			return true;
 		}
 
-		public void Remove(string FileName)
+		public bool Remove(string FileName)
 		{
-
-		}
-
-		public bool Rename(string OldFileName, string NewFileName)
-		{
-			return true;
+			var relPath=ToRelativeFileName(FileName);
+			return _Files.RemoveAll(m => m.FileName==relPath) >0;
 		}
 
 		#region Build properties
-		/// <summary>
-		/// These files get copied into the output directory before compiling
-		/// </summary>
-		public readonly List<string> ExternalDepencies = new List<string>();
-		public readonly List<Project> ProjectDependencies = new List<Project>();
+
+		public readonly List<string> RequiredProjects = new List<string>();
 		public readonly List<BuildError> LastBuildErrors = new List<BuildError>();
 
 		public string OutputFile { get; set; }
 		public string OutputDirectory { get; set; }
 		public OutputTypes OutputType { get; set; }
+
+		public bool EnableBuildVersioning = false;
+		public bool AlsoStoreChangedSources = false;
+		public int LastBuildVersionCount = 0;
 		#endregion
 	}
 
@@ -139,6 +317,20 @@ namespace D_IDE.Core
 		/// Non-Executable
 		/// </summary>
 		Other
+	}
+
+	public class ProjectModule{
+		public string FileName;
+
+		public long LastModified;
+		public BuildAction Action=BuildAction.None;
+
+		public enum BuildAction
+		{
+			None=0,
+			Compile=1,
+			CopyToOutput=2
+		}
 	}
 
 	public class BuildError

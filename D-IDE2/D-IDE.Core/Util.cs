@@ -119,10 +119,25 @@ namespace D_IDE.Core
 
     public class ErrorLogger
     {
+		public enum ErrorType
+		{
+			Info,Warning,Error
+		}
+
         public static void Log(Exception ex)
         {
-
+			throw ex;
         }
+
+		public static void Log(string msg)
+		{
+			Log(msg, ErrorType.Warning);
+		}
+
+		public static void Log(string msg, ErrorType etype)
+		{
+			MessageBox.Show(msg);
+		}
     }
 
 	/// <summary>

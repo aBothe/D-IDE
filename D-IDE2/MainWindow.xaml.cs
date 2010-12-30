@@ -21,7 +21,7 @@ namespace D_IDE
 		#endregion
 
 		#region GUI Interactions
-		public void UpdateProjectExplorer()
+		public void UpdateGUIElements()
 		{
 			Panel_ProjectExplorer.Update();
 		}
@@ -69,21 +69,27 @@ namespace D_IDE
 			
 			if (pdlg.ShowDialog().Value)
 			{
+				var pdir = pdlg.ProjectDir;
+				if (pdlg.CreateProjectDir)
+					pdir += "\\" + Util.PurifyFileName(pdlg.ProjectName);
+
+				Util.CreateDirectoryRecursively(pdir);
+
 				if (IDEManager.CurrentSolution != null && pdlg.AddToCurrentSolution)
 					IDEManager.ProjectManagement.AddNewProjectToCurrentSolution(
 						pdlg.SelectedLanguageBinding,
 						pdlg.SelectedProjectType,
 						pdlg.ProjectName,
-						pdlg.ProjectDir);
+						pdir);
 				else if (!pdlg.AddToCurrentSolution)
 					IDEManager.CurrentSolution = IDEManager.ProjectManagement.CreateNewProjectAndSolution(
 						pdlg.SelectedLanguageBinding,
 						pdlg.SelectedProjectType,
 						pdlg.ProjectName,
-						pdlg.ProjectDir,
+						pdir,
 						pdlg.SolutionName);
 
-				UpdateProjectExplorer();
+				UpdateGUIElements();
 			}
 		}
 

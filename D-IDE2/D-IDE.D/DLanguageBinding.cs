@@ -118,9 +118,11 @@ namespace D_IDE.D
 		public override FileTemplate[] ModuleTemplates { get { return _FileTypes.ToArray(); } }
 		public override FileTemplate[] ProjectTemplates	{get { return _ProjectTypes.ToArray(); }}
 
-		public override Project OpenProject(string FileName)
+		public override Project OpenProject(Solution sln,string FileName)
 		{
-			throw new NotImplementedException();
+			var ret = new DProject(sln,FileName);
+			ret.ReloadProject();
+			return ret;
 		}
 
 		public override bool BuildProject(Project Project)
