@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -55,12 +56,8 @@
       <DependentUpon>CoreIcons.resx</DependentUpon>
     </Compile>
     <Compile Include="IDEInterface.cs" />
-    <Compile Include="DefaultModule.cs" />
-    <Compile Include="IBuildProvider.cs" />
-    <Compile Include="IDebugProvider.cs" />
-    <Compile Include="ILanguageBinding.cs" />
-    <Compile Include="IModule.cs" />
-    <Compile Include="IProject.cs" />
+    <Compile Include="AbstractLanguageBinding.cs" />
+    <Compile Include="Project.cs" />
     <Compile Include="LanguageLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Solution.cs" />

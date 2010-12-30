@@ -17,17 +17,12 @@ namespace D_IDE
 			Init();
 		}
 
-		public EditorDocument(IModule mod):base(mod)
-		{
-			Init();
-		}
-
 		public EditorDocument(string file):base(file)
 		{
 			Init();
 		}
 
-		public EditorDocument(IProject prj, string file):base(prj,file)
+		public EditorDocument(Project prj, string file):base(prj,file)
 		{
 			Init();
 		}
@@ -57,13 +52,28 @@ namespace D_IDE
 
 		public override void Save()
 		{
+			/*
+			 * If the file is still undefined, open a save file dialog
+			 */
+			if (IsUnboundNonExistingFile)
+			{
+				var sf = new Microsoft.Win32.SaveFileDialog();
+				sf.FileName = AbsoluteFilePath;
+
+				if (!sf.ShowDialog().Value)
+					return;
+				else 
+					AbsoluteFilePath = sf.FileName;
+			}
+
 			Editor.Save(AbsoluteFilePath);
 			Modified = false;
 		}
 
 		public override void Reload()
 		{
-			Editor.Load(AbsoluteFilePath);
+			if(File.Exists(AbsoluteFilePath))
+				Editor.Load(AbsoluteFilePath);
 			Modified = false;
 		}
 	}

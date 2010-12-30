@@ -10,12 +10,12 @@ namespace D_IDE
 	/// <summary>
 	/// A binding that manages all generic file types
 	/// </summary>
-	internal class GenericFileBinding:ILanguageBinding
+	internal class GenericFileBinding:AbstractLanguageBinding
 	{
 		public GenericFileBinding()
 		{
 			var exts=new string[]{".txt"};
-			_moduletypes.Add(new SourceFileType() { 
+			_moduletypes.Add(new FileTemplate() { 
 				Name="Text file",
 				Description="Empty text file",
 				Extensions=exts,
@@ -24,42 +24,29 @@ namespace D_IDE
 				LargeImage=CommonIcons.txt32,
 				SmallImage=CommonIcons.txt16
 			});
-
-			_moduletypes.Add(new SourceFileType()
-			{
-				Name="a file",
-				DefaultFilePrefix="afile"
-			});
 		}
 
-		public string LanguageName
-		{
-			get { return "General"; }
-		}
+		public override string LanguageName{get { return "General"; }}
+		public override object LanguageIcon	{get { return new BitmapImage(new Uri("../Resources/file.png",UriKind.Relative)); }		}
+		
+		List<FileTemplate> _moduletypes = new List<FileTemplate>();
+		public override FileTemplate[] ModuleTemplates { get { return _moduletypes.ToArray(); } }
+		
+		public override bool ProjectsSupported{get { return false; }}
+		public override bool CanUseDebugging { get { return false; } }
+		public override bool CanUseCodeCompletion { get { return false; } }
+		public override bool CanBuild { get { return false; } }
+		public override bool CanBuildToSingleModule { get { return false; } }
 
-		public object LanguageIcon
-		{
-			get { return new BitmapImage(new Uri("../Resources/file.png",UriKind.Relative)); }
-		}
 
-		List<SourceFileType> _moduletypes = new List<SourceFileType>();
-		public SourceFileType[] ModuleTypes
-		{
-			get { return _moduletypes.ToArray(); }
-		}
-
-		public SourceFileType[] ProjectTypes		{			get { throw new NotImplementedException(); }		}
-		public bool ProjectsSupported{get { return false; }}
-		public bool CanUseDebugging{get { return false; }}
-		public bool CanUseCodeCompletion{get { return false; }}
-		public bool CanBuild{			get { return false; }		}
-		public bool CanBuildToSingleModule		{			get { return false; }		}
-		public Parser.Core.ILanguage Language		{			get { return null; }		}
-		public object GetNodeIcon(Parser.Core.INode Node)		{			return null;		}
-		public IProject CreateEmptyProject(SourceFileType ProjectType)		{			return null;		}
-		public IProject OpenProject(string FileName)		{			return null;		}
-		public IModule CreateEmptyModule(SourceFileType FileType)		{			throw new NotImplementedException();}
-		public IModule OpenModule(string FileName)		{			throw new NotImplementedException();		}
-		public IDebugProvider DebugProvider		{			get { return null; }		}
+		public override object SmallProjectIcon		{			get { throw new NotImplementedException(); }		}
+		public override object LargeProjectIcon		{			get { throw new NotImplementedException(); }		}
+		public override FileTemplate[] ProjectTemplates		{			get { throw new NotImplementedException(); }		}
+		public override Project CreateEmptyProject(FileTemplate ProjectType)		{			throw new NotImplementedException();		}
+		public override Project OpenProject(string FileName)		{			throw new NotImplementedException();		}
+		public override Parser.Core.ILanguage Language { get { throw new NotImplementedException(); } }
+		public override bool BuildProject(Project Project)		{			throw new NotImplementedException();		}
+		public override BuildError[] BuildSingleModule(string FileName)		{			throw new NotImplementedException();		}
+		public override string BuildSymbolValueString(Parser.Core.AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugEngineWrapper.DebugScopedSymbol sym)		{			throw new NotImplementedException();		}
 	}
 }

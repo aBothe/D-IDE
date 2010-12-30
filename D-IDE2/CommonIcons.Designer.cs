@@ -340,6 +340,13 @@ namespace D_IDE {
             }
         }
         
+        internal static System.Drawing.Bitmap save16 {
+            get {
+                object obj = ResourceManager.GetObject("save16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap SaveAllHH {
             get {
                 object obj = ResourceManager.GetObject("SaveAllHH", resourceCulture);

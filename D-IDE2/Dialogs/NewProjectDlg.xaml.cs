@@ -27,7 +27,7 @@ namespace D_IDE.Dialogs
 	{
 		#region Properties
 		string _PrjName;
-		SourceFileType _FileType;
+		FileTemplate _FileType;
 
 		public string ProjectName 
 		{ 
@@ -61,13 +61,13 @@ namespace D_IDE.Dialogs
 			set { ComboBox_CreateSolution.SelectedIndex = value ? 1 : 0; }
 		}
 
-		public ILanguageBinding SelectedLanguageBinding		
+		public AbstractLanguageBinding SelectedLanguageBinding		
 		{
 			get {
-				return List_Languages.SelectedItem as ILanguageBinding;
+				return List_Languages.SelectedItem as AbstractLanguageBinding;
 			}	
 		}
-		public SourceFileType SelectedProjectType		{			
+		public FileTemplate SelectedProjectType		{			
 			get { 
 				return _FileType; 
 			}
@@ -126,7 +126,7 @@ namespace D_IDE.Dialogs
 			{	
 				// Only show languages that support and have projects
 				return from b in LanguageLoader.Bindings 
-					   where b.ProjectsSupported && b.ProjectTypes.Length>0
+					   where b.ProjectsSupported && b.ProjectTemplates.Length>0
 					   select b;			
 			}		
 		}
@@ -136,7 +136,7 @@ namespace D_IDE.Dialogs
 			{
 				var o = SelectedLanguageBinding;
 				if (o != null)
-					return o.ProjectTypes;
+					return o.ProjectTemplates;
 				return null;
 			}
 		}
@@ -153,7 +153,7 @@ namespace D_IDE.Dialogs
 
 			if (List_FileTypes.Items.Count > 0)
 			{
-				_FileType = List_FileTypes.Items[0] as SourceFileType;
+				_FileType = List_FileTypes.Items[0] as FileTemplate;
 				List_FileTypes.SelectedIndex = 0;
 			}
 
@@ -173,7 +173,7 @@ namespace D_IDE.Dialogs
 
 			if (List_FileTypes.Items.Count > 0)
 			{
-				SelectedProjectType = List_FileTypes.Items[0] as SourceFileType;
+				SelectedProjectType = List_FileTypes.Items[0] as FileTemplate;
 				List_FileTypes.SelectedIndex = 0;
 			}
 		}

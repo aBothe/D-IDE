@@ -48,12 +48,16 @@ namespace D_IDE
 
 		#region Ribbon buttons
 
+		/// <summary>
+		/// Create a source file that is unrelated to any open project or solution
+		/// </summary>
 		private void NewSource(object sender, RoutedEventArgs e)
 		{
 			var sdlg = new NewSrcDlg();
 			if (sdlg.ShowDialog().Value)
 			{
-
+				var ed = new EditorDocument(sdlg.FileName);
+				ed.Show(DockMgr);
 			}
 		}
 
@@ -182,6 +186,7 @@ namespace D_IDE
 		/// </summary>
 		private void RibbonWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
 		{
+			e.Handled = true;
 			bool ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
 			if (ctrl)
@@ -197,6 +202,8 @@ namespace D_IDE
 					Save(sender, null);
 					return;
 			}
+
+			e.Handled = false;
 		}
 
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)

@@ -31,7 +31,7 @@ namespace D_IDE
 		/// Doesn't add it to the current solution.
 		/// Doesn't modify the current solution.
 		/// </summary>
-		public static IProject CreateNewProject(ILanguageBinding Binding,SourceFileType ProjectType,string Name,string BaseDir)
+		public static Project CreateNewProject(AbstractLanguageBinding Binding,FileTemplate ProjectType,string Name,string BaseDir)
 		{
 			var prj = Binding.CreateEmptyProject(ProjectType);
 			prj.Name = Name;
@@ -46,7 +46,7 @@ namespace D_IDE
 			return prj;
 		}
 
-		public static Solution CreateNewProjectAndSolution(			ILanguageBinding Binding,			SourceFileType ProjectType,			string Name,			string BaseDir,			string SolutionName)
+		public static Solution CreateNewProjectAndSolution(			AbstractLanguageBinding Binding,			FileTemplate ProjectType,			string Name,			string BaseDir,			string SolutionName)
 		{
 			var sln = new Solution();
 			sln.Name = SolutionName;
@@ -60,25 +60,9 @@ namespace D_IDE
 		}
 
 		/// <summary>
-		/// Central method to load a project whereas its file extension is used to identify
-		/// the generic project type.
-		/// </summary>
-		public static IProject LoadProjectFromFile(string FileName)
-		{
-			string ls = FileName.ToLower();
-
-			foreach (var lang in from l in LanguageLoader.Bindings where l.ProjectsSupported select l)
-				foreach (var pt in lang.ProjectTypes)
-					foreach (var ext in pt.Extensions)
-						if (ls.EndsWith(ext))
-							return lang.OpenProject(FileName);
-			return null;
-		}
-
-		/// <summary>
 		/// Creates a new project and adds it to the current solution
 		/// </summary>
-		public static IProject AddNewProjectToSolution(			Solution sln,			ILanguageBinding Binding,			SourceFileType ProjectType,			string Name,			string BaseDir)
+		public static Project AddNewProjectToSolution(			Solution sln,			AbstractLanguageBinding Binding,			FileTemplate ProjectType,			string Name,			string BaseDir)
 		{
 			var prj = CreateNewProject(Binding, ProjectType, Name, BaseDir);
 			sln.AddProject(prj);
@@ -86,28 +70,23 @@ namespace D_IDE
 			return prj;
 		}
 
-		public static IProject AddNewProjectToCurrentSolution(ILanguageBinding Binding,			SourceFileType ProjectType,			string Name,			string BaseDir)
+		public static Project AddNewProjectToCurrentSolution(AbstractLanguageBinding Binding,			FileTemplate ProjectType,			string Name,			string BaseDir)
 		{
 			return AddNewProjectToSolution(CurrentSolution,Binding,ProjectType,Name,BaseDir);
 		}
 
-		public static void ReassignProject(IProject Project, Solution NewSolution)
+		public static void ReassignProject(Project Project, Solution NewSolution)
 		{
 			
 		}
 
-		public static string ProjectBaseDirectory(IProject Project)
-		{
-			return System.IO.Path.GetDirectoryName(Project.FileName);
-		}
-
 		#region Project Dependencies dialog
-		static void ShowProjectDependenciesDialog(Solution sln,IProject Project)
+		static void ShowProjectDependenciesDialog(Solution sln,Project Project)
 		{
 
 		}
 
-		public static void ShowProjectDependenciesDialog(IProject Project)
+		public static void ShowProjectDependenciesDialog(Project Project)
 		{
 			ShowProjectDependenciesDialog(Project.Solution,Project);
 		}
@@ -117,7 +96,7 @@ namespace D_IDE
 			ShowProjectDependenciesDialog(sln,null);
 		}
 
-		public static void ShowProjectPropertiesDialog(IProject Project)
+		public static void ShowProjectPropertiesDialog(Project Project)
 		{
 
 		}
@@ -129,51 +108,58 @@ namespace D_IDE
 			/// <summary>
 			/// Opens a new-source dialog
 			/// </summary>
-			public static void AddNewSourceToProject(IProject Project, string RelativeDir)
+			public static void AddNewSourceToProject(Project Project, string RelativeDir)
 			{
 
 			}
 
-			public static void AddNewDirectoryToProject(IProject Project, string RelativeDir, string DirName)
-			{
-
-			}
-
-
-
-			public static void AddExistingSourceToProject(string FileName ,IProject Project,string RelativeDir)
-			{
-
-			}
-
-			public static void AddExistingDirectoryToProject(string DirectoryPath,IProject Project, string RelativeDir)
+			public static void AddNewDirectoryToProject(Project Project, string RelativeDir, string DirName)
 			{
 
 			}
 
 
-
-			public static void CopyFile(IProject Project, string FileName, IProject TargetProject, string NewDirectory)
+			/// <summary>
+			/// Creates a dialog which asks the user to add a file
+			/// </summary>
+			public static void AddExistingSourceToProject(Project Project, string RelativeDir)
 			{
 
 			}
 
-			public static void CopyDirectory(IProject Project, string RelativeDir, IProject TargetProject, string NewDir)
+			public static void AddExistingSourceToProject(string FileName ,Project Project,string RelativeDir)
 			{
 
 			}
 
-			public static void MoveFile(IProject Project, string FileName, IProject TargetProject, string NewDirectory)
+			public static void AddExistingDirectoryToProject(string DirectoryPath,Project Project, string RelativeDir)
 			{
 
 			}
 
-			public static void MoveDirectory(IProject Project, string RelativeDir, IProject TargetProject, string NewDir)
+
+
+			public static void CopyFile(Project Project, string FileName, Project TargetProject, string NewDirectory)
 			{
 
 			}
 
-			public static void ExcludeDirectoryFromProject(IProject prj, string RelativePath)
+			public static void CopyDirectory(Project Project, string RelativeDir, Project TargetProject, string NewDir)
+			{
+
+			}
+
+			public static void MoveFile(Project Project, string FileName, Project TargetProject, string NewDirectory)
+			{
+
+			}
+
+			public static void MoveDirectory(Project Project, string RelativeDir, Project TargetProject, string NewDir)
+			{
+
+			}
+
+			public static void ExcludeDirectoryFromProject(Project prj, string RelativePath)
 			{
 				if (prj.SubDirectories.Contains(RelativePath))
 					prj.SubDirectories.Remove(RelativePath);
@@ -186,57 +172,22 @@ namespace D_IDE
 
 
 
-			public static void ExludeFileFromProject(IProject Project, string file)
+			public static void ExludeFileFromProject(Project Project, string file)
 			{
 
 			}
 
-			public static void RemoveDirectoryFromProject(IProject Project, string RelativePath)
+			public static void RemoveDirectoryFromProject(Project Project, string RelativePath)
 			{
 
 			}
 
-			public static void RemoveFileFromProject(IProject Project, string file)
+			public static void RemoveFileFromProject(Project Project, string file)
 			{
 
 			}
 
-
-
-			public static string ToAbsoluteFileName(IProject Project, string file)
-			{
-				if (Path.IsPathRooted(file))
-					return file;
-				return ProjectManagement.ProjectBaseDirectory(Project)+ "\\" + file;
-			}
-
-			public static string ToRelativeFileName(IProject Project, string file)
-			{
-				if (Path.IsPathRooted(file) && Project != null)
-					return file.Remove(0, IDEManager.ProjectManagement.ProjectBaseDirectory(Project).Length).Trim('\\');
-				return file;
-			}
-
-			public static bool ContainsFile(IProject Project, string file)
-			{
-				var path = ToRelativeFileName(Project, file);
-				return Project.Files.Contains(path);
-			}
-
-			public static IModule GetModule(IProject Project, string file)
-			{
-				var relPath = ToRelativeFileName(Project, file);
-
-				foreach (var m in Project.ModuleCache)
-				{
-					if (ToRelativeFileName(Project,m.FileName) == relPath)
-						return m;
-				}
-				
-				return null;
-			}
-
-			public static bool RenameFile(IProject Project, string file, string NewFileName)
+			public static bool RenameFile(Project Project, string file, string NewFileName)
 			{
 				return true;
 			}
@@ -244,19 +195,33 @@ namespace D_IDE
 
 		public class BuildManagement
 		{
-			public static bool BuildSolution(Solution sln)
+			public static bool Build(Solution sln,bool Incrementally)
 			{
 				return false;
 			}
 
-			public static bool BuildProject(IProject Project)
+			public static bool Build(Project Project, bool Incrementally)
 			{
 				return false;
 			}
 
-			public static bool BuildSingleModule(IModule Module)
+			/// <summary>
+			/// Builds currently edited document to single executable
+			/// </summary>
+			/// <returns></returns>
+			public static bool BuildSingle()
 			{
 				return false;
+			}
+
+			public static void CleanUpOutput(Solution sln)
+			{
+
+			}
+
+			public static void CleanUpOutput(Project Project)
+			{
+
 			}
 		}
 
@@ -271,7 +236,7 @@ namespace D_IDE
 				return OpenFile(null, FileName);
 			}
 
-			public static AbstractEditorDocument OpenFile(IProject OwnerProject,string FileName)
+			public static AbstractEditorDocument OpenFile(Project OwnerProject,string FileName)
 			{
 				/*
 				 * 1. Solution check
@@ -286,10 +251,10 @@ namespace D_IDE
 					 * - Load solution and load all of its projects
 					 * - Open last opened files
 					 */
-					CurrentSolution = Solution.LoadFromFile(FileName);
+					CurrentSolution =new Solution(FileName);
 
 					foreach (var f in CurrentSolution.ProjectFiles)
-						CurrentSolution.ProjectCache.Add(ProjectManagement.LoadProjectFromFile(f));
+						CurrentSolution.ProjectCache.Add(Project.LoadProjectFromFile(f));
 
 					foreach (var prj in CurrentSolution)
 						foreach (var fn in prj.LastOpenedFiles)
@@ -299,7 +264,7 @@ namespace D_IDE
 				}
 
 
-				var LoadedPrj = IDEManager.ProjectManagement.LoadProjectFromFile(FileName);
+				var LoadedPrj = Project.LoadProjectFromFile(FileName);
 				if (LoadedPrj != null)
 				{
 					/* 
@@ -322,22 +287,22 @@ namespace D_IDE
 				var _prj = OwnerProject;
 				if(_prj==null && CurrentSolution!=null)
 					foreach(var p in CurrentSolution.ProjectCache)
-						if(FileManagement.ContainsFile(p,FileName))
+						if(p.ContainsFile(FileName))
 						{
 							_prj=p;
 							break;
 						}
 
 				// Check if file already open
-				var relPath = FileManagement.ToRelativeFileName(_prj, FileName);
+				var absPath = _prj!=null?_prj.ToAbsoluteFileName(FileName):FileName;
 				foreach (var doc in DockMgr.Documents)
-					if (doc is AbstractEditorDocument && (doc as AbstractEditorDocument).RelativeFilePath == relPath)
+					if (doc is AbstractEditorDocument && (doc as AbstractEditorDocument).AbsoluteFilePath == absPath)
 					{
 						doc.Activate();
 						return doc as AbstractEditorDocument;
 					}
 
-				var newEd = new EditorDocument(_prj, relPath);
+				var newEd = new EditorDocument(_prj, absPath);
 				newEd.Show(DockMgr);
 
 				return newEd;

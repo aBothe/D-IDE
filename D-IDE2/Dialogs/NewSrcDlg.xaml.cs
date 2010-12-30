@@ -27,7 +27,7 @@ namespace D_IDE.Dialogs
 	{
 		#region Properties
 		string _FileName;
-		SourceFileType _FileType;
+		FileTemplate _FileType;
 
 		public string FileName 
 		{ 
@@ -38,8 +38,8 @@ namespace D_IDE.Dialogs
 			}
 		}
 
-		public ILanguageBinding SelectedLanguageBinding		{get {return List_Languages.SelectedItem as ILanguageBinding;}	}
-		public SourceFileType SelectedFileType		{			
+		public AbstractLanguageBinding SelectedLanguageBinding		{get {return List_Languages.SelectedItem as AbstractLanguageBinding;}	}
+		public FileTemplate SelectedFileType		{			
 			get { 
 				return _FileType; 
 			}
@@ -71,7 +71,7 @@ namespace D_IDE.Dialogs
 			{
 				var o = SelectedLanguageBinding;
 				if (o != null)
-					return o.ModuleTypes;
+					return o.ModuleTemplates;
 				return null;
 			}
 		}
@@ -88,7 +88,7 @@ namespace D_IDE.Dialogs
 
 			if (List_FileTypes.Items.Count > 0)
 			{
-				_FileType = List_FileTypes.Items[0] as SourceFileType;
+				_FileType = List_FileTypes.Items[0] as FileTemplate;
 				List_FileTypes.SelectedIndex = 0;
 			}
 		}
@@ -106,7 +106,7 @@ namespace D_IDE.Dialogs
 
 			if (List_FileTypes.Items.Count > 0)
 			{
-				SelectedFileType = List_FileTypes.Items[0] as SourceFileType;
+				SelectedFileType = List_FileTypes.Items[0] as FileTemplate;
 				//List_FileTypes.SelectedIndex = 0;
 			}
 		}

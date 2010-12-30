@@ -5,24 +5,19 @@ using Parser.Core;
 using D_Parser;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using DebugEngineWrapper;
 
 namespace D_IDE.D
 {
-	public class DLanguageBinding:ILanguageBinding
+	public class DLanguageBinding:AbstractLanguageBinding
 	{
-		public object LanguageIcon
-		{
-			get
-			{
-				return DIcons.dproj; 
-			}
-		}
+		public override object LanguageIcon{get	{return DIcons.dproj32; }}
 
 		public DLanguageBinding()
 		{
 			// Files
 			var exts = new string[] { ".d",".di" };
-			_FileTypes.Add(new SourceFileType
+			_FileTypes.Add(new FileTemplate
 			{
 				Name="D Module",
 				Description = "D Source Module",
@@ -34,7 +29,7 @@ namespace D_IDE.D
 
 			//Projects
 			exts = new string[] { ".dprj" }; // All projects of the D language have the same extension
-			_ProjectTypes.Add(new SourceFileType
+			_ProjectTypes.Add(new FileTemplate
 			{
 				Name = "Console Application",
 				Description = "Console-based application",
@@ -45,7 +40,7 @@ namespace D_IDE.D
 			});
 
 			var img2 =DIcons.Generic_Application;
-			_ProjectTypes.Add(new SourceFileType
+			_ProjectTypes.Add(new FileTemplate
 			{
 				Name = "Window Application",
 				Description = "Win32-based application",
@@ -56,7 +51,7 @@ namespace D_IDE.D
 			});
 
 			img2 = DIcons.dll48;
-			_ProjectTypes.Add(new SourceFileType
+			_ProjectTypes.Add(new FileTemplate
 			{
 				Name = "Dynamic Link Library",
 				Description = "Win32 DLL project",
@@ -66,7 +61,7 @@ namespace D_IDE.D
 				DefaultFilePrefix="DynamicLinkLib"
 			});
 
-			_ProjectTypes.Add(new SourceFileType
+			_ProjectTypes.Add(new FileTemplate
 			{
 				Name = "Static Link Library",
 				Description = "Project which outputs a .lib file",
@@ -77,31 +72,25 @@ namespace D_IDE.D
 			});
 		}
 
-		public string LanguageName	{	get { return "D"; }	}
+		public override string LanguageName	{	get { return "D"; }	}
 
-		List<SourceFileType> _FileTypes = new List<SourceFileType>();
-		List<SourceFileType> _ProjectTypes = new List<SourceFileType>();
-		public SourceFileType[] ModuleTypes { get { return _FileTypes.ToArray(); } }
-		public SourceFileType[] ProjectTypes { get { return _ProjectTypes.ToArray(); } }
+		List<FileTemplate> _FileTypes = new List<FileTemplate>();
+		List<FileTemplate> _ProjectTypes = new List<FileTemplate>();
 
-		public bool ProjectsSupported{get { return true; }}
-		public bool CanUseDebugging{get {return true; }}
-		public bool CanUseCodeCompletion{get { return true; }}
-		public bool CanBuild{get { return true; }}
+		public override bool ProjectsSupported{get { return true; }}
+		public override bool CanUseDebugging { get { return true; } }
+		public override bool CanUseCodeCompletion { get { return true; } }
+		public override bool CanBuild { get { return true; } }
 
-		public bool CanBuildToSingleModule{	get { return true; }}
+		public override bool CanBuildToSingleModule { get { return true; } }
+
 
 		DLanguage _Language=new DLanguage();
-		public ILanguage Language{get { return _Language; }}
+		public override ILanguage Language { get { return _Language; } }
 
-		public object GetNodeIcon(Parser.Core.INode Node)
+		public override Project CreateEmptyProject(FileTemplate FileType)
 		{
-			throw new NotImplementedException();
-		}
-
-		public IProject CreateEmptyProject(SourceFileType FileType)
-		{
-			var prj=new DProject(FileType);
+			var prj=new Project();
 
 			switch (_ProjectTypes.IndexOf(FileType))
 			{
@@ -124,24 +113,29 @@ namespace D_IDE.D
 			return prj;
 		}
 
-		public IProject OpenProject(string FileName)
+		public override object SmallProjectIcon		{			get { return DIcons.dproj16; }		}
+		public override object LargeProjectIcon		{			get { return DIcons.dproj32; }		}
+		public override FileTemplate[] ModuleTemplates { get { return _FileTypes.ToArray(); } }
+		public override FileTemplate[] ProjectTemplates	{get { return _ProjectTypes.ToArray(); }}
+
+		public override Project OpenProject(string FileName)
 		{
 			throw new NotImplementedException();
 		}
 
-		public IModule CreateEmptyModule(SourceFileType FileType)
+		public override bool BuildProject(Project Project)
 		{
 			throw new NotImplementedException();
 		}
 
-		public IModule OpenModule(string FileName)
+		public override BuildError[] BuildSingleModule(string FileName)
 		{
 			throw new NotImplementedException();
 		}
 
-		public IDebugProvider DebugProvider
+		public override string BuildSymbolValueString(AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugScopedSymbol sym)
 		{
-			get { throw new NotImplementedException(); }
+			throw new NotImplementedException();
 		}
 	}
 }

@@ -12,7 +12,7 @@ namespace D_IDE
 		/// <summary>
 		/// Central access point for retrieving any loaded language
 		/// </summary>
-		public static List<ILanguageBinding> Bindings = new List<ILanguageBinding>();
+		public static List<AbstractLanguageBinding> Bindings = new List<AbstractLanguageBinding>();
 
 		/// <summary>
 		/// Loads a language interface dll into the RAM and puts its language binding into <see cref="Bindings"/>
@@ -20,14 +20,14 @@ namespace D_IDE
 		/// <param name="file"></param>
 		/// <param name="LanguageInterface"></param>
 		/// <returns></returns>
-		public static ILanguageBinding LoadLanguageInterface(string file, string LanguageInterface)
+		public static AbstractLanguageBinding LoadLanguageInterface(string file, string LanguageInterface)
 		{
 			var ass = Assembly.LoadFrom(file);
 
 			if (ass == null)
 				throw new Exception("Could not load " + file);
 
-			var lang = ass.CreateInstance(LanguageInterface) as ILanguageBinding;
+			var lang = ass.CreateInstance(LanguageInterface) as AbstractLanguageBinding;
 
 			if (lang == null)
 				throw new Exception("Could not instantiate " + LanguageInterface + " of " + file);

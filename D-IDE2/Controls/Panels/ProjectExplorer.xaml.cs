@@ -145,7 +145,7 @@ namespace D_IDE.Controls.Panels
 				var src_prj = src_dn.ParentProjectNode.Project;
 
 				var dest_path = "";
-				IProject dest_prj = null;
+				Project dest_prj = null;
 
 				if (dropNode is ProjectNode)
 					dest_prj = (dropNode as ProjectNode).Project;
@@ -167,7 +167,7 @@ namespace D_IDE.Controls.Panels
 				var src_prj = src_fn.ParentProjectNode.Project;
 
 				var dest_path = "";
-				IProject dest_prj = null;
+				Project dest_prj = null;
 
 				if (dropNode is ProjectNode)
 					dest_prj = (dropNode as ProjectNode).Project;
@@ -235,7 +235,7 @@ namespace D_IDE.Controls.Panels
 				if (n is FileNode)
 				{
 					var fn=n as FileNode;
-					IProject prj = fn.ParentProjectNode.Project;
+					Project prj = fn.ParentProjectNode.Project;
 
 					cm.Items.Add("Open", CommonIcons.open16,delegate(Object o, EventArgs _e)
 					{
@@ -360,17 +360,17 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Build", CommonIcons.Icons_16x16_BuildCurrentSelectedProject, delegate(Object o, EventArgs _e)
 					{
-						prj.Build();
+						IDEManager.BuildManagement.Build(prj,true);
 					});
 
 					cm.Items.Add("Rebuild", null, delegate(Object o, EventArgs _e)
 					{
-						prj.Rebuild();
+						IDEManager.BuildManagement.Build(prj,false);
 					});
 
 					cm.Items.Add("CleanUp", null, delegate(Object o, EventArgs _e)
 					{
-						prj.CleanUpOutput();
+						IDEManager.BuildManagement.CleanUpOutput(prj);
 					});
 
 					cm.Items.Add(new ToolStripSeparator());
@@ -378,6 +378,11 @@ namespace D_IDE.Controls.Panels
 					cm.Items.Add("Add File", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
 					{
 						IDEManager.FileManagement.AddNewSourceToProject(prj,".");
+					});
+
+					cm.Items.Add("Add Existing", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.FileManagement.AddExistingSourceToProject(prj,"");
 					});
 
 					cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
@@ -391,7 +396,7 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Open File Path", null, delegate(Object o, EventArgs _e)
 					{
-						System.Diagnostics.Process.Start("explorer",IDEManager.ProjectManagement.ProjectBaseDirectory(prj));
+						System.Diagnostics.Process.Start("explorer",prj.BaseDirectory);
 					});
 
 					cm.Items.Add("Properties", CommonIcons.properties16, delegate(Object o, EventArgs _e)
@@ -438,12 +443,12 @@ namespace D_IDE.Controls.Panels
 			foreach (var lang in LanguageLoader.Bindings)
 			{
 				if (lang.ProjectsSupported)
-					foreach (var pt in lang.ProjectTypes)
+					foreach (var pt in lang.ProjectTemplates)
 						if (pt.SmallImage != null && pt.Extensions != null)
 							foreach (var ext in pt.Extensions)
 								Util.AddGDIImageToImageList(TreeIcons, ext, pt.SmallImage);
 
-				foreach (var mt in lang.ModuleTypes)
+				foreach (var mt in lang.ModuleTemplates)
 					if (mt.SmallImage != null && mt.Extensions != null)
 						foreach (var ext in mt.Extensions)
 							Util.AddGDIImageToImageList(TreeIcons, ext, mt.SmallImage);
@@ -490,14 +495,12 @@ namespace D_IDE.Controls.Panels
 
 		public class ProjectNode : TreeNode
 		{
-			public IProject Project;
+			public Project Project;
 
 			public ProjectNode() { }
-			public ProjectNode(IProject prj):base(prj.Name)
+			public ProjectNode(Project prj):base(prj.Name)
 			{
 				Project = prj;
-
-				var pt = Project.ProjectType;
 				SelectedImageKey= ImageKey = GetFileIconKey(prj.FileName);
 
 				UpdateChildren();
@@ -575,9 +578,7 @@ namespace D_IDE.Controls.Panels
 			{
 				get
 				{
-					// get project node
-					var prj = ParentProjectNode.Project;
-					return IDEManager.ProjectManagement.ProjectBaseDirectory(prj)+"\\"+RelativePath;
+					return ParentProjectNode.Project.ToAbsoluteFileName(RelativePath);
 				}
 			}
 			#endregion

@@ -12,22 +12,17 @@ namespace D_IDE
 	public abstract class AbstractEditorDocument : DocumentContent
 	{
 		public AbstractEditorDocument() { }
-		public AbstractEditorDocument(IModule mod)
-		{
-			Project = mod.Project;
-			FileName = mod.FileName;
-		}
 		public AbstractEditorDocument(string file)
 		{
 			this.FileName = file;
 		}
-		public AbstractEditorDocument(IProject prj, string file)
+		public AbstractEditorDocument(Project prj, string file)
 		{
 			Project = prj;
 			FileName = file;
 		}
 
-		public IProject Project = null;
+		public Project Project = null;
 		string _FileName;
 		public string FileName
 		{
@@ -35,8 +30,18 @@ namespace D_IDE
 			set
 			{
 				_FileName = value;
+				if (String.IsNullOrEmpty(value)) // Enforce not-empty filenames
+					_FileName = "Undefined";
 				Modified = false;
 			}
+		}
+
+		/// <summary>
+		/// Checks if file is stand-alone and not bound to any project.
+		/// </summary>
+		public bool IsUnboundNonExistingFile
+		{
+			get { return Project == null && Path.GetDirectoryName(_FileName) == ""; }
 		}
 
 		public string RelativeFilePath
@@ -44,7 +49,7 @@ namespace D_IDE
 			get
 			{
 				if (Path.IsPathRooted(FileName) && Project != null)
-					return FileName.Remove(0, IDEManager.ProjectManagement.ProjectBaseDirectory(Project).Length).Trim('\\');
+					return FileName.Remove(0, Project.BaseDirectory.Length).Trim('\\');
 				return FileName;
 			}
 			set { FileName = value; }
@@ -56,23 +61,15 @@ namespace D_IDE
 			{
 				if (Path.IsPathRooted(FileName) || Project == null)
 					return FileName;
-				return IDEManager.ProjectManagement.ProjectBaseDirectory(Project) + "\\" + FileName;
+				return Project.BaseDirectory + "\\" + FileName;
 			}
 			set { FileName = value; }
-		}
-
-		public IModule Module
-		{
-			get
-			{
-				return IDEManager.FileManagement.GetModule(Project, FileName);
-			}
 		}
 
 		public bool Modified
 		{
 			get { return Title != null && Title.EndsWith("*"); }
-			set { Title = Path.GetFileName(_FileName) + (value ? "*" : ""); }
+			set { Title = Path.GetFileName(FileName) + (value ? "*" : ""); }
 		}
 
 		public abstract void Save();

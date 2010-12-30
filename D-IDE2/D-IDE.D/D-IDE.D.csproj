@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DebugEngineWrapper, Version=1.0.3992.12100, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\externalDeps\DebugEngineWrapper.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -52,8 +56,6 @@
       <DependentUpon>DIcons.resx</DependentUpon>
     </Compile>
     <Compile Include="DLanguageBinding.cs" />
-    <Compile Include="DModule.cs" />
-    <Compile Include="DProject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

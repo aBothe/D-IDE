@@ -8,8 +8,7 @@
 		Width="754" Height="480" MinWidth="640" MinHeight="480" 
 		xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock"
 		KeyDown="RibbonWindow_KeyDown"
-					 Closing="RibbonWindow_Closing">
-
+		Closing="RibbonWindow_Closing">
 	<Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -17,6 +16,12 @@
         </Grid.RowDefinitions>
 
         <ribbon:Ribbon x:Name="Ribbon">
+			<ribbon:Ribbon.QuickAccessToolBar>
+				<ribbon:RibbonQuickAccessToolBar>
+					<ribbon:RibbonButton SmallImageSource="Resources/open16.png" Click="Open" ToolTipTitle="Open (Ctrl+O)" />
+					<ribbon:RibbonButton SmallImageSource="Resources/save16.png" Click="Save" ToolTipTitle="Save (Ctrl+S)" />
+				</ribbon:RibbonQuickAccessToolBar>
+			</ribbon:Ribbon.QuickAccessToolBar>
 			
 			<ribbon:Ribbon.ApplicationMenu>
 				<ribbon:RibbonApplicationMenu SmallImageSource="Resources/list-drop-down.png">

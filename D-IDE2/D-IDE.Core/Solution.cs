@@ -7,36 +7,43 @@ using System.IO;
 
 namespace D_IDE.Core
 {
-	public class Solution:IEnumerable<IProject>
+	public class Solution:IEnumerable<Project>
 	{
 		public const string SolutionExtension = ".idesln";
 
-		public static Solution LoadFromFile(string FileName)
+		public Solution() { }
+		public Solution(string file)
+		{
+			FileName = file;
+			Load();
+		}
+
+		public void Load()
 		{
 			if (!File.Exists(FileName))
-				return null;
+				return;
 
 			var x = XmlTextReader.Create(FileName);
-
-			var ret = new Solution();
-			ret.FileName = FileName;
+			_ProjectFiles.Clear();
 			try
 			{
 				while (x.Read())
 					switch (x.LocalName)
 					{
 						case "name":
-							ret.Name = x.ReadString();
+							Name = x.ReadString();
 							break;
 						case "project":
-							ret._ProjectFiles.Add(x.ReadString());
+							var f = x.ReadString();
+							_ProjectFiles.Add(f);
+							if (x.HasAttributes && x.GetAttribute("isStartProject") !="false")
+								_StartPrjFile = f;
 							break;
 					}
 			}
 			catch{}
 
 			x.Close();
-			return ret;
 		}
 
 		public string GetSolutionRelatedPath(string path)
@@ -55,7 +62,7 @@ namespace D_IDE.Core
 		/// Adds it to the project cache.
 		/// </summary>
 		/// <param name="Project"></param>
-		public void AddProject(IProject Project)
+		public void AddProject(Project Project)
 		{
 			if (ProjectCache.Contains(Project))
 				return;
@@ -84,7 +91,7 @@ namespace D_IDE.Core
 			return false;
 		}
 
-		public bool UnloadProject(IProject Project)
+		public bool UnloadProject(Project Project)
 		{
 			return ProjectCache.Remove(Project);
 		}
@@ -115,6 +122,8 @@ namespace D_IDE.Core
 			foreach (var s in _ProjectFiles)
 			{
 				x.WriteStartElement("project");
+				if (s == _StartPrjFile)
+					x.WriteAttributeString("isStartProject","true");
 				x.WriteCData(s);
 				x.WriteEndElement();
 			}
@@ -136,9 +145,9 @@ namespace D_IDE.Core
 		}
 
 		readonly List<string> _ProjectFiles = new List<string>();
-		int _StartPrjIndex = 0;
+		string _StartPrjFile;
 
-		public IProject this[string file]
+		public Project this[string file]
 		{
 			get {
 				foreach (var p in ProjectCache)
@@ -154,20 +163,16 @@ namespace D_IDE.Core
 			}
 		}
 		
-		public readonly List<IProject> ProjectCache = new List<IProject>();
+		public readonly List<Project> ProjectCache = new List<Project>();
 
-		public IProject StartProject
+		public Project StartProject
 		{
 			get {
-				if (_StartPrjIndex < _ProjectFiles.Count)
-				{
-					return ProjectCache[_StartPrjIndex];
-				}
-				return null;
+				return this[_StartPrjFile];
 			}
 			set {
-				if (ProjectCache.Contains(value))
-					_StartPrjIndex = ProjectCache.IndexOf(value);
+				if (_ProjectFiles.Contains(value.FileName))
+					_StartPrjFile = value.FileName;
 				else throw new Exception("Project "+value.Name+" is not part of this Solution");
 			}
 		}
@@ -197,20 +202,20 @@ namespace D_IDE.Core
 
 		}
 
-		public Dictionary<IProject, List<BuildError>> LastBuildErrors
+		public Dictionary<Project, BuildError[]> LastBuildErrors
 		{
 			get
 			{
-				var ret = new Dictionary<IProject, List<BuildError>>(ProjectCache.Count);
+				var ret = new Dictionary<Project, BuildError[]>(ProjectCache.Count);
 
 				foreach (var p in ProjectCache)
-					ret.Add(p,p.LastBuildErrors);
+					ret.Add(p,p.LastBuildErrors.ToArray());
 
 				return ret;
 			}
 		}
 
-		public IEnumerator<IProject> GetEnumerator()
+		public IEnumerator<Project> GetEnumerator()
 		{
 			return ProjectCache.GetEnumerator();
 		}
