@@ -19,6 +19,9 @@ namespace D_IDE.Core
 		/// Contain all project files including the file paths of the modules
 		/// </summary>
 		string[] Files { get; }
+
+		List<string> LastOpenedFiles { get; }
+
 		/// <summary>
 		/// Contains relative paths of empty but used directories
 		/// </summary>
@@ -49,8 +52,6 @@ namespace D_IDE.Core
 		bool Save();
 		void Reload();
 		void LoadFromFile(string FileName);
-
-		IModule this[string FileName] { get; set; }
 
 		void Add(string FileName);
 		void Remove(string FileName);

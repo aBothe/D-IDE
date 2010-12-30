@@ -39,6 +39,15 @@ namespace D_IDE.Core
 			return ret;
 		}
 
+		public string GetSolutionRelatedPath(string path)
+		{
+			if (!Path.IsPathRooted(path))
+				return path;
+			if (path.StartsWith(BaseDir))
+				return path.Substring(BaseDir.Length).Trim('\\');
+			return path;
+		}
+
 		#region Project management
 		/// <summary>
 		/// Adds a project to the solution.
@@ -51,8 +60,9 @@ namespace D_IDE.Core
 			if (ProjectCache.Contains(Project))
 				return;
 
-			if (!_ProjectFiles.Contains(Project.FileName))
-				_ProjectFiles.Add(Project.FileName);
+			var prjPath = GetSolutionRelatedPath(Project.FileName);
+			if (!_ProjectFiles.Contains(prjPath))
+				_ProjectFiles.Add(prjPath);
 
 			ProjectCache.Add(Project);
 			Project.Solution = this;
@@ -64,27 +74,6 @@ namespace D_IDE.Core
 				return;
 
 			_ProjectFiles.Add(file);
-			LoadProject(file);
-		}
-
-		public void LoadAllProjects()
-		{
-			foreach (string fn in _ProjectFiles)
-			{
-				if (IsProjectLoaded(fn)) 
-					continue;
-				LoadProject(fn);
-			}
-		}
-
-		public IProject LoadProject(string Project)
-		{
-			if (!_ProjectFiles.Contains(Project))
-				return null;
-
-			ProjectCache.Add(LoadProject(Project));
-
-			return null;
 		}
 
 		public bool IsProjectLoaded(string file)
@@ -102,12 +91,8 @@ namespace D_IDE.Core
 
 		public void ExcludeProject(string file)
 		{
-
-		}
-
-		public void RemoveProject(string file)
-		{
-
+			UnloadProject(this[file]);
+			_ProjectFiles.Remove(file);
 		}
 		#endregion
 

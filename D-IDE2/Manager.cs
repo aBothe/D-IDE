@@ -9,6 +9,14 @@ namespace D_IDE
 	{
 		#region Properties
 		public static MainWindow MainWindow;
+		public static AvalonDock.DockingManager DockMgr
+		{
+			get { return MainWindow.DockMgr; }
+		}
+		public static AbstractEditorDocument CurrentEditor
+		{
+			get	{return DockMgr.ActiveDocument as AbstractEditorDocument;}
+		}
 		/// <summary>
 		/// There can be only one open solution. 
 		/// Stand-alone modules are opened independently of any other open solutions, projects or modules
@@ -77,6 +85,7 @@ namespace D_IDE
 
 			return prj;
 		}
+
 		public static IProject AddNewProjectToCurrentSolution(ILanguageBinding Binding,			SourceFileType ProjectType,			string Name,			string BaseDir)
 		{
 			return AddNewProjectToSolution(CurrentSolution,Binding,ProjectType,Name,BaseDir);
@@ -84,7 +93,7 @@ namespace D_IDE
 
 		public static void ReassignProject(IProject Project, Solution NewSolution)
 		{
-
+			
 		}
 
 		public static string ProjectBaseDirectory(IProject Project)
@@ -194,11 +203,42 @@ namespace D_IDE
 
 
 
-			public static string GetAbsoluteFileName(IProject Project, string file)
+			public static string ToAbsoluteFileName(IProject Project, string file)
 			{
 				if (Path.IsPathRooted(file))
 					return file;
-				return ProjectManagement.ProjectBaseDirectory(Project) + file;
+				return ProjectManagement.ProjectBaseDirectory(Project)+ "\\" + file;
+			}
+
+			public static string ToRelativeFileName(IProject Project, string file)
+			{
+				if (Path.IsPathRooted(file) && Project != null)
+					return file.Remove(0, IDEManager.ProjectManagement.ProjectBaseDirectory(Project).Length).Trim('\\');
+				return file;
+			}
+
+			public static bool ContainsFile(IProject Project, string file)
+			{
+				var path = ToRelativeFileName(Project, file);
+				return Project.Files.Contains(path);
+			}
+
+			public static IModule GetModule(IProject Project, string file)
+			{
+				var relPath = ToRelativeFileName(Project, file);
+
+				foreach (var m in Project.ModuleCache)
+				{
+					if (ToRelativeFileName(Project,m.FileName) == relPath)
+						return m;
+				}
+				
+				return null;
+			}
+
+			public static bool RenameFile(IProject Project, string file, string NewFileName)
+			{
+				return true;
 			}
 		}
 
@@ -222,14 +262,119 @@ namespace D_IDE
 
 		public class EditingManagement
 		{
-			public static EditorDocument OpenFile(IProject Project, string FileName)
-			{
-				return null;
-			}
-
-			public static EditorDocument OpenFile(string FileName)
+			/// <summary>
+			/// Central method to open a file OR a project
+			/// </summary>
+			/// <returns>Editor instance if a source file was opened</returns>
+			public static AbstractEditorDocument OpenFile(string FileName)
 			{
 				return OpenFile(null, FileName);
+			}
+
+			public static AbstractEditorDocument OpenFile(IProject OwnerProject,string FileName)
+			{
+				/*
+				 * 1. Solution check
+				 * 2. Project file check
+				 * 3. Solution file check
+				 */
+				var ext = Path.GetExtension(FileName);
+
+				if (ext == Solution.SolutionExtension)
+				{
+					/*
+					 * - Load solution and load all of its projects
+					 * - Open last opened files
+					 */
+					CurrentSolution = Solution.LoadFromFile(FileName);
+
+					foreach (var f in CurrentSolution.ProjectFiles)
+						CurrentSolution.ProjectCache.Add(ProjectManagement.LoadProjectFromFile(f));
+
+					foreach (var prj in CurrentSolution)
+						foreach (var fn in prj.LastOpenedFiles)
+							OpenFile(prj,fn);
+
+					return null;
+				}
+
+
+				var LoadedPrj = IDEManager.ProjectManagement.LoadProjectFromFile(FileName);
+				if (LoadedPrj != null)
+				{
+					/* 
+					 * - Load project
+					 * - Create anonymous solution that holds the project virtually
+					 * - Open last opened files
+					 */
+					CurrentSolution = new Solution();
+					CurrentSolution.Name = LoadedPrj.Name;
+					CurrentSolution.AddProject(LoadedPrj);
+
+					foreach (var prj in CurrentSolution)
+						foreach (var fn in prj.LastOpenedFiles)
+							OpenFile(prj,fn);
+
+					return null;
+				}
+
+				// Try to resolve owner project
+				var _prj = OwnerProject;
+				if(_prj==null && CurrentSolution!=null)
+					foreach(var p in CurrentSolution.ProjectCache)
+						if(FileManagement.ContainsFile(p,FileName))
+						{
+							_prj=p;
+							break;
+						}
+
+				// Check if file already open
+				var relPath = FileManagement.ToRelativeFileName(_prj, FileName);
+				foreach (var doc in DockMgr.Documents)
+					if (doc is AbstractEditorDocument && (doc as AbstractEditorDocument).RelativeFilePath == relPath)
+					{
+						doc.Activate();
+						return doc as AbstractEditorDocument;
+					}
+
+				var newEd = new EditorDocument(_prj, relPath);
+				newEd.Show(DockMgr);
+
+				return newEd;
+			}
+
+			public static void SaveCurrentFile()
+			{
+				if (CurrentEditor != null)
+					CurrentEditor.Save();
+			}
+
+			public static void SaveAllFiles()
+			{
+				foreach (var doc in DockMgr.Documents)
+					if (doc is AbstractEditorDocument)
+					{
+						(doc as AbstractEditorDocument).Save();
+					}
+			}
+
+			/// <summary>
+			/// Saves the file under a new file name.
+			/// Renames it in its project if possible.
+			/// </summary>
+			public static void SaveCurrentFileAs(string NewFilePath)
+			{
+				if (CurrentEditor == null) return;
+
+				if (CurrentEditor.Project != null)
+					IDEManager.FileManagement.RenameFile(
+						CurrentEditor.Project,
+						CurrentEditor.FileName, NewFilePath);
+				else
+				{
+					CurrentEditor.FileName = NewFilePath;
+					CurrentEditor.Save();
+				}
 			}
 		}
 	}

@@ -14,12 +14,13 @@ namespace D_IDE.D
 		public string FileName		{			get;			set;		}
         public Solution Solution{get;      set;        }
 		public readonly List<string> _Files = new List<string>();
+		public readonly List<string> _LastOpenedFiles = new List<string>();
 
 		public DProject(SourceFileType ft)
 		{
 			ProjectType = ft;
 		}
-
+		
 		public bool Save()
 		{
 			throw new NotImplementedException();
@@ -150,6 +151,12 @@ namespace D_IDE.D
 		public List<string> SubDirectories
 		{
 			get { return subdirs; }
+		}
+
+
+		public List<string> LastOpenedFiles
+		{
+			get { return _LastOpenedFiles; }
 		}
 	}
 }

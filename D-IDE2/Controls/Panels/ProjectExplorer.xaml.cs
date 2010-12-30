@@ -520,15 +520,10 @@ namespace D_IDE.Controls.Panels
 					var fDir=System.IO.Path.GetDirectoryName(f);
 					var dirNode = DirectoryNode.CheckIfSubDirExists(this,fDir);
 
-					var mod=Project[f];
-					FileNode fnode = null;
-					// If it's managed, add a module node
-					// otherwise create filenode only
-					if (mod != null)
-						fnode = new ModuleNode() { Module = mod };
-					else fnode = new FileNode() { FileName = f };
-
+					var fnode = new FileNode() { FileName = f };
 					fnode.SelectedImageKey = fnode.ImageKey = GetFileIconKey(f);
+
+					dirNode.Nodes.Add(fnode);
 				}
 			}
 		}
@@ -662,15 +657,6 @@ namespace D_IDE.Controls.Panels
 					}
 					return null;
 				}
-			}
-		}
-
-		public class ModuleNode : FileNode
-		{
-			public IModule Module;
-			public new string FileName
-			{
-				get { return Module.FileName; }
 			}
 		}
 		#endregion

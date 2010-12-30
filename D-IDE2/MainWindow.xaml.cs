@@ -4,6 +4,10 @@ using Microsoft.Windows.Controls.Ribbon;
 using D_IDE.Core;
 using D_IDE.Dialogs;
 using D_IDE.Controls.Panels;
+using System.Windows.Input;
+using System;
+using Microsoft.Win32;
+using System.Linq;
 
 namespace D_IDE
 {
@@ -13,13 +17,6 @@ namespace D_IDE
 	public partial class MainWindow : RibbonWindow
 	{
 		#region Properties
-		AbstractEditorDocument SelectedDocument
-		{
-			get {
-				return DockMgr.ActiveDocument as AbstractEditorDocument;
-				}
-		}
-
 		ProjectExplorer Panel_ProjectExplorer = new ProjectExplorer();
 		#endregion
 
@@ -88,27 +85,47 @@ namespace D_IDE
 
 		private void Open(object sender, RoutedEventArgs e)
 		{
-			
+			var dlg = new OpenFileDialog();
+
+			// Add filter
+			dlg.Filter = "All files (*.*)|*.*";
+			dlg.InitialDirectory = GlobalProperties.Current.DefaultProjectDirectory;
+			dlg.Multiselect = true;
+
+			if (dlg.ShowDialog().Value)
+				foreach (var fn in dlg.FileNames)
+					IDEManager.EditingManagement.OpenFile(fn);
 		}
 
 		private void Save(object sender, RoutedEventArgs e)
 		{
-			
+			IDEManager.EditingManagement.SaveCurrentFile();
 		}
 
 		private void SaveAll(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.EditingManagement.SaveAllFiles();
 		}
 
 		private void SaveAs(object sender, RoutedEventArgs e)
 		{
+			var ce=IDEManager.CurrentEditor;
+			if (ce == null)
+				return;
 
+			var dlg = new SaveFileDialog();
+
+			// Add filter
+			dlg.Filter = "All files (*.*)|*.*";
+			dlg.FileName=ce.AbsoluteFilePath;
+
+			if (dlg.ShowDialog().Value)
+				IDEManager.EditingManagement.SaveCurrentFileAs(dlg.FileName);
 		}
 
 		private void Exit(object sender, RoutedEventArgs e)
 		{
-
+			Close();
 		}
 
 		private void Settings(object sender, RoutedEventArgs e)
@@ -118,25 +135,73 @@ namespace D_IDE
 
 		#endregion
 
-		#region GUI-related stuff
 		public void UpdateLastFilesMenus()
 		{
 			Button_Open.Items.Clear();
 
-			// First add recent files
-			var l = new List<string> { "aa","bbbb","ccc" };
+			var mi = new RibbonApplicationMenuItem();
+			mi.Header = "File";
+			mi.ToolTipTitle = "Open File (Ctrl+O)";
+			mi.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri("Resources/file.png",UriKind.Relative));
+			mi.Click += Open;
+			Button_Open.Items.Add(mi);
 
-			foreach (var i in l)
+			// First add recent files
+			if (GlobalProperties.Current.LastFiles.Count > 0 || GlobalProperties.Current.LastProjects.Count > 0)
+				Button_Open.Items.Add(new RibbonSeparator());
+
+			foreach (var i in GlobalProperties.Current.LastFiles)
 			{
-				var mi = new RibbonApplicationMenuItem();
-				mi.Header = System.IO.Path.GetFileName( i);
-				mi.Tag = i;
+				mi = new RibbonApplicationMenuItem();
+				mi.Header = i;
+				mi.Click+=delegate(Object o,RoutedEventArgs _e)
+				{
+					IDEManager.EditingManagement.OpenFile(i);
+				};
 				Button_Open.Items.Add(mi);
 			}
 
 			// Then add recent projects
-			
+			if(GlobalProperties.Current.LastFiles.Count>0 && GlobalProperties.Current.LastProjects.Count>0)
+				Button_Open.Items.Add(new RibbonSeparator());
+
+			foreach (var i in GlobalProperties.Current.LastProjects)
+			{
+				mi = new RibbonApplicationMenuItem();
+				mi.Header = i;
+				mi.Click += delegate(Object o, RoutedEventArgs _e)
+				{
+					IDEManager.EditingManagement.OpenFile(i);
+				};
+				Button_Open.Items.Add(mi);
+			}
 		}
-		#endregion
+
+		/// <summary>
+		/// Catches all menu shortcuts
+		/// </summary>
+		private void RibbonWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+		{
+			bool ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
+			if (ctrl)
+			switch (e.Key)
+			{
+				case Key.N:
+					NewSource(sender, null);
+					return;
+				case Key.O:
+					Open(sender, null);
+					return;
+				case Key.S:
+					Save(sender, null);
+					return;
+			}
+		}
+
+		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+
+		}
 	}
 }

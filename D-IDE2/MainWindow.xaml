@@ -5,7 +5,10 @@
         Title="D-IDE"
 		x:Name="RibbonWindow"
 		Icon="d-ide.ico"
-		Width="754" Height="480" MinWidth="640" MinHeight="480" xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock">
+		Width="754" Height="480" MinWidth="640" MinHeight="480" 
+		xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock"
+		KeyDown="RibbonWindow_KeyDown"
+					 Closing="RibbonWindow_Closing">
 
 	<Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
@@ -17,19 +20,19 @@
 			
 			<ribbon:Ribbon.ApplicationMenu>
 				<ribbon:RibbonApplicationMenu SmallImageSource="Resources/list-drop-down.png">
-					<ribbon:RibbonApplicationMenuItem Header="New" Name="Button_New">
+					<ribbon:RibbonApplicationMenuItem Header="New" Name="Button_New" ImageSource="Resources/NewDocument_32x32.png">
 						<ribbon:RibbonApplicationMenuItem ImageSource="Resources/prj_32.png" Header="Project" Click="NewProject" />
-						<ribbon:RibbonApplicationMenuItem Header="File" Click="NewSource" ImageSource="Resources/NewDocument_32x32.png" />
+						<ribbon:RibbonApplicationMenuItem Header="File" Click="NewSource" ImageSource="Resources/NewDocument_32x32.png" ToolTipTitle="New File (Ctrl+N)" ToolTipDescription="Create a new source file" />
 					</ribbon:RibbonApplicationMenuItem>
-					<ribbon:RibbonApplicationMenuItem Header="Open" Click="Open" ImageSource="Resources/OpenPH.png" Name="Button_Open" />
+					<ribbon:RibbonApplicationMenuItem Header="Open" ImageSource="Resources/OpenPH.png" Name="Button_Open" />
 					<ribbon:RibbonSeparator />
-					<ribbon:RibbonApplicationMenuItem Header="Save" Click="Save" ImageSource="Resources/SaveHH.png" />
+					<ribbon:RibbonApplicationMenuItem Header="Save" Click="Save" ImageSource="Resources/SaveHH.png" ToolTipTitle="Save (Ctrl+S)" />
 					<ribbon:RibbonApplicationMenuItem Header="Save All" Click="SaveAll" ImageSource="Resources/SaveAllHH.png" />
 					<ribbon:RibbonApplicationMenuItem Header="Save as" Click="SaveAs" ImageSource="Resources/SaveAsHH.png" />
 					<ribbon:RibbonSeparator />
 					<ribbon:RibbonApplicationMenuItem Header="Settings" ImageSource="Resources/settings_32.png" Click="Settings" />
 					<ribbon:RibbonSeparator />
-					<ribbon:RibbonApplicationMenuItem Header="Exit" Click="Exit" ImageSource="Resources/application-exit-3.ico" />
+					<ribbon:RibbonApplicationMenuItem Header="Exit" Click="Exit" ImageSource="Resources/application-exit-3.ico" ToolTipTitle="Exit D-IDE (Alt+F4)" />
 				</ribbon:RibbonApplicationMenu>
 			</ribbon:Ribbon.ApplicationMenu>
 
