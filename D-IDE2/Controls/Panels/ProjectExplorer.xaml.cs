@@ -62,7 +62,35 @@ namespace D_IDE.Controls.Panels
 
 			MainTree.BorderStyle = BorderStyle.None;
 			MainTree.HideSelection = false;
+
+			MainTree.LabelEdit = true;
+			MainTree.AfterLabelEdit += new NodeLabelEditEventHandler(MainTree_AfterLabelEdit);
 			#endregion
+		}
+
+		/// <summary>
+		/// Renaming
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		void MainTree_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
+		{
+			if (e.Node is SolutionNode)
+				e.CancelEdit = !IDEManager.ProjectManagement.Rename((e.Node as SolutionNode).Solution, e.Label);
+			else if (e.Node is ProjectNode)
+				e.CancelEdit = !IDEManager.ProjectManagement.Rename((e.Node as ProjectNode).Project, e.Label);
+			else if(e.Node is DirectoryNode)
+			{
+				var dn=e.Node as DirectoryNode;
+				e.CancelEdit = !IDEManager.FileManagement.RenameDirectory(dn.ParentProjectNode.Project, dn.RelativePath, e.Label);
+				if (!e.CancelEdit)dn.Text = Util.PurifyDirName(e.Label);
+			}
+			else if (e.Node is FileNode)
+			{
+				var n = e.Node as FileNode;
+				e.CancelEdit = !IDEManager.FileManagement.RenameFile(n.ParentProjectNode.Project,n.FileName,e.Label);
+				if (!e.CancelEdit) n.Text = Util.PurifyFileName(e.Label);
+			}
 		}
 
 		void MainTree_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -434,6 +462,7 @@ namespace D_IDE.Controls.Panels
 			SetupTreeIcons();
 
 			var expandedNodes = new List<string>();
+			expandedNodes.Clear();
 			foreach (TreeNode n in MainTree.Nodes)
 				_CheckForExpansionStates(n, ref expandedNodes);
 
@@ -442,16 +471,29 @@ namespace D_IDE.Controls.Panels
 			if (IDEManager.CurrentSolution != null)
 				MainTree.Nodes.Add(new SolutionNode(IDEManager.CurrentSolution));
 
+			foreach (TreeNode n in MainTree.Nodes)
+				_ApplyExpansionStates(n, expandedNodes);
+
 			MainTree.EndUpdate();
 		}
 
 		void _CheckForExpansionStates(TreeNode node, ref List<string> lst)
 		{
-			if (node.IsExpanded)
+			if (node is ProjectNode?!node.IsExpanded: node.IsExpanded)
 				lst.Add(node.FullPath);
-
+			
 			foreach (TreeNode n in node.Nodes)
 				_CheckForExpansionStates(n, ref lst);
+		}
+
+		void _ApplyExpansionStates(TreeNode node, List<string> lst)
+		{
+			// Expand project nodes by default
+			if (node is ProjectNode?!lst.Contains(node.FullPath):lst.Contains(node.FullPath))
+				node.Expand();
+
+			foreach (TreeNode n in node.Nodes)
+				_ApplyExpansionStates(n, lst);
 		}
 
 		#region Icons
@@ -499,10 +541,8 @@ namespace D_IDE.Controls.Panels
 			public SolutionNode() { }
 			public SolutionNode(Solution solution)
 			{
-				Expand();
-
 				this.Solution = solution;
-				Text = "Solution "+solution.Name;
+				Text = solution.Name;
 
 				SelectedImageKey= ImageKey = "solution";
 
@@ -515,6 +555,7 @@ namespace D_IDE.Controls.Panels
 
 				foreach (var p in Solution)
 					Nodes.Add(new ProjectNode(p));
+				Expand();
 			}
 		}
 
@@ -651,7 +692,10 @@ namespace D_IDE.Controls.Panels
 
 					// if no match was found, create a node
 					if (!matchFound)
-						CurNode.Nodes.Add(CurNode = new DirectoryNode() { DirectoryName = pathparts[i] });
+					{
+						var nn = new DirectoryNode(pathparts[i]);
+						CurNode.Nodes.Add(CurNode =nn);
+					}
 
 					i++;
 				}
@@ -668,8 +712,34 @@ namespace D_IDE.Controls.Panels
 
 		public class FileNode : TreeNode
 		{
-			string _FileName;
-			public string FileName { get { return _FileName; } set { _FileName = value; Text = System.IO.Path.GetFileName(value); } }
+			public string FileName
+			{
+				get { return Text; }
+				set { Text = value; }
+			}
+
+			public string RelativeFilePath
+			{
+				get
+				{
+					string ret = FileName;
+
+					var n = this as TreeNode;
+					while (n is FileNode || n is DirectoryNode)
+					{
+						if (n is FileNode)
+						{
+							n = n.Parent;
+							continue;
+						}
+						
+						ret = (n as DirectoryNode).DirectoryName + "\\" + ret;
+						n = n.Parent;
+					}
+
+					return ret.Trim(' ', '\\');
+				}
+			}
 
 			public ProjectNode ParentProjectNode
 			{

@@ -36,10 +36,33 @@ namespace D_IDE.Core
             }
         }
 
+		/// <summary>
+		/// Tries to rename or move a file relative to the directory of the source file.
+		/// </summary>
+		/// <param name="newFileName">Can be a relative or a absolute file path</param>
+		/// <returns>True if file could be moved, false if new file already existed</returns>
+		public static bool MoveFile(string file, string newFileName)
+		{
+			var newName=Path.IsPathRooted(newFileName)?newFileName:Path.Combine(Path.GetDirectoryName(file) ,newFileName);
+
+			if (!File.Exists(file) || File.Exists(newName))
+				return false;
+			try	{File.Move(file, newName);}
+			catch (Exception ex) { ErrorLogger.Log(ex); return false; }
+			return true;
+		}
+
 		public static string PurifyFileName(string file)
 		{
 			string r = file;
 			foreach (var c in Path.GetInvalidFileNameChars())
+				r = r.Replace(c, '_');
+			return r;
+		}
+		public static string PurifyDirName(string dirName)
+		{
+			string r = dirName;
+			foreach (var c in Path.GetInvalidPathChars())
 				r = r.Replace(c, '_');
 			return r;
 		}

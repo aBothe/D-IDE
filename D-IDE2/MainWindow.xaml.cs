@@ -23,7 +23,19 @@ namespace D_IDE
 		#region GUI Interactions
 		public void UpdateGUIElements()
 		{
+			UpdateProjectExplorer();
+			UpdateTitle();
+		}
+		public void UpdateProjectExplorer()
+		{
 			Panel_ProjectExplorer.Update();
+		}
+		public void UpdateTitle()
+		{
+			if (IDEManager.CurrentSolution != null)
+				Title = IDEManager.CurrentSolution.Name + " - D-IDE";
+			else
+				Title = "D-IDE";
 		}
 		#endregion
 

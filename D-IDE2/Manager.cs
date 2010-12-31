@@ -5,6 +5,8 @@ using System.Linq;
 using Microsoft.Win32;
 using D_IDE.Dialogs;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace D_IDE
 {
@@ -20,11 +22,17 @@ namespace D_IDE
 		{
 			get	{return DockMgr.ActiveDocument as AbstractEditorDocument;}
 		}
+
+		public static IEnumerable<AbstractEditorDocument> Editors
+		{
+			get { return from e in DockMgr.Documents where e is AbstractEditorDocument select e as AbstractEditorDocument; }
+		}
+
 		/// <summary>
 		/// There can be only one open solution. 
 		/// Stand-alone modules are opened independently of any other open solutions, projects or modules
 		/// </summary>
-		public static Solution CurrentSolution;
+		public static Solution CurrentSolution { get; set; }
 		#endregion
 
 		public class ProjectManagement
@@ -81,6 +89,39 @@ namespace D_IDE
 		public static void ReassignProject(Project Project, Solution NewSolution)
 		{
 			
+		}
+
+		public static bool Rename(Solution sln, string NewName)
+		{
+			// Prevent moving the project into an other directory
+			if (NewName.Contains('\\'))
+				return false;
+
+			var newSolutionFileName = Path.ChangeExtension(Util.PurifyFileName(NewName), Solution.SolutionExtension);
+			var ret= Util.MoveFile(sln.FileName,newSolutionFileName);
+			if (ret)
+			{
+				sln.Name = NewName;
+				sln.FileName = sln.BaseDirectory + "\\" + newSolutionFileName;
+				MainWindow.UpdateTitle();
+			}
+			return ret;
+		}
+
+		public static bool Rename(Project prj, string NewName)
+		{
+			// Prevent moving the project into an other directory
+			if (NewName.Contains('\\'))
+				return false;
+
+			var newSolutionFileName =Util.PurifyFileName( NewName)+ Path.GetExtension(prj.FileName);
+			var ret = Util.MoveFile(prj.FileName, newSolutionFileName);
+			if (ret)
+			{
+				prj.Name = NewName;
+				prj.FileName = prj.BaseDirectory + "\\" + newSolutionFileName;
+			}
+			return ret;
 		}
 
 		#region Project Dependencies dialog
@@ -172,24 +213,24 @@ namespace D_IDE
 
 
 
-			public static void CopyFile(Project Project, string FileName, Project TargetProject, string NewDirectory)
+			public static bool CopyFile(Project Project, string FileName, Project TargetProject, string NewDirectory)
 			{
-
+				return false;
 			}
 
-			public static void CopyDirectory(Project Project, string RelativeDir, Project TargetProject, string NewDir)
+			public static bool CopyDirectory(Project Project, string RelativeDir, Project TargetProject, string NewDir)
 			{
-
+				return false;
 			}
 
-			public static void MoveFile(Project Project, string FileName, Project TargetProject, string NewDirectory)
+			public static bool MoveFile(Project Project, string FileName, Project TargetProject, string NewDirectory)
 			{
-
+				return false;
 			}
 
-			public static void MoveDirectory(Project Project, string RelativeDir, Project TargetProject, string NewDir)
+			public static bool MoveDirectory(Project Project, string RelativeDir, Project TargetProject, string NewDir)
 			{
-
+				return false;
 			}
 
 			public static void ExcludeDirectoryFromProject(Project prj, string RelativePath)
@@ -205,9 +246,19 @@ namespace D_IDE
 
 
 
-			public static void ExludeFileFromProject(Project Project, string file)
+			public static bool ExludeFileFromProject(Project Project, string file)
 			{
-
+				var absFile = Project.ToAbsoluteFileName(file);
+				foreach (var ed in Editors)
+					if (ed.AbsoluteFilePath == absFile)
+						if (!ed.Close())
+							return false;
+				if (Project.Remove(file))
+				{
+					Project.Save();
+					return true;
+				}
+				return false;
 			}
 
 			public static void RemoveDirectoryFromProject(Project Project, string RelativePath)
@@ -215,12 +266,34 @@ namespace D_IDE
 
 			}
 
-			public static void RemoveFileFromProject(Project Project, string file)
+			public static bool RemoveFileFromProject(Project Project, string file)
 			{
-
+				var r = ExludeFileFromProject(Project, file);
+				try{
+					if (r) File.Delete(file);
+				}catch {}
+				return r;
 			}
 
 			public static bool RenameFile(Project Project, string file, string NewFileName)
+			{
+				var absPath=Project.ToAbsoluteFileName(file);
+				var newFilePath = Util.PurifyFileName( NewFileName);
+				var ret = Util.MoveFile(absPath, newFilePath);
+				if (ret)
+				{
+					Project.Remove(file);
+					Project.Add(Path.GetDirectoryName(absPath) + "\\" + newFilePath);
+					Project.Save();
+
+					foreach (var e in Editors)
+						if (e.AbsoluteFilePath == absPath)
+							e.FileName = Path.GetDirectoryName(absPath) + "\\" + newFilePath;
+				}
+				return ret;
+			}
+
+			public static bool RenameDirectory(Project Project, string dir, string NewDirName)
 			{
 				return true;
 			}

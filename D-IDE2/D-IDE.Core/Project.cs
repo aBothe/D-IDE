@@ -71,15 +71,17 @@ namespace D_IDE.Core
 		
 		public string ToAbsoluteFileName(string file)
 		{
-			if (Path.IsPathRooted(file))
-				return file;
-			return BaseDirectory + "\\" + file;
+			var f = file.Trim('\\');
+			if (Path.IsPathRooted(f))
+				return f;
+			return BaseDirectory + "\\" + f;
 		}
 		public string ToRelativeFileName(string file)
 		{
-			if (Path.IsPathRooted(file))
-				return file.Remove(0, BaseDirectory.Length).Trim('\\');
-			return file;
+			var f = file.Trim('\\');
+			if (Path.IsPathRooted(f))
+				return f.Remove(0, BaseDirectory.Length).Trim('\\');
+			return f;
 		}
 
 		public IEnumerator<ProjectModule> GetEnumerator() { return _Files.GetEnumerator(); }
