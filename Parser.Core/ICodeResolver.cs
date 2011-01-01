@@ -7,9 +7,9 @@ namespace Parser.Core
 	public interface ICodeResolver
 	{
 		ITypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly, out object OptionalInitToken);
-		INode[] ResolveTypes(ISourceModule[] Cache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList);
+		INode[] ResolveTypes(IAbstractSyntaxTree[] Cache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList);
 
-		INode[] ResolveImports(ISourceModule[] Cache, ISourceModule CurrentModule);
+		INode[] ResolveImports(IAbstractSyntaxTree[] Cache, IAbstractSyntaxTree CurrentModule);
 
 		void IsInCommentAreaOrString(string Text, int Offset, out bool IsInString, out bool IsInLineComment, out bool IsInBlockComment, out bool IsInNestedBlockComment);
 		bool IsInCommentOrString(string Text,int Offset);

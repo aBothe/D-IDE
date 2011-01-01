@@ -8,10 +8,10 @@ namespace Parser.Core
 	{
 		ITypeDeclaration ParseType(string Code, out object OptionalToken);
 
-		ISourceModule ParseString(string Code, bool OuterStructureOnly);
-		ISourceModule ParseFile(string FileName, bool OuterStructureOnly);
+		IAbstractSyntaxTree ParseString(string Code, bool OuterStructureOnly);
+		IAbstractSyntaxTree ParseFile(string FileName, bool OuterStructureOnly);
 
-		void UpdateModule(ISourceModule Module);
-		void UpdateModuleFromText(string Code,ISourceModule Module);
+		void UpdateModule(IAbstractSyntaxTree Module);
+		void UpdateModuleFromText(string Code,IAbstractSyntaxTree Module);
 	}
 }

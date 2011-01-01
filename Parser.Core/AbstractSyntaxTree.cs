@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Parser.Core
 {
-	public abstract class AbstractSourceModule:AbstractBlockNode, ISourceModule
+	public abstract class AbstractSyntaxTree:AbstractBlockNode, IAbstractSyntaxTree
 	{
 		string _FileName;
 		Dictionary<ITypeDeclaration, bool> _Imports = new Dictionary<ITypeDeclaration, bool>();

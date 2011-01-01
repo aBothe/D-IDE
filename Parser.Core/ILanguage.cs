@@ -11,9 +11,9 @@ namespace Parser.Core
 		IParser CreateParser();
 		ICodeResolver CreateCodeResolver();
 
-		void SaveModuleCache(ISourceModule[] Modules, string[] ImportDirectories, string FileName);
-		void SaveModuleCache(ISourceModule[] Modules, string FileName);
-		ISourceModule[] LoadModuleCache(string FileName, out string[] ImportDirectories);
-		ISourceModule[] LoadModuleCache(string FileName);
+		void SaveModuleCache(IAbstractSyntaxTree[] Modules, string[] ImportDirectories, string FileName);
+		void SaveModuleCache(IAbstractSyntaxTree[] Modules, string FileName);
+		IAbstractSyntaxTree[] LoadModuleCache(string FileName, out string[] ImportDirectories);
+		IAbstractSyntaxTree[] LoadModuleCache(string FileName);
 	}
 }

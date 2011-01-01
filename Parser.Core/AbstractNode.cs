@@ -62,8 +62,8 @@ namespace Parser.Core
 			while (curParent != null)
 			{
 				// Also include module path
-				if (curParent is ISourceModule)
-					path = (curParent as ISourceModule).ModuleName + "." + path;
+				if (curParent is IAbstractSyntaxTree)
+					path = (curParent as IAbstractSyntaxTree).ModuleName + "." + path;
 				else
 					path = curParent.Name + "." + path;
 				curParent = curParent.Parent;

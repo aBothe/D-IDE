@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Parser.Core
 {
-	public interface ISourceModule: IBlockNode
+	public interface IAbstractSyntaxTree: IBlockNode
 	{
 		string FileName { get; set; }
 		string ModuleName { get; set; }

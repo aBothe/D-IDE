@@ -52,7 +52,7 @@
     <Compile Include="IParser.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AbstractSourceModule.cs">
+    <Compile Include="AbstractSyntaxTree.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AbstractTypeDeclaration.cs">
