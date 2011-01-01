@@ -20,7 +20,7 @@ namespace D_IDE
 		}
 		public static AbstractEditorDocument CurrentEditor
 		{
-			get	{return DockMgr.ActiveDocument as AbstractEditorDocument;}
+			get { return DockMgr.ActiveDocument as AbstractEditorDocument; }
 		}
 
 		public static IEnumerable<AbstractEditorDocument> Editors
@@ -37,114 +37,114 @@ namespace D_IDE
 
 		public class ProjectManagement
 		{
-		/// <summary>
-		/// Creates a new project.
-		/// Doesn't add it to the current solution.
-		/// Doesn't modify the current solution.
-		/// </summary>
-		public static Project CreateNewProject(AbstractLanguageBinding Binding,FileTemplate ProjectType,string Name,string BaseDir)
-		{
-			var prj = Binding.CreateEmptyProject(ProjectType);
-			prj.Name = Name;
-			prj.FileName =
-				BaseDir.Trim('\\', ' ', '\t') + "\\" +
-				Path.ChangeExtension(Util.PurifyFileName(Name), ProjectType.Extensions[0]);
-
-			// Set the output dir to 'bin' by default
-			// Perhaps we'll change this default value some time later in the global settings
-			prj.OutputDirectory = "bin";
-
-			return prj;
-		}
-
-		public static Solution CreateNewProjectAndSolution(			AbstractLanguageBinding Binding,			FileTemplate ProjectType,			string Name,			string BaseDir,			string SolutionName)
-		{
-			var sln = new Solution();
-			sln.Name = SolutionName;
-			sln.FileName =
-				BaseDir.Trim('\\',' ','\t')+ "\\" +
-				Path.ChangeExtension(Util.PurifyFileName(Name), Solution.SolutionExtension);
-
-			AddNewProjectToSolution(sln, Binding, ProjectType, Name, BaseDir);
-
-			return sln;
-		}
-
-		/// <summary>
-		/// Creates a new project and adds it to the current solution
-		/// </summary>
-		public static Project AddNewProjectToSolution(			Solution sln,			AbstractLanguageBinding Binding,			FileTemplate ProjectType,			string Name,			string BaseDir)
-		{
-			var prj = CreateNewProject(Binding, ProjectType, Name, BaseDir);
-			sln.AddProject(prj);
-
-			return prj;
-		}
-
-		public static Project AddNewProjectToCurrentSolution(AbstractLanguageBinding Binding,			FileTemplate ProjectType,			string Name,			string BaseDir)
-		{
-			return AddNewProjectToSolution(CurrentSolution,Binding,ProjectType,Name,BaseDir);
-		}
-
-		public static void ReassignProject(Project Project, Solution NewSolution)
-		{
-			
-		}
-
-		public static bool Rename(Solution sln, string NewName)
-		{
-			// Prevent moving the project into an other directory
-			if (NewName.Contains('\\'))
-				return false;
-
-			var newSolutionFileName = Path.ChangeExtension(Util.PurifyFileName(NewName), Solution.SolutionExtension);
-			var ret= Util.MoveFile(sln.FileName,newSolutionFileName);
-			if (ret)
+			/// <summary>
+			/// Creates a new project.
+			/// Doesn't add it to the current solution.
+			/// Doesn't modify the current solution.
+			/// </summary>
+			public static Project CreateNewProject(AbstractLanguageBinding Binding, FileTemplate ProjectType, string Name, string BaseDir)
 			{
-				sln.Name = NewName;
-				sln.FileName = sln.BaseDirectory + "\\" + newSolutionFileName;
-				MainWindow.UpdateTitle();
+				var prj = Binding.CreateEmptyProject(ProjectType);
+				prj.Name = Name;
+				prj.FileName =
+					BaseDir.Trim('\\', ' ', '\t') + "\\" +
+					Path.ChangeExtension(Util.PurifyFileName(Name), ProjectType.Extensions[0]);
+
+				// Set the output dir to 'bin' by default
+				// Perhaps we'll change this default value some time later in the global settings
+				prj.OutputDirectory = "bin";
+
+				return prj;
 			}
-			return ret;
-		}
 
-		public static bool Rename(Project prj, string NewName)
-		{
-			// Prevent moving the project into an other directory
-			if (NewName.Contains('\\'))
-				return false;
-
-			var newSolutionFileName =Util.PurifyFileName( NewName)+ Path.GetExtension(prj.FileName);
-			var ret = Util.MoveFile(prj.FileName, newSolutionFileName);
-			if (ret)
+			public static Solution CreateNewProjectAndSolution(AbstractLanguageBinding Binding, FileTemplate ProjectType, string Name, string BaseDir, string SolutionName)
 			{
-				prj.Name = NewName;
-				prj.FileName = prj.BaseDirectory + "\\" + newSolutionFileName;
+				var sln = new Solution();
+				sln.Name = SolutionName;
+				sln.FileName =
+					BaseDir.Trim('\\', ' ', '\t') + "\\" +
+					Path.ChangeExtension(Util.PurifyFileName(Name), Solution.SolutionExtension);
+
+				AddNewProjectToSolution(sln, Binding, ProjectType, Name, BaseDir);
+
+				return sln;
 			}
-			return ret;
-		}
 
-		#region Project Dependencies dialog
-		static void ShowProjectDependenciesDialog(Solution sln,Project Project)
-		{
+			/// <summary>
+			/// Creates a new project and adds it to the current solution
+			/// </summary>
+			public static Project AddNewProjectToSolution(Solution sln, AbstractLanguageBinding Binding, FileTemplate ProjectType, string Name, string BaseDir)
+			{
+				var prj = CreateNewProject(Binding, ProjectType, Name, BaseDir);
+				sln.AddProject(prj);
 
-		}
+				return prj;
+			}
 
-		public static void ShowProjectDependenciesDialog(Project Project)
-		{
-			ShowProjectDependenciesDialog(Project.Solution,Project);
-		}
+			public static Project AddNewProjectToCurrentSolution(AbstractLanguageBinding Binding, FileTemplate ProjectType, string Name, string BaseDir)
+			{
+				return AddNewProjectToSolution(CurrentSolution, Binding, ProjectType, Name, BaseDir);
+			}
 
-		public static void ShowProjectDependenciesDialog(Solution sln)
-		{
-			ShowProjectDependenciesDialog(sln,null);
-		}
+			public static void ReassignProject(Project Project, Solution NewSolution)
+			{
 
-		public static void ShowProjectPropertiesDialog(Project Project)
-		{
+			}
 
-		}
-		#endregion
+			public static bool Rename(Solution sln, string NewName)
+			{
+				// Prevent moving the project into an other directory
+				if (NewName.Contains('\\'))
+					return false;
+
+				var newSolutionFileName = Path.ChangeExtension(Util.PurifyFileName(NewName), Solution.SolutionExtension);
+				var ret = Util.MoveFile(sln.FileName, newSolutionFileName);
+				if (ret)
+				{
+					sln.Name = NewName;
+					sln.FileName = sln.BaseDirectory + "\\" + newSolutionFileName;
+					MainWindow.UpdateTitle();
+				}
+				return ret;
+			}
+
+			public static bool Rename(Project prj, string NewName)
+			{
+				// Prevent moving the project into an other directory
+				if (NewName.Contains('\\'))
+					return false;
+
+				var newSolutionFileName = Util.PurifyFileName(NewName) + Path.GetExtension(prj.FileName);
+				var ret = Util.MoveFile(prj.FileName, newSolutionFileName);
+				if (ret)
+				{
+					prj.Name = NewName;
+					prj.FileName = prj.BaseDirectory + "\\" + newSolutionFileName;
+				}
+				return ret;
+			}
+
+			#region Project Dependencies dialog
+			static void ShowProjectDependenciesDialog(Solution sln, Project Project)
+			{
+
+			}
+
+			public static void ShowProjectDependenciesDialog(Project Project)
+			{
+				ShowProjectDependenciesDialog(Project.Solution, Project);
+			}
+
+			public static void ShowProjectDependenciesDialog(Solution sln)
+			{
+				ShowProjectDependenciesDialog(sln, null);
+			}
+
+			public static void ShowProjectPropertiesDialog(Project Project)
+			{
+
+			}
+			#endregion
 		}
 
 		public class FileManagement
@@ -158,17 +158,19 @@ namespace D_IDE
 				if (sdlg.ShowDialog().Value)
 				{
 					var file = (String.IsNullOrEmpty(RelativeDir) ? "" : (RelativeDir + "\\")) + sdlg.FileName;
-					File.WriteAllText(Project.BaseDirectory+"\\"+file,"");
+					File.WriteAllText(Project.BaseDirectory + "\\" + file, "");
 					Project.Add(file);
 					Project.Save();
 					MainWindow.UpdateGUIElements();
 				}
 			}
 
-			public static void AddNewDirectoryToProject(Project Project, string RelativeDir, string DirName)
+			public static bool AddNewDirectoryToProject(Project Project, string RelativeDir, string DirName)
 			{
 				string absDir = Project.BaseDirectory + "\\" + (String.IsNullOrEmpty(RelativeDir) ? "" : (RelativeDir + "\\")) + DirName;
+				if (Directory.Exists(absDir)) return false;
 				Util.CreateDirectoryRecursively(absDir);
+				return true;
 			}
 
 
@@ -190,10 +192,10 @@ namespace D_IDE
 					 */
 					foreach (var file in dlg.FileNames)
 					{
-						var newFile=absPath+"\\"+Path.GetFileName(file);
+						var newFile = absPath + "\\" + Path.GetFileName(file);
 
 						if (Path.GetDirectoryName(file) != absPath)
-							File.Copy(file,newFile);
+							File.Copy(file, newFile);
 
 						Project.Add(newFile);
 					}
@@ -201,12 +203,12 @@ namespace D_IDE
 				}
 			}
 
-			public static void AddExistingSourceToProject(string FileName ,Project Project,string RelativeDir)
+			public static void AddExistingSourceToProject(string FileName, Project Project, string RelativeDir)
 			{
 
 			}
 
-			public static void AddExistingDirectoryToProject(string DirectoryPath,Project Project, string RelativeDir)
+			public static void AddExistingDirectoryToProject(string DirectoryPath, Project Project, string RelativeDir)
 			{
 
 			}
@@ -258,6 +260,7 @@ namespace D_IDE
 					Project.Save();
 					return true;
 				}
+				MainWindow.UpdateProjectExplorer();
 				return false;
 			}
 
@@ -269,16 +272,18 @@ namespace D_IDE
 			public static bool RemoveFileFromProject(Project Project, string file)
 			{
 				var r = ExludeFileFromProject(Project, file);
-				try{
+				try
+				{
 					if (r) File.Delete(file);
-				}catch {}
+				}
+				catch { }
 				return r;
 			}
 
 			public static bool RenameFile(Project Project, string file, string NewFileName)
 			{
-				var absPath=Project.ToAbsoluteFileName(file);
-				var newFilePath = Util.PurifyFileName( NewFileName);
+				var absPath = Project.ToAbsoluteFileName(file);
+				var newFilePath = Util.PurifyFileName(NewFileName);
 				var ret = Util.MoveFile(absPath, newFilePath);
 				if (ret)
 				{
@@ -301,7 +306,7 @@ namespace D_IDE
 
 		public class BuildManagement
 		{
-			public static bool Build(Solution sln,bool Incrementally)
+			public static bool Build(Solution sln, bool Incrementally)
 			{
 				return false;
 			}
@@ -342,7 +347,7 @@ namespace D_IDE
 				return OpenFile(null, FileName);
 			}
 
-			public static AbstractEditorDocument OpenFile(Project OwnerProject,string FileName)
+			public static AbstractEditorDocument OpenFile(Project OwnerProject, string FileName)
 			{
 				/*
 				 * 1. Solution check
@@ -357,20 +362,20 @@ namespace D_IDE
 					 * - Load solution and load all of its projects
 					 * - Open last opened files
 					 */
-					CurrentSolution =new Solution(FileName);
+					CurrentSolution = new Solution(FileName);
 
 					foreach (var f in CurrentSolution.ProjectFiles)
-						CurrentSolution.ProjectCache.Add(Project.LoadProjectFromFile(CurrentSolution,f));
+						CurrentSolution.ProjectCache.Add(Project.LoadProjectFromFile(CurrentSolution, f));
 
 					foreach (var prj in CurrentSolution)
 						foreach (var fn in prj.LastOpenedFiles)
-							OpenFile(prj,fn);
+							OpenFile(prj, fn);
 					MainWindow.UpdateGUIElements();
 					return null;
 				}
 
-				var langs=LanguageLoader.Bindings.Where(l => l.CanHandleProject(FileName)).ToArray();
-				if (langs.Length>0)
+				var langs = LanguageLoader.Bindings.Where(l => l.CanHandleProject(FileName)).ToArray();
+				if (langs.Length > 0)
 				{
 					/* 
 					 * - Load project
@@ -387,23 +392,23 @@ namespace D_IDE
 
 					foreach (var prj in CurrentSolution)
 						foreach (var fn in prj.LastOpenedFiles)
-							OpenFile(prj,fn);
+							OpenFile(prj, fn);
 					MainWindow.UpdateGUIElements();
 					return null;
 				}
 
 				// Try to resolve owner project
 				var _prj = OwnerProject;
-				if(_prj==null && CurrentSolution!=null)
-					foreach(var p in CurrentSolution.ProjectCache)
-						if(p.ContainsFile(FileName))
+				if (_prj == null && CurrentSolution != null)
+					foreach (var p in CurrentSolution.ProjectCache)
+						if (p.ContainsFile(FileName))
 						{
-							_prj=p;
+							_prj = p;
 							break;
 						}
 
 				// Check if file already open
-				var absPath = _prj!=null?_prj.ToAbsoluteFileName(FileName):FileName;
+				var absPath = _prj != null ? _prj.ToAbsoluteFileName(FileName) : FileName;
 				foreach (var doc in DockMgr.Documents)
 					if (doc is AbstractEditorDocument && (doc as AbstractEditorDocument).AbsoluteFilePath == absPath)
 					{

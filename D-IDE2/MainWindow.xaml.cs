@@ -45,8 +45,8 @@ namespace D_IDE
 
 			IDEManager.MainWindow = this;
 
-            // Load global settings
-            GlobalProperties.Init();
+			// Load global settings
+			GlobalProperties.Init();
 
 			// Load language bindings
 			LanguageLoader.Bindings.Add(new GenericFileBinding());
@@ -55,7 +55,7 @@ namespace D_IDE
 			UpdateLastFilesMenus();
 
 			// Init panels and their layouts
-			Panel_ProjectExplorer.Show(DockMgr,AvalonDock.AnchorStyle.Left);
+			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
 		}
 
 		#region Ribbon buttons
@@ -75,10 +75,11 @@ namespace D_IDE
 
 		private void NewProject(object sender, RoutedEventArgs e)
 		{
-			var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.CreateNew | (IDEManager.CurrentSolution!=null?NewProjectDlg.DialogMode.Add:0));
+			var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.CreateNew | (IDEManager.CurrentSolution != null ? NewProjectDlg.DialogMode.Add : 0));
 
+			Util.CreateDirectoryRecursively(GlobalProperties.Current.DefaultProjectDirectory);
 			pdlg.ProjectDir = GlobalProperties.Current.DefaultProjectDirectory;
-			
+
 			if (pdlg.ShowDialog().Value)
 			{
 				var pdir = pdlg.ProjectDir;
@@ -131,7 +132,7 @@ namespace D_IDE
 
 		private void SaveAs(object sender, RoutedEventArgs e)
 		{
-			var ce=IDEManager.CurrentEditor;
+			var ce = IDEManager.CurrentEditor;
 			if (ce == null)
 				return;
 
@@ -139,7 +140,7 @@ namespace D_IDE
 
 			// Add filter
 			dlg.Filter = "All files (*.*)|*.*";
-			dlg.FileName=ce.AbsoluteFilePath;
+			dlg.FileName = ce.AbsoluteFilePath;
 
 			if (dlg.ShowDialog().Value)
 				IDEManager.EditingManagement.SaveCurrentFileAs(dlg.FileName);
@@ -164,7 +165,7 @@ namespace D_IDE
 			var mi = new RibbonApplicationMenuItem();
 			mi.Header = "File";
 			mi.ToolTipTitle = "Open File (Ctrl+O)";
-			mi.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri("Resources/file.png",UriKind.Relative));
+			mi.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri("Resources/file.png", UriKind.Relative));
 			mi.Click += Open;
 			Button_Open.Items.Add(mi);
 
@@ -176,7 +177,7 @@ namespace D_IDE
 			{
 				mi = new RibbonApplicationMenuItem();
 				mi.Header = i;
-				mi.Click+=delegate(Object o,RoutedEventArgs _e)
+				mi.Click += delegate(Object o, RoutedEventArgs _e)
 				{
 					IDEManager.EditingManagement.OpenFile(i);
 				};
@@ -184,7 +185,7 @@ namespace D_IDE
 			}
 
 			// Then add recent projects
-			if(GlobalProperties.Current.LastFiles.Count>0 && GlobalProperties.Current.LastProjects.Count>0)
+			if (GlobalProperties.Current.LastFiles.Count > 0 && GlobalProperties.Current.LastProjects.Count > 0)
 				Button_Open.Items.Add(new RibbonSeparator());
 
 			foreach (var i in GlobalProperties.Current.LastProjects)
@@ -208,25 +209,25 @@ namespace D_IDE
 			bool ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
 			if (ctrl)
-			switch (e.Key)
-			{
-				case Key.N:
-					NewSource(sender, null);
-					return;
-				case Key.O:
-					Open(sender, null);
-					return;
-				case Key.S:
-					Save(sender, null);
-					return;
-			}
+				switch (e.Key)
+				{
+					case Key.N:
+						NewSource(sender, null);
+						return;
+					case Key.O:
+						Open(sender, null);
+						return;
+					case Key.S:
+						Save(sender, null);
+						return;
+				}
 
 			e.Handled = false;
 		}
 
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
-
+			IDEManager.EditingManagement.SaveAllFiles();
 		}
 	}
 }
