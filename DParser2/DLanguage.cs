@@ -20,7 +20,7 @@ namespace D_Parser
 			return new DCodeResolver();
 		}
 
-		public void SaveModuleCache(ISourceModule[] Modules, string[] ImportDirectories, string FileName)
+		public void SaveModuleCache(IAbstractSyntaxTree[] Modules, string[] ImportDirectories, string FileName)
 		{
 			// Take a memory stream due to its speed
 			// -- A file stream would take to much time
@@ -51,12 +51,12 @@ namespace D_Parser
 			ms.Close();
 		}
 
-		public void SaveModuleCache(ISourceModule[] Modules, string FileName)
+		public void SaveModuleCache(IAbstractSyntaxTree[] Modules, string FileName)
 		{
 			SaveModuleCache(Modules, null, FileName);
 		}
 
-		public ISourceModule[] LoadModuleCache(string FileName, out string[] ImportDirectories)
+		public IAbstractSyntaxTree[] LoadModuleCache(string FileName, out string[] ImportDirectories)
 		{
 			var bns = new BinaryNodeStorage(FileName, false);
 			var bs = bns.BinReader;
@@ -64,7 +64,7 @@ namespace D_Parser
 			// Module count
 			int ModuleCount = bs.ReadInt32();
 
-			var ret = new List<ISourceModule>();
+			var ret = new List<IAbstractSyntaxTree>();
 			var imps = new List<string>();
 
 			// Parsed directories
@@ -100,7 +100,7 @@ namespace D_Parser
 			return ret.ToArray();
 		}
 
-		public ISourceModule[] LoadModuleCache(string FileName)
+		public IAbstractSyntaxTree[] LoadModuleCache(string FileName)
 		{
 			string[] imps = null;
 			return LoadModuleCache(FileName, out imps);

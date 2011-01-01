@@ -183,9 +183,9 @@ namespace D_Parser
         /// <param name="cc"></param>
         /// <param name="ActualModule"></param>
         /// <returns></returns>
-        public static List<ISourceModule> ResolveImports(List<ISourceModule> CodeCache, ISourceModule ActualModule)
+        public static List<IAbstractSyntaxTree> ResolveImports(List<IAbstractSyntaxTree> CodeCache, IAbstractSyntaxTree ActualModule)
         {
-            var ret = new List<ISourceModule>();
+            var ret = new List<IAbstractSyntaxTree>();
             if (CodeCache == null || ActualModule == null) return ret;
 
             // First add all local imports
@@ -235,7 +235,7 @@ namespace D_Parser
             return ret;
         }
 
-        public static void ResolveImports(ref List<ISourceModule> ImportModules, List<ISourceModule> CodeCache, ISourceModule ActualModule)
+        public static void ResolveImports(ref List<IAbstractSyntaxTree> ImportModules, List<IAbstractSyntaxTree> CodeCache, IAbstractSyntaxTree ActualModule)
         {
             var localImps = new List<string>();
             foreach (var kv in ActualModule.Imports)
@@ -289,7 +289,7 @@ namespace D_Parser
             return false;
         }
 
-        public static ISourceModule SearchModuleInCache(List<ISourceModule> HayStack,string ModuleName)
+        public static IAbstractSyntaxTree SearchModuleInCache(List<IAbstractSyntaxTree> HayStack,string ModuleName)
         {
             foreach (var m in HayStack)
             {
@@ -305,7 +305,7 @@ namespace D_Parser
         /// <param name="Module"></param>
         /// <param name="IdentifierList"></param>
         /// <returns>When a type was found, the declaration entry will be returned. Otherwise, it'll return null.</returns>
-        public static INode[] ResolveTypeDeclarations_ModuleOnly(List<ISourceModule> ImportCache,IBlockNode BlockNode, ITypeDeclaration IdentifierList, NodeFilter Filter)
+        public static INode[] ResolveTypeDeclarations_ModuleOnly(List<IAbstractSyntaxTree> ImportCache,IBlockNode BlockNode, ITypeDeclaration IdentifierList, NodeFilter Filter)
         {
             var ret = new List<INode>();
 
@@ -447,7 +447,7 @@ namespace D_Parser
         /// <param name="CurrentlyScopedBlock"></param>
         /// <param name="IdentifierList"></param>
         /// <returns></returns>
-        public static INode[] ResolveTypeDeclarations(List<ISourceModule> ImportCache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
+        public static INode[] ResolveTypeDeclarations(List<IAbstractSyntaxTree> ImportCache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
         {
             var ret = new List<INode>();
 
@@ -477,7 +477,7 @@ namespace D_Parser
         /// <param name="ModuleCache"></param>
         /// <param name="ActualClass"></param>
         /// <returns></returns>
-        public static DClassLike ResolveBaseClass(List<ISourceModule> ModuleCache,DClassLike ActualClass)
+        public static DClassLike ResolveBaseClass(List<IAbstractSyntaxTree> ModuleCache,DClassLike ActualClass)
         {
             // Implicitly set the object class to the inherited class if no explicit one was done
             if (ActualClass.BaseClasses.Count < 1)
@@ -672,12 +672,12 @@ namespace D_Parser
 			return t;
 		}
 
-		public INode[] ResolveTypes(ISourceModule[] Cache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
+		public INode[] ResolveTypes(IAbstractSyntaxTree[] Cache, IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList)
 		{
 			return ResolveTypes(Cache, CurrentlyScopedBlock, IdentifierList);
 		}
 
-		public INode[] ResolveImports(ISourceModule[] Cache, ISourceModule CurrentModule)
+		public INode[] ResolveImports(IAbstractSyntaxTree[] Cache, IAbstractSyntaxTree CurrentModule)
 		{
 			return ResolveImports(Cache, CurrentModule);
 		}

@@ -8,7 +8,7 @@ namespace D_Parser
     /// <summary>
     /// Encapsules an entire document and represents the root node
     /// </summary>
-    public class DModule : DBlockStatement, ISourceModule
+    public class DModule : DBlockStatement, IAbstractSyntaxTree
     {
 		public bool ContainsImport(ITypeDeclaration type)
 		{

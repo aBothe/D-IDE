@@ -17,22 +17,22 @@ namespace D_Parser
 			return t;
 		}
 
-		public ISourceModule ParseString(string Code, bool OuterStructureOnly)
+		public IAbstractSyntaxTree ParseString(string Code, bool OuterStructureOnly)
 		{
 			return DParser.ParseString(Code, OuterStructureOnly);
 		}
 
-		public ISourceModule ParseFile(string FileName, bool OuterStructureOnly)
+		public IAbstractSyntaxTree ParseFile(string FileName, bool OuterStructureOnly)
 		{
 			return DParser.ParseFile(FileName, OuterStructureOnly);
 		}
 
-		public void UpdateModule(ISourceModule Module)
+		public void UpdateModule(IAbstractSyntaxTree Module)
 		{
 			DParser.UpdateModule(Module);
 		}
 
-		public void UpdateModuleFromText(string Code, ISourceModule Module)
+		public void UpdateModuleFromText(string Code, IAbstractSyntaxTree Module)
 		{
 			DParser.UpdateModuleFromText(Module, Code);
 		}
@@ -78,23 +78,23 @@ namespace D_Parser
             return bt;
         }
 
-        public static ISourceModule ParseString(string ModuleCode)
+        public static IAbstractSyntaxTree ParseString(string ModuleCode)
         {
             return ParseString(ModuleCode,false);
         }
 
-        public static ISourceModule ParseString(string ModuleCode,bool SkipFunctionBodies)
+        public static IAbstractSyntaxTree ParseString(string ModuleCode,bool SkipFunctionBodies)
         {
             var p = Create(new StringReader(ModuleCode));
             return p.Parse(SkipFunctionBodies);
         }
 
-        public static ISourceModule ParseFile(string File)
+        public static IAbstractSyntaxTree ParseFile(string File)
         {
             return ParseFile(File, false);
         }
 
-        public static ISourceModule ParseFile(string File, bool SkipFunctionBodies)
+        public static IAbstractSyntaxTree ParseFile(string File, bool SkipFunctionBodies)
         {
             var s=new FileStream(File,FileMode.Open,FileAccess.Read,FileShare.ReadWrite);
             var p=Create(new StreamReader(s));
@@ -108,13 +108,13 @@ namespace D_Parser
         /// Parses the module again
         /// </summary>
         /// <param name="Module"></param>
-        public static void UpdateModule(ISourceModule Module)
+        public static void UpdateModule(IAbstractSyntaxTree Module)
         {
             var m = DParser.ParseFile(Module.FileName);
             Module.Assign(m);
         }
 
-        public static void UpdateModuleFromText(ISourceModule Module, string Code)
+        public static void UpdateModuleFromText(IAbstractSyntaxTree Module, string Code)
         {
             var m = DParser.ParseString(Code);
             Module.Assign(m);
@@ -128,7 +128,7 @@ namespace D_Parser
         /// <summary>
         /// Encapsules whole document structure
         /// </summary>
-        ISourceModule doc;
+        IAbstractSyntaxTree doc;
 
         /// <summary>
         /// Modifiers for entire block
@@ -152,7 +152,7 @@ namespace D_Parser
             }
         }
 
-        public ISourceModule Document
+        public IAbstractSyntaxTree Document
         {
             get { return doc; }
         }
@@ -355,7 +355,7 @@ namespace D_Parser
         DToken Step() { lexer.NextToken(); Peek(1); return t; }
 
         [DebuggerStepThrough()]
-        public ISourceModule Parse()
+        public IAbstractSyntaxTree Parse()
         {
             return Parse(false);
         }
@@ -366,7 +366,7 @@ namespace D_Parser
         /// <param name="imports">List of imports in the module</param>
         /// <param name="ParseStructureOnly">If true, all statements and non-declarations are ignored - useful for analysing libraries</param>
         /// <returns>Completely parsed module structure</returns>
-        public ISourceModule Parse(bool ParseStructureOnly)
+        public IAbstractSyntaxTree Parse(bool ParseStructureOnly)
         {
             this.ParseStructureOnly = ParseStructureOnly;
             doc=Root();
@@ -374,7 +374,7 @@ namespace D_Parser
         }
         
         #region Error handlers
-        public delegate void ErrorHandler(ISourceModule tempModule, int line, int col, int kindOf, string message);
+        public delegate void ErrorHandler(IAbstractSyntaxTree tempModule, int line, int col, int kindOf, string message);
         static public event ErrorHandler OnError, OnSemanticError;
 
         void SynErr(int n, string msg)

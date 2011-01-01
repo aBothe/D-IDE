@@ -18,7 +18,7 @@ namespace D_Parser
         /// <summary>
         /// Module entry point
         /// </summary>
-        ISourceModule Root()
+        IAbstractSyntaxTree Root()
         {
             Step();
 
