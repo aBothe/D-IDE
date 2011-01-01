@@ -62,12 +62,32 @@ namespace D_IDE.Controls.Panels
 			MainTree.DragOver += new System.Windows.Forms.DragEventHandler(MainTree_DragOver);
 			MainTree.DragDrop += new System.Windows.Forms.DragEventHandler(MainTree_DragDrop);
 
+			MainTree.BeforeExpand += new TreeViewCancelEventHandler(MainTree_BeforeExpand);
+
 			MainTree.BorderStyle = BorderStyle.None;
 			MainTree.HideSelection = false;
 
+			MainTree.KeyDown += new System.Windows.Forms.KeyEventHandler(MainTree_KeyDown);
 			MainTree.LabelEdit = true;
 			MainTree.AfterLabelEdit += new NodeLabelEditEventHandler(MainTree_AfterLabelEdit);
 			#endregion
+		}
+
+		void MainTree_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
+		{
+			if (e.KeyCode == Keys.F2)
+			{
+				if (MainTree.SelectedNode != null)
+					MainTree.SelectedNode.BeginEdit();
+			}
+		}
+
+		void MainTree_BeforeExpand(object sender, TreeViewCancelEventArgs e)
+		{
+			if (e.Node is SolutionNode)
+			{
+
+			}
 		}
 
 		/// <summary>
@@ -106,7 +126,7 @@ namespace D_IDE.Controls.Panels
 			MainTree.SelectedNode = n;
 
 			if (n is FileNode)
-				IDEManager.EditingManagement.OpenFile((n as FileNode).ParentProjectNode.Project, (n as FileNode).FileName);
+				IDEManager.EditingManagement.OpenFile((n as FileNode).FileName);
 		}
 
 		#region Drag'n'Drop
@@ -283,7 +303,7 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Open", CommonIcons.open16, delegate(Object o, EventArgs _e)
 					{
-						IDEManager.EditingManagement.OpenFile(prj, fn.FileName);
+						IDEManager.EditingManagement.OpenFile(fn.AbsolutePath);
 					});
 
 					AddCutCopyPasteButtons(cm, n, true, true, false);
@@ -383,17 +403,25 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add(new ToolStripSeparator());
 
-					cm.Items.Add("Add Project", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
+					var subMenu = new ToolStripMenuItem("Add", CommonIcons.addfile16);
+					cm.Items.Add(subMenu);
+
+					subMenu.DropDownItems.Add("New Project", CommonIcons.prj_16, delegate(Object o, EventArgs _e)
 					{
 						var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.Add) { ProjectDir = sln.BaseDirectory };
 
 						if (pdlg.ShowDialog().Value)
 							IDEManager.ProjectManagement.AddNewProjectToSolution(
-								sln,
-								pdlg.SelectedLanguageBinding,
-								pdlg.SelectedProjectType,
-								pdlg.ProjectName,
-								pdlg.ProjectDir);
+							sln,
+							pdlg.SelectedLanguageBinding,
+							pdlg.SelectedProjectType,
+							pdlg.ProjectName,
+							pdlg.ProjectDir);
+					});
+
+					subMenu.DropDownItems.Add("Existing Project", null, delegate(Object o, EventArgs _e)
+					{
+						IDEManager.ProjectManagement.AddExistingProjectToSolution(sln);
 					});
 
 					cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
@@ -571,7 +599,7 @@ namespace D_IDE.Controls.Panels
 		{
 			public Solution Solution;
 
-			public SolutionNode() { }
+			public SolutionNode() { SelectedImageKey = ImageKey = "solution"; }
 			public SolutionNode(Solution solution)
 			{
 				this.Solution = solution;
@@ -587,23 +615,34 @@ namespace D_IDE.Controls.Panels
 				Nodes.Clear();
 
 				foreach (var p in Solution)
-					Nodes.Add(new ProjectNode(p));
+				{
+					var pn = new ProjectNode(p.FileName,p.Name);
+					Nodes.Add(pn);
+					// Add project node first before refreshing its children 
+					// - the 'Project'-property requires an existing parent node, which is in our case 'this' node
+					pn.UpdateChildren();
+				}
 				Expand();
 			}
 		}
 
 		public class ProjectNode : TreeNode
 		{
-			public Project Project;
+			public Project Project
+			{
+				get
+				{
+					if(Parent is SolutionNode)
+						return (Parent as SolutionNode).Solution.ByName(Text);
+					return null;
+				}
+			}
 
 			public ProjectNode() { }
-			public ProjectNode(Project prj)
-				: base(prj.Name)
+			public ProjectNode(string prjfile,string Name)
+				: base(Name)
 			{
-				Project = prj;
-				SelectedImageKey = ImageKey = GetFileIconKey(prj.FileName);
-
-				UpdateChildren();
+				SelectedImageKey = ImageKey = GetFileIconKey(prjfile);
 			}
 
 			public void UpdateChildren()
@@ -703,12 +742,12 @@ namespace D_IDE.Controls.Panels
 				while (i < pathparts.Length && CurNode != null)
 				{
 					// A bit buggy but should work in many situations
-					if (pathparts[i] == "..")
+					/*if (pathparts[i] == "..")
 					{
 						CurNode = CurNode.Parent;
 						i++;
 						continue;
-					}
+					}*/
 
 					// scan for existing subdirectories
 					bool matchFound = false;
@@ -772,6 +811,14 @@ namespace D_IDE.Controls.Panels
 					}
 
 					return ret.Trim(' ', '\\');
+				}
+			}
+
+			public string AbsolutePath
+			{
+				get
+				{
+					return ParentProjectNode.Project.ToAbsoluteFileName(RelativeFilePath);
 				}
 			}
 

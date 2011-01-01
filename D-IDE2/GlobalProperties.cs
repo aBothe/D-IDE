@@ -6,6 +6,7 @@ using System.Windows;
 using System.IO;
 using Parser.Core;
 using System.Xml;
+using D_IDE.Core;
 
 namespace D_IDE
 {
@@ -42,7 +43,13 @@ namespace D_IDE
                 catch { }
             }
         }
-	
+
+		/// <summary>
+		/// A list of all globally loaded projects.
+		/// Useful when
+		/// </summary>
+		public static List<Project> ProjectCache = new List<Project>();
+
         public const string MainSettingsFile = "D-IDE.settings.xml";
         public const string LayoutFile = "D-IDE.layout.xml";
 

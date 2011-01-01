@@ -59,6 +59,14 @@ namespace D_IDE.Core
 			return file;
 		}
 
+		public Project ByName(string Name)
+		{
+			foreach (var p in ProjectCache)
+				if (p.Name == Name)
+					return p;
+			return null;
+		}
+
 		#region Project management
 		/// <summary>
 		/// Adds a project to the solution.
@@ -66,31 +74,34 @@ namespace D_IDE.Core
 		/// Adds it to the project cache.
 		/// </summary>
 		/// <param name="Project"></param>
-		public void AddProject(Project Project)
+		public bool AddProject(Project Project)
 		{
 			if (ProjectCache.Contains(Project))
-				return;
+				return false;
 
-			var prjPath = ToRelativeFileName(Project.FileName);
-			if (!_ProjectFiles.Contains(prjPath))
-				_ProjectFiles.Add(prjPath);
+			if (!AddProject(Project.FileName))
+				return false;
 
 			ProjectCache.Add(Project);
 			Project.Solution = this;
+			return true;
 		}
 
-		public void AddProject(string file)
+		public bool AddProject(string file)
 		{
-			if (_ProjectFiles.Contains(file))
-				return;
+			var relPath = ToRelativeFileName(file);
+			if (_ProjectFiles.Contains(relPath))
+				return false;
 
-			_ProjectFiles.Add(file);
+			_ProjectFiles.Add(relPath);
+			return true;
 		}
 
 		public bool IsProjectLoaded(string file)
 		{
+			var absPath = ToAbsoluteFileName(file);
 			foreach (var p in ProjectCache)
-				if (p.FileName == file)
+				if (p.FileName == absPath)
 					return true;
 			return false;
 		}
@@ -103,7 +114,7 @@ namespace D_IDE.Core
 		public void ExcludeProject(string file)
 		{
 			UnloadProject(this[file]);
-			_ProjectFiles.Remove(file);
+			_ProjectFiles.Remove(ToRelativeFileName(file));
 		}
 		#endregion
 
@@ -169,14 +180,26 @@ namespace D_IDE.Core
 			set { FileName = value + Path.GetFileName(FileName); }
 		}
 
+		public bool ContainsProject(string file)
+		{
+			var relPath = ToRelativeFileName(file);
+			return _ProjectFiles.Count(s => s == relPath) > 0;
+		}
+
+		public bool ContainsProject(Project prj)
+		{
+			return ContainsProject(prj.FileName);
+		}
+
 		readonly List<string> _ProjectFiles = new List<string>();
 		string _StartPrjFile;
 
 		public Project this[string file]
 		{
 			get {
+				var relPath = ToRelativeFileName(file);
 				foreach (var p in ProjectCache)
-					if (p.FileName == file)
+					if (p.FileName == relPath)
 						return p;
 				return null;
 			}

@@ -26,19 +26,25 @@ namespace D_IDE.Core
 		/// </summary>
 		public static Project LoadProjectFromFile(Solution sln,string FileName)
 		{
-			string ls = FileName.ToLower();
+			if (File.Exists(sln.ToAbsoluteFileName(FileName)))
+			{
+				string ls = FileName.ToLower();
 
-			foreach (var lang in from l in LanguageLoader.Bindings where l.ProjectsSupported select l)
-				foreach (var pt in lang.ProjectTemplates)
-					if(pt.Extensions!=null)
-						foreach (var ext in pt.Extensions)
-							if (ls.EndsWith(ext))
-								return lang.OpenProject(sln,FileName);
+				foreach (var lang in from l in LanguageLoader.Bindings where l.ProjectsSupported select l)
+					foreach (var pt in lang.ProjectTemplates)
+						if (pt.Extensions != null)
+							foreach (var ext in pt.Extensions)
+								if (ls.EndsWith(ext))
+									return lang.OpenProject(sln, FileName);
+			}
 			return null;
 		}
 
 		#region Properties
 		public string Name;
+		/// <summary>
+		/// Absolute file path
+		/// </summary>
 		public string FileName;
 		public string BaseDirectory {
 			get { return Path.GetDirectoryName(FileName); }

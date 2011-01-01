@@ -23,11 +23,6 @@ namespace D_IDE
 			Init();
 		}
 
-		public EditorDocument(Project prj, string file):base(prj,file)
-		{
-			Init();
-		}
-
 		public readonly TextEditor Editor = new TextEditor();
 		
 		#endregion

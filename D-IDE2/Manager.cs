@@ -81,9 +81,78 @@ namespace D_IDE
 				return prj;
 			}
 
-			public static Project AddNewProjectToCurrentSolution(AbstractLanguageBinding Binding, FileTemplate ProjectType, string Name, string BaseDir)
+			/// <summary>
+			/// Adds a new project to the current solution
+			/// </summary>
+			public static Project AddNewProjectToSolution(AbstractLanguageBinding Binding, FileTemplate ProjectType, string Name, string BaseDir)
 			{
 				return AddNewProjectToSolution(CurrentSolution, Binding, ProjectType, Name, BaseDir);
+			}
+
+			public static bool AddExistingProjectToSolution(Solution sln, string Projectfile)
+			{
+				/*
+				 * a) Check if project already existing
+				 * b) Try to load project; if succeeded:
+				 * c) Add to solution; if succeeded:
+				 * d) Save solution
+				 */
+
+				// a)
+				if (sln.ContainsProject(Projectfile)) return false;
+				// b)
+				var prj = Project.LoadProjectFromFile(sln, Projectfile);
+				if (prj == null) return false;// Perhaps it's a project format that's simply not supported
+				// c)
+				if (!sln.AddProject(prj)) return false;
+				// d)
+				sln.Save();
+				return true;
+			}
+
+			/// <summary>
+			/// Opens a dialog which asks the user to select one or more project files
+			/// </summary>
+			/// <returns></returns>
+			public static bool AddExistingProjectToSolution(Solution sln)
+			{
+				var of = new OpenFileDialog();
+				of.InitialDirectory = sln.BaseDirectory;
+
+				// Build filter string
+				string tfilter = "";
+				var all_exts = new List<string>();
+				foreach (var lang in from l in LanguageLoader.Bindings where l.ProjectsSupported select l)
+				{
+					tfilter+="|"+lang.LanguageName+" projects|";
+					var exts=new List<string>();
+
+					foreach (var t in lang.ProjectTemplates)
+						if (t.Extensions != null)
+							foreach (var ext in t.Extensions)
+							{
+								if (!exts.Contains("*"+ext))
+									exts.Add("*" + ext);
+								if (!all_exts.Contains("*" + ext))
+									all_exts.Add("*" + ext);
+							}
+
+					tfilter += string.Join(";",exts);
+				}
+				tfilter = "All supported projects|" + string.Join(";", all_exts) + tfilter+ "|All files|*.*";
+				of.Filter = tfilter;
+
+				of.Multiselect = true;
+
+				var r=true;
+				if (of.ShowDialog().Value)
+				{
+					foreach (var file in of.FileNames)
+						if (!AddExistingProjectToSolution(sln, file))
+							r = false;
+				}
+
+				return r;
 			}
 
 			public static void ReassignProject(Project Project, Solution NewSolution)
@@ -97,6 +166,12 @@ namespace D_IDE
 				if (NewName.Contains('\\'))
 					return false;
 
+				/*
+				 * - Try to rename the solution file
+				 * - Rename the solution
+				 * - Save it
+				 */
+
 				var newSolutionFileName = Path.ChangeExtension(Util.PurifyFileName(NewName), Solution.SolutionExtension);
 				var ret = Util.MoveFile(sln.FileName, newSolutionFileName);
 				if (ret)
@@ -104,6 +179,7 @@ namespace D_IDE
 					sln.Name = NewName;
 					sln.FileName = sln.BaseDirectory + "\\" + newSolutionFileName;
 					MainWindow.UpdateTitle();
+					sln.Save();
 				}
 				return ret;
 			}
@@ -114,12 +190,25 @@ namespace D_IDE
 				if (NewName.Contains('\\'))
 					return false;
 
+				/*
+				 * - Try to rename the project file
+				 * - If successful, remove old project file from solution
+				 * - Rename the project and it's filename
+				 * - Add the 'new' project to the solution
+				 * - Save everything
+				 */
+
 				var newSolutionFileName = Util.PurifyFileName(NewName) + Path.GetExtension(prj.FileName);
 				var ret = Util.MoveFile(prj.FileName, newSolutionFileName);
 				if (ret)
 				{
+					prj.Solution.ExcludeProject(prj.FileName);					
 					prj.Name = NewName;
 					prj.FileName = prj.BaseDirectory + "\\" + newSolutionFileName;
+					prj.Solution.AddProject(prj);
+
+					prj.Solution.Save();
+					prj.Save();
 				}
 				return ret;
 			}
@@ -344,11 +433,6 @@ namespace D_IDE
 			/// <returns>Editor instance if a source file was opened</returns>
 			public static AbstractEditorDocument OpenFile(string FileName)
 			{
-				return OpenFile(null, FileName);
-			}
-
-			public static AbstractEditorDocument OpenFile(Project OwnerProject, string FileName)
-			{
 				/*
 				 * 1. Solution check
 				 * 2. Project file check
@@ -359,17 +443,20 @@ namespace D_IDE
 				if (ext == Solution.SolutionExtension)
 				{
 					/*
-					 * - Load solution and load all of its projects
+					 * - Load solution
+					 * - Load all of its projects
 					 * - Open last opened files
 					 */
 					CurrentSolution = new Solution(FileName);
 
 					foreach (var f in CurrentSolution.ProjectFiles)
-						CurrentSolution.ProjectCache.Add(Project.LoadProjectFromFile(CurrentSolution, f));
+						if(File.Exists(CurrentSolution.ToAbsoluteFileName( f)))
+							CurrentSolution.ProjectCache.Add(Project.LoadProjectFromFile(CurrentSolution, f));
 
 					foreach (var prj in CurrentSolution)
 						foreach (var fn in prj.LastOpenedFiles)
-							OpenFile(prj, fn);
+							OpenFile(fn);
+
 					MainWindow.UpdateGUIElements();
 					return null;
 				}
@@ -392,14 +479,15 @@ namespace D_IDE
 
 					foreach (var prj in CurrentSolution)
 						foreach (var fn in prj.LastOpenedFiles)
-							OpenFile(prj, fn);
+							OpenFile(prj.ToAbsoluteFileName( fn));
 					MainWindow.UpdateGUIElements();
 					return null;
 				}
 
 				// Try to resolve owner project
-				var _prj = OwnerProject;
-				if (_prj == null && CurrentSolution != null)
+				// - useful if relative path was given - enables
+				Project _prj =null;
+				if (CurrentSolution != null)
 					foreach (var p in CurrentSolution.ProjectCache)
 						if (p.ContainsFile(FileName))
 						{
@@ -416,7 +504,7 @@ namespace D_IDE
 						return doc as AbstractEditorDocument;
 					}
 
-				var newEd = new EditorDocument(_prj, absPath);
+				var newEd = new EditorDocument(absPath);
 				newEd.Show(DockMgr);
 				MainWindow.UpdateGUIElements();
 				return newEd;

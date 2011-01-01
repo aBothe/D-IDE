@@ -16,13 +16,27 @@ namespace D_IDE
 		{
 			this.FileName = file;
 		}
-		public AbstractEditorDocument(Project prj, string file)
+
+		public Project Project
 		{
-			Project = prj;
-			FileName = file;
+			get
+			{
+				if (IDEManager.CurrentSolution != null)
+				{
+					var prjs=IDEManager.CurrentSolution.ProjectCache.Where(prj => prj.ContainsFile(FileName)).ToArray();
+					if (prjs.Length > 0)
+						return prjs[0];
+				}
+				return null;
+			}
+		}
+		public bool HasProject
+		{
+			get {
+				return Project != null;
+			}
 		}
 
-		public Project Project = null;
 		string _FileName;
 		public string FileName
 		{
@@ -50,14 +64,14 @@ namespace D_IDE
 		/// </summary>
 		public bool IsUnboundNonExistingFile
 		{
-			get { return Project == null && Path.GetDirectoryName(_FileName) == ""; }
+			get { return !HasProject && Path.GetDirectoryName(_FileName) == ""; }
 		}
 
 		public string RelativeFilePath
 		{
 			get
 			{
-				if (Path.IsPathRooted(FileName) && Project != null)
+				if (Path.IsPathRooted(FileName) && HasProject)
 					return FileName.Remove(0, Project.BaseDirectory.Length).Trim('\\');
 				return FileName;
 			}

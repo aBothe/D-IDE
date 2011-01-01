@@ -89,7 +89,7 @@ namespace D_IDE
 				Util.CreateDirectoryRecursively(pdir);
 
 				if (IDEManager.CurrentSolution != null && pdlg.AddToCurrentSolution)
-					IDEManager.ProjectManagement.AddNewProjectToCurrentSolution(
+					IDEManager.ProjectManagement.AddNewProjectToSolution(
 						pdlg.SelectedLanguageBinding,
 						pdlg.SelectedProjectType,
 						pdlg.ProjectName,
