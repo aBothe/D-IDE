@@ -77,7 +77,10 @@ namespace D_IDE.Core
 		public bool AddProject(Project Project)
 		{
 			if (ProjectCache.Contains(Project))
+			{
+				ErrorLogger.Log(new ProjectException(Project,"Solution already contains Project \""+Project.Name+"\""));
 				return false;
+			}
 
 			if (!AddProject(Project.FileName))
 				return false;

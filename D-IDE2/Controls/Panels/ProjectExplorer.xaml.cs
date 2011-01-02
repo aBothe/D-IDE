@@ -9,7 +9,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using D_IDE.Core;
 using System.Windows.Forms;
 using System.IO;
@@ -64,11 +63,19 @@ namespace D_IDE.Controls.Panels
 
 			MainTree.BorderStyle = BorderStyle.None;
 			MainTree.HideSelection = false;
+			MainTree.TreeViewNodeSorter = new PrjExplorerNodeSorter();
 
 			MainTree.KeyDown += new System.Windows.Forms.KeyEventHandler(MainTree_KeyDown);
 			MainTree.LabelEdit = true;
+			MainTree.BeforeLabelEdit += new NodeLabelEditEventHandler(MainTree_BeforeLabelEdit);
 			MainTree.AfterLabelEdit += new NodeLabelEditEventHandler(MainTree_AfterLabelEdit);
 			#endregion
+		}
+
+		void MainTree_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
+		{
+			if (_IsRefreshing || (e.Node is ProjectNode &&(e.Node as ProjectNode).IsUnloaded))
+				e.CancelEdit = true;
 		}
 
 		void MainTree_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
@@ -134,7 +141,7 @@ namespace D_IDE.Controls.Panels
 			MainTree.SelectedNode = n;
 
 			if (n is FileNode)
-				IDEManager.EditingManagement.OpenFile((n as FileNode).FileName);
+				IDEManager.EditingManagement.OpenFile((n as FileNode).AbsolutePath);
 			
 			// Set to start project
 			else if (n is ProjectNode)
@@ -569,9 +576,12 @@ namespace D_IDE.Controls.Panels
 			Update();
 		}
 
+		bool _IsRefreshing= false;
 		public void Update()
 		{
+			_IsRefreshing = true;
 			MainTree.BeginUpdate();
+			
 			SetupTreeIcons();
 
 			var expandedNodes = new List<string>();
@@ -590,6 +600,7 @@ namespace D_IDE.Controls.Panels
 			MainTree.Sort();
 
 			MainTree.EndUpdate();
+			_IsRefreshing = false;
 		}
 
 		void _CheckForExpansionStates(TreeNode node, ref List<string> lst)
@@ -742,7 +753,7 @@ namespace D_IDE.Controls.Panels
 			{
 				Nodes.Clear();
 
-				var baseDir = System.IO.Path.GetDirectoryName(Project.FileName);
+				var baseDir = Path.GetDirectoryName(Project.FileName);
 
 				// First add observed directories
 				foreach (var d in Project.SubDirectories)
@@ -752,10 +763,10 @@ namespace D_IDE.Controls.Panels
 				foreach (var f in from m in Project.Files select m.FileName)
 				{
 					// Create directory node
-					var fDir = System.IO.Path.GetDirectoryName(f);
+					var fDir = Path.IsPathRooted(f)?"": Path.GetDirectoryName(f);
 					var dirNode = DirectoryNode.CheckIfSubDirExists(this, fDir);
 
-					var fnode = new FileNode() { FileName = f };
+					var fnode = new FileNode() { FileName = Path.GetFileName( f) };
 					fnode.SelectedImageKey = fnode.ImageKey = GetFileIconKey(f);
 
 					dirNode.Nodes.Add(fnode);
@@ -931,5 +942,21 @@ namespace D_IDE.Controls.Panels
 			}
 		}
 		#endregion
+
+		public class PrjExplorerNodeSorter : System.Collections.IComparer
+		{
+			public int Compare(object x, object y)
+			{
+				if (y is DirectoryNode && !(x is DirectoryNode))
+					return 1;
+
+				if (x is TreeNode && y is TreeNode)
+				{
+					var r= string.Compare((x as TreeNode).Text,(y as TreeNode).Text);
+					return r;
+				}
+				return 0;
+			}
+		}
 	}
 }

@@ -52,6 +52,17 @@ namespace D_IDE.Core
 			return true;
 		}
 
+
+		public static System.Windows.MessageBoxResult ShowFileExistsDialog(string file)
+		{
+			return System.Windows.MessageBox.Show(
+				"\"" + Path.GetFileName(file) + "\" already exists. Continue with overwriting?", 
+				"File already exists", 
+				System.Windows.MessageBoxButton.YesNoCancel, 
+				System.Windows.MessageBoxImage.Question, 
+				System.Windows.MessageBoxResult.No);
+		}
+
 		public static string PurifyFileName(string file)
 		{
 			string r = file;
@@ -149,7 +160,7 @@ namespace D_IDE.Core
 
         public static void Log(Exception ex)
         {
-			throw ex;
+			Log(ex.Message,ErrorType.Error);
         }
 
 		public static void Log(string msg)

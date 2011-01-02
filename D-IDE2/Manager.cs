@@ -99,10 +99,12 @@ namespace D_IDE
 				 */
 
 				// a)
-				if (sln.ContainsProject(Projectfile)) return false;
+				if (sln.ContainsProject(Projectfile)) {
+					ErrorLogger.Log(new ProjectException(sln[Projectfile],"Project already part of solution"));
+					return false; }
 				// b)
 				var prj = Project.LoadProjectFromFile(sln, Projectfile);
-				if (prj == null) return false;// Perhaps it's a project format that's simply not supported
+				if (prj == null) return false; // Perhaps it's a project format that's simply not supported
 				// c)
 				if (!sln.AddProject(prj)) return false;
 				// d)
@@ -281,17 +283,26 @@ namespace D_IDE
 			/// <summary>
 			/// Opens a new-source dialog
 			/// </summary>
-			public static void AddNewSourceToProject(Project Project, string RelativeDir)
+			public static bool AddNewSourceToProject(Project Project, string RelativeDir)
 			{
 				var sdlg = new NewSrcDlg();
 				if (sdlg.ShowDialog().Value)
 				{
 					var file = (String.IsNullOrEmpty(RelativeDir) ? "" : (RelativeDir + "\\")) + sdlg.FileName;
-					File.WriteAllText(Project.BaseDirectory + "\\" + file, "");
-					Project.Add(file);
-					Project.Save();
-					MainWindow.UpdateGUIElements();
+					var absFile=Project.BaseDirectory + "\\" + file;
+
+					if (File.Exists(absFile))
+						return false;
+
+					if (Project.Add(file))
+					{
+						File.WriteAllText(absFile, "");
+						Project.Save();
+						MainWindow.UpdateGUIElements();
+						return true;
+					}
 				}
+				return false;
 			}
 
 			public static bool AddNewDirectoryToProject(Project Project, string RelativeDir, string DirName)
@@ -300,8 +311,11 @@ namespace D_IDE
 					return false;
 				string relDir = (String.IsNullOrEmpty(RelativeDir) ? "" : (RelativeDir + "\\")) + Util.PurifyDirName( DirName);
 				var absDir = Project.BaseDirectory + "\\" + relDir;
-				if (Directory.Exists(absDir) && Project.SubDirectories.Contains(relDir)) 
+				if (Directory.Exists(absDir) && Project.SubDirectories.Contains(relDir))
+				{
+					ErrorLogger.Log(new System.IO.IOException("Directory "+absDir+" already exists"));
 					return false;
+				}
 
 				Project.SubDirectories.Add(relDir);
 				Util.CreateDirectoryRecursively(absDir);
@@ -331,18 +345,23 @@ namespace D_IDE
 				foreach (var FileName in Files)
 				{
 					/*
-					 * - If not in the same directory, copy the selected file into ours
-					 * - Add it to the project
+					 * - Try to add the new file; if successful:
+					 * - Physically copy the file if it's not in the target directory
 					 */
 					var newFile = absPath + "\\" + Path.GetFileName(FileName);
 
-					if (Path.GetDirectoryName(FileName) != absPath)
-						File.Copy(FileName, newFile);
-
-					Project.Add(newFile);
+					if (Project.Add(newFile))
+					{
+						try
+						{
+							if (Path.GetDirectoryName(FileName) != absPath)
+								File.Copy(FileName, newFile,true);
+						}
+						catch (Exception ex) { ErrorLogger.Log(ex); }
+					}
 				}
-				Project.Save();
-				MainWindow.UpdateGUIElements();
+				if(Project.Save())
+					MainWindow.UpdateGUIElements();
 			}
 
 			public static void AddExistingDirectoryToProject(string DirectoryPath, Project Project, string RelativeDir)

@@ -87,24 +87,25 @@ namespace D_IDE.Dialogs
 			}
 		}
 
+		[Flags]
 		public enum DialogMode
 		{
-			CreateNew,
-			Add
+			CreateNew=1,
+			Add=2
 		}
 
 		public DialogMode NewProjectDlgMode
 		{
 			set {
 				// Create only
-				if (value.HasFlag(DialogMode.CreateNew) && !value.HasFlag(DialogMode.Add))
+				if (value==DialogMode.CreateNew)
 				{
 					ComboBox_CreateSolution.SelectedIndex = 0;
 					ComboBox_CreateSolution.IsEnabled = false;
 					TextBox_SolutionName.IsEnabled = true;
 				}
 				// Add only
-				else if (!value.HasFlag(DialogMode.CreateNew) && value.HasFlag(DialogMode.Add))
+				else if (value==DialogMode.Add)
 				{
 					ComboBox_CreateSolution.SelectedIndex = 1;
 					ComboBox_CreateSolution.IsEnabled = false;

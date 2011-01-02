@@ -26,8 +26,11 @@ namespace D_IDE.Core
 		/// </summary>
 		public static Project LoadProjectFromFile(Solution sln,string FileName)
 		{
-			if (File.Exists(sln.ToAbsoluteFileName(FileName)))
+			if (!File.Exists(sln.ToAbsoluteFileName(FileName)))
 			{
+				ErrorLogger.Log(new FileNotFoundException("Couldn't load project because the file \"" + FileName + "\" was not found", FileName));
+				return null;
+			}
 				string ls = FileName.ToLower();
 
 				foreach (var lang in from l in LanguageLoader.Bindings where l.ProjectsSupported select l)
@@ -41,8 +44,8 @@ namespace D_IDE.Core
 										sln.AddProject(ret); // Ensure the project is loaded into the cache
 									return ret;
 								}
-			}
-			return null;
+				ErrorLogger.Log(new FileLoadException("Unkown project type", FileName));
+				return null;
 		}
 
 		#region Properties
@@ -90,8 +93,8 @@ namespace D_IDE.Core
 		public string ToRelativeFileName(string file)
 		{
 			var f = file.Trim('\\');
-			if (Path.IsPathRooted(f))
-				return f.Remove(0, BaseDirectory.Length).Trim('\\');
+			if (Path.IsPathRooted(f) && f.StartsWith(BaseDirectory))
+				return f.Substring(BaseDirectory.Length).Trim('\\');
 			return f;
 		}
 
@@ -302,7 +305,19 @@ namespace D_IDE.Core
 		public bool Add(string FileName)
 		{
 			if (ContainsFile(FileName))
+			{
+				ErrorLogger.Log(new ProjectException(this,"Project already contains "+FileName));
 				return false;
+			}
+
+			// Check if other projects of the same solution own these files
+			if(Solution!=null)
+			foreach (var p in Solution)
+				if (p.BaseDirectory == BaseDirectory && p.ContainsFile(FileName))
+				{
+					ErrorLogger.Log(new ProjectException(this,"An other Project is already containing "+FileName));
+					return false;
+				}
 
 			_Files.Add(new ProjectModule() {  FileName=ToRelativeFileName(FileName), Action=ProjectModule.BuildAction.Compile});
 			return true;
@@ -311,7 +326,10 @@ namespace D_IDE.Core
 		public bool Remove(string FileName)
 		{
 			var relPath=ToRelativeFileName(FileName);
-			return _Files.RemoveAll(m => m.FileName==relPath) >0;
+			bool r= _Files.RemoveAll(m => m.FileName==relPath) >0;
+			if(!r)
+				ErrorLogger.Log(new ProjectException(this, "Couldn't remove " + FileName+ " from project"));
+			return r;
 		}
 
 		#region Build properties
@@ -327,6 +345,16 @@ namespace D_IDE.Core
 		public bool AlsoStoreChangedSources = false;
 		public int LastBuildVersionCount = 0;
 		#endregion
+	}
+
+	public class ProjectException : Exception
+	{
+		public readonly Project Project;
+		public ProjectException(Project prj, string msg)
+			: base(msg)
+		{
+			Project = prj;
+		}
 	}
 
 	public enum OutputTypes
