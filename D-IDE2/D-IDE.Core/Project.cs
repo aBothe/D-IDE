@@ -35,7 +35,12 @@ namespace D_IDE.Core
 						if (pt.Extensions != null)
 							foreach (var ext in pt.Extensions)
 								if (ls.EndsWith(ext))
-									return lang.OpenProject(sln, FileName);
+								{
+									var ret = lang.OpenProject(sln, FileName);
+									if (ret != null)
+										sln.AddProject(ret); // Ensure the project is loaded into the cache
+									return ret;
+								}
 			}
 			return null;
 		}
@@ -95,7 +100,7 @@ namespace D_IDE.Core
 		#endregion
 
 		#region Saving & Loading
-		protected delegate void CustomReadEventHandler(XmlReader reader) ;
+		protected delegate bool CustomReadEventHandler(XmlReader reader) ;
 		protected delegate void CustomWriteEventHandler(XmlWriter writer);
 		/// <summary>
 		/// Enables custom data reading when reading from a project file.
@@ -125,6 +130,15 @@ namespace D_IDE.Core
 				xw.WriteAttributeString("lastModified", m.LastModified.ToString());
 				xw.WriteAttributeString("buildAction", ((int)m.Action).ToString());
 				xw.WriteCData(m.FileName);
+				xw.WriteEndElement();
+			}
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("dirs");
+			foreach (var m in SubDirectories)
+			{
+				xw.WriteStartElement("dir");
+				xw.WriteCData(m);
 				xw.WriteEndElement();
 			}
 			xw.WriteEndElement();
@@ -183,7 +197,8 @@ namespace D_IDE.Core
 			while (xr.Read())
 			{
 				if (OnReadElementFromFile != null)
-					OnReadElementFromFile(xr);
+					if (OnReadElementFromFile(xr)) // Continue if the event has handled the element
+						continue;
 
 				if (xr.NodeType == XmlNodeType.Element)
 				{
@@ -210,12 +225,19 @@ namespace D_IDE.Core
 										act=(ProjectModule.BuildAction)Convert.ToInt32(xsr.Value);
 									xsr.MoveToElement();
 
-									try
-									{
-										string _fn = xsr.ReadString();
-										_Files.Add(new ProjectModule() { FileName=_fn, Action=act, LastModified=mod});
-									}
-									catch { }
+									string _fn = xsr.ReadString();
+									_Files.Add(new ProjectModule() { FileName=_fn, Action=act, LastModified=mod});
+							}
+							break;
+
+						case "dirs":
+							SubDirectories.Clear();
+
+							xsr = xr.ReadSubtree();
+							while (xsr.Read())
+							{
+								if (xsr.LocalName != "dir") continue;
+								SubDirectories.Add(xsr.ReadString());
 							}
 							break;
 

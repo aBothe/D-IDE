@@ -62,8 +62,6 @@ namespace D_IDE.Controls.Panels
 			MainTree.DragOver += new System.Windows.Forms.DragEventHandler(MainTree_DragOver);
 			MainTree.DragDrop += new System.Windows.Forms.DragEventHandler(MainTree_DragDrop);
 
-			MainTree.BeforeExpand += new TreeViewCancelEventHandler(MainTree_BeforeExpand);
-
 			MainTree.BorderStyle = BorderStyle.None;
 			MainTree.HideSelection = false;
 
@@ -82,14 +80,6 @@ namespace D_IDE.Controls.Panels
 			}
 		}
 
-		void MainTree_BeforeExpand(object sender, TreeViewCancelEventArgs e)
-		{
-			if (e.Node is SolutionNode)
-			{
-
-			}
-		}
-
 		/// <summary>
 		/// Renaming
 		/// </summary>
@@ -97,25 +87,43 @@ namespace D_IDE.Controls.Panels
 		/// <param name="e"></param>
 		void MainTree_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
 		{
+			if (!IsAddingDirectory && e.Label == null)
+				return;
+
 			if (e.Node is SolutionNode)
 				e.CancelEdit = !IDEManager.ProjectManagement.Rename((e.Node as SolutionNode).Solution, e.Label);
 			else if (e.Node is ProjectNode)
-				e.CancelEdit = !IDEManager.ProjectManagement.Rename((e.Node as ProjectNode).Project, e.Label);
+				e.CancelEdit = (e.Node as ProjectNode).IsUnloaded || !IDEManager.ProjectManagement.Rename((e.Node as ProjectNode).Project, e.Label);
 			else if (e.Node is DirectoryNode)
 			{
 				var dn = e.Node as DirectoryNode;
 				if (IsAddingDirectory)
+				{
+					IsAddingDirectory = false;
 					e.CancelEdit = !IDEManager.FileManagement.AddNewDirectoryToProject(dn.ParentProjectNode.Project, dn.RelativePath, e.Label);
+					if (e.CancelEdit) // We don't want to keep our empty directory node
+					{
+						dn.Remove();
+						return;
+					}
+				}
 				else
 					e.CancelEdit = !IDEManager.FileManagement.RenameDirectory(dn.ParentProjectNode.Project, dn.RelativePath, e.Label);
-				if (!e.CancelEdit) dn.Text = Util.PurifyDirName(e.Label);
+				
+				if (!e.CancelEdit) // If successful, apply the new (purified) name
+					dn.Text = Util.PurifyDirName(e.Label);
 			}
 			else if (e.Node is FileNode)
 			{
 				var n = e.Node as FileNode;
 				e.CancelEdit = !IDEManager.FileManagement.RenameFile(n.ParentProjectNode.Project, n.FileName, e.Label);
-				if (!e.CancelEdit) n.Text = Util.PurifyFileName(e.Label);
+				
+				if (!e.CancelEdit) 
+					n.Text = Util.PurifyFileName(e.Label);
 			}
+
+			if (!e.CancelEdit)
+				MainTree.Sort();
 		}
 
 		void MainTree_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -127,6 +135,19 @@ namespace D_IDE.Controls.Panels
 
 			if (n is FileNode)
 				IDEManager.EditingManagement.OpenFile((n as FileNode).FileName);
+			
+			// Set to start project
+			else if (n is ProjectNode)
+			{
+				var pn=n as ProjectNode;
+				if(pn.IsUnloaded)
+					return;
+				var sln = pn.Project.Solution;
+				sln.StartProject = pn.Project;
+				sln.Save();
+
+				Update();
+			}
 		}
 
 		#region Drag'n'Drop
@@ -277,9 +298,8 @@ namespace D_IDE.Controls.Panels
 				});
 		}
 		#endregion
-		/// <summary>
-		/// Handles context menu creation, contains click event handlers
-		/// </summary>
+
+		#region Context Menus
 		void MainTree_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
 		{
 			if (e.Button == MouseButtons.Right)
@@ -322,7 +342,7 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Open File Path", null, delegate(Object o, EventArgs _e)
 					{
-						System.Diagnostics.Process.Start("explorer", System.IO.Path.GetDirectoryName(fn.FileName));
+						System.Diagnostics.Process.Start("explorer",System.IO.Path.GetDirectoryName( fn.AbsolutePath));
 					});
 				}
 				#endregion
@@ -443,65 +463,96 @@ namespace D_IDE.Controls.Panels
 				#region Project Node
 				else if (n is ProjectNode)
 				{
-					var prj = (n as ProjectNode).Project;
+					var pn = n as ProjectNode;
 
-					cm.Items.Add("Build", CommonIcons.Icons_16x16_BuildCurrentSelectedProject, delegate(Object o, EventArgs _e)
+					if (pn.IsUnloaded)
 					{
-						IDEManager.BuildManagement.Build(prj, true);
-					});
+						cm.Items.Add("Reload", CommonIcons.Refresh, delegate(Object o, EventArgs _e)
+						{
+							var prj =Project.LoadProjectFromFile(  pn.Solution, pn.Text);
+							if (prj!=null)
+									Update();
+						});
 
-					cm.Items.Add("Rebuild", null, delegate(Object o, EventArgs _e)
+						AddCutCopyPasteButtons(cm, pn, true, false, false);
+
+						cm.Items.Add(new ToolStripSeparator());
+
+						cm.Items.Add("Exclude", CommonIcons.delete16, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.ProjectManagement.ExcludeProject(pn.Solution,pn.Text);
+						});
+					}
+					else
 					{
-						IDEManager.BuildManagement.Build(prj, false);
-					});
 
-					cm.Items.Add("CleanUp", null, delegate(Object o, EventArgs _e)
-					{
-						IDEManager.BuildManagement.CleanUpOutput(prj);
-					});
+						var prj = pn.Project;
 
-					cm.Items.Add(new ToolStripSeparator());
+						cm.Items.Add("Build", CommonIcons.Icons_16x16_BuildCurrentSelectedProject, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.BuildManagement.Build(prj, true);
+						});
 
-					var subMenu = new ToolStripMenuItem("Add");
-					cm.Items.Add(subMenu);
+						cm.Items.Add("Rebuild", null, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.BuildManagement.Build(prj, false);
+						});
 
-					subMenu.DropDownItems.Add("File", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
-					{
-						IDEManager.FileManagement.AddNewSourceToProject(prj, "");
-					});
+						cm.Items.Add("CleanUp", null, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.BuildManagement.CleanUpOutput(prj);
+						});
 
-					subMenu.DropDownItems.Add("Directory", CommonIcons.dir, delegate(Object o, EventArgs _e)
-					{
-						IsAddingDirectory = true;
-						var nd = new DirectoryNode("");
-						n.Nodes.Add(nd);
-						n.Expand();
-						nd.BeginEdit();
-					});
+						cm.Items.Add(new ToolStripSeparator());
 
-					subMenu.DropDownItems.Add("Existing File", null, delegate(Object o, EventArgs _e)
-					{
-						IDEManager.FileManagement.AddExistingSourceToProject(prj, "");
-					});
+						var subMenu = new ToolStripMenuItem("Add");
+						cm.Items.Add(subMenu);
 
-					cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
-					{
-						IDEManager.ProjectManagement.ShowProjectDependenciesDialog(prj);
-					});
+						subMenu.DropDownItems.Add("File", CommonIcons.addfile16, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.FileManagement.AddNewSourceToProject(prj, "");
+						});
 
-					AddCutCopyPasteButtons(cm, n, true, false, true);
+						subMenu.DropDownItems.Add("Directory", CommonIcons.dir, delegate(Object o, EventArgs _e)
+						{
+							IsAddingDirectory = true;
+							var nd = new DirectoryNode("");
+							n.Nodes.Add(nd);
+							n.Expand();
+							nd.BeginEdit();
+						});
 
-					cm.Items.Add(new ToolStripSeparator());
+						subMenu.DropDownItems.Add("Existing File", null, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.FileManagement.AddExistingSourceToProject(prj, "");
+						});
 
-					cm.Items.Add("Open File Path", null, delegate(Object o, EventArgs _e)
-					{
-						System.Diagnostics.Process.Start("explorer", prj.BaseDirectory);
-					});
+						cm.Items.Add("Project Dependencies", null, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.ProjectManagement.ShowProjectDependenciesDialog(prj);
+						});
 
-					cm.Items.Add("Properties", CommonIcons.properties16, delegate(Object o, EventArgs _e)
-					{
-						IDEManager.ProjectManagement.ShowProjectPropertiesDialog(prj);
-					});
+						AddCutCopyPasteButtons(cm, n, true, false, true);
+
+						cm.Items.Add(new ToolStripSeparator());
+
+						cm.Items.Add("Exclude", CommonIcons.delete16, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.ProjectManagement.ExcludeProject(prj);
+						});
+
+						cm.Items.Add(new ToolStripSeparator());
+
+						cm.Items.Add("Open File Path", null, delegate(Object o, EventArgs _e)
+						{
+							System.Diagnostics.Process.Start("explorer", prj.BaseDirectory);
+						});
+
+						cm.Items.Add("Properties", CommonIcons.properties16, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.ProjectManagement.ShowProjectPropertiesDialog(prj);
+						});
+					}
 				}
 				#endregion
 
@@ -511,6 +562,7 @@ namespace D_IDE.Controls.Panels
 				cm.Show(MainTree, e.Location);
 			}
 		}
+		#endregion
 
 		private void Refresh_Click(object sender, RoutedEventArgs e)
 		{
@@ -534,6 +586,8 @@ namespace D_IDE.Controls.Panels
 
 			foreach (TreeNode n in MainTree.Nodes)
 				_ApplyExpansionStates(n, expandedNodes);
+
+			MainTree.Sort();
 
 			MainTree.EndUpdate();
 		}
@@ -614,13 +668,29 @@ namespace D_IDE.Controls.Panels
 			{
 				Nodes.Clear();
 
-				foreach (var p in Solution)
+				foreach (var file in Solution.ProjectFiles)
 				{
-					var pn = new ProjectNode(p.FileName,p.Name);
-					Nodes.Add(pn);
-					// Add project node first before refreshing its children 
-					// - the 'Project'-property requires an existing parent node, which is in our case 'this' node
-					pn.UpdateChildren();
+					var absFile = Solution.ToAbsoluteFileName(file);
+					var p = Solution[file];
+					ProjectNode pn=null;
+					if (p != null)
+					{
+						pn = new ProjectNode(absFile, p.Name);
+						Nodes.Add(pn);
+						// Add project node first before refreshing its children 
+						// - the 'Project'-property requires an existing parent node, which is in our case 'this' node
+						pn.UpdateChildren();
+
+						if (Solution.StartProject == p)
+							pn.NodeFont = new System.Drawing.Font(pn.NodeFont,System.Drawing.FontStyle.Bold);
+					}
+					else
+					{
+						// If a project is there but not found, create a 'disabled' project node
+						pn = new ProjectNode(absFile,file);
+						pn.IsUnloaded = true;
+						Nodes.Add(pn);
+					}
 				}
 				Expand();
 			}
@@ -628,13 +698,36 @@ namespace D_IDE.Controls.Panels
 
 		public class ProjectNode : TreeNode
 		{
+			public Solution Solution
+			{
+				get
+				{
+					if (Parent is SolutionNode)
+						return (Parent as SolutionNode).Solution;
+					return null;
+				}
+			}
+
 			public Project Project
 			{
 				get
 				{
-					if(Parent is SolutionNode)
-						return (Parent as SolutionNode).Solution.ByName(Text);
+					if(Solution!=null)
+						return Solution.ByName(Text);
 					return null;
+				}
+			}
+
+			bool _IsNotloaded = false;
+			public bool IsUnloaded
+			{
+				get { return _IsNotloaded; }
+				set
+				{
+					if (_IsNotloaded = value)
+						ForeColor = System.Drawing.Color.Gray;
+					else
+						ForeColor = System.Drawing.Color.Black;
 				}
 			}
 
@@ -738,7 +831,6 @@ namespace D_IDE.Controls.Panels
 				var CurNode = ThisNode;
 
 				// move deeper along the path
-				i++;
 				while (i < pathparts.Length && CurNode != null)
 				{
 					// A bit buggy but should work in many situations

@@ -55,7 +55,7 @@ namespace D_IDE.Core
 		public string ToRelativeFileName(string file)
 		{
 			if (Path.IsPathRooted(file))
-				return file.Remove(0, BaseDirectory.Length).Trim('\\');
+				return file.Substring(BaseDirectory.Length).Trim('\\');
 			return file;
 		}
 
@@ -197,9 +197,9 @@ namespace D_IDE.Core
 		public Project this[string file]
 		{
 			get {
-				var relPath = ToRelativeFileName(file);
+				var absPath = ToAbsoluteFileName(file);
 				foreach (var p in ProjectCache)
-					if (p.FileName == relPath)
+					if (ToAbsoluteFileName( p.FileName) == absPath)
 						return p;
 				return null;
 			}

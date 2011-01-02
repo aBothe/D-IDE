@@ -19,7 +19,7 @@
 			<ribbon:Ribbon.QuickAccessToolBar>
 				<ribbon:RibbonQuickAccessToolBar>
 					<ribbon:RibbonButton SmallImageSource="Resources/open16.png" Click="Open" ToolTipTitle="Open (Ctrl+O)" />
-					<ribbon:RibbonButton SmallImageSource="Resources/save16.png" Click="Save" ToolTipTitle="Save (Ctrl+S)" />
+					<ribbon:RibbonButton SmallImageSource="Resources/save16.png" Click="SaveAll" ToolTipTitle="Save All" />
 				</ribbon:RibbonQuickAccessToolBar>
 			</ribbon:Ribbon.QuickAccessToolBar>
 			

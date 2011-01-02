@@ -14,7 +14,7 @@ namespace D_IDE.D
 			Solution = sln;
 			OnReadElementFromFile += delegate(XmlReader xr)
 			{
-
+				return false;
 			};
 
 			OnWriteToFile += delegate(XmlWriter xw)

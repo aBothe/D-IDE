@@ -107,6 +107,8 @@ namespace D_IDE
 				if (!sln.AddProject(prj)) return false;
 				// d)
 				sln.Save();
+
+				MainWindow.UpdateGUIElements();
 				return true;
 			}
 
@@ -163,7 +165,7 @@ namespace D_IDE
 			public static bool Rename(Solution sln, string NewName)
 			{
 				// Prevent moving the project into an other directory
-				if (NewName.Contains('\\'))
+				if (String.IsNullOrEmpty(NewName) || NewName.Contains('\\'))
 					return false;
 
 				/*
@@ -187,7 +189,7 @@ namespace D_IDE
 			public static bool Rename(Project prj, string NewName)
 			{
 				// Prevent moving the project into an other directory
-				if (NewName.Contains('\\'))
+				if (String.IsNullOrEmpty(NewName) || NewName.Contains('\\'))
 					return false;
 
 				/*
@@ -211,6 +213,44 @@ namespace D_IDE
 					prj.Save();
 				}
 				return ret;
+			}
+
+			/// <summary>
+			/// (Since we don't want to remove a whole project we still can exclude them from solutions)
+			/// </summary>
+			/// <param name="prj"></param>
+			public static void ExcludeProject(Project prj)
+			{
+				/*
+				 * - Close open editors that are related to prj
+				 * - Remove reference from solution
+				 * - Save solution
+				 */
+
+				foreach (var ed in Editors.Where(e => e.Project == prj))
+					ed.Close();
+
+				var sln = prj.Solution;
+				sln.ExcludeProject(prj.FileName);
+				sln.Save();
+
+				MainWindow.UpdateGUIElements();
+			}
+
+			/// <summary>
+			/// (Since we don't want to remove a whole project we still can exclude them from solutions)
+			/// </summary>
+			public static void ExcludeProject(Solution sln,string prjFile)
+			{
+				/*
+				 * - Remove reference from solution
+				 * - Save solution
+				 */
+
+				sln.ExcludeProject(prjFile);
+				sln.Save();
+
+				MainWindow.UpdateGUIElements();
 			}
 
 			#region Project Dependencies dialog
@@ -256,9 +296,16 @@ namespace D_IDE
 
 			public static bool AddNewDirectoryToProject(Project Project, string RelativeDir, string DirName)
 			{
-				string absDir = Project.BaseDirectory + "\\" + (String.IsNullOrEmpty(RelativeDir) ? "" : (RelativeDir + "\\")) + DirName;
-				if (Directory.Exists(absDir)) return false;
+				if (Project==null || String.IsNullOrEmpty(DirName))
+					return false;
+				string relDir = (String.IsNullOrEmpty(RelativeDir) ? "" : (RelativeDir + "\\")) + Util.PurifyDirName( DirName);
+				var absDir = Project.BaseDirectory + "\\" + relDir;
+				if (Directory.Exists(absDir) && Project.SubDirectories.Contains(relDir)) 
+					return false;
+
+				Project.SubDirectories.Add(relDir);
 				Util.CreateDirectoryRecursively(absDir);
+				Project.Save();
 				return true;
 			}
 
@@ -269,32 +316,33 @@ namespace D_IDE
 			public static void AddExistingSourceToProject(Project Project, string RelativeDir)
 			{
 				var dlg = new OpenFileDialog();
-				var absPath = (Project.BaseDirectory + "\\" + RelativeDir).Trim('\\');
-				dlg.InitialDirectory = absPath;
+				dlg.InitialDirectory = Project.BaseDirectory + "\\" + RelativeDir;
 				dlg.Multiselect = true;
 
 				if (dlg.ShowDialog().Value)
+				{
+					AddExistingSourceToProject(Project, RelativeDir,dlg.FileNames);
+				}
+			}
+
+			public static void AddExistingSourceToProject(Project Project, string RelativeDir,params string[] Files)
+			{
+				var absPath = (Project.BaseDirectory + "\\" + RelativeDir).Trim('\\');
+				foreach (var FileName in Files)
 				{
 					/*
 					 * - If not in the same directory, copy the selected file into ours
 					 * - Add it to the project
 					 */
-					foreach (var file in dlg.FileNames)
-					{
-						var newFile = absPath + "\\" + Path.GetFileName(file);
+					var newFile = absPath + "\\" + Path.GetFileName(FileName);
 
-						if (Path.GetDirectoryName(file) != absPath)
-							File.Copy(file, newFile);
+					if (Path.GetDirectoryName(FileName) != absPath)
+						File.Copy(FileName, newFile);
 
-						Project.Add(newFile);
-					}
-					MainWindow.UpdateGUIElements();
+					Project.Add(newFile);
 				}
-			}
-
-			public static void AddExistingSourceToProject(string FileName, Project Project, string RelativeDir)
-			{
-
+				Project.Save();
+				MainWindow.UpdateGUIElements();
 			}
 
 			public static void AddExistingDirectoryToProject(string DirectoryPath, Project Project, string RelativeDir)
@@ -324,38 +372,62 @@ namespace D_IDE
 				return false;
 			}
 
-			public static void ExcludeDirectoryFromProject(Project prj, string RelativePath)
+			public static bool ExcludeDirectoryFromProject(Project prj, string RelativePath)
 			{
-				if (prj.SubDirectories.Contains(RelativePath))
-					prj.SubDirectories.Remove(RelativePath);
+				if (prj == null || string.IsNullOrEmpty(RelativePath))
+					return false;
 
-				foreach (var s in prj.Files)
-				{
+				/*
+				 * - Delete all subdirectory references
+				 * - Delete all files that are inside of these directories
+				 */
+				var affectedFiles=(from f in prj.Files 
+								   where Path.GetDirectoryName( f.FileName).Contains(RelativePath) 
+								   select prj.ToAbsoluteFileName( f.FileName)).ToArray();
 
-				}
+				foreach(var ed in Editors.Where(e=>affectedFiles.Contains(e.AbsoluteFilePath)))
+					ed.Close();
+
+				foreach (var s in prj.SubDirectories.Where(d=>d== RelativePath || d.Contains(RelativePath)).ToArray())
+					prj.SubDirectories.Remove(s);
+
+				foreach (var s in affectedFiles)
+					prj.Remove(s);
+
+				prj.Save();
+
+				MainWindow.UpdateGUIElements();
+				return true;
 			}
 
-
+			public static bool RemoveDirectoryFromProject(Project Project, string RelativePath)
+			{
+				if (Project== null || string.IsNullOrEmpty(RelativePath))
+					return false;
+				try
+				{
+					if (ExcludeDirectoryFromProject(Project, RelativePath))
+						Directory.Delete(Project.BaseDirectory + "\\" + RelativePath, true);
+				}
+				catch (Exception ex) { ErrorLogger.Log(ex); return false; }
+				return true;
+			}
 
 			public static bool ExludeFileFromProject(Project Project, string file)
 			{
 				var absFile = Project.ToAbsoluteFileName(file);
-				foreach (var ed in Editors)
-					if (ed.AbsoluteFilePath == absFile)
-						if (!ed.Close())
-							return false;
-				if (Project.Remove(file))
+				// Close (all) editor(s) that represent our file
+				foreach (var ed in Editors.Where(e=>e.AbsoluteFilePath==absFile).ToArray())
+					if(!ed.Close())
+						return false;
+
+				var r = Project.Remove(file);
+				if (r)
 				{
 					Project.Save();
-					return true;
+					MainWindow.UpdateProjectExplorer();
 				}
-				MainWindow.UpdateProjectExplorer();
-				return false;
-			}
-
-			public static void RemoveDirectoryFromProject(Project Project, string RelativePath)
-			{
-
+				return r;
 			}
 
 			public static bool RemoveFileFromProject(Project Project, string file)
@@ -363,7 +435,7 @@ namespace D_IDE
 				var r = ExludeFileFromProject(Project, file);
 				try
 				{
-					if (r) File.Delete(file);
+					if (r) File.Delete(Project.ToAbsoluteFileName( file));
 				}
 				catch { }
 				return r;
