@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -22,13 +21,13 @@ namespace D_IDE.Controls.Panels
 	public partial class ProjectExplorer : AvalonDock.DockableContent
 	{
 		#region Properties
-		System.Windows.Forms.TreeView MainTree = new System.Windows.Forms.TreeView();
+		public System.Windows.Forms.TreeView MainTree = new System.Windows.Forms.TreeView();
 		static readonly ImageList TreeIcons = new ImageList();
 
 		bool IsAddingDirectory = false;
 
 		bool IsCut = false;
-		TreeNode CutCopyNode = null;
+		PrjExplorerNode CutCopyNode = null;
 		#endregion
 
 		public ProjectExplorer()
@@ -123,7 +122,7 @@ namespace D_IDE.Controls.Panels
 			else if (e.Node is FileNode)
 			{
 				var n = e.Node as FileNode;
-				e.CancelEdit = !IDEManager.FileManagement.RenameFile(n.ParentProjectNode.Project, n.FileName, e.Label);
+				e.CancelEdit = !IDEManager.FileManagement.RenameFile(n.ParentProjectNode.Project, n.AbsolutePath, e.Label);
 				
 				if (!e.CancelEdit) 
 					n.Text = Util.PurifyFileName(e.Label);
@@ -160,128 +159,228 @@ namespace D_IDE.Controls.Panels
 		#region Drag'n'Drop
 		void MainTree_DragDrop(object sender, System.Windows.Forms.DragEventArgs e)
 		{
+			if (e.Effect == DragDropEffects.None) return;
+
+			var targetNode = new DnDData(MainTree.GetNodeAt(MainTree.PointToClient(new System.Drawing.Point(e.X, e.Y))) as PrjExplorerNode);
+			MainTree.SelectedNode = targetNode.Node;
 			bool LastState = IsCut;
+			IsCut = e.Effect == System.Windows.Forms.DragDropEffects.Move;
 
-			if (e.Effect != System.Windows.Forms.DragDropEffects.None && e.Data.GetDataPresent(typeof(TreeNode)))
-			{
-				var n = e.Data.GetData(typeof(TreeNode)) as TreeNode;
-				IsCut = e.Effect == System.Windows.Forms.DragDropEffects.Move;
-
-				DoPaste(n, MainTree.GetNodeAt(new System.Drawing.Point(e.X, e.Y)));
-			}
-
+			if (e.Data.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop))
+				foreach (var file in e.Data.GetData(DataFormats.FileDrop) as string[])
+					DoPaste(file,targetNode);
+			else if (e.Data.GetDataPresent(typeof(DnDData)))
+				DoPaste(e.Data.GetData(typeof(DnDData)) as DnDData, targetNode);
 			IsCut = LastState;
 		}
 
 		void MainTree_DragOver(object sender, System.Windows.Forms.DragEventArgs e)
 		{
-			var n = e.Data.GetData(e.Data.GetFormats()[0]) as TreeNode;
+			e.Effect = System.Windows.Forms.DragDropEffects.None;
+			var targetNode = new DnDData( MainTree.GetNodeAt(MainTree.PointToClient(new System.Drawing.Point(e.X, e.Y))) as PrjExplorerNode);
+			MainTree.SelectedNode = targetNode.Node;
 
-			if (n != null)
+			if (targetNode.Node != null)
+				targetNode.Node.Expand();
+
+			if (e.Data.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop))
 			{
-				if (IsDropAllowed(n, MainTree.GetNodeAt(new System.Drawing.Point(e.X, e.Y))))
-					if ((e.KeyState & 8) == 8) // If ctrl got pressed
-						e.Effect = System.Windows.Forms.DragDropEffects.Copy;
-					else
-						e.Effect = System.Windows.Forms.DragDropEffects.Move; // Move file/dir by default
+				var files = e.Data.GetData(DataFormats.FileDrop) as string[];
+
+				// Force all files to be droppable
+				foreach (var file in files)
+					if (!IsDropAllowed(file, targetNode.Node))	
+						return;
+
+				e.Effect = System.Windows.Forms.DragDropEffects.Copy;
+			}
+			else if (e.Data.GetDataPresent(typeof(DnDData)))
+			{
+				var d = e.Data.GetData(typeof(DnDData)) as DnDData;
+				if(!IsDropAllowed(d.Path,targetNode.Node))
+					return;
+
+				// If src prj and dest prj are equal, set default action to 'move'
+				bool Move=d.Project==targetNode.Project;
+				
+				// If ctrl is pressed anyway, turn action
+				if((e.KeyState & 8) == 8)	Move=!Move;
+
+				if (!Move) // If ctrl has been pressed
+					e.Effect = System.Windows.Forms.DragDropEffects.Copy;
 				else
-					e.Effect = System.Windows.Forms.DragDropEffects.None;
+					e.Effect = System.Windows.Forms.DragDropEffects.Move; // Move file/dir by default
 			}
 		}
 
 		void MainTree_ItemDrag(object sender, ItemDragEventArgs e)
 		{
-			var n = e.Item as TreeNode;
+			var n = e.Item as PrjExplorerNode;
 			if (n != null)
 			{
 				MainTree.SelectedNode = n;
 
 				if (e.Button == MouseButtons.Left && !(e.Item is SolutionNode))
-					MainTree.DoDragDrop(new System.Windows.Forms.DataObject(n as object), System.Windows.Forms.DragDropEffects.All);
+					MainTree.DoDragDrop(new System.Windows.Forms.DataObject(new DnDData(n)), System.Windows.Forms.DragDropEffects.All);
+			}
+		}
+
+		public class DnDData
+		{
+			public DnDData(PrjExplorerNode n) { Node = n; }
+			public readonly PrjExplorerNode Node;
+			public string Path { get { return Node.AbsolutePath; } }
+
+			public bool IsSln { get { return Node is SolutionNode; } }
+			public bool IsPrj { get { return Node is ProjectNode; } }
+			public bool IsDir { get { return Node is DirectoryNode; } }
+			public bool IsFile { get { return Node is FileNode; } }
+
+			public Project Project
+			{
+				get
+				{
+					if (IsPrj) return (Node as ProjectNode).Project;
+					if (IsDir) return (Node as DirectoryNode).ParentProjectNode.Project;
+					if (IsFile) return (Node as FileNode).ParentProjectNode.Project;
+					return null;
+				}
+			}
+
+			public Solution Solution
+			{
+				get
+				{
+					if (IsSln) return (Node as SolutionNode).Solution;
+					if (Project != null) return Project.Solution;
+					return null;
+				}
 			}
 		}
 		#endregion
 
 		#region Node copying & moving
-		public static bool IsDropAllowed(TreeNode src, TreeNode dropNode)
+		public static bool IsDropAllowed(string file, PrjExplorerNode dropNode)
 		{
+			if (string.IsNullOrEmpty(file))	return false;
+
+			if (file.EndsWith(Solution.SolutionExtension))
+				return true;
+
+			if (dropNode == null) return false;
+
+			bool isPrj = false;
+			AbstractLanguageBinding.SearchBinding(file,out isPrj);
+
+			if (isPrj && dropNode is SolutionNode && !(dropNode as SolutionNode).Solution.ContainsProject(file))
+				return true;
+			else if (isPrj) // Ignore already existing projects
+				return false;
+
+			/*
+			 * After checking for solution or project extension, check if 'file' is file or directory
+			 */
+			bool IsDir = Directory.Exists(file);
+			var dropFile=dropNode.AbsolutePath;
+
 			// A directory node can be dropped on an other directory node or a project node
-			if (src is DirectoryNode &&
-				src != dropNode && (
+			if (IsDir && (
 				(dropNode is DirectoryNode &&
-					!(dropNode as DirectoryNode).RelativePath // Ensure that the drop node is no subdirectory of our source node
-						.Contains((src as DirectoryNode).RelativePath)) || // e.g. src - FolderA, dropNode - FolderA/FolderB/FolderC  ->> dropNode path contains src path ->> return false;
+					!dropFile.Contains(file) && file!=dropFile)|| // Ensure that the drop node is no subdirectory of our source node
 				(dropNode is ProjectNode &&
-					src.Parent != dropNode) // Ensure that the directory's root is not the original
+					(dropNode as ProjectNode).Project.BaseDirectory!=file) // Ensure that the directory's root is not the original
 				))
 				return true;
 
-			if (src is FileNode &&
-				(dropNode is DirectoryNode || dropNode is ProjectNode) &&
-				src.Parent != dropNode.Parent) // Ensure the file gets moved either to an other directory or project
-				return true;
-
-			if (src is ProjectNode &&
-				dropNode is SolutionNode &&
-				src.Parent != dropNode)
+			if ((dropNode is DirectoryNode || dropNode is ProjectNode) &&
+				Path.GetDirectoryName(file)!=dropFile) // Ensure the file gets moved either to an other directory or project
 				return true;
 
 			return false;
 		}
 
-		public void DoPaste(TreeNode src, TreeNode dropNode)
+		public void DoPaste(DnDData data, DnDData dropNode)
 		{
-			if (src is DirectoryNode)
+			// 'Pre-expand' our drop node - when the tree gets updated
+			if (!dropNode.IsPrj)
+				_ExpandedNodes.Add(dropNode.Node.FullPath);
+
+			if (data.IsDir)
 			{
-				var src_dn = src as DirectoryNode;
-				var src_path = src_dn.RelativePath;
-				var src_prj = src_dn.ParentProjectNode.Project;
+				var src_path = (data.Node as DirectoryNode).RelativePath;
+				var src_prj = data.Project;
 
-				var dest_path = "";
-				Project dest_prj = null;
-
-				if (dropNode is ProjectNode)
-					dest_prj = (dropNode as ProjectNode).Project;
-				else if (dropNode is DirectoryNode)
-				{
-					dest_path = (dropNode as DirectoryNode).RelativePath;
-					dest_prj = (dropNode as DirectoryNode).ParentProjectNode.Project;
-				}
+				var dest_path = dropNode.IsDir?(dropNode.Node as DirectoryNode).RelativePath: "";
+				Project dest_prj = dropNode.Project;
 
 				if (dest_prj != null)
 					if (IsCut) IDEManager.FileManagement.MoveDirectory(src_prj, src_path, dest_prj, dest_path);
 					else IDEManager.FileManagement.CopyDirectory(src_prj, src_path, dest_prj, dest_path);
 			}
 
-			else if (src is FileNode)
+			else if (data.IsFile)
 			{
-				var src_fn = src as FileNode;
-				var src_path = src_fn.FileName;
-				var src_prj = src_fn.ParentProjectNode.Project;
+				var src_path = (data.Node as FileNode).RelativeFilePath;
+				var src_prj = dropNode.Project;
 
-				var dest_path = "";
-				Project dest_prj = null;
-
-				if (dropNode is ProjectNode)
-					dest_prj = (dropNode as ProjectNode).Project;
-				else if (dropNode is DirectoryNode)
-				{
-					dest_path = (dropNode as DirectoryNode).RelativePath;
-					dest_prj = (dropNode as DirectoryNode).ParentProjectNode.Project;
-				}
+				var dest_path = dropNode.IsDir ? (dropNode.Node as DirectoryNode).RelativePath : "";
+				Project dest_prj = dropNode.Project;
 
 				if (dest_prj != null)
 					if (IsCut) IDEManager.FileManagement.MoveFile(src_prj, src_path, dest_prj, dest_path);
 					else IDEManager.FileManagement.CopyFile(src_prj, src_path, dest_prj, dest_path);
 			}
-
-			else if (src is ProjectNode && dropNode is SolutionNode && src.Parent != dropNode)
-				IDEManager.ProjectManagement.ReassignProject((src as ProjectNode).Project, (dropNode as SolutionNode).Solution);
 		}
 
-		void AddCutCopyPasteButtons(ContextMenuStrip cm, TreeNode node, bool CutAllowed, bool CopyAllowed, bool PasteAllowed)
+		/// <summary>
+		/// Note: We will be only allowed to COPY files, not move them
+		/// </summary>
+		/// <param name="file"></param>
+		/// <param name="dropNode"></param>
+		public void DoPaste(string file,DnDData dropNode)
 		{
-			if (CutAllowed || CopyAllowed || (PasteAllowed && IsDropAllowed(CutCopyNode, node)))
+			// Solution
+			if (file.EndsWith(Solution.SolutionExtension))
+			{
+				IDEManager.EditingManagement.OpenFile(file);
+				return;
+			}
+
+			// Project
+			bool isPrj = false;
+			AbstractLanguageBinding.SearchBinding(file, out isPrj);
+
+			if (isPrj && dropNode.IsSln)
+				IDEManager.ProjectManagement.AddExistingProjectToSolution(dropNode.Solution, file);
+			else if (isPrj) // Ignore already existing projects
+				return;
+
+			bool IsDir = Directory.Exists(file);
+			var dropFile = dropNode.Path;
+
+			// 'Pre-expand' our drop node - when the tree gets updated
+			if(!dropNode.IsPrj)
+				_ExpandedNodes.Add(dropNode.Node.FullPath);
+
+			if (IsDir)
+			{
+				if (dropNode.IsPrj)
+					IDEManager.FileManagement.AddExistingDirectoryToProject(file, dropNode.Project, "");
+				else if (dropNode.IsDir)
+					IDEManager.FileManagement.AddExistingDirectoryToProject(file, dropNode.Project, (dropNode.Node as DirectoryNode).RelativePath);
+			}
+			else
+			{
+				if (dropNode.IsPrj)
+					IDEManager.FileManagement.AddExistingSourceToProject(dropNode.Project, "", file);
+				else if (dropNode.IsDir)
+					IDEManager.FileManagement.AddExistingSourceToProject(dropNode.Project, (dropNode.Node as DirectoryNode).RelativePath, file);
+			}
+		}
+
+		void AddCutCopyPasteButtons(ContextMenuStrip cm, PrjExplorerNode node, bool CutAllowed, bool CopyAllowed, bool PasteAllowed)
+		{
+			if (CutAllowed || CopyAllowed || (PasteAllowed && CutCopyNode!=null && IsDropAllowed(CutCopyNode.AbsolutePath, node)))
 				cm.Items.Add(new ToolStripSeparator());
 
 			if (CutAllowed)
@@ -298,10 +397,10 @@ namespace D_IDE.Controls.Panels
 					CutCopyNode = node;
 				});
 
-			if (PasteAllowed && IsDropAllowed(CutCopyNode, node))
+			if (PasteAllowed && CutCopyNode!=null && IsDropAllowed(CutCopyNode.AbsolutePath, node))
 				cm.Items.Add("Paste", CommonIcons.Icons_16x16_PasteIcon, delegate(Object o, EventArgs _e)
 				{
-					DoPaste(CutCopyNode, node);
+					DoPaste(CutCopyNode.AbsolutePath,new DnDData(node));
 				});
 		}
 		#endregion
@@ -333,16 +432,17 @@ namespace D_IDE.Controls.Panels
 						IDEManager.EditingManagement.OpenFile(fn.AbsolutePath);
 					});
 
-					AddCutCopyPasteButtons(cm, n, true, true, false);
+					AddCutCopyPasteButtons(cm, fn, true, true, false);
 
 					cm.Items.Add("Exlude", null, delegate(Object o, EventArgs _e)
 					{
-						IDEManager.FileManagement.ExludeFileFromProject(prj, fn.FileName);
+						IDEManager.FileManagement.ExludeFileFromProject(prj, fn.RelativeFilePath);
 					});
 
 					cm.Items.Add("Delete", CommonIcons.delete16, delegate(Object o, EventArgs _e)
 					{
-						IDEManager.FileManagement.RemoveFileFromProject(prj, fn.FileName);
+						if(Util.ShowDeleteFileDialog(fn.FileName))
+							IDEManager.FileManagement.RemoveFileFromProject(prj, fn.RelativeFilePath);
 					});
 
 					cm.Items.Add(new ToolStripSeparator());
@@ -393,11 +493,12 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Delete", CommonIcons.delete16, delegate(Object o, EventArgs _e)
 					{
+						if (Util.ShowDeleteFileDialog(dn.DirectoryName))
 						IDEManager.FileManagement.RemoveDirectoryFromProject(
 							dn.ParentProjectNode.Project, dn.RelativePath);
 					});
 
-					AddCutCopyPasteButtons(cm, n, true, true, true);
+					AddCutCopyPasteButtons(cm, dn, true, true, true);
 
 					cm.Items.Add(new ToolStripSeparator());
 
@@ -456,7 +557,7 @@ namespace D_IDE.Controls.Panels
 						IDEManager.ProjectManagement.ShowProjectDependenciesDialog(sln);
 					});
 
-					AddCutCopyPasteButtons(cm, n, false, false, true);
+					AddCutCopyPasteButtons(cm, n as PrjExplorerNode, false, false, true);
 
 					cm.Items.Add(new ToolStripSeparator());
 
@@ -487,7 +588,8 @@ namespace D_IDE.Controls.Panels
 
 						cm.Items.Add("Exclude", CommonIcons.delete16, delegate(Object o, EventArgs _e)
 						{
-							IDEManager.ProjectManagement.ExcludeProject(pn.Solution,pn.Text);
+							if(MessageBox.Show("Continue with excluding project?","Excluding project",MessageBoxButtons.YesNo,MessageBoxIcon.Asterisk,MessageBoxDefaultButton.Button2)==DialogResult.Yes)
+								IDEManager.ProjectManagement.ExcludeProject(pn.Solution,pn.Text);
 						});
 					}
 					else
@@ -539,12 +641,13 @@ namespace D_IDE.Controls.Panels
 							IDEManager.ProjectManagement.ShowProjectDependenciesDialog(prj);
 						});
 
-						AddCutCopyPasteButtons(cm, n, true, false, true);
+						AddCutCopyPasteButtons(cm, pn, true, false, true);
 
 						cm.Items.Add(new ToolStripSeparator());
 
 						cm.Items.Add("Exclude", CommonIcons.delete16, delegate(Object o, EventArgs _e)
 						{
+							if (MessageBox.Show("Continue with excluding project?", "Excluding project", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
 							IDEManager.ProjectManagement.ExcludeProject(prj);
 						});
 
@@ -571,12 +674,13 @@ namespace D_IDE.Controls.Panels
 		}
 		#endregion
 
-		private void Refresh_Click(object sender, RoutedEventArgs e)
+		private void Refresh_Click(object sender, System.Windows.RoutedEventArgs e)
 		{
 			Update();
 		}
 
 		bool _IsRefreshing= false;
+		List<string> _ExpandedNodes = new List<string>();
 		public void Update()
 		{
 			_IsRefreshing = true;
@@ -584,10 +688,8 @@ namespace D_IDE.Controls.Panels
 			
 			SetupTreeIcons();
 
-			var expandedNodes = new List<string>();
-			expandedNodes.Clear();
 			foreach (TreeNode n in MainTree.Nodes)
-				_CheckForExpansionStates(n, ref expandedNodes);
+				_CheckForExpansionStates(n, ref _ExpandedNodes);
 
 			MainTree.Nodes.Clear();
 
@@ -595,11 +697,12 @@ namespace D_IDE.Controls.Panels
 				MainTree.Nodes.Add(new SolutionNode(IDEManager.CurrentSolution));
 
 			foreach (TreeNode n in MainTree.Nodes)
-				_ApplyExpansionStates(n, expandedNodes);
+				_ApplyExpansionStates(n, _ExpandedNodes);
 
 			MainTree.Sort();
 
 			MainTree.EndUpdate();
+			_ExpandedNodes.Clear();
 			_IsRefreshing = false;
 		}
 
@@ -660,7 +763,15 @@ namespace D_IDE.Controls.Panels
 		#endregion
 
 		#region Node classes
-		public class SolutionNode : TreeNode
+		public abstract class PrjExplorerNode : TreeNode
+		{
+			public abstract string AbsolutePath{get;}
+
+			public PrjExplorerNode() { }
+			public PrjExplorerNode(string text) : base(text) { }
+		}
+
+		public class SolutionNode : PrjExplorerNode
 		{
 			public Solution Solution;
 
@@ -705,9 +816,14 @@ namespace D_IDE.Controls.Panels
 				}
 				Expand();
 			}
+
+			public override string AbsolutePath
+			{
+				get { return Solution.FileName; }
+			}
 		}
 
-		public class ProjectNode : TreeNode
+		public class ProjectNode : PrjExplorerNode
 		{
 			public Solution Solution
 			{
@@ -772,9 +888,14 @@ namespace D_IDE.Controls.Panels
 					dirNode.Nodes.Add(fnode);
 				}
 			}
+
+			public override string AbsolutePath
+			{
+				get { return Project.FileName; }
+			}
 		}
 
-		public class DirectoryNode : TreeNode
+		public class DirectoryNode : PrjExplorerNode
 		{
 			#region Properties
 			public string DirectoryName
@@ -817,7 +938,7 @@ namespace D_IDE.Controls.Panels
 				}
 			}
 
-			public string AbsolutePath
+			public override string AbsolutePath
 			{
 				get
 				{
@@ -886,7 +1007,7 @@ namespace D_IDE.Controls.Panels
 			}
 		}
 
-		public class FileNode : TreeNode
+		public class FileNode : PrjExplorerNode
 		{
 			public string FileName
 			{
@@ -917,7 +1038,7 @@ namespace D_IDE.Controls.Panels
 				}
 			}
 
-			public string AbsolutePath
+			public override string AbsolutePath
 			{
 				get
 				{

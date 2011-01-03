@@ -34,6 +34,15 @@ namespace D_IDE.Core
 		public abstract bool CanUseCodeCompletion { get; }
 		public abstract bool CanBuild { get; }
 		public abstract bool CanBuildToSingleModule { get; }
+
+		public static AbstractLanguageBinding SearchBinding(string file, out bool IsProject)
+		{
+			IsProject = false;
+			foreach (var lang in LanguageLoader.Bindings)
+				if ((lang.ProjectsSupported && (IsProject=lang.CanHandleProject(file))) || lang.CanHandleFile(file))
+					return lang;
+			return null;
+		}
 		#endregion
 
 		/// <summary>

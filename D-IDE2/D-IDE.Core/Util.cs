@@ -5,6 +5,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using Microsoft.VisualBasic;
 
 namespace D_IDE.Core
 {
@@ -52,7 +53,6 @@ namespace D_IDE.Core
 			return true;
 		}
 
-
 		public static System.Windows.MessageBoxResult ShowFileExistsDialog(string file)
 		{
 			return System.Windows.MessageBox.Show(
@@ -61,6 +61,21 @@ namespace D_IDE.Core
 				System.Windows.MessageBoxButton.YesNoCancel, 
 				System.Windows.MessageBoxImage.Question, 
 				System.Windows.MessageBoxResult.No);
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="file"></param>
+		/// <returns>True if user wishes to continue</returns>
+		public static bool ShowDeleteFileDialog(string file)
+		{
+			return System.Windows.MessageBox.Show(
+				"Continue with deleting \""+Path.GetFileName( file)+"\"",
+				"Delete file/directory",
+				System.Windows.MessageBoxButton.YesNo,
+				System.Windows.MessageBoxImage.Question,
+				System.Windows.MessageBoxResult.Yes) == System.Windows.MessageBoxResult.Yes;
 		}
 
 		public static string PurifyFileName(string file)
@@ -155,22 +170,22 @@ namespace D_IDE.Core
     {
 		public enum ErrorType
 		{
-			Info,Warning,Error
+			Info=MessageBoxIcon.Information,Warning=MessageBoxIcon.Warning,Error=MessageBoxIcon.Error
 		}
 
-        public static void Log(Exception ex)
+        public static bool Log(Exception ex)
         {
-			Log(ex.Message,ErrorType.Error);
+			return Log(ex.Message,ErrorType.Error);
         }
 
-		public static void Log(string msg)
+		public static bool Log(string msg)
 		{
-			Log(msg, ErrorType.Warning);
+			return Log(msg, ErrorType.Warning);
 		}
 
-		public static void Log(string msg, ErrorType etype)
+		public static bool Log(string msg, ErrorType etype)
 		{
-			MessageBox.Show(msg);
+			return MessageBox.Show(msg,etype.ToString(),MessageBoxButtons.OKCancel,(MessageBoxIcon)etype,MessageBoxDefaultButton.Button1)==DialogResult.OK;
 		}
     }
 
@@ -238,6 +253,22 @@ namespace D_IDE.Core
 			}
 		}
 
+		public static bool MoveToRecycleBin(params string[] files)
+		{
+			foreach (var file in files)
+			{
+				try
+				{
+					if (Directory.Exists(file))
+						Directory.Delete(file,true);
+					else if(File.Exists(file))
+						File.Delete(file);
+				}
+				catch (Exception ex) { ErrorLogger.Log(ex); return false; }
+			}
+			return true;
+		}
+
 		public const uint SHGFI_ICON = 0x100;
 		public const uint SHGFI_LARGEICON = 0x0;
 		public const uint SHGFI_SMALLICON = 0x1;
@@ -261,6 +292,7 @@ namespace D_IDE.Core
 			ref SHFILEINFO psfi,
 			uint cbSizeFileInfo,
 			uint uFlags);
+
 		[DllImport("user32.dll")]
 		public static extern int DestroyIcon(IntPtr hIcon);
 	}

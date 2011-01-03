@@ -13,6 +13,13 @@ namespace D_IDE
 	class IDEManager
 	{
 		#region Properties
+		public static bool CanUpdateGUI = true;
+		public static void UpdateGUI()
+		{
+			if (CanUpdateGUI)
+				MainWindow.UpdateGUIElements();
+		}
+
 		public static MainWindow MainWindow;
 		public static AvalonDock.DockingManager DockMgr
 		{
@@ -298,7 +305,7 @@ namespace D_IDE
 					{
 						File.WriteAllText(absFile, "");
 						Project.Save();
-						MainWindow.UpdateGUIElements();
+						UpdateGUI();
 						return true;
 					}
 				}
@@ -320,6 +327,7 @@ namespace D_IDE
 				Project.SubDirectories.Add(relDir);
 				Util.CreateDirectoryRecursively(absDir);
 				Project.Save();
+				//UpdateGUI();
 				return true;
 			}
 
@@ -360,34 +368,141 @@ namespace D_IDE
 						catch (Exception ex) { ErrorLogger.Log(ex); }
 					}
 				}
-				if(Project.Save())
-					MainWindow.UpdateGUIElements();
+				if (Project.Save())
+					UpdateGUI();
 			}
 
-			public static void AddExistingDirectoryToProject(string DirectoryPath, Project Project, string RelativeDir)
+			public static bool AddExistingDirectoryToProject(string DirectoryPath, Project Project, string RelativeDir)
 			{
+				/*
+				 * - If dir not controlled by prj, add it
+				 * - Copy the directory and all its children
+				 * - Save project
+				 */
+				var newDir_rel =Path.Combine( RelativeDir, Path.GetFileName(DirectoryPath));
+				var newDir_abs = Project.ToAbsoluteFileName(newDir_rel);
 
+				// If project dir is a subdirectory of DirectoryPath, return false
+				if (Project.BaseDirectory.Contains(DirectoryPath) || DirectoryPath==Project.BaseDirectory)
+				{
+					ErrorLogger.Log(new Exception("Project's base directory is part of "+DirectoryPath+" - can't add it"));
+					return false;
+				}
+
+				if (!Project.SubDirectories.Contains(newDir_rel))
+					Project.SubDirectories.Add(newDir_rel);
+
+				Util.CreateDirectoryRecursively(newDir_abs);
+
+				foreach (var file in Directory.GetFiles(DirectoryPath,"*",SearchOption.AllDirectories))
+				{
+					// Note: Empty directories will be ignored.
+					var newFile_rel = file.Substring(DirectoryPath.Length).Trim('\\');
+					var newFile_abs =newDir_abs + "\\" + newFile_rel;
+					
+					if (Project.Add(newFile_abs))
+					{
+						try
+						{
+							if(file!=newFile_abs)
+								File.Copy(file, newFile_abs, true);
+						}
+						catch (Exception ex) {if(! ErrorLogger.Log(ex)) return false; }
+					}
+				}
+				Project.Save();
+				UpdateGUI();
+				return true;
 			}
-
-
 
 			public static bool CopyFile(Project Project, string FileName, Project TargetProject, string NewDirectory)
 			{
-				return false;
+				var tarprj = (Project == TargetProject || TargetProject == null) ? Project : TargetProject;
+				/*
+				 * - Build file paths
+				 * - Try to copy file; if succesful:
+				 * - Add to new project
+				 * - Save target project
+				 */
+				var oldFile = Project.ToAbsoluteFileName(FileName);
+				var newFile_rel =(NewDirectory + "\\" + Path.GetFileName(FileName)).Trim('\\');
+				var newFile_abs = tarprj.ToAbsoluteFileName(newFile_rel);
+
+				if(File.Exists(newFile_abs) || tarprj.ContainsFile(newFile_abs))
+					return false;
+
+				try{
+					File.Copy(oldFile,newFile_abs);
+				}catch(Exception ex){ErrorLogger.Log(ex); return false;}
+
+				// Normally this should always return true since we've tested its non-existence before!
+				tarprj.Add(newFile_abs);
+				tarprj.Save();
+				UpdateGUI();
+				return true;
 			}
 
 			public static bool CopyDirectory(Project Project, string RelativeDir, Project TargetProject, string NewDir)
 			{
-				return false;
+				var srcDir_abs = Project.BaseDirectory + "\\" + RelativeDir;
+				var destDir_abs = Path.Combine(TargetProject.BaseDirectory,NewDir,Path.GetFileName(RelativeDir));
+				if (srcDir_abs == destDir_abs)
+				{
+					ErrorLogger.Log(new Exception("Source and destination are equal"));
+					return false;
+				}
+				return AddExistingDirectoryToProject(srcDir_abs.Trim('\\'), TargetProject, NewDir);
 			}
 
 			public static bool MoveFile(Project Project, string FileName, Project TargetProject, string NewDirectory)
 			{
+				/*
+				 * - Copy file
+				 * - Delete old one from project
+				 * - Delete old physically
+				 */
+				CanUpdateGUI = false;
+				if (CopyFile(Project, FileName, TargetProject, NewDirectory) && Project.Remove(FileName))
+				{
+					var oldDir_rel = Path.GetDirectoryName(Project.ToRelativeFileName(FileName));
+					Win32.MoveToRecycleBin(Project.ToAbsoluteFileName(FileName));
+
+					// If directory empty, keep it managed by the project
+					if (!Project.SubDirectories.Contains(oldDir_rel))
+						Project.SubDirectories.Add(oldDir_rel);
+					Project.Save();
+				}
+				CanUpdateGUI = true;
+				UpdateGUI();
 				return false;
 			}
 
 			public static bool MoveDirectory(Project Project, string RelativeDir, Project TargetProject, string NewDir)
 			{
+				/*
+				 * - Exclude src dir from prj
+				 * - Move dir
+				 * - Add new dir to dest prj
+				 */
+				CanUpdateGUI = false;
+				if(ExcludeDirectoryFromProject(Project,RelativeDir))
+				{
+					CanUpdateGUI = true;
+					var srcDir_abs = Project.BaseDirectory + "\\" + RelativeDir;
+					var destDir_abs =Path.Combine(TargetProject.BaseDirectory,NewDir,Path.GetFileName(RelativeDir));
+
+					// Theoretically it's not needed to move the dir explicitly - it'd be done by AddExistingDirectoryToProject();
+					// However it'd be needed to delete the source directory
+					try
+					{
+						if(srcDir_abs!=destDir_abs)
+							Directory.Move(srcDir_abs, destDir_abs);
+					}
+					catch (Exception ex) { ErrorLogger.Log(ex); return false; }
+
+					return AddExistingDirectoryToProject(destDir_abs, TargetProject, NewDir);
+				}
+				CanUpdateGUI = true;
 				return false;
 			}
 
@@ -415,7 +530,7 @@ namespace D_IDE
 
 				prj.Save();
 
-				MainWindow.UpdateGUIElements();
+				UpdateGUI();
 				return true;
 			}
 
@@ -426,7 +541,7 @@ namespace D_IDE
 				try
 				{
 					if (ExcludeDirectoryFromProject(Project, RelativePath))
-						Directory.Delete(Project.BaseDirectory + "\\" + RelativePath, true);
+						Win32.MoveToRecycleBin(Project.BaseDirectory + "\\" + RelativePath);
 				}
 				catch (Exception ex) { ErrorLogger.Log(ex); return false; }
 				return true;
@@ -454,7 +569,7 @@ namespace D_IDE
 				var r = ExludeFileFromProject(Project, file);
 				try
 				{
-					if (r) File.Delete(Project.ToAbsoluteFileName( file));
+					if (r) Win32.MoveToRecycleBin(Project.ToAbsoluteFileName( file));
 				}
 				catch { }
 				return r;
@@ -549,6 +664,7 @@ namespace D_IDE
 							OpenFile(fn);
 
 					MainWindow.UpdateGUIElements();
+					MainWindow.Panel_ProjectExplorer.MainTree.ExpandAll();
 					return null;
 				}
 

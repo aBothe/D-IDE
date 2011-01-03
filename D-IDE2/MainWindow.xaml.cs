@@ -17,7 +17,7 @@ namespace D_IDE
 	public partial class MainWindow : RibbonWindow
 	{
 		#region Properties
-		ProjectExplorer Panel_ProjectExplorer = new ProjectExplorer();
+		public ProjectExplorer Panel_ProjectExplorer = new ProjectExplorer();
 		#endregion
 
 		#region GUI Interactions

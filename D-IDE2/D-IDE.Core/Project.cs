@@ -62,6 +62,12 @@ namespace D_IDE.Core
 
 		protected readonly List<ProjectModule> _Files = new List<ProjectModule>();
 
+		public ProjectModule[] GetFilesInDirectory(string dir)
+		{
+			var relDir = ToRelativeFileName(dir);
+			return _Files.Where(m => m.FileName.StartsWith(relDir)).ToArray();
+		}
+
 		/// <summary>
 		/// Contain all project files including the file paths of the modules.
 		/// All paths should be relative to the project base directory
@@ -138,7 +144,8 @@ namespace D_IDE.Core
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("dirs");
-			foreach (var m in SubDirectories)
+			// Only save 'empty' pre-added subdirectories
+			foreach (var m in SubDirectories.Where(s=>GetFilesInDirectory(s).Length<1))
 			{
 				xw.WriteStartElement("dir");
 				xw.WriteCData(m);
@@ -240,7 +247,9 @@ namespace D_IDE.Core
 							while (xsr.Read())
 							{
 								if (xsr.LocalName != "dir") continue;
-								SubDirectories.Add(xsr.ReadString());
+
+								var dir = xsr.ReadString();
+								SubDirectories.Add(dir);
 							}
 							break;
 

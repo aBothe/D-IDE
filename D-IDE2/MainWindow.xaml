@@ -126,7 +126,6 @@
 						<ribbon:RibbonMenuItem Header="Breakpoints"></ribbon:RibbonMenuItem>
 					</ribbon:RibbonMenuButton>
 
-					<ribbon:RibbonButton Label="Reload Project tree" LargeImageSource="Resources/112_RefreshArrow_Blue_32x32_72.png"></ribbon:RibbonButton>
 					<ribbon:RibbonButton Label="Restore default layout" SmallImageSource="Resources/109_AllAnnotations_Default_16x16_72.png"></ribbon:RibbonButton>
 				</ribbon:RibbonGroup>
 			</ribbon:RibbonTab>

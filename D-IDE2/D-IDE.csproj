@@ -50,6 +50,7 @@
     <Reference Include="ICSharpCode.AvalonEdit">
       <HintPath>..\externalDeps\ICSharpCode.AvalonEdit.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.Windows.Shell, Version=3.5.41019.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\externalDeps\Microsoft.Windows.Shell.dll</HintPath>
@@ -293,9 +294,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\save16.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="t.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
