@@ -44,7 +44,7 @@
 			
 			
 
-			<ribbon:RibbonTab Header="Module">
+			<ribbon:RibbonTab Header="Edit" Name="Tab_Edit">
 				<ribbon:RibbonGroup Header="Edit">
 					<ribbon:RibbonButton SmallImageSource="Resources/Icons.16x16.CutIcon.png" Label="Cut" />
 					<ribbon:RibbonButton SmallImageSource="Resources/Icons.16x16.CopyIcon.png" Label="Copy" />
@@ -64,11 +64,34 @@
 					<ribbon:RibbonButton Label="Reformat document"></ribbon:RibbonButton>
 				</ribbon:RibbonGroup>
 			</ribbon:RibbonTab>
-			
-			
-			
-			
-			<ribbon:RibbonTab Header="Project">
+
+
+
+
+
+			<ribbon:RibbonTab Header="View">
+				<ribbon:RibbonGroup Header="View">
+					<ribbon:RibbonMenuButton Label="Panels" LargeImageSource="Resources/panel.png">
+						<ribbon:RibbonMenuItem Header="Project Explorer"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Document Outline"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Start Page"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonSeparator />
+						<ribbon:RibbonMenuItem Header="Build Log"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Output"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Error Log"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonSeparator />
+						<ribbon:RibbonMenuItem Header="Locals"></ribbon:RibbonMenuItem>
+						<ribbon:RibbonMenuItem Header="Breakpoints"></ribbon:RibbonMenuItem>
+					</ribbon:RibbonMenuButton>
+
+					<ribbon:RibbonButton Label="Restore default layout" SmallImageSource="Resources/109_AllAnnotations_Default_16x16_72.png"></ribbon:RibbonButton>
+				</ribbon:RibbonGroup>
+			</ribbon:RibbonTab>
+
+
+
+
+			<ribbon:RibbonTab Header="Project" Name="Tab_Project">
 				<ribbon:RibbonGroup Header="Project">
 					<ribbon:RibbonButton Label="Project Settings" LargeImageSource="Resources/settings_32.png" />
 					<ribbon:RibbonButton Label="Open directory in Explorer" LargeImageSource="Resources/Computer.png" />
@@ -78,7 +101,7 @@
 
 			
 
-			<ribbon:RibbonTab Header="Build &amp; Debug">
+			<ribbon:RibbonTab Header="Build &amp; Debug" Name="Tab_Build">
 				<ribbon:RibbonGroup Header="Build">
 					<ribbon:RibbonButton Label="Build Project" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
 					<ribbon:RibbonButton Label="Build Current Module" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
@@ -109,29 +132,7 @@
 			</ribbon:RibbonTab>
 
 
-			
-			
-			<ribbon:RibbonTab Header="View">
-				<ribbon:RibbonGroup Header="View">
-					<ribbon:RibbonMenuButton Label="Panels" LargeImageSource="Resources/panel.png">
-						<ribbon:RibbonMenuItem Header="Project Explorer"></ribbon:RibbonMenuItem>
-						<ribbon:RibbonMenuItem Header="Document Outline"></ribbon:RibbonMenuItem>
-						<ribbon:RibbonMenuItem Header="Start Page"></ribbon:RibbonMenuItem>
-						<ribbon:RibbonSeparator />
-						<ribbon:RibbonMenuItem Header="Build Log"></ribbon:RibbonMenuItem>
-						<ribbon:RibbonMenuItem Header="Output"></ribbon:RibbonMenuItem>
-						<ribbon:RibbonMenuItem Header="Error Log"></ribbon:RibbonMenuItem>
-						<ribbon:RibbonSeparator />
-						<ribbon:RibbonMenuItem Header="Locals"></ribbon:RibbonMenuItem>
-						<ribbon:RibbonMenuItem Header="Breakpoints"></ribbon:RibbonMenuItem>
-					</ribbon:RibbonMenuButton>
-
-					<ribbon:RibbonButton Label="Restore default layout" SmallImageSource="Resources/109_AllAnnotations_Default_16x16_72.png"></ribbon:RibbonButton>
-				</ribbon:RibbonGroup>
-			</ribbon:RibbonTab>
-			
-			
-			
+				
 		</ribbon:Ribbon>
 		
 		<StatusBar Grid.Row="1" Name="statusBar1" VerticalAlignment="Bottom">

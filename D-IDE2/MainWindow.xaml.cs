@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System;
 using Microsoft.Win32;
 using System.Linq;
+using System.IO;
 
 namespace D_IDE
 {
@@ -83,8 +84,9 @@ namespace D_IDE
 			if (pdlg.ShowDialog().Value)
 			{
 				var pdir = pdlg.ProjectDir;
-				if (pdlg.CreateProjectDir)
-					pdir += "\\" + Util.PurifyFileName(pdlg.ProjectName);
+
+				if (pdlg.CreateSolutionDir && !pdlg.AddToCurrentSolution)
+					pdir += "\\" + Util.PurifyDirName(pdlg.SolutionName);
 
 				Util.CreateDirectoryRecursively(pdir);
 

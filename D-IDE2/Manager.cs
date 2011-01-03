@@ -51,10 +51,22 @@ namespace D_IDE
 			/// </summary>
 			public static Project CreateNewProject(AbstractLanguageBinding Binding, FileTemplate ProjectType, string Name, string BaseDir)
 			{
+				/*
+				 * Enforce the creation of a new project directory
+				 */
+				var baseDir = BaseDir.Trim('\\', ' ', '\t') + "\\" + Util.PurifyDirName(Name);
+				if (Directory.Exists(baseDir))
+				{
+					ErrorLogger.Log(new Exception("Project directory exists already"));
+					return null;
+				}
+
+				Util.CreateDirectoryRecursively(baseDir);
+
 				var prj = Binding.CreateEmptyProject(ProjectType);
 				prj.Name = Name;
 				prj.FileName =
-					BaseDir.Trim('\\', ' ', '\t') + "\\" +
+					baseDir + "\\" + 
 					Path.ChangeExtension(Util.PurifyFileName(Name), ProjectType.Extensions[0]);
 
 				// Set the output dir to 'bin' by default
@@ -64,16 +76,20 @@ namespace D_IDE
 				return prj;
 			}
 
+			/// <summary>
+			/// Note: The current solution will not be touched
+			/// </summary>
 			public static Solution CreateNewProjectAndSolution(AbstractLanguageBinding Binding, FileTemplate ProjectType, string Name, string BaseDir, string SolutionName)
 			{
+				var baseDir = BaseDir.Trim('\\', ' ', '\t');
 				var sln = new Solution();
 				sln.Name = SolutionName;
 				sln.FileName =
-					BaseDir.Trim('\\', ' ', '\t') + "\\" +
+					baseDir + "\\" +
 					Path.ChangeExtension(Util.PurifyFileName(Name), Solution.SolutionExtension);
 
-				AddNewProjectToSolution(sln, Binding, ProjectType, Name, BaseDir);
-
+				AddNewProjectToSolution(sln, Binding, ProjectType, Name, baseDir);
+				
 				return sln;
 			}
 
@@ -83,8 +99,12 @@ namespace D_IDE
 			public static Project AddNewProjectToSolution(Solution sln, AbstractLanguageBinding Binding, FileTemplate ProjectType, string Name, string BaseDir)
 			{
 				var prj = CreateNewProject(Binding, ProjectType, Name, BaseDir);
-				sln.AddProject(prj);
-
+				if (prj != null)
+				{
+					prj.Save();
+					sln.AddProject(prj);
+					sln.Save();
+				}
 				return prj;
 			}
 

@@ -43,7 +43,7 @@
 		<Label Content="Directory" Foreground="White" Height="20" HorizontalAlignment="Left" Margin="12,0,0,41" Name="label2" VerticalAlignment="Bottom" Width="150" Padding="0" />
 		<TextBox Margin="330,0,164,12" Name="TextBox_SolutionName" Height="23" VerticalAlignment="Bottom" />
 		<Label Content="Solution Name" Foreground="White" Height="20" HorizontalAlignment="Left" Margin="12,0,0,12" Name="label3" VerticalAlignment="Bottom" Width="148" Padding="0" />
-		<CheckBox Content="Create Project Directory" Foreground="White" Height="16" HorizontalAlignment="Left" Margin="168,0,0,45" Name="Check_CreateSolutionDir" VerticalAlignment="Bottom" Width="157" IsChecked="True" />
+		<CheckBox Content="Create Solution Directory" Foreground="White" Height="16" HorizontalAlignment="Left" Margin="168,0,0,45" Name="Check_CreateSolutionDir" VerticalAlignment="Bottom" Width="157" IsChecked="True" />
 		<ComboBox Margin="168,0,0,12" Name="ComboBox_CreateSolution" SelectedIndex="0" IsEditable="False" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="157" SelectionChanged="ComboBox_CreateSolution_SelectionChanged">
 			<ComboBoxItem Content="Create" />
 			<ComboBoxItem Content="Add" />

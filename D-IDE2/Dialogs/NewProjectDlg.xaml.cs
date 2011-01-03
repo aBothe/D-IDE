@@ -45,7 +45,7 @@ namespace D_IDE.Dialogs
 			get { return TextBox_ProjectDir.Text; }
 			set { TextBox_ProjectDir.Text = value; PropChanged("CreationAllowed"); }
 		}
-		public bool CreateProjectDir
+		public bool CreateSolutionDir
 		{
 			get { return Check_CreateSolutionDir.IsChecked.Value; }
 			set { Check_CreateSolutionDir.IsChecked = value; }
@@ -102,20 +102,17 @@ namespace D_IDE.Dialogs
 				{
 					ComboBox_CreateSolution.SelectedIndex = 0;
 					ComboBox_CreateSolution.IsEnabled = false;
-					TextBox_SolutionName.IsEnabled = true;
 				}
 				// Add only
 				else if (value==DialogMode.Add)
 				{
 					ComboBox_CreateSolution.SelectedIndex = 1;
 					ComboBox_CreateSolution.IsEnabled = false;
-					TextBox_SolutionName.IsEnabled = false;
 				}
 				// Both
 				else
 				{
 					ComboBox_CreateSolution.IsEnabled = true;
-					TextBox_SolutionName.IsEnabled = true;
 				}
 				PropChanged("CreationAllowed");
 			}
@@ -190,7 +187,7 @@ namespace D_IDE.Dialogs
 
 		private void ComboBox_CreateSolution_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			TextBox_SolutionName.IsEnabled = !AddToCurrentSolution;
+			TextBox_SolutionName.IsEnabled = Check_CreateSolutionDir.IsEnabled = !AddToCurrentSolution;
 		}
 
 		/// <summary>
