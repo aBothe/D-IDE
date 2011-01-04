@@ -26,6 +26,7 @@ namespace D_IDE
 		{
 			UpdateProjectExplorer();
 			UpdateTitle();
+			UpdateLastFilesMenus();
 		}
 		public void UpdateProjectExplorer()
 		{
@@ -40,24 +41,60 @@ namespace D_IDE
 		}
 		#endregion
 
+		#region Initializer
 		public MainWindow()
 		{
 			InitializeComponent();
 
+
+			// Init global variables
 			IDEManager.MainWindow = this;
+			Show();
 
-			// Load global settings
-			GlobalProperties.Init();
-
-			// Load language bindings
-			LanguageLoader.Bindings.Add(new GenericFileBinding());
-			LanguageLoader.LoadLanguageInterface("D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
-
-			UpdateLastFilesMenus();
-
-			// Init panels and their layouts
+			#region Init panels and their layouts
+			// Note: To enable the docking manager saving&restoring procedures it's needed to name all the panels
+			Panel_ProjectExplorer.Name = "ProjectExplorer";
+			Panel_ProjectExplorer.HideOnClose = true;
 			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
+			#endregion
+
+			/*
+			 * - Restore Docking Layout
+			 * - Global Settings
+			 * - Language Bindings
+			 * - Language Settings
+			 * (Optional):
+			 * - Open last project
+			 * - Open last files
+			 */
+
+			try
+			{
+				// Load layout
+				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
+				// Exclude this call in develop time
+				//if (File.Exists(layoutFile))	DockMgr.RestoreLayout(layoutFile);
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
+
+			try
+			{
+				// Load global settings
+				GlobalProperties.Init();
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
+
+			LanguageLoader.Bindings.Add(new GenericFileBinding());
+			try
+			{
+				// Load language bindings
+				LanguageLoader.LoadLanguageInterface("D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
+
+			UpdateGUIElements();			
 		}
+		#endregion
 
 		#region Ribbon buttons
 
@@ -155,19 +192,35 @@ namespace D_IDE
 
 		private void Settings(object sender, RoutedEventArgs e)
 		{
-
+			var dlg = new GlobalSettingsDlg();
+			dlg.ShowDialog();
 		}
 
 		#endregion
 
+		class LastFileItem : RibbonApplicationMenuItem
+		{
+			public LastFileItem(string file,bool IsPrj)
+			{
+				Header = Path.GetFileName(file);
+				ToolTipTitle = file;
+				Click += delegate(Object o, RoutedEventArgs _e)
+				{
+					IDEManager.EditingManagement.OpenFile(file);
+				};
+
+				Height = 22;
+			}
+		}
+
 		public void UpdateLastFilesMenus()
 		{
 			Button_Open.Items.Clear();
-
+			
 			var mi = new RibbonApplicationMenuItem();
-			mi.Header = "File";
+			mi.Header = "File/Project";
 			mi.ToolTipTitle = "Open File (Ctrl+O)";
-			mi.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri("Resources/file.png", UriKind.Relative));
+			mi.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri("Resources/OpenPH.png", UriKind.Relative));
 			mi.Click += Open;
 			Button_Open.Items.Add(mi);
 
@@ -176,30 +229,14 @@ namespace D_IDE
 				Button_Open.Items.Add(new RibbonSeparator());
 
 			foreach (var i in GlobalProperties.Current.LastFiles)
-			{
-				mi = new RibbonApplicationMenuItem();
-				mi.Header = i;
-				mi.Click += delegate(Object o, RoutedEventArgs _e)
-				{
-					IDEManager.EditingManagement.OpenFile(i);
-				};
-				Button_Open.Items.Add(mi);
-			}
+				Button_Open.Items.Add(new LastFileItem(i,false));
 
 			// Then add recent projects
 			if (GlobalProperties.Current.LastFiles.Count > 0 && GlobalProperties.Current.LastProjects.Count > 0)
 				Button_Open.Items.Add(new RibbonSeparator());
 
 			foreach (var i in GlobalProperties.Current.LastProjects)
-			{
-				mi = new RibbonApplicationMenuItem();
-				mi.Header = i;
-				mi.Click += delegate(Object o, RoutedEventArgs _e)
-				{
-					IDEManager.EditingManagement.OpenFile(i);
-				};
-				Button_Open.Items.Add(mi);
-			}
+				Button_Open.Items.Add(new LastFileItem(i,true));
 		}
 
 		/// <summary>
@@ -229,7 +266,21 @@ namespace D_IDE
 
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
-			IDEManager.EditingManagement.SaveAllFiles();
+			try
+			{
+				// Save docking layout
+				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
+				DockMgr.SaveLayout(layoutFile);
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
+			try{
+				// Save all files
+				IDEManager.EditingManagement.SaveAllFiles();
+
+				// Save global settings
+				GlobalProperties.Save();
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
 	}
 }

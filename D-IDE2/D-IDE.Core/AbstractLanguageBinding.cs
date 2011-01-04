@@ -1,6 +1,7 @@
 ﻿using Parser.Core;
 using System.IO;
 using DebugEngineWrapper;
+using System.Windows.Controls;
 
 namespace D_IDE.Core
 {
@@ -13,15 +14,22 @@ namespace D_IDE.Core
 		/// </summary>
 		public abstract object LanguageIcon { get; }
 
+		#region Settings
+		public abstract bool CanUseSettings { get; }
+		public abstract void SaveSettings(string SuggestedFileName);
+		public abstract void LoadSettings(string SuggestedFileName);
+		public abstract AbstractSettingsPage SettingsPage { get; }
+		#endregion
+
 		public abstract object SmallProjectIcon { get; }
 		public abstract object LargeProjectIcon { get; }
 
 		/// <summary>
-		/// File types and extensions supported by this language
+		/// File types and extensions supported by this binding
 		/// </summary>
 		public abstract FileTemplate[] ModuleTemplates { get; }
 		/// <summary>
-		/// Project types and extensions supported by this language
+		/// Project types and extensions supported by this binding
 		/// </summary>
 		public abstract FileTemplate[] ProjectTemplates { get; }
 

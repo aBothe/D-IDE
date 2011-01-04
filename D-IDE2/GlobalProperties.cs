@@ -12,37 +12,7 @@ namespace D_IDE
 {
 	internal class GlobalProperties
 	{
-        public readonly static string SettingsSaveLocationFile = IDEUtil.ApplicationStartUpPath + "\\SettingsDirectory.cfg";
-
-        /// <summary>
-        /// Gets and sets the directory where all configurations are stored
-        /// </summary>
-        public static string ConfigDirectory
-        {
-            get {
-                try
-                {
-                    if (File.Exists(SettingsSaveLocationFile))
-                    {
-                        var con = File.ReadAllText(SettingsSaveLocationFile);
-                        if (Directory.Exists(con))
-                            return con;
-                    }
-                }
-                catch { }
-                string ret = IDEUtil.ApplicationStartUpPath + "D-IDE.config";
-                IDEUtil.CreateDirectoryRecursively(ret);
-                return ret;
-            }
-            set
-            {
-                try
-                {
-                    File.WriteAllText(SettingsSaveLocationFile, value);
-                }
-                catch { }
-            }
-        }
+        
 
 		/// <summary>
 		/// A list of all globally loaded projects.
@@ -50,20 +20,30 @@ namespace D_IDE
 		/// </summary>
 		public static List<Project> ProjectCache = new List<Project>();
 
-        public const string MainSettingsFile = "D-IDE.settings.xml";
-        public const string LayoutFile = "D-IDE.layout.xml";
+        public const string MainSettingsFile = "D-IDE2.settings.xml";
+        public const string LayoutFile = "D-IDE2.layout.xml";
 
         /// <summary>
         /// Globally initializes all settings and essential properties
         /// </summary>
         public static void Init()
         {
-            Load(ConfigDirectory + MainSettingsFile);
+			try
+			{
+				Current = Load();
+				if (Current == null)
+					Current = new GlobalProperties();
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
         }
 
-		public static bool Load(string fn)
+		public static GlobalProperties Load()
 		{
-			if (!File.Exists(fn)) return false;
+			return Load(Path.Combine(IDEInterface.ConfigDirectory, MainSettingsFile));
+		}
+		public static GlobalProperties Load(string fn)
+		{
+			if (!File.Exists(fn)) return null;
 
             try
             {
@@ -297,13 +277,21 @@ namespace D_IDE
                 }
 
                 xr.Close();
-                Current = p;
+				return p;
 
             }
             catch {  }
-            return true;
+            return null;
 		}
 
+		public static void Save()
+		{
+			try
+			{
+				Save(Path.Combine(IDEInterface.ConfigDirectory, MainSettingsFile));
+			}
+			catch { }
+		}
 		public static void Save(string fn)
 		{
 			if (String.IsNullOrEmpty(fn)) return;
@@ -433,7 +421,7 @@ namespace D_IDE
 			xw.Close();
 		}
 
-		public static GlobalProperties Current=new GlobalProperties();
+		public static GlobalProperties Current=null;
 
 		public List<string>
 			LastProjects = new List<string>(),

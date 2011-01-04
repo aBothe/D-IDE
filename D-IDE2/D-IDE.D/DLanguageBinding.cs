@@ -139,5 +139,27 @@ namespace D_IDE.D
 		{
 			throw new NotImplementedException();
 		}
+
+		#region Settings
+		public override bool CanUseSettings
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public override void SaveSettings(string SuggestedFileName)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override void LoadSettings(string SuggestedFileName)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override AbstractSettingsPage SettingsPage
+		{
+			get { throw new NotImplementedException(); }
+		}
+		#endregion
 	}
 }

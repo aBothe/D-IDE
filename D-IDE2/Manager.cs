@@ -653,6 +653,16 @@ namespace D_IDE
 
 		public class EditingManagement
 		{
+			static void AdjustLastFileList(string openedFile, bool IsPrj)
+			{
+				var l = IsPrj? GlobalProperties.Current.LastProjects:GlobalProperties.Current.LastFiles;
+				if (l.Contains(openedFile))
+					l.Remove(openedFile);
+				l.Insert(0, openedFile);
+				while (l.Count > 10)
+					l.RemoveAt(10);
+			}
+
 			/// <summary>
 			/// Central method to open a file OR a project
 			/// </summary>
@@ -662,7 +672,7 @@ namespace D_IDE
 				/*
 				 * 1. Solution check
 				 * 2. Project file check
-				 * 3. Solution file check
+				 * 3. Normal file check
 				 */
 				var ext = Path.GetExtension(FileName);
 
@@ -674,6 +684,8 @@ namespace D_IDE
 					 * - Open last opened files
 					 */
 					CurrentSolution = new Solution(FileName);
+
+					AdjustLastFileList(FileName, true);
 
 					foreach (var f in CurrentSolution.ProjectFiles)
 						if(File.Exists(CurrentSolution.ToAbsoluteFileName( f)))
@@ -696,18 +708,23 @@ namespace D_IDE
 					 * - Create anonymous solution that holds the project virtually
 					 * - Open last opened files
 					 */
+					var _oldSln = CurrentSolution;
 					CurrentSolution = new Solution();
 					CurrentSolution.FileName = Path.ChangeExtension(FileName, Solution.SolutionExtension);
 
 					var LoadedPrj = langs[0].OpenProject(CurrentSolution, FileName);
+					if (LoadedPrj != null)
+					{
+						AdjustLastFileList(FileName, true);
+						CurrentSolution.Name = LoadedPrj.Name;
+						CurrentSolution.AddProject(LoadedPrj);
 
-					CurrentSolution.Name = LoadedPrj.Name;
-					CurrentSolution.AddProject(LoadedPrj);
-
-					foreach (var prj in CurrentSolution)
-						foreach (var fn in prj.LastOpenedFiles)
-							OpenFile(prj.ToAbsoluteFileName( fn));
-					MainWindow.UpdateGUIElements();
+						foreach (var prj in CurrentSolution)
+							foreach (var fn in prj.LastOpenedFiles)
+								OpenFile(prj.ToAbsoluteFileName(fn));
+						MainWindow.UpdateGUIElements();
+					}
+					else CurrentSolution = _oldSln;
 					return null;
 				}
 
@@ -730,6 +747,8 @@ namespace D_IDE
 						doc.Activate();
 						return doc as AbstractEditorDocument;
 					}
+
+				AdjustLastFileList(absPath, false);
 
 				var newEd = new EditorDocument(absPath);
 				newEd.Show(DockMgr);

@@ -730,7 +730,7 @@ namespace D_IDE.Controls.Panels
 		{
 			TreeIcons.Images.Clear();
 
-			TreeIcons.Images.Add("solution", CommonIcons.Icons_16x16_CombineIcon);
+			TreeIcons.Images.Add("solution", CommonIcons.solution16);
 			TreeIcons.Images.Add("dir", CommonIcons.dir);
 			TreeIcons.Images.Add("dir_open", CommonIcons.dir_open);
 

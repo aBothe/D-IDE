@@ -91,11 +91,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Dialogs\GlobalSettingsDlg.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\NewSrcDlg.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialogs\NewProjectDlg.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\SettingsPages\Page_General.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -111,11 +119,17 @@
     <Compile Include="Controls\Panels\ProjectExplorer.xaml.cs">
       <DependentUpon>ProjectExplorer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\GlobalSettingsDlg.xaml.cs">
+      <DependentUpon>GlobalSettingsDlg.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\NewSrcDlg.xaml.cs">
       <DependentUpon>NewSrcDlg.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\NewProjectDlg.xaml.cs">
       <DependentUpon>NewProjectDlg.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\SettingsPages\Page_General.xaml.cs">
+      <DependentUpon>Page_General.xaml</DependentUpon>
     </Compile>
     <Compile Include="GenericFileBinding.cs" />
     <Compile Include="GlobalProperties.cs" />
@@ -274,7 +288,6 @@
     <Resource Include="Resources\txt32.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\Icons.16x16.CombineIcon.png" />
     <Resource Include="Resources\Icons.32x32.CombineIcon.png" />
   </ItemGroup>
   <ItemGroup>
@@ -294,6 +307,10 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\save16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\solution16.png" />
+    <Resource Include="Resources\solution32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

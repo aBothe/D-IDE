@@ -48,5 +48,13 @@ namespace D_IDE
 		public override bool BuildProject(Project Project)		{			throw new NotImplementedException();		}
 		public override BuildError[] BuildSingleModule(string FileName)		{			throw new NotImplementedException();		}
 		public override string BuildSymbolValueString(Parser.Core.AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugEngineWrapper.DebugScopedSymbol sym)		{			throw new NotImplementedException();		}
+
+		public override void SaveSettings(string SuggestedFileName)		{			throw new NotImplementedException();		}
+		public override void LoadSettings(string SuggestedFileName)		{			throw new NotImplementedException();		}
+		public override bool CanUseSettings		{			get { return false; }		}
+		public override AbstractSettingsPage SettingsPage
+		{
+			get { throw new NotImplementedException(); }
+		}
 	}
 }

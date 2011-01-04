@@ -193,13 +193,6 @@ namespace D_IDE {
             }
         }
         
-        internal static System.Drawing.Bitmap Icons_16x16_CombineIcon {
-            get {
-                object obj = ResourceManager.GetObject("Icons_16x16_CombineIcon", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
         internal static System.Drawing.Bitmap Icons_16x16_CommentRegion {
             get {
                 object obj = ResourceManager.GetObject("Icons_16x16_CommentRegion", resourceCulture);
@@ -371,6 +364,20 @@ namespace D_IDE {
         internal static System.Drawing.Bitmap settings_32 {
             get {
                 object obj = ResourceManager.GetObject("settings_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap solution16 {
+            get {
+                object obj = ResourceManager.GetObject("solution16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap solution32 {
+            get {
+                object obj = ResourceManager.GetObject("solution32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
