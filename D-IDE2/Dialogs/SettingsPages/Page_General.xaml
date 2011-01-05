@@ -5,8 +5,19 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="376" d:DesignWidth="624">
-    <w:Grid>
-		<w:Button Content="Button" Height="23" HorizontalAlignment="Left" Margin="76,60,0,0" Name="button1" VerticalAlignment="Top" Width="75" />
+             d:DesignHeight="376" d:DesignWidth="624" Background="White">
+	<w:Grid Name="stackPanel1">
+		<w:GroupBox Header="Application" Height="97" VerticalAlignment="Top">
+			<w:Grid>
+				<w:CheckBox Content="Allow multiple instances of D-IDE (needs restart)" Height="16" HorizontalAlignment="Left" Margin="6,6,0,0" Name="cb_MultipleInstances" VerticalAlignment="Top" />
+				<w:CheckBox Content="Check for program updates at startup" Height="16" HorizontalAlignment="Left" Margin="6,28,0,0" Name="checkBox1" VerticalAlignment="Top" />
+				<w:CheckBox Content="Show Start Page" Height="16" HorizontalAlignment="Left" Margin="6,50,0,0" Name="checkBox2" VerticalAlignment="Top" />
+			</w:Grid>
+		</w:GroupBox>
+
+		<w:GroupBox Header="Project Settings" Height="73" VerticalAlignment="Top" Margin="0,103,0,0">
+			<w:Grid>
+				</w:Grid>
+		</w:GroupBox>
 	</w:Grid>
 </AbstractSettingsPage>
