@@ -54,7 +54,7 @@ namespace D_IDE.Core
 		}
 		public string ToRelativeFileName(string file)
 		{
-			if (Path.IsPathRooted(file))
+			if (Path.IsPathRooted(file) && file.StartsWith(BaseDirectory))
 				return file.Substring(BaseDirectory.Length).Trim('\\');
 			return file;
 		}
@@ -76,16 +76,11 @@ namespace D_IDE.Core
 		/// <param name="Project"></param>
 		public bool AddProject(Project Project)
 		{
-			if (ProjectCache.Contains(Project))
-			{
-				ErrorLogger.Log(new ProjectException(Project,"Solution already contains Project \""+Project.Name+"\""));
-				return false;
-			}
-
 			if (!AddProject(Project.FileName))
 				return false;
-
-			ProjectCache.Add(Project);
+			
+			if (!ProjectCache.Contains(Project))
+				ProjectCache.Add(Project);
 			Project.Solution = this;
 			return true;
 		}
@@ -219,11 +214,14 @@ namespace D_IDE.Core
 		public Project StartProject
 		{
 			get {
+				if (string.IsNullOrEmpty(_StartPrjFile) && _ProjectFiles.Count>0)
+					_StartPrjFile = _ProjectFiles[0];
+
 				return this[_StartPrjFile];
 			}
 			set {
-				if (_ProjectFiles.Contains(value.FileName))
-					_StartPrjFile = value.FileName;
+				if (_ProjectFiles.Contains(ToRelativeFileName( value.FileName)))
+					_StartPrjFile =ToRelativeFileName( value.FileName);
 				else throw new Exception("Project "+value.Name+" is not part of this Solution");
 			}
 		}

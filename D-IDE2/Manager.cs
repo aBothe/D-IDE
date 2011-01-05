@@ -120,8 +120,8 @@ namespace D_IDE
 			{
 				/*
 				 * a) Check if project already existing
-				 * b) Try to load project; if succeeded:
-				 * c) Add to solution; if succeeded:
+				 * b) Add to solution; if succeeded:
+				 * c) Try to load project; if succeeded:
 				 * d) Save solution
 				 */
 
@@ -130,10 +130,12 @@ namespace D_IDE
 					ErrorLogger.Log(new ProjectException(sln[Projectfile],"Project already part of solution"));
 					return false; }
 				// b)
+				if (!sln.AddProject(Projectfile))
+					return false;
+				// c)
 				var prj = Project.LoadProjectFromFile(sln, Projectfile);
 				if (prj == null) return false; // Perhaps it's a project format that's simply not supported
-				// c)
-				if (!sln.AddProject(prj)) return false;
+				
 				// d)
 				sln.Save();
 

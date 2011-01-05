@@ -1,0 +1,12 @@
+﻿<AbstractSettingsPage x:Class="D_IDE.Dialogs.SettingsPages.Page_General"
+			 xmlns="clr-namespace:D_IDE.Core;assembly=d-ide.core"
+             xmlns:w="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="376" d:DesignWidth="624">
+    <w:Grid>
+		<w:Button Content="Button" Height="23" HorizontalAlignment="Left" Margin="76,60,0,0" Name="button1" VerticalAlignment="Top" Width="75" />
+	</w:Grid>
+</AbstractSettingsPage>

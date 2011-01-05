@@ -73,7 +73,8 @@ namespace D_IDE.Controls.Panels
 
 		void MainTree_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
 		{
-			if (_IsRefreshing || (e.Node is ProjectNode &&(e.Node as ProjectNode).IsUnloaded))
+			var n = e.Node as PrjExplorerNode;
+			if (_IsRefreshing || (n is ProjectNode &&(n as ProjectNode).IsUnloaded))
 				e.CancelEdit = true;
 		}
 
@@ -277,23 +278,23 @@ namespace D_IDE.Controls.Panels
 			else if (isPrj) // Ignore already existing projects
 				return false;
 
+			if (dropNode is SolutionNode)
+				return false;
+
 			/*
 			 * After checking for solution or project extension, check if 'file' is file or directory
 			 */
 			bool IsDir = Directory.Exists(file);
+			var fileDir = Path.GetDirectoryName(file);
+
 			var dropFile=dropNode.AbsolutePath;
+			var dropDir = dropFile;
+			if (!(dropNode is DirectoryNode)) 
+				dropDir = Path.GetDirectoryName(dropFile);
 
-			// A directory node can be dropped on an other directory node or a project node
-			if (IsDir && (
-				(dropNode is DirectoryNode &&
-					!dropFile.Contains(file) && file!=dropFile)|| // Ensure that the drop node is no subdirectory of our source node
-				(dropNode is ProjectNode &&
-					(dropNode as ProjectNode).Project.BaseDirectory!=file) // Ensure that the directory's root is not the original
-				))
+			if (IsDir && file!=dropDir && !dropDir.Contains(file))
 				return true;
-
-			if ((dropNode is DirectoryNode || dropNode is ProjectNode) &&
-				Path.GetDirectoryName(file)!=dropFile) // Ensure the file gets moved either to an other directory or project
+			else if (fileDir!=dropDir) // Ensure the file gets moved either to an other directory or project
 				return true;
 
 			return false;
@@ -311,7 +312,9 @@ namespace D_IDE.Controls.Panels
 				var src_prj = data.Project;
 
 				var dest_path = dropNode.IsDir?(dropNode.Node as DirectoryNode).RelativePath: "";
-				Project dest_prj = dropNode.Project;
+				if (dropNode.IsFile) dest_path = Path.GetDirectoryName(dropNode.Path);
+				var dest_prj = dropNode.Project;
+				dest_path = dest_prj.ToRelativeFileName(dest_path);
 
 				if (dest_prj != null)
 					if (IsCut) IDEManager.FileManagement.MoveDirectory(src_prj, src_path, dest_prj, dest_path);
@@ -321,10 +324,13 @@ namespace D_IDE.Controls.Panels
 			else if (data.IsFile)
 			{
 				var src_path = (data.Node as FileNode).RelativeFilePath;
-				var src_prj = dropNode.Project;
+				var src_prj = data.Project;
 
 				var dest_path = dropNode.IsDir ? (dropNode.Node as DirectoryNode).RelativePath : "";
-				Project dest_prj = dropNode.Project;
+				if (dropNode.IsFile) dest_path = Path.GetDirectoryName(dropNode.Path);
+				var dest_prj = dropNode.Project;
+
+				dest_path = dest_prj.ToRelativeFileName(dest_path);
 
 				if (dest_prj != null)
 					if (IsCut) IDEManager.FileManagement.MoveFile(src_prj, src_path, dest_prj, dest_path);
@@ -362,20 +368,16 @@ namespace D_IDE.Controls.Panels
 			if(!dropNode.IsPrj)
 				_ExpandedNodes.Add(dropNode.Node.FullPath);
 
+			var dropDir = "";
+			if (dropNode.IsDir)
+				dropDir = (dropNode.Node as DirectoryNode).RelativePath;
+			else if (dropNode.IsFile)
+				dropDir = Path.GetDirectoryName( (dropNode.Node as FileNode).RelativeFilePath);
+
 			if (IsDir)
-			{
-				if (dropNode.IsPrj)
-					IDEManager.FileManagement.AddExistingDirectoryToProject(file, dropNode.Project, "");
-				else if (dropNode.IsDir)
-					IDEManager.FileManagement.AddExistingDirectoryToProject(file, dropNode.Project, (dropNode.Node as DirectoryNode).RelativePath);
-			}
+					IDEManager.FileManagement.AddExistingDirectoryToProject(file, dropNode.Project, dropDir);
 			else
-			{
-				if (dropNode.IsPrj)
-					IDEManager.FileManagement.AddExistingSourceToProject(dropNode.Project, "", file);
-				else if (dropNode.IsDir)
-					IDEManager.FileManagement.AddExistingSourceToProject(dropNode.Project, (dropNode.Node as DirectoryNode).RelativePath, file);
-			}
+					IDEManager.FileManagement.AddExistingSourceToProject(dropNode.Project, dropDir, file);
 		}
 
 		void AddCutCopyPasteButtons(ContextMenuStrip cm, PrjExplorerNode node, bool CutAllowed, bool CopyAllowed, bool PasteAllowed)
@@ -765,9 +767,11 @@ namespace D_IDE.Controls.Panels
 		#region Node classes
 		public abstract class PrjExplorerNode : TreeNode
 		{
-			public abstract string AbsolutePath{get;}
+			public abstract string AbsolutePath { get; }
 
-			public PrjExplorerNode() { }
+			public bool IsExternalFile { get; protected set; }
+
+			public PrjExplorerNode() {}
 			public PrjExplorerNode(string text) : base(text) { }
 		}
 
@@ -798,18 +802,20 @@ namespace D_IDE.Controls.Panels
 					if (p != null)
 					{
 						pn = new ProjectNode(absFile, p.Name);
+						pn.Tag = absFile;
 						Nodes.Add(pn);
 						// Add project node first before refreshing its children 
 						// - the 'Project'-property requires an existing parent node, which is in our case 'this' node
 						pn.UpdateChildren();
 
 						if (Solution.StartProject == p)
-							pn.NodeFont = new System.Drawing.Font(pn.NodeFont,System.Drawing.FontStyle.Bold);
+							pn.NodeFont = new System.Drawing.Font("Arial",0.04f,System.Drawing.FontStyle.Bold);
 					}
 					else
 					{
 						// If a project is there but not found, create a 'disabled' project node
-						pn = new ProjectNode(absFile,file);
+						pn = new ProjectNode(absFile,Path.GetFileName( file));
+						pn.Tag = absFile;
 						pn.IsUnloaded = true;
 						Nodes.Add(pn);
 					}
@@ -840,7 +846,7 @@ namespace D_IDE.Controls.Panels
 				get
 				{
 					if(Solution!=null)
-						return Solution.ByName(Text);
+						return IsExternalFile?Solution[AbsolutePath] :Solution.ByName(Text);
 					return null;
 				}
 			}
@@ -883,6 +889,7 @@ namespace D_IDE.Controls.Panels
 					var dirNode = DirectoryNode.CheckIfSubDirExists(this, fDir);
 
 					var fnode = new FileNode() { FileName = Path.GetFileName( f) };
+					fnode.Tag = f;
 					fnode.SelectedImageKey = fnode.ImageKey = GetFileIconKey(f);
 
 					dirNode.Nodes.Add(fnode);
@@ -891,7 +898,11 @@ namespace D_IDE.Controls.Panels
 
 			public override string AbsolutePath
 			{
-				get { return Project.FileName; }
+				get {
+					if (IsExternalFile) 
+						return Tag as string;
+					return Project.FileName; 
+				}
 			}
 		}
 
@@ -910,6 +921,9 @@ namespace D_IDE.Controls.Panels
 			{
 				get
 				{
+					if (IsExternalFile)
+						return Tag as string;
+
 					string ret = "";
 
 					var n = this;
@@ -1019,6 +1033,9 @@ namespace D_IDE.Controls.Panels
 			{
 				get
 				{
+					if (IsExternalFile)
+						return Tag as string;
+
 					string ret = FileName;
 
 					var n = this as TreeNode;
