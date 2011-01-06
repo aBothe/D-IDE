@@ -9,7 +9,7 @@ namespace D_IDE.Core
 {
 	public class IDEInterface
 	{
-		public readonly static string SettingsSaveLocationFile = Util.ApplicationStartUpPath + "\\SettingsDirectory.cfg";
+		readonly static string SettingsSaveLocationFile = Util.ApplicationStartUpPath + "\\StoreAtUserDocs.flag";
 
 		/// <summary>
 		/// Gets and sets the directory where all configurations are stored
@@ -17,30 +17,30 @@ namespace D_IDE.Core
 		public static string ConfigDirectory
 		{
 			get
-			{/*
-				try
-				{
-					if (File.Exists(SettingsSaveLocationFile))
-					{
-						var con = File.ReadAllText(SettingsSaveLocationFile);
-						if (Directory.Exists(con))
-							return con;
-					}
-				}
-				catch { }*/
+			{
 				// Create and return default value
-				string ret = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\D-IDE.config";
+				var ret = Environment.GetFolderPath(StoreSettingsAtUserFiles?
+					Environment.SpecialFolder.MyDocuments:
+					Environment.SpecialFolder.CommonApplicationData) + "\\D-IDE.config";
 				Util.CreateDirectoryRecursively(ret);
 				return ret;
-			}/*
+			}
+		}
+
+		public static bool StoreSettingsAtUserFiles
+		{
+			get
+			{
+				return File.Exists(SettingsSaveLocationFile);
+			}
 			set
 			{
-				try
-				{
-					File.WriteAllText(SettingsSaveLocationFile, value);
-				}
-				catch { }
-			}*/
+				if (value && !StoreSettingsAtUserFiles)
+					File.WriteAllText(SettingsSaveLocationFile, "This flag file means that the settings are stored at the user documents ("+
+						Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)+")");
+				else if (!value && StoreSettingsAtUserFiles)
+					File.Delete(SettingsSaveLocationFile);
+			}
 		}
 	}
 }

@@ -12,8 +12,6 @@ namespace D_IDE
 {
 	internal class GlobalProperties
 	{
-        
-
 		/// <summary>
 		/// A list of all globally loaded projects.
 		/// Useful when

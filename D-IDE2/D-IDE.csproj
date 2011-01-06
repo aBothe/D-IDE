@@ -103,6 +103,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Dialogs\SettingsPages\Page_Editing.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\SettingsPages\Page_General.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -127,6 +131,9 @@
     </Compile>
     <Compile Include="Dialogs\NewProjectDlg.xaml.cs">
       <DependentUpon>NewProjectDlg.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\SettingsPages\Page_Editing.xaml.cs">
+      <DependentUpon>Page_Editing.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\SettingsPages\Page_General.xaml.cs">
       <DependentUpon>Page_General.xaml</DependentUpon>

@@ -26,7 +26,8 @@ namespace D_IDE.Dialogs
 		{
 			InitializeComponent();
 
-			SettingsPages.Add( new Page_General());
+			SettingsPages.Add(new Page_General());
+			SettingsPages.Add(new Page_Editing());
 
 			RefreshCategoryTree();
 		}
@@ -58,17 +59,17 @@ namespace D_IDE.Dialogs
 			ret.Tag = Page;
 			ret.Header = Page.SettingCategory;
 
-			ret.MouseDown += delegate(object sender, MouseButtonEventArgs e)
-			{
-				SetSettingPage(ret);
-			};
-
 			var subCategories = Page.SubCategories;
 			if(subCategories!=null && subCategories.Length>0)
 				foreach(var sc in subCategories)
 					ret.Items.Add(_BuildCategoryNode(sc));
 
 			return ret;
+		}
+
+		private void CategoryTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+		{
+			SetSettingPage(e.NewValue as TreeViewItem);
 		}
 	}
 }
