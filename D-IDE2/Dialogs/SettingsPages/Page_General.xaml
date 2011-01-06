@@ -15,9 +15,12 @@
 			</w:Grid>
 		</w:GroupBox>
 
-		<w:GroupBox Header="Project Settings" Height="73" VerticalAlignment="Top" Margin="0,103,0,0">
+		<w:GroupBox Header="Project Settings" Height="198" VerticalAlignment="Top" Margin="0,103,0,0">
 			<w:Grid>
-				</w:Grid>
+				<w:TextBox Height="23" Margin="6,28,37,0" Name="textBox1" VerticalAlignment="Top" />
+				<w:Button Content="..." Height="23" Margin="0,28,6,0" Name="button1" VerticalAlignment="Top" HorizontalAlignment="Right" Width="25" />
+				<w:Label Content="Default Project Directory" Height="16" HorizontalAlignment="Left" Margin="6,6,0,0" Name="label1" VerticalAlignment="Top" Padding="0" Width="155" />
+			</w:Grid>
 		</w:GroupBox>
 	</w:Grid>
 </AbstractSettingsPage>

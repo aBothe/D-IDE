@@ -6,6 +6,7 @@
 		<TreeView HorizontalAlignment="Left" Margin="12,12,0,41" Name="CategoryTree" Width="188" />
 		<Button Content="Cancel" Margin="0,0,12,12" Name="buttonCancel" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" />
 		<ContentControl Margin="206,12,12,41" Name="PropPageHost" />
-		<Button Content="Apply" Height="23" HorizontalAlignment="Right" Margin="0,0,93,12" Name="buttonApply" VerticalAlignment="Bottom" Width="75" />
+		<Button Content="Apply" Height="23" HorizontalAlignment="Right" Margin="0,0,200,12" Name="buttonRestoreDefaults" VerticalAlignment="Bottom" Width="75" IsDefault="True" />
+		<Button Content="Restore Defaults" Height="23" HorizontalAlignment="Right" Margin="0,0,93,12" Name="buttonApply" VerticalAlignment="Bottom" Width="101" />
 	</Grid>
 </Window>

@@ -12,6 +12,7 @@ namespace D_IDE.Core
 	public class AbstractSettingsPage : UserControl
 	{
 		public virtual void ApplyChanges(){}
+		public virtual void RestoreDefaults() { }
 
 		public virtual string SettingCategory { get { return String.Empty; } }
 		public virtual AbstractSettingsPage[] SubCategories { get { return null; } }
