@@ -26,8 +26,21 @@ namespace D_IDE.Dialogs
 		{
 			InitializeComponent();
 
+			BuildCategoryArray();
+		}
+
+		#region Category Tree
+		public void BuildCategoryArray()
+		{
+			SettingsPages.Clear();
+
 			SettingsPages.Add(new Page_General());
 			SettingsPages.Add(new Page_Editing());
+			SettingsPages.Add(new Page_Building());
+			SettingsPages.Add(new Page_Debugging());
+
+			foreach (var lang in from l in LanguageLoader.Bindings where l.CanUseSettings select l)
+				SettingsPages.Add(lang.SettingsPage);
 
 			RefreshCategoryTree();
 		}
@@ -71,5 +84,49 @@ namespace D_IDE.Dialogs
 		{
 			SetSettingPage(e.NewValue as TreeViewItem);
 		}
+		#endregion
+
+		#region Settings logic
+		private void buttonApply_Click(object sender, RoutedEventArgs e)
+		{
+			ApplySettings();
+			DialogResult = true;
+		}
+
+		public void ApplySettings()
+		{
+			foreach (var sp in SettingsPages)
+				ApplySettings(sp);
+		}
+
+		void ApplySettings(AbstractSettingsPage p)
+		{
+			p.ApplyChanges();
+			if (p.SubCategories != null && p.SubCategories.Length > 0)
+				foreach (var ssp in p.SubCategories)
+					ApplySettings(ssp);
+		}
+
+		public void RestoreDefaults()
+		{
+			foreach (var sp in SettingsPages) RestoreDefaults(sp);
+		}
+
+		void RestoreDefaults(AbstractSettingsPage p)
+		{
+			p.RestoreDefaults();
+			if (p.SubCategories != null && p.SubCategories.Length > 0)
+				foreach (var ssp in p.SubCategories)
+					RestoreDefaults(ssp);
+		}
+		
+		private void buttonRestore_Click(object sender, RoutedEventArgs e)
+		{
+			if (MessageBox.Show("Are you sure?", "Restoring defaults", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			{
+				RestoreDefaults();
+			}
+		}
+		#endregion
 	}
 }

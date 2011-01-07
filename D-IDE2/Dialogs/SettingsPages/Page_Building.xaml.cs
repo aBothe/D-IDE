@@ -15,12 +15,9 @@ using D_IDE.Core;
 
 namespace D_IDE.Dialogs.SettingsPages
 {
-	/// <summary>
-	/// Interaktionslogik für Page_Editing.xaml
-	/// </summary>
-	public partial class Page_Editing : AbstractSettingsPage
+	public partial class Page_Building : AbstractSettingsPage
 	{
-		public Page_Editing()
+		public Page_Building()
 		{
 			InitializeComponent();
 			LoadCurrent();
@@ -30,23 +27,20 @@ namespace D_IDE.Dialogs.SettingsPages
 		{
 			get
 			{
-				return "Editing";
+				return "Building";
 			}
-		}
-
-		public override void RestoreDefaults()
-		{
-			
 		}
 
 		public override void ApplyChanges()
 		{
-			
+			GlobalProperties.Current.DoAutoSaveOnBuilding = cb_SaveBeforeBuild.IsChecked.Value;
+			GlobalProperties.Current.DefaultBinariesPath = tb_DefBinPath.Text;
 		}
 
 		public override void LoadCurrent()
 		{
-
+			cb_SaveBeforeBuild.IsChecked = GlobalProperties.Current.DoAutoSaveOnBuilding;
+			tb_DefBinPath.Text = GlobalProperties.Current.DefaultBinariesPath;
 		}
 	}
 }

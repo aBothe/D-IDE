@@ -153,31 +153,10 @@ namespace D_IDE
                                 }
                                 break;
 
-                            case "logbuildstatus":
-                                if (xr.MoveToAttribute("value"))
-                                {
-                                    p.LogBuildProgress = xr.Value == "1";
-                                }
-                                break;
-
-                            case "showbuildcommands":
-                                if (xr.MoveToAttribute("value"))
-                                {
-                                    p.ShowBuildCommands = xr.Value == "1";
-                                }
-                                break;
-
                             case "externaldbg":
                                 if (xr.MoveToAttribute("value"))
                                 {
                                     p.UseExternalDebugger = xr.Value == "1";
-                                }
-                                break;
-
-                            case "singleinstance":
-                                if (xr.MoveToAttribute("value"))
-                                {
-                                    p.SingleInstance = xr.Value == "1";
                                 }
                                 break;
 
@@ -198,11 +177,11 @@ namespace D_IDE
                                 {
                                     if (xr.LocalName == "bin")
                                     {
-                                        p.exe_dbg = xr.ReadString();
+                                        p.ExternalDebugger_Bin = xr.ReadString();
                                     }
                                     else if (xr.LocalName == "args")
                                     {
-                                        p.dbg_args = xr.ReadString();
+                                        p.ExternalDebugger_Arguments = xr.ReadString();
                                     }
                                     else break;
                                 }
@@ -226,13 +205,6 @@ namespace D_IDE
                                 }
                                 break;
 
-                            case "showdbgpanelswhendebugging":
-                                if (xr.MoveToAttribute("value"))
-                                {
-                                    p.ShowDbgPanelsOnDebugging = xr.Value == "1";
-                                }
-                                break;
-
                             case "autosave":
                                 if (xr.MoveToAttribute("value"))
                                 {
@@ -240,12 +212,6 @@ namespace D_IDE
                                 }
                                 break;
 
-                            case "createpdb":
-                                if (xr.MoveToAttribute("value"))
-                                {
-                                    p.CreatePDBOnBuild = xr.Value == "1";
-                                }
-                                break;
 
                             case "highlightings":
                                 if (xr.IsEmptyElement) break;
@@ -267,7 +233,7 @@ namespace D_IDE
                             case "shownewconsolewhenexecuting":
                                 if (xr.MoveToAttribute("value"))
                                 {
-                                    p.ShowExternalConsoleWhenExecuting = xr.Value == "1";
+                                    p.ShowDebugConsole = xr.Value == "1";
                                 }
                                 break;
                         }
@@ -288,7 +254,7 @@ namespace D_IDE
 			{
 				Save(Path.Combine(IDEInterface.ConfigDirectory, MainSettingsFile));
 			}
-			catch { }
+			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
 		public static void Save(string fn)
 		{
@@ -340,20 +306,8 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Current.RetrieveNews ? "1" : "0");
 			xw.WriteEndElement();
 
-			xw.WriteStartElement("logbuildstatus");
-			xw.WriteAttributeString("value", Current.LogBuildProgress ? "1" : "0");
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("showbuildcommands");
-			xw.WriteAttributeString("value", Current.ShowBuildCommands ? "1" : "0");
-			xw.WriteEndElement();
-
 			xw.WriteStartElement("externaldbg");
 			xw.WriteAttributeString("value", Current.UseExternalDebugger ? "1" : "0");
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("singleinstance");
-			xw.WriteAttributeString("value", Current.SingleInstance ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("watchforupdates");
@@ -366,10 +320,10 @@ namespace D_IDE
 
 			xw.WriteStartElement("debugger");
 			xw.WriteStartElement("bin");
-			xw.WriteCData(Current.exe_dbg);
+			xw.WriteCData(Current.ExternalDebugger_Bin);
 			xw.WriteEndElement();
 			xw.WriteStartElement("args");
-			xw.WriteCData(Current.dbg_args);
+			xw.WriteCData(Current.ExternalDebugger_Arguments);
 			xw.WriteEndElement();
 			xw.WriteEndElement();
 
@@ -385,16 +339,8 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Current.SkipUnknownCode ? "1" : "0");
 			xw.WriteEndElement();
 
-			xw.WriteStartElement("showdbgpanelswhendebugging");
-			xw.WriteAttributeString("value", Current.ShowDbgPanelsOnDebugging ? "1" : "0");
-			xw.WriteEndElement();
-
 			xw.WriteStartElement("autosave");
 			xw.WriteAttributeString("value", Current.DoAutoSaveOnBuilding ? "1" : "0");
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("createpdb");
-			xw.WriteAttributeString("value", Current.CreatePDBOnBuild ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("highlightings");
@@ -409,7 +355,7 @@ namespace D_IDE
 			xw.WriteEndElement();
 
             xw.WriteStartElement("shownewconsolewhenexecuting");
-            xw.WriteAttributeString("value", Current.ShowExternalConsoleWhenExecuting ? "1" : "0");
+            xw.WriteAttributeString("value", Current.ShowDebugConsole ? "1" : "0");
             xw.WriteEndElement();
 
             //Code templates
@@ -425,36 +371,50 @@ namespace D_IDE
 			LastProjects = new List<string>(),
 			LastFiles = new List<string>(),
 			LastOpenFiles = new List<string>();
-
-		public bool OpenLastPrj = true;
-		public bool OpenLastFiles = true;
+				
 		public WindowState lastFormState = WindowState.Maximized;
 		public Point lastFormLocation;
 		public Size lastFormSize;
 		public Dictionary<string, string> SyntaxHighlightingEntries = new Dictionary<string, string>();
-        public bool UseRibbonMenu = false;
 
-		public bool LogBuildProgress = true;
-		public bool ShowBuildCommands = true;
-		public bool UseExternalDebugger = false;
+		#region Build
 		public bool DoAutoSaveOnBuilding = true;
-		public bool CreatePDBOnBuild = true;
-		public bool ShowDbgPanelsOnDebugging = false;
+		public string DefaultBinariesPath = "bin";
+		#endregion
 
 		#region Debugging
 		public bool VerboseDebugOutput = false;
 		public bool SkipUnknownCode = true;
-        public bool ShowExternalConsoleWhenExecuting = true;
+        public bool ShowDebugConsole = true;
+
+		public bool UseExternalDebugger = false;
+		public string ExternalDebugger_Bin = "windbg.exe";
+		public string ExternalDebugger_Arguments = "\"$exe\"";
 		#endregion
 
-		public bool EnableFXFormsDesigner = false; // For those who want to experiment a little bit ;-)
-		public bool RetrieveNews = true;
-		public bool SingleInstance = true;
-		public bool WatchForUpdates = false;
-		public string DefaultProjectDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\D Projects";
+		#region General
 
-		public string exe_dbg = "windbg.exe";
-		public string dbg_args = "\"$exe\"";
+		readonly static string MultipleInstanceFlagFile = IDEInterface.CommonlyUsedDirectory + "\\MultipleInstancesAllowed.flag";
+		public static bool AllowMultipleProgramInstances
+		{
+			get { return !File.Exists(MultipleInstanceFlagFile); }
+			set
+			{
+				if (value && !AllowMultipleProgramInstances)
+					File.WriteAllText(MultipleInstanceFlagFile, "Indicates whether D-IDE is allowed to be launched multiple times or not.");
+				else if (!value && AllowMultipleProgramInstances)
+					File.Delete(MultipleInstanceFlagFile);
+			}
+		}
+
+		public bool WatchForUpdates = true;
+		public bool ShowStartPage = true;
+		public bool RetrieveNews = true;
+
+		public string DefaultProjectDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\D Projects";
+		public bool OpenLastPrj = true;
+		public bool OpenLastFiles = true;
+		#endregion
 
 		public string lastSearchDir = IDEUtil.ApplicationStartUpPath;
 	}

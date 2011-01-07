@@ -9,6 +9,7 @@ using System;
 using Microsoft.Win32;
 using System.Linq;
 using System.IO;
+using System.Threading;
 
 namespace D_IDE
 {
@@ -38,17 +39,19 @@ namespace D_IDE
 				Title = IDEManager.CurrentSolution.Name + " - D-IDE";
 			else
 				Title = "D-IDE";
+
+			
 		}
 		#endregion
 
 		#region Initializer
-		public MainWindow()
+		public MainWindow(string[] args)
 		{
 			InitializeComponent();
 
-
 			// Init global variables
 			IDEManager.MainWindow = this;
+			// Showing the window is required because the DockMgr has to init all panels first before being able to restore last layouts
 			Show();
 
 			#region Init panels and their layouts
@@ -58,41 +61,31 @@ namespace D_IDE
 			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
 			#endregion
 
-			/*
-			 * - Restore Docking Layout
-			 * - Global Settings
-			 * - Language Bindings
-			 * - Language Settings
-			 * (Optional):
-			 * - Open last project
-			 * - Open last files
-			 */
-
+			// Load global settings
 			try
 			{
-				// Load layout
+				GlobalProperties.Init();
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
+
+			// Load layout
+			try
+			{
 				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
 				// Exclude this call in develop time
 				//if (File.Exists(layoutFile))	DockMgr.RestoreLayout(layoutFile);
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
-			try
-			{
-				// Load global settings
-				GlobalProperties.Init();
-			}
-			catch (Exception ex) { ErrorLogger.Log(ex); }
-
+			// Load language bindings
 			LanguageLoader.Bindings.Add(new GenericFileBinding());
 			try
 			{
-				// Load language bindings
 				LanguageLoader.LoadLanguageInterface("D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
-			UpdateGUIElements();			
+			UpdateGUIElements();
 		}
 		#endregion
 

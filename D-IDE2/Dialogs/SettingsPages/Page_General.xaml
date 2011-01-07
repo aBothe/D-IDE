@@ -7,23 +7,23 @@
              mc:Ignorable="d" 
              d:DesignHeight="376" d:DesignWidth="624" Background="White">
 	<w:Grid Name="stackPanel1">
-		<w:GroupBox Header="Application" Height="148" VerticalAlignment="Top">
+		<w:GroupBox Header="Application" Height="138" VerticalAlignment="Top">
 			<w:Grid>
 				<w:CheckBox Content="Allow multiple instances of D-IDE (needs restart)" Height="16" HorizontalAlignment="Left" Margin="6,6,0,0" Name="cb_MultipleInstances" VerticalAlignment="Top" />
-				<w:CheckBox Content="Check for program updates at startup" Height="16" HorizontalAlignment="Left" Margin="6,28,0,0" Name="checkBox1" VerticalAlignment="Top" />
-				<w:CheckBox Content="Show Start Page" Height="16" HorizontalAlignment="Left" Margin="6,50,0,0" Name="checkBox2" VerticalAlignment="Top" />
-				<w:CheckBox Content="Get last blog updates" Height="16" HorizontalAlignment="Left" Margin="6,72,0,0" Name="checkBox5" VerticalAlignment="Top" />
-				<w:CheckBox Content="Store settings at user documents" Height="16" HorizontalAlignment="Left" Margin="6,104,0,0" Name="checkBox6" VerticalAlignment="Top" />
+				<w:CheckBox Content="Check for program updates at startup" Height="16" HorizontalAlignment="Left" Margin="6,28,0,0" Name="cb_Updates" VerticalAlignment="Top" />
+				<w:CheckBox Content="Show Start Page" Height="16" HorizontalAlignment="Left" Margin="6,50,0,0" Name="cb_StartPage" VerticalAlignment="Top" />
+				<w:CheckBox Content="Get last blog updates" Height="16" HorizontalAlignment="Left" Margin="6,72,0,0" Name="cb_RetrieveBlog" VerticalAlignment="Top" />
+				<w:CheckBox Content="Store settings at user documents" Height="16" HorizontalAlignment="Left" Margin="6,94,0,0" Name="cb_UserSpecSettings" VerticalAlignment="Top" />
 			</w:Grid>
 		</w:GroupBox>
 
-		<w:GroupBox Header="Project Settings" Height="122" VerticalAlignment="Top" Margin="0,154,0,0">
+		<w:GroupBox Header="Project Settings" Height="122" VerticalAlignment="Top" Margin="1,144,-1,0">
 			<w:Grid>
-				<w:TextBox Height="23" Margin="6,28,37,0" Name="textBox1" VerticalAlignment="Top" />
-				<w:Button Content="..." Height="23" Margin="0,28,6,0" Name="button1" VerticalAlignment="Top" HorizontalAlignment="Right" Width="25" />
+				<w:TextBox Height="23" Margin="6,28,37,0" Name="tb_PrjRepo" VerticalAlignment="Top" IsReadOnly="True" />
+				<w:Button Content="..." Height="23" Margin="0,28,6,0" Name="bt_Search_PrjRepo" VerticalAlignment="Top" HorizontalAlignment="Right" Width="25" Click="bt_Search_PrjRepo_Click" />
 				<w:Label Content="Default Project Directory" Height="16" HorizontalAlignment="Left" Margin="6,6,0,0" Name="label1" VerticalAlignment="Top" Padding="0" Width="155" />
-				<w:CheckBox Content="Automatically reopen last solution" Height="16" HorizontalAlignment="Left" Margin="6,57,0,0" Name="checkBox3" VerticalAlignment="Top" />
-				<w:CheckBox Content="Automatically reopen last files" Height="16" HorizontalAlignment="Left" Margin="6,79,0,0" Name="checkBox4" VerticalAlignment="Top" />
+				<w:CheckBox Content="Automatically reopen last solution" Height="16" HorizontalAlignment="Left" Margin="6,57,0,0" Name="cb_OpenLastSln" VerticalAlignment="Top" />
+				<w:CheckBox Content="Automatically reopen last files" Height="16" HorizontalAlignment="Left" Margin="6,79,0,0" Name="cb_OpenLastFiles" VerticalAlignment="Top" />
 			</w:Grid>
 		</w:GroupBox>
 	</w:Grid>

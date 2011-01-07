@@ -9,7 +9,8 @@ namespace D_IDE.Core
 {
 	public class IDEInterface
 	{
-		readonly static string SettingsSaveLocationFile = Util.ApplicationStartUpPath + "\\StoreAtUserDocs.flag";
+		const string ConfigDirectoryName = "D-IDE.config";
+		readonly static string SettingsSaveLocationFile = CommonlyUsedDirectory + "\\StoreAtUserDocs.flag";
 
 		/// <summary>
 		/// Gets and sets the directory where all configurations are stored
@@ -18,10 +19,20 @@ namespace D_IDE.Core
 		{
 			get
 			{
+				if(!StoreSettingsAtUserFiles)
+					return CommonlyUsedDirectory;
+
 				// Create and return default value
-				var ret = Environment.GetFolderPath(StoreSettingsAtUserFiles?
-					Environment.SpecialFolder.MyDocuments:
-					Environment.SpecialFolder.CommonApplicationData) + "\\D-IDE.config";
+				var ret = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\"+ConfigDirectoryName;
+				Util.CreateDirectoryRecursively(ret);
+				return ret;
+			}
+		}
+
+		public static string CommonlyUsedDirectory
+		{
+			get {
+				var ret = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\" + ConfigDirectoryName;
 				Util.CreateDirectoryRecursively(ret);
 				return ret;
 			}

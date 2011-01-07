@@ -13,6 +13,7 @@ namespace D_IDE.Core
 	{
 		public virtual void ApplyChanges(){}
 		public virtual void RestoreDefaults() { }
+		public virtual void LoadCurrent() { }
 
 		public virtual string SettingCategory { get { return String.Empty; } }
 		public virtual AbstractSettingsPage[] SubCategories { get { return null; } }

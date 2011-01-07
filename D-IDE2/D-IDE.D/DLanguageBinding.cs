@@ -143,7 +143,7 @@ namespace D_IDE.D
 		#region Settings
 		public override bool CanUseSettings
 		{
-			get { throw new NotImplementedException(); }
+			get { return false; }
 		}
 
 		public override void SaveSettings(string SuggestedFileName)
