@@ -67,13 +67,6 @@ namespace D_IDE.D {
             }
         }
         
-        internal static byte[] D_new {
-            get {
-                object obj = ResourceManager.GetObject("D_new", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
         internal static byte[] d_xshd {
             get {
                 object obj = ResourceManager.GetObject("d_xshd", resourceCulture);
