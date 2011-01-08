@@ -35,6 +35,7 @@ namespace D_IDE
 			catch (Exception ex) { ErrorLogger.Log(ex); }
         }
 
+		#region Loading & Saving
 		public static GlobalProperties Load()
 		{
 			return Load(Path.Combine(IDEInterface.ConfigDirectory, MainSettingsFile));
@@ -364,7 +365,7 @@ namespace D_IDE
 			xw.WriteEndDocument();
 			xw.Close();
 		}
-
+		#endregion
 		public static GlobalProperties Current=null;
 
 		public List<string>
@@ -373,8 +374,7 @@ namespace D_IDE
 			LastOpenFiles = new List<string>();
 				
 		public WindowState lastFormState = WindowState.Maximized;
-		public Point lastFormLocation;
-		public Size lastFormSize;
+		public Size lastFormSize=Size.Empty;
 		public Dictionary<string, string> SyntaxHighlightingEntries = new Dictionary<string, string>();
 
 		#region Build

@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using D_IDE.Core;
-using Parser.Core;
-using D_Parser;
-using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using D_IDE.Core;
+using D_Parser;
 using DebugEngineWrapper;
+using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using Parser.Core;
+using System.Xml;
+using System.IO;
 
 namespace D_IDE.D
 {
@@ -70,6 +74,13 @@ namespace D_IDE.D
 				LargeImage = img2,
 				DefaultFilePrefix="StaticLib"
 			});
+
+			// Associate highlighting definitions
+			var ms = new MemoryStream(DIcons.d_xshd);
+			var hi = HighlightingLoader.Load(new XmlTextReader(ms), HighlightingManager.Instance);
+			HighlightingManager.Instance.RegisterHighlighting(
+				"D", new[] { ".d", ".di" }, hi);
+			ms.Close();
 		}
 
 		public override string LanguageName	{	get { return "D"; }	}

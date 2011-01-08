@@ -39,8 +39,6 @@ namespace D_IDE
 				Title = IDEManager.CurrentSolution.Name + " - D-IDE";
 			else
 				Title = "D-IDE";
-
-			
 		}
 		#endregion
 
@@ -51,6 +49,22 @@ namespace D_IDE
 
 			// Init global variables
 			IDEManager.MainWindow = this;
+
+			// Load global settings
+			try
+			{
+				GlobalProperties.Init();
+
+				// Apply window state & size
+				WindowState = GlobalProperties.Current.lastFormState;
+				if (!GlobalProperties.Current.lastFormSize.IsEmpty)
+				{
+					Width = GlobalProperties.Current.lastFormSize.Width;
+					Height = GlobalProperties.Current.lastFormSize.Height;
+				}
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
+
 			// Showing the window is required because the DockMgr has to init all panels first before being able to restore last layouts
 			Show();
 
@@ -60,13 +74,6 @@ namespace D_IDE
 			Panel_ProjectExplorer.HideOnClose = true;
 			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
 			#endregion
-
-			// Load global settings
-			try
-			{
-				GlobalProperties.Init();
-			}
-			catch (Exception ex) { ErrorLogger.Log(ex); }
 
 			// Load layout
 			try
@@ -259,6 +266,10 @@ namespace D_IDE
 
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
+			// Save window state & size
+			GlobalProperties.Current.lastFormSize = new Size(Width,Height);
+			GlobalProperties.Current.lastFormState = this.WindowState;
+
 			try
 			{
 				// Save docking layout

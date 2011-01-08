@@ -35,6 +35,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\externalDeps\DebugEngineWrapper.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.AvalonEdit, Version=4.0.0.6963, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\externalDeps\ICSharpCode.AvalonEdit.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -42,8 +46,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
@@ -96,6 +98,9 @@
     <Content Include="Resources\dproj32.png" />
     <Content Include="Resources\dproj48.png" />
     <Content Include="Resources\Generic_Application.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D.xshd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

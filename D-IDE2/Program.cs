@@ -2,14 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.VisualBasic.ApplicationServices;
 using System.Windows;
 using D_IDE.Core;
 using System.IO.Pipes;
 
 namespace D_IDE
 {
-	internal class Program :WindowsFormsApplicationBase
+	/*internal class Program
+	{
+		[STAThread]
+		public static void Main(string[] args)
+		{
+			var CurrentApp = new Application();
+			CurrentApp.Run(new MainWindow(args));
+		}
+	}*/
+	
+	internal class Program :Microsoft.VisualBasic.ApplicationServices.WindowsFormsApplicationBase
 	{
 		[STAThread]
 		public static void Main(string[] args)
@@ -37,7 +46,7 @@ namespace D_IDE
 		/// <summary>
 		/// Simply activates the first instance and opens all files passed as command arguments
 		/// </summary>
-		protected override void OnStartupNextInstance(StartupNextInstanceEventArgs eventArgs)
+		protected override void OnStartupNextInstance(Microsoft.VisualBasic.ApplicationServices.StartupNextInstanceEventArgs eventArgs)
 		{
 			IDEManager.MainWindow.Activate();
 
