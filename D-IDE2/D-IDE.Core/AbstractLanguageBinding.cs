@@ -2,6 +2,7 @@
 using System.IO;
 using DebugEngineWrapper;
 using System.Windows.Controls;
+using System;
 
 namespace D_IDE.Core
 {
@@ -15,33 +16,33 @@ namespace D_IDE.Core
 		public abstract object LanguageIcon { get; }
 
 		#region Settings
-		public abstract bool CanUseSettings { get; }
-		public abstract void SaveSettings(string SuggestedFileName);
-		public abstract void LoadSettings(string SuggestedFileName);
-		public abstract AbstractSettingsPage SettingsPage { get; }
+		public virtual bool CanUseSettings { get { return false; } }
+		public virtual void SaveSettings(string SuggestedFileName) { throw new NotImplementedException(); } 
+		public virtual void LoadSettings(string SuggestedFileName) { throw new NotImplementedException(); } 
+		public virtual AbstractSettingsPage SettingsPage { get { throw new NotImplementedException(); } }
 		#endregion
 
-		public abstract object SmallProjectIcon { get; }
-		public abstract object LargeProjectIcon { get; }
+		public virtual object SmallProjectIcon { get { throw new NotImplementedException(); } }
+		public virtual object LargeProjectIcon { get { throw new NotImplementedException(); } }
 
 		/// <summary>
 		/// File types and extensions supported by this binding
 		/// </summary>
 		public abstract FileTemplate[] ModuleTemplates { get; }
 		/// <summary>
-		/// Project types and extensions supported by this binding
+		/// Project types and extensions supported by this binding. Can be null if projects not supported
 		/// </summary>
-		public abstract FileTemplate[] ProjectTemplates { get; }
+		public virtual FileTemplate[] ProjectTemplates { get { throw new NotImplementedException(); } }
 
 		/// <summary>
 		/// If true, D-IDE can create Language specific projects. 
 		/// </summary>
-		public abstract bool ProjectsSupported { get; }
+		public virtual bool ProjectsSupported { get { return false; } }
 
-		public abstract bool CanUseDebugging { get; }
-		public abstract bool CanUseCodeCompletion { get; }
-		public abstract bool CanBuild { get; }
-		public abstract bool CanBuildToSingleModule { get; }
+		public virtual bool CanUseDebugging { get { return false; } }
+		public virtual bool CanUseCodeCompletion { get { return false; } }
+		public virtual bool CanBuild { get { return false; } }
+		public virtual bool CanBuildToSingleModule { get { return false; } }
 
 		public static AbstractLanguageBinding SearchBinding(string file, out bool IsProject)
 		{
@@ -56,13 +57,13 @@ namespace D_IDE.Core
 		/// <summary>
 		/// Must not be null if <see cref="CanUseCodeCompletion"/> is set to true
 		/// </summary>
-		public abstract ILanguage Language { get; }
+		public virtual ILanguage Language { get { throw new NotImplementedException(); } }
 
-		public abstract Project CreateEmptyProject(FileTemplate ProjectType);
-		public abstract Project OpenProject(Solution Solution,string FileName);
+		public virtual Project CreateEmptyProject(FileTemplate ProjectType) { throw new NotImplementedException(); } 
+		public virtual Project OpenProject(Solution Solution, string FileName) {  throw new NotImplementedException(); } 
 
-		public abstract bool BuildProject(Project Project);
-		public abstract BuildError[] BuildSingleModule(string FileName);
+		public virtual bool BuildProject(Project Project) { throw new NotImplementedException(); }
+		public virtual BuildError[] BuildSingleModule(string FileName){ throw new NotImplementedException(); } 
 
 
 		public bool CanHandleProject(string ProjectFile)
@@ -99,10 +100,10 @@ namespace D_IDE.Core
 		/// <param name="ScopedSrcLine"></param>
 		/// <param name="sym"></param>
 		/// <returns></returns>
-		public abstract string BuildSymbolValueString(
-			Parser.Core.AbstractSyntaxTree ModuleTree, 
-			uint ScopedSrcLine, 
-			DebugScopedSymbol sym);
+		public virtual string BuildSymbolValueString(
+			Parser.Core.AbstractSyntaxTree ModuleTree,
+			uint ScopedSrcLine,
+			DebugScopedSymbol sym) { throw new NotImplementedException(); }
 	}
 
 	public class FileTemplate

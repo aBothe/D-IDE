@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System;
 using AvalonDock;
-using D_IDE.Controls;
 using D_IDE.Core;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
@@ -76,9 +75,9 @@ namespace D_IDE
 
 			Editor.ShowLineNumbers = true;
 			Editor.TextChanged += new EventHandler(Editor_TextChanged);
-			
 		}
 
+		#region Syntax Highlighting
 		/// <summary>
 		/// Associates a new syntax highligther with the editor
 		/// </summary>
@@ -89,6 +88,12 @@ namespace D_IDE
 				Editor.SyntaxHighlighting = hi;
 			}catch{}
 		}
+
+		public static IHighlightingDefinition GetHighlighting(string file)
+		{
+			return null;
+		}
+		#endregion
 
 		#region Editor events
 		void Editor_TextChanged(object sender, EventArgs e)

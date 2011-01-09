@@ -4,11 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.IO;
+using ICSharpCode.AvalonEdit.Highlighting;
+
 
 namespace D_IDE.Core
 {
 	public class IDEInterface
 	{
+		#region Files
 		const string ConfigDirectoryName = "D-IDE.config";
 		readonly static string SettingsSaveLocationFile = CommonlyUsedDirectory + "\\StoreAtUserDocs.flag";
 
@@ -53,5 +56,6 @@ namespace D_IDE.Core
 					File.Delete(SettingsSaveLocationFile);
 			}
 		}
+		#endregion
 	}
 }

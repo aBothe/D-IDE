@@ -98,7 +98,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>CommonIcons.resx</DependentUpon>
     </Compile>
-    <Compile Include="Controls\AbstractEditorDocument.cs" />
     <Page Include="Controls\Panels\ProjectExplorer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -135,7 +134,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Controls\EditorDocument.cs" />
     <Compile Include="Controls\Panels\ProjectExplorer.xaml.cs">
       <DependentUpon>ProjectExplorer.xaml</DependentUpon>
     </Compile>

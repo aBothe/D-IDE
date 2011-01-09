@@ -21,12 +21,13 @@ namespace D_IDE
 		{
 			get
 			{
-				if (IDEManager.CurrentSolution != null)
+				//TODO: Add a generic manager or main window class
+				/*if (IDEManager.CurrentSolution != null)
 				{
 					var prjs=IDEManager.CurrentSolution.ProjectCache.Where(prj => prj.ContainsFile(FileName)).ToArray();
 					if (prjs.Length > 0)
 						return prjs[0];
-				}
+				}*/
 				return null;
 			}
 		}
