@@ -29,14 +29,14 @@ namespace D_IDE.Dialogs.SettingsPages
 		public override void ApplyChanges()
 		{
 			GlobalProperties.AllowMultipleProgramInstances = cb_MultipleInstances.IsChecked.Value;
-			GlobalProperties.Current.WatchForUpdates = cb_Updates.IsChecked.Value;
-			GlobalProperties.Current.ShowStartPage = cb_StartPage.IsChecked.Value;
-			GlobalProperties.Current.RetrieveNews = cb_RetrieveBlog.IsChecked.Value;
+			GlobalProperties.Instance.WatchForUpdates = cb_Updates.IsChecked.Value;
+			GlobalProperties.Instance.ShowStartPage = cb_StartPage.IsChecked.Value;
+			GlobalProperties.Instance.RetrieveNews = cb_RetrieveBlog.IsChecked.Value;
 			IDEInterface.StoreSettingsAtUserFiles = cb_UserSpecSettings.IsChecked.Value;
 
-			GlobalProperties.Current.DefaultProjectDirectory = tb_PrjRepo.Text;
-			GlobalProperties.Current.OpenLastPrj = cb_OpenLastSln.IsChecked.Value;
-			GlobalProperties.Current.OpenLastFiles = cb_OpenLastFiles.IsChecked.Value;
+			GlobalProperties.Instance.DefaultProjectDirectory = tb_PrjRepo.Text;
+			GlobalProperties.Instance.OpenLastPrj = cb_OpenLastSln.IsChecked.Value;
+			GlobalProperties.Instance.OpenLastFiles = cb_OpenLastFiles.IsChecked.Value;
 		}
 		
 		public override string SettingCategory
@@ -47,14 +47,14 @@ namespace D_IDE.Dialogs.SettingsPages
 		public override void LoadCurrent()
 		{
 			cb_MultipleInstances.IsChecked = GlobalProperties.AllowMultipleProgramInstances;
-			cb_Updates.IsChecked = GlobalProperties.Current.WatchForUpdates;
-			cb_StartPage.IsChecked = GlobalProperties.Current.ShowStartPage;
-			cb_RetrieveBlog.IsChecked = GlobalProperties.Current.RetrieveNews;
+			cb_Updates.IsChecked = GlobalProperties.Instance.WatchForUpdates;
+			cb_StartPage.IsChecked = GlobalProperties.Instance.ShowStartPage;
+			cb_RetrieveBlog.IsChecked = GlobalProperties.Instance.RetrieveNews;
 			cb_UserSpecSettings.IsChecked = IDEInterface.StoreSettingsAtUserFiles;
 
-			tb_PrjRepo.Text = GlobalProperties.Current.DefaultProjectDirectory;
-			cb_OpenLastSln.IsChecked = GlobalProperties.Current.OpenLastPrj;
-			cb_OpenLastFiles.IsChecked = GlobalProperties.Current.OpenLastFiles;
+			tb_PrjRepo.Text = GlobalProperties.Instance.DefaultProjectDirectory;
+			cb_OpenLastSln.IsChecked = GlobalProperties.Instance.OpenLastPrj;
+			cb_OpenLastFiles.IsChecked = GlobalProperties.Instance.OpenLastFiles;
 		}
 
 		private void bt_Search_PrjRepo_Click(object sender, RoutedEventArgs e)

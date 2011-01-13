@@ -10,7 +10,7 @@ using D_IDE.Core;
 
 namespace D_IDE
 {
-	internal class GlobalProperties
+	public class GlobalProperties
 	{
 		/// <summary>
 		/// A list of all globally loaded projects.
@@ -28,9 +28,9 @@ namespace D_IDE
         {
 			try
 			{
-				Current = Load();
-				if (Current == null)
-					Current = new GlobalProperties();
+				Instance = Load();
+				if (Instance == null)
+					Instance = new GlobalProperties();
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
         }
@@ -266,97 +266,97 @@ namespace D_IDE
 			xw.WriteStartElement("settings");
 
 			xw.WriteStartElement("recentprojects");
-			foreach (string f in Current.LastProjects)
+			foreach (string f in Instance.LastProjects)
 			{
 				xw.WriteStartElement("f"); xw.WriteCData(f); xw.WriteEndElement();
 			}
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("recentfiles");
-			foreach (string f in Current.LastFiles)
+			foreach (string f in Instance.LastFiles)
 			{
 				xw.WriteStartElement("f"); xw.WriteCData(f); xw.WriteEndElement();
 			}
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("lastopenedfiles");
-			foreach (string f in Current.LastOpenFiles)
+			foreach (string f in Instance.LastOpenFiles)
 			{
 				xw.WriteStartElement("f"); xw.WriteCData(f); xw.WriteEndElement();
 			}
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("openlastprj");
-			xw.WriteAttributeString("value", Current.OpenLastPrj ? "1" : "0");
+			xw.WriteAttributeString("value", Instance.OpenLastPrj ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("openlastfiles");
-			xw.WriteAttributeString("value", Current.OpenLastFiles ? "1" : "0");
+			xw.WriteAttributeString("value", Instance.OpenLastFiles ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("windowstate");
-			xw.WriteAttributeString("value", ((int)Current.lastFormState).ToString());
+			xw.WriteAttributeString("value", ((int)Instance.lastFormState).ToString());
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("windowsize");
-			xw.WriteAttributeString("x", Current.lastFormSize.Width.ToString());
-			xw.WriteAttributeString("y", Current.lastFormSize.Height.ToString());
+			xw.WriteAttributeString("x", Instance.lastFormSize.Width.ToString());
+			xw.WriteAttributeString("y", Instance.lastFormSize.Height.ToString());
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("retrievenews");
-			xw.WriteAttributeString("value", Current.RetrieveNews ? "1" : "0");
+			xw.WriteAttributeString("value", Instance.RetrieveNews ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("externaldbg");
-			xw.WriteAttributeString("value", Current.UseExternalDebugger ? "1" : "0");
+			xw.WriteAttributeString("value", Instance.UseExternalDebugger ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("watchforupdates");
-			xw.WriteAttributeString("value", Current.WatchForUpdates ? "1" : "0");
+			xw.WriteAttributeString("value", Instance.WatchForUpdates ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("defprjdir");
-			xw.WriteCData(Current.DefaultProjectDirectory);
+			xw.WriteCData(Instance.DefaultProjectDirectory);
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("debugger");
 			xw.WriteStartElement("bin");
-			xw.WriteCData(Current.ExternalDebugger_Bin);
+			xw.WriteCData(Instance.ExternalDebugger_Bin);
 			xw.WriteEndElement();
 			xw.WriteStartElement("args");
-			xw.WriteCData(Current.ExternalDebugger_Arguments);
+			xw.WriteCData(Instance.ExternalDebugger_Arguments);
 			xw.WriteEndElement();
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("lastsearchdir");
-			xw.WriteCData(Current.lastSearchDir);
+			xw.WriteCData(Instance.lastSearchDir);
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("verbosedbgoutput");
-			xw.WriteAttributeString("value", Current.VerboseDebugOutput ? "1" : "0");
+			xw.WriteAttributeString("value", Instance.VerboseDebugOutput ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("skipunknowncode");
-			xw.WriteAttributeString("value", Current.SkipUnknownCode ? "1" : "0");
+			xw.WriteAttributeString("value", Instance.SkipUnknownCode ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("autosave");
-			xw.WriteAttributeString("value", Current.DoAutoSaveOnBuilding ? "1" : "0");
+			xw.WriteAttributeString("value", Instance.DoAutoSaveOnBuilding ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("highlightings");
-			foreach (string ext in Current.SyntaxHighlightingEntries.Keys)
+			foreach (string ext in Instance.SyntaxHighlightingEntries.Keys)
 			{
-				if (String.IsNullOrEmpty(Current.SyntaxHighlightingEntries[ext])) continue;
+				if (String.IsNullOrEmpty(Instance.SyntaxHighlightingEntries[ext])) continue;
 				xw.WriteStartElement("f");
 				xw.WriteAttributeString("ext", ext);
-				xw.WriteCData(Current.SyntaxHighlightingEntries[ext]);
+				xw.WriteCData(Instance.SyntaxHighlightingEntries[ext]);
 				xw.WriteEndElement();
 			}
 			xw.WriteEndElement();
 
             xw.WriteStartElement("shownewconsolewhenexecuting");
-            xw.WriteAttributeString("value", Current.ShowDebugConsole ? "1" : "0");
+            xw.WriteAttributeString("value", Instance.ShowDebugConsole ? "1" : "0");
             xw.WriteEndElement();
 
             //Code templates
@@ -366,7 +366,7 @@ namespace D_IDE
 			xw.Close();
 		}
 		#endregion
-		public static GlobalProperties Current=null;
+		public static GlobalProperties Instance=null;
 
 		public List<string>
 			LastProjects = new List<string>(),
@@ -416,6 +416,6 @@ namespace D_IDE
 		public bool OpenLastFiles = true;
 		#endregion
 
-		public string lastSearchDir = IDEUtil.ApplicationStartUpPath;
+		public string lastSearchDir =Util.ApplicationStartUpPath;
 	}
 }

@@ -34,24 +34,24 @@ namespace D_IDE.Dialogs.SettingsPages
 
 		public override void ApplyChanges()
 		{
-			GlobalProperties.Current.VerboseDebugOutput = cb_VerboseDbgOutput.IsChecked.Value;
-			GlobalProperties.Current.SkipUnknownCode = cb_SkipUnresolvableCode.IsChecked.Value;
-			GlobalProperties.Current.ShowDebugConsole = cb_ShowDbgConsole.IsChecked.Value;
+			GlobalProperties.Instance.VerboseDebugOutput = cb_VerboseDbgOutput.IsChecked.Value;
+			GlobalProperties.Instance.SkipUnknownCode = cb_SkipUnresolvableCode.IsChecked.Value;
+			GlobalProperties.Instance.ShowDebugConsole = cb_ShowDbgConsole.IsChecked.Value;
 
-			GlobalProperties.Current.UseExternalDebugger = cb_UseExtDebugger.IsChecked.Value;
-			GlobalProperties.Current.ExternalDebugger_Bin = tb_ExtDbg_Path.Text;
-			GlobalProperties.Current.ExternalDebugger_Arguments = tb_ExtDbg_Params.Text;
+			GlobalProperties.Instance.UseExternalDebugger = cb_UseExtDebugger.IsChecked.Value;
+			GlobalProperties.Instance.ExternalDebugger_Bin = tb_ExtDbg_Path.Text;
+			GlobalProperties.Instance.ExternalDebugger_Arguments = tb_ExtDbg_Params.Text;
 		}
 
 		public override void LoadCurrent()
 		{
-			cb_VerboseDbgOutput.IsChecked = GlobalProperties.Current.VerboseDebugOutput;
-			cb_SkipUnresolvableCode.IsChecked = GlobalProperties.Current.SkipUnknownCode;
-			cb_ShowDbgConsole.IsChecked = GlobalProperties.Current.ShowDebugConsole;
+			cb_VerboseDbgOutput.IsChecked = GlobalProperties.Instance.VerboseDebugOutput;
+			cb_SkipUnresolvableCode.IsChecked = GlobalProperties.Instance.SkipUnknownCode;
+			cb_ShowDbgConsole.IsChecked = GlobalProperties.Instance.ShowDebugConsole;
 
-			cb_UseExtDebugger.IsChecked = GlobalProperties.Current.UseExternalDebugger;
-			tb_ExtDbg_Path.Text = GlobalProperties.Current.ExternalDebugger_Bin;
-			tb_ExtDbg_Params.Text = GlobalProperties.Current.ExternalDebugger_Arguments;
+			cb_UseExtDebugger.IsChecked = GlobalProperties.Instance.UseExternalDebugger;
+			tb_ExtDbg_Path.Text = GlobalProperties.Instance.ExternalDebugger_Bin;
+			tb_ExtDbg_Params.Text = GlobalProperties.Instance.ExternalDebugger_Arguments;
 		}
 
 		private void button1_Click(object sender, RoutedEventArgs e)

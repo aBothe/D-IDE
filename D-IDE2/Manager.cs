@@ -657,7 +657,7 @@ namespace D_IDE
 		{
 			static void AdjustLastFileList(string openedFile, bool IsPrj)
 			{
-				var l = IsPrj? GlobalProperties.Current.LastProjects:GlobalProperties.Current.LastFiles;
+				var l = IsPrj? GlobalProperties.Instance.LastProjects:GlobalProperties.Instance.LastFiles;
 				if (l.Contains(openedFile))
 					l.Remove(openedFile);
 				l.Insert(0, openedFile);

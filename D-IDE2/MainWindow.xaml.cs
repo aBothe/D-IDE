@@ -56,11 +56,11 @@ namespace D_IDE
 				GlobalProperties.Init();
 
 				// Apply window state & size
-				WindowState = GlobalProperties.Current.lastFormState;
-				if (!GlobalProperties.Current.lastFormSize.IsEmpty)
+				WindowState = GlobalProperties.Instance.lastFormState;
+				if (!GlobalProperties.Instance.lastFormSize.IsEmpty)
 				{
-					Width = GlobalProperties.Current.lastFormSize.Width;
-					Height = GlobalProperties.Current.lastFormSize.Height;
+					Width = GlobalProperties.Instance.lastFormSize.Width;
+					Height = GlobalProperties.Instance.lastFormSize.Height;
 				}
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
@@ -115,8 +115,8 @@ namespace D_IDE
 		{
 			var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.CreateNew | (IDEManager.CurrentSolution != null ? NewProjectDlg.DialogMode.Add : 0));
 
-			Util.CreateDirectoryRecursively(GlobalProperties.Current.DefaultProjectDirectory);
-			pdlg.ProjectDir = GlobalProperties.Current.DefaultProjectDirectory;
+			Util.CreateDirectoryRecursively(GlobalProperties.Instance.DefaultProjectDirectory);
+			pdlg.ProjectDir = GlobalProperties.Instance.DefaultProjectDirectory;
 
 			if (pdlg.ShowDialog().Value)
 			{
@@ -151,7 +151,7 @@ namespace D_IDE
 
 			// Add filter
 			dlg.Filter = "All files (*.*)|*.*";
-			dlg.InitialDirectory = GlobalProperties.Current.DefaultProjectDirectory;
+			dlg.InitialDirectory = GlobalProperties.Instance.DefaultProjectDirectory;
 			dlg.Multiselect = true;
 
 			if (dlg.ShowDialog().Value)
@@ -225,17 +225,17 @@ namespace D_IDE
 			Button_Open.Items.Add(mi);
 
 			// First add recent files
-			if (GlobalProperties.Current.LastFiles.Count > 0 || GlobalProperties.Current.LastProjects.Count > 0)
+			if (GlobalProperties.Instance.LastFiles.Count > 0 || GlobalProperties.Instance.LastProjects.Count > 0)
 				Button_Open.Items.Add(new RibbonSeparator());
 
-			foreach (var i in GlobalProperties.Current.LastFiles)
+			foreach (var i in GlobalProperties.Instance.LastFiles)
 				Button_Open.Items.Add(new LastFileItem(i,false));
 
 			// Then add recent projects
-			if (GlobalProperties.Current.LastFiles.Count > 0 && GlobalProperties.Current.LastProjects.Count > 0)
+			if (GlobalProperties.Instance.LastFiles.Count > 0 && GlobalProperties.Instance.LastProjects.Count > 0)
 				Button_Open.Items.Add(new RibbonSeparator());
 
-			foreach (var i in GlobalProperties.Current.LastProjects)
+			foreach (var i in GlobalProperties.Instance.LastProjects)
 				Button_Open.Items.Add(new LastFileItem(i,true));
 		}
 
@@ -267,8 +267,8 @@ namespace D_IDE
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 			// Save window state & size
-			GlobalProperties.Current.lastFormSize = new Size(Width,Height);
-			GlobalProperties.Current.lastFormState = this.WindowState;
+			GlobalProperties.Instance.lastFormSize = new Size(Width,Height);
+			GlobalProperties.Instance.lastFormState = this.WindowState;
 
 			try
 			{

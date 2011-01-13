@@ -159,7 +159,6 @@
       <DependentUpon>Page_General.xaml</DependentUpon>
     </Compile>
     <Compile Include="GenericFileBinding.cs" />
-    <Compile Include="GlobalProperties.cs" />
     <Compile Include="IDEUtil.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

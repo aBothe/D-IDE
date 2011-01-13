@@ -33,14 +33,14 @@ namespace D_IDE.Dialogs.SettingsPages
 
 		public override void ApplyChanges()
 		{
-			GlobalProperties.Current.DoAutoSaveOnBuilding = cb_SaveBeforeBuild.IsChecked.Value;
-			GlobalProperties.Current.DefaultBinariesPath = tb_DefBinPath.Text;
+			GlobalProperties.Instance.DoAutoSaveOnBuilding = cb_SaveBeforeBuild.IsChecked.Value;
+			GlobalProperties.Instance.DefaultBinariesPath = tb_DefBinPath.Text;
 		}
 
 		public override void LoadCurrent()
 		{
-			cb_SaveBeforeBuild.IsChecked = GlobalProperties.Current.DoAutoSaveOnBuilding;
-			tb_DefBinPath.Text = GlobalProperties.Current.DefaultBinariesPath;
+			cb_SaveBeforeBuild.IsChecked = GlobalProperties.Instance.DoAutoSaveOnBuilding;
+			tb_DefBinPath.Text = GlobalProperties.Instance.DefaultBinariesPath;
 		}
 	}
 }
