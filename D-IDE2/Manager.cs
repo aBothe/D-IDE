@@ -35,6 +35,11 @@ namespace D_IDE
 			get { return from e in DockMgr.Documents where e is AbstractEditorDocument select e as AbstractEditorDocument; }
 		}
 
+		public static System.Collections.ObjectModel.ObservableCollection<BuildError> ErrorList
+		{
+			get { return MainWindow.Panel_ErrorList.Errors; }
+		}
+
 		/// <summary>
 		/// There can be only one open solution. 
 		/// Stand-alone modules are opened independently of any other open solutions, projects or modules
@@ -623,6 +628,19 @@ namespace D_IDE
 
 		public class BuildManagement
 		{
+			/// <summary>
+			/// Builds the current solution incrementally.
+			/// If no solution present, the current module will be built to a standalone executable.
+			/// </summary>
+			/// <returns></returns>
+			public static bool Build()
+			{
+				if (CurrentSolution != null)
+					return Build(CurrentSolution,true);
+
+				return BuildSingle();
+			}
+
 			public static bool Build(Solution sln, bool Incrementally)
 			{
 				return false;
@@ -639,7 +657,20 @@ namespace D_IDE
 			/// <returns></returns>
 			public static bool BuildSingle()
 			{
-				return false;
+				if (CurrentEditor == null)
+					return false;
+
+				string file = CurrentEditor.AbsoluteFilePath;
+				bool IsProject = false;
+				var lang=AbstractLanguageBinding.SearchBinding(file,out IsProject);
+				if (lang == null || IsProject || !lang.CanBuildToSingleModule)
+					return false;
+
+				ErrorList.Clear();
+				foreach (var err in lang.BuildSingleModule(file))
+					ErrorList.Add(err);
+
+				return ErrorList.Count<1;
 			}
 
 			public static void CleanUpOutput(Solution sln)

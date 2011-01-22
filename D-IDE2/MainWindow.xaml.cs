@@ -20,6 +20,7 @@ namespace D_IDE
 	{
 		#region Properties
 		public ProjectExplorer Panel_ProjectExplorer = new ProjectExplorer();
+		public ErrorListPanel Panel_ErrorList = new ErrorListPanel();
 		#endregion
 
 		#region GUI Interactions
@@ -73,6 +74,10 @@ namespace D_IDE
 			Panel_ProjectExplorer.Name = "ProjectExplorer";
 			Panel_ProjectExplorer.HideOnClose = true;
 			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
+
+			Panel_ErrorList.Name = "ErrorList";
+			Panel_ErrorList.HideOnClose = true;
+			Panel_ErrorList.Show(DockMgr,AvalonDock.AnchorStyle.Bottom);
 			#endregion
 
 			// Load layout
@@ -289,12 +294,12 @@ namespace D_IDE
 
 		private void BuildSolution_Click(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.BuildManagement.Build();
 		}
 
 		private void BuildToStandAlone_Click(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.BuildManagement.BuildSingle();
 		}
 	}
 }

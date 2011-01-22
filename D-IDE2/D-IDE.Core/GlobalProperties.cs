@@ -135,6 +135,7 @@ namespace D_IDE
                                 break;
 
                             case "windowsize":
+								p.lastFormSize = new Size();
                                 if (xr.MoveToAttribute("x"))
                                 {
                                     try { p.lastFormSize.Width = Convert.ToInt32(xr.Value); }

@@ -49,7 +49,7 @@ namespace D_IDE.Core
 		}
 
 		#region Properties
-		public string Name;
+		public string Name { get; set; }
 		/// <summary>
 		/// Absolute file path
 		/// </summary>
@@ -417,9 +417,9 @@ namespace D_IDE.Core
 		/// <summary>
 		/// Can be null
 		/// </summary>
-		public readonly Project Project;
-		public readonly string FileName;
-		public readonly string Message;
-		public readonly CodeLocation Location;
+		public Project Project { get; set; }
+		public string FileName { get; set; }
+		public string Message { get; set; }
+		public CodeLocation Location { get; set; }
 	}
 }

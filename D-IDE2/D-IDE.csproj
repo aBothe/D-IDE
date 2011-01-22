@@ -98,6 +98,10 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>CommonIcons.resx</DependentUpon>
     </Compile>
+    <Page Include="Controls\Panels\ErrorListPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\Panels\ProjectExplorer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -134,6 +138,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Compile Include="Controls\Panels\ErrorListPanel.xaml.cs">
+      <DependentUpon>ErrorListPanel.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Panels\ProjectExplorer.xaml.cs">
       <DependentUpon>ProjectExplorer.xaml</DependentUpon>
     </Compile>

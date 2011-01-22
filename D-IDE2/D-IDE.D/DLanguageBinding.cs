@@ -143,7 +143,7 @@ namespace D_IDE.D
 
 		public override BuildError[] BuildSingleModule(string FileName)
 		{
-			throw new NotImplementedException();
+			return new[] { new BuildError(){Message="There was an error while building this file... please rebuild!",FileName=FileName,Location=new CodeLocation(2,3)}};
 		}
 
 		public override string BuildSymbolValueString(AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugScopedSymbol sym)
