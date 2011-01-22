@@ -103,8 +103,8 @@
 
 			<ribbon:RibbonTab Header="Build &amp; Debug" Name="Tab_Build">
 				<ribbon:RibbonGroup Header="Build">
-					<ribbon:RibbonButton Label="Build Project" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
-					<ribbon:RibbonButton Label="Build Current Module" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
+					<ribbon:RibbonButton Click="BuildSolution_Click" Label="Build Solution" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
+					<ribbon:RibbonButton Click="BuildToStandAlone_Click" Label="Build Current Module" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
 					<ribbon:RibbonButton Label="Stop Building" IsEnabled="False" Name="Button_StopBuilding" SmallImageSource="Resources/stop_build.png" />
 				</ribbon:RibbonGroup>
 				

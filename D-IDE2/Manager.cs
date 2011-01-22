@@ -754,6 +754,7 @@ namespace D_IDE
 
 				var newEd = new EditorDocument(absPath);
 				newEd.Show(DockMgr);
+				newEd.Activate();
 				MainWindow.UpdateGUIElements();
 				return newEd;
 			}

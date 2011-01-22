@@ -61,6 +61,18 @@ namespace D_IDE.Core
 		public Solution Solution;
 
 		protected readonly List<ProjectModule> _Files = new List<ProjectModule>();
+		public readonly List<string> ProjectFileDependencies = new List<string>();
+
+		public Project[] ProjectDependencies
+		{
+			get
+			{
+				var ret = new List<Project>();
+				foreach (var file in ProjectFileDependencies)
+					ret.Add(Solution[file]);
+				return ret.ToArray();
+			}
+		}
 
 		public ProjectModule[] GetFilesInDirectory(string dir)
 		{

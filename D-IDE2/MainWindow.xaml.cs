@@ -286,5 +286,15 @@ namespace D_IDE
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
+
+		private void BuildSolution_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void BuildToStandAlone_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
 	}
 }
