@@ -5,7 +5,7 @@
         Title="D-IDE"
 		x:Name="RibbonWindow"
 		Icon="d-ide.ico"
-		Width="754" Height="480" MinWidth="640" MinHeight="480" 
+		Width="1054" Height="852" MinWidth="640" MinHeight="480" 
 		xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock"
 		KeyDown="RibbonWindow_KeyDown"
 		Closing="RibbonWindow_Closing">
