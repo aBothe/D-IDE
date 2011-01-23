@@ -52,6 +52,7 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DBuildSupport.cs" />
     <Compile Include="DIcons.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -59,6 +60,7 @@
     </Compile>
     <Compile Include="DLanguageBinding.cs" />
     <Compile Include="DProject.cs" />
+    <Compile Include="DSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

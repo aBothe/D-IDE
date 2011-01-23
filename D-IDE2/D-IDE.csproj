@@ -102,6 +102,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\Panels\LogPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\Panels\ProjectExplorer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -140,6 +144,9 @@
     </Page>
     <Compile Include="Controls\Panels\ErrorListPanel.xaml.cs">
       <DependentUpon>ErrorListPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Panels\LogPanel.xaml.cs">
+      <DependentUpon>LogPanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\Panels\ProjectExplorer.xaml.cs">
       <DependentUpon>ProjectExplorer.xaml</DependentUpon>

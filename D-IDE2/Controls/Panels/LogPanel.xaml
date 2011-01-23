@@ -1,0 +1,7 @@
+﻿<DockableContent x:Class="D_IDE.Controls.Panels.LogPanel"
+        xmlns="clr-namespace:AvalonDock;assembly=AvalonDock"
+		xmlns:w="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Log" Height="306" Width="664" HideOnClose="True">
+	<w:TextBox Name="MainText" IsReadOnly="True" />
+</DockableContent>

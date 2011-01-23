@@ -10,6 +10,7 @@ using Microsoft.Win32;
 using System.Linq;
 using System.IO;
 using System.Threading;
+using AvalonDock;
 
 namespace D_IDE
 {
@@ -21,6 +22,7 @@ namespace D_IDE
 		#region Properties
 		public ProjectExplorer Panel_ProjectExplorer = new ProjectExplorer();
 		public ErrorListPanel Panel_ErrorList = new ErrorListPanel();
+		public LogPanel Panel_Log = new LogPanel();
 		#endregion
 
 		#region GUI Interactions
@@ -69,6 +71,11 @@ namespace D_IDE
 			// Showing the window is required because the DockMgr has to init all panels first before being able to restore last layouts
 			Show();
 
+			IDEInterface.LogHandler += delegate(string msg)
+			{
+				Panel_Log.AppendOutput(msg);
+			};
+
 			#region Init panels and their layouts
 			// Note: To enable the docking manager saving&restoring procedures it's needed to name all the panels
 			Panel_ProjectExplorer.Name = "ProjectExplorer";
@@ -78,6 +85,11 @@ namespace D_IDE
 			Panel_ErrorList.Name = "ErrorList";
 			Panel_ErrorList.HideOnClose = true;
 			Panel_ErrorList.Show(DockMgr,AvalonDock.AnchorStyle.Bottom);
+			Panel_ErrorList.DockableStyle |= DockableStyle.AutoHide;
+
+			Panel_Log.Name = "Output";
+			Panel_Log.Show(DockMgr,AvalonDock.AnchorStyle.Bottom);
+			Panel_Log.DockableStyle |= DockableStyle.AutoHide;
 			#endregion
 
 			// Load layout

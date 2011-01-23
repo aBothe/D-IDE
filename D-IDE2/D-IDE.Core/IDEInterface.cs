@@ -57,5 +57,19 @@ namespace D_IDE.Core
 			}
 		}
 		#endregion
+
+		#region Output & Logging
+		public delegate void LogEvent(string Message);
+		public static event LogEvent LogHandler;
+		/// <summary>
+		/// Appends text to the MainWindow's output log.
+		/// Note: This event will overloaded when D-IDE starts.
+		/// </summary>
+		
+		public static void Log(string s)
+		{
+			LogHandler(s);
+		}
+		#endregion
 	}
 }

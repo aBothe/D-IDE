@@ -24,5 +24,16 @@ namespace D_IDE.D
 
 			FileName = sln.ToAbsoluteFileName( file);
 		}
+
+		public DVersion Version = DVersion.D2;
+		public bool IsRelease;
+
+		public DMDConfig CompilerConfiguration
+		{
+			get
+			{
+				return DSettings.Instance.DMDConfig(Version);
+			}
+		}
 	}
 }

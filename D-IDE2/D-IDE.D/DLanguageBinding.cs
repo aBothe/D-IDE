@@ -10,6 +10,7 @@ using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using Parser.Core;
 using System.Xml;
 using System.IO;
+using System.Diagnostics;
 
 namespace D_IDE.D
 {
@@ -95,10 +96,12 @@ namespace D_IDE.D
 
 		public override bool CanBuildToSingleModule { get { return true; } }
 
-
+		#region Code Completion
 		DLanguage _Language=new DLanguage();
 		public override ILanguage Language { get { return _Language; } }
+		#endregion
 
+		#region Projecting
 		public override Project CreateEmptyProject(FileTemplate FileType)
 		{
 			var prj=new Project();
@@ -135,16 +138,22 @@ namespace D_IDE.D
 			ret.ReloadProject();
 			return ret;
 		}
+		#endregion
+
+		#region Building
+		public readonly DBuildSupport BuildSupport = new DBuildSupport();
 
 		public override bool BuildProject(Project Project)
 		{
 			throw new NotImplementedException();
 		}
 
+		
 		public override GenericError[] BuildSingleModule(string FileName)
 		{
-			return new[] { new GenericError(){Message="There was an error while building this file... please rebuild!",FileName=FileName,Location=new CodeLocation(2,3)}};
+			return BuildSupport.BuildSingleModule(FileName);
 		}
+#endregion
 
 		public override string BuildSymbolValueString(AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugScopedSymbol sym)
 		{
@@ -154,22 +163,22 @@ namespace D_IDE.D
 		#region Settings
 		public override bool CanUseSettings
 		{
-			get { return false; }
+			get { return true; }
 		}
 
 		public override void SaveSettings(string SuggestedFileName)
 		{
-			throw new NotImplementedException();
+			
 		}
 
 		public override void LoadSettings(string SuggestedFileName)
 		{
-			throw new NotImplementedException();
+			
 		}
 
 		public override AbstractSettingsPage SettingsPage
 		{
-			get { throw new NotImplementedException(); }
+			get { return null; }
 		}
 		#endregion
 	}

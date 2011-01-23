@@ -185,6 +185,7 @@ namespace D_IDE.Core
 
 		public static bool Log(string msg, ErrorType etype)
 		{
+			IDEInterface.Log(msg);
 			return MessageBox.Show(msg,etype.ToString(),MessageBoxButtons.OKCancel,(MessageBoxIcon)etype,MessageBoxDefaultButton.Button1)==DialogResult.OK;
 		}
     }
@@ -214,16 +215,8 @@ namespace D_IDE.Core
 	}
 
 #region LowLevel
-	/// <summary>
-	/// DLL Definition für IconExtract.
-	/// </summary>
 	public class Win32
 	{
-		/// <summary>
-		/// Methode zum extrahieren von einem Icon aus einer Datei.
-		/// </summary>
-		/// <param name="FilePath">Hier übergeben Sie den Pfad der Datei von dem das Icon extrahiert werden soll.</param>
-		/// <param name="Small">Bei übergabe von true wird ein kleines und bei false ein großes Icon zurück gegeben.</param>
 		public static System.Drawing.Image GetIcon(string FilePath, bool Small)
 		{
 			IntPtr hImgSmall;
