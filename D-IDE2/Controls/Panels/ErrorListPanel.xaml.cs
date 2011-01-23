@@ -26,6 +26,7 @@ namespace D_IDE.Controls.Panels
 			InitializeComponent();
 
 			MainList.ItemsSource = Errors;
+			//MainList.Items.Filter
 		}
 
 		public readonly ObservableCollection<BuildError> Errors = new ObservableCollection<BuildError>();

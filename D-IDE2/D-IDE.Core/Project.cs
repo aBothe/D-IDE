@@ -414,6 +414,16 @@ namespace D_IDE.Core
 
 	public class BuildError
 	{
+		public enum ErrorType
+		{
+			BuildError=0,
+			ParserError=1,
+			Warning=2,
+			Info=3
+		}
+
+		[System.ComponentModel.DefaultValue(ErrorType.BuildError)]
+		public ErrorType Type { get; set; }
 		/// <summary>
 		/// Can be null
 		/// </summary>

@@ -7,6 +7,7 @@ using D_IDE.Dialogs;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace D_IDE
 {
@@ -35,7 +36,7 @@ namespace D_IDE
 			get { return from e in DockMgr.Documents where e is AbstractEditorDocument select e as AbstractEditorDocument; }
 		}
 
-		public static System.Collections.ObjectModel.ObservableCollection<BuildError> ErrorList
+		public static ObservableCollection<BuildError> ErrorList
 		{
 			get { return MainWindow.Panel_ErrorList.Errors; }
 		}
