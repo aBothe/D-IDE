@@ -227,11 +227,11 @@ namespace D_IDE.Core
 		}
 		#endregion
 
-		public Dictionary<Project, BuildError[]> LastBuildErrors
+		public Dictionary<Project, GenericError[]> LastBuildErrors
 		{
 			get
 			{
-				var ret = new Dictionary<Project, BuildError[]>(ProjectCache.Count);
+				var ret = new Dictionary<Project, GenericError[]>(ProjectCache.Count);
 
 				foreach (var p in ProjectCache)
 					ret.Add(p,p.LastBuildErrors.ToArray());

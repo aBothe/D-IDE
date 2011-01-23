@@ -10,6 +10,7 @@ using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using System.Xml;
+using Parser.Core;
 
 namespace D_IDE
 {
@@ -17,6 +18,7 @@ namespace D_IDE
 	{
 		#region Generic properties
 		public readonly TextEditor Editor = new TextEditor();
+		public AbstractSyntaxTree SyntaxTree=null;
 		#endregion
 
 		public EditorDocument()
@@ -93,6 +95,10 @@ namespace D_IDE
 		{
 			return null;
 		}
+		#endregion
+
+		#region Code Completion
+
 		#endregion
 
 		#region Editor events

@@ -69,7 +69,7 @@ namespace D_IDE.Core
 		public virtual Project OpenProject(Solution Solution, string FileName) {  throw new NotImplementedException(); } 
 
 		public virtual bool BuildProject(Project Project) { throw new NotImplementedException(); }
-		public virtual BuildError[] BuildSingleModule(string FileName){ throw new NotImplementedException(); } 
+		public virtual GenericError[] BuildSingleModule(string FileName){ throw new NotImplementedException(); } 
 
 
 		public bool CanHandleProject(string ProjectFile)

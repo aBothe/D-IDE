@@ -141,9 +141,9 @@ namespace D_IDE.D
 			throw new NotImplementedException();
 		}
 
-		public override BuildError[] BuildSingleModule(string FileName)
+		public override GenericError[] BuildSingleModule(string FileName)
 		{
-			return new[] { new BuildError(){Message="There was an error while building this file... please rebuild!",FileName=FileName,Location=new CodeLocation(2,3)}};
+			return new[] { new GenericError(){Message="There was an error while building this file... please rebuild!",FileName=FileName,Location=new CodeLocation(2,3)}};
 		}
 
 		public override string BuildSymbolValueString(AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugScopedSymbol sym)

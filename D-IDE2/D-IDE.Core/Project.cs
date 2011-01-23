@@ -356,7 +356,7 @@ namespace D_IDE.Core
 		#region Build properties
 
 		public readonly List<string> RequiredProjects = new List<string>();
-		public readonly List<BuildError> LastBuildErrors = new List<BuildError>();
+		public readonly List<GenericError> LastBuildErrors = new List<GenericError>();
 
 		public string OutputFile { get; set; }
 		public string OutputDirectory { get; set; }
@@ -412,17 +412,16 @@ namespace D_IDE.Core
 		}
 	}
 
-	public class BuildError
+	public class GenericError
 	{
 		public enum ErrorType
 		{
-			BuildError=0,
-			ParserError=1,
+			Error=0,
 			Warning=2,
 			Info=3
 		}
 
-		[System.ComponentModel.DefaultValue(ErrorType.BuildError)]
+		[System.ComponentModel.DefaultValue(ErrorType.Error)]
 		public ErrorType Type { get; set; }
 		/// <summary>
 		/// Can be null
@@ -431,5 +430,50 @@ namespace D_IDE.Core
 		public string FileName { get; set; }
 		public string Message { get; set; }
 		public CodeLocation Location { get; set; }
+
+		public override string ToString()
+		{
+			return Message+ " ("+FileName+":"+Location.Line+")";
+		}
+	}
+
+	public class BuildError:GenericError
+	{
+		public BuildError() { }
+		public BuildError(string Message) { this.Message = Message; }
+		public BuildError(string Message, string FileName, CodeLocation Location)
+		{
+			this.Message = Message;
+			this.FileName = FileName;
+			this.Location = Location;
+		}
+	}
+
+	public class ParseError : GenericError
+	{
+		public readonly ParserError ParserError;
+
+		public ParseError(ParserError err)
+		{
+			this.ParserError = err;
+
+			if (err.IsSemantic)
+				Type = ErrorType.Warning;
+		}
+
+		public new string Message
+		{
+			get { return ParserError.Message; }
+		}
+
+		public new CodeLocation Location
+		{
+			get { return new CodeLocation(ParserError.Location.Column,ParserError.Location.Line); }
+		}
+
+		public bool IsSemantic
+		{
+			get { return ParserError.IsSemantic; }
+		}
 	}
 }

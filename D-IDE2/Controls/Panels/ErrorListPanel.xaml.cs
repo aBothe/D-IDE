@@ -13,6 +13,7 @@ using System.Windows.Shapes;
 using D_IDE.Core;
 using System.Collections.ObjectModel;
 using AvalonDock;
+using System.ComponentModel;
 
 namespace D_IDE.Controls.Panels
 {
@@ -23,18 +24,26 @@ namespace D_IDE.Controls.Panels
 	{
 		public ErrorListPanel()
 		{
+			DataContext = this;
 			InitializeComponent();
-
-			MainList.ItemsSource = Errors;
-			//MainList.Items.Filter
 		}
 
-		public readonly ObservableCollection<BuildError> Errors = new ObservableCollection<BuildError>();
+		public readonly List<GenericError> Errors = new List<GenericError>();
+
+		public void RefreshErrorList()
+		{
+			var selIndex = MainList.SelectedIndex;
+
+			MainList.ItemsSource = Errors;
+
+			if (MainList.Items.Count > selIndex)
+				MainList.SelectedIndex = selIndex;
+		}
 
 		private void MainList_MouseDown(object sender, MouseButtonEventArgs e)
 		{
 			var item=e.OriginalSource as FrameworkElement;
-			var err=item.DataContext as BuildError;
+			var err=item.DataContext as GenericError;
 
 			if (err == null)
 				return;

@@ -2,12 +2,12 @@
         xmlns="clr-namespace:AvalonDock;assembly=AvalonDock"
 		xmlns:w="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Error List" Height="225" Width="665">
-		<w:ListView Name="MainList" SelectionMode="Single" MouseDoubleClick="MainList_MouseDown">
+        Title="Error List" Height="225" Width="665" HideOnClose="True">
+	<w:ListView Name="MainList" SelectionMode="Single" MouseDoubleClick="MainList_MouseDown">
 			<w:ListView.View>
 				<w:GridView>
-					<w:GridViewColumn Header="Description" DisplayMemberBinding="{w:Binding Message}" />
-					<w:GridViewColumn Header="File" DisplayMemberBinding="{w:Binding FileName}" />
+				<w:GridViewColumn Header="Description" DisplayMemberBinding="{w:Binding Message}" />
+				<w:GridViewColumn Header="File" DisplayMemberBinding="{w:Binding FileName}" />
 				<w:GridViewColumn Header="Line" Width="50" DisplayMemberBinding="{w:Binding Location.Line}" />
 				<w:GridViewColumn Header="Column" Width="50" DisplayMemberBinding="{w:Binding Location.Column}" />
 				<w:GridViewColumn Header="Project" Width="80" DisplayMemberBinding="{w:Binding Project.Name}" />

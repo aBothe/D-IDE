@@ -36,9 +36,42 @@ namespace D_IDE
 			get { return from e in DockMgr.Documents where e is AbstractEditorDocument select e as AbstractEditorDocument; }
 		}
 
-		public static ObservableCollection<BuildError> ErrorList
+		public class ErrorManagement
 		{
-			get { return MainWindow.Panel_ErrorList.Errors; }
+			public readonly static List<GenericError> LastUnboundBuildErrors = new List<GenericError>();
+			public static GenericError[] LastParseErrors
+			{
+				get
+				{
+					var ed = CurrentEditor as EditorDocument;
+					if (ed == null || ed.SyntaxTree == null)
+						return new GenericError[] { };
+
+					var ret = new List<GenericError>();
+					foreach (var err in ed.SyntaxTree.ParseErrors)
+						ret.Add(new ParseError(err));
+					return ret.ToArray();
+				}
+			}
+
+			public static void RefreshErrorList()
+			{
+				var el = MainWindow.Panel_ErrorList.Errors;
+
+				el.Clear();
+
+				// Add unbound build errors
+				if(LastUnboundBuildErrors.Count>0)
+					el.AddRange(LastUnboundBuildErrors);
+				// (Bound) Solution errors
+				else  if (CurrentSolution != null)
+					foreach (var prj in CurrentSolution)
+						el.AddRange(prj.LastBuildErrors);
+				// Parse errors
+				el.AddRange(LastParseErrors);
+				
+				MainWindow.Panel_ErrorList.RefreshErrorList();
+			}
 		}
 
 		/// <summary>
@@ -664,14 +697,16 @@ namespace D_IDE
 				string file = CurrentEditor.AbsoluteFilePath;
 				bool IsProject = false;
 				var lang=AbstractLanguageBinding.SearchBinding(file,out IsProject);
+
 				if (lang == null || IsProject || !lang.CanBuildToSingleModule)
 					return false;
 
-				ErrorList.Clear();
-				foreach (var err in lang.BuildSingleModule(file))
-					ErrorList.Add(err);
+				ErrorManagement.LastUnboundBuildErrors.Clear();
 
-				return ErrorList.Count<1;
+				ErrorManagement.LastUnboundBuildErrors.AddRange(lang.BuildSingleModule(file));
+
+				ErrorManagement.RefreshErrorList();
+				return ErrorManagement.LastUnboundBuildErrors.Count<1;
 			}
 
 			public static void CleanUpOutput(Solution sln)
