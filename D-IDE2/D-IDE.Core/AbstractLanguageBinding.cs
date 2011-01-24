@@ -97,6 +97,11 @@ namespace D_IDE.Core
 			return false;
 		}
 
+		public static string CreateSettingsFileName(AbstractLanguageBinding Binding)
+		{
+			return IDEInterface.ConfigDirectory + "\\" + Util.PurifyFileName(Binding.LanguageName) + ".config.xml";
+		}
+
 		/// <summary>
 		/// Retrieves the value of a debug symbol.
 		/// Debugging requires CodeCompletion to enable better node search.

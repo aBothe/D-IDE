@@ -155,25 +155,35 @@ namespace D_IDE.D
 		}
 #endregion
 
+		#region Debugging
 		public override string BuildSymbolValueString(AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugScopedSymbol sym)
 		{
 			throw new NotImplementedException();
 		}
+		#endregion
 
 		#region Settings
-		public override bool CanUseSettings
-		{
-			get { return true; }
-		}
+		public override bool CanUseSettings	{get { return true; }}
 
 		public override void SaveSettings(string SuggestedFileName)
 		{
-			
+			var x = XmlTextWriter.Create(SuggestedFileName);
+
+			DSettings.Instance.Save(x);
+
+			x.Close();
 		}
 
 		public override void LoadSettings(string SuggestedFileName)
 		{
-			
+			if (!File.Exists(SuggestedFileName))
+				return;
+
+			var x = XmlTextReader.Create(SuggestedFileName);
+
+			DSettings.Instance.Load(x);
+
+			x.Close();
 		}
 
 		public override AbstractSettingsPage SettingsPage

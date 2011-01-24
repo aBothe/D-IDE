@@ -109,6 +109,17 @@ namespace D_IDE
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
+			// Load all language-specific settings
+			foreach (var lang in LanguageLoader.Bindings)
+				try
+				{
+					if (lang.CanUseSettings)
+						lang.LoadSettings(AbstractLanguageBinding.CreateSettingsFileName(lang));
+				}
+				catch (Exception ex) {
+					ErrorLogger.Log(ex);
+				}
+
 			UpdateGUIElements();
 		}
 		#endregion
@@ -300,6 +311,18 @@ namespace D_IDE
 
 				// Save global settings
 				GlobalProperties.Save();
+
+				// Save language-specific settings
+				foreach(var lang in LanguageLoader.Bindings)
+					if(lang.CanUseSettings)
+						try
+						{
+							lang.SaveSettings(AbstractLanguageBinding.CreateSettingsFileName(lang));
+						}
+						catch (Exception ex)
+						{
+							ErrorLogger.Log(ex);
+						}
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}

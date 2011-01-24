@@ -32,12 +32,14 @@ namespace D_IDE.Controls.Panels
 
 		public void RefreshErrorList()
 		{
+			Dispatcher.Invoke(new EventHandler(delegate(object o,EventArgs e){
 			var selIndex = MainList.SelectedIndex;
 
 			MainList.ItemsSource = Errors;
 
 			if (MainList.Items.Count > selIndex)
 				MainList.SelectedIndex = selIndex;
+			}),null,null);
 		}
 
 		private void MainList_MouseDown(object sender, MouseButtonEventArgs e)

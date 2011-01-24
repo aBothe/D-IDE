@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using System.Windows;
 
 namespace D_IDE.Core
 {
@@ -26,7 +27,9 @@ namespace D_IDE.Core
 			psi.RedirectStandardOutput = true;
 			psi.UseShellExecute = false;
 
-			var prc = Process.Start(psi);
+			var prc = new Process();
+			prc.StartInfo = psi;
+
 			prc.ErrorDataReceived += delegate(object s, DataReceivedEventArgs e) {
 				if (!string.IsNullOrEmpty(e.Data) && OnError != null)
 					OnError(e.Data);
@@ -37,6 +40,18 @@ namespace D_IDE.Core
 					OnOutput(e.Data);
 			};
 			prc.Exited += delegate(object s, EventArgs e) { if (OnExit != null) OnExit(); };
+
+			try
+			{
+				if (GlobalProperties.Instance.VerboseDebugOutput)
+					IDEInterface.Log(Executable+" "+Arguments);
+				prc.Start();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Error executing " + Executable +" "+Arguments + ":\n\n" + ex.Message);
+				return null;
+			}
 
 			prc.BeginErrorReadLine();
 			prc.BeginOutputReadLine();
