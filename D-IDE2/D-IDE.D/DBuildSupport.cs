@@ -25,7 +25,7 @@ namespace D_IDE.D
 			if (File.Exists(exe))
 				File.Delete(exe);
 
-			var dmd = DSettings.Instance.DMD2;
+			var dmd = DSettings.Instance.dmd2;
 			var dmd_exe = dmd.SoureCompiler;
 
 			// Always enable it to use environment paths to find dmd.exe

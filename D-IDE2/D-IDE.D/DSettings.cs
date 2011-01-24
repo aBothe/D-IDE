@@ -11,14 +11,14 @@ namespace D_IDE.D
 	{
 		public static DSettings Instance=new DSettings();
 
-		public DMDConfig DMD1=new DMDConfig();
-		public DMDConfig DMD2=new DMDConfig();
+		public DMDConfig dmd1 = new DMDConfig() { Version=DVersion.D1};
+		public DMDConfig dmd2 = new DMDConfig() { Version=DVersion.D2};
 
 		public DMDConfig DMDConfig(DVersion v)
 		{
 			if (v == DVersion.D1)
-				return DMD1;
-			return DMD2;
+				return dmd1;
+			return dmd2;
 		}
 
 		public string cv2pdb_exe = "cv2pdb.exe";
@@ -33,6 +33,9 @@ namespace D_IDE.D
 			x.WriteStartElement("cv2pdb");
 			x.WriteCData(cv2pdb_exe);
 			x.WriteEndElement();
+
+			dmd1.Save(x);
+			dmd2.Save(x);
 
 			x.WriteEndElement();
 		}
@@ -52,9 +55,9 @@ namespace D_IDE.D
 						config.Load(x);
 
 						if (config.Version == DVersion.D1)
-							DMD1 = config;
+							dmd1 = config;
 						else
-							DMD2 = config;
+							dmd2 = config;
 						break;
 				}
 			}
@@ -222,7 +225,6 @@ namespace D_IDE.D
 						break;
 				}
 			}
-
 		}
 
 		public void Save(XmlWriter x)
@@ -230,30 +232,39 @@ namespace D_IDE.D
 			x.WriteStartElement("dmd");
 			x.WriteAttributeString("version",((int)Version).ToString());
 
-			x.WriteStartElement("basedirectory");
-			x.WriteCData(BaseDirectory);
-			x.WriteEndElement();
-
+			if (!string.IsNullOrEmpty(BaseDirectory)){
+				x.WriteStartElement("basedirectory");
+				x.WriteCData(BaseDirectory);
+				x.WriteEndElement();
+			}
+			if (!string.IsNullOrEmpty(SoureCompiler)){
 			x.WriteStartElement("sourcecompiler");
-			x.WriteString(SoureCompiler);
+			x.WriteCData(SoureCompiler);
 			x.WriteEndElement();
-
-			x.WriteStartElement("exelinker");
-			x.WriteString(ExeLinker);
-			x.WriteEndElement();
-
-			x.WriteStartElement("win32linker");
-			x.WriteString(Win32ExeLinker);
-			x.WriteEndElement();
-
-			x.WriteStartElement("dlllinker");
-			x.WriteString(DllLinker);
-			x.WriteEndElement();
-
-			x.WriteStartElement("liblinker");
-			x.WriteString(LibLinker);
-			x.WriteEndElement();
-
+			} 
+			if (!string.IsNullOrEmpty(ExeLinker)){
+				x.WriteStartElement("exelinker");
+				x.WriteCData(ExeLinker);
+				x.WriteEndElement();
+			}
+			if (!string.IsNullOrEmpty(Win32ExeLinker))
+			{
+				x.WriteStartElement("win32linker");
+				x.WriteCData(Win32ExeLinker);
+				x.WriteEndElement();
+			}
+			if (!string.IsNullOrEmpty(DllLinker))
+			{
+				x.WriteStartElement("dlllinker");
+				x.WriteCData(DllLinker);
+				x.WriteEndElement();
+			}
+			if (!string.IsNullOrEmpty(LibLinker))
+			{
+				x.WriteStartElement("liblinker");
+				x.WriteCData(LibLinker);
+				x.WriteEndElement();
+			}
 			DebugArgs.Save(x);
 			ReleaseArgs.Save(x);
 
