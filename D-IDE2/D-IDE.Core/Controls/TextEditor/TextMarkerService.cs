@@ -21,14 +21,14 @@ namespace D_IDE.Core.Controls.Editor
 	/// </summary>
 	public sealed class TextMarkerService : DocumentColorizingTransformer, IBackgroundRenderer
 	{
-		readonly TextEditor codeEditor;
+		public readonly TextEditor Editor;
 		TextSegmentCollection<TextMarker> markers;
 		
 		public TextMarkerService(TextEditor codeEditor)
 		{
 			if (codeEditor == null)
 				throw new ArgumentNullException("codeEditor");
-			this.codeEditor = codeEditor;
+			this.Editor = codeEditor;
 			codeEditor.DocumentChanged += codeEditor_DocumentChanged;
 			codeEditor_DocumentChanged(null, null);
 		}
@@ -37,21 +37,30 @@ namespace D_IDE.Core.Controls.Editor
 		void codeEditor_DocumentChanged(object sender, EventArgs e)
 		{
 			if (markers != null) {
+				return;
 				foreach (TextMarker m in markers.ToArray()) {
 					m.Delete();
 				}
 			}
-			if (codeEditor.Document == null)
+			if (Editor.Document == null)
 				markers = null;
 			else
-				markers = new TextSegmentCollection<TextMarker>(codeEditor.Document);
+				markers = new TextSegmentCollection<TextMarker>(Editor.Document);
 		}
 		#endregion
 		
 		#region ITextMarkerService
+		public void Add(TextMarker m)
+		{
+			if (markers.Contains(m))
+				return;
+
+			markers.Add(m);
+		}
+
 		public TextMarker Create(int startOffset, int length)
 		{
-			int textLength = codeEditor.Document.TextLength;
+			int textLength = Editor.Document.TextLength;
 			if (startOffset < 0 || startOffset > textLength)
 				throw new ArgumentOutOfRangeException("startOffset", startOffset, "Value must be between 0 and " + textLength);
 			if (length < 0 || startOffset + length > textLength)
@@ -97,7 +106,7 @@ namespace D_IDE.Core.Controls.Editor
 		/// </summary>
 		internal void Redraw(ISegment segment)
 		{
-			codeEditor.TextArea.TextView.Redraw(segment, DispatcherPriority.Normal);
+			Editor.TextArea.TextView.Redraw(segment, DispatcherPriority.Normal);
 		}
 		#endregion
 		
@@ -204,11 +213,51 @@ namespace D_IDE.Core.Controls.Editor
 	public class TextMarker : TextSegment
 	{
 		public readonly TextMarkerService TextMarkerService;
+
 		public TextMarker(TextMarkerService svc, int offset, int length)
 		{
 			TextMarkerService = svc;
 			StartOffset = offset;
 			Length = length;
+
+			// If length 0, highlight first word/token
+			if (length < 1)
+			{
+				var ln = svc.Editor.Document.GetLineByOffset(offset);
+
+				var doc = svc.Editor.Document;
+				int i=ln.Offset;
+				bool HadNonWS = false;
+				bool IsIdent=false;
+				while (i < ln.EndOffset)
+				{
+					var c = doc.GetCharAt(i);
+					if (!HadNonWS && !char.IsWhiteSpace(c))
+					{
+						HadNonWS = true;
+						if (char.IsLetterOrDigit(c))
+							IsIdent = true;
+						StartOffset = i;
+					}
+					else if (IsIdent)
+					{
+						if (!char.IsLetterOrDigit(c))
+						{
+							Length = i - StartOffset;
+							break;
+						}
+					}
+					else if(HadNonWS)
+						break;
+					i++;
+				}
+
+				if (!HadNonWS)
+				{
+					StartOffset = ln.Offset;
+					Length = ln.Length;
+				}
+			}
 		}
 
 		public object Tag { get; set; }

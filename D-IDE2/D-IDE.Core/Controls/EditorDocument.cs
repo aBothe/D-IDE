@@ -115,7 +115,7 @@ namespace D_IDE
 			public readonly GenericError Error;
 
 			public ErrorMarker(EditorDocument EditorDoc, GenericError Error)
-				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(Error.Location.Line,Error.Location.Column),1)
+				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(Error.Location.Line,Error.Location.Column),0)
 			{
 				this.EditorDocument = EditorDoc;
 				this.Error = Error;
@@ -132,6 +132,9 @@ namespace D_IDE
 			foreach (var err in CoreManager.ErrorManagement.GetErrorsForFile(AbsoluteFilePath))
 			{
 				var m = new ErrorMarker(this, err);
+				MarkerStrategy.Add(m);
+
+				m.Redraw();
 			}
 		}
 		#endregion

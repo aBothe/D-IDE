@@ -130,7 +130,7 @@ namespace D_IDE.D
 				int lineNumber = Convert.ToInt32(s.Substring(to, to2 - to));
 				string errmsg = s.Substring(to2 + 2).Trim();
 
-				TempBuildErrorList.Add(new BuildError(errmsg, FileName, new CodeLocation(-1, lineNumber)));
+				TempBuildErrorList.Add(new BuildError(errmsg, FileName, new CodeLocation(0, lineNumber)));
 			}
 		}
 		#endregion
