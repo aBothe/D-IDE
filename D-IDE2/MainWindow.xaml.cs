@@ -11,13 +11,14 @@ using System.Linq;
 using System.IO;
 using System.Threading;
 using AvalonDock;
+using D_IDE.Core.Controls;
 
 namespace D_IDE
 {
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
-	public partial class MainWindow : RibbonWindow
+	public partial class MainWindow : RibbonWindow, IFormBase
 	{
 		#region Properties
 		public ProjectExplorer Panel_ProjectExplorer = new ProjectExplorer();
@@ -26,32 +27,37 @@ namespace D_IDE
 		#endregion
 
 		#region GUI Interactions
-		public void UpdateGUIElements()
+		public void RefreshGUI()
 		{
-			UpdateProjectExplorer();
-			UpdateTitle();
+			RefreshProjectExplorer();
+			RefreshTitle();
 			UpdateLastFilesMenus();
 		}
-		public void UpdateProjectExplorer()
+		public void RefreshErrorList()
 		{
-			Panel_ProjectExplorer.Update();
+			Panel_ErrorList.RefreshErrorList();
 		}
-		public void UpdateTitle()
+		public void RefreshTitle()
 		{
 			if (IDEManager.CurrentSolution != null)
 				Title = IDEManager.CurrentSolution.Name + " - D-IDE";
 			else
 				Title = "D-IDE";
 		}
+
+		public void RefreshProjectExplorer()
+		{
+			Panel_ProjectExplorer.Update();
+		}
 		#endregion
 
 		#region Initializer
 		public MainWindow(string[] args)
 		{
-			InitializeComponent();
+			// Init Manager
+			IDEManager.Instance = new IDEManager(this);
 
-			// Init global variables
-			IDEManager.MainWindow = this;
+			InitializeComponent();
 
 			// Load global settings
 			try
@@ -120,7 +126,7 @@ namespace D_IDE
 					ErrorLogger.Log(ex);
 				}
 
-			UpdateGUIElements();
+			RefreshGUI();
 		}
 		#endregion
 
@@ -169,7 +175,7 @@ namespace D_IDE
 						pdir,
 						pdlg.SolutionName);
 
-				UpdateGUIElements();
+				RefreshGUI();
 			}
 		}
 
@@ -199,7 +205,7 @@ namespace D_IDE
 
 		private void SaveAs(object sender, RoutedEventArgs e)
 		{
-			var ce = IDEManager.CurrentEditor;
+			var ce = IDEManager.Instance.CurrentEditor;
 			if (ce == null)
 				return;
 
@@ -335,6 +341,11 @@ namespace D_IDE
 		private void BuildToStandAlone_Click(object sender, RoutedEventArgs e)
 		{
 			IDEManager.BuildManagement.BuildSingle();
+		}
+
+		public DockingManager DockManager
+		{
+			get { return DockMgr; }
 		}
 	}
 }

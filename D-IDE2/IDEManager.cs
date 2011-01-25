@@ -11,75 +11,20 @@ using System.Collections.ObjectModel;
 
 namespace D_IDE
 {
-	class IDEManager
+	class IDEManager:CoreManager
 	{
-		#region Properties
-		public static bool CanUpdateGUI = true;
-		public static void UpdateGUI()
+		public static new IDEManager Instance
 		{
-			if (CanUpdateGUI)
-				MainWindow.UpdateGUIElements();
+			get { return CoreManager.Instance as IDEManager; }
+			set { CoreManager.Instance = value; }
 		}
 
-		public static MainWindow MainWindow;
-		public static AvalonDock.DockingManager DockMgr
+		public IDEManager(MainWindow mw):base(mw)		{}
+
+		public new MainWindow MainWindow
 		{
-			get { return MainWindow.DockMgr; }
+			get { return base.MainWindow as MainWindow; }
 		}
-		public static AbstractEditorDocument CurrentEditor
-		{
-			get { return DockMgr.ActiveDocument as AbstractEditorDocument; }
-		}
-
-		public static IEnumerable<AbstractEditorDocument> Editors
-		{
-			get { return from e in DockMgr.Documents where e is AbstractEditorDocument select e as AbstractEditorDocument; }
-		}
-
-		public class ErrorManagement
-		{
-			public readonly static List<GenericError> LastUnboundBuildErrors = new List<GenericError>();
-			public static GenericError[] LastParseErrors
-			{
-				get
-				{
-					var ed = CurrentEditor as EditorDocument;
-					if (ed == null || ed.SyntaxTree == null)
-						return new GenericError[] { };
-
-					var ret = new List<GenericError>();
-					foreach (var err in ed.SyntaxTree.ParseErrors)
-						ret.Add(new ParseError(err));
-					return ret.ToArray();
-				}
-			}
-
-			public static void RefreshErrorList()
-			{
-				var el = MainWindow.Panel_ErrorList.Errors;
-
-				el.Clear();
-
-				// Add unbound build errors
-				if(LastUnboundBuildErrors.Count>0)
-					el.AddRange(LastUnboundBuildErrors);
-				// (Bound) Solution errors
-				else  if (CurrentSolution != null)
-					foreach (var prj in CurrentSolution)
-						el.AddRange(prj.LastBuildErrors);
-				// Parse errors
-				el.AddRange(LastParseErrors);
-				
-				MainWindow.Panel_ErrorList.RefreshErrorList();
-			}
-		}
-
-		/// <summary>
-		/// There can be only one open solution. 
-		/// Stand-alone modules are opened independently of any other open solutions, projects or modules
-		/// </summary>
-		public static Solution CurrentSolution { get; set; }
-		#endregion
 
 		public class ProjectManagement
 		{
@@ -178,7 +123,7 @@ namespace D_IDE
 				// d)
 				sln.Save();
 
-				MainWindow.UpdateGUIElements();
+				Instance.UpdateGUI();
 				return true;
 			}
 
@@ -250,7 +195,7 @@ namespace D_IDE
 				{
 					sln.Name = NewName;
 					sln.FileName = sln.BaseDirectory + "\\" + newSolutionFileName;
-					MainWindow.UpdateTitle();
+					Instance.MainWindow.RefreshTitle();
 					sln.Save();
 				}
 				return ret;
@@ -297,14 +242,14 @@ namespace D_IDE
 				 * - Save solution
 				 */
 
-				foreach (var ed in Editors.Where(e => e.Project == prj))
+				foreach (var ed in Instance.Editors.Where(e => e.Project == prj))
 					ed.Close();
 
 				var sln = prj.Solution;
 				sln.ExcludeProject(prj.FileName);
 				sln.Save();
 
-				MainWindow.UpdateGUIElements();
+				Instance.UpdateGUI();
 			}
 
 			/// <summary>
@@ -320,7 +265,7 @@ namespace D_IDE
 				sln.ExcludeProject(prjFile);
 				sln.Save();
 
-				MainWindow.UpdateGUIElements();
+				Instance.UpdateGUI();
 			}
 
 			#region Project Dependencies dialog
@@ -366,7 +311,7 @@ namespace D_IDE
 					{
 						File.WriteAllText(absFile, "");
 						Project.Save();
-						UpdateGUI();
+						Instance.UpdateGUI();
 						return true;
 					}
 				}
@@ -430,7 +375,7 @@ namespace D_IDE
 					}
 				}
 				if (Project.Save())
-					UpdateGUI();
+					Instance.UpdateGUI(); ;
 			}
 
 			public static bool AddExistingDirectoryToProject(string DirectoryPath, Project Project, string RelativeDir)
@@ -472,7 +417,7 @@ namespace D_IDE
 					}
 				}
 				Project.Save();
-				UpdateGUI();
+				Instance.UpdateGUI();
 				return true;
 			}
 
@@ -499,7 +444,7 @@ namespace D_IDE
 				// Normally this should always return true since we've tested its non-existence before!
 				tarprj.Add(newFile_abs);
 				tarprj.Save();
-				UpdateGUI();
+				Instance.UpdateGUI();
 				return true;
 			}
 
@@ -522,7 +467,7 @@ namespace D_IDE
 				 * - Delete old one from project
 				 * - Delete old physically
 				 */
-				CanUpdateGUI = false;
+				Instance.CanUpdateGUI = false;
 				if (CopyFile(Project, FileName, TargetProject, NewDirectory) && Project.Remove(FileName))
 				{
 					var oldDir_rel = Path.GetDirectoryName(Project.ToRelativeFileName(FileName));
@@ -533,8 +478,8 @@ namespace D_IDE
 						Project.SubDirectories.Add(oldDir_rel);
 					Project.Save();
 				}
-				CanUpdateGUI = true;
-				UpdateGUI();
+				Instance.CanUpdateGUI = true;
+				Instance.UpdateGUI();
 				return false;
 			}
 
@@ -545,10 +490,10 @@ namespace D_IDE
 				 * - Move dir
 				 * - Add new dir to dest prj
 				 */
-				CanUpdateGUI = false;
+				Instance.CanUpdateGUI = false;
 				if(ExcludeDirectoryFromProject(Project,RelativeDir))
 				{
-					CanUpdateGUI = true;
+					Instance.CanUpdateGUI = true;
 					var srcDir_abs = Project.BaseDirectory + "\\" + RelativeDir;
 					var destDir_abs =Path.Combine(TargetProject.BaseDirectory,NewDir,Path.GetFileName(RelativeDir));
 
@@ -563,7 +508,7 @@ namespace D_IDE
 
 					return AddExistingDirectoryToProject(destDir_abs, TargetProject, NewDir);
 				}
-				CanUpdateGUI = true;
+				Instance.CanUpdateGUI = true;
 				return false;
 			}
 
@@ -580,7 +525,7 @@ namespace D_IDE
 								   where Path.GetDirectoryName( f.FileName).Contains(RelativePath) 
 								   select prj.ToAbsoluteFileName( f.FileName)).ToArray();
 
-				foreach(var ed in Editors.Where(e=>affectedFiles.Contains(e.AbsoluteFilePath)))
+				foreach(var ed in Instance.Editors.Where(e=>affectedFiles.Contains(e.AbsoluteFilePath)))
 					ed.Close();
 
 				foreach (var s in prj.SubDirectories.Where(d=>d== RelativePath || d.Contains(RelativePath)).ToArray())
@@ -591,7 +536,7 @@ namespace D_IDE
 
 				prj.Save();
 
-				UpdateGUI();
+				Instance.UpdateGUI();
 				return true;
 			}
 
@@ -612,7 +557,7 @@ namespace D_IDE
 			{
 				var absFile = Project.ToAbsoluteFileName(file);
 				// Close (all) editor(s) that represent our file
-				foreach (var ed in Editors.Where(e=>e.AbsoluteFilePath==absFile).ToArray())
+				foreach (var ed in Instance.Editors.Where(e=>e.AbsoluteFilePath==absFile).ToArray())
 					if(!ed.Close())
 						return false;
 
@@ -620,7 +565,7 @@ namespace D_IDE
 				if (r)
 				{
 					Project.Save();
-					MainWindow.UpdateProjectExplorer();
+					Instance.MainWindow.RefreshProjectExplorer();
 				}
 				return r;
 			}
@@ -647,7 +592,7 @@ namespace D_IDE
 					Project.Add(Path.GetDirectoryName(absPath) + "\\" + newFilePath);
 					Project.Save();
 
-					foreach (var e in Editors)
+					foreach (var e in Instance.Editors)
 						if (e.AbsoluteFilePath == absPath)
 							e.FileName = Path.GetDirectoryName(absPath) + "\\" + newFilePath;
 				}
@@ -691,10 +636,10 @@ namespace D_IDE
 			/// <returns></returns>
 			public static bool BuildSingle()
 			{
-				if (CurrentEditor == null)
+				if (Instance.CurrentEditor == null)
 					return false;
 
-				string file = CurrentEditor.AbsoluteFilePath;
+				string file = Instance.CurrentEditor.AbsoluteFilePath;
 				bool IsProject = false;
 				var lang=AbstractLanguageBinding.SearchBinding(file,out IsProject);
 
@@ -764,8 +709,8 @@ namespace D_IDE
 						foreach (var fn in prj.LastOpenedFiles)
 							OpenFile(fn);
 
-					MainWindow.UpdateGUIElements();
-					MainWindow.Panel_ProjectExplorer.MainTree.ExpandAll();
+					Instance.UpdateGUI();
+					Instance.MainWindow.Panel_ProjectExplorer.MainTree.ExpandAll();
 					return null;
 				}
 
@@ -791,7 +736,7 @@ namespace D_IDE
 						foreach (var prj in CurrentSolution)
 							foreach (var fn in prj.LastOpenedFiles)
 								OpenFile(prj.ToAbsoluteFileName(fn));
-						MainWindow.UpdateGUIElements();
+						Instance.UpdateGUI();
 					}
 					else CurrentSolution = _oldSln;
 					return null;
@@ -810,7 +755,7 @@ namespace D_IDE
 
 				// Check if file already open
 				var absPath = _prj != null ? _prj.ToAbsoluteFileName(FileName) : FileName;
-				foreach (var doc in DockMgr.Documents)
+				foreach (var doc in Instance.MainWindow.DockManager.Documents)
 					if (doc is AbstractEditorDocument && (doc as AbstractEditorDocument).AbsoluteFilePath == absPath)
 					{
 						doc.Activate();
@@ -820,21 +765,21 @@ namespace D_IDE
 				AdjustLastFileList(absPath, false);
 
 				var newEd = new EditorDocument(absPath);
-				newEd.Show(DockMgr);
+				newEd.Show(Instance.MainWindow.DockManager);
 				newEd.Activate();
-				MainWindow.UpdateGUIElements();
+				Instance.UpdateGUI();
 				return newEd;
 			}
 
 			public static void SaveCurrentFile()
 			{
-				if (CurrentEditor != null)
-					CurrentEditor.Save();
+				if (Instance.CurrentEditor != null)
+					Instance.CurrentEditor.Save();
 			}
 
 			public static void SaveAllFiles()
 			{
-				foreach (var doc in DockMgr.Documents)
+				foreach (var doc in Instance.MainWindow.DockManager.Documents)
 					if (doc is AbstractEditorDocument)
 						(doc as AbstractEditorDocument).Save();
 
@@ -853,16 +798,16 @@ namespace D_IDE
 			/// </summary>
 			public static void SaveCurrentFileAs(string NewFilePath)
 			{
-				if (CurrentEditor == null) return;
+				if (Instance.CurrentEditor == null) return;
 
-				if (CurrentEditor.Project != null)
+				if (Instance.CurrentEditor.Project != null)
 					IDEManager.FileManagement.RenameFile(
-						CurrentEditor.Project,
-						CurrentEditor.FileName, NewFilePath);
+						Instance.CurrentEditor.Project,
+						Instance.CurrentEditor.FileName, NewFilePath);
 				else
 				{
-					CurrentEditor.FileName = NewFilePath;
-					CurrentEditor.Save();
+					Instance.CurrentEditor.FileName = NewFilePath;
+					Instance.CurrentEditor.Save();
 				}
 			}
 		}

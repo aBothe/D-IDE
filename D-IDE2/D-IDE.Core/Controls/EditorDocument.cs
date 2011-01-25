@@ -11,6 +11,7 @@ using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using System.Xml;
 using Parser.Core;
+using D_IDE.Core.Controls.Editor;
 
 namespace D_IDE
 {
@@ -19,6 +20,8 @@ namespace D_IDE
 		#region Generic properties
 		public readonly TextEditor Editor = new TextEditor();
 		public AbstractSyntaxTree SyntaxTree=null;
+
+		TextMarkerService MarkerStrategy;
 		#endregion
 
 		public EditorDocument()
@@ -77,6 +80,16 @@ namespace D_IDE
 
 			Editor.ShowLineNumbers = true;
 			Editor.TextChanged += new EventHandler(Editor_TextChanged);
+
+			// Register Marker strategy
+			var tv = Editor.TextArea.TextView;
+			MarkerStrategy=new TextMarkerService(Editor);
+			tv.Services.AddService(typeof(TextMarkerService), MarkerStrategy);
+			tv.LineTransformers.Add(MarkerStrategy);
+			tv.BackgroundRenderers.Add(MarkerStrategy);
+			
+
+			RefreshErrorHighlightings();
 		}
 
 		#region Syntax Highlighting
@@ -94,6 +107,32 @@ namespace D_IDE
 		public static IHighlightingDefinition GetHighlighting(string file)
 		{
 			return null;
+		}
+
+		public class ErrorMarker:TextMarker
+		{
+			public readonly EditorDocument EditorDocument;
+			public readonly GenericError Error;
+
+			public ErrorMarker(EditorDocument EditorDoc, GenericError Error)
+				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(Error.Location.Line,Error.Location.Column),1)
+			{
+				this.EditorDocument = EditorDoc;
+				this.Error = Error;
+			}
+		}
+
+		public void RefreshErrorHighlightings()
+		{
+			// Clear old markers
+			foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
+				if (marker is ErrorMarker)
+					marker.Delete();
+
+			foreach (var err in CoreManager.ErrorManagement.GetErrorsForFile(AbsoluteFilePath))
+			{
+				var m = new ErrorMarker(this, err);
+			}
 		}
 		#endregion
 

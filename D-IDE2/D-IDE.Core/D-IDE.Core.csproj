@@ -58,6 +58,8 @@
     <Compile Include="Controls\AbstractEditorDocument.cs" />
     <Compile Include="Controls\AbstractSettingsPage.cs" />
     <Compile Include="Controls\EditorDocument.cs" />
+    <Compile Include="Controls\IFormBase.cs" />
+    <Compile Include="Controls\TextEditor\TextMarkerService.cs" />
     <Compile Include="CoreIcons.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -67,6 +69,7 @@
     <Compile Include="GlobalProperties.cs" />
     <Compile Include="IDEInterface.cs" />
     <Compile Include="AbstractLanguageBinding.cs" />
+    <Compile Include="CoreManager.cs" />
     <Compile Include="Project.cs" />
     <Compile Include="LanguageLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

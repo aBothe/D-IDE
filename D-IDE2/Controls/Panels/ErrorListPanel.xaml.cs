@@ -28,14 +28,12 @@ namespace D_IDE.Controls.Panels
 			InitializeComponent();
 		}
 
-		public readonly List<GenericError> Errors = new List<GenericError>();
-
 		public void RefreshErrorList()
 		{
 			Dispatcher.Invoke(new EventHandler(delegate(object o,EventArgs e){
 			var selIndex = MainList.SelectedIndex;
 
-			MainList.ItemsSource = Errors;
+			MainList.ItemsSource = IDEManager.ErrorManagement.Errors;
 
 			if (MainList.Items.Count > selIndex)
 				MainList.SelectedIndex = selIndex;

@@ -37,7 +37,8 @@ namespace D_IDE
 		protected override bool OnStartup(Microsoft.VisualBasic.ApplicationServices.StartupEventArgs eventArgs)
 		{
 			var CurrentApp = new Application();
-			CurrentApp.MainWindow = new MainWindow(eventArgs.CommandLine.ToArray());
+			var mw = new MainWindow(eventArgs.CommandLine.ToArray());
+			CurrentApp.MainWindow = mw;
 			CurrentApp.Run();
 			// Return false to avoid base.Run() throwing an exception that no Winforms MainWindow could be found
 			return false;
@@ -48,7 +49,7 @@ namespace D_IDE
 		/// </summary>
 		protected override void OnStartupNextInstance(Microsoft.VisualBasic.ApplicationServices.StartupNextInstanceEventArgs eventArgs)
 		{
-			IDEManager.MainWindow.Activate();
+			IDEManager.Instance.MainWindow.Activate();
 
 			foreach(var s in eventArgs.CommandLine)
 				IDEManager.EditingManagement.OpenFile(s);
