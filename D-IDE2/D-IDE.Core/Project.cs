@@ -5,6 +5,7 @@ using Parser.Core;
 using System.Linq;
 using System.IO;
 using System.Xml;
+using System.ComponentModel;
 
 namespace D_IDE.Core
 {
@@ -31,20 +32,21 @@ namespace D_IDE.Core
 				ErrorLogger.Log(new FileNotFoundException("Couldn't load project because the file \"" + FileName + "\" was not found", FileName));
 				return null;
 			}
-				string ls = FileName.ToLower();
 
-				foreach (var lang in from l in LanguageLoader.Bindings where l.ProjectsSupported select l)
-					foreach (var pt in lang.ProjectTemplates)
-						if (pt.Extensions != null)
-							foreach (var ext in pt.Extensions)
-								if (ls.EndsWith(ext))
-								{
-									var ret = lang.OpenProject(sln, FileName);
-									if (ret != null)
-										sln.AddProject(ret); // Ensure the project is loaded into the cache
-									return ret;
-								}
-				ErrorLogger.Log(new FileLoadException("Unkown project type", FileName));
+			string ls = FileName.ToLower();
+
+			foreach (var lang in from l in LanguageLoader.Bindings where l.ProjectsSupported select l)
+				foreach (var pt in lang.ProjectTemplates)
+					if (pt.Extensions != null)
+						foreach (var ext in pt.Extensions)
+							if (ls.EndsWith(ext))
+							{
+								var ret = lang.OpenProject(sln, FileName);
+								if (ret != null)
+									sln.AddProject(ret); // Ensure the project is loaded into the cache
+								return ret;
+							}
+			ErrorLogger.Log(new FileLoadException("Unkown project type", FileName));
 				return null;
 		}
 
@@ -67,7 +69,7 @@ namespace D_IDE.Core
 		{
 			get
 			{
-				var ret = new List<Project>();
+				var ret = new List<Project>(ProjectFileDependencies.Count);
 				foreach (var file in ProjectFileDependencies)
 					ret.Add(Solution[file]);
 				return ret.ToArray();
@@ -89,6 +91,12 @@ namespace D_IDE.Core
 		{
 			get { return from f in _Files where f.Action == ProjectModule.BuildAction.Compile select f; }
 		}
+
+		/// <summary>
+		/// Project's build version
+		/// </summary>
+		[DefaultValue(new Version())]
+		public Version Version { get; set; }
 
 		public bool ContainsFile(string file)
 		{
@@ -183,17 +191,21 @@ namespace D_IDE.Core
 			}
 			xw.WriteEndElement();
 
-				xw.WriteStartElement("enablesubversioning");
-				xw.WriteAttributeString("value", EnableBuildVersioning ? "true" : "false");
-				xw.WriteEndElement();
+			xw.WriteStartElement("enablesubversioning");
+			xw.WriteAttributeString("value", EnableBuildVersioning ? "true" : "false");
+			xw.WriteEndElement();
 
-				xw.WriteStartElement("alsostoresources");
-				xw.WriteAttributeString("value", AlsoStoreChangedSources?"true":"false");
-				xw.WriteEndElement();
+			xw.WriteStartElement("alsostoresources");
+			xw.WriteAttributeString("value", AlsoStoreChangedSources?"true":"false");
+			xw.WriteEndElement();
 
-				xw.WriteStartElement("lastversioncount");
-				xw.WriteAttributeString("value", LastBuildVersionCount.ToString());
-				xw.WriteEndElement();
+			xw.WriteStartElement("lastversioncount");
+			xw.WriteAttributeString("value", LastBuildVersionCount.ToString());
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("version");
+			xw.WriteCData(Version.ToString());
+			xw.WriteEndElement();
 
 			if (OnWriteToFile != null)
 				OnWriteToFile(xw);
@@ -315,6 +327,13 @@ namespace D_IDE.Core
 								catch { }
 							}
 							break;
+
+						case "version":
+							System.Version v = null;
+							Version.TryParse(xr.ReadString(),out v);
+							if (v != null)
+								Version = v;
+							break;
 					}
 				}
 			}
@@ -354,7 +373,6 @@ namespace D_IDE.Core
 		}
 
 		#region Build properties
-
 		public readonly List<string> RequiredProjects = new List<string>();
 		public readonly List<GenericError> LastBuildErrors = new List<GenericError>();
 
@@ -365,6 +383,32 @@ namespace D_IDE.Core
 		public bool EnableBuildVersioning = false;
 		public bool AlsoStoreChangedSources = false;
 		public int LastBuildVersionCount = 0;
+
+		/// <summary>
+		/// Copies all files to project's output directory
+		/// </summary>
+		public void CopyCopyableOutputFiles()
+		{
+			CopyCopyableOutputFiles(ToAbsoluteFileName( OutputDirectory));
+		}
+
+		/// <summary>
+		/// Copies all files which are marked as 'Copy' to targetDirectory
+		/// </summary>
+		public void CopyCopyableOutputFiles(string targetDirectory)
+		{
+			string fn = "";
+			foreach (var pf in _Files)
+			{
+				fn = ToAbsoluteFileName(pf.FileName);
+				if(pf.Action==ProjectModule.BuildAction.CopyToOutput && File.Exists(fn))
+					File.Copy(ToAbsoluteFileName(fn),Path.Combine( targetDirectory,Path.GetFileName(pf.FileName)));
+			}
+
+			fn = ToAbsoluteFileName(OutputFile);
+			if (File.Exists(fn))
+				File.Copy(fn,Path.Combine(targetDirectory,Path.GetFileName(OutputFile)));
+		}
 		#endregion
 	}
 
@@ -402,7 +446,7 @@ namespace D_IDE.Core
 		public string FileName;
 
 		public long LastModified;
-		public BuildAction Action=BuildAction.None;
+		public BuildAction Action=BuildAction.CopyToOutput;
 
 		public enum BuildAction
 		{

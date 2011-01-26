@@ -9,62 +9,96 @@ using Parser.Core;
 
 namespace D_IDE.D
 {
-	public class DBuildSupport
+	public class DBuildSupport:IBuildSupport
 	{
 		#region Properties
 		readonly List<GenericError> TempBuildErrorList = new List<GenericError>();
 		Process TempPrc = null;
+
+		DVersion DMDVersion = DVersion.D2;
+		DMDConfig CurrentDMDConfig
+		{
+			get { return DSettings.Instance.DMDConfig(DMDVersion); }
+		}
 		#endregion
 
-		public GenericError[] BuildSingleModule(string FileName)
+		public BuildResult BuildProject(Project prj)
+		{
+			// Build outputs/target paths
+			string objectDirectory = prj.BaseDirectory+"\\obj";
+			Util.CreateDirectoryRecursively(objectDirectory);
+
+			// Compile d sources to object files
+			
+
+			// Link files
+
+			return null;
+		}
+
+		public BuildResult BuildSingleModule(string FileName, string OutputDirectory, bool Link)
 		{
 			TempBuildErrorList.Clear();
+			var br = new BuildResult() { SourceFile=FileName};
 
-			string exe = Path.ChangeExtension(FileName, ".exe");
-
-			if (File.Exists(exe))
-				File.Delete(exe);
-
-			var dmd = DSettings.Instance.dmd2;
-			var dmd_exe = dmd.SoureCompiler;
-
-			// Always enable it to use environment paths to find dmd.exe
-			if (!Path.IsPathRooted(dmd_exe) && Directory.Exists(dmd.BaseDirectory))
-				dmd_exe = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
-
-			TempPrc = FileExecution.ExecuteSilentlyAsync(
-				dmd_exe,
-				BuildDSourceCompileArgumentString(dmd.SingleCompilationArguments,FileName,""), // Compile our program always in debug mode
-				Path.GetDirectoryName(FileName),
-				OnOutput, OnError, OnExit
-				);
-
-			if (TempPrc != null && !TempPrc.HasExited)
-				TempPrc.WaitForExit(10000);
-
-			if (File.Exists(exe))
+			if (Link)
 			{
-				IDEInterface.Log("Build successful");
-				CreatePDBFromExe(exe);
-			}
+				string exe=string.IsNullOrEmpty(OutputDirectory)?
+					Path.ChangeExtension(FileName, ".exe"):
+					OutputDirectory + "\\" + Path.GetFileName(FileName) + ".exe";
 
-			return TempBuildErrorList.ToArray();
+				br.TargetFile = exe;
+
+				if (File.Exists(exe))
+					File.Delete(exe);
+
+				var dmd = DSettings.Instance.dmd2;
+				var dmd_exe = dmd.SoureCompiler;
+
+				// Always enable it to use environment paths to find dmd.exe
+				if (!Path.IsPathRooted(dmd_exe) && Directory.Exists(dmd.BaseDirectory))
+					dmd_exe = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
+
+				TempPrc = FileExecution.ExecuteSilentlyAsync(
+					dmd_exe,
+					BuildDSourceCompileArgumentString(CurrentDMDConfig. SingleCompilationArguments, FileName, ""), // Compile our program always in debug mode
+					Path.GetDirectoryName(FileName),
+					OnOutput, OnError, OnExit
+					);
+
+				if (TempPrc != null && !TempPrc.HasExited)
+					TempPrc.WaitForExit(10000);
+
+				if (File.Exists(exe))
+				{
+					var br = CreatePDBFromExe(exe);
+
+
+				}
+
+				TempBuildErrorList.ToArray();
+			}
 		}
 
 		/// <summary>
 		/// Calls the cv2pdb program
 		/// </summary>
-		/// <param name="Executable"></param>
-		public bool CreatePDBFromExe(string Executable)
+		public BuildResult CreatePDBFromExe(string Executable)
 		{
+			var _p = TempBuildErrorList.ToArray();
+
+			string pdb = Path.ChangeExtension(Executable, ".pdb");
+			var br = new BuildResult() { SourceFile=Executable,TargetFile=pdb};
+
 			if (!File.Exists(Executable))
 			{
-				IDEInterface.Log("Debug information database creation failed - "+Executable+" does not exist");
-				return false;
+				br.BuildErrors = new[] { 
+					new GenericError(){Message="Debug information database creation failed - "+Executable+" does not exist"}
+					};
+				return br;
 			}
 
 			bool res = false;
-			string pdb = Path.ChangeExtension(Executable, ".pdb");
 
 			if (File.Exists(pdb))
 				File.Delete(pdb); // Enforce recreation of the database
@@ -99,7 +133,14 @@ namespace D_IDE.D
 					prc.WaitForExit(10000); // A time out of 10 seconds should be enough
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
-			return res;
+
+			br.BuildErrors = TempBuildErrorList.ToArray();
+			TempBuildErrorList.Clear();
+			TempBuildErrorList.AddRange(_p);
+
+			br.Successful = res;
+
+			return br;
 		}
 
 		#region Message Callbacks

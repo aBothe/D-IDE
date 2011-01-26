@@ -153,7 +153,7 @@ namespace D_IDE.D
 		{
 			return BuildSupport.BuildSingleModule(FileName);
 		}
-#endregion
+		#endregion
 
 		#region Debugging
 		public override string BuildSymbolValueString(AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugScopedSymbol sym)

@@ -165,8 +165,6 @@ namespace D_IDE.D
 			return ReleaseArgs;
 		}
 
-		public string SingleCompilationArguments = "\"$src\" -gc -debug";
-
 		DBuildArguments DebugArgs=new DBuildArguments(){
 			IsDebug=true,
 		SoureCompiler = "-c \"$src\" -of\"$obj\" -gc -debug",

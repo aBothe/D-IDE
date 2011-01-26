@@ -85,6 +85,9 @@ namespace D_IDE.Core
 			return false;
 		}
 
+		/// <summary>
+		/// Returns if project can build the file named 'FileName'
+		/// </summary>
 		public bool CanHandleFile(string FileName)
 		{
 			var ext = Path.GetExtension(FileName).ToLower();

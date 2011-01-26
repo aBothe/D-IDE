@@ -220,13 +220,13 @@ namespace D_IDE.Core.Controls.Editor
 			StartOffset = offset;
 			Length = length;
 
-			// If length 0, highlight first word/token
+			// If length 0, highlight word/token at the offset
 			if (length < 1)
 			{
 				var ln = svc.Editor.Document.GetLineByOffset(offset);
 
 				var doc = svc.Editor.Document;
-				int i=ln.Offset;
+				int i=offset;
 				bool HadNonWS = false;
 				bool IsIdent=false;
 				while (i < ln.EndOffset)

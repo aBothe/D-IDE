@@ -67,6 +67,7 @@
     </Compile>
     <Compile Include="FileExecution.cs" />
     <Compile Include="GlobalProperties.cs" />
+    <Compile Include="IBuildSupport.cs" />
     <Compile Include="IDEInterface.cs" />
     <Compile Include="AbstractLanguageBinding.cs" />
     <Compile Include="CoreManager.cs" />
