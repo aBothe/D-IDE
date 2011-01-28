@@ -97,7 +97,7 @@ namespace D_IDE.D
 				{
 					switch (x2.LocalName)
 					{
-						case "sourceompiler":
+						case "sourcecompiler":
 							SoureCompiler = x2.ReadString();
 							break;
 						case "win32linker":
@@ -143,6 +143,16 @@ namespace D_IDE.D
 
 				x.WriteEndElement();
 			}
+
+			public void ApplyFrom(DBuildArguments other)
+			{
+				IsDebug = other.IsDebug;
+				SoureCompiler = other.SoureCompiler;
+				Win32ExeLinker = other.Win32ExeLinker;
+				ExeLinker = other.ExeLinker;
+				DllLinker = other.DllLinker;
+				LibLinker = other.LibLinker;
+			}
 		}
 
 		public DVersion Version = DVersion.D2;
@@ -158,22 +168,22 @@ namespace D_IDE.D
 		public string DllLinker = "dmd.exe";
 		public string LibLinker = "lib.exe";
 
-		DBuildArguments BuildArguments(bool IsDebug)
+		public DBuildArguments BuildArguments(bool IsDebug)
 		{
 			if (IsDebug)
 				return DebugArgs;
 			return ReleaseArgs;
 		}
 
-		DBuildArguments DebugArgs=new DBuildArguments(){
-			IsDebug=true,
+		public DBuildArguments DebugArgs=new DBuildArguments(){
+		IsDebug=true,
 		SoureCompiler = "-c \"$src\" -of\"$obj\" -gc -debug",
 		Win32ExeLinker = "$objs -L/su:windows -L/exet:nt -of\"$exe\" -gc -debug",
 		ExeLinker = "$objs -of\"$exe\" -gc -debug",
 		DllLinker = "$objs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc -debug",
 		LibLinker = "-c -n \"$lib\" $objs"};
 
-		DBuildArguments ReleaseArgs=new DBuildArguments(){
+		public DBuildArguments ReleaseArgs=new DBuildArguments(){
 		SoureCompiler = "-c \"$src\" -of\"$obj\" -release -O -inline",
 		Win32ExeLinker = "$objs -L/su:windows -L/exet:nt -of\"$exe\" -release -O -inline",
 		ExeLinker = "$objs -of\"$exe\" -release -O -inline",

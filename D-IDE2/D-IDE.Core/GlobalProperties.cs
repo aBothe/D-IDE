@@ -207,6 +207,13 @@ namespace D_IDE
                                 }
                                 break;
 
+							case "verbosebuild":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.VerboseBuildOutput = xr.Value == "1";
+								}
+								break;
+
                             case "autosave":
                                 if (xr.MoveToAttribute("value"))
                                 {
@@ -337,8 +344,12 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Instance.VerboseDebugOutput ? "1" : "0");
 			xw.WriteEndElement();
 
-			xw.WriteStartElement("skipunknowncode");
-			xw.WriteAttributeString("value", Instance.SkipUnknownCode ? "1" : "0");
+			xw.WriteStartElement("verbosebuild");
+			xw.WriteAttributeString("value", Instance.VerboseBuildOutput ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("autosave");
+			xw.WriteAttributeString("value", Instance.DoAutoSaveOnBuilding ? "1" : "0");
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("autosave");
@@ -379,6 +390,7 @@ namespace D_IDE
 		public Dictionary<string, string> SyntaxHighlightingEntries = new Dictionary<string, string>();
 
 		#region Build
+		public bool VerboseBuildOutput = true;
 		public bool DoAutoSaveOnBuilding = true;
 		public string DefaultBinariesPath = "bin";
 		#endregion

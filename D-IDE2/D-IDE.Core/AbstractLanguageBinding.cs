@@ -43,7 +43,6 @@ namespace D_IDE.Core
 		public virtual bool CanUseDebugging { get { return false; } }
 		public virtual bool CanUseCodeCompletion { get { return false; } }
 		public virtual bool CanBuild { get { return false; } }
-		public virtual bool CanBuildToSingleModule { get { return false; } }
 
 		public static AbstractLanguageBinding SearchBinding(string file, out bool IsProject)
 		{
@@ -66,11 +65,7 @@ namespace D_IDE.Core
 #endregion
 
 		public virtual Project CreateEmptyProject(FileTemplate ProjectType) { throw new NotImplementedException(); } 
-		public virtual Project OpenProject(Solution Solution, string FileName) {  throw new NotImplementedException(); } 
-
-		public virtual bool BuildProject(Project Project) { throw new NotImplementedException(); }
-		public virtual GenericError[] BuildSingleModule(string FileName){ throw new NotImplementedException(); } 
-
+		public virtual Project OpenProject(Solution Solution, string FileName) {  throw new NotImplementedException(); }
 
 		public bool CanHandleProject(string ProjectFile)
 		{
@@ -104,6 +99,11 @@ namespace D_IDE.Core
 		{
 			return IDEInterface.ConfigDirectory + "\\" + Util.PurifyFileName(Binding.LanguageName) + ".config.xml";
 		}
+
+		/// <summary>
+		/// Language build support. Only requested if CanBuild returns true.
+		/// </summary>
+		public virtual IBuildSupport BuildSupport { get { return null; } }
 
 		/// <summary>
 		/// Retrieves the value of a debug symbol.

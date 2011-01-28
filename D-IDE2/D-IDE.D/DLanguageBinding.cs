@@ -94,8 +94,6 @@ namespace D_IDE.D
 		public override bool CanUseCodeCompletion { get { return true; } }
 		public override bool CanBuild { get { return true; } }
 
-		public override bool CanBuildToSingleModule { get { return true; } }
-
 		#region Code Completion
 		DLanguage _Language=new DLanguage();
 		public override ILanguage Language { get { return _Language; } }
@@ -140,20 +138,15 @@ namespace D_IDE.D
 		}
 		#endregion
 
-		#region Building
-		public readonly DBuildSupport BuildSupport = new DBuildSupport();
+		readonly DBuildSupport _BuildSupport = new DBuildSupport();
 
-		public override bool BuildProject(Project Project)
+		public override IBuildSupport BuildSupport
 		{
-			throw new NotImplementedException();
+			get
+			{
+				return _BuildSupport;
+			}
 		}
-
-		
-		public override GenericError[] BuildSingleModule(string FileName)
-		{
-			return BuildSupport.BuildSingleModule(FileName);
-		}
-		#endregion
 
 		#region Debugging
 		public override string BuildSymbolValueString(AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugScopedSymbol sym)

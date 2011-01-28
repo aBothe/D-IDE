@@ -45,6 +45,11 @@ namespace D_IDE
 				Title = "D-IDE";
 		}
 
+		public void ClearLog()
+		{
+			Panel_Log.Clear();
+		}
+
 		public void RefreshProjectExplorer()
 		{
 			Panel_ProjectExplorer.Update();

@@ -12,17 +12,18 @@ namespace D_IDE.D
 	public class DBuildSupport:IBuildSupport
 	{
 		#region Properties
-		readonly List<GenericError> TempBuildErrorList = new List<GenericError>();
 		Process TempPrc = null;
+		bool ShallStop = false;
 
-		DVersion DMDVersion = DVersion.D2;
-		DMDConfig CurrentDMDConfig
+		public DVersion DMDVersion = DVersion.D2;
+		public bool CompileRelease = true;
+		public DMDConfig CurrentDMDConfig
 		{
 			get { return DSettings.Instance.DMDConfig(DMDVersion); }
 		}
 		#endregion
 
-		public BuildResult BuildProject(Project prj)
+		public override BuildResult BuildProject(Project prj)
 		{
 			// Build outputs/target paths
 			string objectDirectory = prj.BaseDirectory+"\\obj";
@@ -32,52 +33,102 @@ namespace D_IDE.D
 			
 
 			// Link files
-
 			return null;
 		}
 
-		public BuildResult BuildSingleModule(string FileName, string OutputDirectory, bool Link)
+		public BuildResult CompileSource(DMDConfig dmd,bool DebugCompile, string srcFile, string objFile, string execDirectory)
 		{
-			TempBuildErrorList.Clear();
-			var br = new BuildResult() { SourceFile=FileName};
+			var br = new BuildResult() { SourceFile = srcFile,TargetFile=objFile,Successful=true };
 
-			if (Link)
+			if (GlobalProperties.Instance.VerboseBuildOutput)
+				IDEInterface.Log("Compile " + srcFile);
+
+			var dmd_exe = dmd.SoureCompiler;
+
+			// Always enable it to use environment paths to find dmd.exe
+			if (!Path.IsPathRooted(dmd_exe) && Directory.Exists(dmd.BaseDirectory))
+				dmd_exe = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
+
+			TempPrc = FileExecution.ExecuteSilentlyAsync(dmd_exe,
+					BuildDSourceCompileArgumentString(dmd.BuildArguments(DebugCompile).SoureCompiler, srcFile, objFile), // Compile our program always in debug mode
+					execDirectory,
+					OnOutput, delegate(string s) {
+						var err = ParseErrorMessage(s);
+						if (err.Type == GenericError.ErrorType.Error)
+							br.Successful = false;
+						br.BuildErrors.Add(err);
+					}, OnExit);
+
+			if (TempPrc != null && !TempPrc.HasExited)
+				TempPrc.WaitForExit(10000);
+
+			br.Successful = br.Successful && File.Exists(objFile);
+			return br;
+		}
+
+		/// <summary>
+		/// Links several object files to an executable, dynamic or static library
+		/// </summary>
+		public BuildResult LinkFiles(string linkerExe, string linkerArgs, string startDirectory, string targetFile, bool CreatePDB, params string[] files)
+		{
+			var errList = new List<GenericError>();
+			var br = new BuildResult() { TargetFile=targetFile};
+
+			TempPrc = FileExecution.ExecuteSilentlyAsync(
+					linkerExe,	BuildDLinkerArgumentString(linkerArgs,targetFile,files), startDirectory,
+					OnOutput, delegate(string s)
 			{
-				string exe=string.IsNullOrEmpty(OutputDirectory)?
-					Path.ChangeExtension(FileName, ".exe"):
-					OutputDirectory + "\\" + Path.GetFileName(FileName) + ".exe";
+				var err = ParseErrorMessage(s);
+				if (err.Type == GenericError.ErrorType.Error)
+					br.Successful = false;
+				br.BuildErrors.Add(err);
+			}, OnExit);
 
+			if (TempPrc != null && !TempPrc.HasExited)
+				TempPrc.WaitForExit(10000);
+
+			br.Successful = File.Exists(targetFile);
+
+			// If targetFile is executable or library, create PDB
+			if (CreatePDB && (targetFile.EndsWith(".exe") || targetFile.EndsWith(".dll")))
+			{
+				var br_=CreatePDBFromExe(targetFile);
+				br.BuildErrors.AddRange(br_.BuildErrors);
+
+				br.AdditionalFiles=new[]{br_.TargetFile};
+			}
+
+			return br;
+		}
+
+		public override BuildResult BuildModule(string FileName, string OutputDirectory, bool Link)
+		{
+			var dmd = CurrentDMDConfig;
+			var dmd_exe = dmd.SoureCompiler;
+			bool compileDebug = true;
+
+			var outputDir = Path.IsPathRooted(OutputDirectory) ? OutputDirectory : Path.Combine(Path.GetDirectoryName(FileName), OutputDirectory);
+			
+			// Compile .d source file to obj
+			var obj = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(FileName) + ".obj");
+			var br = CompileSource(dmd,compileDebug,FileName,obj,Path.GetDirectoryName(FileName));
+
+			if (Link && br.Successful)
+			{
+				br.Successful = false;
+				#region Link To StandAlone executable
+				var exe = OutputDirectory + "\\" + Path.GetFileNameWithoutExtension(FileName) + ".exe";
 				br.TargetFile = exe;
 
-				if (File.Exists(exe))
-					File.Delete(exe);
-
-				var dmd = DSettings.Instance.dmd2;
-				var dmd_exe = dmd.SoureCompiler;
-
-				// Always enable it to use environment paths to find dmd.exe
-				if (!Path.IsPathRooted(dmd_exe) && Directory.Exists(dmd.BaseDirectory))
-					dmd_exe = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
-
-				TempPrc = FileExecution.ExecuteSilentlyAsync(
-					dmd_exe,
-					BuildDSourceCompileArgumentString(CurrentDMDConfig. SingleCompilationArguments, FileName, ""), // Compile our program always in debug mode
-					Path.GetDirectoryName(FileName),
-					OnOutput, OnError, OnExit
-					);
-
-				if (TempPrc != null && !TempPrc.HasExited)
-					TempPrc.WaitForExit(10000);
-
-				if (File.Exists(exe))
-				{
-					var br = CreatePDBFromExe(exe);
-
-
-				}
-
-				TempBuildErrorList.ToArray();
+				var br_ = LinkFiles(dmd.ExeLinker, dmd.BuildArguments(compileDebug).ExeLinker, Path.GetDirectoryName(obj), exe,compileDebug, obj);
+				
+				br.BuildErrors.AddRange(br_.BuildErrors);
+				br.AdditionalFiles = br_.AdditionalFiles;
+				br.Successful = br_.Successful;
+				#endregion
 			}
+
+			return br;			
 		}
 
 		/// <summary>
@@ -85,20 +136,14 @@ namespace D_IDE.D
 		/// </summary>
 		public BuildResult CreatePDBFromExe(string Executable)
 		{
-			var _p = TempBuildErrorList.ToArray();
-
-			string pdb = Path.ChangeExtension(Executable, ".pdb");
+			var pdb = Path.ChangeExtension(Executable, ".pdb");
 			var br = new BuildResult() { SourceFile=Executable,TargetFile=pdb};
 
 			if (!File.Exists(Executable))
 			{
-				br.BuildErrors = new[] { 
-					new GenericError(){Message="Debug information database creation failed - "+Executable+" does not exist"}
-					};
+				br.BuildErrors.Add(new GenericError(){Message="Debug information database creation failed - "+Executable+" does not exist"});
 				return br;
 			}
-
-			bool res = false;
 
 			if (File.Exists(pdb))
 				File.Delete(pdb); // Enforce recreation of the database
@@ -113,18 +158,19 @@ namespace D_IDE.D
 			try
 			{
 				var prc = FileExecution.ExecuteSilentlyAsync(cv2pdb, "\"" + Executable + "\"", Path.GetDirectoryName(Executable),
-				OnOutput, OnError, delegate()
+				OnOutput, delegate(string s){
+					br.BuildErrors.Add(new GenericError(){Message=s});	
+				}, delegate()
 				{
 					if (File.Exists(pdb))
 					{
-						IDEInterface.Log("Database created successfully");
-						res = true;
+						IDEInterface.Log("Debug information database created successfully");
+						br.Successful = true;
 					}
 					else
-						TempBuildErrorList.Add(new GenericError()
+						br.BuildErrors.Add(new GenericError()
 						{
-							Message = "Database creation failed",
-							FileName = pdb,
+							Message = "Debug information database creation failed",
 							Type = GenericError.ErrorType.Warning
 						});
 				});
@@ -133,12 +179,6 @@ namespace D_IDE.D
 					prc.WaitForExit(10000); // A time out of 10 seconds should be enough
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
-
-			br.BuildErrors = TempBuildErrorList.ToArray();
-			TempBuildErrorList.Clear();
-			TempBuildErrorList.AddRange(_p);
-
-			br.Successful = res;
 
 			return br;
 		}
@@ -154,28 +194,28 @@ namespace D_IDE.D
 			IDEInterface.Log(s);
 		}
 
-		void OnError(string s)
+		public static BuildError ParseErrorMessage(string s)
 		{
 			int to = s.IndexOf(".d(");
-			if (to < 0)
-			{
-				TempBuildErrorList.Add(new BuildError(s));
-			}
-			else
+			if (to>0)
 			{
 				to += 2;
 				string FileName = s.Substring(0, to);
 				to += 1;
 				int to2 = s.IndexOf("):", to);
-				if (to2 < 0) return;
-				int lineNumber = Convert.ToInt32(s.Substring(to, to2 - to));
-				string errmsg = s.Substring(to2 + 2).Trim();
+				if (to2 > 0)
+				{
+					int lineNumber = Convert.ToInt32(s.Substring(to, to2 - to));
+					string errmsg = s.Substring(to2 + 2).Trim();
 
-				TempBuildErrorList.Add(new BuildError(errmsg, FileName, new CodeLocation(0, lineNumber)));
+					return new BuildError(errmsg, FileName, new CodeLocation(0, lineNumber));
+				}
 			}
+			return new BuildError(s);
 		}
 		#endregion
 
+		#region Build string util
 		/// <summary>
 		/// Builds an argument string for compiling a source to an object file
 		/// </summary>
@@ -183,14 +223,12 @@ namespace D_IDE.D
 		/// <param name="srcFile"></param>
 		/// <param name="objDir"></param>
 		/// <returns></returns>
-		public static string BuildDSourceCompileArgumentString(string input, string srcFile, string objDir)
+		public static string BuildDSourceCompileArgumentString(string input, string srcFile, string objFile)
 		{
-			string obj =Path.Combine(objDir, Path.GetFileNameWithoutExtension(srcFile)+".obj");
-
 			return ParseArgumentString(input, new Dictionary<string, string>{
 				{"$src",srcFile},
-				{"$objDir",objDir},
-				{"$obj",obj},
+				{"$objDir",Path.Combine( Path.GetDirectoryName(srcFile), Path.GetDirectoryName(objFile))},
+				{"$obj",objFile},
 				{"$filename",Path.GetFileNameWithoutExtension(srcFile)}
 			});
 		}
@@ -224,10 +262,26 @@ namespace D_IDE.D
 		{
 			string ret = input;
 
-			foreach (var kv in ReplacedStrings)
-				ret = ret.Replace(kv.Key,kv.Value);
+			if(!string.IsNullOrEmpty(ret))
+				foreach (var kv in ReplacedStrings)
+					ret = ret.Replace(kv.Key,kv.Value);
 
 			return ret;
+		}
+		#endregion
+
+		bool isBuilding = false;
+		public override bool IsBuilding
+		{
+			get { return isBuilding; }
+		}
+
+		public override void StopBuilding()
+		{
+			ShallStop = true;
+
+			if (TempPrc != null && !TempPrc.HasExited)
+				TempPrc.Kill();
 		}
 	}
 }

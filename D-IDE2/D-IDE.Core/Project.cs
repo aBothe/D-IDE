@@ -95,8 +95,7 @@ namespace D_IDE.Core
 		/// <summary>
 		/// Project's build version
 		/// </summary>
-		[DefaultValue(new Version())]
-		public Version Version { get; set; }
+		public Version Version=new Version();
 
 		public bool ContainsFile(string file)
 		{

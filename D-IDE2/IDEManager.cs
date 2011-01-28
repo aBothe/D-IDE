@@ -630,12 +630,19 @@ namespace D_IDE
 				return false;
 			}
 
+			public static bool BuildSingle()
+			{
+				string _u = null;
+				return BuildSingle(out _u);
+			}
+
 			/// <summary>
 			/// Builds currently edited document to single executable
 			/// </summary>
 			/// <returns></returns>
-			public static bool BuildSingle()
+			public static bool BuildSingle(out string CreatedExecutable)
 			{
+				CreatedExecutable = null;
 				if (Instance.CurrentEditor == null)
 					return false;
 
@@ -643,15 +650,18 @@ namespace D_IDE
 				bool IsProject = false;
 				var lang=AbstractLanguageBinding.SearchBinding(file,out IsProject);
 
-				if (lang == null || IsProject || !lang.CanBuildToSingleModule)
+				if (lang == null || IsProject || !lang.CanBuild)
 					return false;
 
+				Instance.MainWindow.ClearLog();
 				ErrorManagement.LastUnboundBuildErrors.Clear();
 
-				ErrorManagement.LastUnboundBuildErrors.AddRange(lang.BuildSingleModule(file));
+				var br = lang.BuildSupport.BuildStandAlone(file);
+				CreatedExecutable = br.TargetFile;
+				ErrorManagement.LastUnboundBuildErrors.AddRange(br.BuildErrors);
 
 				ErrorManagement.RefreshErrorList();
-				return ErrorManagement.LastUnboundBuildErrors.Count<1;
+				return br.Successful;
 			}
 
 			public static void CleanUpOutput(Solution sln)
