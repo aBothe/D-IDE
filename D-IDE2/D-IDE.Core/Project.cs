@@ -518,12 +518,9 @@ namespace D_IDE.Core
 
 	public class ProjectVersion
 	{
-		int major = 1;
-		int minor = 0;
-
-		public int Major { get { return major; } set { major = value; minor = Revision = Build = 0; } }
-		public int Minor { get { return minor; } set { minor = value; Revision = Build = 0; } }
-		public int Build { get; protected set; }
+		public int Major { get; set; }
+		public int Minor { get; set; }
+		public int Build { get; set; }
 		public int Revision { get; set; }
 
 		public void IncrementBuild() { Build++; Revision = 0; }
