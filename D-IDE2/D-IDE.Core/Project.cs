@@ -71,7 +71,8 @@ namespace D_IDE.Core
 			{
 				var ret = new List<Project>(ProjectFileDependencies.Count);
 				foreach (var file in ProjectFileDependencies)
-					ret.Add(Solution[file]);
+					if(Solution.IsProjectLoaded(file))
+						ret.Add(Solution[file]);
 				return ret.ToArray();
 			}
 		}
@@ -95,7 +96,7 @@ namespace D_IDE.Core
 		/// <summary>
 		/// Project's build version
 		/// </summary>
-		public Version Version=new Version();
+		public ProjectVersion Version = new ProjectVersion();
 
 		public bool ContainsFile(string file)
 		{
@@ -196,10 +197,6 @@ namespace D_IDE.Core
 
 			xw.WriteStartElement("alsostoresources");
 			xw.WriteAttributeString("value", AlsoStoreChangedSources?"true":"false");
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("lastversioncount");
-			xw.WriteAttributeString("value", LastBuildVersionCount.ToString());
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("version");
@@ -316,22 +313,8 @@ namespace D_IDE.Core
 							}
 							break;
 
-						case "lastversioncount":
-							if (xr.MoveToAttribute("value"))
-							{
-								try
-								{
-									LastBuildVersionCount = Convert.ToInt32(xr.Value);
-								}
-								catch { }
-							}
-							break;
-
 						case "version":
-							System.Version v = null;
-							Version.TryParse(xr.ReadString(),out v);
-							if (v != null)
-								Version = v;
+							Version.Parse(xr.ReadString());
 							break;
 					}
 				}
@@ -373,22 +356,39 @@ namespace D_IDE.Core
 
 		#region Build properties
 		public readonly List<string> RequiredProjects = new List<string>();
-		public readonly List<GenericError> LastBuildErrors = new List<GenericError>();
+		public BuildResult LastBuildResult { get; set; }
 
-		public string OutputFile { get; set; }
-		public string OutputDirectory { get; set; }
+		protected string OutputFileOverride { get; set; }
+		public string OutputFile { 
+			get {
+				string ext = ".exe";
+				if (OutputType == OutputTypes.DynamicLibary)
+					ext = ".dll";
+
+				if (string.IsNullOrEmpty(OutputFileOverride))
+					return ToAbsoluteFileName( "bin\\"+ Util.PurifyFileName(Name)+ext);
+				else return ToAbsoluteFileName( OutputFileOverride);
+			}
+			set {
+				OutputFileOverride = value;
+			}
+		}
+		public string OutputDirectory
+		{
+			get { return Path.GetDirectoryName(OutputFile); }
+		}
+
 		public OutputTypes OutputType { get; set; }
 
 		public bool EnableBuildVersioning = false;
 		public bool AlsoStoreChangedSources = false;
-		public int LastBuildVersionCount = 0;
 
 		/// <summary>
 		/// Copies all files to project's output directory
 		/// </summary>
 		public void CopyCopyableOutputFiles()
 		{
-			CopyCopyableOutputFiles(ToAbsoluteFileName( OutputDirectory));
+			CopyCopyableOutputFiles(OutputDirectory);
 		}
 
 		/// <summary>
@@ -403,10 +403,6 @@ namespace D_IDE.Core
 				if(pf.Action==ProjectModule.BuildAction.CopyToOutput && File.Exists(fn))
 					File.Copy(ToAbsoluteFileName(fn),Path.Combine( targetDirectory,Path.GetFileName(pf.FileName)));
 			}
-
-			fn = ToAbsoluteFileName(OutputFile);
-			if (File.Exists(fn))
-				File.Copy(fn,Path.Combine(targetDirectory,Path.GetFileName(OutputFile)));
 		}
 		#endregion
 	}
@@ -517,6 +513,38 @@ namespace D_IDE.Core
 		public bool IsSemantic
 		{
 			get { return ParserError.IsSemantic; }
+		}
+	}
+
+	public class ProjectVersion
+	{
+		int major = 1;
+		int minor = 0;
+
+		public int Major { get { return major; } set { major = value; minor = Revision = Build = 0; } }
+		public int Minor { get { return minor; } set { minor = value; Revision = Build = 0; } }
+		public int Build { get; protected set; }
+		public int Revision { get; set; }
+
+		public void IncrementBuild() { Build++; Revision = 0; }
+
+		public ProjectVersion() { }
+		public ProjectVersion(string versionString) { Parse(versionString); }
+		public void Parse(string versionString)
+		{
+			var p = versionString.Split('.');
+			if (p.Length > 3)
+			{
+				Major = Convert.ToInt32(p[0]);
+				Minor = Convert.ToInt32(p[1]);
+				Build = Convert.ToInt32(p[2]);
+				Revision = Convert.ToInt32(p[3]);
+			}
+		}
+
+		public override string ToString()
+		{
+			return Major.ToString() + "." + Minor.ToString() + "." + Build.ToString() + "." + Revision.ToString();
 		}
 	}
 }

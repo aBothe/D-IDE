@@ -25,20 +25,85 @@ namespace D_IDE.D
 
 		public override BuildResult BuildProject(Project prj)
 		{
+			var dprj = prj as DProject;
+			if (dprj == null)
+				throw new Exception("Cannot compile non-D project");
+
+			DMDVersion=dprj.DMDVersion;
+
 			// Build outputs/target paths
-			string objectDirectory = prj.BaseDirectory+"\\obj";
+			string objectDirectory = dprj.BaseDirectory+"\\obj";
 			Util.CreateDirectoryRecursively(objectDirectory);
 
 			// Compile d sources to object files
-			
+			var objs = new List<string>();
+
+			foreach (var f in dprj.CompilableFiles)
+			{
+				bool _u = false ;
+				var lang=AbstractLanguageBinding.SearchBinding(f.FileName, out _u);
+
+				if (lang == null || _u || !lang.CanBuild)
+					continue;
+
+				var br = lang.BuildSupport.BuildModule(prj.ToAbsoluteFileName( f.FileName),objectDirectory,false);
+
+				if (!br.Successful)
+					return br;
+
+				// To save command line space, make the targetfile relative to our objectDirectory
+				objs.Add(br.TargetFile.StartsWith(dprj.BaseDirectory)? br.TargetFile.Substring(dprj.BaseDirectory.Length+1):br.TargetFile);
+			}
+
+			if (objs.Count < 1)
+			{
+				var br = new BuildResult();
+				br.BuildErrors.Add(new GenericError() { Message = "Project is empty - cannot build", Project=prj,Type=GenericError.ErrorType.Info });
+				br.Successful = true;
+				return br;
+			}
+
+			// Add import libraries
+			objs.AddRange(dprj.LinkedLibraries);
 
 			// Link files
-			return null;
+			var linkerExe = CurrentDMDConfig.ExeLinker;
+			var args=CurrentDMDConfig.BuildArguments(!dprj.IsRelease);
+			var linkerArgs = args.ExeLinker;
+
+			switch (dprj.OutputType)
+			{
+				case OutputTypes.CommandWindowLessExecutable:
+					linkerExe = CurrentDMDConfig.Win32ExeLinker;
+					linkerArgs = args.Win32ExeLinker;
+					break;
+				case OutputTypes.DynamicLibary:
+					linkerExe = CurrentDMDConfig.DllLinker;
+					linkerArgs = args.DllLinker;
+					break;
+				case OutputTypes.Other:
+					if (dprj.OutputFile.EndsWith(".lib"))
+					{
+						linkerExe = CurrentDMDConfig.LibLinker;
+						linkerArgs = args.LibLinker;
+					}
+					break;
+			}
+
+			var linkResult = LinkFiles(linkerExe, linkerArgs, dprj.BaseDirectory, dprj.OutputFile, !dprj.IsRelease, objs.ToArray());
+
+			if (linkResult.Successful)
+				dprj.Version.IncrementBuild();
+			else 
+				dprj.Version.Revision++;
+
+			return linkResult;
 		}
 
 		public BuildResult CompileSource(DMDConfig dmd,bool DebugCompile, string srcFile, string objFile, string execDirectory)
 		{
-			var br = new BuildResult() { SourceFile = srcFile,TargetFile=objFile,Successful=true };
+			var obj = Path.ChangeExtension(objFile, ".obj");
+			var br = new BuildResult() { SourceFile = srcFile,TargetFile=obj,Successful=true };
 
 			if (GlobalProperties.Instance.VerboseBuildOutput)
 				IDEInterface.Log("Compile " + srcFile);
@@ -50,7 +115,7 @@ namespace D_IDE.D
 				dmd_exe = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
 
 			TempPrc = FileExecution.ExecuteSilentlyAsync(dmd_exe,
-					BuildDSourceCompileArgumentString(dmd.BuildArguments(DebugCompile).SoureCompiler, srcFile, objFile), // Compile our program always in debug mode
+					BuildDSourceCompileArgumentString(dmd.BuildArguments(DebugCompile).SoureCompiler, srcFile, obj), // Compile our program always in debug mode
 					execDirectory,
 					OnOutput, delegate(string s) {
 						var err = ParseErrorMessage(s);
@@ -62,7 +127,7 @@ namespace D_IDE.D
 			if (TempPrc != null && !TempPrc.HasExited)
 				TempPrc.WaitForExit(10000);
 
-			br.Successful = br.Successful && File.Exists(objFile);
+			br.Successful = br.Successful && File.Exists(obj);
 			return br;
 		}
 
@@ -72,7 +137,7 @@ namespace D_IDE.D
 		public BuildResult LinkFiles(string linkerExe, string linkerArgs, string startDirectory, string targetFile, bool CreatePDB, params string[] files)
 		{
 			var errList = new List<GenericError>();
-			var br = new BuildResult() { TargetFile=targetFile};
+			var br = new BuildResult() { TargetFile=targetFile, Successful=true};
 
 			TempPrc = FileExecution.ExecuteSilentlyAsync(
 					linkerExe,	BuildDLinkerArgumentString(linkerArgs,targetFile,files), startDirectory,
@@ -87,10 +152,10 @@ namespace D_IDE.D
 			if (TempPrc != null && !TempPrc.HasExited)
 				TempPrc.WaitForExit(10000);
 
-			br.Successful = File.Exists(targetFile);
+			br.Successful = br.Successful && File.Exists(targetFile);
 
 			// If targetFile is executable or library, create PDB
-			if (CreatePDB && (targetFile.EndsWith(".exe") || targetFile.EndsWith(".dll")))
+			if (br.Successful && CreatePDB && (targetFile.EndsWith(".exe") || targetFile.EndsWith(".dll")))
 			{
 				var br_=CreatePDBFromExe(targetFile);
 				br.BuildErrors.AddRange(br_.BuildErrors);
@@ -108,6 +173,7 @@ namespace D_IDE.D
 			bool compileDebug = true;
 
 			var outputDir = Path.IsPathRooted(OutputDirectory) ? OutputDirectory : Path.Combine(Path.GetDirectoryName(FileName), OutputDirectory);
+			Util.CreateDirectoryRecursively(outputDir);
 			
 			// Compile .d source file to obj
 			var obj = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(FileName) + ".obj");

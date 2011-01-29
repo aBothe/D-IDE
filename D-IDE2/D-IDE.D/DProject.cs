@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using D_IDE.Core;
 using System.Xml;
+using System.IO;
 
 namespace D_IDE.D
 {
@@ -25,14 +26,30 @@ namespace D_IDE.D
 			FileName = sln.ToAbsoluteFileName( file);
 		}
 
-		public DVersion Version = DVersion.D2;
-		public bool IsRelease;
+		public new string OutputFile
+		{
+			get
+			{
+				var f = base.OutputFile;
+				if (OutputType == OutputTypes.Other)
+					return Path.ChangeExtension(f,".lib");
+				return f;
+			}
+			set
+			{
+				base.OutputFile = value;
+			}
+		}
+
+		public DVersion DMDVersion = DVersion.D2;
+		public bool IsRelease=false;
+		public List<string> LinkedLibraries = new List<string>();
 
 		public DMDConfig CompilerConfiguration
 		{
 			get
 			{
-				return DSettings.Instance.DMDConfig(Version);
+				return DSettings.Instance.DMDConfig(DMDVersion);
 			}
 		}
 	}

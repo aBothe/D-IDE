@@ -234,7 +234,7 @@ namespace D_IDE.Core
 				var ret = new Dictionary<Project, GenericError[]>(ProjectCache.Count);
 
 				foreach (var p in ProjectCache)
-					ret.Add(p,p.LastBuildErrors.ToArray());
+					ret.Add(p,p.LastBuildResult.BuildErrors.ToArray());
 
 				return ret;
 			}

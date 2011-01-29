@@ -52,11 +52,6 @@ namespace D_IDE
 				prj.FileName =
 					baseDir + "\\" + 
 					Path.ChangeExtension(Util.PurifyFileName(Name), ProjectType.Extensions[0]);
-
-				// Set the output dir to 'bin' by default
-				// Perhaps we'll change this default value some time later in the global settings
-				prj.OutputDirectory = "bin";
-
 				return prj;
 			}
 
@@ -622,11 +617,36 @@ namespace D_IDE
 
 			public static bool Build(Solution sln, bool Incrementally)
 			{
-				return false;
+				//TODO: Build from most independent to most dependent project
+				//TODO: Enable incremental build
+
+				foreach (var prj in sln)
+				{
+					if (!Build(prj, Incrementally))
+						return false;
+				}
+				return true;
 			}
 
 			public static bool Build(Project Project, bool Incrementally)
 			{
+				Instance.MainWindow.ClearLog();
+
+				bool isPrj = false;
+				var lang = AbstractLanguageBinding.SearchBinding(Project.FileName, out isPrj);
+
+				if (lang != null && isPrj && lang.CanBuild)
+				{
+					var br = ErrorManagement.LastBuildResult= lang.BuildSupport.BuildProject(Project);
+					Project.LastBuildResult=br;
+
+					if (br.Successful)
+						Project.CopyCopyableOutputFiles();
+
+					ErrorManagement.RefreshErrorList();
+
+					return br.Successful;
+				}
 				return false;
 			}
 
