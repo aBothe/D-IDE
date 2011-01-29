@@ -654,11 +654,9 @@ namespace D_IDE
 					return false;
 
 				Instance.MainWindow.ClearLog();
-				ErrorManagement.LastUnboundBuildErrors.Clear();
 
-				var br = lang.BuildSupport.BuildStandAlone(file);
+				var br=ErrorManagement.LastBuildResult = lang.BuildSupport.BuildStandAlone(file);
 				CreatedExecutable = br.TargetFile;
-				ErrorManagement.LastUnboundBuildErrors.AddRange(br.BuildErrors);
 
 				ErrorManagement.RefreshErrorList();
 				return br.Successful;

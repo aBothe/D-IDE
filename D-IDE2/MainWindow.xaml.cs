@@ -93,14 +93,14 @@ namespace D_IDE
 			Panel_ProjectExplorer.HideOnClose = true;
 			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
 
-			Panel_ErrorList.Name = "ErrorList";
-			Panel_ErrorList.HideOnClose = true;
-			Panel_ErrorList.Show(DockMgr,AvalonDock.AnchorStyle.Bottom);
-			Panel_ErrorList.DockableStyle |= DockableStyle.AutoHide;
-
 			Panel_Log.Name = "Output";
 			Panel_Log.Show(DockMgr,AvalonDock.AnchorStyle.Bottom);
 			Panel_Log.DockableStyle |= DockableStyle.AutoHide;
+
+			Panel_ErrorList.Name = "ErrorList";
+			Panel_ErrorList.HideOnClose = true;
+			Panel_ErrorList.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
+			Panel_ErrorList.DockableStyle |= DockableStyle.AutoHide;
 			#endregion
 
 			// Load layout

@@ -56,7 +56,8 @@ namespace D_IDE.Core
 				return Errors.Where(err => err.FileName == file).ToArray();
 			}
 
-			public readonly static List<GenericError> LastUnboundBuildErrors = new List<GenericError>();
+			public static BuildResult LastBuildResult { get; set; }
+
 			public static GenericError[] LastParseErrors
 			{
 				get
@@ -81,8 +82,8 @@ namespace D_IDE.Core
 				var el = new List<GenericError>();
 
 				// Add unbound build errors
-				if (LastUnboundBuildErrors.Count > 0)
-					el.AddRange(LastUnboundBuildErrors);
+				if (LastBuildResult!=null)
+					el.AddRange(LastBuildResult.BuildErrors);
 				// (Bound) Solution errors
 				else if (CurrentSolution != null)
 					foreach (var prj in CurrentSolution)
