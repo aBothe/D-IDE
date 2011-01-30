@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System;
-using AvalonDock;
 using D_IDE.Core;
+using D_IDE.Core.Controls.Editor;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
-using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using ICSharpCode.AvalonEdit.CodeCompletion;
-using System.Xml;
 using Parser.Core;
-using D_IDE.Core.Controls.Editor;
 
 namespace D_IDE
 {
@@ -115,10 +109,21 @@ namespace D_IDE
 			public readonly GenericError Error;
 
 			public ErrorMarker(EditorDocument EditorDoc, GenericError Error)
-				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(Error.Location.Line,Error.Location.Column),0)
+				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(Error.Location.Line,Error.Location.Column),false)
 			{
 				this.EditorDocument = EditorDoc;
 				this.Error = Error;
+			}
+		}
+
+		public class BreakPointMarker : TextMarker
+		{
+			public readonly BreakpointWrapper Breakpoint;
+
+			public BreakPointMarker(EditorDocument EditorDoc, BreakpointWrapper breakPoint)
+				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(breakPoint.Line,0),true)
+			{
+				this.Breakpoint = breakPoint;
 			}
 		}
 

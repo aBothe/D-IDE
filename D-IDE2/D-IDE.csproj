@@ -62,7 +62,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\externalDeps\AvalonDock.dll</HintPath>
     </Reference>
-    <Reference Include="DebugEngineWrapper">
+    <Reference Include="DebugEngineWrapper, Version=1.0.3992.12100, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\externalDeps\DebugEngineWrapper.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.AvalonEdit">
@@ -180,7 +181,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Management\DebugManagement.cs" />
     <Compile Include="Management\EditingManagement.cs" />
     <Compile Include="Management\IDEManager.cs" />
     <Compile Include="Management\BuildManagement.cs" />

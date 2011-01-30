@@ -219,44 +219,53 @@ namespace D_IDE.Core.Controls.Editor
 			TextMarkerService = svc;
 			StartOffset = offset;
 			Length = length;
+		}
 
-			// If length 0, highlight word/token at the offset
-			if (length < 1)
+		public TextMarker(TextMarkerService svc, int WordOffset, bool WholeLine)
+		{
+			TextMarkerService = svc;
+			StartOffset = WordOffset;
+
+			var ln = svc.Editor.Document.GetLineByOffset(WordOffset);
+
+			if (WholeLine)
 			{
-				var ln = svc.Editor.Document.GetLineByOffset(offset);
+				StartOffset = ln.Offset;
+				Length = ln.Length;
+				return;
+			}
 
-				var doc = svc.Editor.Document;
-				int i=offset;
-				bool HadNonWS = false;
-				bool IsIdent=false;
-				while (i < ln.EndOffset)
+			var doc = svc.Editor.Document;
+			int i=WordOffset;
+			bool HadNonWS = false;
+			bool IsIdent=false;
+			while (i < ln.EndOffset)
+			{
+				var c = doc.GetCharAt(i);
+				if (!HadNonWS && !char.IsWhiteSpace(c))
 				{
-					var c = doc.GetCharAt(i);
-					if (!HadNonWS && !char.IsWhiteSpace(c))
+					HadNonWS = true;
+					if (char.IsLetterOrDigit(c))
+						IsIdent = true;
+					StartOffset = i;
+				}
+				else if (IsIdent)
+				{
+					if (!char.IsLetterOrDigit(c))
 					{
-						HadNonWS = true;
-						if (char.IsLetterOrDigit(c))
-							IsIdent = true;
-						StartOffset = i;
-					}
-					else if (IsIdent)
-					{
-						if (!char.IsLetterOrDigit(c))
-						{
-							Length = i - StartOffset;
-							break;
-						}
-					}
-					else if(HadNonWS)
+						Length = i - StartOffset;
 						break;
-					i++;
+					}
 				}
+				else if(HadNonWS)
+					break;
+				i++;
+			}
 
-				if (!HadNonWS)
-				{
-					StartOffset = ln.Offset;
-					Length = ln.Length;
-				}
+			if (!HadNonWS)
+			{
+				StartOffset = ln.Offset;
+				Length = ln.Length;
 			}
 		}
 
