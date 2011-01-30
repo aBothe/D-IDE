@@ -162,6 +162,13 @@ namespace D_IDE
                                 }
                                 break;
 
+							case "lastselectedribbontab":
+								if (xr.MoveToAttribute("value"))
+								{
+									p.LastSelectedRibbonTab=Convert.ToInt32(xr.Value);
+								}
+								break;
+
                             case "watchforupdates":
                                 if (xr.MoveToAttribute("value"))
                                 {
@@ -319,6 +326,10 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Instance.UseExternalDebugger ? "1" : "0");
 			xw.WriteEndElement();
 
+			xw.WriteStartElement("lastselectedribbontab");
+			xw.WriteAttributeString("value", Instance.LastSelectedRibbonTab.ToString());
+			xw.WriteEndElement();
+
 			xw.WriteStartElement("watchforupdates");
 			xw.WriteAttributeString("value", Instance.WatchForUpdates ? "1" : "0");
 			xw.WriteEndElement();
@@ -419,6 +430,8 @@ namespace D_IDE
 					File.Delete(MultipleInstanceFlagFile);
 			}
 		}
+
+		public int LastSelectedRibbonTab = 0;
 
 		public bool WatchForUpdates = true;
 		public bool ShowStartPage = true;

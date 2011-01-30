@@ -32,6 +32,7 @@ namespace D_IDE
 			RefreshProjectExplorer();
 			RefreshTitle();
 			UpdateLastFilesMenus();
+			UpdateTabs();
 		}
 		public void RefreshErrorList()
 		{
@@ -39,10 +40,12 @@ namespace D_IDE
 		}
 		public void RefreshTitle()
 		{
+			string appendix = "D-IDE " + System.Reflection.Assembly.GetCallingAssembly().GetName().Version.ToString(3);
+			
 			if (IDEManager.CurrentSolution != null)
-				Title = IDEManager.CurrentSolution.Name + " - D-IDE";
+				Title = IDEManager.CurrentSolution.Name + " - "+appendix;
 			else
-				Title = "D-IDE";
+				Title = appendix;
 		}
 
 		public void ClearLog()
@@ -54,6 +57,16 @@ namespace D_IDE
 		{
 			Panel_ProjectExplorer.Update();
 		}
+
+		public void UpdateTabs()
+		{
+			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+
+			Tab_Edit.IsEnabled = Tab_Build.IsEnabled= ed != null;
+			Tab_Project.IsEnabled = ed!=null && ed.HasProject;
+			ContextTab_Debug.Visibility = IDEManager.DebugManagement.IsDebugging ? Visibility.Visible : Visibility.Hidden;
+		}
+
 		#endregion
 
 		#region Initializer
@@ -76,6 +89,8 @@ namespace D_IDE
 					Width = GlobalProperties.Instance.lastFormSize.Width;
 					Height = GlobalProperties.Instance.lastFormSize.Height;
 				}
+
+				Ribbon.SelectedIndex = GlobalProperties.Instance.LastSelectedRibbonTab;
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
@@ -308,6 +323,7 @@ namespace D_IDE
 			// Save window state & size
 			GlobalProperties.Instance.lastFormSize = new Size(Width,Height);
 			GlobalProperties.Instance.lastFormState = this.WindowState;
+			GlobalProperties.Instance.LastSelectedRibbonTab = Ribbon.SelectedIndex;
 
 			try
 			{
@@ -351,6 +367,31 @@ namespace D_IDE
 		public DockingManager DockManager
 		{
 			get { return DockMgr; }
+		}
+
+		private void DockMgr_ActiveDocumentChanged(object sender, EventArgs e)
+		{
+			UpdateTabs();
+		}
+
+		private void DockMgr_DocumentClosed(object sender, EventArgs e)
+		{
+			RefreshGUI();
+		}
+
+		private void DockMgr_DocumentClosing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+			var ed = IDEManager.Instance.CurrentEditor;
+
+			if (ed != null && ed.Modified)
+			{
+				var res = MessageBox.Show(this,"Save file before close?",ed.Title,MessageBoxButton.YesNoCancel,MessageBoxImage.Question,MessageBoxResult.Yes);
+
+				if (res == MessageBoxResult.Cancel)
+					e.Cancel = true;
+				else if (res == MessageBoxResult.Yes)
+					ed.Save();
+			}
 		}
 	}
 }

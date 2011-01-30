@@ -242,13 +242,6 @@ namespace D_IDE {
             }
         }
         
-        internal static System.Drawing.Bitmap Icons_16x16_RunProgramIcon {
-            get {
-                object obj = ResourceManager.GetObject("Icons_16x16_RunProgramIcon", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
         internal static System.Drawing.Bitmap Icons_32x32_CombineIcon {
             get {
                 object obj = ResourceManager.GetObject("Icons_32x32_CombineIcon", resourceCulture);

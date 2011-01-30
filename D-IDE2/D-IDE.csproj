@@ -173,14 +173,19 @@
       <DependentUpon>Page_General.xaml</DependentUpon>
     </Compile>
     <Compile Include="GenericFileBinding.cs" />
-    <Compile Include="IDEUtil.cs" />
+    <Compile Include="Misc\IDEUtil.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IDEManager.cs" />
+    <Compile Include="Management\DebugManagement.cs" />
+    <Compile Include="Management\EditingManagement.cs" />
+    <Compile Include="Management\IDEManager.cs" />
+    <Compile Include="Management\BuildManagement.cs" />
+    <Compile Include="Management\FileManagement.cs" />
+    <Compile Include="Management\ProjectManagement.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -213,11 +218,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="CodeCompletion\" />
-    <Folder Include="Debugging\" />
-    <Folder Include="Misc\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Resource Include="Resources\dir.gif" />
     <Resource Include="Resources\dir_open.gif" />
@@ -314,7 +315,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Notes.txt" />
+    <Resource Include="Misc\Notes.txt" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\prj_16.png" />
