@@ -16,6 +16,12 @@ namespace D_IDE
 		public AbstractSyntaxTree SyntaxTree=null;
 
 		TextMarkerService MarkerStrategy;
+
+		public bool ReadOnly
+		{
+			get { return Editor.IsReadOnly; }
+			set { Editor.IsReadOnly = true; }
+		}
 		#endregion
 
 		public EditorDocument()
@@ -74,6 +80,7 @@ namespace D_IDE
 
 			Editor.ShowLineNumbers = true;
 			Editor.TextChanged += new EventHandler(Editor_TextChanged);
+			Editor.Document.LineCountChanged += new EventHandler(Document_LineCountChanged);
 
 			// Register Marker strategy
 			var tv = Editor.TextArea.TextView;
@@ -84,6 +91,17 @@ namespace D_IDE
 			
 
 			RefreshErrorHighlightings();
+			RefreshBreakpointHighlightings();
+		}
+
+		int _LastLineCount;
+		void Document_LineCountChanged(object sender, EventArgs e)
+		{
+			// Relocate breakpoints that are located after the current cursor position
+			// Note: Breakpoints can only be relocated when not in debugging mode!
+			var affectedBreakpoints = CoreManager.BreakpointManagement.GetBreakpointsAt(RelativeFilePath).Where(bpw => bpw.Line >= Editor.TextArea.Caret.Line);
+
+
 		}
 
 		#region Syntax Highlighting
@@ -116,14 +134,23 @@ namespace D_IDE
 			}
 		}
 
-		public class BreakPointMarker : TextMarker
+		public class BreakpointMarker : TextMarker
 		{
 			public readonly BreakpointWrapper Breakpoint;
 
-			public BreakPointMarker(EditorDocument EditorDoc, BreakpointWrapper breakPoint)
+			public BreakpointMarker(EditorDocument EditorDoc, BreakpointWrapper breakPoint)
 				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(breakPoint.Line,0),true)
 			{
 				this.Breakpoint = breakPoint;
+			}
+
+			public new int StartOffset{
+				get{return base.StartOffset;}
+				set{
+					//TODO: Is StartOffset really working?
+					var newLine=TextMarkerService.Editor.Document.GetLineByOffset(value).LineNumber;
+					Breakpoint.Line=newLine;
+				}
 			}
 		}
 
@@ -141,6 +168,24 @@ namespace D_IDE
 
 				m.Redraw();
 			}
+		}
+
+		public void RefreshBreakpointHighlightings()
+		{
+			// Clear old markers
+			foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
+				if (marker is BreakpointMarker)
+					marker.Delete();
+
+			var bps = CoreManager.BreakpointManagement.GetBreakpointsAt(AbsoluteFilePath);
+			if(bps!=null)
+				foreach (var bpw in bps)
+				{
+					var m = new BreakpointMarker(this, bpw);
+					MarkerStrategy.Add(m);
+
+					m.Redraw();
+				}
 		}
 		#endregion
 

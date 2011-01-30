@@ -393,5 +393,14 @@ namespace D_IDE
 					ed.Save();
 			}
 		}
+
+		private void ToggleBreakpoint_Click(object sender, RoutedEventArgs e)
+		{
+			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+			if (ed == null) return;
+
+			CoreManager.BreakpointManagement.ToggleBreakpoint(ed.RelativeFilePath, ed.Editor.TextArea.Caret.Line);
+			ed.RefreshBreakpointHighlightings();
+		}
 	}
 }

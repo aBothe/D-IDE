@@ -113,7 +113,7 @@
 					</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Breakpoints" >
-					<r:RibbonButton Label="Toggle Breakpoint" SmallImageSource="Resources/breakpoint.png" />
+					<r:RibbonButton Label="Toggle Breakpoint" Click="ToggleBreakpoint_Click" SmallImageSource="Resources/breakpoint.png" />
 					<r:RibbonButton Label="Refresh Breakpoints" SmallImageSource="Resources/Icons.16x16.BrowserRefresh.png" />
 				</r:RibbonGroup>
 			</r:RibbonTab>
