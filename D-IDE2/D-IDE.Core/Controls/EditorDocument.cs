@@ -6,6 +6,7 @@ using D_IDE.Core.Controls.Editor;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
 using Parser.Core;
+using System.Windows.Media;
 
 namespace D_IDE
 {
@@ -80,7 +81,6 @@ namespace D_IDE
 
 			Editor.ShowLineNumbers = true;
 			Editor.TextChanged += new EventHandler(Editor_TextChanged);
-			Editor.Document.LineCountChanged += new EventHandler(Document_LineCountChanged);
 
 			// Register Marker strategy
 			var tv = Editor.TextArea.TextView;
@@ -92,16 +92,6 @@ namespace D_IDE
 
 			RefreshErrorHighlightings();
 			RefreshBreakpointHighlightings();
-		}
-
-		int _LastLineCount;
-		void Document_LineCountChanged(object sender, EventArgs e)
-		{
-			// Relocate breakpoints that are located after the current cursor position
-			// Note: Breakpoints can only be relocated when not in debugging mode!
-			var affectedBreakpoints = CoreManager.BreakpointManagement.GetBreakpointsAt(RelativeFilePath).Where(bpw => bpw.Line >= Editor.TextArea.Caret.Line);
-
-
 		}
 
 		#region Syntax Highlighting
@@ -142,15 +132,10 @@ namespace D_IDE
 				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(breakPoint.Line,0),true)
 			{
 				this.Breakpoint = breakPoint;
-			}
 
-			public new int StartOffset{
-				get{return base.StartOffset;}
-				set{
-					//TODO: Is StartOffset really working?
-					var newLine=TextMarkerService.Editor.Document.GetLineByOffset(value).LineNumber;
-					Breakpoint.Line=newLine;
-				}
+				MarkerType = TextMarkerType.None;
+				BackgroundColor = Colors.DarkRed;
+				ForegroundColor = Colors.White;
 			}
 		}
 
@@ -197,6 +182,17 @@ namespace D_IDE
 		void Editor_TextChanged(object sender, EventArgs e)
 		{
 			Modified = true;
+
+			// Relocate breakpoint positions - when not being in debug mode!
+			if(!CoreManager.DebugManagement.IsDebugging)
+				foreach (var mk in MarkerStrategy.TextMarkers)
+				{
+					var bpm = mk as BreakpointMarker;
+					if (bpm != null)
+					{
+						bpm.Breakpoint.Line = Editor.Document.GetLineByOffset(bpm.StartOffset).LineNumber;
+					}
+				}
 		}
 		#endregion
 	}

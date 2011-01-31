@@ -63,7 +63,7 @@ namespace D_IDE.Core
 					DebugManagement.Engine.Symbols.GetLineByOffset(bp.Offset, out file, out line);
 
 					bpw.File = file;
-					bpw.Line = (int)line;
+					bpw.Line = (int)line+1;
 
 					Breakpoints.Add(bpw);
 				}
@@ -93,8 +93,8 @@ namespace D_IDE.Core
 
 				if (DebugManagement.IsDebugging)
 				{
-					ulong off = 0;
-					if (!DebugManagement.Engine.Symbols.GetOffsetByLine(file, (uint)line, out off))
+					ulong off = 0; //TODO: Make line 0-based - the editor uses 1-based line numbers
+					if (!DebugManagement.Engine.Symbols.GetOffsetByLine(file, (uint)line-1, out off))
 						return null;
 
 					var bp = DebugManagement.Engine.AddBreakPoint(BreakPointOptions.Enabled);
@@ -168,6 +168,9 @@ namespace D_IDE.Core
 		}
 		public BreakPoint Breakpoint { get; set; }
 		public string File { get; set; }
+		/// <summary>
+		/// 0-based line number
+		/// </summary>
 		public int Line { get; set; }
 	}
 }

@@ -29,26 +29,9 @@ namespace D_IDE.Core.Controls.Editor
 			if (codeEditor == null)
 				throw new ArgumentNullException("codeEditor");
 			this.Editor = codeEditor;
-			codeEditor.DocumentChanged += codeEditor_DocumentChanged;
-			codeEditor_DocumentChanged(null, null);
+			markers = new TextSegmentCollection<TextMarker>(Editor.Document);
 		}
-		
-		#region Document Changed - recreate marker collection
-		void codeEditor_DocumentChanged(object sender, EventArgs e)
-		{
-			if (markers != null) {
-				return;
-				foreach (TextMarker m in markers.ToArray()) {
-					m.Delete();
-				}
-			}
-			if (Editor.Document == null)
-				markers = null;
-			else
-				markers = new TextSegmentCollection<TextMarker>(Editor.Document);
-		}
-		#endregion
-		
+				
 		#region ITextMarkerService
 		public void Add(TextMarker m)
 		{
