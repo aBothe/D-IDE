@@ -38,6 +38,10 @@ namespace D_IDE
 
 			public static bool Build(Project Project, bool Incrementally)
 			{
+				// Save all files that belong to Project
+				foreach (var ed in Instance.Editors.Where(e=>Project.ContainsFile(e.AbsoluteFilePath)))
+					ed.Save();
+
 				Instance.MainWindow.ClearLog();
 
 				bool isPrj = false;
@@ -45,7 +49,7 @@ namespace D_IDE
 
 				if (lang != null && isPrj && lang.CanBuild)
 				{
-					var br = ErrorManagement.LastBuildResult = lang.BuildSupport.BuildProject(Project);
+					var br = ErrorManagement.LastBuildResult = lang.BuildSupport.BuildProject(Project,Incrementally);
 					Project.LastBuildResult = br;
 
 					if (br.Successful)
@@ -71,10 +75,13 @@ namespace D_IDE
 			public static bool BuildSingle(out string CreatedExecutable)
 			{
 				CreatedExecutable = null;
-				if (Instance.CurrentEditor == null)
+				var ed = Instance.CurrentEditor;
+				if (ed == null)
 					return false;
 
-				string file = Instance.CurrentEditor.AbsoluteFilePath;
+				ed.Save();
+
+				string file = ed.AbsoluteFilePath;
 				bool IsProject = false;
 				var lang = AbstractLanguageBinding.SearchBinding(file, out IsProject);
 

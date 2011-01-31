@@ -438,10 +438,24 @@ namespace D_IDE.Core
 	}
 
 	public class ProjectModule{
+		public Project Project;
 		public string FileName;
 
-		public long LastModified;
+		public long LastModified=0;
 		public BuildAction Action=BuildAction.CopyToOutput;
+
+		public bool Modified
+		{
+			get
+			{
+				return LastModified!=File.GetLastWriteTimeUtc(FileName).ToFileTime();
+			}
+		}
+
+		public void ResetModifiedTime()
+		{
+			LastModified = File.GetLastWriteTimeUtc(FileName).ToFileTime();
+		}
 
 		public enum BuildAction
 		{

@@ -21,9 +21,12 @@ namespace D_IDE.D
 		{
 			get { return DSettings.Instance.DMDConfig(DMDVersion); }
 		}
+
+		public bool CompileIncrementally = false;
+		public ProjectModule TempModule;
 		#endregion
 
-		public override BuildResult BuildProject(Project prj)
+		public override BuildResult BuildProject(Project prj,bool Incrementally)
 		{
 			var dprj = prj as DProject;
 			if (dprj == null)
@@ -40,6 +43,9 @@ namespace D_IDE.D
 
 			foreach (var f in dprj.CompilableFiles)
 			{
+				CompileIncrementally = Incrementally;
+				TempModule = f;
+
 				bool _u = false ;
 				var lang=AbstractLanguageBinding.SearchBinding(f.FileName, out _u);
 
@@ -177,6 +183,10 @@ namespace D_IDE.D
 			
 			// Compile .d source file to obj
 			var obj = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(FileName) + ".obj");
+			// Check if creation can be skipped
+			if (CompileIncrementally && !Link && TempModule != null && !TempModule.Modified && File.Exists(obj))
+				return new BuildResult() { SourceFile=FileName,Successful=true,TargetFile=obj };
+
 			var br = CompileSource(dmd,compileDebug,FileName,obj,Path.GetDirectoryName(FileName));
 
 			if (Link && br.Successful)

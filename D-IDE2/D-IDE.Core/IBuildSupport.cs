@@ -11,7 +11,7 @@ namespace D_IDE.Core
 	public abstract class IBuildSupport
 	{
 		protected Thread buildThread;
-		public abstract BuildResult BuildProject(Project Project);
+		public abstract BuildResult BuildProject(Project Project,bool Incremetally);
 		public abstract BuildResult BuildModule(string FileName, string OutputDirectory, bool LinkToStandAlone);
 
 		public virtual void BuildModuleAsync(string FileName, string OutputDirectory, bool LinkToStandAlone)

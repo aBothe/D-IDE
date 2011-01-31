@@ -10,9 +10,18 @@ namespace D_IDE.D
 {
 	public class DProject:Project
 	{
+		public DProject()
+		{ }
+
 		public DProject(Solution sln,string file)
 		{
 			Solution = sln;
+			FileName = sln.ToAbsoluteFileName( file);
+			Init();
+		}
+
+		void Init()
+		{
 			OnReadElementFromFile += delegate(XmlReader xr)
 			{
 				return false;
@@ -22,8 +31,6 @@ namespace D_IDE.D
 			{
 
 			};
-
-			FileName = sln.ToAbsoluteFileName( file);
 		}
 
 		public new string OutputFile

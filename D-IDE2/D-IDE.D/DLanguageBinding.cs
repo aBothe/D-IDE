@@ -102,7 +102,7 @@ namespace D_IDE.D
 		#region Projecting
 		public override Project CreateEmptyProject(FileTemplate FileType)
 		{
-			var prj=new Project();
+			var prj=new DProject();
 
 			switch (_ProjectTypes.IndexOf(FileType))
 			{

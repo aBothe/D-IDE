@@ -314,6 +314,13 @@ namespace D_IDE
 						Save(sender, null);
 						return;
 				}
+			else 
+				switch (e.Key)
+				{
+					case Key.F9:
+						ToggleBreakpoint_Click(null,null);
+						break;
+				}
 
 			e.Handled = false;
 		}

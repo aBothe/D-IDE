@@ -54,7 +54,8 @@ namespace D_IDE
 			}
 			try
 			{
-				Editor.Save(AbsoluteFilePath);
+				if(Modified)
+					Editor.Save(AbsoluteFilePath);
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); return false; }
 			Modified = false;
@@ -81,6 +82,7 @@ namespace D_IDE
 
 			Editor.ShowLineNumbers = true;
 			Editor.TextChanged += new EventHandler(Editor_TextChanged);
+			Editor.Document.LineCountChanged += new EventHandler(Document_LineCountChanged);
 
 			// Register Marker strategy
 			var tv = Editor.TextArea.TextView;
@@ -183,8 +185,23 @@ namespace D_IDE
 		{
 			Modified = true;
 
+			// Relocate/Update build errors
+			foreach (var m in MarkerStrategy.TextMarkers)
+			{
+				var bem = m as ErrorMarker;
+				if(bem==null)
+					continue;
+
+				var nloc=bem.EditorDocument.Editor.Document.GetLocation(bem.StartOffset);
+				bem.Error.Location = new CodeLocation(nloc.Column, nloc.Line);
+			}
+			//CoreManager.Instance.MainWindow.RefreshErrorList();			
+		}
+
+		void Document_LineCountChanged(object sender, EventArgs e)
+		{
 			// Relocate breakpoint positions - when not being in debug mode!
-			if(!CoreManager.DebugManagement.IsDebugging)
+			if (!CoreManager.DebugManagement.IsDebugging)
 				foreach (var mk in MarkerStrategy.TextMarkers)
 				{
 					var bpm = mk as BreakpointMarker;
