@@ -9,7 +9,7 @@ using System.ComponentModel;
 
 namespace D_IDE.Core
 {
-	public class Project:IEnumerable<ProjectModule>
+	public class Project:IEnumerable<SourceModule>
 	{
 		public Project() { }
 		public Project(Solution sln, string prjFile)
@@ -62,7 +62,7 @@ namespace D_IDE.Core
 		}
 		public Solution Solution;
 
-		protected readonly List<ProjectModule> _Files = new List<ProjectModule>();
+		protected readonly List<SourceModule> _Files = new List<SourceModule>();
 		public readonly List<string> ProjectFileDependencies = new List<string>();
 
 		public Project[] ProjectDependencies
@@ -77,7 +77,7 @@ namespace D_IDE.Core
 			}
 		}
 
-		public ProjectModule[] GetFilesInDirectory(string dir)
+		public SourceModule[] GetFilesInDirectory(string dir)
 		{
 			var relDir = ToRelativeFileName(dir);
 			return _Files.Where(m => m.FileName.StartsWith(relDir)).ToArray();
@@ -87,10 +87,10 @@ namespace D_IDE.Core
 		/// Contain all project files including the file paths of the modules.
 		/// All paths should be relative to the project base directory
 		/// </summary>
-		public ProjectModule[] Files { get { return _Files.ToArray(); } }
-		public IEnumerable<ProjectModule> CompilableFiles
+		public SourceModule[] Files { get { return _Files.ToArray(); } }
+		public IEnumerable<SourceModule> CompilableFiles
 		{
-			get { return from f in _Files where f.Action == ProjectModule.BuildAction.Compile select f; }
+			get { return from f in _Files where f.Action == SourceModule.BuildAction.Compile select f; }
 		}
 
 		/// <summary>
@@ -124,19 +124,13 @@ namespace D_IDE.Core
 			return f;
 		}
 
-		public IEnumerator<ProjectModule> GetEnumerator() { return _Files.GetEnumerator(); }
+		public IEnumerator<SourceModule> GetEnumerator() { return _Files.GetEnumerator(); }
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()	{	return _Files.GetEnumerator();	}
 		#endregion
 
 		#region Saving & Loading
-		protected delegate bool CustomReadEventHandler(XmlReader reader) ;
-		protected delegate void CustomWriteEventHandler(XmlWriter writer);
-		/// <summary>
-		/// Enables custom data reading when reading from a project file.
-		/// Gets called after every XmlReader.Read();
-		/// </summary>
-		protected CustomReadEventHandler OnReadElementFromFile;
-		protected CustomWriteEventHandler OnWriteToFile;
+		protected virtual void SaveLanguageSpecificSettings(XmlWriter xw) {}
+		protected virtual void LoadLanguageSpecificSettings(XmlReader xr) { }
 
 		public bool Save()
 		{
@@ -156,7 +150,7 @@ namespace D_IDE.Core
 			foreach (var m in _Files)
 			{
 				xw.WriteStartElement("file");
-				xw.WriteAttributeString("lastModified", m.LastModified.ToString());
+				// Do not save the last modification timestamp because after re-opening the project it shall be rebuilt completely
 				xw.WriteAttributeString("buildAction", ((int)m.Action).ToString());
 				xw.WriteCData(m.FileName);
 				xw.WriteEndElement();
@@ -203,8 +197,8 @@ namespace D_IDE.Core
 			xw.WriteCData(Version.ToString());
 			xw.WriteEndElement();
 
-			if (OnWriteToFile != null)
-				OnWriteToFile(xw);
+			xw.WriteStartElement("languagespecific");
+			SaveLanguageSpecificSettings(xw);
 
 			xw.WriteEndDocument();
 			xw.Close();
@@ -226,10 +220,6 @@ namespace D_IDE.Core
 
 			while (xr.Read())
 			{
-				if (OnReadElementFromFile != null)
-					if (OnReadElementFromFile(xr)) // Continue if the event has handled the element
-						continue;
-
 				if (xr.NodeType == XmlNodeType.Element)
 				{
 					switch (xr.LocalName)
@@ -247,16 +237,13 @@ namespace D_IDE.Core
 							while (xsr.Read())
 							{
 								if (xsr.LocalName != "file") continue;
-									long mod = 0;
-									ProjectModule.BuildAction act =  ProjectModule.BuildAction.Compile;
-									if (xsr.MoveToAttribute("lastModified"))
-										mod = Convert.ToInt64(xsr.Value);
+								var act=SourceModule.BuildAction.None;
 									if (xsr.MoveToAttribute("buildAction"))
-										act=(ProjectModule.BuildAction)Convert.ToInt32(xsr.Value);
+										act=(SourceModule.BuildAction)Convert.ToInt32(xsr.Value);
 									xsr.MoveToElement();
 
 									string _fn = xsr.ReadString();
-									_Files.Add(new ProjectModule() { FileName=_fn, Action=act, LastModified=mod});
+									_Files.Add(new SourceModule() {Project=this, FileName=_fn, Action=act});
 							}
 							break;
 
@@ -316,6 +303,10 @@ namespace D_IDE.Core
 						case "version":
 							Version.Parse(xr.ReadString());
 							break;
+
+						case "languagespecific":
+							LoadLanguageSpecificSettings(xr.ReadSubtree());
+							break;
 					}
 				}
 			}
@@ -341,7 +332,7 @@ namespace D_IDE.Core
 					return false;
 				}
 
-			_Files.Add(new ProjectModule() {  FileName=ToRelativeFileName(FileName), Action=ProjectModule.BuildAction.Compile});
+			_Files.Add(new SourceModule() {Project=this,  FileName=ToRelativeFileName(FileName), Action=SourceModule.BuildAction.Compile});
 			return true;
 		}
 
@@ -400,7 +391,7 @@ namespace D_IDE.Core
 			foreach (var pf in _Files)
 			{
 				fn = ToAbsoluteFileName(pf.FileName);
-				if(pf.Action==ProjectModule.BuildAction.CopyToOutput && File.Exists(fn))
+				if(pf.Action==SourceModule.BuildAction.CopyToOutput && File.Exists(fn))
 					File.Copy(ToAbsoluteFileName(fn),Path.Combine( targetDirectory,Path.GetFileName(pf.FileName)));
 			}
 		}
@@ -437,13 +428,33 @@ namespace D_IDE.Core
 		Other
 	}
 
-	public class ProjectModule{
-		public Project Project;
-		public string FileName;
+	/// <summary>
+	/// Represents a project's source file
+	/// </summary>
+	public class SourceModule{
+		public Project Project { get; set; }
+		public string FileName { get; set; }
 
-		public long LastModified=0;
+		public string AbsoluteFileName
+		{
+			get
+			{
+				if (Project != null)
+					return Project.ToAbsoluteFileName(FileName);
+				return FileName;
+			}
+		}
+
+		/// <summary>
+		/// Contains the UTC timestamp. Describes when the last build of this file was
+		/// </summary>
+		protected long LastModified=0;
 		public BuildAction Action=BuildAction.CopyToOutput;
+		public BuildResult LastBuildResult { get; set; }
 
+		/// <summary>
+		/// Returns true if file was edited since the last build
+		/// </summary>
 		public bool Modified
 		{
 			get
@@ -459,12 +470,22 @@ namespace D_IDE.Core
 
 		public enum BuildAction
 		{
+			/// <summary>
+			/// File will be disregarded when building
+			/// </summary>
 			None=0,
+			/// <summary>
+			/// File will be compiled and linked to the target file
+			/// </summary>
 			Compile=1,
+			/// <summary>
+			/// File will be copied to output directory
+			/// </summary>
 			CopyToOutput=2
 		}
 	}
 
+	#region Errors
 	public class GenericError
 	{
 		public enum ErrorType
@@ -529,6 +550,7 @@ namespace D_IDE.Core
 			get { return ParserError.IsSemantic; }
 		}
 	}
+	#endregion
 
 	public class ProjectVersion
 	{

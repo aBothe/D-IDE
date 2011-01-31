@@ -11,27 +11,27 @@ namespace D_IDE.Core
 	public abstract class IBuildSupport
 	{
 		protected Thread buildThread;
-		public abstract BuildResult BuildProject(Project Project,bool Incremetally);
-		public abstract BuildResult BuildModule(string FileName, string OutputDirectory, bool LinkToStandAlone);
+		public abstract void BuildProject(Project Project);
+		public abstract void BuildModule(SourceModule Module, string OutputDirectory, bool LinkToStandAlone);
 
-		public virtual void BuildModuleAsync(string FileName, string OutputDirectory, bool LinkToStandAlone)
+		#region TODO: Async build support
+		public virtual void BuildModuleAsync(SourceModule Module, string OutputDirectory, bool LinkToStandAlone)
 		{
 			if (buildThread != null && buildThread.IsAlive)
 				buildThread.Abort();
 
 			buildThread = new Thread(delegate()
 			{
-				BuildModule(FileName,OutputDirectory,LinkToStandAlone);
+				BuildModule(Module,OutputDirectory,LinkToStandAlone);
 			});
 
 			buildThread.IsBackground = true;
 			buildThread.Start();
 		}
 
-
-		public BuildResult BuildStandAlone(string FileName)
+		public void BuildStandAlone(SourceModule Module)
 		{
-			return BuildModule(FileName,Path.GetDirectoryName(FileName),true);
+			BuildModule(Module,Path.GetDirectoryName(Module.FileName),true);
 		}
 
 		public delegate void BuildFinishedEvent(BuildResult Result);
@@ -44,15 +44,38 @@ namespace D_IDE.Core
 
 		public abstract bool IsBuilding { get; }
 		public abstract void StopBuilding();
+		#endregion
+
+		public BuildResult BuildStandAlone(string file)
+		{
+			var sm = new SourceModule();
+			sm.FileName = file;
+
+			BuildStandAlone(sm);
+
+			return sm.LastBuildResult;
+		}
 	}
 
+	/// <summary>
+	/// Contains information about the build state of a file.
+	/// </summary>
 	public class BuildResult
 	{
+		/// <summary>
+		/// True if target file was up to date before the build request was invoked
+		/// </summary>
+		public bool NoBuildNeeded = false;
+
 		public bool Successful;
 		public readonly List<GenericError> BuildErrors=new List<GenericError>();
 		public string SourceFile;
 		public string TargetFile;
 
+		/// <summary>
+		/// Additionally generated files that are worth it to take care of.
+		/// Useful e.g. when creating a .pdb file after sources have been compiled.
+		/// </summary>
 		public string[] AdditionalFiles;
 	}
 }

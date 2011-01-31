@@ -136,9 +136,11 @@ namespace D_IDE.Core
 
 			public static BreakpointWrapper GetBreakpointAt(string file, int line)
 			{
-				if (Breakpoints.Count < 1)
-					return null;
-				return Breakpoints.First(bp => bp.File == file && bp.Line == line);
+				try
+				{
+					return Breakpoints.First(bp => bp.File == file && bp.Line == line);
+				}
+				catch { return null; }
 			}
 
 			public static IEnumerable<BreakpointWrapper> GetBreakpointsAt(string file)

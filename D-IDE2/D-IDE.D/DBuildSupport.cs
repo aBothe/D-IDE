@@ -22,11 +22,9 @@ namespace D_IDE.D
 			get { return DSettings.Instance.DMDConfig(DMDVersion); }
 		}
 
-		public bool CompileIncrementally = false;
-		public ProjectModule TempModule;
 		#endregion
 
-		public override BuildResult BuildProject(Project prj,bool Incrementally)
+		public override void BuildProject(Project prj)
 		{
 			var dprj = prj as DProject;
 			if (dprj == null)
@@ -34,39 +32,54 @@ namespace D_IDE.D
 
 			DMDVersion=dprj.DMDVersion;
 
+			dprj.LastBuildResult = new BuildResult() { SourceFile=dprj.FileName, TargetFile=dprj.OutputFile};
+
 			// Build outputs/target paths
 			string objectDirectory = dprj.BaseDirectory+"\\obj";
 			Util.CreateDirectoryRecursively(objectDirectory);
 
-			// Compile d sources to object files
+			#region Compile d sources to object files
 			var objs = new List<string>();
+			bool AllObjectsUnchanged = true;
 
+			AbstractLanguageBinding lang = null;
 			foreach (var f in dprj.CompilableFiles)
 			{
-				CompileIncrementally = Incrementally;
-				TempModule = f;
-
 				bool _u = false ;
-				var lang=AbstractLanguageBinding.SearchBinding(f.FileName, out _u);
+				if(lang==null || !lang.CanHandleFile(f.FileName))
+					lang=AbstractLanguageBinding.SearchBinding(f.FileName, out _u);
 
 				if (lang == null || _u || !lang.CanBuild)
 					continue;
 
-				var br = lang.BuildSupport.BuildModule(prj.ToAbsoluteFileName( f.FileName),objectDirectory,false);
+				lang.BuildSupport.BuildModule(f,objectDirectory,false);
 
-				if (!br.Successful)
-					return br;
+				if (!f.LastBuildResult.Successful)
+					return;
+
+				if (!f.LastBuildResult.NoBuildNeeded)
+					AllObjectsUnchanged = false;
 
 				// To save command line space, make the targetfile relative to our objectDirectory
-				objs.Add(br.TargetFile.StartsWith(dprj.BaseDirectory)? br.TargetFile.Substring(dprj.BaseDirectory.Length+1):br.TargetFile);
+				objs.Add(f.LastBuildResult.TargetFile.StartsWith(dprj.BaseDirectory) 
+					? f.LastBuildResult.TargetFile.Substring(dprj.BaseDirectory.Length + 1) 
+					: f.LastBuildResult.TargetFile);
 			}
 
 			if (objs.Count < 1)
 			{
-				var br = new BuildResult();
-				br.BuildErrors.Add(new GenericError() { Message = "Project is empty - cannot build", Project=prj,Type=GenericError.ErrorType.Info });
-				br.Successful = true;
-				return br;
+				prj.LastBuildResult.Successful = true;
+				prj.LastBuildResult.NoBuildNeeded = true;
+				IDEInterface.Log("Project "+dprj.Name+" empty");
+				return;
+			}
+			#endregion
+
+			// If no source has been changed, skip linkage 
+			if (AllObjectsUnchanged && File.Exists(dprj.OutputFile))
+			{
+				dprj.LastBuildResult.NoBuildNeeded = true;
+				return;
 			}
 
 			// Add import libraries
@@ -96,14 +109,12 @@ namespace D_IDE.D
 					break;
 			}
 
-			var linkResult = LinkFiles(linkerExe, linkerArgs, dprj.BaseDirectory, dprj.OutputFile, !dprj.IsRelease, objs.ToArray());
+			dprj.LastBuildResult = LinkFiles(linkerExe, linkerArgs, dprj.BaseDirectory, dprj.OutputFile, !dprj.IsRelease, objs.ToArray());
 
-			if (linkResult.Successful)
+			if (dprj.LastBuildResult.Successful)
 				dprj.Version.IncrementBuild();
 			else 
 				dprj.Version.Revision++;
-
-			return linkResult;
 		}
 
 		public BuildResult CompileSource(DMDConfig dmd,bool DebugCompile, string srcFile, string objFile, string execDirectory)
@@ -172,28 +183,33 @@ namespace D_IDE.D
 			return br;
 		}
 
-		public override BuildResult BuildModule(string FileName, string OutputDirectory, bool Link)
+		public override void BuildModule(SourceModule Module, string OutputDirectory, bool Link)
 		{
 			var dmd = CurrentDMDConfig;
 			var dmd_exe = dmd.SoureCompiler;
 			bool compileDebug = true;
+			var src = Module.AbsoluteFileName;
 
-			var outputDir = Path.IsPathRooted(OutputDirectory) ? OutputDirectory : Path.Combine(Path.GetDirectoryName(FileName), OutputDirectory);
+			var outputDir = Path.IsPathRooted(OutputDirectory) ? OutputDirectory : Path.Combine(Path.GetDirectoryName(src), OutputDirectory);
 			Util.CreateDirectoryRecursively(outputDir);
 			
 			// Compile .d source file to obj
-			var obj = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(FileName) + ".obj");
-			// Check if creation can be skipped
-			if (CompileIncrementally && !Link && TempModule != null && !TempModule.Modified && File.Exists(obj))
-				return new BuildResult() { SourceFile=FileName,Successful=true,TargetFile=obj };
+			var obj = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(src) + ".obj");
 
-			var br = CompileSource(dmd,compileDebug,FileName,obj,Path.GetDirectoryName(FileName));
+			// Check if creation can be skipped
+			if (!Link && !Module.Modified && File.Exists(obj))
+			{
+				Module.LastBuildResult = new BuildResult() { SourceFile=src, TargetFile=obj,Successful = true, NoBuildNeeded=true};
+				return;
+			}
+
+			var br =Module.LastBuildResult= CompileSource(dmd,compileDebug,src,obj,Path.GetDirectoryName(src));
 
 			if (Link && br.Successful)
 			{
 				br.Successful = false;
 				#region Link To StandAlone executable
-				var exe = OutputDirectory + "\\" + Path.GetFileNameWithoutExtension(FileName) + ".exe";
+				var exe = OutputDirectory + "\\" + Path.GetFileNameWithoutExtension(src) + ".exe";
 				br.TargetFile = exe;
 
 				var br_ = LinkFiles(dmd.ExeLinker, dmd.BuildArguments(compileDebug).ExeLinker, Path.GetDirectoryName(obj), exe,compileDebug, obj);
@@ -202,9 +218,7 @@ namespace D_IDE.D
 				br.AdditionalFiles = br_.AdditionalFiles;
 				br.Successful = br_.Successful;
 				#endregion
-			}
-
-			return br;			
+			}		
 		}
 
 		/// <summary>

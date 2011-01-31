@@ -17,20 +17,6 @@ namespace D_IDE.D
 		{
 			Solution = sln;
 			FileName = sln.ToAbsoluteFileName( file);
-			Init();
-		}
-
-		void Init()
-		{
-			OnReadElementFromFile += delegate(XmlReader xr)
-			{
-				return false;
-			};
-
-			OnWriteToFile += delegate(XmlWriter xw)
-			{
-
-			};
 		}
 
 		public new string OutputFile
@@ -58,6 +44,20 @@ namespace D_IDE.D
 			{
 				return DSettings.Instance.DMDConfig(DMDVersion);
 			}
+		}
+
+		protected override void LoadLanguageSpecificSettings(XmlReader xr)
+		{
+			while(xr.Read())
+				switch (xr.LocalName)
+				{
+					default: break;
+				}
+		}
+
+		protected override void SaveLanguageSpecificSettings(XmlWriter xw)
+		{
+			
 		}
 	}
 }
