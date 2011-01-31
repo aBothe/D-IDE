@@ -56,8 +56,15 @@ namespace D_IDE.Core
 				// (Bound) Solution errors
 				else if (CurrentSolution != null)
 					foreach (var prj in CurrentSolution)
+					{
+						// Add project errors
 						if (prj.LastBuildResult != null)
 							el.AddRange(prj.LastBuildResult.BuildErrors);
+						// Add errors of its modules
+						foreach (var m in prj.Files)
+							if(m.LastBuildResult!=null)
+								el.AddRange(m.LastBuildResult.BuildErrors);
+					}
 				// Errors that occurred while parsing source files
 				el.AddRange(LastParseErrors);
 

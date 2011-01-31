@@ -26,6 +26,12 @@ namespace D_IDE
 			public static bool Build(Solution sln, bool Incrementally)
 			{
 				//TODO: Build from most independent to most dependent project
+				/*
+				 * TODO: How to combine D Projects?
+				 * -- e.g. Project A is a class library
+				 * -- Project B is an executable --> Interfacing?
+				 * http://digitalmars.com/d/2.0/dll.html
+				 */
 
 				foreach (var prj in sln)
 				{
@@ -42,6 +48,8 @@ namespace D_IDE
 					ed.Save();
 
 				Instance.MainWindow.ClearLog();
+				// Important: Reset error list's unbound build result
+				ErrorManagement.LastBuildResult = null;
 
 				bool isPrj = false;
 				var lang = AbstractLanguageBinding.SearchBinding(Project.FileName, out isPrj);
@@ -49,7 +57,6 @@ namespace D_IDE
 				if (lang != null && isPrj && lang.CanBuild)
 				{
 					lang.BuildSupport.BuildProject(Project);
-					ErrorManagement.LastBuildResult = Project.LastBuildResult;
 
 					if (Project.LastBuildResult.Successful)
 						Project.CopyCopyableOutputFiles();
