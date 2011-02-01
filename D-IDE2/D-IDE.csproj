@@ -115,6 +115,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Dialogs\ProjectSettingsDlg.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Dialogs\NewSrcDlg.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -122,6 +126,10 @@
     <Page Include="Dialogs\NewProjectDlg.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\SettingsPages\Page_General_Prj.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialogs\SettingsPages\Page_Debugging.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -155,11 +163,17 @@
     <Compile Include="Dialogs\GlobalSettingsDlg.xaml.cs">
       <DependentUpon>GlobalSettingsDlg.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\ProjectSettingsDlg.xaml.cs">
+      <DependentUpon>ProjectSettingsDlg.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\NewSrcDlg.xaml.cs">
       <DependentUpon>NewSrcDlg.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\NewProjectDlg.xaml.cs">
       <DependentUpon>NewProjectDlg.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\SettingsPages\Page_General_Prj.xaml.cs">
+      <DependentUpon>Page_General_Prj.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\SettingsPages\Page_Debugging.xaml.cs">
       <DependentUpon>Page_Debugging.xaml</DependentUpon>

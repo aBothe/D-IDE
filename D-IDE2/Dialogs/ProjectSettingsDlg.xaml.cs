@@ -18,13 +18,16 @@ namespace D_IDE.Dialogs
 	/// <summary>
 	/// Interaktionslogik für GlobalSettingsDlg.xaml
 	/// </summary>
-	public partial class GlobalSettingsDlg : Window
+	public partial class ProjectSettingsDlg : Window
 	{
-		public readonly List<AbstractSettingsPage> SettingsPages = new List<AbstractSettingsPage>();
-		
-		public GlobalSettingsDlg()
+		public readonly List<AbstractProjectSettingsPage> SettingsPages = new List<AbstractProjectSettingsPage>();
+		public readonly Project Project;
+
+		public ProjectSettingsDlg(Project Project)
 		{
 			InitializeComponent();
+
+			this.Project = Project;
 
 			BuildCategoryArray();
 		}
@@ -34,13 +37,15 @@ namespace D_IDE.Dialogs
 		{
 			SettingsPages.Clear();
 
-			SettingsPages.Add(new Page_General());
-			SettingsPages.Add(new Page_Editing());
-			SettingsPages.Add(new Page_Building());
-			SettingsPages.Add(new Page_Debugging());
+			SettingsPages.Add(new Page_General_Prj());
 
-			foreach (var lang in from l in LanguageLoader.Bindings where l.CanUseSettings select l)
-				SettingsPages.Add(lang.SettingsPage);
+			var pgs = Project.LanguageSpecificProjectSettings;
+			if (pgs != null && pgs.Length > 0)
+				foreach (var p in pgs)
+					SettingsPages.Add(p);
+
+			foreach (var p in SettingsPages)
+				p.LoadCurrent(Project);
 
 			RefreshCategoryTree();
 		}
@@ -66,16 +71,13 @@ namespace D_IDE.Dialogs
 			PropPageHost.Content = n.Tag;
 		}
 
-		TreeViewItem _BuildCategoryNode(AbstractSettingsPage Page)
+		TreeViewItem _BuildCategoryNode(AbstractProjectSettingsPage Page)
 		{
 			var ret = new TreeViewItem();
 			ret.Tag = Page;
 			ret.Header = Page.SettingCategoryName;
 
-			var subCategories = Page.SubCategories;
-			if(subCategories!=null && subCategories.Length>0)
-				foreach(var sc in subCategories)
-					ret.Items.Add(_BuildCategoryNode(sc));
+			// There are no subcategories? -- Because we have enough tree space ;-)
 
 			return ret;
 		}
@@ -96,36 +98,7 @@ namespace D_IDE.Dialogs
 		public void ApplySettings()
 		{
 			foreach (var sp in SettingsPages)
-				ApplySettings(sp);
-		}
-
-		void ApplySettings(AbstractSettingsPage p)
-		{
-			p.ApplyChanges();
-			if (p.SubCategories != null && p.SubCategories.Length > 0)
-				foreach (var ssp in p.SubCategories)
-					ApplySettings(ssp);
-		}
-
-		public void RestoreDefaults()
-		{
-			foreach (var sp in SettingsPages) RestoreDefaults(sp);
-		}
-
-		void RestoreDefaults(AbstractSettingsPage p)
-		{
-			p.RestoreDefaults();
-			if (p.SubCategories != null && p.SubCategories.Length > 0)
-				foreach (var ssp in p.SubCategories)
-					RestoreDefaults(ssp);
-		}
-		
-		private void buttonRestore_Click(object sender, RoutedEventArgs e)
-		{
-			if (MessageBox.Show("Are you sure?", "Restoring defaults", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-			{
-				RestoreDefaults();
-			}
+				sp.ApplyChanges(Project);
 		}
 		#endregion
 	}

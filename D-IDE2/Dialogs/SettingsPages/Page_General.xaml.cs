@@ -39,7 +39,7 @@ namespace D_IDE.Dialogs.SettingsPages
 			GlobalProperties.Instance.OpenLastFiles = cb_OpenLastFiles.IsChecked.Value;
 		}
 		
-		public override string SettingCategory
+		public override string SettingCategoryName
 		{
 			get { return "General"; }
 		}

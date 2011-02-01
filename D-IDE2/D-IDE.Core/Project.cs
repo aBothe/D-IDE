@@ -51,6 +51,16 @@ namespace D_IDE.Core
 		}
 
 		#region Properties
+		/*
+		 * To sum up the 'real' project properties:
+		 *	- Name
+		 *	- Project Files
+		 *	- Dependency of other projects
+		 *	- Version
+		 *	- Language specific stuff
+		 */
+		public virtual AbstractProjectSettingsPage[] LanguageSpecificProjectSettings { get { return null; } }
+
 		public string Name { get; set; }
 		/// <summary>
 		/// Absolute file path
@@ -58,19 +68,17 @@ namespace D_IDE.Core
 		public string FileName;
 		public string BaseDirectory {
 			get { return Path.GetDirectoryName(FileName); }
-			set	{ FileName = value + Path.GetFileName(FileName); }
 		}
 		public Solution Solution;
 
 		protected readonly List<SourceModule> _Files = new List<SourceModule>();
-		public readonly List<string> ProjectFileDependencies = new List<string>();
 
 		public Project[] ProjectDependencies
 		{
 			get
 			{
-				var ret = new List<Project>(ProjectFileDependencies.Count);
-				foreach (var file in ProjectFileDependencies)
+				var ret = new List<Project>(RequiredProjects.Count);
+				foreach (var file in RequiredProjects)
 					if(Solution.IsProjectLoaded(file))
 						ret.Add(Solution[file]);
 				return ret.ToArray();
@@ -97,6 +105,7 @@ namespace D_IDE.Core
 		/// Project's build version
 		/// </summary>
 		public ProjectVersion Version = new ProjectVersion();
+		public bool AutoIncrementBuildNumber = true;
 
 		public bool ContainsFile(string file)
 		{
@@ -194,6 +203,7 @@ namespace D_IDE.Core
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("version");
+			xw.WriteAttributeString("autoincrementbuild",AutoIncrementBuildNumber.ToString());
 			xw.WriteCData(Version.ToString());
 			xw.WriteEndElement();
 
@@ -288,19 +298,17 @@ namespace D_IDE.Core
 
 						case "enablesubversioning":
 							if (xr.MoveToAttribute("value"))
-							{
 								EnableBuildVersioning = xr.Value == "true";
-							}
 							break;
 
 						case "alsostoresources":
 							if (xr.MoveToAttribute("value"))
-							{
 								AlsoStoreChangedSources = xr.Value == "true";
-							}
 							break;
 
 						case "version":
+							if (xr.MoveToAttribute("autoincrementbuild"))
+								AutoIncrementBuildNumber = xr.GetAttribute("autoincrementbuild")=="true";
 							Version.Parse(xr.ReadString());
 							break;
 

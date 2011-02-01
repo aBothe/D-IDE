@@ -26,7 +26,7 @@ namespace D_IDE.Dialogs.SettingsPages
 			LoadCurrent();
 		}
 
-		public override string SettingCategory
+		public override string SettingCategoryName
 		{
 			get
 			{
