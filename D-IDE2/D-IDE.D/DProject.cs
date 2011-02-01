@@ -51,13 +51,32 @@ namespace D_IDE.D
 			while(xr.Read())
 				switch (xr.LocalName)
 				{
+					case "isrelease":
+						IsRelease = xr.ReadString()=="true";
+						break;
+					case "dversion":
+						DMDVersion = (DVersion)Convert.ToInt32(xr.ReadString());
+						break;
+					case "libs":
+						var xr2 = xr.ReadSubtree();
+						while (xr2.Read())
+						{
+							if (xr2.LocalName == "lib")
+								LinkedLibraries.Add(xr2.ReadString());
+						}
+						break;
 					default: break;
 				}
 		}
 
 		protected override void SaveLanguageSpecificSettings(XmlWriter xw)
 		{
-			
+			xw.WriteElementString("isrelease", IsRelease.ToString());
+			xw.WriteElementString("dversion",((int)DMDVersion).ToString());
+			xw.WriteStartElement("libs");
+			foreach (var lib in LinkedLibraries)
+				xw.WriteElementString("lib",lib);
+			xw.WriteEndElement();
 		}
 	}
 }
