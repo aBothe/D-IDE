@@ -111,7 +111,8 @@ namespace D_IDE
 
 			public static void CleanUpOutput(Solution sln)
 			{
-
+				foreach (var prj in sln)
+					CleanUpOutput(prj);
 			}
 
 			public static void CleanUpOutput(Project Project)
