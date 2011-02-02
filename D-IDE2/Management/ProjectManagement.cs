@@ -267,7 +267,11 @@ namespace D_IDE
 
 			public static void ShowProjectPropertiesDialog(Project Project)
 			{
+				if (Project == null)
+					return;
 
+				var dlg = new D_IDE.Dialogs.ProjectSettingsDlg(Project);
+				dlg.ShowDialog();
 			}
 			#endregion
 		}

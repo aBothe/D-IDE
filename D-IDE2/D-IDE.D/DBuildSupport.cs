@@ -110,11 +110,6 @@ namespace D_IDE.D
 			}
 
 			dprj.LastBuildResult = LinkFiles(linkerExe, linkerArgs, dprj.BaseDirectory, dprj.OutputFile, !dprj.IsRelease, objs.ToArray());
-
-			if (dprj.LastBuildResult.Successful)
-				dprj.Version.IncrementBuild();
-			else 
-				dprj.Version.Revision++;
 		}
 
 		public BuildResult CompileSource(DMDConfig dmd,bool DebugCompile, string srcFile, string objFile, string execDirectory)

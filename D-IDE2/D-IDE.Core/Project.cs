@@ -308,7 +308,7 @@ namespace D_IDE.Core
 
 						case "version":
 							if (xr.MoveToAttribute("autoincrementbuild"))
-								AutoIncrementBuildNumber = xr.GetAttribute("autoincrementbuild")=="true";
+								AutoIncrementBuildNumber = xr.GetAttribute("autoincrementbuild").ToLower()=="true";
 							Version.Parse(xr.ReadString());
 							break;
 

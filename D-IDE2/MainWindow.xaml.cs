@@ -409,5 +409,11 @@ namespace D_IDE
 			CoreManager.BreakpointManagement.ToggleBreakpoint(ed.RelativeFilePath, ed.Editor.TextArea.Caret.Line);
 			ed.RefreshBreakpointHighlightings();
 		}
+
+		private void PrjSettings_Click(object sender, RoutedEventArgs e)
+		{
+			if(IDEManager.Instance.CurrentEditor!=null)
+				IDEManager.ProjectManagement.ShowProjectPropertiesDialog(IDEManager.Instance.CurrentEditor.Project);
+		}
 	}
 }

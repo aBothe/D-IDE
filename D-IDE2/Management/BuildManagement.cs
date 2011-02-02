@@ -56,6 +56,12 @@ namespace D_IDE
 
 				if (lang != null && isPrj && lang.CanBuild)
 				{
+					if (Project.AutoIncrementBuildNumber)
+						if (Project.LastBuildResult.Successful)
+							Project.Version.IncrementBuild();
+						else
+							Project.Version.Revision++;
+
 					lang.BuildSupport.BuildProject(Project);
 
 					if (Project.LastBuildResult.Successful)
