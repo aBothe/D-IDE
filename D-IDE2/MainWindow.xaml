@@ -109,7 +109,9 @@
 					<r:RibbonSplitButton Label="Launch Debugger" SmallImageSource="Resources/build_dbg.png">
 						<r:RibbonMenuItem Header="Run until main()" />
 					</r:RibbonSplitButton>
-					<r:RibbonButton Label="Run without Debugger" SmallImageSource="Resources/build.png" />
+					<r:RibbonSplitButton Label="Run without Debugger" SmallImageSource="Resources/build.png">
+						<r:RibbonMenuItem Header="Run in external console" />
+					</r:RibbonSplitButton>
 					</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Breakpoints" >
