@@ -188,7 +188,7 @@
       <DependentUpon>Page_General.xaml</DependentUpon>
     </Compile>
     <Compile Include="GenericFileBinding.cs" />
-    <Compile Include="Management\ExeLaunchManagement.cs" />
+    <Compile Include="Management\IDEDebugManagement.cs" />
     <Compile Include="Misc\IDEUtil.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

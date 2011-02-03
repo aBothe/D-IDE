@@ -16,7 +16,7 @@ namespace D_IDE
 		public readonly TextEditor Editor = new TextEditor();
 		public AbstractSyntaxTree SyntaxTree=null;
 
-		TextMarkerService MarkerStrategy;
+		public TextMarkerService MarkerStrategy { get; protected set; }
 
 		public bool ReadOnly
 		{

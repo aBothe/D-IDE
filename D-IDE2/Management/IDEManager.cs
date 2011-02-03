@@ -26,5 +26,11 @@ namespace D_IDE
 		{
 			get { return base.MainWindow as MainWindow; }
 		}
+
+		public static void Log(string s)
+		{
+			if(!string.IsNullOrWhiteSpace(s))
+				Instance.MainWindow.Panel_Log.AppendOutput(s);
+		}
 	}
 }

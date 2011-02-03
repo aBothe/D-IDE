@@ -11,6 +11,91 @@ namespace D_IDE.Core
 {
 	public class Project:IEnumerable<SourceModule>
 	{
+		#region Properties
+		public Solution Solution;
+		public string Name { get; set; }
+
+		/// <summary>
+		/// Absolute file path
+		/// </summary>
+		public string FileName;
+		public string BaseDirectory
+		{
+			get { return Path.GetDirectoryName(FileName); }
+		}
+
+		public virtual AbstractProjectSettingsPage[] LanguageSpecificProjectSettings { get { return null; } }
+
+		/// <summary>
+		/// Contain all project files including the file paths of the modules.
+		/// All paths should be relative to the project base directory
+		/// </summary>
+		public SourceModule[] Files { get { return _Files.ToArray(); } }
+		/// <summary>
+		/// Project's build version
+		/// </summary>
+		public ProjectVersion Version = new ProjectVersion();
+		public bool AutoIncrementBuildNumber = true;
+
+		/// <summary>
+		/// Contains relative paths of empty but used directories
+		/// </summary>
+		public readonly List<string> SubDirectories = new List<string>();
+		public readonly List<string> LastOpenedFiles = new List<string>();
+		protected readonly List<SourceModule> _Files = new List<SourceModule>();
+		public Project[] ProjectDependencies
+		{
+			get
+			{
+				var ret = new List<Project>(RequiredProjects.Count);
+				foreach (var file in RequiredProjects)
+					if (Solution.IsProjectLoaded(file))
+						ret.Add(Solution[file]);
+				return ret.ToArray();
+			}
+		}
+		public SourceModule[] GetFilesInDirectory(string dir)
+		{
+			var relDir = ToRelativeFileName(dir);
+			return _Files.Where(m => m.FileName.StartsWith(relDir)).ToArray();
+		}
+		public IEnumerable<SourceModule> CompilableFiles
+		{
+			get { return from f in _Files where f.Action == SourceModule.BuildAction.Compile select f; }
+		}
+
+		public readonly List<string> RequiredProjects = new List<string>();
+		public BuildResult LastBuildResult { get; set; }
+		public string ExecutingArguments { get; set; }
+		protected string OutputFileOverride { get; set; }
+		public string OutputFile
+		{
+			get
+			{
+				string ext = ".exe";
+				if (OutputType == OutputTypes.DynamicLibary)
+					ext = ".dll";
+
+				if (string.IsNullOrEmpty(OutputFileOverride))
+					return ToAbsoluteFileName("bin\\" + Util.PurifyFileName(Name) + ext);
+				else return ToAbsoluteFileName(OutputFileOverride);
+			}
+			set
+			{
+				OutputFileOverride = value;
+			}
+		}
+		public string OutputDirectory
+		{
+			get { return Path.GetDirectoryName(OutputFile); }
+		}
+
+		public OutputTypes OutputType { get; set; }
+
+		public bool EnableBuildVersioning = false;
+		public bool AlsoStoreChangedSources = false;
+		#endregion
+
 		public Project() { }
 		public Project(Solution sln, string prjFile)
 		{
@@ -50,74 +135,12 @@ namespace D_IDE.Core
 				return null;
 		}
 
-		#region Properties
-		/*
-		 * To sum up the 'real' project properties:
-		 *	- Name
-		 *	- Project Files
-		 *	- Dependency of other projects
-		 *	- Version
-		 *	- Language specific stuff
-		 */
-		public virtual AbstractProjectSettingsPage[] LanguageSpecificProjectSettings { get { return null; } }
-
-		public string Name { get; set; }
-		/// <summary>
-		/// Absolute file path
-		/// </summary>
-		public string FileName;
-		public string BaseDirectory {
-			get { return Path.GetDirectoryName(FileName); }
-		}
-		public Solution Solution;
-
-		protected readonly List<SourceModule> _Files = new List<SourceModule>();
-
-		public Project[] ProjectDependencies
-		{
-			get
-			{
-				var ret = new List<Project>(RequiredProjects.Count);
-				foreach (var file in RequiredProjects)
-					if(Solution.IsProjectLoaded(file))
-						ret.Add(Solution[file]);
-				return ret.ToArray();
-			}
-		}
-
-		public SourceModule[] GetFilesInDirectory(string dir)
-		{
-			var relDir = ToRelativeFileName(dir);
-			return _Files.Where(m => m.FileName.StartsWith(relDir)).ToArray();
-		}
-
-		/// <summary>
-		/// Contain all project files including the file paths of the modules.
-		/// All paths should be relative to the project base directory
-		/// </summary>
-		public SourceModule[] Files { get { return _Files.ToArray(); } }
-		public IEnumerable<SourceModule> CompilableFiles
-		{
-			get { return from f in _Files where f.Action == SourceModule.BuildAction.Compile select f; }
-		}
-
-		/// <summary>
-		/// Project's build version
-		/// </summary>
-		public ProjectVersion Version = new ProjectVersion();
-		public bool AutoIncrementBuildNumber = true;
-
 		public bool ContainsFile(string file)
 		{
 			var relPath = ToRelativeFileName(file);
 			return _Files.Count(o => o.FileName==relPath)>0;
 		}
-		/// <summary>
-		/// Contains relative paths of empty but used directories
-		/// </summary>
-		public readonly List<string> SubDirectories = new List<string>();
-		public readonly List<string> LastOpenedFiles = new List<string>();
-		
+
 		public string ToAbsoluteFileName(string file)
 		{
 			var f = file.Trim('\\');
@@ -135,7 +158,6 @@ namespace D_IDE.Core
 
 		public IEnumerator<SourceModule> GetEnumerator() { return _Files.GetEnumerator(); }
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()	{	return _Files.GetEnumerator();	}
-		#endregion
 
 		#region Saving & Loading
 		protected virtual void SaveLanguageSpecificSettings(XmlWriter xw) {}
@@ -353,35 +375,6 @@ namespace D_IDE.Core
 			return r;
 		}
 
-		#region Build properties
-		public readonly List<string> RequiredProjects = new List<string>();
-		public BuildResult LastBuildResult { get; set; }
-
-		protected string OutputFileOverride { get; set; }
-		public string OutputFile { 
-			get {
-				string ext = ".exe";
-				if (OutputType == OutputTypes.DynamicLibary)
-					ext = ".dll";
-
-				if (string.IsNullOrEmpty(OutputFileOverride))
-					return ToAbsoluteFileName( "bin\\"+ Util.PurifyFileName(Name)+ext);
-				else return ToAbsoluteFileName( OutputFileOverride);
-			}
-			set {
-				OutputFileOverride = value;
-			}
-		}
-		public string OutputDirectory
-		{
-			get { return Path.GetDirectoryName(OutputFile); }
-		}
-
-		public OutputTypes OutputType { get; set; }
-
-		public bool EnableBuildVersioning = false;
-		public bool AlsoStoreChangedSources = false;
-
 		/// <summary>
 		/// Copies all files to project's output directory
 		/// </summary>
@@ -403,7 +396,6 @@ namespace D_IDE.Core
 					File.Copy(ToAbsoluteFileName(fn),Path.Combine( targetDirectory,Path.GetFileName(pf.FileName)));
 			}
 		}
-		#endregion
 	}
 
 	public class ProjectException : Exception

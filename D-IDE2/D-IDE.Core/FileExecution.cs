@@ -14,11 +14,13 @@ namespace D_IDE.Core
 
 		/// <summary>
 		/// Starts a process without showing a console.
-		/// Error and standard outputs
 		/// </summary>
 		public static Process ExecuteSilentlyAsync(string Executable, string Arguments, string StartDirectory,
 			DataReceivedEvent OnOutput, DataReceivedEvent OnError, ProcessExitedEvent OnExit)
 		{
+			if (GlobalProperties.Instance.VerboseDebugOutput)
+				IDEInterface.Log(Executable + " " + Arguments);
+
 			var psi = new ProcessStartInfo(Executable, Arguments);
 			psi.WorkingDirectory = StartDirectory;
 
@@ -43,18 +45,45 @@ namespace D_IDE.Core
 
 			try
 			{
-				if (GlobalProperties.Instance.VerboseDebugOutput)
-					IDEInterface.Log(Executable+" "+Arguments);
 				prc.Start();
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show("Error executing " + Executable +" "+Arguments + ":\n\n" + ex.Message);
+				ErrorLogger.Log(ex);
 				return null;
 			}
 
 			prc.BeginErrorReadLine();
 			prc.BeginOutputReadLine();
+			return prc;
+		}
+
+		/// <summary>
+		/// Starts a console-based process
+		/// </summary>
+		public static Process ExecuteAsync(string Executable, string Arguments, string StartDirectory, ProcessExitedEvent OnExit)
+		{
+			if (GlobalProperties.Instance.VerboseDebugOutput)
+				IDEInterface.Log(Executable + " " + Arguments);
+
+			var psi = new ProcessStartInfo(Executable, Arguments);
+			psi.WorkingDirectory = StartDirectory;
+
+			var prc = new Process();
+			prc.StartInfo = psi;
+
+			prc.Exited += delegate(object s, EventArgs e) { if (OnExit != null) OnExit(); };
+
+			try
+			{
+				prc.Start();
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex);
+				return null;
+			}
+
 			return prc;
 		}
 	}

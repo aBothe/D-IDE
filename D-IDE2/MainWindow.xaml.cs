@@ -24,6 +24,17 @@ namespace D_IDE
 		public ProjectExplorer Panel_ProjectExplorer = new ProjectExplorer();
 		public ErrorListPanel Panel_ErrorList = new ErrorListPanel();
 		public LogPanel Panel_Log = new LogPanel();
+
+		public string Status1
+		{
+			get { return StatusLabel1.Text; }
+			set { StatusLabel1.Text=value; }
+		}
+		public string Status2
+		{
+			get { return StatusLabel2.Text; }
+			set { StatusLabel2.Text = value; }
+		}
 		#endregion
 
 		#region GUI Interactions
