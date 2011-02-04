@@ -8,6 +8,7 @@ using System.Diagnostics;
 using DebugEngineWrapper;
 using D_IDE.Core.Controls.Editor;
 using System.Windows.Media;
+using System.Threading;
 
 namespace D_IDE
 {
@@ -23,7 +24,7 @@ namespace D_IDE
 			public static void LaunchWithDebugger(Project prj)
 			{
 				if (prj != null)
-					LaunchWithDebugger(prj.OutputFile,prj.ExecutingArguments);
+					LaunchWithDebugger(prj.OutputFile,prj.ExecutingArguments,prj.BaseDirectory,prj.OutputType!=OutputTypes.CommandWindowLessExecutable);
 			}
 
 
@@ -42,7 +43,51 @@ namespace D_IDE
 
 			#region Debugging
 			private static bool dbgEngineInited = false;
-			public static bool StopWaitingForEvents = false;
+			static bool EngineStarting = false;
+			static bool StopWaitingForEvents = false;
+			static bool _PauseDebuggee = false;
+
+			public static void ContinueDebugging()
+			{
+				if (!IsDebugging)	return;
+				Engine.Execute("gh");
+				WaitForDebugEvent();
+			}
+
+			/// <summary>
+			/// Tries to halt the wait thread
+			/// </summary>
+			public static void PauseDebugging()
+			{
+				_PauseDebuggee = true;
+			}
+
+			public static void StepIn()
+			{
+				if (!IsDebugging) return;
+				Engine.Execute("t"); // Trace
+				WaitForDebugEvent(false);
+				StopWaitingForEvents = false;
+				GotoCurrentLocation();
+			}
+
+			public static void StepOver()
+			{
+				if (!IsDebugging) return;
+				Engine.Execute("p"); // Step
+				WaitForDebugEvent(false);
+				StopWaitingForEvents = false;
+				GotoCurrentLocation();
+			}
+
+			public static void StepOut()
+			{
+				if (!IsDebugging) return;
+				Engine.Execute("pt"); // Halt on next return
+				WaitForDebugEvent(false);
+				StopWaitingForEvents = false;
+				GotoCurrentLocation();
+			}
 
 			public static void GotoCurrentLocation()
 			{
@@ -80,19 +125,31 @@ namespace D_IDE
 				//TODO: Call Stack window - with switching between different stack levels?
 			}
 
-			public static void WaitForDebugEvent()
+			static void _waitDelegate(object o)
 			{
-				if (!IsDebugging) return;
+				bool IsAsync = (bool)o;
 				Log("Waiting for the program to interrupt...");
-				WaitResult wr = WaitResult.OK;
+				var wr = WaitResult.OK;
 				while (IsDebugging && (wr = Engine.WaitForEvent(10)) == WaitResult.TimeOut)
 				{
-					if (wr == WaitResult.Unexpected) break;
-					System.Windows.Forms.Application.DoEvents(); //TODO?
+					if (wr == WaitResult.Unexpected)
+						break;
+					if(!IsAsync)
+						System.Windows.Forms.Application.DoEvents();
 				}
 				if (wr != WaitResult.Unexpected)
 					Log("Program execution paused...");
+			}
 
+			public static void WaitForDebugEvent() { WaitForDebugEvent(true); }
+
+			public static void WaitForDebugEvent(bool Async)
+			{
+				if (!IsDebugging) return;
+
+				if (Async)
+					new Thread(_waitDelegate).Start(true);
+				else _waitDelegate(false);
 				/*
 				 * After a program paused its execution, we'll be able to access its breakpoints and symbol data.
 				 * When resuming the program, WaitForDebugEvent() will be called again.
@@ -107,21 +164,18 @@ namespace D_IDE
 				{
 					if (!GlobalProperties.Instance.VerboseDebugOutput && (type == OutputFlags.Verbose || type == OutputFlags.Normal)) return;
 
-					string m = msg.Replace("\n", "\r\n");
-
 					if (type != OutputFlags.Warning)
-						Log(m);
+						Log( msg.Replace("\n", "\r\n"));
 				};
 
-				/*dbg.OnLoadModule += delegate(ulong BaseOffset, uint ModuleSize, string ModuleName, uint Checksum, uint Timestamp)
+				Engine.OnLoadModule += delegate(ulong BaseOffset, uint ModuleSize, string ModuleName, uint Checksum, uint Timestamp)
 				{
-					LoadedModules.Add(ModuleName, BaseOffset);
-					if (IsInitDebugger)
+					if (EngineStarting)
 						return DebugStatus.Break;
 					return DebugStatus.NoChange;
 				};
 
-				dbg.OnUnloadModule += delegate(ulong BaseOffset, string ModuleName)
+				/*dbg.OnUnloadModule += delegate(ulong BaseOffset, string ModuleName)
 				{
 					LoadedModules.Remove(ModuleName);
 					return DebugStatus.NoChange;
@@ -137,7 +191,7 @@ namespace D_IDE
 
 					if (!Engine.Symbols.GetLineByOffset(off, out fn, out ln))
 					{
-						Log("No source data found!");
+						Log("No source associated with "+off.ToString());
 						return DebugStatus.Break;
 					}
 
@@ -246,14 +300,18 @@ namespace D_IDE
 			public static void LaunchWithDebugger(string exe, string args,string sourcePath,bool showConsole)
 			{
 				StopExecution();
+
 				if (!dbgEngineInited)
 					InitDebugger();
+
+				EngineStarting = true;
+				StopWaitingForEvents = false;
 
 				DebugCreateProcessOptions opt = new DebugCreateProcessOptions();
 				opt.CreateFlags = CreateFlags.DebugOnlyThisProcess | (showConsole ? CreateFlags.CreateNewConsole : 0);
 				opt.EngCreateFlags = EngCreateFlags.Default;
 
-				Engine.CreateProcessAndAttach(0, exe + (string.IsNullOrWhiteSpace(args)?"":(" "+args)), opt, Path.GetDirectoryName(exe), "", 0, 0);
+				Engine.CreateProcessAndAttach(0, exe + (string.IsNullOrWhiteSpace(args) ? "" : (" " + args)), opt, Path.GetDirectoryName(exe), "", 0, 0);
 
 				Engine.Symbols.SourcePath = string.IsNullOrWhiteSpace(sourcePath) ? sourcePath : Path.GetDirectoryName(exe);
 				Engine.IsSourceCodeOrientedStepping = true;
@@ -264,7 +322,9 @@ namespace D_IDE
 
 				BreakpointManagement.SetupBreakpoints();
 
-				WaitForDebugEvent();
+				EngineStarting = false;
+
+				WaitForDebugEvent(); // Wait for the first breakpoint/exception/program exit to occur
 			}
 			#endregion
 
