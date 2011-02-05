@@ -9,6 +9,7 @@ namespace D_IDE.Core.Controls
 	{
 		AvalonDock.DockingManager DockManager { get; }
 
+		void RefreshMenu();
 		void RefreshGUI();
 		void RefreshErrorList();
 		void RefreshTitle();

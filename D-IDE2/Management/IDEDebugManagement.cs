@@ -27,6 +27,27 @@ namespace D_IDE
 					LaunchWithDebugger(prj.OutputFile,prj.ExecutingArguments,prj.BaseDirectory,prj.OutputType!=OutputTypes.CommandWindowLessExecutable);
 			}
 
+			/// <summary>
+			/// Executes the last built project or single module.
+			/// </summary>
+			/// <param name="ShowConsole"></param>
+			public static Process LaunchWithoutDebugger(bool ShowConsole)
+			{
+				if (ErrorManagement.LastSingleBuildResult != null)
+				{
+					if (ErrorManagement.LastSingleBuildResult.Successful)
+						return LaunchWithoutDebugger(ErrorManagement.LastSingleBuildResult.TargetFile, "", ShowConsole);
+				}
+				else
+				{
+					if (CurrentSolution != null &&
+						CurrentSolution.StartProject != null &&
+						CurrentSolution.StartProject.LastBuildResult != null &&
+						CurrentSolution.StartProject.LastBuildResult.Successful)
+						return LaunchWithoutDebugger(CurrentSolution.StartProject, ShowConsole);
+				}
+				return null;
+			}
 
 			public static Process LaunchWithoutDebugger(Solution sln, bool ShowConsole)
 			{
@@ -364,6 +385,15 @@ namespace D_IDE
 				IDEInterface.Log(Data);
 			}
 			#endregion
+
+			public static void PauseExecution()
+			{
+				if (IsDebugging)
+				{
+					Engine.InterruptTimeOut = 50;
+					Engine.Interrupt();
+				}
+			}
 
 			public static void StopExecution()
 			{

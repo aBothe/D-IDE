@@ -11,7 +11,13 @@ namespace D_IDE
 	{
 		public class BuildManagement
 		{
-			public static bool StopBuilding = false;
+			public static bool IsBuilding { get; protected set; }
+			static IBuildSupport curBuildSupp = null;
+			public static void StopBuilding()
+			{
+				if (curBuildSupp != null)
+					curBuildSupp.StopBuilding();
+			}
 
 			/// <summary>
 			/// Builds the current solution incrementally.
@@ -35,15 +41,19 @@ namespace D_IDE
 				 * http://digitalmars.com/d/2.0/dll.html
 				 */
 
+				IsBuilding = true;
+				IDEManager.Instance.MainWindow.RefreshMenu();
 				foreach (var prj in sln)
 				{
 					if (!Build(prj, Incrementally))
 						return false;
 				}
+				IsBuilding = false;
+				IDEManager.Instance.MainWindow.RefreshMenu();
 				return true;
 			}
 
-			public static bool Build(Project Project, bool Incrementally)
+			static bool Build(Project Project, bool Incrementally)
 			{
 				// Save all files that belong to Project
 				foreach (var ed in Instance.Editors.Where(e=>Project.ContainsFile(e.AbsoluteFilePath)))
@@ -51,7 +61,7 @@ namespace D_IDE
 
 				Instance.MainWindow.ClearLog();
 				// Important: Reset error list's unbound build result
-				ErrorManagement.LastBuildResult = null;
+				ErrorManagement.LastSingleBuildResult = null;
 
 				bool isPrj = false;
 				var lang = AbstractLanguageBinding.SearchBinding(Project.FileName, out isPrj);
@@ -88,6 +98,8 @@ namespace D_IDE
 			/// <returns></returns>
 			public static bool BuildSingle(out string CreatedExecutable)
 			{
+				IsBuilding = true;
+				IDEManager.Instance.MainWindow.RefreshMenu();
 				CreatedExecutable = null;
 				var ed = Instance.CurrentEditor;
 				if (ed == null)
@@ -104,10 +116,12 @@ namespace D_IDE
 
 				Instance.MainWindow.ClearLog();
 
-				var br = ErrorManagement.LastBuildResult = lang.BuildSupport.BuildStandAlone(file);
+				var br = ErrorManagement.LastSingleBuildResult = lang.BuildSupport.BuildStandAlone(file);
 				CreatedExecutable = br.TargetFile;
 
 				ErrorManagement.RefreshErrorList();
+				IsBuilding = false;
+				IDEManager.Instance.MainWindow.RefreshMenu();
 				return br.Successful;
 			}
 

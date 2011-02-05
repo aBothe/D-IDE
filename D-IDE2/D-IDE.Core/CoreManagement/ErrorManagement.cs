@@ -25,7 +25,7 @@ namespace D_IDE.Core
 				return Errors.Where(err => err.FileName == file).ToArray();
 			}
 
-			public static BuildResult LastBuildResult { get; set; }
+			public static BuildResult LastSingleBuildResult { get; set; }
 
 			public static GenericError[] LastParseErrors
 			{
@@ -51,8 +51,8 @@ namespace D_IDE.Core
 				var el = new List<GenericError>();
 
 				// Add unbound build errors
-				if (LastBuildResult != null)
-					el.AddRange(LastBuildResult.BuildErrors);
+				if (LastSingleBuildResult != null)
+					el.AddRange(LastSingleBuildResult.BuildErrors);
 				// (Bound) Solution errors
 				else if (CurrentSolution != null)
 					foreach (var prj in CurrentSolution)

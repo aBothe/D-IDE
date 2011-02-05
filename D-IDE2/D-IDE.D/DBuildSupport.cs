@@ -45,6 +45,7 @@ namespace D_IDE.D
 			AbstractLanguageBinding lang = null;
 			foreach (var f in dprj.CompilableFiles)
 			{
+				if (ShallStop)return;
 				bool _u = false ;
 				if(lang==null || !lang.CanHandleFile(f.FileName))
 					lang=AbstractLanguageBinding.SearchBinding(f.FileName, out _u);
@@ -109,6 +110,7 @@ namespace D_IDE.D
 					break;
 			}
 
+			if (ShallStop) return;
 			dprj.LastBuildResult = LinkFiles(linkerExe, linkerArgs, dprj.BaseDirectory, dprj.OutputFile, !dprj.IsRelease, objs.ToArray());
 		}
 
@@ -354,12 +356,6 @@ namespace D_IDE.D
 			return ret;
 		}
 		#endregion
-
-		bool isBuilding = false;
-		public override bool IsBuilding
-		{
-			get { return isBuilding; }
-		}
 
 		public override void StopBuilding()
 		{

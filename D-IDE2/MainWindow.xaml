@@ -41,10 +41,6 @@
 				</r:RibbonApplicationMenu>
 			</r:Ribbon.ApplicationMenu>
 
-			<r:Ribbon.ContextualTabGroups>
-				<r:RibbonContextualTabGroup Name="ContextTab_Debug" Header="Debug" />
-			</r:Ribbon.ContextualTabGroups>
-
 			<r:RibbonTab Header="Code" Name="Tab_Edit">
 				<r:RibbonGroup Header="Edit">
 					<r:RibbonButton SmallImageSource="Resources/Icons.16x16.CutIcon.png" Label="Cut" />
@@ -63,6 +59,11 @@
 					<r:RibbonButton Label="Uncomment selection"></r:RibbonButton>
 					<r:RibbonButton Label="Double line"></r:RibbonButton>
 					<r:RibbonButton Label="Reformat document"></r:RibbonButton>
+				</r:RibbonGroup>
+
+				<r:RibbonGroup Header="Breakpoints" >
+					<r:RibbonButton Label="Toggle Breakpoint" Click="ToggleBreakpoint_Click" SmallImageSource="Resources/breakpoint.png" />
+					<r:RibbonButton Label="Refresh Breakpoints" Click="RefreshBreakpoints_Click" SmallImageSource="Resources/Icons.16x16.BrowserRefresh.png" />
 				</r:RibbonGroup>
 			</r:RibbonTab>
 
@@ -111,14 +112,9 @@
 						<r:RibbonMenuItem Header="Run in external console" Click="LaunchInConsole_Click" />
 					</r:RibbonSplitButton>
 				</r:RibbonGroup>
-				
-				<r:RibbonGroup Header="Breakpoints" >
-					<r:RibbonButton Label="Toggle Breakpoint" Click="ToggleBreakpoint_Click" SmallImageSource="Resources/breakpoint.png" />
-					<r:RibbonButton Label="Refresh Breakpoints" Click="RefreshBreakpoints_Click" SmallImageSource="Resources/Icons.16x16.BrowserRefresh.png" />
-				</r:RibbonGroup>
 			</r:RibbonTab>
 			
-			<r:RibbonTab Header="Debug" ContextualTabGroupHeader="Debugging" Name="Tab_Debug">
+			<r:RibbonTab Header="Debug" Name="Tab_Debug">
 				<r:RibbonGroup Header="Program">
 					<r:RibbonButton Label="Continue" Click="Button_ResumeExecution_Click" IsEnabled="False" Name="Button_ResumeExecution" SmallImageSource="Resources/build_dbg.png" />
 					<r:RibbonButton Label="Pause" Click="Button_PauseExecution_Click" IsEnabled="False" Name="Button_PauseExecution" SmallImageSource="Resources/pause.png" />

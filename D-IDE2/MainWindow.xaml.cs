@@ -43,7 +43,7 @@ namespace D_IDE
 			RefreshProjectExplorer();
 			RefreshTitle();
 			UpdateLastFilesMenus();
-			UpdateTabs();
+			RefreshMenu();
 		}
 		public void RefreshErrorList()
 		{
@@ -69,13 +69,23 @@ namespace D_IDE
 			Panel_ProjectExplorer.Update();
 		}
 
-		public void UpdateTabs()
+		public void RefreshMenu()
 		{
 			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
 
-			Tab_Edit.IsEnabled = Tab_Build.IsEnabled= ed != null;
-			Tab_Project.IsEnabled = ed!=null && ed.HasProject;
-			ContextTab_Debug.Visibility = IDEManager.DebugManagement.IsDebugging ? Visibility.Visible : Visibility.Hidden;
+			Tab_Edit.IsEnabled = ed != null;
+			Tab_Project.IsEnabled = Tab_Edit.IsEnabled && ed.HasProject;
+			Tab_Build.IsEnabled = Tab_Edit.IsEnabled && !IDEManager.IDEDebugManagement.IsExecuting;
+			Tab_Debug.IsEnabled = IDEManager.IDEDebugManagement.IsExecuting;
+
+			Button_StopBuilding.IsEnabled = IDEManager.BuildManagement.IsBuilding;
+
+			Button_ResumeExecution.IsEnabled =
+				Button_PauseExecution.IsEnabled =
+				Button_StepIn.IsEnabled =
+				Button_StepOut.IsEnabled =
+				Button_StepOver.IsEnabled =
+				IDEManager.IDEDebugManagement.IsDebugging;
 		}
 
 		#endregion
@@ -268,12 +278,15 @@ namespace D_IDE
 
 		private void LaunchWithoutDebugger_Click(object sender, RoutedEventArgs e)
 		{
-
+			//TODO How to decide between starting the project and starting the current module?
+			if (IDEManager.BuildManagement.Build())
+				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(false);
 		}
 
 		private void LaunchInConsole_Click(object sender, RoutedEventArgs e)
 		{
-
+			if (IDEManager.BuildManagement.Build())
+				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(true);
 		}
 
 		private void RefreshBreakpoints_Click(object sender, RoutedEventArgs e)
@@ -293,12 +306,17 @@ namespace D_IDE
 
 		private void Button_StopExecution_Click(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.IDEDebugManagement.StopExecution();
 		}
 
 		private void Button_RestartExecution_Click(object sender, RoutedEventArgs e)
 		{
-
+			var dbg = IDEManager.IDEDebugManagement.IsDebugging;
+			Button_StopExecution_Click(sender, e);
+			if (dbg)
+				LaunchDebugger_Click(sender, e);
+			else 
+				LaunchWithoutDebugger_Click(sender, e);
 		}
 
 		private void Button_StepIn_Click(object sender, RoutedEventArgs e)
@@ -318,7 +336,7 @@ namespace D_IDE
 
 		private void Button_StopBuilding_Click(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.BuildManagement.StopBuilding();
 		}
 
 		#endregion
@@ -449,7 +467,7 @@ namespace D_IDE
 
 		private void DockMgr_ActiveDocumentChanged(object sender, EventArgs e)
 		{
-			UpdateTabs();
+			RefreshMenu();
 		}
 
 		private void DockMgr_DocumentClosed(object sender, EventArgs e)
@@ -477,7 +495,7 @@ namespace D_IDE
 			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
 			if (ed == null) return;
 
-			CoreManager.BreakpointManagement.ToggleBreakpoint(ed.RelativeFilePath, ed.Editor.TextArea.Caret.Line);
+			CoreManager.BreakpointManagement.ToggleBreakpoint(ed.AbsoluteFilePath, ed.Editor.TextArea.Caret.Line);
 			ed.RefreshBreakpointHighlightings();
 		}
 

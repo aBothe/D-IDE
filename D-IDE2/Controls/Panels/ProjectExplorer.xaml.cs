@@ -809,7 +809,7 @@ namespace D_IDE.Controls.Panels
 						pn.UpdateChildren();
 
 						if (Solution.StartProject == p)
-							pn.NodeFont = new System.Drawing.Font("Arial",0.04f,System.Drawing.FontStyle.Bold);
+							pn.NodeFont = new System.Drawing.Font("Arial",10f,System.Drawing.FontStyle.Bold);
 					}
 					else
 					{

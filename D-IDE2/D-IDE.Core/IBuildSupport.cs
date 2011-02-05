@@ -42,7 +42,6 @@ namespace D_IDE.Core
 				BuildFinished(res);
 		}
 
-		public abstract bool IsBuilding { get; }
 		public abstract void StopBuilding();
 		#endregion
 
