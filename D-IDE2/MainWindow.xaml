@@ -102,36 +102,34 @@
 				<r:RibbonGroup Header="Build">
 					<r:RibbonButton Click="BuildSolution_Click" Label="Build Solution" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
 					<r:RibbonButton Click="BuildToStandAlone_Click" Label="Build Current Module" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
-					<r:RibbonButton Label="Stop Building" IsEnabled="False" Name="Button_StopBuilding" SmallImageSource="Resources/stop_build.png" />
+					<r:RibbonButton Label="Stop Building" Click="Button_StopBuilding_Click" IsEnabled="False" Name="Button_StopBuilding" SmallImageSource="Resources/stop_build.png" />
 				</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Run">
-					<r:RibbonSplitButton Label="Launch Debugger" SmallImageSource="Resources/build_dbg.png">
-						<r:RibbonMenuItem Header="Run until main()" />
+					<r:RibbonButton Label="Launch Debugger" Click="LaunchDebugger_Click" SmallImageSource="Resources/build_dbg.png"/>
+					<r:RibbonSplitButton Label="Run without Debugger" Click="LaunchWithoutDebugger_Click" SmallImageSource="Resources/build.png">
+						<r:RibbonMenuItem Header="Run in external console" Click="LaunchInConsole_Click" />
 					</r:RibbonSplitButton>
-					<r:RibbonSplitButton Label="Run without Debugger" SmallImageSource="Resources/build.png">
-						<r:RibbonMenuItem Header="Run in external console" />
-					</r:RibbonSplitButton>
-					</r:RibbonGroup>
+				</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Breakpoints" >
 					<r:RibbonButton Label="Toggle Breakpoint" Click="ToggleBreakpoint_Click" SmallImageSource="Resources/breakpoint.png" />
-					<r:RibbonButton Label="Refresh Breakpoints" SmallImageSource="Resources/Icons.16x16.BrowserRefresh.png" />
+					<r:RibbonButton Label="Refresh Breakpoints" Click="RefreshBreakpoints_Click" SmallImageSource="Resources/Icons.16x16.BrowserRefresh.png" />
 				</r:RibbonGroup>
 			</r:RibbonTab>
 			
 			<r:RibbonTab Header="Debug" ContextualTabGroupHeader="Debugging" Name="Tab_Debug">
 				<r:RibbonGroup Header="Program">
-					<r:RibbonButton Label="Continue" IsEnabled="False" Name="Button_ResumeExecution" SmallImageSource="Resources/build_dbg.png" />
-					<r:RibbonButton Label="Pause" IsEnabled="False" Name="Button_PauseExecution" SmallImageSource="Resources/pause.png" />
-					<r:RibbonButton Label="Stop" IsEnabled="False" Name="Button_StopExecution" SmallImageSource="Resources/stop.png" />
-					<r:RibbonButton Label="Restart" IsEnabled="False" Name="Button_RestartExecution" SmallImageSource="Resources/restart.png" />
+					<r:RibbonButton Label="Continue" Click="Button_ResumeExecution_Click" IsEnabled="False" Name="Button_ResumeExecution" SmallImageSource="Resources/build_dbg.png" />
+					<r:RibbonButton Label="Pause" Click="Button_PauseExecution_Click" IsEnabled="False" Name="Button_PauseExecution" SmallImageSource="Resources/pause.png" />
+					<r:RibbonButton Label="Stop" Click="Button_StopExecution_Click" IsEnabled="False" Name="Button_StopExecution" SmallImageSource="Resources/stop.png" />
+					<r:RibbonButton Label="Restart" Click="Button_RestartExecution_Click" IsEnabled="False" Name="Button_RestartExecution" SmallImageSource="Resources/restart.png" />
 				</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Debugging">
-					<r:RibbonButton Name="Button_StepIn" Label="Step in" LargeImageSource="Resources/debug-step-into.ico" />
-					<r:RibbonButton Name="Button_StepOver" Label="Step over" LargeImageSource="Resources/debug-step-over.ico" />
-					<r:RibbonButton Name="Button_StepOut" Label="Step out" LargeImageSource="Resources/debug-step-out.ico" />
+					<r:RibbonButton Name="Button_StepIn" Click="Button_StepIn_Click" Label="Step in" LargeImageSource="Resources/debug-step-into.ico" />
+					<r:RibbonButton Name="Button_StepOver" Click="Button_StepOver_Click" Label="Step over" LargeImageSource="Resources/debug-step-over.ico" />
+					<r:RibbonButton Name="Button_StepOut" Click="Button_StepOut_Click" Label="Step out" LargeImageSource="Resources/debug-step-out.ico" />
 				</r:RibbonGroup>
 			</r:RibbonTab>
 

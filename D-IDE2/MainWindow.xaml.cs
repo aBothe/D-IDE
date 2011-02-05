@@ -261,6 +261,66 @@ namespace D_IDE
 			dlg.ShowDialog();
 		}
 
+		private void LaunchDebugger_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void LaunchWithoutDebugger_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void LaunchInConsole_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void RefreshBreakpoints_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void Button_ResumeExecution_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void Button_PauseExecution_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void Button_StopExecution_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void Button_RestartExecution_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void Button_StepIn_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void Button_StepOver_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void Button_StepOut_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void Button_StopBuilding_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
 		#endregion
 
 		class LastFileItem : RibbonApplicationMenuItem

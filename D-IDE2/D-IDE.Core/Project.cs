@@ -391,9 +391,32 @@ namespace D_IDE.Core
 			string fn = "";
 			foreach (var pf in _Files)
 			{
+				if (pf.Action != SourceModule.BuildAction.CopyToOutput)
+					continue;
+
 				fn = ToAbsoluteFileName(pf.FileName);
-				if(pf.Action==SourceModule.BuildAction.CopyToOutput && File.Exists(fn))
-					File.Copy(ToAbsoluteFileName(fn),Path.Combine( targetDirectory,Path.GetFileName(pf.FileName)));
+				string tg=Path.Combine(targetDirectory, Path.GetFileName(pf.FileName));
+
+				pf.LastBuildResult = new BuildResult() { 
+					TargetFile=tg,
+					SourceFile=fn};
+
+				if (!File.Exists(fn))
+				{
+					pf.LastBuildResult.BuildErrors.Add(new GenericError() { Message=fn+" not found"});
+					continue;
+				}
+
+				try
+				{
+					File.Copy(ToAbsoluteFileName(fn), tg);
+					pf.LastBuildResult.Successful = true;
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex);
+					pf.LastBuildResult.BuildErrors.Add(new GenericError() { Message=ex.Message});
+				}
 			}
 		}
 	}
