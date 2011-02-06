@@ -21,17 +21,15 @@ namespace D_IDE.Core
 			if (GlobalProperties.Instance.VerboseDebugOutput)
 				IDEInterface.Log(Executable + " " + Arguments);
 
-			var psi = new ProcessStartInfo(Executable, Arguments);
-			psi.WorkingDirectory = StartDirectory;
+			var psi = new ProcessStartInfo(Executable, Arguments) { 
+				WorkingDirectory=StartDirectory,
+				CreateNoWindow=true,
+				UseShellExecute=false,
+				RedirectStandardError=true,
+				RedirectStandardOutput=true
+			};
 
-			psi.CreateNoWindow = true;
-			psi.RedirectStandardError = true;
-			psi.RedirectStandardOutput = true;
-			psi.UseShellExecute = false;
-
-			var prc = new Process();
-			prc.StartInfo = psi;
-
+			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=true};
 			prc.ErrorDataReceived += delegate(object s, DataReceivedEventArgs e) {
 				if (!string.IsNullOrEmpty(e.Data) && OnError != null)
 					OnError(e.Data);
@@ -41,7 +39,7 @@ namespace D_IDE.Core
 				if (!string.IsNullOrEmpty(e.Data) && OnOutput != null)
 					OnOutput(e.Data);
 			};
-			prc.Exited += delegate(object s, EventArgs e) { if (OnExit != null) OnExit(); };
+			prc.Exited +=new EventHandler( delegate(object s, EventArgs e) { if (OnExit != null) OnExit(); });
 
 			try
 			{
@@ -66,13 +64,10 @@ namespace D_IDE.Core
 			if (GlobalProperties.Instance.VerboseDebugOutput)
 				IDEInterface.Log(Executable + " " + Arguments);
 
-			var psi = new ProcessStartInfo(Executable, Arguments);
-			psi.WorkingDirectory = StartDirectory;
+			var psi = new ProcessStartInfo(Executable, Arguments) { WorkingDirectory=StartDirectory, UseShellExecute=false};
+			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=true};
 
-			var prc = new Process();
-			prc.StartInfo = psi;
-
-			prc.Exited += delegate(object s, EventArgs e) { if (OnExit != null) OnExit(); };
+			prc.Exited +=new EventHandler( delegate(object s, EventArgs e) { if (OnExit != null) OnExit(); });
 
 			try
 			{

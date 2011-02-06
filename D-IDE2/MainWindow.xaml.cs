@@ -83,30 +83,37 @@ namespace D_IDE
 
 		public void RefreshMenu()
 		{
-			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
-			var IsEditable = ed != null;
-			var HasProject = IsEditable && ed.HasProject;
+			Dispatcher.Invoke(new ParameterizedThreadStart(delegate(object o)
+			{
+				var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+				var IsEditable = ed != null;
+				var HasProject = IsEditable && ed.HasProject;
 
-			Tab_Edit.IsEnabled = IsEditable;
-			Check_RunCurModule.IsEnabled = Tab_Project.IsEnabled = HasProject || IDEManager.CurrentSolution!=null;
-			Tab_Build.IsEnabled = (IsEditable || IDEManager.CurrentSolution!=null) && !IDEManager.IDEDebugManagement.IsExecuting;
+				Tab_Edit.IsEnabled = IsEditable;
+				Check_RunCurModule.IsEnabled = Tab_Project.IsEnabled = HasProject || IDEManager.CurrentSolution != null;
+				Tab_Build.IsEnabled = (IsEditable || IDEManager.CurrentSolution != null) && !IDEManager.IDEDebugManagement.IsExecuting;
 
-			// Restore tab selection when executing finished
-			if (!Tab_Debug.IsEnabled && IDEManager.IDEDebugManagement.IsExecuting)
-				_prevSelectedMainTab = Ribbon.SelectedIndex;
-			else if (Tab_Debug.IsEnabled && !IDEManager.IDEDebugManagement.IsExecuting)
-				Ribbon.SelectedIndex = _prevSelectedMainTab;
+				// Restore tab selection when executing finished
+				if (!Tab_Debug.IsEnabled && IDEManager.IDEDebugManagement.IsExecuting)
+				{
+					_prevSelectedMainTab = Ribbon.SelectedIndex;
+					Tab_Debug.IsSelected=true;
+				}
+				else if (Tab_Debug.IsEnabled && !IDEManager.IDEDebugManagement.IsExecuting)
+					Ribbon.SelectedIndex = _prevSelectedMainTab;
 
-			Tab_Debug.IsEnabled = IDEManager.IDEDebugManagement.IsExecuting;
+				Tab_Debug.IsEnabled = IDEManager.IDEDebugManagement.IsExecuting;
 
-			Button_StopBuilding.IsEnabled = IDEManager.BuildManagement.IsBuilding;
+				Button_StopBuilding.IsEnabled = IDEManager.BuildManagement.IsBuilding;
 
-			Button_ResumeExecution.IsEnabled =
-				Button_PauseExecution.IsEnabled =
-				Button_StepIn.IsEnabled =
-				Button_StepOut.IsEnabled =
-				Button_StepOver.IsEnabled =
-				IDEManager.IDEDebugManagement.IsDebugging;
+				Button_ResumeExecution.IsEnabled =
+					Button_PauseExecution.IsEnabled =
+					Button_StepIn.IsEnabled =
+					Button_StepOut.IsEnabled =
+					Button_StepOver.IsEnabled =
+					IDEManager.IDEDebugManagement.IsDebugging;
+				Button_StopExecution.IsEnabled = IDEManager.IDEDebugManagement.IsExecuting;
+			}),this);
 		}
 
 		#endregion
@@ -306,16 +313,17 @@ namespace D_IDE
 				IDEManager.IDEDebugManagement.LaunchWithDebugger();
 		}
 
+		bool _showextconsole = false;
 		private void LaunchWithoutDebugger_Click(object sender, RoutedEventArgs e)
 		{
 			if (RunCurrentModuleOnly? IDEManager.BuildManagement.BuildSingle():IDEManager.BuildManagement.Build())
-				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(false);
+				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(_showextconsole);
+			_showextconsole = false;
 		}
 
 		private void LaunchInConsole_Click(object sender, RoutedEventArgs e)
 		{
-			if (IDEManager.BuildManagement.Build())
-				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(true);
+			_showextconsole = true;
 		}
 
 		private void RefreshBreakpoints_Click(object sender, RoutedEventArgs e)

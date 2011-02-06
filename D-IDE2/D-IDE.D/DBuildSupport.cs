@@ -154,6 +154,19 @@ namespace D_IDE.D
 			var errList = new List<GenericError>();
 			var br = new BuildResult() { TargetFile=targetFile, Successful=true};
 
+			if (File.Exists(targetFile))
+			{
+				try
+				{
+					File.Delete(targetFile);
+				}
+				catch (Exception ex) // Perhaps our targetFile is still in use
+				{
+					br.BuildErrors.Add(new GenericError() { Message=ex.Message});
+					return br;
+				}
+			}
+
 			TempPrc = FileExecution.ExecuteSilentlyAsync(
 					linkerExe,	BuildDLinkerArgumentString(linkerArgs,targetFile,files), startDirectory,
 					OnOutput, delegate(string s)

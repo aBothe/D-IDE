@@ -393,6 +393,7 @@ namespace D_IDE
 			static void CurrentProcess_Exited()
 			{
 				IDEInterface.Log("Process exited with code "+CurrentProcess.ExitCode.ToString()+" ("+(CurrentProcess.ExitTime-CurrentProcess.StartTime).ToString()+")");
+				Instance.MainWindow.RefreshMenu();
 			}
 
 			static void CurrentProcess_ErrorDataReceived(string Data)
@@ -423,7 +424,10 @@ namespace D_IDE
 					IsDebugging = false;
 				}
 				if (CurrentProcess != null && !CurrentProcess.HasExited)
+				{
 					CurrentProcess.Kill();
+					CurrentProcess = null;
+				}
 			}
 
 			public static bool IsExecuting
