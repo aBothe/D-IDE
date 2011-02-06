@@ -80,6 +80,7 @@ namespace D_IDE.D
 			if (AllObjectsUnchanged && File.Exists(dprj.OutputFile))
 			{
 				dprj.LastBuildResult.NoBuildNeeded = true;
+				dprj.LastBuildResult.Successful = true;
 				return;
 			}
 

@@ -17,6 +17,21 @@ namespace D_IDE
 		public class IDEDebugManagement:DebugManagement
 		{
 			#region Trivial methods
+			/// <summary>
+			/// Execute the current solution or single module by attaching a debugger to it
+			/// </summary>
+			/// <param name="ShowConsole">Show an external program console?</param>
+			public static void LaunchWithDebugger()
+			{
+				if (ErrorManagement.LastSingleBuildResult != null)
+				{
+					if (ErrorManagement.LastSingleBuildResult.Successful)
+						LaunchWithDebugger(ErrorManagement.LastSingleBuildResult.TargetFile, "",Path.GetDirectoryName(ErrorManagement.LastSingleBuildResult.SourceFile),true);
+				}
+				else
+					LaunchWithDebugger(CurrentSolution.StartProject);
+			}
+
 			public static void LaunchWithDebugger(Solution sln)
 			{
 				LaunchWithDebugger(sln.StartProject);
@@ -28,9 +43,9 @@ namespace D_IDE
 			}
 
 			/// <summary>
-			/// Executes the last built project or single module.
+			/// Execute the current solution or single module without attaching a debugger to it
 			/// </summary>
-			/// <param name="ShowConsole"></param>
+			/// <param name="ShowConsole">Show an external program console?</param>
 			public static Process LaunchWithoutDebugger(bool ShowConsole)
 			{
 				if (ErrorManagement.LastSingleBuildResult != null)
@@ -325,6 +340,8 @@ namespace D_IDE
 				if (!dbgEngineInited)
 					InitDebugger();
 
+				IsDebugging = true;
+				Instance.UpdateGUI();
 				EngineStarting = true;
 				StopWaitingForEvents = false;
 
@@ -367,6 +384,9 @@ namespace D_IDE
 				else
 					CurrentProcess = FileExecution.ExecuteSilentlyAsync(exe, args, Path.GetDirectoryName(exe),
 						CurrentProcess_OutputDataReceived, CurrentProcess_ErrorDataReceived, CurrentProcess_Exited);
+
+				Instance.UpdateGUI();
+
 				return CurrentProcess;
 			}
 
@@ -402,7 +422,7 @@ namespace D_IDE
 					Engine.Terminate();
 					IsDebugging = false;
 				}
-				if (CurrentProcess != null || !CurrentProcess.HasExited)
+				if (CurrentProcess != null && !CurrentProcess.HasExited)
 					CurrentProcess.Kill();
 			}
 

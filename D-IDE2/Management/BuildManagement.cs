@@ -45,7 +45,7 @@ namespace D_IDE
 				IDEManager.Instance.MainWindow.RefreshMenu();
 				foreach (var prj in sln)
 				{
-					if (!Build(prj, Incrementally))
+					if (!InternalBuild(prj, Incrementally))
 						return false;
 				}
 				IsBuilding = false;
@@ -53,7 +53,17 @@ namespace D_IDE
 				return true;
 			}
 
-			static bool Build(Project Project, bool Incrementally)
+			public static bool Build(Project Project, bool Incrementally)
+			{
+				IsBuilding = true;
+				IDEManager.Instance.MainWindow.RefreshMenu();
+				var r = InternalBuild(Project, Incrementally);
+				IsBuilding = false;
+				IDEManager.Instance.MainWindow.RefreshMenu();
+				return r;
+			}
+
+			static bool InternalBuild(Project Project, bool Incrementally)
 			{
 				// Save all files that belong to Project
 				foreach (var ed in Instance.Editors.Where(e=>Project.ContainsFile(e.AbsoluteFilePath)))
@@ -69,7 +79,7 @@ namespace D_IDE
 				if (lang != null && isPrj && lang.CanBuild)
 				{
 					if (Project.AutoIncrementBuildNumber)
-						if (Project.LastBuildResult.Successful)
+						if (Project.LastBuildResult!=null && Project.LastBuildResult.Successful)
 							Project.Version.IncrementBuild();
 						else
 							Project.Version.Revision++;

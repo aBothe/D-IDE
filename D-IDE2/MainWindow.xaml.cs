@@ -35,6 +35,18 @@ namespace D_IDE
 			get { return StatusLabel2.Text; }
 			set { StatusLabel2.Text = value; }
 		}
+
+		public bool RunCurrentModuleOnly
+		{
+			get { return Check_RunCurModule.IsEnabled?Check_RunCurModule.IsChecked.Value:true; }
+			set { Check_RunCurModule.IsChecked = value; }
+		}
+
+		/// <summary>
+		/// Helper property: Indicates index of tab that shall become selected after debugging/executing finished
+		/// </summary>
+		static int _prevSelectedMainTab = -1;
+			
 		#endregion
 
 		#region GUI Interactions
@@ -72,10 +84,19 @@ namespace D_IDE
 		public void RefreshMenu()
 		{
 			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+			var IsEditable = ed != null;
+			var HasProject = IsEditable && ed.HasProject;
 
-			Tab_Edit.IsEnabled = ed != null;
-			Tab_Project.IsEnabled = Tab_Edit.IsEnabled && ed.HasProject;
-			Tab_Build.IsEnabled = Tab_Edit.IsEnabled && !IDEManager.IDEDebugManagement.IsExecuting;
+			Tab_Edit.IsEnabled = IsEditable;
+			Check_RunCurModule.IsEnabled = Tab_Project.IsEnabled = HasProject || IDEManager.CurrentSolution!=null;
+			Tab_Build.IsEnabled = (IsEditable || IDEManager.CurrentSolution!=null) && !IDEManager.IDEDebugManagement.IsExecuting;
+
+			// Restore tab selection when executing finished
+			if (!Tab_Debug.IsEnabled && IDEManager.IDEDebugManagement.IsExecuting)
+				_prevSelectedMainTab = Ribbon.SelectedIndex;
+			else if (Tab_Debug.IsEnabled && !IDEManager.IDEDebugManagement.IsExecuting)
+				Ribbon.SelectedIndex = _prevSelectedMainTab;
+
 			Tab_Debug.IsEnabled = IDEManager.IDEDebugManagement.IsExecuting;
 
 			Button_StopBuilding.IsEnabled = IDEManager.BuildManagement.IsBuilding;
@@ -271,15 +292,23 @@ namespace D_IDE
 			dlg.ShowDialog();
 		}
 
+		private void BuildSolution_Click(object sender, RoutedEventArgs e)
+		{
+			if (RunCurrentModuleOnly)
+				IDEManager.BuildManagement.BuildSingle();
+			else
+				IDEManager.BuildManagement.Build();
+		}
+
 		private void LaunchDebugger_Click(object sender, RoutedEventArgs e)
 		{
-
+			if (RunCurrentModuleOnly ? IDEManager.BuildManagement.BuildSingle() : IDEManager.BuildManagement.Build())
+				IDEManager.IDEDebugManagement.LaunchWithDebugger();
 		}
 
 		private void LaunchWithoutDebugger_Click(object sender, RoutedEventArgs e)
 		{
-			//TODO How to decide between starting the project and starting the current module?
-			if (IDEManager.BuildManagement.Build())
+			if (RunCurrentModuleOnly? IDEManager.BuildManagement.BuildSingle():IDEManager.BuildManagement.Build())
 				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(false);
 		}
 
@@ -448,16 +477,6 @@ namespace D_IDE
 						}
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
-		}
-
-		private void BuildSolution_Click(object sender, RoutedEventArgs e)
-		{
-			IDEManager.BuildManagement.Build();
-		}
-
-		private void BuildToStandAlone_Click(object sender, RoutedEventArgs e)
-		{
-			IDEManager.BuildManagement.BuildSingle();
 		}
 
 		public DockingManager DockManager

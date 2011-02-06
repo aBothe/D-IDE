@@ -482,13 +482,13 @@ namespace D_IDE.Core
 		{
 			get
 			{
-				return LastModified!=File.GetLastWriteTimeUtc(FileName).ToFileTime();
+				return LastModified!=File.GetLastWriteTimeUtc(AbsoluteFileName).ToFileTime();
 			}
 		}
 
 		public void ResetModifiedTime()
 		{
-			LastModified = File.GetLastWriteTimeUtc(FileName).ToFileTime();
+			LastModified = File.GetLastWriteTimeUtc(AbsoluteFileName).ToFileTime();
 		}
 
 		public enum BuildAction
