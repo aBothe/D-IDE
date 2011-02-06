@@ -44,15 +44,14 @@ namespace D_IDE.Core
 			try
 			{
 				prc.Start();
+				prc.BeginErrorReadLine();
+				prc.BeginOutputReadLine();
 			}
 			catch (Exception ex)
 			{
 				ErrorLogger.Log(ex);
 				return null;
 			}
-
-			prc.BeginErrorReadLine();
-			prc.BeginOutputReadLine();
 			return prc;
 		}
 

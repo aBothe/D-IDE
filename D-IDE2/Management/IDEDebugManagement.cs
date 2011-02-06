@@ -93,10 +93,10 @@ namespace D_IDE
 			/// <summary>
 			/// Tries to halt the wait thread
 			/// </summary>
-			public static void PauseDebugging()
+			/*public static void PauseDebugging()
 			{
 				_PauseDebuggee = true;
-			}
+			}*/
 
 			public static void StepIn()
 			{
@@ -138,8 +138,8 @@ namespace D_IDE
 					var ed = EditingManagement.OpenFile(fn) as EditorDocument;
 					if (ed != null)
 					{
-						var text_off = ed.Editor.Document.GetOffset((int)ln - 1, 0);
-						ed.Editor.TextArea.Selection.StartSelectionOrSetEndpoint(text_off, text_off);
+						var text_off = ed.Editor.Document.GetOffset((int)ln, 0);
+						ed.Editor.TextArea.Caret.Offset = text_off;
 					}
 				}
 				else
@@ -177,7 +177,7 @@ namespace D_IDE
 					Log("Program execution paused...");
 			}
 
-			public static void WaitForDebugEvent() { WaitForDebugEvent(true); }
+			public static void WaitForDebugEvent() { WaitForDebugEvent(false); }
 
 			public static void WaitForDebugEvent(bool Async)
 			{
@@ -295,7 +295,7 @@ namespace D_IDE
 
 				Engine.OnExitProcess += delegate(uint code)
 				{
-					Log("Process exited with code " + code.ToString());
+					Log("Debugger Process exited with code " + code.ToString());
 					StopExecution();
 					return DebugStatus.NoChange;
 				};
@@ -311,19 +311,6 @@ namespace D_IDE
 				Engine.Execute(".lines -e"); // Enable source code locating
 
 				dbgEngineInited = true;
-			}
-
-			public class DebugErrorMarker : TextMarker
-			{
-				public readonly CodeException Exception;
-				public DebugErrorMarker(TextMarkerService svc, CodeException ex)
-					:base(svc,svc.Editor.Document.GetOffset((int)ex.SourceLine,0),true)
-				{
-					this.Exception = ex;
-					ToolTip = ex.Message;
-
-					BackgroundColor = Colors.Yellow;
-				}
 			}
 
 			/// <summary>
@@ -346,11 +333,11 @@ namespace D_IDE
 				StopWaitingForEvents = false;
 
 				DebugCreateProcessOptions opt = new DebugCreateProcessOptions();
-				opt.CreateFlags = CreateFlags.DebugOnlyThisProcess | (showConsole ? CreateFlags.CreateNewConsole : 0);
+				opt.CreateFlags = CreateFlags.DebugOnlyThisProcess | (true ? CreateFlags.CreateNewConsole : 0);
 				opt.EngCreateFlags = EngCreateFlags.Default;
 
 				Engine.CreateProcessAndAttach(0, exe + (string.IsNullOrWhiteSpace(args) ? "" : (" " + args)), opt, Path.GetDirectoryName(exe), "", 0, 0);
-
+				
 				Engine.Symbols.SourcePath = string.IsNullOrWhiteSpace(sourcePath) ? sourcePath : Path.GetDirectoryName(exe);
 				Engine.IsSourceCodeOrientedStepping = true;
 
@@ -420,8 +407,11 @@ namespace D_IDE
 			{
 				if (IsDebugging)
 				{
-					Engine.Terminate();
 					IsDebugging = false;
+					Engine.EndPendingWaits();
+					Engine.Terminate();
+					//Engine.MainProcess.Kill();
+					Instance.MainWindow.RefreshMenu();
 				}
 				if (CurrentProcess != null && !CurrentProcess.HasExited)
 				{

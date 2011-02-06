@@ -197,19 +197,17 @@ namespace D_IDE.Core.Controls.Editor
 	{
 		public readonly TextMarkerService TextMarkerService;
 
-		public TextMarker(TextMarkerService svc, int offset, int length)
+		/// <summary>
+		/// Sets StartOffset and Length to the word's position if WordOffset describes the position of that word.
+		/// Alternatively, if WholeLine is set to true, the entire line will be hightlighted
+		/// </summary>
+		/// <param name="WordOffset"></param>
+		/// <param name="WholeLine"></param>
+		public void CalculateWordOffset(int WordOffset, bool WholeLine)
 		{
-			TextMarkerService = svc;
-			StartOffset = offset;
-			Length = length;
-		}
-
-		public TextMarker(TextMarkerService svc, int WordOffset, bool WholeLine)
-		{
-			TextMarkerService = svc;
 			StartOffset = WordOffset;
 
-			var ln = svc.Editor.Document.GetLineByOffset(WordOffset);
+			var ln = TextMarkerService.Editor.Document.GetLineByOffset(WordOffset);
 
 			if (WholeLine)
 			{
@@ -218,10 +216,10 @@ namespace D_IDE.Core.Controls.Editor
 				return;
 			}
 
-			var doc = svc.Editor.Document;
-			int i=WordOffset;
+			var doc = TextMarkerService.Editor.Document;
+			int i = WordOffset;
 			bool HadNonWS = false;
-			bool IsIdent=false;
+			bool IsIdent = false;
 			while (i < ln.EndOffset)
 			{
 				var c = doc.GetCharAt(i);
@@ -240,7 +238,7 @@ namespace D_IDE.Core.Controls.Editor
 						break;
 					}
 				}
-				else if(HadNonWS)
+				else if (HadNonWS)
 					break;
 				i++;
 			}
@@ -250,6 +248,24 @@ namespace D_IDE.Core.Controls.Editor
 				StartOffset = ln.Offset;
 				Length = ln.Length;
 			}
+		}
+
+		public TextMarker(TextMarkerService svc)
+		{
+			TextMarkerService = svc;
+		}
+
+		public TextMarker(TextMarkerService svc, int offset, int length)
+		{
+			TextMarkerService = svc;
+			StartOffset = offset;
+			Length = length;
+		}
+
+		public TextMarker(TextMarkerService svc, int WordOffset, bool WholeLine)
+		{
+			TextMarkerService = svc;
+			CalculateWordOffset(WordOffset, WholeLine);
 		}
 
 		public object Tag { get; set; }

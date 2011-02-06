@@ -174,6 +174,32 @@ namespace D_IDE
 					m.Redraw();
 				}
 		}
+
+		/// <summary>
+		/// Current instruction frames
+		/// </summary>
+		public void RefreshDebugHighlightings()
+		{
+			foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
+				if (marker is CoreManager.DebugManagement.DebugStackFrameMarker)
+					marker.Delete();
+
+			var bps = CoreManager.DebugManagement.Engine.CallStack;
+			if (bps != null)
+				foreach (var stack in bps)
+				{
+					string fn;
+					uint ln;
+					if (CoreManager.DebugManagement.Engine.Symbols.GetLineByOffset(stack.InstructionOffset, out fn, out ln))
+					{
+						if (AbsoluteFilePath.EndsWith(fn))
+						{
+							var m = new CoreManager.DebugManagement.DebugStackFrameMarker(MarkerStrategy, stack, Editor.Document.GetOffset((int)ln-1,0));
+							m.Redraw();
+						}
+					}
+				}
+		}
 		#endregion
 
 		#region Code Completion

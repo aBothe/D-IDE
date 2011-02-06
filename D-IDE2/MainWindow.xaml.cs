@@ -99,7 +99,7 @@ namespace D_IDE
 					_prevSelectedMainTab = Ribbon.SelectedIndex;
 					Tab_Debug.IsSelected=true;
 				}
-				else if (Tab_Debug.IsEnabled && !IDEManager.IDEDebugManagement.IsExecuting)
+				else if (Tab_Debug.IsEnabled && !IDEManager.IDEDebugManagement.IsExecuting && _prevSelectedMainTab>-1)
 					Ribbon.SelectedIndex = _prevSelectedMainTab;
 
 				Tab_Debug.IsEnabled = IDEManager.IDEDebugManagement.IsExecuting;
@@ -333,12 +333,12 @@ namespace D_IDE
 
 		private void Button_ResumeExecution_Click(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.IDEDebugManagement.ContinueDebugging();
 		}
 
 		private void Button_PauseExecution_Click(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.IDEDebugManagement.PauseExecution();
 		}
 
 		private void Button_StopExecution_Click(object sender, RoutedEventArgs e)
@@ -358,17 +358,17 @@ namespace D_IDE
 
 		private void Button_StepIn_Click(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.IDEDebugManagement.StepIn();
 		}
 
 		private void Button_StepOver_Click(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.IDEDebugManagement.StepOver();
 		}
 
 		private void Button_StepOut_Click(object sender, RoutedEventArgs e)
 		{
-
+			IDEManager.IDEDebugManagement.StepOut();
 		}
 
 		private void Button_StopBuilding_Click(object sender, RoutedEventArgs e)

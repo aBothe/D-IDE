@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DebugEngineWrapper;
+using D_IDE.Core.Controls.Editor;
+using System.Windows.Media;
 
 namespace D_IDE.Core
 {
@@ -17,6 +19,53 @@ namespace D_IDE.Core
 				get;
 				protected set;
 			}
+
+			public class DebugErrorMarker : TextMarker
+			{
+				public readonly CodeException Exception;
+				public DebugErrorMarker(TextMarkerService svc, CodeException ex)
+					: base(svc, svc.Editor.Document.GetOffset((int)ex.SourceLine, 0), true)
+				{
+					this.Exception = ex;
+					ToolTip = ex.Message;
+
+					BackgroundColor = Colors.Yellow;
+				}
+			}
+
+			public class DebugStackFrameMarker : TextMarker
+			{
+				public readonly DebugEngineWrapper.StackFrame Frame;
+
+				public static DebugStackFrameMarker Create(TextMarkerService svc, DebugEngineWrapper.StackFrame frm)
+				{
+					string fn;
+					uint ln;
+					ulong off = frm.InstructionOffset;
+					if (Engine.Symbols.GetLineByOffset(off, out fn, out ln))
+					{
+						var text_off = svc.Editor.Document.GetOffset((int)ln, 0);
+
+						var m = new DebugStackFrameMarker(svc, frm, text_off);
+						m.Redraw();
+
+						return m;
+					}
+					return null;
+				}
+
+				public DebugStackFrameMarker(TextMarkerService svc, DebugEngineWrapper.StackFrame frm, int text_offset)
+					: base(svc, text_offset, true)
+				{
+					Frame = frm;
+
+					if (frm.FrameNumber < 1)
+						BackgroundColor = Colors.Yellow;
+					else
+						BackgroundColor = Colors.Green;
+				}
+			}
+
 		}
 
 		public class BreakpointManagement
