@@ -29,10 +29,11 @@ namespace D_IDE
 			try
 			{
 				Instance = Load();
-				if (Instance == null)
-					Instance = new GlobalProperties();
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
+
+			if (Instance == null)
+				Instance = new GlobalProperties();
         }
 
 		#region Loading & Saving
@@ -421,11 +422,11 @@ namespace D_IDE
 		readonly static string MultipleInstanceFlagFile = IDEInterface.CommonlyUsedDirectory + "\\MultipleInstancesAllowed.flag";
 		public static bool AllowMultipleProgramInstances
 		{
-			get { return !File.Exists(MultipleInstanceFlagFile); }
+			get { return File.Exists(MultipleInstanceFlagFile); }
 			set
 			{
 				if (value && !AllowMultipleProgramInstances)
-					File.WriteAllText(MultipleInstanceFlagFile, "Indicates whether D-IDE is allowed to be launched multiple times or not.");
+					File.WriteAllText(MultipleInstanceFlagFile, "This file indicates that D-IDE is allowed to be launched multiple times simultaneously.");
 				else if (!value && AllowMultipleProgramInstances)
 					File.Delete(MultipleInstanceFlagFile);
 			}

@@ -11,6 +11,7 @@ namespace D_IDE.Core
 {
     public class Util
 	{
+		public delegate void EmptyDelegate();
 		#region File I/O
 		public static readonly string ApplicationStartUpPath = Directory.GetCurrentDirectory();
 
@@ -93,6 +94,38 @@ namespace D_IDE.Core
 			return r;
 		}
 		#endregion
+
+		/// <summary>
+		/// Strip all XML tags from a given string
+		/// Taken from http://dotnetperls.com/remove-html-tags
+		/// </summary>
+		public static string StripXmlTags(string source)
+		{
+			char[] array = new char[source.Length];
+			int arrayIndex = 0;
+			bool inside = false;
+
+			for (int i = 0; i < source.Length; i++)
+			{
+				char let = source[i];
+				if (let == '<')
+				{
+					inside = true;
+					continue;
+				}
+				if (let == '>')
+				{
+					inside = false;
+					continue;
+				}
+				if (!inside)
+				{
+					array[arrayIndex] = let;
+					arrayIndex++;
+				}
+			}
+			return new string(array, 0, arrayIndex);
+		}
 
 		public static DateTime DateFromUnixTime(long t)
         {

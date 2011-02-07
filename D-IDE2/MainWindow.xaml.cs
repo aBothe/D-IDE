@@ -24,6 +24,7 @@ namespace D_IDE
 		public ProjectExplorer Panel_ProjectExplorer = new ProjectExplorer();
 		public ErrorListPanel Panel_ErrorList = new ErrorListPanel();
 		public LogPanel Panel_Log = new LogPanel();
+		public StartPage StartPage;
 
 		public string Status1
 		{
@@ -152,6 +153,11 @@ namespace D_IDE
 			};
 
 			#region Init panels and their layouts
+			StartPage = new Controls.Panels.StartPage();
+			StartPage.Name = "IDEStartPage";
+			StartPage.HideOnClose = true;
+			StartPage.ShowAsDocument(DockManager);
+
 			// Note: To enable the docking manager saving&restoring procedures it's needed to name all the panels
 			Panel_ProjectExplorer.Name = "ProjectExplorer";
 			Panel_ProjectExplorer.HideOnClose = true;
@@ -214,7 +220,7 @@ namespace D_IDE
 			}
 		}
 
-		private void NewProject(object sender, RoutedEventArgs e)
+		public void DoNewProject()
 		{
 			var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.CreateNew | (IDEManager.CurrentSolution != null ? NewProjectDlg.DialogMode.Add : 0));
 
@@ -246,6 +252,11 @@ namespace D_IDE
 
 				RefreshGUI();
 			}
+		}
+
+		private void NewProject(object sender, RoutedEventArgs e)
+		{
+			DoNewProject();
 		}
 
 		private void Open(object sender, RoutedEventArgs e)
