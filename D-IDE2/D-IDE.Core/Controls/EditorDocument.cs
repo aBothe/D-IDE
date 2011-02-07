@@ -94,6 +94,7 @@ namespace D_IDE
 
 			RefreshErrorHighlightings();
 			RefreshBreakpointHighlightings();
+			RefreshDebugHighlightings();
 		}
 
 		#region Syntax Highlighting
@@ -184,6 +185,9 @@ namespace D_IDE
 				if (marker is CoreManager.DebugManagement.DebugStackFrameMarker)
 					marker.Delete();
 
+			if (!CoreManager.DebugManagement.IsDebugging)
+				return;
+
 			var bps = CoreManager.DebugManagement.Engine.CallStack;
 			if (bps != null)
 				foreach (var stack in bps)
@@ -192,9 +196,10 @@ namespace D_IDE
 					uint ln;
 					if (CoreManager.DebugManagement.Engine.Symbols.GetLineByOffset(stack.InstructionOffset, out fn, out ln))
 					{
-						if (AbsoluteFilePath.EndsWith(fn))
+						if (AbsoluteFilePath.EndsWith(fn) && ln<Editor.Document.LineCount)
 						{
-							var m = new CoreManager.DebugManagement.DebugStackFrameMarker(MarkerStrategy, stack, Editor.Document.GetOffset((int)ln-1,0));
+							var m = new CoreManager.DebugManagement.DebugStackFrameMarker(MarkerStrategy, stack, Editor.Document.GetOffset((int)ln,0));
+							MarkerStrategy.Add(m);
 							m.Redraw();
 						}
 					}

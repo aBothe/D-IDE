@@ -102,7 +102,7 @@ namespace D_IDE
 			{
 				if (!IsDebugging) return;
 				Engine.Execute("t"); // Trace
-				WaitForDebugEvent(false);
+				WaitForDebugEvent();
 				StopWaitingForEvents = false;
 				GotoCurrentLocation();
 			}
@@ -111,7 +111,7 @@ namespace D_IDE
 			{
 				if (!IsDebugging) return;
 				Engine.Execute("p"); // Step
-				WaitForDebugEvent(false);
+				WaitForDebugEvent();
 				StopWaitingForEvents = false;
 				GotoCurrentLocation();
 			}
@@ -120,7 +120,7 @@ namespace D_IDE
 			{
 				if (!IsDebugging) return;
 				Engine.Execute("pt"); // Halt on next return
-				WaitForDebugEvent(false);
+				WaitForDebugEvent();
 				StopWaitingForEvents = false;
 				GotoCurrentLocation();
 			}
@@ -136,7 +136,7 @@ namespace D_IDE
 				if (Engine.Symbols.GetLineByOffset(off, out fn, out ln))
 				{
 					var ed = EditingManagement.OpenFile(fn) as EditorDocument;
-					if (ed != null)
+					if (ed != null && ln<ed.Editor.Document.LineCount)
 					{
 						var text_off = ed.Editor.Document.GetOffset((int)ln, 0);
 						ed.Editor.TextArea.Caret.Offset = text_off;
@@ -161,36 +161,26 @@ namespace D_IDE
 				//TODO: Call Stack window - with switching between different stack levels?
 			}
 
-			static void _waitDelegate(object o)
+			public static void WaitForDebugEvent()
 			{
-				bool IsAsync = (bool)o;
+				if (!IsDebugging) return;
+
 				Log("Waiting for the program to interrupt...");
 				var wr = WaitResult.OK;
 				while (IsDebugging && (wr = Engine.WaitForEvent(10)) == WaitResult.TimeOut)
 				{
 					if (wr == WaitResult.Unexpected)
 						break;
-					if(!IsAsync)
-						System.Windows.Forms.Application.DoEvents();
+					System.Windows.Forms.Application.DoEvents();
 				}
 				if (wr != WaitResult.Unexpected)
-					Log("Program execution paused...");
-			}
-
-			public static void WaitForDebugEvent() { WaitForDebugEvent(false); }
-
-			public static void WaitForDebugEvent(bool Async)
-			{
-				if (!IsDebugging) return;
-
-				if (Async)
-					new Thread(_waitDelegate).Start(true);
-				else _waitDelegate(false);
+					Log("Program execution halted...");
 				/*
 				 * After a program paused its execution, we'll be able to access its breakpoints and symbol data.
 				 * When resuming the program, WaitForDebugEvent() will be called again.
 				 * Note that it's not possible to 'wait' on a different thread.
 				 */
+				RefreshAllDebugMarkers();
 			}
 
 			public static void InitDebugger()

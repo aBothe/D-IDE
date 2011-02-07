@@ -63,9 +63,21 @@ namespace D_IDE.Core
 						BackgroundColor = Colors.Yellow;
 					else
 						BackgroundColor = Colors.Green;
+					MarkerType = TextMarkerType.None;
 				}
 			}
 
+			public static void RefreshAllDebugMarkers()
+			{
+				foreach (var aed in CoreManager.Instance.Editors)
+				{
+					var ed = aed as EditorDocument;
+					if (ed==null)
+						continue;
+
+					ed.RefreshDebugHighlightings();
+				}
+			}
 		}
 
 		public class BreakpointManagement
