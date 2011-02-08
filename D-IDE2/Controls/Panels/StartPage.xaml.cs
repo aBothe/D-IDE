@@ -130,9 +130,9 @@ namespace D_IDE.Controls.Panels
 				IDEManager.EditingManagement.OpenFile(i.Path);
 		}
 
-		private void label3_MouseDown(object sender, MouseButtonEventArgs e)
+		private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
 		{
-			System.Diagnostics.Process.Start("http://d-ide.sourceforge.net");
+			System.Diagnostics.Process.Start(e.Uri.ToString());
 		}
 	}
 }

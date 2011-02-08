@@ -36,6 +36,10 @@
 		</w:ListView>
 		<w:CheckBox IsChecked="{w:Binding CheckForNewsFlag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Retrieve news at startup" HorizontalAlignment="Left" Margin="287,0,0,15" Name="Check_GetNewsOnStartup" Foreground="White" Height="16" VerticalAlignment="Bottom" />
 		<w:Label Content="Version" Height="16" HorizontalAlignment="Left" Margin="14,43,0,0" Name="Label_Version" VerticalAlignment="Top" Padding="0" Width="168" FontSize="10" />
-		<w:Label Content="http://d-ide.sourceforge.net/" Height="15" HorizontalAlignment="Left" Padding="0" Margin="14,61,0,0" Name="label3" VerticalAlignment="Top" Width="252" Foreground="Blue" MouseDown="label3_MouseDown" Cursor="Hand" />
+		<w:Label Height="15" HorizontalAlignment="Left" Padding="0" Margin="14,61,0,0" Name="label3" VerticalAlignment="Top" Width="252">
+			<w:Label.Content>
+				<w:Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="http://d-ide.sourceforge.net">http://d-ide.sourceforge.net</w:Hyperlink>
+			</w:Label.Content>
+		</w:Label>
 	</w:Grid>
 </DockableContent>
