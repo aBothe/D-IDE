@@ -22,8 +22,7 @@
 		<w:Label Content="Recent projects:" Height="17" HorizontalAlignment="Left" Padding="0" Margin="12,146,0,0" Name="label1" VerticalAlignment="Top" Width="254" />
 		<w:Button Content="Open Selected" HorizontalAlignment="Left" Margin="12,0,0,12" Name="Button_Open" Width="90" Height="23" VerticalAlignment="Bottom" Click="Button_Open_Click" />
 		<w:Button Content="Create New" HorizontalAlignment="Left" Margin="108,0,0,12" Name="Button_CreatePrj" Width="90" Height="23" VerticalAlignment="Bottom" Click="Button_CreatePrj_Click" />
-		<w:Image Height="128" HorizontalAlignment="Left" Margin="12,12,0,0" Name="image1" Stretch="Fill" VerticalAlignment="Top" Width="128" Source="/D-IDE;component/Resources/d-ide_128.png" IsHitTestVisible="False" />
-		<w:TextBlock Height="22" HorizontalAlignment="Left" Margin="148,12,0,0" Name="textBlock1" Text="Welcome to D-IDE!" VerticalAlignment="Top" Width="118" TextWrapping="Wrap" FontSize="13" FontWeight="Normal" FontStyle="Normal" FontFamily="Segoe UI" />
+		<w:TextBlock Height="34" HorizontalAlignment="Left" Margin="12,12,0,0" Name="textBlock1" Text="Welcome to D-IDE!" VerticalAlignment="Top" Width="254" TextWrapping="Wrap" FontSize="28" FontWeight="Normal" FontStyle="Normal" FontFamily="Segoe UI" TextAlignment="Left" />
 		<w:Label Content="Recent news:" Height="14" HorizontalAlignment="Left" Padding="0" Margin="288,12,0,0" Name="label2" VerticalAlignment="Top" Width="107" />
 		<w:ListView Margin="287,32,12,41" Padding="0" Name="NewsList" Background="{x:Null}" BorderBrush="{x:Null}" IsTextSearchEnabled="False">
 			<w:ListView.ItemTemplate>
@@ -36,5 +35,7 @@
 			</w:ListView.ItemTemplate>
 		</w:ListView>
 		<w:CheckBox IsChecked="{w:Binding CheckForNewsFlag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Retrieve news at startup" HorizontalAlignment="Left" Margin="287,0,0,15" Name="Check_GetNewsOnStartup" Foreground="White" Height="16" VerticalAlignment="Bottom" />
+		<w:Label Content="Version" Height="16" HorizontalAlignment="Left" Margin="14,43,0,0" Name="Label_Version" VerticalAlignment="Top" Padding="0" Width="168" FontSize="10" />
+		<w:Label Content="http://d-ide.sourceforge.net/" Height="15" HorizontalAlignment="Left" Padding="0" Margin="14,61,0,0" Name="label3" VerticalAlignment="Top" Width="252" Foreground="Blue" MouseDown="label3_MouseDown" Cursor="Hand" />
 	</w:Grid>
 </DockableContent>

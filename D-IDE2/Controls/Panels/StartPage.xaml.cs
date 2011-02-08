@@ -27,6 +27,8 @@ namespace D_IDE.Controls.Panels
 		{
 			DataContext = this;
 			InitializeComponent();
+
+			Label_Version.Content = "Version " + System.Reflection.Assembly.GetCallingAssembly().GetName().Version.ToString(4);
 		}
 
 		private void Button_Open_Click(object sender, RoutedEventArgs e)
@@ -126,6 +128,11 @@ namespace D_IDE.Controls.Panels
 			var i = RecentProjectsList.SelectedItem as RecentPrjItem;
 			if(i!=null)
 				IDEManager.EditingManagement.OpenFile(i.Path);
+		}
+
+		private void label3_MouseDown(object sender, MouseButtonEventArgs e)
+		{
+			System.Diagnostics.Process.Start("http://d-ide.sourceforge.net");
 		}
 	}
 }
