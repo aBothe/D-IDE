@@ -86,8 +86,8 @@ Global
 		{650AD5E8-B84B-45E7-B42B-0AA72199252C}.Release|Win32.ActiveCfg = Release|Any CPU
 		{650AD5E8-B84B-45E7-B42B-0AA72199252C}.Release|x86.ActiveCfg = Release|Any CPU
 		{6D8A8B32-1119-412D-BFA1-F17B85D5B750}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{6D8A8B32-1119-412D-BFA1-F17B85D5B750}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{6D8A8B32-1119-412D-BFA1-F17B85D5B750}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{6D8A8B32-1119-412D-BFA1-F17B85D5B750}.Debug|Mixed Platforms.ActiveCfg = Release|x86
+		{6D8A8B32-1119-412D-BFA1-F17B85D5B750}.Debug|Mixed Platforms.Build.0 = Release|x86
 		{6D8A8B32-1119-412D-BFA1-F17B85D5B750}.Debug|Win32.ActiveCfg = Debug|x86
 		{6D8A8B32-1119-412D-BFA1-F17B85D5B750}.Debug|x86.ActiveCfg = Debug|x86
 		{6D8A8B32-1119-412D-BFA1-F17B85D5B750}.Debug|x86.Build.0 = Debug|x86

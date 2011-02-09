@@ -4,6 +4,7 @@ using System.Net;
 using System.IO;
 using System.Text;
 using ICSharpCode.SharpZipLib.Zip;
+using System.Threading;
 
 namespace D_IDE.Updater
 {
@@ -35,7 +36,8 @@ namespace D_IDE.Updater
 			Console.WriteLine("Download "+ArchiveUrl);
 			try
 			{
-				new WebClient().DownloadFile(ArchiveUrl, TempFile);
+				var wc = new WebClient();
+				wc.DownloadFile(new Uri(ArchiveUrl), TempFile);
 			}
 			catch (Exception ex)
 			{
