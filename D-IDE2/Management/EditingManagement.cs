@@ -132,27 +132,35 @@ namespace D_IDE
 					CurrentSolution.Save();
 
 					foreach (var p in CurrentSolution)
+					{
+						p.LastOpenedFiles.Clear();
+						// Store last opened files
+						foreach (var ed in Instance.Editors)
+						{
+							if (p.ContainsFile(ed.AbsoluteFilePath))
+								p.LastOpenedFiles.Add(ed.FileName);
+						}
+
 						p.Save();
+					}
 				}
 			}
 
 			/// <summary>
 			/// Saves the file under a new file name.
-			/// Renames it in its project if possible.
+			/// Copies the file and does not affect the project.
 			/// </summary>
 			public static void SaveCurrentFileAs(string NewFilePath)
 			{
 				if (Instance.CurrentEditor == null) return;
-
+				/*
 				if (Instance.CurrentEditor.Project != null)
 					IDEManager.FileManagement.RenameFile(
 						Instance.CurrentEditor.Project,
 						Instance.CurrentEditor.FileName, NewFilePath);
-				else
-				{
-					Instance.CurrentEditor.FileName = NewFilePath;
-					Instance.CurrentEditor.Save();
-				}
+				*/
+				Instance.CurrentEditor.FileName = NewFilePath;
+				Instance.CurrentEditor.Save();
 			}
 		}
 	}

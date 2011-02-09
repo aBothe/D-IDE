@@ -202,6 +202,10 @@ namespace D_IDE
 				}
 
 			RefreshGUI();
+
+			// Load last solution
+			if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
+				IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 		}
 		#endregion
 
@@ -428,6 +432,8 @@ namespace D_IDE
 
 			foreach (var i in GlobalProperties.Instance.LastProjects)
 				Button_Open.Items.Add(new LastFileItem(i,true));
+
+			StartPage.RefreshLastProjects();
 		}
 
 		/// <summary>
