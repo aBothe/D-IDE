@@ -33,7 +33,7 @@
   <ItemGroup>
     <Reference Include="DebugEngineWrapper, Version=1.0.3992.12100, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\externalDeps\DebugEngineWrapper.dll</HintPath>
+      <HintPath>..\..\DebugEngineWrapper\DebugEngineWrapper\DebugEngineWrapper.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.AvalonEdit, Version=4.0.0.6963, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

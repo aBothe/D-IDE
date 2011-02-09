@@ -104,9 +104,9 @@
 				</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Run">
-					<r:RibbonButton Label="Launch Debugger" Click="LaunchDebugger_Click" SmallImageSource="Resources/build_dbg.png"/>
-					<r:RibbonSplitButton Label="Run without Debugger" Click="LaunchWithoutDebugger_Click" SmallImageSource="Resources/build.png">
-						<r:RibbonMenuItem Header="Run in external console" Click="LaunchInConsole_Click" />
+					<r:RibbonButton Label="Launch Debugger" Click="LaunchDebugger_Click" SmallImageSource="Resources/build_dbg.png" ToolTipTitle="Build &amp; Debug Solution/Current Module (F5)" />
+					<r:RibbonSplitButton Label="Run without Debugger" Click="LaunchWithoutDebugger_Click" SmallImageSource="Resources/build.png" ToolTipTitle="Build &amp; Launch Solution/Current Module without attaching a debugger to it (Shift+F5)">
+						<r:RibbonMenuItem Header="Run in external console" Click="LaunchInConsole_Click" ToolTipTitle="Build &amp; Launch the program in an external console box" />
 					</r:RibbonSplitButton>
 					</r:RibbonGroup>
 			</r:RibbonTab>

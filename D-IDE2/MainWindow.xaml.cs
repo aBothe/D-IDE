@@ -443,9 +443,11 @@ namespace D_IDE
 		{
 			e.Handled = true;
 			bool ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+			bool shift=Keyboard.IsKeyDown(Key.LeftShift)|| Keyboard.IsKeyDown(Key.RightShift);
+			var k = e.Key == Key.System ? e.SystemKey : e.Key;
 
 			if (ctrl)
-				switch (e.Key)
+				switch (k)
 				{
 					case Key.N:
 						NewSource(sender, null);
@@ -458,11 +460,26 @@ namespace D_IDE
 						return;
 				}
 			else 
-				switch (e.Key)
+				switch (k)
 				{
+					case Key.F5:
+						if (CoreManager.DebugManagement.IsDebugging)
+							Button_ResumeExecution_Click(null, null);
+						else if (!IDEManager.IDEDebugManagement.IsExecuting)
+							if (shift)
+								LaunchWithoutDebugger_Click(null, null);
+							else
+								LaunchDebugger_Click(null, null);
+						return;
 					case Key.F9:
 						ToggleBreakpoint_Click(null,null);
-						break;
+						return;
+					case Key.F10:
+						Button_StepOut_Click(null, null);
+						return;
+					case Key.F11:
+						Button_StepIn_Click(null, null);
+						return;
 				}
 
 			e.Handled = false;

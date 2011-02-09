@@ -154,8 +154,8 @@ namespace D_IDE.Core
 
 				if (DebugManagement.IsDebugging)
 				{
-					ulong off = 0; //TODO: Make line 0-based - the editor uses 1-based line numbers
-					if (!DebugManagement.Engine.Symbols.GetOffsetByLine(file, (uint)line-1, out off))
+					ulong off = 0;
+					if (!DebugManagement.Engine.Symbols.GetOffsetByLine(file, (uint)line, out off))
 						return null;
 
 					var bp = DebugManagement.Engine.AddBreakPoint(BreakPointOptions.Enabled);
