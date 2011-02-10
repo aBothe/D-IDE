@@ -43,7 +43,7 @@ namespace D_IDE.Controls.Panels
 			Dispatcher.Invoke(new EventHandler(delegate(object o,EventArgs e) {
 				MainText.AppendText(o as string + "\r\n");
 				MainText.ScrollToEnd();
-			}), s,null);
+			}), s,EventArgs.Empty);
 		}
 	}
 }

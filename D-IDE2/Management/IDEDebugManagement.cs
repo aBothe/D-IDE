@@ -157,7 +157,7 @@ namespace D_IDE
 
 			public static void UpdateDebuggingPanels()
 			{
-				//TODO: Local variables window
+				IDEManager.Instance.MainWindow.Panel_Locals.RefreshTable();
 				//TODO: Call Stack window - with switching between different stack levels?
 			}
 
@@ -180,6 +180,7 @@ namespace D_IDE
 				 * When resuming the program, WaitForDebugEvent() will be called again.
 				 * Note that it's not possible to 'wait' on a different thread.
 				 */
+				UpdateDebuggingPanels();
 				RefreshAllDebugMarkers();
 			}
 
@@ -402,6 +403,8 @@ namespace D_IDE
 					Engine.Terminate();
 					//Engine.MainProcess.Kill();
 					Instance.MainWindow.RefreshMenu();
+					UpdateDebuggingPanels();
+					RefreshAllDebugMarkers();
 				}
 				if (CurrentProcess != null && !CurrentProcess.HasExited)
 				{

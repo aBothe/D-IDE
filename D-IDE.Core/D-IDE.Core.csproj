@@ -59,6 +59,13 @@
   <ItemGroup>
     <Compile Include="Controls\AbstractEditorDocument.cs" />
     <Compile Include="Controls\AbstractSettingsPage.cs" />
+    <Compile Include="Controls\Aga.Controls\Collection.cs" />
+    <Compile Include="Controls\Aga.Controls\Tree\Converters.cs" />
+    <Compile Include="Controls\Aga.Controls\Tree\ITreeModel.cs" />
+    <Compile Include="Controls\Aga.Controls\Tree\RowExpander.cs" />
+    <Compile Include="Controls\Aga.Controls\Tree\TreeList.cs" />
+    <Compile Include="Controls\Aga.Controls\Tree\TreeListItem.cs" />
+    <Compile Include="Controls\Aga.Controls\Tree\TreeNode.cs" />
     <Compile Include="Controls\EditorDocument.cs" />
     <Compile Include="Controls\IFormBase.cs" />
     <Compile Include="Controls\TextEditor\TextMarkerService.cs" />
@@ -129,6 +136,15 @@
     <None Include="dbghelp.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Controls\Aga.Controls\Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Controls\Aga.Controls\Aga.Controls.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,0 +1,3 @@
+﻿
+The entire Aga.Controls.Tree code was taken from http://www.codeproject.com/KB/WPF/wpf_treelistview_control.aspx
+

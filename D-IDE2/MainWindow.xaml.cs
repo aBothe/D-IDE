@@ -25,6 +25,7 @@ namespace D_IDE
 		public ErrorListPanel Panel_ErrorList = new ErrorListPanel();
 		public LogPanel Panel_Log = new LogPanel();
 		public StartPage StartPage;
+		public DebugLocalsPanel Panel_Locals = new DebugLocalsPanel();
 
 		public string Status1
 		{
@@ -153,6 +154,10 @@ namespace D_IDE
 			};
 
 			#region Init panels and their layouts
+			Panel_Locals.Name = "LocalsPanel";
+			Panel_Locals.HideOnClose = true;
+			Panel_Locals.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
+
 			StartPage = new Controls.Panels.StartPage();
 			StartPage.Name = "IDEStartPage";
 			StartPage.HideOnClose = true;
@@ -475,7 +480,7 @@ namespace D_IDE
 						ToggleBreakpoint_Click(null,null);
 						return;
 					case Key.F10:
-						Button_StepOut_Click(null, null);
+						Button_StepOver_Click(null, null);
 						return;
 					case Key.F11:
 						Button_StepIn_Click(null, null);
