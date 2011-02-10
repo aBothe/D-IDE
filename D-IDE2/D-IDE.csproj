@@ -60,12 +60,11 @@
   <ItemGroup>
     <Reference Include="AvalonDock, Version=1.3.3571.0, Culture=neutral, PublicKeyToken=85a1e0ada7ec13e4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\externalDeps\AvalonDock.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\Misc\AvalonDock.dll</HintPath>
     </Reference>
-    <Reference Include="DebugEngineWrapper, Version=1.0.3992.12100, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="DebugEngineWrapper, Version=1.0.4057.29467, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\DebugEngineWrapper\DebugEngineWrapper\DebugEngineWrapper.dll</HintPath>
+      <HintPath>..\DebugEngineWrapper\DebugEngineWrapper.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.AvalonEdit">
       <HintPath>..\externalDeps\ICSharpCode.AvalonEdit.dll</HintPath>
@@ -334,7 +333,7 @@
       <Project>{650AD5E8-B84B-45E7-B42B-0AA72199252C}</Project>
       <Name>Parser.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="D-IDE.Core\D-IDE.Core.csproj">
+    <ProjectReference Include="..\D-IDE.Core\D-IDE.Core.csproj">
       <Project>{97A8A088-8820-4A2D-82F4-2AA5CBDE093F}</Project>
       <Name>D-IDE.Core</Name>
     </ProjectReference>
@@ -405,7 +404,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(ProjectDir)/7z" u -y -x!*.pdb -x!*.vshost.* "$(ProjectDir)\..\d-ide.zip"</PostBuildEvent>
+    <PostBuildEvent>"$(ProjectDir)/7z" u -y -x!*.pdb -x!*.vshost.* "$(SolutionDir)d-ide.zip"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyTitle("D-IDE")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyCompany("Alexander Bothe")]
 [assembly: AssemblyProduct("D-IDE")]
 [assembly: AssemblyCopyright("Copyright © Microsoft 2010")]
 [assembly: AssemblyTrademark("")]
@@ -55,3 +55,4 @@ using System.Windows;
 // by using the '*' as shown below:
 [assembly: AssemblyVersion("2.0.*")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: NeutralResourcesLanguageAttribute("en")]
