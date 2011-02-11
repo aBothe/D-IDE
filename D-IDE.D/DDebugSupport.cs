@@ -8,9 +8,6 @@ namespace D_IDE.D
 {
 	public class DDebugSupport:GenericDebugSupport
 	{
-		public DDebugSupport()
-		{
 
-		}
 	}
 }
