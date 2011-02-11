@@ -78,6 +78,7 @@ namespace D_IDE
 						CurrentSolution.AddProject(LoadedPrj);
 
 						foreach (var prj in CurrentSolution)
+							if(prj!=null && prj.LastOpenedFiles.Count>0)
 							foreach (var fn in prj.LastOpenedFiles)
 								OpenFile(prj.ToAbsoluteFileName(fn));
 						Instance.UpdateGUI();
