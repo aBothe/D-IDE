@@ -35,7 +35,8 @@
     <Reference Include="DebugEngineWrapper">
       <HintPath>..\DebugEngineWrapper\DebugEngineWrapper.dll</HintPath>
     </Reference>
-    <Reference Include="ICSharpCode.AvalonEdit">
+    <Reference Include="ICSharpCode.AvalonEdit, Version=4.0.0.6963, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Misc\ICSharpCode.AvalonEdit.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
