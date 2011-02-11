@@ -78,6 +78,34 @@ namespace D_IDE.Core
 					ed.RefreshDebugHighlightings();
 				}
 			}
+
+			static GenericDebugSupport genDbgSupport;
+			/// <summary>
+			/// If the current editor belongs to a LanguageBinding that supports special debugging support, return this one.
+			/// Otherwise, the very generic and basic Debug Support will be returned.
+			/// </summary>
+			/// <returns></returns>
+			public static GenericDebugSupport GetCurrentDebugSupport()
+			{
+				if (!IsDebugging)
+					return null;
+
+				string f="";
+				uint ln=0;
+				if (!Engine.Symbols.GetLineByOffset(Engine.CurrentInstructionOffset, out f, out ln))
+					return null;
+
+				bool _u=false;
+				var lang = AbstractLanguageBinding.SearchBinding(f, out _u);
+				if (lang == null || !lang.CanUseDebugging)
+				{
+					if (genDbgSupport == null)
+						genDbgSupport = new GenericDebugSupport();
+					return genDbgSupport;
+				}
+
+				return lang.DebugSupport;
+			}
 		}
 
 		public class BreakpointManagement

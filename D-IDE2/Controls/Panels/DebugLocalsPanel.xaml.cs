@@ -40,39 +40,25 @@ namespace D_IDE.Controls.Panels
 		{
 			public System.Collections.IEnumerable GetChildren(object parent)
 			{
-				var ret = new List<LocalsPanelItem>();
-				if (parent == null)
-				{
-					foreach (var s in IDEManager.DebugManagement.Engine.Symbols.ScopeLocalSymbols)
-						ret.Add( new LocalsPanelItem() { Symbol = s, Name = s.Name, Value = s.TextValue, ValueType = s.TypeName });
-					return ret;
-				}
+				var supp= CoreManager.DebugManagement.GetCurrentDebugSupport();
+				if(supp==null)
+					return null;
 
-				var pi = parent as LocalsPanelItem;
-				foreach (var s in pi.Symbol.Children)
-					ret.Add(new LocalsPanelItem() { Symbol = s, Name = s.Name, Value = s.TextValue, ValueType = s.TypeName });
-				return ret;
+				return supp.GetChildSymbols(IDEManager.DebugManagement.Engine.Symbols.ScopeLocalSymbols,parent as DebugSymbolWrapper);
 			}
 
 			public bool HasChildren(object parent)
 			{
-				var pi = parent as LocalsPanelItem;
+				var pi = parent as DebugSymbolWrapper;
 				if (pi == null)
 					return false;
 
-				return pi.Symbol.ChildrenCount > 0;
+				var supp = CoreManager.DebugManagement.GetCurrentDebugSupport();
+				if (supp == null)
+					return false;
+
+				return supp.HasChildren(IDEManager.DebugManagement.Engine.Symbols.ScopeLocalSymbols, pi) ;
 			}
-		}
-
-		public class LocalsPanelItem
-		{
-			public DebugScopedSymbol Symbol { get; set; }
-			public string Name { get; set; }
-			public string Value { get; set; }
-			public string ValueType { get; set; }
-
-			readonly ObservableCollection<LocalsPanelItem> children = new ObservableCollection<LocalsPanelItem>();
-			public ObservableCollection<LocalsPanelItem> Children { get { return children; } }
 		}
 	}
 }

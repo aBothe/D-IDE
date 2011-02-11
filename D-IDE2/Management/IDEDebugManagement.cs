@@ -157,7 +157,8 @@ namespace D_IDE
 
 			public static void UpdateDebuggingPanels()
 			{
-				IDEManager.Instance.MainWindow.Panel_Locals.RefreshTable();
+				if(IDEManager.Instance.CurrentEditor!=null)
+					IDEManager.Instance.MainWindow.Panel_Locals.RefreshTable();
 				//TODO: Call Stack window - with switching between different stack levels?
 			}
 

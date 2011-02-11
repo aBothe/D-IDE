@@ -195,16 +195,16 @@ namespace DebugEngineWrapper
 			}
 		}
 #pragma region Evaluation of local symbol contents
-		property array<DebugScopedSymbol^>^ ScopeLocalSymbols
+		property DebugSymbolGroup^ ScopeLocalSymbols
 		{
-			array<DebugScopedSymbol^>^ get(){
+			DebugSymbolGroup^ get(){
 				DebugSymbolGroup^ dsg;
 
 				DbgSymbolGroup* sg;
 				if(sym->GetScopeSymbolGroup(DEBUG_SCOPE_GROUP_LOCALS,0,(PDEBUG_SYMBOL_GROUP*)&sg)==S_OK)
 				{
 					dsg=gcnew DebugSymbolGroup(sg);
-					return dsg->Symbols;
+					return dsg;
 				}
 				return nullptr;
 			}

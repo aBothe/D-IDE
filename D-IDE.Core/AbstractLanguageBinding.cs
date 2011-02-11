@@ -106,18 +106,9 @@ namespace D_IDE.Core
 		public virtual IBuildSupport BuildSupport { get { return null; } }
 
 		/// <summary>
-		/// Retrieves the value of a debug symbol.
-		/// Debugging requires CodeCompletion to enable better node search.
-		/// Only called if CanUseDebugging is true.
+		/// Debug symbol resolving suppport. Only requested if CanUseDebugging is set to true
 		/// </summary>
-		/// <param name="ModuleTree"></param>
-		/// <param name="ScopedSrcLine"></param>
-		/// <param name="sym"></param>
-		/// <returns></returns>
-		public virtual string BuildSymbolValueString(
-			Parser.Core.AbstractSyntaxTree ModuleTree,
-			uint ScopedSrcLine,
-			DebugScopedSymbol sym) { throw new NotImplementedException(); }
+		public virtual GenericDebugSupport DebugSupport { get { return null; } }
 	}
 
 	public class FileTemplate

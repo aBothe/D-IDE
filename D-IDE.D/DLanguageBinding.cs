@@ -149,9 +149,13 @@ namespace D_IDE.D
 		}
 
 		#region Debugging
-		public override string BuildSymbolValueString(AbstractSyntaxTree ModuleTree, uint ScopedSrcLine, DebugScopedSymbol sym)
+		readonly GenericDebugSupport DDebugging = new DDebugSupport();
+		public override GenericDebugSupport DebugSupport
 		{
-			throw new NotImplementedException();
+			get
+			{
+				return DDebugging;
+			}
 		}
 		#endregion
 
