@@ -50,6 +50,7 @@ namespace D_IDE
 							CurrentSolution.ProjectCache.Add(Project.LoadProjectFromFile(CurrentSolution, f));
 
 					foreach (var prj in CurrentSolution)
+						if (prj != null && prj.LastOpenedFiles.Count > 0)
 						foreach (var fn in prj.LastOpenedFiles)
 							OpenFile(fn);
 
