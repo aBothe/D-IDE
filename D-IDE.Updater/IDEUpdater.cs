@@ -14,7 +14,7 @@ namespace D_IDE.Updater
 	public class IDEUpdater
 	{
 		public static string ArchiveUrl = "http://d-ide.svn.sourceforge.net/viewvc/d-ide/d-ide.zip";
-		public static string OutputDir = Directory.GetCurrentDirectory();
+		public static string OutputDir = Directory.GetCurrentDirectory()+"\\D-IDE";
 
 		[STAThread]
 		static void Main(string[] args)
@@ -34,6 +34,7 @@ namespace D_IDE.Updater
 		{
 			TempFile = Path.GetTempFileName();
 			Console.WriteLine("Download "+ArchiveUrl);
+			Console.WriteLine("This may will take a longer time due to the initialization of .NET's WebClient....");
 			try
 			{
 				var wc = new WebClient();

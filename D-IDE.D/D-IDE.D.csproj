@@ -104,7 +104,9 @@
     <Content Include="Resources\Generic_Application.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="D.xshd" />
+    <None Include="D.xshd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Page Include="DPrjSettingsPage.xaml">

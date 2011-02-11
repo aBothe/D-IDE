@@ -9,6 +9,19 @@
 		xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock"
 		KeyDown="RibbonWindow_KeyDown"
 		Closing="RibbonWindow_Closing">
+	
+	<!-- Menu commands -->
+	
+	<r:RibbonWindow.CommandBindings>
+		
+	</r:RibbonWindow.CommandBindings>
+	
+	<r:RibbonWindow.InputBindings>
+		<KeyBinding Key="X" Modifiers="Alt" Command="Close" />
+	</r:RibbonWindow.InputBindings>
+	
+	<!-- UI Definitions -->
+	
 	<Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -37,15 +50,15 @@
 					<r:RibbonSeparator />
 					<r:RibbonApplicationMenuItem Header="Settings" ImageSource="Resources/settings_32.png" Click="Settings" />
 					<r:RibbonSeparator />
-					<r:RibbonApplicationMenuItem Header="Exit" Click="Exit" ImageSource="Resources/application-exit-3.ico" ToolTipTitle="Exit D-IDE (Alt+F4)" />
+					<r:RibbonApplicationMenuItem Header="Exit" Command="Close" ImageSource="Resources/application-exit-3.ico" ToolTipTitle="Exit D-IDE (Alt+X)" />
 				</r:RibbonApplicationMenu>
 			</r:Ribbon.ApplicationMenu>
 
-			<r:RibbonTab Header="Code" Name="Tab_Edit">
+			<r:RibbonTab Header="Code" Name="Tab_Edit"  IsSelected="True">
 				<r:RibbonGroup Header="Edit">
-					<r:RibbonButton SmallImageSource="Resources/Icons.16x16.CutIcon.png" Label="Cut" />
-					<r:RibbonButton SmallImageSource="Resources/Icons.16x16.CopyIcon.png" Label="Copy" />
-					<r:RibbonButton SmallImageSource="Resources/Icons.16x16.PasteIcon.png" Label="Paste" />
+					<r:RibbonButton SmallImageSource="Resources/Icons.16x16.CutIcon.png" Command="Cut" Label="Cut" />
+					<r:RibbonButton SmallImageSource="Resources/Icons.16x16.CopyIcon.png" Command="Copy" Label="Copy" />
+					<r:RibbonButton SmallImageSource="Resources/Icons.16x16.PasteIcon.png" Command="Paste" Label="Paste" />
 				</r:RibbonGroup>
 
 				<r:RibbonGroup Header="Search">
@@ -96,7 +109,7 @@
 				</r:RibbonGroup>
 			</r:RibbonTab>
 
-			<r:RibbonTab Header="Build" Name="Tab_Build" IsSelected="True">
+			<r:RibbonTab Header="Build" Name="Tab_Build">
 				<r:RibbonGroup Header="Build">
 					<r:RibbonButton Click="BuildSolution_Click" Label="Build" ToolTipTitle="Build current solution or module" ToolTipDescription="Note: If the 'Current Module' Checkbox has been ticked, the current module will be built only" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
 					<r:RibbonButton Label="Stop Building" Click="Button_StopBuilding_Click" IsEnabled="False" Name="Button_StopBuilding" SmallImageSource="Resources/stop_build.png" />
@@ -126,7 +139,10 @@
 				</r:RibbonGroup>
 			</r:RibbonTab>
 
-
+			<r:RibbonTab Header="Help">
+				<r:RibbonGroup Header="Internet resources">
+				</r:RibbonGroup>
+			</r:RibbonTab>
 				
 		</r:Ribbon>
 		
