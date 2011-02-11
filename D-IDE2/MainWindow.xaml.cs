@@ -93,7 +93,7 @@ namespace D_IDE
 
 				Tab_Edit.IsEnabled = IsEditable;
 				Check_RunCurModule.IsEnabled = Tab_Project.IsEnabled = HasProject || IDEManager.CurrentSolution != null;
-				Tab_Build.IsEnabled = (IsEditable || IDEManager.CurrentSolution != null) && !IDEManager.IDEDebugManagement.IsExecuting;
+				Tab_Build.IsEnabled = ((IsEditable && ed.LanguageBinding!=null) || IDEManager.CurrentSolution != null) && !IDEManager.IDEDebugManagement.IsExecuting;
 
 				// Restore tab selection when executing finished
 				if (!Tab_Debug.IsEnabled && IDEManager.IDEDebugManagement.IsExecuting)

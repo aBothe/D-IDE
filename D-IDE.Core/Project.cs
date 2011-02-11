@@ -131,7 +131,7 @@ namespace D_IDE.Core
 									sln.AddProject(ret); // Ensure the project is loaded into the cache
 								return ret;
 							}
-			ErrorLogger.Log(new FileLoadException("Unkown project type", FileName));
+			ErrorLogger.Log(new FileLoadException("Unkown project type of "+FileName, FileName));
 				return null;
 		}
 

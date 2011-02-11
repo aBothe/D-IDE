@@ -41,15 +41,19 @@ namespace D_IDE
 					 * - Load all of its projects
 					 * - Open last opened files
 					 */
-					CurrentSolution = new Solution(FileName);
+					var sln =CurrentSolution = new Solution(FileName);
 
 					AdjustLastFileList(FileName, true);
 
-					foreach (var f in CurrentSolution.ProjectFiles)
-						if (File.Exists(CurrentSolution.ToAbsoluteFileName(f)))
-							CurrentSolution.ProjectCache.Add(Project.LoadProjectFromFile(CurrentSolution, f));
+					foreach (var f in sln.ProjectFiles)
+						if (File.Exists(sln.ToAbsoluteFileName(f)))
+						{
+							var prj = Project.LoadProjectFromFile(sln, f);
+							if(prj!=null)
+								sln.ProjectCache.Add(prj);
+						}
 
-					foreach (var prj in CurrentSolution)
+					foreach (var prj in sln)
 						if (prj != null && prj.LastOpenedFiles.Count > 0)
 						foreach (var fn in prj.LastOpenedFiles)
 							OpenFile(fn);
