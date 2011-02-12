@@ -14,7 +14,7 @@ goto :x64
 :done
 
 
-%DEVENV% "..\D-IDE\D-IDE.sln"
+%DEVENV% "..\D-IDE2.sln"
 
 REM copy ".\TestInstallerHelper\bin\Release\DIDE.Installer.dll" .
 

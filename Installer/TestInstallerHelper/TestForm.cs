@@ -19,7 +19,7 @@ namespace TestInstallerHelper
 
         private void button1_Click(object sender, EventArgs e)
         {
-            string file = @".\D-IDE.settings.xml";
+            string file = @".\D.config.xml";
             //if (File.Exists(file)) File.Delete(file);
             InstallerHelper.CreateConfigurationFile(file);
 

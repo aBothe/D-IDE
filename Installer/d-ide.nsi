@@ -35,6 +35,7 @@ Var DMD2_LATEST_VERSION
 Var D_WEB_INSTALL_PATH
 Var PERFORM_CLR_FEATURES
 Var IS_CONNECTED
+Var CONFIG_DIR
 
 ;--------------------------------------------------------
 ; Setting various predefined NSIS Variables
@@ -63,6 +64,9 @@ Function .onInit
 	ReadRegStr $DMD1_BIN_VERSION HKLM "SOFTWARE\D-IDE2" "Dmd1xBinVersion"
 	ReadRegStr $DMD2_BIN_VERSION HKLM "SOFTWARE\D-IDE2" "Dmd2xBinVersion"
 	ReadRegStr $D_WEB_INSTALL_PATH HKLM "SOFTWARE\D" "Install_Dir"
+	
+	SetShellVarContext all
+	StrCpy $CONFIG_DIR "$APPDATA\D-IDE.config"
 
 	Call DotNet20Exists
 	Pop $PERFORM_CLR_FEATURES
@@ -301,15 +305,14 @@ SectionEnd
 ;--------------------------------------------------------
 Section "-Install Program Files" install_section_id
 	CreateDirectory "$INSTDIR"
-	CreateDirectory "$INSTDIR\D-IDE.config"
+	CreateDirectory "$CONFIG_DIR"	
 	SetOutPath "$INSTDIR"
 
 	SetOverwrite on
 	File /nonfatal /x .svn /x *.vshost* "${BINARY_APPLICATION_FILES}\*.exe"
 	File /nonfatal /x .svn /x *.vshost* "${BINARY_APPLICATION_FILES}\*.exe.config"
 	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.dll"
-	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.xml"
-	;File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.xshd"
+	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.xshd"
 
 	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
 	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
@@ -428,21 +431,21 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion" $DMD2_BIN_VERSION
 
 		
-		StrCpy $0 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
-		StrCpy $1 "$TEMP\D-IDE.settings.xml"
+		StrCpy $0 "$CONFIG_DIR\D.config.xml"
+		StrCpy $1 "$TEMP\D.config.xml"
 		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
 		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
 
 		
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 1 "${D_FILE_LIST}"
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$TEMP\D-IDE.settings.xml"
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$TEMP\D.config.xml"
 		pop $1
 		StrCmp $1 "" +2 0
 		DetailPrint $1
 		
 		
-		StrCpy $0 "$TEMP\D-IDE.settings.xml"
-		StrCpy $1 "$INSTDIR\D-IDE.config\D-IDE.settings.xml"
+		StrCpy $0 "$TEMP\D.config.xml"
+		StrCpy $1 "$CONFIG_DIR\D.config.xml"
 		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
 		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
 
@@ -466,9 +469,9 @@ SectionEnd
 ;--------------------------------------------------------
 Section "-Start Menu Shortcuts" start_menu_section_id
 
-	CreateDirectory "$SMPROGRAMS\D-IDE"
-	CreateShortCut "$SMPROGRAMS\D-IDE\D-IDE.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
-	CreateShortCut "$SMPROGRAMS\D-IDE\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
+	CreateDirectory "$SMPROGRAMS\D-IDE 2"
+	CreateShortCut "$SMPROGRAMS\D-IDE 2\D-IDE 2.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
+	CreateShortCut "$SMPROGRAMS\D-IDE 2\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
 
 	CreateShortCut "$DESKTOP\D-IDE.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
 SectionEnd

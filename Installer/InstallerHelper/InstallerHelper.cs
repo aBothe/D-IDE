@@ -162,13 +162,13 @@ namespace DIDE.Installer
                 Dictionary<string, string[]> dict = new Dictionary<string, string[]>();
                 if (LocalCompiler.DMD1Info != null)
                 {
-                    dict.Add("//settings/dmd[@version='1']/binpath", new string[] { LocalCompiler.DMD1Info.ExecutableFile.Directory.FullName });
-                    dict.Add("//settings/dmd[@version='1']/imports/dir", LocalCompiler.DMD1Info.LibraryPaths);
+                    dict.Add("//dsettings/dmd[@version='1']/basedirectory", new string[] { LocalCompiler.DMD1Info.ExecutableFile.Directory.FullName });
+                    //dict.Add("//dsettings/dmd[@version='1']/imports/dir", LocalCompiler.DMD1Info.LibraryPaths);
                 }
                 if (LocalCompiler.DMD2Info != null)
                 {
-                    dict.Add("//settings/dmd[@version='2']/binpath", new string[] { LocalCompiler.DMD2Info.ExecutableFile.Directory.FullName });
-                    dict.Add("//settings/dmd[@version='2']/imports/dir", LocalCompiler.DMD2Info.LibraryPaths);
+                    dict.Add("//dsettings/dmd[@version='2']/basedirectory", new string[] { LocalCompiler.DMD2Info.ExecutableFile.Directory.FullName });
+                    //dict.Add("//dsettings/dmd[@version='2']/imports/dir", LocalCompiler.DMD2Info.LibraryPaths);
                 }
 
                 Configuration.CreateConfigurationFile(filePath, dict);
