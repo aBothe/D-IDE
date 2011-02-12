@@ -41,7 +41,7 @@ Var CONFIG_DIR
 ; Setting various predefined NSIS Variables
 ;--------------------------------------------------------
 Name "D-IDE 2"
-OutFile ".\Builds\D-IDE2.${FILEDATE}.exe"
+OutFile ".\Builds\D-IDE2.original.${FILEDATE}.exe"
 BrandingText "Alexander Bothe"
 InstallDir $PROGRAMFILES\D-IDE2
 InstallDirRegKey HKLM "Software\D-IDE2" "Install_Dir"

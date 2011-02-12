@@ -18,7 +18,7 @@ goto :x64
 
 REM copy ".\TestInstallerHelper\bin\Release\DIDE.Installer.dll" .
 
-"%MAKENSIS%\makensis.exe" ".\d-ide.nsi" > ".\installer_build.log"
+"%MAKENSIS%\makensis.exe" ".\d-ide.original.nsi" > ".\installer_build.log"
 
 set DEVENV=
 set MAKENSIS=
