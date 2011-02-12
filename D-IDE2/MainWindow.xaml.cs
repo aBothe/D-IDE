@@ -129,6 +129,7 @@ namespace D_IDE
 			InitializeComponent();
 
 			// Init logging support
+			ErrorLogger.Instance = new IDELogger(this);
 
 			// Load global settings
 			try
