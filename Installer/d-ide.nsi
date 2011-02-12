@@ -197,7 +197,8 @@ SectionEnd
 ; Create start menu and desktop shortcuts
 ;--------------------------------------------------------
 Section "Sample Projects" samples_section_id
-	CreateShortCut "$DESKTOP\D-IDE.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
+	;sample project copied here
+	CreateDirectory "$INSTDIR\Samples"
 SectionEnd
 
 ;--------------------------------------------------------
