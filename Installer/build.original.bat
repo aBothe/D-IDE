@@ -13,7 +13,10 @@ goto :x64
 	if "%MAKENSIS%"=="" set MAKENSIS=%PROGRAMFILES(X86)%\NSIS
 :done
 
+
 %DEVENV% "..\D-IDE2.sln"
+
+REM copy ".\TestInstallerHelper\bin\Release\DIDE.Installer.dll" .
 
 "%MAKENSIS%\makensis.exe" ".\d-ide.nsi" > ".\installer_build.log"
 

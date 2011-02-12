@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
-; Include ModernUI
+; Include UltraModernUI
 ;--------------------------------------------------------
-!include MUI2.nsh
+!include UMUI.nsh
 
 ;--------------------------------------------------------
 ; Setting custom variables and constants
@@ -12,28 +12,10 @@
 
 !define DNF4_URL "http://download.microsoft.com/download/1/B/E/1BE39E79-7E39-46A3-96FF-047F95396215/dotNetFx40_Full_setup.exe"
 !define VCPPR2010_URL "http://download.microsoft.com/download/5/B/C/5BC5DBB3-652D-4DCE-B14A-475AB85EEF6E/vcredist_x86.exe"
-!define DMD_URL "http://ftp.digitalmars.com/dinstaller.exe"
-!define DMD_FILE_LIST_URL "http://ftp.digitalmars.com/"
 
 !define /date FILEDATE "%Y%m%d"
 !define /date DATE "%Y.%m.%d"
 
-!define TEXT_DMD_CONFIG_TITLE "Digital Mars D Compiler"
-!define TEXT_DMD_CONFIG_SUBTITLE "Choose your installation type."
-
-!define DMD_WEB_INSTALLER "DMD Web Installer"
-!define DMD_UNZIP_AND_COPY "DMD Unzip and Copy"
-!define D_FILE_LIST "$TEMP\dmd.files.${FILEDATE}.html"
-
-Var DMD_INSTALL_ACTION
-Var DMD1_BIN_PATH
-Var DMD2_BIN_PATH
-Var DMD1_BIN_VERSION
-Var DMD2_BIN_VERSION
-Var DMD1_LATEST_VERSION
-Var DMD2_LATEST_VERSION
-Var D_WEB_INSTALL_PATH
-Var PERFORM_CLR_FEATURES
 Var IS_CONNECTED
 Var CONFIG_DIR
 
@@ -43,8 +25,8 @@ Var CONFIG_DIR
 Name "D-IDE 2"
 OutFile ".\Builds\D-IDE2.${FILEDATE}.exe"
 BrandingText "Alexander Bothe"
-InstallDir $PROGRAMFILES\D-IDE2
-InstallDirRegKey HKLM "Software\D-IDE2" "Install_Dir"
+InstallDir $PROGRAMFILES\D-IDE
+InstallDirRegKey HKLM "Software\D-IDE" "Install_Dir"
 RequestExecutionLevel highest
 
 ;--------------------------------------------------------
@@ -53,36 +35,16 @@ RequestExecutionLevel highest
 ;--------------------------------------------------------
 Function .onInit
 	InitPluginsDir
-	File /oname=$PLUGINSDIR\dmd-config-choice.ini "dmd-config-choice.ini"
-	File /oname=$PLUGINSDIR\dmd-config.ini "dmd-config.ini"
 
 	SetOutPath $PLUGINSDIR
 	File "DIDE.Installer.dll"
 	
-	ReadRegStr $DMD1_BIN_PATH HKLM "SOFTWARE\D-IDE2" "Dmd1xBinPath"
-	ReadRegStr $DMD2_BIN_PATH HKLM "SOFTWARE\D-IDE2" "Dmd2xBinPath"
-	ReadRegStr $DMD1_BIN_VERSION HKLM "SOFTWARE\D-IDE2" "Dmd1xBinVersion"
-	ReadRegStr $DMD2_BIN_VERSION HKLM "SOFTWARE\D-IDE2" "Dmd2xBinVersion"
-	ReadRegStr $D_WEB_INSTALL_PATH HKLM "SOFTWARE\D" "Install_Dir"
-	
 	SetShellVarContext all
 	StrCpy $CONFIG_DIR "$APPDATA\D-IDE.config"
-
-	Call DotNet20Exists
-	Pop $PERFORM_CLR_FEATURES
 	
 	Call IsConnected
 	Pop $IS_CONNECTED
-	
-	IntCmp $IS_CONNECTED 1 0 skipToEnd skipToEnd
 
-		inetc::get "${DMD_FILE_LIST_URL}" "${D_FILE_LIST}"
-		Pop $0
-		
-		IntCmp $PERFORM_CLR_FEATURES 1 0 skipToEnd skipToEnd
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 1 "${D_FILE_LIST}"
-
-	skipToEnd:
 FunctionEnd
 
 ;--------------------------------------------------------
@@ -99,133 +61,34 @@ FunctionEnd
 ;--------------------------------------------------------
 ; Modern UI Configuration
 ;--------------------------------------------------------
-!define MUI_HEADERIMAGE
+!define UMUI_SKIN "blue"
+
+!define UMUI_PAGEBGIMAGE
+!define UMUI_UNPAGEBGIMAGE
+
 !define MUI_HEADERIMAGE_BITMAP ".\d-ide-logo.bmp";
 !define MUI_ABORTWARNING
+!define MUI_UNABORTWARNING
 
 ;Installer Pages
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "License.rtf"
 !insertmacro MUI_PAGE_DIRECTORY
-Page custom DmdConfigChoicePage DmdConfigChoicePageValidation
-Page custom DmdConfigPage DmdConfigPageValidation
+!insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 
 ;Uninstaller Pages
-!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro UMUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 
 !insertmacro MUI_LANGUAGE "English"
-
-
-ReserveFile "dmd-config-choice.ini"
-ReserveFile "dmd-config.ini"
 
 ;--------------------------------------------------------
 ; Setup Icons
 ;--------------------------------------------------------
 Icon ".\install.ico"
 UninstallIcon ".\uninstall.ico"
-
-;------------------------------------------------------------------------
-; In this section, we shall use a custom configuration page.
-;------------------------------------------------------------------------
-Function DmdConfigChoicePage
-
-	!insertmacro MUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
-	InstallOptions::dialog "$PLUGINSDIR\dmd-config-choice.ini"
-FunctionEnd
-
-Function DmdConfigChoicePageValidation
-
-    ReadINIStr $0 "$PLUGINSDIR\dmd-config-choice.ini" "Settings" "State"
-    StrCmp $0 1 doNothingOption
-    StrCmp $0 2 webInstallerOption
-    StrCmp $0 3 unzipOption
-
-    Goto done
-
-    doNothingOption:
-		StrCpy $DMD_INSTALL_ACTION ""
-        Abort ; Return to the page
-
-    webInstallerOption:
-		StrCpy $DMD_INSTALL_ACTION "${DMD_WEB_INSTALLER}"
-		Abort ; Return to the page
-
-    unzipOption:
-		IntCmp $PERFORM_CLR_FEATURES 1 +2
-		MessageBox MB_OK "This feature requires the .Net Framework 2.0."
-
-		StrCpy $DMD_INSTALL_ACTION "${DMD_UNZIP_AND_COPY}"
-        Abort ; Return to the page
-
-	done:
-FunctionEnd
-
-;------------------------------------------------------------------------
-; In this section, we shall use a custom configuration page.
-;------------------------------------------------------------------------
-Function DmdConfigPage
-	StrCmp $DMD_INSTALL_ACTION "${DMD_UNZIP_AND_COPY}" DownloadAndUnzip
-	Abort
-
-	DownloadAndUnzip:
-		IntCmp $PERFORM_CLR_FEATURES 1 +2
-		Abort
-
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
-		pop $DMD1_BIN_VERSION
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Version" 0
-		pop $DMD1_LATEST_VERSION
-		IntCmp $DMD1_BIN_VERSION -1 +3 0
-			WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 3" "Text" "Version 1.$DMD1_BIN_VERSION Installed (Latest is 1.$DMD1_LATEST_VERSION)"
-		Goto +2
-			WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 3" "Text" "(Latest is 1.$DMD1_LATEST_VERSION)"
-
-
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Path" 0
-		pop $DMD1_BIN_PATH
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 4" "State" $DMD1_BIN_PATH
-
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Version" 0
-		pop $DMD2_BIN_VERSION
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Version" 0
-		pop $DMD2_LATEST_VERSION
-		IntCmp $DMD2_BIN_VERSION -1 +3 0
-			WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 6" "Text" "Version 2.$DMD2_BIN_VERSION Installed (Latest is 2.$DMD2_LATEST_VERSION)"
-		Goto +2
-			WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 6" "Text" "(Latest is 2.$DMD2_LATEST_VERSION)"
-
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Path" 0
-		pop $DMD2_BIN_PATH
-		WriteINIStr "$PLUGINSDIR\dmd-config.ini" "Field 7" "State" $DMD2_BIN_PATH
-
-		
-	!insertmacro MUI_HEADER_TEXT "${TEXT_DMD_CONFIG_TITLE}" "${TEXT_DMD_CONFIG_SUBTITLE}"
-	InstallOptions::dialog "$PLUGINSDIR\dmd-config.ini"
-FunctionEnd
-
-Function DmdConfigPageValidation
-    ; At this point the user has either pressed Next or one of our custom buttons
-    ; We find out which by reading from the INI file
-    ReadINIStr $0 "$PLUGINSDIR\dmd-config.ini" "Settings" "State"
-    StrCmp $0 4 dmd1PathChanged
-    StrCmp $0 7 dmd2PathChanged done
-
-    dmd1PathChanged:
-		ReadINIStr $DMD1_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 4" "State"
-        Abort ; Return to the page
-
-    dmd2PathChanged:
-		ReadINIStr $DMD2_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 7" "State"
-        Abort ; Return to the page
-
-    done:
-		ReadINIStr $DMD1_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 4" "State"
-		ReadINIStr $DMD2_BIN_PATH "$PLUGINSDIR\dmd-config.ini" "Field 7" "State"
-FunctionEnd
 
 ;--------------------------------------------------------
 ; Download and install the .Net Framework 4
@@ -246,7 +109,6 @@ Section "-.Net Framework 4" net4_section_id
 
 	FileExistsAlready:
 		DetailPrint "Installing the .Net Framework 4."
-		;ExecWait '"$SYSDIR\msiexec.exe" "$2" /quiet'
 		ExecWait '"$2" /quiet'
 
 		Call DotNet4Exists
@@ -317,140 +179,7 @@ Section "-Install Program Files" install_section_id
 	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
 	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
 
-	WriteRegStr HKLM "Software\D-IDE2" "" $INSTDIR
-	WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd1xBinPath" $DMD1_BIN_PATH
-	WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd2xBinPath" $DMD2_BIN_PATH
-	WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd1xBinVersion" $DMD1_BIN_VERSION
-	WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd2xBinVersion" $DMD2_BIN_VERSION
-SectionEnd
-
-
-
-;--------------------------------------------------------
-; Download and install Digital-Mars DMD
-;--------------------------------------------------------
-Section "-Digital-Mars DMD Install/Update" dmd_section_id
-	DetailPrint "Internet? $IS_CONNECTED, .Net 2.0? $PERFORM_CLR_FEATURES"
-
-	StrCmp $DMD_INSTALL_ACTION "${DMD_WEB_INSTALLER}" WebInstall 0
-	StrCmp $DMD_INSTALL_ACTION "${DMD_UNZIP_AND_COPY}" DownloadAndUnzip ConfigureDMD
-
-	WebInstall:
-
-		IntCmp $IS_CONNECTED 1 +2
-			MessageBox MB_OK "It seems that you are not connected to the internet. Please connect now if you wish to download the Digital Mars compilers."
-
-		DetailPrint "Installing DMD with the official DMD Web Installer."
-		StrCpy $1 "dinstaller.exe"
-		StrCpy $2 "$EXEDIR\$1"
-		IfFileExists $2 FileExists FileMissing
-
-		FileMissing:
-			DetailPrint "Digital Mars DMD not installed... Downloading file."
-			StrCpy $2 "$EXEDIR\$1"
-			NSISdl::download "${DMD_URL}" $2
-
-		FileExists:
-			DetailPrint "Installing Digital Mars DMD."
-			ExecWait '"$2"'
-
-		;get the latest install location from the registry!
-		ReadRegStr $D_WEB_INSTALL_PATH HKLM "SOFTWARE\D" "Install_Dir"
-		StrCpy $DMD1_BIN_PATH "$D_WEB_INSTALL_PATH\dmd"
-		StrCpy $DMD2_BIN_PATH "$D_WEB_INSTALL_PATH\dmd2"
-		WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd1xBinPath" $DMD1_BIN_PATH
-		WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd2xBinPath" $DMD2_BIN_PATH
-
-		Goto ConfigureDMD
-
-	DownloadAndUnzip:
-
-		IntCmp $PERFORM_CLR_FEATURES 0 Finished
-
-		IntCmp $IS_CONNECTED 1 +2
-			MessageBox MB_OK "It seems that you are not connected to the internet. Please connect now if you wish to download the Digital Mars compilers."
-
-		DetailPrint "Downloading and instaling DMD 1.$DMD1_LATEST_VERSION to target location."
-		StrCpy $1 "dmd1.$DMD1_LATEST_VERSION.zip"
-		StrCpy $2 "$EXEDIR\$1"
-		IfFileExists $2 Dmd1FileExists Dmd1FileMissing
-
-		Dmd1FileMissing:
-			StrCpy $2 "$TEMP\$1"
-			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD1Url" 0
-			Pop $0
-			NSISdl::download "$0" $2
-			IfFileExists $2 Dmd1FileExists Dmd2FileMissing
-
-		Dmd1FileExists:
-			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD1_BIN_PATH) and unzip the new DMD 1 Compiler into it?" IDYES 0 IDNO Dmd2FileMissing
-			RMDir /r "$DMD1_BIN_PATH"
-			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "FixDmdInstallPath" 1 "$DMD1_BIN_PATH"
-			Pop $3
-			CreateDirectory "$3"
-			DetailPrint "Unzipping DMD 1.$DMD1_LATEST_VERSION to $3."
-			nsisunz::Unzip "$2" "$3"
-
-			DetailPrint "Downloading and instaling DMD 2.$DMD2_LATEST_VERSION to target location."
-			StrCpy $1 "dmd2.$DMD2_LATEST_VERSION.zip"
-			StrCpy $2 "$EXEDIR\$1"
-			IfFileExists $2 Dmd2FileExists Dmd2FileMissing
-
-		Dmd2FileMissing:
-			StrCpy $1 "dmd2.$DMD2_LATEST_VERSION.zip"
-			StrCpy $2 "$TEMP\$1"
-			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLatestDMD2Url" 0
-			Pop $0
-			NSISdl::download "$0" $2
-			IfFileExists $2 Dmd2FileExists ConfigureDMD
-
-		Dmd2FileExists:
-			MessageBox MB_YESNO "Are you sure you want to clean out the folder ($DMD2_BIN_PATH) and unzip the new DMD 2 Compiler into it?" IDYES 0 IDNO ConfigureDMD
-			RMDir /r "$DMD2_BIN_PATH"
-			CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "FixDmdInstallPath" 1 "$DMD2_BIN_PATH"
-			Pop $3
-			CreateDirectory "$3"
-			DetailPrint "Unzipping DMD 2.$DMD2_LATEST_VERSION to $3."
-			nsisunz::Unzip "$2" "$3"
-
-			Goto ConfigureDMD
-
-	ConfigureDMD:
-		IntCmp $PERFORM_CLR_FEATURES 0 Finished
-
-		DetailPrint "Configuring DMD and D-IDE 2."
-
-		IntCmp $DMD1_BIN_VERSION -1 0 +4 +4
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
-		pop $DMD1_BIN_VERSION
-		WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd1xBinVersion" $DMD1_BIN_VERSION
-
-		IntCmp $DMD2_BIN_VERSION -1 0 +4 +4
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Version" 0
-		pop $DMD2_BIN_VERSION
-		WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd2xBinVersion" $DMD2_BIN_VERSION
-
-		
-		StrCpy $0 "$CONFIG_DIR\D.config.xml"
-		StrCpy $1 "$TEMP\D.config.xml"
-		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
-		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
-
-		
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "Initialize" 1 "${D_FILE_LIST}"
-		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$TEMP\D.config.xml"
-		pop $1
-		StrCmp $1 "" +2 0
-		DetailPrint $1
-		
-		
-		StrCpy $0 "$TEMP\D.config.xml"
-		StrCpy $1 "$CONFIG_DIR\D.config.xml"
-		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
-		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
-
-	Finished:
-
+	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
 SectionEnd
 
 ;--------------------------------------------------------
@@ -459,70 +188,60 @@ SectionEnd
 Section "-Write Uninstaller" write_uninstaller_id
 	WriteUninstaller "$INSTDIR\Uninstall.exe"
 
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE2" "DisplayName" "D-IDE 2"
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE2" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE2" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE" "DisplayName" "D-IDE"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
 SectionEnd
 
 ;--------------------------------------------------------
 ; Create start menu and desktop shortcuts
 ;--------------------------------------------------------
-Section "-Start Menu Shortcuts" start_menu_section_id
+Section "Sample Projects" samples_section_id
+	CreateShortCut "$DESKTOP\D-IDE.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
+SectionEnd
 
-	CreateDirectory "$SMPROGRAMS\D-IDE 2"
-	CreateShortCut "$SMPROGRAMS\D-IDE 2\D-IDE 2.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
-	CreateShortCut "$SMPROGRAMS\D-IDE 2\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
+;--------------------------------------------------------
+; Create start menu shortcuts
+;--------------------------------------------------------
+Section "Start Menu Shortcuts" start_menu_section_id
 
+	CreateDirectory "$SMPROGRAMS\D-IDE"
+	CreateShortCut "$SMPROGRAMS\D-IDE\D-IDE.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
+	CreateShortCut "$SMPROGRAMS\D-IDE\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
+SectionEnd
+
+;--------------------------------------------------------
+; Create desktop shortcut
+;--------------------------------------------------------
+Section "Desktop Shortcut" desktop_section_id
 	CreateShortCut "$DESKTOP\D-IDE.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
 SectionEnd
 
 ;--------------------------------------------------------
 ; Launch Program After Install with popup dialog
 ;--------------------------------------------------------
-Section
-	MessageBox MB_YESNO|MB_ICONQUESTION "Open D-IDE now?" IDNO DontLaunchThingy
-		ExecShell open "$INSTDIR\D-IDE.exe" SW_SHOWNORMAL
-		Quit
-	DontLaunchThingy:
+;Section /o "Launch D-IDE"
+Section  "Launch D-IDE"
+	ExecShell open "$INSTDIR\D-IDE.exe" SW_SHOWNORMAL
 SectionEnd
 
 ;--------------------------------------------------------
 ; Uninstaller Section
 ;--------------------------------------------------------
 Section "Uninstall"
-	DetailPrint "Remove D-IDE 2 Files"
+	DetailPrint "Remove D-IDE Files"
 
-	Delete "$SMPROGRAMS\D-IDE 2\*.*"
-	RMDir "$SMPROGRAMS\D-IDE 2"
+	Delete "$SMPROGRAMS\D-IDE\*.*"
+	RMDir "$SMPROGRAMS\D-IDE"
+	
+	Delete "$DESKTOP\D-IDE.lnk"
 
-	Delete $INSTDIR\*.exe
-	Delete $INSTDIR\*.dll
-	Delete "$INSTDIR\Uninstall.exe"
-
+	Delete "$INSTDIR\*.*"
 	RMDir "$INSTDIR"
 
-	DeleteRegKey /ifempty HKLM "Software\D-IDE2"
-	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE2"
+	DeleteRegKey /ifempty HKLM "Software\D-IDE"
+	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE"
 SectionEnd
-
-;--------------------------------------------------------
-; Detects Microsoft .Net Framework 2.0
-;--------------------------------------------------------
-Function DotNet20Exists
-	ClearErrors
-	ReadRegStr $1 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v2.0.50727" "Version"
-	IfErrors MDNFNotFound MDNFFound
-
-	MDNFFound:
-		Push 1
-		Goto ExitFunction
-
-	MDNFNotFound:
-		Push 0
-		Goto ExitFunction
-
-	ExitFunction:
-FunctionEnd
 
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 4
