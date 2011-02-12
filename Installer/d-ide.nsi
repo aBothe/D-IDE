@@ -317,11 +317,11 @@ Section "-Install Program Files" install_section_id
 	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
 	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
 
-	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
-	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath" $DMD1_BIN_PATH
-	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath" $DMD2_BIN_PATH
-	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinVersion" $DMD1_BIN_VERSION
-	WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion" $DMD2_BIN_VERSION
+	WriteRegStr HKLM "Software\D-IDE2" "" $INSTDIR
+	WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd1xBinPath" $DMD1_BIN_PATH
+	WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd2xBinPath" $DMD2_BIN_PATH
+	WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd1xBinVersion" $DMD1_BIN_VERSION
+	WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd2xBinVersion" $DMD2_BIN_VERSION
 SectionEnd
 
 
@@ -418,17 +418,17 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 	ConfigureDMD:
 		IntCmp $PERFORM_CLR_FEATURES 0 Finished
 
-		DetailPrint "Configuring DMD and D-IDE."
+		DetailPrint "Configuring DMD and D-IDE 2."
 
 		IntCmp $DMD1_BIN_VERSION -1 0 +4 +4
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD1Version" 0
 		pop $DMD1_BIN_VERSION
-		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinVersion" $DMD1_BIN_VERSION
+		WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd1xBinVersion" $DMD1_BIN_VERSION
 
 		IntCmp $DMD2_BIN_VERSION -1 0 +4 +4
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "GetLocalDMD2Version" 0
 		pop $DMD2_BIN_VERSION
-		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion" $DMD2_BIN_VERSION
+		WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd2xBinVersion" $DMD2_BIN_VERSION
 
 		
 		StrCpy $0 "$CONFIG_DIR\D.config.xml"
@@ -459,9 +459,9 @@ SectionEnd
 Section "-Write Uninstaller" write_uninstaller_id
 	WriteUninstaller "$INSTDIR\Uninstall.exe"
 
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE" "DisplayName" "D-IDE"
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE2" "DisplayName" "D-IDE 2"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE2" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE2" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
 SectionEnd
 
 ;--------------------------------------------------------
@@ -490,10 +490,10 @@ SectionEnd
 ; Uninstaller Section
 ;--------------------------------------------------------
 Section "Uninstall"
-	DetailPrint "Remove D-IDE Files"
+	DetailPrint "Remove D-IDE 2 Files"
 
-	Delete "$SMPROGRAMS\D-IDE\*.*"
-	RMDir "$SMPROGRAMS\D-IDE"
+	Delete "$SMPROGRAMS\D-IDE 2\*.*"
+	RMDir "$SMPROGRAMS\D-IDE 2"
 
 	Delete $INSTDIR\*.exe
 	Delete $INSTDIR\*.dll
@@ -501,8 +501,8 @@ Section "Uninstall"
 
 	RMDir "$INSTDIR"
 
-	DeleteRegKey /ifempty HKLM "Software\D-IDE"
-	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE"
+	DeleteRegKey /ifempty HKLM "Software\D-IDE2"
+	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE2"
 SectionEnd
 
 ;--------------------------------------------------------
