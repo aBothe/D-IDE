@@ -231,7 +231,7 @@ namespace D_IDE
 						Log(fn + ":" + ln.ToString(),ErrorType.Information);
 
 					var ed=EditingManagement.OpenFile(fn) as EditorDocument;
-					if (ed != null)
+					if (ed == null)
 					{
 						Log("Unable to move to "+fn+":"+ln,ErrorType.Warning);
 						return DebugStatus.Break;

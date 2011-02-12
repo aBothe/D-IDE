@@ -180,8 +180,9 @@ namespace D_IDE
 			try
 			{
 				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
-				// Exclude this call in develop time
-				//if (File.Exists(layoutFile))	DockMgr.RestoreLayout(layoutFile);
+				// Exclude this call in develop (debug) time
+				if (!System.Diagnostics.Debugger.IsAttached&&File.Exists(layoutFile))
+					DockMgr.RestoreLayout(layoutFile);
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
