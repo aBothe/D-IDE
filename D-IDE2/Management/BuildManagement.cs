@@ -41,16 +41,20 @@ namespace D_IDE
 				 * http://digitalmars.com/d/2.0/dll.html
 				 */
 
+				bool ret = true;
 				IsBuilding = true;
 				IDEManager.Instance.MainWindow.RefreshMenu();
 				foreach (var prj in sln)
 				{
 					if (!InternalBuild(prj, Incrementally))
-						return false;
+					{
+						ret = false;
+						break;
+					}
 				}
 				IsBuilding = false;
 				IDEManager.Instance.MainWindow.RefreshMenu();
-				return true;
+				return ret;
 			}
 
 			public static bool Build(Project Project, bool Incrementally)
