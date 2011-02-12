@@ -112,8 +112,6 @@ namespace D_IDE
 			/// <returns></returns>
 			public static bool BuildSingle(out string CreatedExecutable)
 			{
-				IsBuilding = true;
-				IDEManager.Instance.MainWindow.RefreshMenu();
 				CreatedExecutable = null;
 				var ed = Instance.CurrentEditor;
 				if (ed == null)
@@ -127,6 +125,9 @@ namespace D_IDE
 
 				if (lang == null || IsProject || !lang.CanBuild)
 					return false;
+
+				IsBuilding = true;
+				IDEManager.Instance.MainWindow.RefreshMenu();
 
 				Instance.MainWindow.ClearLog();
 
