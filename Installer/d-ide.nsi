@@ -6,9 +6,8 @@
 ;--------------------------------------------------------
 ; Setting custom variables and constants
 ;--------------------------------------------------------
-!define BINARY_APPLICATION_FILES "..\D-IDE\D-IDE\bin\Release"
-!define PROJECT_FILES "..\D-IDE\D-IDE"
-!define THIRD_PARTY_FILES "..\externalDeps"
+!define BINARY_APPLICATION_FILES "..\D-IDE2\bin\Release"
+!define THIRD_PARTY_FILES "..\Misc"
 !define CLR_INSTALLER_HELPER ".\"
 
 !define DNF4_URL "http://download.microsoft.com/download/1/B/E/1BE39E79-7E39-46A3-96FF-047F95396215/dotNetFx40_Full_setup.exe"
@@ -40,11 +39,11 @@ Var IS_CONNECTED
 ;--------------------------------------------------------
 ; Setting various predefined NSIS Variables
 ;--------------------------------------------------------
-Name "D-IDE"
-OutFile ".\Builds\D-IDE.${FILEDATE}.exe"
+Name "D-IDE 2"
+OutFile ".\Builds\D-IDE2.${FILEDATE}.exe"
 BrandingText "Alexander Bothe"
-InstallDir $PROGRAMFILES\D-IDE
-InstallDirRegKey HKLM "Software\D-IDE" "Install_Dir"
+InstallDir $PROGRAMFILES\D-IDE2
+InstallDirRegKey HKLM "Software\D-IDE2" "Install_Dir"
 RequestExecutionLevel highest
 
 ;--------------------------------------------------------
@@ -59,10 +58,10 @@ Function .onInit
 	SetOutPath $PLUGINSDIR
 	File "DIDE.Installer.dll"
 	
-	ReadRegStr $DMD1_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath"
-	ReadRegStr $DMD2_BIN_PATH HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath"
-	ReadRegStr $DMD1_BIN_VERSION HKLM "SOFTWARE\D-IDE" "Dmd1xBinVersion"
-	ReadRegStr $DMD2_BIN_VERSION HKLM "SOFTWARE\D-IDE" "Dmd2xBinVersion"
+	ReadRegStr $DMD1_BIN_PATH HKLM "SOFTWARE\D-IDE2" "Dmd1xBinPath"
+	ReadRegStr $DMD2_BIN_PATH HKLM "SOFTWARE\D-IDE2" "Dmd2xBinPath"
+	ReadRegStr $DMD1_BIN_VERSION HKLM "SOFTWARE\D-IDE2" "Dmd1xBinVersion"
+	ReadRegStr $DMD2_BIN_VERSION HKLM "SOFTWARE\D-IDE2" "Dmd2xBinVersion"
 	ReadRegStr $D_WEB_INSTALL_PATH HKLM "SOFTWARE\D" "Install_Dir"
 
 	Call DotNet20Exists
@@ -307,8 +306,10 @@ Section "-Install Program Files" install_section_id
 
 	SetOverwrite on
 	File /nonfatal /x .svn /x *.vshost* "${BINARY_APPLICATION_FILES}\*.exe"
+	File /nonfatal /x .svn /x *.vshost* "${BINARY_APPLICATION_FILES}\*.exe.config"
 	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.dll"
-	File /nonfatal /x .svn "${PROJECT_FILES}\*.xshd"
+	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.xml"
+	;File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.xshd"
 
 	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
 	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
@@ -354,8 +355,8 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		ReadRegStr $D_WEB_INSTALL_PATH HKLM "SOFTWARE\D" "Install_Dir"
 		StrCpy $DMD1_BIN_PATH "$D_WEB_INSTALL_PATH\dmd"
 		StrCpy $DMD2_BIN_PATH "$D_WEB_INSTALL_PATH\dmd2"
-		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd1xBinPath" $DMD1_BIN_PATH
-		WriteRegStr HKLM "SOFTWARE\D-IDE" "Dmd2xBinPath" $DMD2_BIN_PATH
+		WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd1xBinPath" $DMD1_BIN_PATH
+		WriteRegStr HKLM "SOFTWARE\D-IDE2" "Dmd2xBinPath" $DMD2_BIN_PATH
 
 		Goto ConfigureDMD
 
