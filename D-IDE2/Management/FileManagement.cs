@@ -6,6 +6,7 @@ using D_IDE.Core;
 using System.IO;
 using Microsoft.Win32;
 using D_IDE.Dialogs;
+using System.Windows;
 
 namespace D_IDE
 {
@@ -111,7 +112,7 @@ namespace D_IDE
 				// If project dir is a subdirectory of DirectoryPath, return false
 				if (Project.BaseDirectory.Contains(DirectoryPath) || DirectoryPath == Project.BaseDirectory)
 				{
-					ErrorLogger.Log(new Exception("Project's base directory is part of " + DirectoryPath + " - can't add it"));
+					ErrorLogger.Log(new Exception("Project's base directory is part of " + DirectoryPath + " - cannot add it"));
 					return false;
 				}
 
@@ -133,7 +134,11 @@ namespace D_IDE
 							if (file != newFile_abs)
 								File.Copy(file, newFile_abs, true);
 						}
-						catch (Exception ex) { if (!ErrorLogger.Log(ex)) return false; }
+						catch (Exception ex) { 
+							ErrorLogger.Log(ex);
+							if(MessageBox.Show("Stop adding files?","Error while adding files",MessageBoxButton.YesNo)==MessageBoxResult.Yes)
+								return false; 
+						}
 					}
 				}
 				Project.Save();

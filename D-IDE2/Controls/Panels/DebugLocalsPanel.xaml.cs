@@ -40,7 +40,7 @@ namespace D_IDE.Controls.Panels
 		{
 			public System.Collections.IEnumerable GetChildren(object parent)
 			{
-				var supp= CoreManager.DebugManagement.GetCurrentDebugSupport();
+				var supp= CoreManager.DebugManagement.CurrentDebugSupport;
 				if(supp==null)
 					return null;
 
@@ -53,7 +53,7 @@ namespace D_IDE.Controls.Panels
 				if (pi == null)
 					return false;
 
-				var supp = CoreManager.DebugManagement.GetCurrentDebugSupport();
+				var supp = CoreManager.DebugManagement.CurrentDebugSupport;
 				if (supp == null)
 					return false;
 

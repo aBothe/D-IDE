@@ -166,7 +166,7 @@ namespace D_IDE
 			{
 				if (!IsDebugging) return;
 
-				Log("Waiting for the program to interrupt...");
+				Log("Waiting for the program to interrupt...",ErrorType.Information);
 				var wr = WaitResult.OK;
 				while (IsDebugging && (wr = Engine.WaitForEvent(10)) == WaitResult.TimeOut)
 				{
@@ -175,7 +175,7 @@ namespace D_IDE
 					System.Windows.Forms.Application.DoEvents();
 				}
 				if (wr != WaitResult.Unexpected)
-					Log("Program execution halted...");
+					Log("Program execution halted...",ErrorType.Information);
 				/*
 				 * After a program paused its execution, we'll be able to access its breakpoints and symbol data.
 				 * When resuming the program, WaitForDebugEvent() will be called again.
@@ -192,8 +192,12 @@ namespace D_IDE
 				{
 					if (!GlobalProperties.Instance.VerboseDebugOutput && (type == OutputFlags.Verbose || type == OutputFlags.Normal)) return;
 
-					if (type != OutputFlags.Warning)
-						Log( msg.Replace("\n", "\r\n"));
+					var ErrType=ErrorType.Message;
+					if (type == OutputFlags.Warning)
+						return;
+					if (type == OutputFlags.Error)
+						ErrType = ErrorType.Error;
+					Log(msg.Replace("\n",string.Empty),ErrType);
 				};
 
 				Engine.OnLoadModule += delegate(ulong BaseOffset, uint ModuleSize, string ModuleName, uint Checksum, uint Timestamp)
@@ -213,23 +217,23 @@ namespace D_IDE
 				{
 					StopWaitingForEvents = true;
 					var bp = Engine.GetBreakPointById(Id);
-					Log("Breakpoint #" + Id.ToString() + " at " + off.ToString() + ": " + exp);
+					Log("Breakpoint #" + Id.ToString() + " at " + off.ToString() + ": " + exp,ErrorType.Information);
 					string fn;
 					uint ln;
 
 					if (!Engine.Symbols.GetLineByOffset(off, out fn, out ln))
 					{
-						Log("No source associated with "+off.ToString());
+						Log("No source associated with " + off.ToString(),ErrorType.Warning);
 						return DebugStatus.Break;
 					}
 
 					if(GlobalProperties.Instance.VerboseDebugOutput)
-						Log(fn + ":" + ln.ToString());
+						Log(fn + ":" + ln.ToString(),ErrorType.Information);
 
 					var ed=EditingManagement.OpenFile(fn) as EditorDocument;
 					if (ed != null)
 					{
-						Log("Unable to move to "+fn+": "+ln);
+						Log("Unable to move to "+fn+":"+ln,ErrorType.Warning);
 						return DebugStatus.Break;
 					}
 
@@ -256,18 +260,18 @@ namespace D_IDE
 					}
 					
 					string msg = "";
-					if (ExceptionType.DException == (ExceptionType)ex.Type)
+					if ((ExceptionType)ex.Type == ExceptionType.DException)
 					{
 						msg = ex.Message;
 						if (ex.TypeInfo != null)
 							msg = ex.TypeInfo + ": " + msg;
 
-						Log(msg);
+						Log(msg,ErrorType.Error);
 						
 					}
 					else
 					{
-						Log(msg=extype + "-Exception");
+						Log(msg=extype + "-Exception",ErrorType.Error);
 					}
 
 					var ed = EditingManagement.OpenFile(ex.SourceFile) as EditorDocument;
@@ -287,7 +291,8 @@ namespace D_IDE
 
 				Engine.OnExitProcess += delegate(uint code)
 				{
-					Log("Debugger Process exited with code " + code.ToString());
+					Log("Debugger Process exited with code " + code.ToString(),
+						code<1?ErrorType.Information:ErrorType.Error);
 					StopExecution();
 					return DebugStatus.NoChange;
 				};
@@ -354,7 +359,7 @@ namespace D_IDE
 
 				if (!File.Exists(exe))
 				{
-					IDEInterface.Log(exe +" not found");
+					ErrorLogger.Log(exe +" not found",ErrorType.Error,ErrorOrigin.Program);
 					return null;
 				}
 
@@ -371,18 +376,20 @@ namespace D_IDE
 
 			static void CurrentProcess_Exited()
 			{
-				IDEInterface.Log("Process exited with code "+CurrentProcess.ExitCode.ToString()+" ("+(CurrentProcess.ExitTime-CurrentProcess.StartTime).ToString()+")");
+				ErrorLogger.Log("Process exited with code "+CurrentProcess.ExitCode.ToString()+" ("+(CurrentProcess.ExitTime-CurrentProcess.StartTime).ToString()+")",
+					CurrentProcess.ExitCode<1?ErrorType.Information:ErrorType.Error,
+					ErrorOrigin.Program);
 				Instance.MainWindow.RefreshMenu();
 			}
 
 			static void CurrentProcess_ErrorDataReceived(string Data)
 			{
-				IDEInterface.Log("Error occured: "+Data);
+				ErrorLogger. Log("Error occured: "+Data,ErrorType.Error,ErrorOrigin.Program);
 			}
 
 			static void CurrentProcess_OutputDataReceived(string Data)
 			{
-				IDEInterface.Log(Data);
+				ErrorLogger. Log(Data,ErrorType.Message,ErrorOrigin.Program);
 			}
 			#endregion
 

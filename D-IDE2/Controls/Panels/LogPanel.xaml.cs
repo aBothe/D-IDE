@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using AvalonDock;
+using System.Threading;
 
 namespace D_IDE.Controls.Panels
 {
@@ -40,10 +41,17 @@ namespace D_IDE.Controls.Panels
 		/// </summary>
 		public void AppendOutput(string s)
 		{
-			Dispatcher.Invoke(new EventHandler(delegate(object o,EventArgs e) {
-				MainText.AppendText(o as string + "\r\n");
+			if (Thread.CurrentThread != Dispatcher.Thread)
+				Dispatcher.Invoke(new D_IDE.Core.Util.EmptyDelegate(() =>
+				{
+					MainText.AppendText(s + "\r\n");
+					MainText.ScrollToEnd();
+				}));
+			else
+			{
+				MainText.AppendText(s + "\r\n");
 				MainText.ScrollToEnd();
-			}), s,EventArgs.Empty);
+			}
 		}
 	}
 }

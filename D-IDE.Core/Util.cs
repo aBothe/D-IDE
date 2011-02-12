@@ -201,27 +201,80 @@ namespace D_IDE.Core
 
     public class ErrorLogger
     {
-		public enum ErrorType
+		static ErrorLogger _inst;
+		public static ErrorLogger Instance
 		{
-			Info=MessageBoxIcon.Information,Warning=MessageBoxIcon.Warning,Error=MessageBoxIcon.Error
+			get
+			{
+				if (_inst == null)
+					_inst = new ErrorLogger();
+				return _inst;
+			}
+			set { _inst = value; }
 		}
 
-        public static bool Log(Exception ex)
+        public static void Log(Exception ex)
         {
-			return Log(ex.Message,ErrorType.Error);
+			Log(ex.Message,ErrorType.Error,ErrorOrigin.System);
         }
 
-		public static bool Log(string msg)
+		public static void Log(Exception ex, ErrorType ErrorType, ErrorOrigin Origin)
 		{
-			return Log(msg, ErrorType.Warning);
+			Log(ex.Message,ErrorType,Origin);
 		}
 
-		public static bool Log(string msg, ErrorType etype)
+		public static void Log(string Message)
 		{
-			IDEInterface.Log(msg);
-			return MessageBox.Show(msg,etype.ToString(),MessageBoxButtons.OKCancel,(MessageBoxIcon)etype,MessageBoxDefaultButton.Button1)==DialogResult.OK;
+			Log(Message, ErrorType.Error, ErrorOrigin. System);
+		}
+
+		protected virtual void OnLog(string Message, ErrorType ErrorType, ErrorOrigin origin)
+		{
+			var icon = MessageBoxIcon.Error;
+			if (ErrorType==ErrorType.Warning)
+				icon = MessageBoxIcon.Warning;
+			else if (ErrorType==ErrorType.Information || ErrorType==ErrorType.Message)
+				icon = MessageBoxIcon.Information;
+
+			MessageBox.Show(Message,origin.ToString() +" "+ ErrorType.ToString(),MessageBoxButtons.OK,icon);
+		}
+
+		public static void Log(string Message, ErrorType ErrorType,ErrorOrigin Origin)
+		{
+			Instance.OnLog(Message,ErrorType,Origin);
 		}
     }
+
+	public enum ErrorType
+	{
+		/// <summary>
+		/// Normal message; Mostly used for logging program outputs
+		/// </summary>
+		Message=0,
+		Information,
+		Warning,
+		Error,
+	}
+
+	public enum ErrorOrigin
+	{
+		/// <summary>
+		/// General log message
+		/// </summary>
+		System = 0,
+		/// <summary>
+		/// Build message
+		/// </summary>
+		Build = 1,
+		/// <summary>
+		/// Message that comes from the debugger
+		/// </summary>
+		Debug,
+		/// <summary>
+		/// Redirected program output
+		/// </summary>
+		Program
+	}
 
 	/// <summary>
 	/// A converter for WPF controls.

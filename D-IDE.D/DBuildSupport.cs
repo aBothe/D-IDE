@@ -71,7 +71,7 @@ namespace D_IDE.D
 			{
 				prj.LastBuildResult.Successful = true;
 				prj.LastBuildResult.NoBuildNeeded = true;
-				IDEInterface.Log("Project "+dprj.Name+" empty");
+				ErrorLogger.Log("Project "+dprj.Name+" empty",ErrorType.Error,ErrorOrigin.Build);
 				return;
 			}
 			#endregion
@@ -121,7 +121,7 @@ namespace D_IDE.D
 			var br = new BuildResult() { SourceFile = srcFile,TargetFile=obj,Successful=true };
 
 			if (GlobalProperties.Instance.VerboseBuildOutput)
-				IDEInterface.Log("Compile " + srcFile);
+				ErrorLogger.Log("Compile " + srcFile,ErrorType.Information,ErrorOrigin.Build);
 
 			var dmd_exe = dmd.SoureCompiler;
 
@@ -255,7 +255,7 @@ namespace D_IDE.D
 			if (!Path.IsPathRooted(cv2pdb) && File.Exists(Util.ApplicationStartUpPath + "\\" + cv2pdb))
 				cv2pdb = Util.ApplicationStartUpPath + "\\" + cv2pdb;
 
-			IDEInterface.Log("Create debug information database " + pdb);
+			ErrorLogger.Log("Create debug information database " + pdb,ErrorType.Information,ErrorOrigin.Build);
 			try
 			{
 				var prc = FileExecution.ExecuteSilentlyAsync(cv2pdb, "\"" + Executable + "\"", Path.GetDirectoryName(Executable),
@@ -265,7 +265,7 @@ namespace D_IDE.D
 				{
 					if (File.Exists(pdb))
 					{
-						IDEInterface.Log("Debug information database created successfully");
+						ErrorLogger.Log("Debug information database created successfully",ErrorType.Information,ErrorOrigin.Build);
 						br.Successful = true;
 					}
 					else
@@ -287,12 +287,13 @@ namespace D_IDE.D
 		#region Message Callbacks
 		void OnExit()
 		{
-			IDEInterface.Log("Process ended with code " + TempPrc.ExitCode.ToString());
+			ErrorLogger.Log("Process ended with code " + TempPrc.ExitCode.ToString(),
+				TempPrc.ExitCode<1?ErrorType.Information:ErrorType.Error,ErrorOrigin.Build);
 		}
 
 		static void OnOutput(string s)
 		{
-			IDEInterface.Log(s);
+			ErrorLogger.Log(s,ErrorType.Message,ErrorOrigin.Build);
 		}
 
 		public static BuildError ParseErrorMessage(string s)

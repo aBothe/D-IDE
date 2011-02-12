@@ -80,32 +80,40 @@ namespace D_IDE.Core
 			}
 
 			static GenericDebugSupport genDbgSupport;
+			static GenericDebugSupport curDbgSupport;
 			/// <summary>
-			/// If the current editor belongs to a LanguageBinding that supports special debugging support, return this one.
-			/// Otherwise, the very generic and basic Debug Support will be returned.
+			/// Debug suppport for the recently built project/module.
+			/// Note: This value will be set when building a project/module.
 			/// </summary>
 			/// <returns></returns>
-			public static GenericDebugSupport GetCurrentDebugSupport()
+			public static GenericDebugSupport CurrentDebugSupport
 			{
-				if (!IsDebugging)
-					return null;
-
-				string f="";
-				uint ln=0;
-				if (!Engine.Symbols.GetLineByOffset(Engine.CurrentInstructionOffset, out f, out ln))
-					return null;
-
-				bool _u=false;
-				var lang = AbstractLanguageBinding.SearchBinding(f, out _u);
-				if (lang == null || !lang.CanUseDebugging)
-				{
-					if (genDbgSupport == null)
-						genDbgSupport = new GenericDebugSupport();
-					return genDbgSupport;
+				set {
+					curDbgSupport = value;
 				}
+				get
+				{
+					if (!IsDebugging)
+						return null;
 
-				return lang.DebugSupport;
+					if (curDbgSupport==null)
+					{
+						if (genDbgSupport == null)
+							genDbgSupport = new GenericDebugSupport();
+						return genDbgSupport;
+					}
+
+					return curDbgSupport;
+				}
 			}
+		}
+
+		/// <summary>
+		/// Logs a debug message
+		/// </summary>
+		protected static void Log(string Message,ErrorType ErrType)
+		{
+			ErrorLogger.Log(Message, ErrType, ErrorOrigin.Debug);
 		}
 
 		public class BreakpointManagement

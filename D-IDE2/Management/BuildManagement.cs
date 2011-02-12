@@ -13,6 +13,10 @@ namespace D_IDE
 		{
 			public static bool IsBuilding { get; protected set; }
 			static IBuildSupport curBuildSupp = null;
+
+			/// <summary>
+			/// Stops all build processes.
+			/// </summary>
 			public static void StopBuilding()
 			{
 				if (curBuildSupp != null)
@@ -42,8 +46,12 @@ namespace D_IDE
 				 */
 
 				bool ret = true;
+				// Enable build menu
 				IsBuilding = true;
 				IDEManager.Instance.MainWindow.RefreshMenu();
+
+				// Iterate through all projects
+				// Note: see above
 				foreach (var prj in sln)
 				{
 					if (!InternalBuild(prj, Incrementally))
@@ -52,6 +60,8 @@ namespace D_IDE
 						break;
 					}
 				}
+
+				// Disable build menu
 				IsBuilding = false;
 				IDEManager.Instance.MainWindow.RefreshMenu();
 				return ret;
@@ -59,9 +69,14 @@ namespace D_IDE
 
 			public static bool Build(Project Project, bool Incrementally)
 			{
+				// Enable build menu
 				IsBuilding = true;
 				IDEManager.Instance.MainWindow.RefreshMenu();
+
+				// Build project with the interal method that's dedicated to build a project
 				var r = InternalBuild(Project, Incrementally);
+
+				// Disable build menu, Refresh error list
 				IsBuilding = false;
 				IDEManager.Instance.MainWindow.RefreshMenu();
 				return r;
@@ -77,22 +92,37 @@ namespace D_IDE
 				// Important: Reset error list's unbound build result
 				ErrorManagement.LastSingleBuildResult = null;
 
+				// Select appropriate language binding
 				bool isPrj = false;
 				var lang = AbstractLanguageBinding.SearchBinding(Project.FileName, out isPrj);
 
+				// If binding is able to build..
 				if (lang != null && isPrj && lang.CanBuild)
 				{
+					// If not building the project incrementally, cleanup project outputs first
+					if(!Incrementally)
+						CleanUpOutput(Project);
+
+					// Set debug support
+					if (lang.CanUseDebugging)
+						DebugManagement.CurrentDebugSupport = lang.DebugSupport;
+					else DebugManagement.CurrentDebugSupport = null;
+
+					// Increment build number if the user wants it to be
 					if (Project.AutoIncrementBuildNumber)
 						if (Project.LastBuildResult!=null && Project.LastBuildResult.Successful)
 							Project.Version.IncrementBuild();
-						else
+						else //TODO: How to handle revision number?
 							Project.Version.Revision++;
 
+					// Build project
 					lang.BuildSupport.BuildProject(Project);
 
+					// Copy additional output files to target dir
 					if (Project.LastBuildResult.Successful)
 						Project.CopyCopyableOutputFiles();
 
+					// Update error list
 					ErrorManagement.RefreshErrorList();
 
 					return Project.LastBuildResult.Successful;
@@ -109,7 +139,6 @@ namespace D_IDE
 			/// <summary>
 			/// Builds currently edited document to single executable
 			/// </summary>
-			/// <returns></returns>
 			public static bool BuildSingle(out string CreatedExecutable)
 			{
 				CreatedExecutable = null;
@@ -117,26 +146,39 @@ namespace D_IDE
 				if (ed == null)
 					return false;
 
+				// Save module
 				ed.Save();
 
+				// Select appropriate language binding
 				string file = ed.AbsoluteFilePath;
 				bool IsProject = false;
 				var lang = AbstractLanguageBinding.SearchBinding(file, out IsProject);
 
+				// Check if binding supports building
 				if (lang == null || IsProject || !lang.CanBuild)
 					return false;
 
+				// Set debug support
+				if (lang.CanUseDebugging)
+					DebugManagement.CurrentDebugSupport = lang.DebugSupport;
+				else DebugManagement.CurrentDebugSupport = null;
+
+				// Enable build menu
 				IsBuilding = true;
 				IDEManager.Instance.MainWindow.RefreshMenu();
 
+				// Clear build output
 				Instance.MainWindow.ClearLog();
 
+				// Execute build
 				var br = ErrorManagement.LastSingleBuildResult = lang.BuildSupport.BuildStandAlone(file);
 				CreatedExecutable = br.TargetFile;
 
+				// Update error list, Disable build menu
 				ErrorManagement.RefreshErrorList();
 				IsBuilding = false;
 				IDEManager.Instance.MainWindow.RefreshMenu();
+
 				return br.Successful;
 			}
 
@@ -146,6 +188,9 @@ namespace D_IDE
 					CleanUpOutput(prj);
 			}
 
+			/// <summary>
+			/// Deletes all project outputs
+			/// </summary>
 			public static void CleanUpOutput(Project Project)
 			{
 				// Delete target file
@@ -156,6 +201,9 @@ namespace D_IDE
 					DeleteTargets(src.LastBuildResult);
 			}
 
+			/// <summary>
+			/// Deletes all ouput files of a build result
+			/// </summary>
 			static void DeleteTargets(BuildResult r)
 			{
 				if (r == null)

@@ -18,4 +18,21 @@ namespace D_IDE
             return loc;
         }
     }
+
+	public class IDELogger : ErrorLogger
+	{
+		readonly MainWindow Owner;
+		public IDELogger(MainWindow Owner)
+		{
+			this.Owner = Owner;
+		}
+
+		protected override void OnLog(string Message, ErrorType etype, ErrorOrigin Origin)
+		{
+			if(Origin==ErrorOrigin.System)
+				base.OnLog(Message, etype,Origin);
+
+			Owner.Panel_Log.AppendOutput(Message);
+		}
+	}
 }

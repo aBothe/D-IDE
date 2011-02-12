@@ -19,7 +19,7 @@ namespace D_IDE.Core
 			DataReceivedEvent OnOutput, DataReceivedEvent OnError, ProcessExitedEvent OnExit)
 		{
 			if (GlobalProperties.Instance.VerboseDebugOutput)
-				IDEInterface.Log(Executable + " " + Arguments);
+				ErrorLogger.Log(Executable + " " + Arguments,ErrorType.Error,ErrorOrigin.Build);
 
 			var psi = new ProcessStartInfo(Executable, Arguments) { 
 				WorkingDirectory=StartDirectory,
@@ -49,7 +49,7 @@ namespace D_IDE.Core
 			}
 			catch (Exception ex)
 			{
-				ErrorLogger.Log(ex);
+				ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Build);
 				return null;
 			}
 			return prc;
@@ -61,7 +61,7 @@ namespace D_IDE.Core
 		public static Process ExecuteAsync(string Executable, string Arguments, string StartDirectory, ProcessExitedEvent OnExit)
 		{
 			if (GlobalProperties.Instance.VerboseDebugOutput)
-				IDEInterface.Log(Executable + " " + Arguments);
+				ErrorLogger. Log(Executable + " " + Arguments);
 
 			var psi = new ProcessStartInfo(Executable, Arguments) { WorkingDirectory=StartDirectory, UseShellExecute=false};
 			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=true};
@@ -74,7 +74,7 @@ namespace D_IDE.Core
 			}
 			catch (Exception ex)
 			{
-				ErrorLogger.Log(ex);
+				ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Build);
 				return null;
 			}
 

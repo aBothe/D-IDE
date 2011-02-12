@@ -93,7 +93,7 @@ namespace D_IDE
 
 				Tab_Edit.IsEnabled = IsEditable;
 				Check_RunCurModule.IsEnabled = Tab_Project.IsEnabled = HasProject || IDEManager.CurrentSolution != null;
-				Tab_Build.IsEnabled = ((IsEditable && ed.LanguageBinding!=null) || IDEManager.CurrentSolution != null) && !IDEManager.IDEDebugManagement.IsExecuting;
+				Tab_Build.IsEnabled = ((IsEditable && ed.LanguageBinding!=null && ed.LanguageBinding.CanBuild) || IDEManager.CurrentSolution != null) && !IDEManager.IDEDebugManagement.IsExecuting;
 
 				// Restore tab selection when executing finished
 				if (!Tab_Debug.IsEnabled && IDEManager.IDEDebugManagement.IsExecuting)
@@ -128,6 +128,8 @@ namespace D_IDE
 
 			InitializeComponent();
 
+			// Init logging support
+
 			// Load global settings
 			try
 			{
@@ -147,11 +149,6 @@ namespace D_IDE
 
 			// Showing the window is required because the DockMgr has to init all panels first before being able to restore last layouts
 			Show();
-
-			IDEInterface.LogHandler += delegate(string msg)
-			{
-				Panel_Log.AppendOutput(msg);
-			};
 
 			#region Init panels and their layouts
 			Panel_Locals.Name = "LocalsPanel";
