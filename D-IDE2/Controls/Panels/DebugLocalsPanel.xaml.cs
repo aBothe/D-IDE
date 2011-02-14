@@ -44,7 +44,8 @@ namespace D_IDE.Controls.Panels
 				if(supp==null)
 					return null;
 
-				return supp.GetChildSymbols(IDEManager.DebugManagement.Engine.Symbols.ScopeLocalSymbols,parent as DebugSymbolWrapper);
+				var r= supp.GetChildSymbols(IDEManager.DebugManagement.Engine.Symbols.ScopeLocalSymbols,parent as DebugSymbolWrapper);
+				return r;
 			}
 
 			public bool HasChildren(object parent)
@@ -57,7 +58,8 @@ namespace D_IDE.Controls.Panels
 				if (supp == null)
 					return false;
 
-				return supp.HasChildren(IDEManager.DebugManagement.Engine.Symbols.ScopeLocalSymbols, pi) ;
+				var r= supp.HasChildren(IDEManager.DebugManagement.Engine.Symbols.ScopeLocalSymbols, pi) ;
+				return r;
 			}
 		}
 	}

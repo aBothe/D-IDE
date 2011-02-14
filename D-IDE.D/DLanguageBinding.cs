@@ -149,11 +149,13 @@ namespace D_IDE.D
 		}
 
 		#region Debugging
-		readonly GenericDebugSupport DDebugging = new DDebugSupport();
+		GenericDebugSupport DDebugging ;
 		public override GenericDebugSupport DebugSupport
 		{
 			get
 			{
+				if (DDebugging == null)
+					DDebugging = new DDebugSupport();
 				return DDebugging;
 			}
 		}

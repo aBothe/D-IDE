@@ -321,6 +321,9 @@ namespace D_IDE
 			{
 				StopExecution();
 
+				// Make all documents read-only
+				EditingManagement.AllDocumentsReadOnly = true;
+
 				if (!dbgEngineInited)
 					InitDebugger();
 
@@ -363,6 +366,9 @@ namespace D_IDE
 					return null;
 				}
 
+				// Make all documents read-only
+				EditingManagement.AllDocumentsReadOnly = true;
+
 				if (ShowConsole)
 					CurrentProcess = FileExecution.ExecuteAsync(exe, args, Path.GetDirectoryName(exe), CurrentProcess_Exited);
 				else
@@ -379,6 +385,8 @@ namespace D_IDE
 				ErrorLogger.Log("Process exited with code "+CurrentProcess.ExitCode.ToString()+" ("+(CurrentProcess.ExitTime-CurrentProcess.StartTime).ToString()+")",
 					CurrentProcess.ExitCode<1?ErrorType.Information:ErrorType.Error,
 					ErrorOrigin.Program);
+
+				EditingManagement.AllDocumentsReadOnly = false;
 				Instance.MainWindow.RefreshMenu();
 			}
 
@@ -419,6 +427,8 @@ namespace D_IDE
 					CurrentProcess.Kill();
 					CurrentProcess = null;
 				}
+
+				EditingManagement.AllDocumentsReadOnly = false;
 			}
 
 			public static bool IsExecuting

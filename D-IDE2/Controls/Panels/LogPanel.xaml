@@ -2,16 +2,18 @@
         xmlns="clr-namespace:AvalonDock;assembly=AvalonDock"
 		xmlns:w="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Log" Height="325" Width="664" HideOnClose="True">
+        Title="Log" Height="336" Width="711" HideOnClose="True">
 	<w:Grid>
-		<w:TextBox Name="MainText" IsReadOnly="True" VerticalScrollBarVisibility="Visible" IsReadOnlyCaretVisible="True" Margin="0,21,0,0" />
-		<w:Menu Height="23" Name="menu1" VerticalAlignment="Top">
-			<w:ComboBox Width="90" Padding="4,0,4,4" SelectedIndex="1" HorizontalContentAlignment="Center">
-				<w:ComboBoxItem Content="System" />
-				<w:ComboBoxItem Content="Building" />
-				<w:ComboBoxItem Content="Debugging" />
-				<w:ComboBoxItem Content="Program output" />
-			</w:ComboBox>
-		</w:Menu>
+		<w:TabControl Name="MainTabs">
+			<w:TabItem Header="System" Name="tab_sys">
+				<w:TextBox Name="Text_Sys" IsReadOnly="True" VerticalScrollBarVisibility="Visible" IsReadOnlyCaretVisible="True" />
+			</w:TabItem>
+			<w:TabItem Header="Build" Name="tab_build" IsSelected="True">
+				<w:TextBox Name="Text_Build" IsReadOnly="True" VerticalScrollBarVisibility="Visible" IsReadOnlyCaretVisible="True" />
+			</w:TabItem>
+			<w:TabItem Header="Output" Name="tab_output">
+				<w:TextBox Name="Text_Output" IsReadOnly="True" VerticalScrollBarVisibility="Visible" IsReadOnlyCaretVisible="True" />
+			</w:TabItem>
+		</w:TabControl>
 	</w:Grid>
 </DockableContent>

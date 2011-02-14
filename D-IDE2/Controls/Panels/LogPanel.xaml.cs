@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using AvalonDock;
 using System.Threading;
+using D_IDE.Core;
 
 namespace D_IDE.Controls.Panels
 {
@@ -20,37 +21,65 @@ namespace D_IDE.Controls.Panels
 	/// </summary>
 	public partial class LogPanel : DockableContent
 	{
+		public enum LogTab
+		{
+			System=1, Build=2, Output=3
+		}
+
 		public LogPanel()
 		{
 			InitializeComponent();
 		}
 
-		public void Clear()
-		{
-			MainText.Clear();
+		public LogTab SelectedTab{
+			get { return (LogTab)(MainTabs.SelectedIndex+1);}
+			set { MainTabs.SelectedIndex = (int)value - 1;	}
 		}
 
-		public string LogText
+		public void Clear()
 		{
-			get { return MainText.Text; }
-			set { MainText.Text = value; }
+			Text_Sys.Clear();
+			Text_Build.Clear();
+			Text_Output.Clear();
 		}
 
 		/// <summary>
 		/// Appends text and scrolls down the log
 		/// </summary>
-		public void AppendOutput(string s)
+		public void AppendOutput(string s,ErrorType errorType,ErrorOrigin origin)
 		{
-			if (Thread.CurrentThread != Dispatcher.Thread)
+			TextBox editor=null;
+			LogTab selTab = LogTab.System;
+			switch (origin)
+			{
+				case ErrorOrigin.System:
+					editor = Text_Sys;
+					selTab = LogTab.System;
+					break;
+				case ErrorOrigin.Build:
+					editor = Text_Build;
+					selTab = LogTab.Build;
+					break;
+				case ErrorOrigin.Debug:
+				case ErrorOrigin.Program:
+					selTab = LogTab.Output;
+					editor = Text_Output;
+					break;
+			}
+
+			//TODO: Find out why invoking the dispatcher thread blocks the entire application
+			if (Thread.CurrentThread.ManagedThreadId != Dispatcher.Thread.ManagedThreadId)
 				Dispatcher.Invoke(new D_IDE.Core.Util.EmptyDelegate(() =>
 				{
-					MainText.AppendText(s + "\r\n");
-					MainText.ScrollToEnd();
+					SelectedTab = selTab;
+					editor.AppendText(s + "\r\n");
+					editor.ScrollToEnd();
 				}));
 			else
 			{
-				MainText.AppendText(s + "\r\n");
-				MainText.ScrollToEnd();
+				SelectedTab = selTab;
+				editor.AppendText(s + "\r\n");
+				editor.ScrollToEnd();
 			}
 		}
 	}

@@ -11,6 +11,26 @@ namespace D_IDE
 	{
 		public class EditingManagement
 		{
+			static bool allDocsReadOnly;
+			/// <summary>
+			/// Make all documents read only
+			/// </summary>
+			public static bool AllDocumentsReadOnly
+			{
+				get { return allDocsReadOnly; }
+				set
+				{
+					allDocsReadOnly = value;
+					foreach (var ed in from e in Instance.Editors where e is EditorDocument select e as EditorDocument)
+						ed.Editor.IsReadOnly = value;
+				}
+			}
+
+			/// <summary>
+			/// Adds a new entry to the globally shared LastFiles/LastProjects-List
+			/// </summary>
+			/// <param name="openedFile">The file which got opened recently</param>
+			/// <param name="IsPrj">Add it to the LastProjects List?</param>
 			static void AdjustLastFileList(string openedFile, bool IsPrj)
 			{
 				var l = IsPrj ? GlobalProperties.Instance.LastProjects : GlobalProperties.Instance.LastFiles;
@@ -22,9 +42,9 @@ namespace D_IDE
 			}
 
 			/// <summary>
-			/// Central method to open a file OR a project
+			/// Central method to open a file/project/solution
 			/// </summary>
-			/// <returns>Editor instance if a source file was opened</returns>
+			/// <returns>Editor instance (if a source file was opened)</returns>
 			public static AbstractEditorDocument OpenFile(string FileName)
 			{
 				/*
@@ -103,18 +123,22 @@ namespace D_IDE
 							break;
 						}
 
-				// Check if file already open
+				// Check if file already open -- Allow only one open instance of a file!
 				var absPath = _prj != null ? _prj.ToAbsoluteFileName(FileName) : FileName;
 				foreach (var doc in Instance.MainWindow.DockManager.Documents)
 					if (doc is AbstractEditorDocument && (doc as AbstractEditorDocument).AbsoluteFilePath == absPath)
 					{
+						// Activate the wanted item and return it
 						doc.Activate();
 						return doc as AbstractEditorDocument;
 					}
 
+				// Add file to recently used files
 				AdjustLastFileList(absPath, false);
 
 				var newEd = new EditorDocument(absPath);
+				// Set read only state if e.g. debugging currently
+				newEd.Editor.IsReadOnly = AllDocumentsReadOnly;
 				newEd.Show(Instance.MainWindow.DockManager);
 				newEd.Activate();
 				Instance.UpdateGUI();

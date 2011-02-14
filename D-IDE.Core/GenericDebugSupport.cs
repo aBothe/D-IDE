@@ -34,26 +34,10 @@ namespace D_IDE.Core
 		{
 			return Symbol.Symbol.ChildrenCount > 0;
 		}
-
-		/// <summary>
-		/// Retrieves the value of a debug symbol.
-		/// Debugging requires CodeCompletion to enable better node search.
-		/// </summary>
-		/// <param name="ModuleTree"></param>
-		/// <param name="ScopedSrcLine"></param>
-		/// <param name="sym"></param>
-		/// <returns></returns>
-		/*public virtual string BuildSymbolValueString(
-			Parser.Core.AbstractSyntaxTree ModuleTree,
-			uint ScopedSrcLine,
-			DebugScopedSymbol sym) 
-		{ 
-			return sym.TextValue;
-		}*/
 	}
 
 	/// <summary>
-	/// A wrapper class for DebugScopedSymbols
+	/// A generic wrapper class for DebugScopedSymbols
 	/// </summary>
 	public class DebugSymbolWrapper
 	{

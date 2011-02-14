@@ -93,9 +93,6 @@ namespace D_IDE.Core
 				}
 				get
 				{
-					if (!IsDebugging)
-						return null;
-
 					if (curDbgSupport==null)
 					{
 						if (genDbgSupport == null)

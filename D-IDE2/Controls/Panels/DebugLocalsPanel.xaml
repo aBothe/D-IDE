@@ -22,14 +22,14 @@
 					<w:GridViewColumn Header="Value" Width="300">
 						<w:GridViewColumn.CellTemplate>
 							<w:DataTemplate>
-								<w:TextBlock Text="{w:Binding Value}"/>
+								<w:TextBlock Text="{w:Binding ValueString}"/>
 							</w:DataTemplate>
 						</w:GridViewColumn.CellTemplate>
 					</w:GridViewColumn>
 					<w:GridViewColumn Header="Type" Width="150">
 						<w:GridViewColumn.CellTemplate>
 							<w:DataTemplate>
-								<w:TextBlock Text="{w:Binding ValueType}"/>
+								<w:TextBlock Text="{w:Binding TypeString}"/>
 							</w:DataTemplate>
 						</w:GridViewColumn.CellTemplate>
 					</w:GridViewColumn>

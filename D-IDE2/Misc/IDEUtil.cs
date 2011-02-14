@@ -32,7 +32,7 @@ namespace D_IDE
 			if(Origin==ErrorOrigin.System)
 				base.OnLog(Message, etype,Origin);
 
-			Owner.Panel_Log.AppendOutput(Message);
+			Owner.Panel_Log.AppendOutput(Message,etype,Origin);
 		}
 	}
 }
