@@ -13,7 +13,7 @@
 						<w:GridViewColumn.CellTemplate>
 							<w:DataTemplate>
 								<w:StackPanel Orientation="Horizontal">
-									<my:RowExpander/>
+										<my:RowExpander/>
 									<w:TextBlock Text="{w:Binding Name}"/>
 								</w:StackPanel>
 							</w:DataTemplate>
