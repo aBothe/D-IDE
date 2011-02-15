@@ -25,8 +25,7 @@ namespace Aga.Controls.Tree
 		{
 			get;
 			private set;
-		} 
-
+		}
 
 		private ITreeModel _model;
 		public ITreeModel Model

@@ -14,11 +14,14 @@ using System.Windows.Shapes;
 
 namespace Aga.Controls.Tree
 {
-	public class RowExpander : Control
+	/// <summary>
+	/// Interaktionslogik für RowExpander1.xaml
+	/// </summary>
+	public partial class RowExpander : Control
 	{
-		static RowExpander()
+		public RowExpander()
 		{
-			DefaultStyleKeyProperty.OverrideMetadata(typeof(RowExpander), new FrameworkPropertyMetadata(typeof(RowExpander)));
+			InitializeComponent();
 		}
 	}
 }
