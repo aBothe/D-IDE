@@ -15,6 +15,7 @@ using System.Threading;
 using D_IDE.Core;
 using System.Xml;
 using System.IO;
+using Aga.Controls.Tree;
 
 namespace D_IDE.Controls.Panels
 {
@@ -91,14 +92,27 @@ namespace D_IDE.Controls.Panels
 
 		public void RefreshLastProjects()
 		{
-			var prjs = new List<RecentPrjItem>();
+			if (!RecentProjectsList.IsInitialized)
+				return;
 
-			foreach (var prjfn in GlobalProperties.Instance.LastProjects)
+			if (RecentProjectsList.Model == null)
+				RecentProjectsList.Model = new LastProjectsModel();
+			else 
+				RecentProjectsList.Refresh();
+		}
+
+		class LastProjectsModel : Aga.Controls.Tree.ITreeModel
+		{
+			public System.Collections.IEnumerable GetChildren(object parent)
 			{
-				prjs.Add(new RecentPrjItem() { Path=prjfn});
+				foreach (var prjfn in GlobalProperties.Instance.LastProjects)
+					yield return new RecentPrjItem() { Path = prjfn };
 			}
 
-			RecentProjectsList.ItemsSource = prjs;
+			public bool HasChildren(object parent)
+			{
+				return false;
+			}
 		}
 
 		private void DockableContent_Loaded(object sender, RoutedEventArgs e)
@@ -125,8 +139,8 @@ namespace D_IDE.Controls.Panels
 
 		private void RecentProjectsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
 		{
-			var i = RecentProjectsList.SelectedItem as RecentPrjItem;
-			if(i!=null)
+			var i = (RecentProjectsList.SelectedItem as TreeNode).Tag as RecentPrjItem;
+			if(i!=null)		
 				IDEManager.EditingManagement.OpenFile(i.Path);
 		}
 

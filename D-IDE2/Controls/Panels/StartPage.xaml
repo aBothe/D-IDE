@@ -1,45 +1,57 @@
-﻿<DockableContent x:Class="D_IDE.Controls.Panels.StartPage"
-        xmlns="clr-namespace:AvalonDock;assembly=AvalonDock"
-		xmlns:w="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ad:DockableContent x:Class="D_IDE.Controls.Panels.StartPage"
+        xmlns:ad="clr-namespace:AvalonDock;assembly=AvalonDock"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:tree="clr-namespace:Aga.Controls.Tree;assembly=d-ide.core"
         Title="Start Page" Height="435" Width="921" Loaded="DockableContent_Loaded">
-    <w:Grid>
-		<w:Grid.Background>
-			<w:LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-				<w:GradientStop Color="White" Offset="0" />
-				<w:GradientStop Color="#FF4A678D" Offset="0.926" />
-			</w:LinearGradientBrush>
-		</w:Grid.Background>
-		<w:ListView HorizontalAlignment="Left" Margin="12,169,0,41" Name="RecentProjectsList" Width="254" MouseDoubleClick="RecentProjectsList_MouseDoubleClick">
-			<w:ListView.ItemTemplate>
-				<w:DataTemplate>
-					<w:ContentControl>
-						<w:Label Content="{w:Binding FileName}" Padding="2" Margin="0" FontSize="11" ToolTip="{w:Binding Path}" />
-					</w:ContentControl>
-				</w:DataTemplate>
-			</w:ListView.ItemTemplate>
-		</w:ListView>
-		<w:Label Content="Recent projects:" Height="17" HorizontalAlignment="Left" Padding="0" Margin="12,146,0,0" Name="label1" VerticalAlignment="Top" Width="254" />
-		<w:Button Content="Open Selected" HorizontalAlignment="Left" Margin="12,0,0,12" Name="Button_Open" Width="90" Height="23" VerticalAlignment="Bottom" Click="Button_Open_Click" />
-		<w:Button Content="Create New" HorizontalAlignment="Left" Margin="108,0,0,12" Name="Button_CreatePrj" Width="90" Height="23" VerticalAlignment="Bottom" Click="Button_CreatePrj_Click" />
-		<w:TextBlock Height="34" HorizontalAlignment="Left" Margin="12,12,0,0" Name="textBlock1" Text="Welcome to D-IDE!" VerticalAlignment="Top" Width="254" TextWrapping="Wrap" FontSize="28" FontWeight="Normal" FontStyle="Normal" FontFamily="Segoe UI" TextAlignment="Left" />
-		<w:Label Content="Recent news:" Height="14" HorizontalAlignment="Left" Padding="0" Margin="288,12,0,0" Name="label2" VerticalAlignment="Top" Width="107" />
-		<w:ListView Margin="287,32,12,41" Padding="0" Name="NewsList" Background="{x:Null}" BorderBrush="{x:Null}" IsTextSearchEnabled="False">
-			<w:ListView.ItemTemplate>
-				<w:DataTemplate>
-					<w:StackPanel>
-						<w:Label Padding="0" Margin="0" Content="{w:Binding TimeString}" FontSize="9" Foreground="#FF454545" />
-						<w:TextBlock Text="{w:Binding Content}" Margin="0" IsHyphenationEnabled="True" TextWrapping="Wrap" Padding="0" />
-					</w:StackPanel>
-				</w:DataTemplate>
-			</w:ListView.ItemTemplate>
-		</w:ListView>
-		<w:CheckBox IsChecked="{w:Binding CheckForNewsFlag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Retrieve news at startup" HorizontalAlignment="Left" Margin="287,0,0,15" Name="Check_GetNewsOnStartup" Foreground="White" Height="16" VerticalAlignment="Bottom" />
-		<w:Label Content="Version" Height="16" HorizontalAlignment="Left" Margin="14,43,0,0" Name="Label_Version" VerticalAlignment="Top" Padding="0" Width="168" FontSize="10" />
-		<w:Label Height="15" HorizontalAlignment="Left" Padding="0" Margin="14,61,0,0" Name="label3" VerticalAlignment="Top" Width="252">
-			<w:Label.Content>
-				<w:Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="http://d-ide.sourceforge.net">http://d-ide.sourceforge.net</w:Hyperlink>
-			</w:Label.Content>
-		</w:Label>
-	</w:Grid>
-</DockableContent>
+    <Grid>
+		<Grid.Background>
+			<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+				<GradientStop Color="White" Offset="0" />
+				<GradientStop Color="#FF4A678D" Offset="0.926" />
+			</LinearGradientBrush>
+		</Grid.Background>
+		<tree:TreeList HorizontalAlignment="Left" Margin="12,169,0,41" Name="RecentProjectsList" Width="254" MouseDoubleClick="RecentProjectsList_MouseDoubleClick">
+			<tree:TreeList.View>
+				<GridView>
+					<GridView.ColumnHeaderContainerStyle>
+						<Style>
+							<Setter Property="FrameworkElement.Visibility" Value="Collapsed" />
+						</Style>
+					</GridView.ColumnHeaderContainerStyle>
+					<GridView.Columns>
+						<GridViewColumn>
+							<GridViewColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding FileName}" ToolTip="{Binding Path}" />
+								</DataTemplate>
+							</GridViewColumn.CellTemplate>
+						</GridViewColumn>
+					</GridView.Columns>
+				</GridView>
+			</tree:TreeList.View>
+		</tree:TreeList>
+		<Label Content="Recent projects:" Height="17" HorizontalAlignment="Left" Padding="0" Margin="12,146,0,0" Name="label1" VerticalAlignment="Top" Width="254" />
+		<Button Content="Open Selected" HorizontalAlignment="Left" Margin="12,0,0,12" Name="Button_Open" Width="90" Height="23" VerticalAlignment="Bottom" Click="Button_Open_Click" />
+		<Button Content="Create New" HorizontalAlignment="Left" Margin="108,0,0,12" Name="Button_CreatePrj" Width="90" Height="23" VerticalAlignment="Bottom" Click="Button_CreatePrj_Click" />
+		<TextBlock Height="34" HorizontalAlignment="Left" Margin="12,12,0,0" Name="textBlock1" Text="Welcome to D-IDE!" VerticalAlignment="Top" Width="254" TextWrapping="Wrap" FontSize="28" FontWeight="Normal" FontStyle="Normal" FontFamily="Segoe UI" TextAlignment="Left" />
+		<Label Content="Recent news:" Height="14" HorizontalAlignment="Left" Padding="0" Margin="288,12,0,0" Name="label2" VerticalAlignment="Top" Width="107" />
+		<ListView Margin="287,32,12,41" Padding="0" Name="NewsList" Background="{x:Null}" BorderBrush="{x:Null}" IsTextSearchEnabled="False">
+			<ListView.ItemTemplate>
+				<DataTemplate>
+					<StackPanel>
+						<Label Padding="0" Margin="0" Content="{Binding TimeString}" FontSize="9" Foreground="#FF454545" />
+						<TextBlock Text="{Binding Content}" Margin="0" IsHyphenationEnabled="True" TextWrapping="Wrap" Padding="0" />
+					</StackPanel>
+				</DataTemplate>
+			</ListView.ItemTemplate>
+		</ListView>
+		<CheckBox IsChecked="{Binding CheckForNewsFlag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Retrieve news at startup" HorizontalAlignment="Left" Margin="287,0,0,15" Name="Check_GetNewsOnStartup" Foreground="White" Height="16" VerticalAlignment="Bottom" />
+		<Label Content="Version" Height="16" HorizontalAlignment="Left" Margin="14,43,0,0" Name="Label_Version" VerticalAlignment="Top" Padding="0" Width="168" FontSize="10" />
+		<Label Height="15" HorizontalAlignment="Left" Padding="0" Margin="14,61,0,0" Name="label3" VerticalAlignment="Top" Width="252">
+			<Label.Content>
+				<Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="http://d-ide.sourceforge.net">http://d-ide.sourceforge.net</Hyperlink>
+			</Label.Content>
+		</Label>
+	</Grid>
+</ad:DockableContent>

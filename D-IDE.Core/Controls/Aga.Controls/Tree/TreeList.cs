@@ -36,11 +36,23 @@ namespace Aga.Controls.Tree
 			  if (_model != value)
 			  {
 				  _model = value;
-				  _root.Children.Clear();
-				  Rows.Clear();
-				  CreateChildrenNodes(_root);
+				  Refresh();
 			  }
 		  }
+		}
+
+		/// <summary>
+		/// Redraws the tree list
+		/// </summary>
+		public void Refresh()
+		{
+			_root.Children.Clear();
+			Rows.Clear();
+
+			if (_model == null)
+				return;
+
+			CreateChildrenNodes(_root);
 		}
 
 		private TreeNode _root;
