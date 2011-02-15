@@ -13,7 +13,7 @@ namespace D_IDE.Updater
 	/// </summary>
 	public class IDEUpdater
 	{
-		public static string ArchiveUrl = "http://d-ide.svn.sourceforge.net/viewvc/d-ide/d-ide.zip";
+		public static string ArchiveUrl = "http://d-ide.sourceforge.net/d-ide.php";
 		public static string OutputDir = Directory.GetCurrentDirectory()+"\\D-IDE";
 
 		[STAThread]
@@ -21,13 +21,9 @@ namespace D_IDE.Updater
 		{
 			// Get the latest build archive
 			string archive = "";
-			if (!DownloadLatestBuild(ArchiveUrl,out archive))
-				return;
-
-			if (!ExtractFiles(archive, OutputDir))
-				return;
-
-			Console.WriteLine("Download successful!");
+			if (DownloadLatestBuild(ArchiveUrl, out archive) && ExtractFiles(archive, OutputDir))
+				Console.WriteLine("Download successful!");
+			Console.ReadKey();
 		}
 
 		public static bool DownloadLatestBuild(string ArchiveUrl,out string TempFile)
@@ -51,6 +47,7 @@ namespace D_IDE.Updater
 
 		public static bool ExtractFiles(string ZipFile, string OutputDirectory)
 		{
+			CreateDirectoryRecursively(OutputDirectory);
 			try
 			{
 				Console.WriteLine("Extract archive " + ZipFile + " to " + OutputDirectory + "\r\n");
