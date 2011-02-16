@@ -39,9 +39,9 @@ namespace D_IDE.Dialogs.SettingsPages
 			
 		}
 
-		public override void ApplyChanges()
+		public override bool ApplyChanges()
 		{
-			
+			return true;
 		}
 
 		public override void LoadCurrent()

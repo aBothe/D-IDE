@@ -91,9 +91,6 @@ namespace D_IDE.Core
 		}
 
 		public OutputTypes OutputType { get; set; }
-
-		public bool EnableBuildVersioning = false;
-		public bool AlsoStoreChangedSources = false;
 		#endregion
 
 		public Project() { }
@@ -216,14 +213,6 @@ namespace D_IDE.Core
 			}
 			xw.WriteEndElement();
 
-			xw.WriteStartElement("enablesubversioning");
-			xw.WriteAttributeString("value", EnableBuildVersioning ? "true" : "false");
-			xw.WriteEndElement();
-
-			xw.WriteStartElement("alsostoresources");
-			xw.WriteAttributeString("value", AlsoStoreChangedSources?"true":"false");
-			xw.WriteEndElement();
-
 			xw.WriteStartElement("version");
 			xw.WriteAttributeString("autoincrementbuild",AutoIncrementBuildNumber.ToString());
 			xw.WriteCData(Version.ToString());
@@ -316,16 +305,6 @@ namespace D_IDE.Core
 									RequiredProjects.Add(xr.ReadString());
 								}
 							}
-							break;
-
-						case "enablesubversioning":
-							if (xr.MoveToAttribute("value"))
-								EnableBuildVersioning = xr.Value == "true";
-							break;
-
-						case "alsostoresources":
-							if (xr.MoveToAttribute("value"))
-								AlsoStoreChangedSources = xr.Value == "true";
 							break;
 
 						case "version":
@@ -445,6 +424,7 @@ namespace D_IDE.Core
 		/// Windows DLL
 		/// </summary>
 		DynamicLibary,
+		StaticLibrary,
 		/// <summary>
 		/// Non-Executable
 		/// </summary>

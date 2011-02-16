@@ -8,6 +8,8 @@ namespace D_IDE.Core.Controls
 	public interface IFormBase
 	{
 		AvalonDock.DockingManager DockManager { get; }
+		System.Windows.Threading.Dispatcher Dispatcher { get; }
+
 
 		void RefreshMenu();
 		void RefreshGUI();

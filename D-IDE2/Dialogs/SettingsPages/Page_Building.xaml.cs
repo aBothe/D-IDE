@@ -31,10 +31,11 @@ namespace D_IDE.Dialogs.SettingsPages
 			}
 		}
 
-		public override void ApplyChanges()
+		public override bool ApplyChanges()
 		{
 			GlobalProperties.Instance.DoAutoSaveOnBuilding = cb_SaveBeforeBuild.IsChecked.Value;
 			GlobalProperties.Instance.DefaultBinariesPath = tb_DefBinPath.Text;
+			return true;
 		}
 
 		public override void LoadCurrent()

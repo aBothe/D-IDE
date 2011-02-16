@@ -60,8 +60,7 @@ namespace D_IDE.Core
 		/// </summary>
 		public static Process ExecuteAsync(string Executable, string Arguments, string StartDirectory, ProcessExitedEvent OnExit)
 		{
-			if (GlobalProperties.Instance.VerboseDebugOutput)
-				ErrorLogger. Log(Executable + " " + Arguments);
+			ErrorLogger. Log("Launch "+ Executable + " " + Arguments,ErrorType.Information,ErrorOrigin.Build);
 
 			var psi = new ProcessStartInfo(Executable, Arguments) { WorkingDirectory=StartDirectory, UseShellExecute=false};
 			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=true};

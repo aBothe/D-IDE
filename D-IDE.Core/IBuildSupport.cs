@@ -54,6 +54,21 @@ namespace D_IDE.Core
 
 			return sm.LastBuildResult;
 		}
+
+		/// <summary>
+		/// Helper function that replaces replaceable strings with specified values.
+		/// Useful e.g. when create execution argument strings
+		/// </summary>
+		public static string BuildArgumentString(string input, IEnumerable<KeyValuePair<string, string>> ReplacedStrings)
+		{
+			string ret = input;
+
+			if (!string.IsNullOrEmpty(ret))
+				foreach (var kv in ReplacedStrings)
+					ret = ret.Replace(kv.Key, kv.Value);
+
+			return ret;
+		}
 	}
 
 	/// <summary>

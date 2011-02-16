@@ -26,7 +26,7 @@ namespace D_IDE.Dialogs.SettingsPages
 			LoadCurrent();
 		}
 
-		public override void ApplyChanges()
+		public override bool ApplyChanges()
 		{
 			GlobalProperties.AllowMultipleProgramInstances = cb_MultipleInstances.IsChecked.Value;
 			GlobalProperties.Instance.WatchForUpdates = cb_Updates.IsChecked.Value;
@@ -37,6 +37,7 @@ namespace D_IDE.Dialogs.SettingsPages
 			GlobalProperties.Instance.DefaultProjectDirectory = tb_PrjRepo.Text;
 			GlobalProperties.Instance.OpenLastPrj = cb_OpenLastSln.IsChecked.Value;
 			GlobalProperties.Instance.OpenLastFiles = cb_OpenLastFiles.IsChecked.Value;
+			return true;
 		}
 		
 		public override string SettingCategoryName

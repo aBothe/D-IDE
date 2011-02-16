@@ -414,7 +414,15 @@ namespace D_IDE
 
 		public bool UseExternalDebugger = false;
 		public string ExternalDebugger_Bin = "windbg.exe";
-		public string ExternalDebugger_Arguments = "\"$exe\"";
+		/// <summary>
+		/// $sourcePath
+		/// $targetDir
+		/// $target
+		/// $exe
+		/// $dll
+		/// $args - executable's arguments
+		/// </summary>
+		public string ExternalDebugger_Arguments = "-srcpath \"$sourcePath\" \"$exe\" $args";
 		#endregion
 
 		#region General

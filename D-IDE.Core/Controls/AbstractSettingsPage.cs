@@ -11,7 +11,7 @@ namespace D_IDE.Core
 	/// </summary>
 	public class AbstractSettingsPage : UserControl
 	{
-		public virtual void ApplyChanges(){}
+		public virtual bool ApplyChanges() { return true; }
 		public virtual void RestoreDefaults() { }
 		public virtual void LoadCurrent() { }
 
@@ -21,7 +21,7 @@ namespace D_IDE.Core
 
 	public class AbstractProjectSettingsPage :UserControl
 	{
-		public virtual void ApplyChanges(Project Project) { }
+		public virtual bool ApplyChanges(Project Project) { return true; }
 		public virtual void LoadCurrent(Project Project) { }
 
 		public virtual string SettingCategoryName { get { return String.Empty; } }

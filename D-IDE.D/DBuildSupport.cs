@@ -327,7 +327,7 @@ namespace D_IDE.D
 		/// <returns></returns>
 		public static string BuildDSourceCompileArgumentString(string input, string srcFile, string objFile)
 		{
-			return ParseArgumentString(input, new Dictionary<string, string>{
+			return BuildArgumentString(input, new Dictionary<string, string>{
 				{"$src",srcFile},
 				{"$objDir",Path.Combine( Path.GetDirectoryName(srcFile), Path.GetDirectoryName(objFile))},
 				{"$obj",objFile},
@@ -350,7 +350,7 @@ namespace D_IDE.D
 			if(Objects!=null && Objects.Length>0)
 				objs="\"" + string.Join("\" \"", Objects) + "\"";
 
-			return ParseArgumentString(input, new Dictionary<string, string>{
+			return BuildArgumentString(input, new Dictionary<string, string>{
 				{"$objs",objs},
 				{"$targetDir",Path.GetDirectoryName(targetFile)},
 				{"$target",targetFile},
@@ -358,17 +358,6 @@ namespace D_IDE.D
 				{"$dll",Path.ChangeExtension(targetFile,".dll")},
 				{"$lib",Path.ChangeExtension(targetFile,".lib")},
 			});
-		}
-
-		public static string ParseArgumentString(string input, IEnumerable<KeyValuePair<string, string>> ReplacedStrings)
-		{
-			string ret = input;
-
-			if(!string.IsNullOrEmpty(ret))
-				foreach (var kv in ReplacedStrings)
-					ret = ret.Replace(kv.Key,kv.Value);
-
-			return ret;
 		}
 		#endregion
 

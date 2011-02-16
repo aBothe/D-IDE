@@ -67,8 +67,8 @@ namespace D_IDE.Controls.Panels
 					break;
 			}
 
-			//TODO: Find out why invoking the dispatcher thread blocks the entire application
-			if (Thread.CurrentThread.ManagedThreadId != Dispatcher.Thread.ManagedThreadId)
+			//TODO: Find out why invoking the dispatcher thread blocks the entire application sometimes
+			if (!Util.IsDispatcherThread)
 				Dispatcher.Invoke(new D_IDE.Core.Util.EmptyDelegate(() =>
 				{
 					SelectedTab = selTab;

@@ -6,6 +6,7 @@ using System.Windows.Data;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using Microsoft.VisualBasic;
+using System.Threading;
 
 namespace D_IDE.Core
 {
@@ -138,6 +139,16 @@ namespace D_IDE.Core
             var ret = new DateTime(1970, 1, 1, 0, 0, 0, 0);
             return (long)(t - ret).TotalSeconds;
         }
+
+		/// <summary>
+		/// Returns true if the thread which calls IsDispatcherThread is the thread that holds up the MainWindow's Message Loop
+		/// </summary>
+		public static bool IsDispatcherThread
+		{
+			get {
+				return Thread.CurrentThread.ManagedThreadId == CoreManager.Instance.MainWindow.Dispatcher.Thread.ManagedThreadId;
+			}
+		}
 
 		#region Icons
 		public static BitmapImage FromDrawingImage(System.Drawing.Icon ico)

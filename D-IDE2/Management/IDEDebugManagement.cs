@@ -313,16 +313,31 @@ namespace D_IDE
 			/// <summary>
 			/// Launch the debugger asynchronously
 			/// </summary>
-			/// <param name="exe"></param>
-			/// <param name="args"></param>
-			/// <param name="sourcePath"></param>
-			/// <param name="showConsole"></param>
 			public static void LaunchWithDebugger(string exe, string args,string sourcePath,bool showConsole)
 			{
 				StopExecution();
 
 				// Make all documents read-only
 				EditingManagement.AllDocumentsReadOnly = true;
+
+				// If there's an external debugger specified and if it's wanted to launch it, start that one
+				if (GlobalProperties.Instance.UseExternalDebugger)
+				{
+					CurrentProcess = FileExecution.ExecuteAsync(GlobalProperties.Instance.ExternalDebugger_Bin,
+						IBuildSupport.BuildArgumentString(GlobalProperties.Instance.ExternalDebugger_Arguments, new Dictionary<string, string>{
+							{"$sourcePath",sourcePath},
+							{"$targetDir",Path.GetDirectoryName(exe)},
+							{"$target",exe},
+							{"$exe",Path.ChangeExtension(exe,".exe")},
+							{"$dll",Path.ChangeExtension(exe,".dll")},
+							{"$args",args}
+						}), // %WINDBG_ARGS% Program.exe Arg1 Arg2
+						Path.GetDirectoryName(exe), CurrentProcess_Exited);
+
+					Instance.UpdateGUI();
+
+					return;
+				}
 
 				if (!dbgEngineInited)
 					InitDebugger();

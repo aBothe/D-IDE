@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using D_IDE.Core;
 using System.IO;
+using System.Windows.Threading;
 
 namespace D_IDE
 {
@@ -21,8 +22,16 @@ namespace D_IDE
 				set
 				{
 					allDocsReadOnly = value;
-					foreach (var ed in from e in Instance.Editors where e is EditorDocument select e as EditorDocument)
-						ed.Editor.IsReadOnly = value;
+
+					// Ensure thread-safety
+					if (Util.IsDispatcherThread)
+						foreach (var ed in from e in Instance.Editors where e is EditorDocument select e as EditorDocument)
+							ed.Editor.IsReadOnly = value;
+					else 
+						IDEManager.Instance.MainWindow.Dispatcher.Invoke(new Util.EmptyDelegate(() => {
+						foreach (var ed in from e in Instance.Editors where e is EditorDocument select e as EditorDocument)
+							ed.Editor.IsReadOnly = value;
+					}));
 				}
 			}
 

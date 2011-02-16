@@ -32,7 +32,7 @@ namespace D_IDE.Dialogs.SettingsPages
 			}
 		}
 
-		public override void ApplyChanges()
+		public override bool ApplyChanges()
 		{
 			GlobalProperties.Instance.VerboseDebugOutput = cb_VerboseDbgOutput.IsChecked.Value;
 			GlobalProperties.Instance.SkipUnknownCode = cb_SkipUnresolvableCode.IsChecked.Value;
@@ -41,6 +41,7 @@ namespace D_IDE.Dialogs.SettingsPages
 			GlobalProperties.Instance.UseExternalDebugger = cb_UseExtDebugger.IsChecked.Value;
 			GlobalProperties.Instance.ExternalDebugger_Bin = tb_ExtDbg_Path.Text;
 			GlobalProperties.Instance.ExternalDebugger_Arguments = tb_ExtDbg_Params.Text;
+			return true;
 		}
 
 		public override void LoadCurrent()

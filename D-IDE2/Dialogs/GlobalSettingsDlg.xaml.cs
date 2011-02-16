@@ -91,22 +91,28 @@ namespace D_IDE.Dialogs
 		#region Settings logic
 		private void buttonApply_Click(object sender, RoutedEventArgs e)
 		{
-			ApplySettings();
-			DialogResult = true;
+			if(ApplySettings())
+				DialogResult = true;
 		}
 
-		public void ApplySettings()
+		public bool ApplySettings()
 		{
 			foreach (var sp in SettingsPages)
-				ApplySettings(sp);
+				if (!ApplySettings(sp))
+					return false;
+			return true;
 		}
 
-		void ApplySettings(AbstractSettingsPage p)
+		bool ApplySettings(AbstractSettingsPage p)
 		{
-			p.ApplyChanges();
+			if (!p.ApplyChanges())
+				return false;
+
 			if (p.SubCategories != null && p.SubCategories.Length > 0)
 				foreach (var ssp in p.SubCategories)
-					ApplySettings(ssp);
+					if (!ApplySettings(ssp))
+						return false;
+			return true;
 		}
 
 		public void RestoreDefaults()

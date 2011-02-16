@@ -25,7 +25,7 @@ namespace D_IDE.D
 			InitializeComponent();
 		}
 
-		public override void ApplyChanges(Project prj)
+		public override bool ApplyChanges(Project prj)
 		{
 			prj.Name = Text_ProjectName.Text;
 			try
@@ -35,8 +35,9 @@ namespace D_IDE.D
 				prj.Version.Build = Convert.ToInt32(Text_Build.Text);
 				prj.Version.Revision = Convert.ToInt32(Text_Revision.Text);
 			}
-			catch (Exception ex) { MessageBox.Show(ex.ToString()); }
+			catch (Exception ex) { MessageBox.Show(ex.ToString()); return false; }
 			prj.AutoIncrementBuildNumber = Check_AutoIncrBuild.IsChecked.Value;
+			return true;
 		}
 		
 		public override string SettingCategoryName
