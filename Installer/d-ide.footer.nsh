@@ -25,6 +25,7 @@ Section "Start Menu Shortcuts" start_menu_section_id
 
 	CreateDirectory "$SMPROGRAMS\D-IDE"
 	CreateShortCut "$SMPROGRAMS\D-IDE\D-IDE.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
+	CreateShortCut "$SMPROGRAMS\D-IDE\Sample Programs.lnk" "$INSTDIR\Samples"
 	CreateShortCut "$SMPROGRAMS\D-IDE\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
 SectionEnd
 
