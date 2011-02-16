@@ -116,7 +116,7 @@ namespace D_IDE.D
 					prj.OutputType = OutputTypes.DynamicLibary;
 					break;
 				case 3:// Lib
-					prj.OutputType = OutputTypes.Other;
+					prj.OutputType = OutputTypes.StaticLibrary;
 					break;
 				default:
 					return null;

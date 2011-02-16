@@ -19,12 +19,12 @@ namespace D_IDE.D
 			FileName = sln.ToAbsoluteFileName( file);
 		}
 
-		public new string OutputFile
+		public override string OutputFile
 		{
 			get
 			{
 				var f = base.OutputFile;
-				if (OutputType == OutputTypes.Other)
+				if (OutputType == OutputTypes.StaticLibrary)
 					return Path.ChangeExtension(f,".lib");
 				return f;
 			}
@@ -77,6 +77,14 @@ namespace D_IDE.D
 			foreach (var lib in LinkedLibraries)
 				xw.WriteElementString("lib",lib);
 			xw.WriteEndElement();
+		}
+
+		public override IEnumerable<AbstractProjectSettingsPage> LanguageSpecificProjectSettings
+		{
+			get
+			{
+				yield return new DPrjSettingsPage();
+			}
 		}
 	}
 }

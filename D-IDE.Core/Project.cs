@@ -24,7 +24,7 @@ namespace D_IDE.Core
 			get { return Path.GetDirectoryName(FileName); }
 		}
 
-		public virtual AbstractProjectSettingsPage[] LanguageSpecificProjectSettings { get { return null; } }
+		public virtual IEnumerable< AbstractProjectSettingsPage> LanguageSpecificProjectSettings { get { return null; } }
 
 		/// <summary>
 		/// Contain all project files including the file paths of the modules.
@@ -68,7 +68,7 @@ namespace D_IDE.Core
 		public BuildResult LastBuildResult { get; set; }
 		public string ExecutingArguments { get; set; }
 		protected string OutputFileOverride { get; set; }
-		public string OutputFile
+		public virtual string OutputFile
 		{
 			get
 			{

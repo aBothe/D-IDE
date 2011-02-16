@@ -40,7 +40,7 @@ namespace D_IDE.Dialogs
 			SettingsPages.Add(new Page_General_Prj());
 
 			var pgs = Project.LanguageSpecificProjectSettings;
-			if (pgs != null && pgs.Length > 0)
+			if (pgs != null)
 				foreach (var p in pgs)
 					SettingsPages.Add(p);
 

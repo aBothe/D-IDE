@@ -6,19 +6,17 @@
              mc:Ignorable="d" 
              d:DesignHeight="376" d:DesignWidth="624" Background="White">
 	<w:Grid Name="stackPanel1">
-		<w:GroupBox Header="General" Height="137" Name="groupBox1" VerticalAlignment="Top">
-			<w:Grid>
-				<w:Label Content="Project Name" Height="17" HorizontalAlignment="Left" Name="label1" VerticalAlignment="Top" Padding="0" Margin="6,9,0,0" Width="75" />
-				<w:TextBox Height="23" Margin="115,6,6,0" Name="Text_ProjectName" VerticalAlignment="Top" />
-				<w:Label Content="Project Version" Height="17" HorizontalAlignment="Left" Margin="6,38,0,0" Name="label2" Padding="0" VerticalAlignment="Top" Width="85" />
-				<w:TextBox Height="23" HorizontalAlignment="Left" Margin="115,35,0,0" Name="Text_Major" VerticalAlignment="Top" Width="50" />
-				<w:TextBox Height="23" HorizontalAlignment="Left" Margin="171,35,0,0" Name="Text_Minor" VerticalAlignment="Top" Width="50" />
-				<w:TextBox Height="23" HorizontalAlignment="Left" Margin="227,35,0,0" Name="Text_Build" VerticalAlignment="Top" Width="60" />
-				<w:TextBox Height="23" HorizontalAlignment="Left" Margin="293,35,0,0" Name="Text_Revision" VerticalAlignment="Top" Width="50" />
-				<w:TextBox Height="23" Margin="115,86,6,0" Name="Text_BaseDir" VerticalAlignment="Top" IsReadOnly="True" />
-				<w:Label Content="Base Directory" Height="17" HorizontalAlignment="Left" Margin="6,89,0,0" Name="label3" Padding="0" VerticalAlignment="Top" Width="85" />
-				<w:CheckBox Content="Auto-Increment Build Number" Height="16" HorizontalAlignment="Left" Margin="115,64,0,0" Name="Check_AutoIncrBuild" VerticalAlignment="Top" />
-			</w:Grid>
-		</w:GroupBox>
+		<w:Label Content="DMD Version" Height="17" HorizontalAlignment="Left" Padding="0" Margin="12,15,0,0" Name="label1" VerticalAlignment="Top" Width="98" />
+		<w:ComboBox Height="23" HorizontalAlignment="Left" Margin="121,12,0,0" Name="Combo_DVersion" VerticalAlignment="Top" Width="41">
+			<w:ComboBoxItem Content="D1" IsSelected="True" />
+			<w:ComboBoxItem Content="D2" />
+		</w:ComboBox>
+		<w:CheckBox Content="Compile as release version" Height="16" HorizontalAlignment="Left" Margin="121,41,0,0" Name="Check_Release" VerticalAlignment="Top" Width="184" />
+		<w:ListView Margin="121,92,12,12" Name="List_Libs" SelectionChanged="List_Libs_SelectionChanged" />
+		<w:TextBox Height="23" Margin="121,63,222,0" Name="text_CurLib" VerticalAlignment="Top" />
+		<w:Label Content="Imported Libraries" Height="17" HorizontalAlignment="Left" Margin="12,66,0,0" Name="label2" Padding="0" VerticalAlignment="Top" Width="98" />
+		<w:Button Content="Add" Height="23" HorizontalAlignment="Right" Margin="0,64,152,0" Name="button_AddLib" VerticalAlignment="Top" Width="64" Click="button_AddLib_Click" />
+		<w:Button Content="Apply" Height="23" HorizontalAlignment="Right" Margin="0,64,82,0" Name="button_ApplyLib" VerticalAlignment="Top" Width="64" Click="button_ApplyLib_Click" />
+		<w:Button Content="Delete" Height="23" Margin="0,63,12,0" Name="button_DeleteLib" VerticalAlignment="Top" Click="button_DeleteLib_Click" HorizontalAlignment="Right" Width="64" />
 	</w:Grid>
 </AbstractProjectSettingsPage>
