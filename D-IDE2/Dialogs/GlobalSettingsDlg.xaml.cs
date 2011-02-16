@@ -40,7 +40,8 @@ namespace D_IDE.Dialogs
 			SettingsPages.Add(new Page_Debugging());
 
 			foreach (var lang in from l in LanguageLoader.Bindings where l.CanUseSettings select l)
-				SettingsPages.Add(lang.SettingsPage);
+				if(lang.SettingsPage!=null)
+					SettingsPages.Add(lang.SettingsPage);
 
 			RefreshCategoryTree();
 		}
@@ -52,7 +53,8 @@ namespace D_IDE.Dialogs
 			CategoryTree.Items.Clear();
 
 			foreach (var pg in SettingsPages)
-				CategoryTree.Items.Add(_BuildCategoryNode( pg));
+				if(pg!=null)
+					CategoryTree.Items.Add(_BuildCategoryNode(pg));
 
 			// If nothing selected and page control empty, select first item
 			if (PropPageHost.Content == null && CategoryTree.Items.Count > 0)

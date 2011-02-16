@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="382" d:DesignWidth="512">
+             d:DesignHeight="382" d:DesignWidth="512" Background="White">
     <w:Grid>
 		<w:CheckBox Content="Verbose debug output" HorizontalAlignment="Left" Margin="12,12,0,0" Name="cb_VerboseDbgOutput" Height="16" VerticalAlignment="Top" />
 		<w:CheckBox Content="Skip non-resolvable code automatically" Height="16" HorizontalAlignment="Left" Margin="12,34,0,0" Name="cb_SkipUnresolvableCode" VerticalAlignment="Top" />
