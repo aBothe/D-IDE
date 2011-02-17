@@ -1,0 +1,22 @@
+﻿<Window x:Class="D_IDE.D.BuildArgumentForm"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             Height="236" Width="665" SizeToContent="WidthAndHeight" Title="Build Arguments" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Grid>
+		<TextBox Height="23" Margin="158,12,12,0" Name="Text_SrcCompiler" VerticalAlignment="Top" />
+		<Label Content="Source Compiler" Height="15" HorizontalAlignment="Left" Margin="12,16,0,0" Name="Label_SrcCmp" VerticalAlignment="Top" Padding="0" Width="104" />
+		<TextBox Height="23" Margin="158,41,12,0" Name="Text_Win32Linker" VerticalAlignment="Top" />
+		<Label Content="Win32 .exe Linker" Height="15" HorizontalAlignment="Left" Margin="12,46,0,0" Name="label1" Padding="0" VerticalAlignment="Top" Width="104" />
+		<TextBox Height="23" Margin="158,70,12,0" Name="Text_ConsoleExe" VerticalAlignment="Top" />
+		<Label Content="Console .exe Linker" Height="15" HorizontalAlignment="Left" Margin="12,74,0,0" Name="label2" Padding="0" VerticalAlignment="Top" Width="104" />
+		<TextBox Height="23" Margin="158,99,12,0" Name="Text_DllLinker" VerticalAlignment="Top" />
+		<Label Content="Win32 .dll Linker" Height="15" HorizontalAlignment="Left" Margin="12,103,0,0" Name="label3" Padding="0" VerticalAlignment="Top" Width="104" />
+		<TextBox Height="23" Margin="158,128,12,0" Name="Text_StaticLibLinker" VerticalAlignment="Top" />
+		<Label Content="Static Library .lib Linker" Height="15" HorizontalAlignment="Left" Margin="12,132,0,0" Name="label4" Padding="0" VerticalAlignment="Top" Width="131" />
+		<Button Content="Cancel" Margin="0,0,12,12" Name="button1" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" IsCancel="True" />
+		<Button Content="OK" Height="23" HorizontalAlignment="Right" Margin="0,0,93,12" Name="Button_OK" VerticalAlignment="Bottom" Width="75" IsDefault="True" Click="Button_OK_Click" />
+	</Grid>
+</Window>
