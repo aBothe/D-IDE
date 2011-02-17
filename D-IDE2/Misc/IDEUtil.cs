@@ -7,6 +7,7 @@ using Parser.Core;
 using System.Net;
 using System.IO;
 using System.Windows;
+using System.Threading;
 
 namespace D_IDE
 {
@@ -28,11 +29,20 @@ namespace D_IDE
 
 		public static void CheckForUpdates()
 		{
-			if (GlobalProperties.Instance.WatchForUpdates && IDEUtil.IsUpdateAvailable)
-			{
-				if (MessageBox.Show("A program update is available. Install it now? Warning: The program will be closed then!", "Update available", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
-					IDEUtil.DoUpdate();
-			}
+			if (GlobalProperties.Instance.WatchForUpdates)
+				new Thread(() =>
+				{
+					Thread.CurrentThread.IsBackground = true;
+					if (IDEUtil.IsUpdateAvailable)
+					{
+						if (MessageBox.Show("A program update is available. Install it now?\r\nWarning: The program will be closed then!", 
+							"Update available", 
+							MessageBoxButton.YesNo, 
+							MessageBoxImage.Question, 
+							MessageBoxResult.Yes) == MessageBoxResult.Yes)
+							IDEUtil.DoUpdate();
+					}
+				}).Start();
 		}
 
 		/// <summary>
@@ -63,18 +73,18 @@ namespace D_IDE
 
 		public static void DoUpdate()
 		{
-			if (File.Exists(UpdaterExe))
+			if (!File.Exists(UpdaterExe))
 			{
 				ErrorLogger.Log(UpdaterExe+" not found! Cannot proceed with update!",ErrorType.Error,ErrorOrigin.System);
 				return;
 			}
 
-			// Close main window - the D-IDE.exe will be overwritten!
-			IDEManager.Instance.MainWindow.Close();
-			System.Windows.Application.Current.Shutdown();
-			
 			// Start the updater
-			FileExecution.ExecuteAsync(UpdaterExe, "", ApplicationStartUpPath, null);
+			var upt=FileExecution.ExecuteAsync(UpdaterExe, "", ApplicationStartUpPath, null);
+
+			// Close main window - the D-IDE.exe will be overwritten!
+			IDEManager.Instance.MainWindow.Dispatcher.Invoke(new EmptyDelegate(() =>
+			IDEManager.Instance.MainWindow.Close()));
 		}
 		#endregion
 	}

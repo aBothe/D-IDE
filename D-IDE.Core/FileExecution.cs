@@ -62,10 +62,11 @@ namespace D_IDE.Core
 		{
 			ErrorLogger. Log("Launch "+ Executable + " " + Arguments,ErrorType.Information,ErrorOrigin.Build);
 
-			var psi = new ProcessStartInfo(Executable, Arguments) { WorkingDirectory=StartDirectory, UseShellExecute=false};
-			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=true};
+			var psi = new ProcessStartInfo(Executable, Arguments) { WorkingDirectory=StartDirectory, UseShellExecute=OnExit==null};
+			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=OnExit!=null};
 
-			prc.Exited +=new EventHandler( delegate(object s, EventArgs e) { if (OnExit != null) OnExit(); });
+			if(OnExit!=null)
+				prc.Exited +=new EventHandler( delegate(object s, EventArgs e) { OnExit(); });
 
 			try
 			{

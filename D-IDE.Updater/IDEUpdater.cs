@@ -30,12 +30,14 @@ namespace D_IDE.Updater
 			// Get latest online file timestamp
 			try
 			{
+				Console.Write("Get last modification timestamp... ");
 				LastOnlineModTime = new WebClient().DownloadString(TimeStampUrl);
+				Console.WriteLine(LastOnlineModTime);
 
 				// Check if offline version is already the latest
 				if (File.Exists(mFileVerFile) && File.ReadAllText(mFileVerFile) == LastOnlineModTime)
 				{
-					Console.WriteLine("You already have the latest version!");
+					Console.WriteLine("You already have got the latest version!");
 					return 0;
 				}
 			}
