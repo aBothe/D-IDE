@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using ICSharpCode.SharpZipLib.Zip;
 using System.Threading;
+using System.Diagnostics;
 
 namespace D_IDE.Updater
 {
@@ -13,24 +14,92 @@ namespace D_IDE.Updater
 	/// </summary>
 	public class IDEUpdater
 	{
-		public static string ArchiveUrl = "http://d-ide.sourceforge.net/d-ide.php";
-		public static string OutputDir = Directory.GetCurrentDirectory()+"\\D-IDE";
+		public const string FileVersionFile = "LastModificationTime";
+		public const string TimeStampUrl = "http://d-ide.sourceforge.net/d-ide.php?action=fileversion";
+		public const string ArchiveUrl = "http://d-ide.sourceforge.net/d-ide.php";
+		public static string OutputDir = Directory.GetCurrentDirectory();
 
 		[STAThread]
-		static void Main(string[] args)
+		static int Main(string[] args)
 		{
+			string mFileVerFile=Path.Combine(OutputDir,FileVersionFile);
+
+			Console.WriteLine("D-IDE Updater\r\n");
+			string LastOnlineModTime="";
+
+			// Get latest online file timestamp
+			try
+			{
+				LastOnlineModTime = new WebClient().DownloadString(TimeStampUrl);
+
+				// Check if offline version is already the latest
+				if (File.Exists(mFileVerFile) && File.ReadAllText(mFileVerFile) == LastOnlineModTime)
+				{
+					Console.WriteLine("You already have the latest version!");
+					return 0;
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				return 1;
+			}
+
+			if (!CheckForOpenInstances())
+				return 1;
+
 			// Get the latest build archive
 			string archive = "";
-			if (DownloadLatestBuild(ArchiveUrl, out archive) && ExtractFiles(archive, OutputDir))
+			if (DownloadLatestBuild(ArchiveUrl, out archive) && CheckForOpenInstances() && ExtractFiles(archive, OutputDir))
+			{
 				Console.WriteLine("Download successful!");
-			Console.ReadKey();
+
+				// Save archive modification time to make later watch-outs for program updates working
+				// Note: Just save it AFTER the update was successful!
+				File.WriteAllText(mFileVerFile, LastOnlineModTime);
+				
+				return 0;
+			}
+			Console.ReadKey(); // Halt on error
+			return 1;
+		}
+
+		/// <summary>
+		/// Check for open D-IDE.exes that are located in the OutputDir and wait until they've been closed down
+		/// </summary>
+		public static bool CheckForOpenInstances()
+		{
+			int i = 10;
+			while (true)
+			{
+				var prcs = Process.GetProcessesByName("D-IDE");
+				if (prcs == null || prcs.Length < 1)
+					break;
+
+				if (i < 0)
+					return false;
+
+				bool br = true;
+				foreach (var prc in prcs)
+				{
+					if (Path.GetDirectoryName(prc.Modules[0].FileName) == OutputDir)
+					{
+						Console.WriteLine("Close D-IDE.exe first to enable update! (" + i.ToString() + " attempts remaining!)");
+						i--;
+						Thread.Sleep(2000);
+						br = false;
+					}
+				}
+				if (br)
+					break;
+			}
+			return true;
 		}
 
 		public static bool DownloadLatestBuild(string ArchiveUrl,out string TempFile)
 		{
 			TempFile = Path.GetTempFileName();
 			Console.WriteLine("Download "+ArchiveUrl);
-			Console.WriteLine("This may will take a longer time due to the initialization of .NET's WebClient....");
 			try
 			{
 				var wc = new WebClient();
@@ -100,6 +169,7 @@ namespace D_IDE.Updater
 			return true;
 		}
 
+		#region Util
 		/// <summary>
 		/// Helper function to check if directory exists. Otherwise the directory will be created.
 		/// </summary>
@@ -122,5 +192,12 @@ namespace D_IDE.Updater
 				}
 			}
 		}
+
+		public static long UnixTimeFromDate(DateTime t)
+		{
+			var ret = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+			return (long)(t - ret).TotalSeconds;
+		}
+		#endregion
 	}
 }

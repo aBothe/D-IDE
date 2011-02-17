@@ -8,7 +8,7 @@
 		Width="1054" Height="852" MinWidth="640" MinHeight="480" 
 		xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock"
 		KeyDown="RibbonWindow_KeyDown"
-		Closing="RibbonWindow_Closing">
+		Closing="RibbonWindow_Closing" Loaded="RibbonWindow_Loaded">
 	
 	<!-- Menu commands -->
 	
@@ -141,6 +141,7 @@
 
 			<r:RibbonTab Header="Help">
 				<r:RibbonGroup Header="Internet resources">
+					<r:RibbonButton Name="Button_Update" Click="Button_Update_Click" Label="Check for updates" />
 				</r:RibbonGroup>
 			</r:RibbonTab>
 				

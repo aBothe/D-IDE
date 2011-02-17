@@ -569,5 +569,15 @@ namespace D_IDE
 			if(IDEManager.Instance.CurrentEditor!=null)
 				IDEManager.ProjectManagement.ShowProjectPropertiesDialog(IDEManager.Instance.CurrentEditor.Project);
 		}
+
+		private void RibbonWindow_Loaded(object sender, RoutedEventArgs e)
+		{
+			IDEUtil.CheckForUpdates();
+		}
+
+		private void Button_Update_Click(object sender, RoutedEventArgs e)
+		{
+			IDEUtil.CheckForUpdates();
+		}
 	}
 }
