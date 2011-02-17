@@ -22,6 +22,7 @@ namespace D_IDE
         }
 
 		#region Auto updater
+		static string UpdaterExe = ApplicationStartUpPath + "\\D-IDE.Updater.exe";
 		static string FileVersionFile = ApplicationStartUpPath + "\\LastModificationTime";
 		const string TimeStampUrl = "http://d-ide.sourceforge.net/d-ide.php?action=fileversion";
 
@@ -62,11 +63,9 @@ namespace D_IDE
 
 		public static void DoUpdate()
 		{
-			var updaterExe = ApplicationStartUpPath+ "\\D-IDE.Updater.exe";
-
-			if (!File.Exists(updaterExe))
+			if (File.Exists(UpdaterExe))
 			{
-				ErrorLogger.Log(updaterExe+" not found! Cannot proceed with update!",ErrorType.Error,ErrorOrigin.System);
+				ErrorLogger.Log(UpdaterExe+" not found! Cannot proceed with update!",ErrorType.Error,ErrorOrigin.System);
 				return;
 			}
 
@@ -75,7 +74,7 @@ namespace D_IDE
 			System.Windows.Application.Current.Shutdown();
 			
 			// Start the updater
-			FileExecution.ExecuteAsync(updaterExe, "", ApplicationStartUpPath, null);
+			FileExecution.ExecuteAsync(UpdaterExe, "", ApplicationStartUpPath, null);
 		}
 		#endregion
 	}

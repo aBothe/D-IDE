@@ -75,7 +75,7 @@ namespace D_IDE.Dialogs
 			ret.Header = Page.SettingCategoryName;
 
 			var subCategories = Page.SubCategories;
-			if(subCategories!=null && subCategories.Length>0)
+			if(subCategories!=null)
 				foreach(var sc in subCategories)
 					ret.Items.Add(_BuildCategoryNode(sc));
 
@@ -108,7 +108,7 @@ namespace D_IDE.Dialogs
 			if (!p.ApplyChanges())
 				return false;
 
-			if (p.SubCategories != null && p.SubCategories.Length > 0)
+			if (p.SubCategories != null)
 				foreach (var ssp in p.SubCategories)
 					if (!ApplySettings(ssp))
 						return false;
@@ -123,7 +123,7 @@ namespace D_IDE.Dialogs
 		void RestoreDefaults(AbstractSettingsPage p)
 		{
 			p.RestoreDefaults();
-			if (p.SubCategories != null && p.SubCategories.Length > 0)
+			if (p.SubCategories != null)
 				foreach (var ssp in p.SubCategories)
 					RestoreDefaults(ssp);
 		}

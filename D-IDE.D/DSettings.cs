@@ -65,7 +65,7 @@ namespace D_IDE.D
 		#endregion
 	}
 
-	public enum DVersion
+	public enum DVersion:int
 	{
 		D1=1,
 		D2=2

@@ -73,6 +73,15 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SettingsPages\DSettingsPage.xaml.cs">
+      <DependentUpon>DSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsPages\DMDSettingsPage.xaml.cs">
+      <DependentUpon>DMDSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsPages\BuildArgumentForm.xaml.cs">
+      <DependentUpon>BuildArgumentForm.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DBuildSupport.cs" />
     <Compile Include="DDebugSupport.cs" />
     <Compile Include="DIcons.Designer.cs">
@@ -83,7 +92,7 @@
     <Compile Include="DLanguageBinding.cs" />
     <Compile Include="DProject.cs" />
     <Compile Include="DSettings.cs" />
-    <Compile Include="DPrjSettingsPage.xaml.cs">
+    <Compile Include="SettingsPages\DPrjSettingsPage.xaml.cs">
       <DependentUpon>DPrjSettingsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -132,7 +141,19 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="DPrjSettingsPage.xaml">
+    <Page Include="SettingsPages\DSettingsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SettingsPages\DMDSettingsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SettingsPages\BuildArgumentForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SettingsPages\DPrjSettingsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

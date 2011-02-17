@@ -185,9 +185,13 @@ namespace D_IDE.D
 			x.Close();
 		}
 
+		
+
 		public override AbstractSettingsPage SettingsPage
 		{
-			get { return null; }
+			get {
+				return new DSettingsPage();
+			}
 		}
 		#endregion
 	}

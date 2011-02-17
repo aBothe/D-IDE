@@ -16,7 +16,7 @@ namespace D_IDE.Core
 		public virtual void LoadCurrent() { }
 
 		public virtual string SettingCategoryName { get { return String.Empty; } }
-		public virtual AbstractSettingsPage[] SubCategories { get { return null; } }
+		public virtual IEnumerable< AbstractSettingsPage> SubCategories { get { return null; } }
 	}
 
 	public class AbstractProjectSettingsPage :UserControl
