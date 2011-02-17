@@ -37,6 +37,11 @@ namespace D_IDE
 		protected override bool OnStartup(Microsoft.VisualBasic.ApplicationServices.StartupEventArgs eventArgs)
 		{
 			var CurrentApp = new Application();
+
+			CurrentApp.Resources.MergedDictionaries.Add(new ResourceDictionary(){
+				Source=new Uri("/PresentationFramework.Aero;component/themes/aero.normalcolor.xaml",UriKind.Relative)
+			});
+
 			var mw = new MainWindow(eventArgs.CommandLine.ToArray());
 			CurrentApp.MainWindow = mw;
 			CurrentApp.Run();

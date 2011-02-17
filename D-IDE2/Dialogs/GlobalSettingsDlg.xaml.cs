@@ -21,7 +21,7 @@ namespace D_IDE.Dialogs
 	public partial class GlobalSettingsDlg : Window
 	{
 		public readonly List<AbstractSettingsPage> SettingsPages = new List<AbstractSettingsPage>();
-		
+
 		public GlobalSettingsDlg()
 		{
 			InitializeComponent();
@@ -53,8 +53,12 @@ namespace D_IDE.Dialogs
 			CategoryTree.Items.Clear();
 
 			foreach (var pg in SettingsPages)
-				if(pg!=null)
-					CategoryTree.Items.Add(_BuildCategoryNode(pg));
+				if (pg != null)
+				{
+					var catn = _BuildCategoryNode(pg);
+					CategoryTree.Items.Add(catn);
+					catn.ExpandSubtree();
+				}
 
 			// If nothing selected and page control empty, select first item
 			if (PropPageHost.Content == null && CategoryTree.Items.Count > 0)
@@ -66,6 +70,7 @@ namespace D_IDE.Dialogs
 		public void SetSettingPage(TreeViewItem n)
 		{
 			PropPageHost.Content = n.Tag;
+			Title = "Global Settings - "+n.Header;
 		}
 
 		TreeViewItem _BuildCategoryNode(AbstractSettingsPage Page)

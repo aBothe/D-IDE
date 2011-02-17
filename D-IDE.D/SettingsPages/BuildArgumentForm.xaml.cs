@@ -25,9 +25,11 @@ namespace D_IDE.D
 		{
 			InitializeComponent();
 			buildArgs = Arguments;
+
+			LoadCurrent();
 		}
 
-		public void Reset()
+		public void LoadCurrent()
 		{
 			Title = (buildArgs.IsDebug ? "Debug" : "Release") + " build arguments";
 

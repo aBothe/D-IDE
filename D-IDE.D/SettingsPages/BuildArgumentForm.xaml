@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             Height="236" Width="665" SizeToContent="WidthAndHeight" Title="Build Arguments" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+             Height="236" Width="665" Title="Build Arguments" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <Grid>
 		<TextBox Height="23" Margin="158,12,12,0" Name="Text_SrcCompiler" VerticalAlignment="Top" />
 		<Label Content="Source Compiler" Height="15" HorizontalAlignment="Left" Margin="12,16,0,0" Name="Label_SrcCmp" VerticalAlignment="Top" Padding="0" Width="104" />
