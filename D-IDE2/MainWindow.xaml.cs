@@ -579,5 +579,17 @@ namespace D_IDE
 		{
 			IDEUtil.CheckForUpdates();
 		}
+
+		private void Button_OpenPrjDir_Click(object sender, RoutedEventArgs e)
+		{
+			string dir = "";
+
+			if (IDEManager.Instance.CurrentEditor != null)
+				dir = Path.GetDirectoryName(IDEManager.Instance.CurrentEditor.AbsoluteFilePath);
+			else
+				dir = CoreManager.CurrentSolution.BaseDirectory;
+
+			System.Diagnostics.Process.Start("explorer.exe",dir);
+		}
 	}
 }

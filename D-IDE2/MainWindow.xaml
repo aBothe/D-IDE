@@ -105,7 +105,7 @@
 			<r:RibbonTab Header="Project" Name="Tab_Project">
 				<r:RibbonGroup Header="Project">
 					<r:RibbonButton Label="Project Settings" Click="PrjSettings_Click" LargeImageSource="Resources/settings_32.png" />
-					<r:RibbonButton Label="Open directory in Explorer" LargeImageSource="Resources/Computer.png" />
+					<r:RibbonButton Label="Open directory in Explorer" Click="Button_OpenPrjDir_Click" LargeImageSource="Resources/Computer.png" />
 				</r:RibbonGroup>
 			</r:RibbonTab>
 

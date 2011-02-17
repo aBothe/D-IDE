@@ -142,7 +142,7 @@ namespace D_IDE.D
 			if (TempPrc != null && !TempPrc.HasExited)
 				TempPrc.WaitForExit(10000);
 
-			br.Successful = br.Successful && File.Exists(obj);
+			br.Successful = br.Successful && TempPrc.ExitCode==0 && File.Exists(obj);
 			return br;
 		}
 
@@ -180,7 +180,7 @@ namespace D_IDE.D
 			if (TempPrc != null && !TempPrc.HasExited)
 				TempPrc.WaitForExit(10000);
 
-			br.Successful = br.Successful && File.Exists(targetFile);
+			br.Successful = br.Successful && TempPrc.ExitCode==0 && File.Exists(targetFile);
 
 			// If targetFile is executable or library, create PDB
 			if (br.Successful && CreatePDB && (targetFile.EndsWith(".exe") || targetFile.EndsWith(".dll")))
