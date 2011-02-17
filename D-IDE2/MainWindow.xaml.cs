@@ -315,6 +315,7 @@ namespace D_IDE
 		private void Settings(object sender, RoutedEventArgs e)
 		{
 			var dlg = new GlobalSettingsDlg();
+			dlg.Owner = this;
 			dlg.ShowDialog();
 		}
 
@@ -347,7 +348,9 @@ namespace D_IDE
 
 		private void RefreshBreakpoints_Click(object sender, RoutedEventArgs e)
 		{
-
+			foreach (var ed in IDEManager.Instance.Editors)
+				if (ed is EditorDocument)
+					(ed as EditorDocument).RefreshBreakpointHighlightings();
 		}
 
 		private void Button_ResumeExecution_Click(object sender, RoutedEventArgs e)

@@ -271,6 +271,7 @@ namespace D_IDE
 					return;
 
 				var dlg = new D_IDE.Dialogs.ProjectSettingsDlg(Project);
+				dlg.Owner = IDEManager.Instance.MainWindow;
 				dlg.ShowDialog();
 			}
 			#endregion
