@@ -69,12 +69,12 @@ namespace D_IDE.Controls.Panels
 
 			//TODO: Find out why invoking the dispatcher thread blocks the entire application sometimes
 			if (!Util.IsDispatcherThread)
-				Dispatcher.Invoke(new D_IDE.Core.Util.EmptyDelegate(() =>
+				Dispatcher.BeginInvoke(new D_IDE.Core.Util.EmptyDelegate(() =>
 				{
 					SelectedTab = selTab;
 					editor.AppendText(s + "\r\n");
 					editor.ScrollToEnd();
-				}));
+				}),System.Windows.Threading.DispatcherPriority.Background);
 			else
 			{
 				SelectedTab = selTab;
