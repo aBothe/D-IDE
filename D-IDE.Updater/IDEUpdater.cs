@@ -22,22 +22,77 @@ namespace D_IDE.Updater
 		[STAThread]
 		static int Main(string[] args)
 		{
-			string mFileVerFile=Path.Combine(OutputDir,FileVersionFile);
+			Console.WriteLine("D-IDE Updater");
+			Console.WriteLine("\tby Alexander Bothe");
+			Console.WriteLine();
+			Console.WriteLine("Add -help to the command line to enum available commands");
+			Console.WriteLine();
 
-			Console.WriteLine("D-IDE Updater\r\n");
+			// Process optional arguments
+			bool DontAsk = false;
+			bool StartImmediately = false;
+			int i=0;
+			for (i = 0; i < args.Length; i++)
+			{
+				switch (args[i])
+				{
+					case "-s":
+						DontAsk = true;
+						break;
+					case "-a":
+						StartImmediately = true;
+						break;
+					case "-o":
+						i++;
+						if (args.Length >i)
+							OutputDir = args[i];
+						break;
+					case "-help":
+					case "-?":
+						Console.WriteLine("Commands:");
+						Console.WriteLine("-s\tDon't halt on errors");
+						Console.WriteLine("-a\tAutomatically launch D-IDE after update has been finished");
+						Console.WriteLine("-o %Path%\tSpecify output directory");
+						return 0;
+				}
+			}
+
+			
+			string mFileVerFile=Path.Combine(OutputDir,FileVersionFile);
 			string LastOnlineModTime="";
 
-			// Get latest online file timestamp
+			// Output local version if possible
+			string offlineVersion ="";
+			if (File.Exists(mFileVerFile))
+			{
+				long timestamp;
+				if (long.TryParse(offlineVersion=File.ReadAllText(mFileVerFile), out timestamp))
+					Console.WriteLine("Local D-IDE Version:\t" + DateFromUnixTime(timestamp).ToLocalTime().ToString());
+			}
+			else 
+				Console.WriteLine("No local D-IDE Version found");
+
+			// Get latest online version
 			try
 			{
-				Console.Write("Get last modification timestamp... ");
+				Console.Write("Online D-IDE Version:\t");
 				LastOnlineModTime = new WebClient().DownloadString(TimeStampUrl);
-				Console.WriteLine(LastOnlineModTime);
+
+				long timestamp;
+				if (long.TryParse(LastOnlineModTime, out timestamp))
+					Console.WriteLine(DateFromUnixTime(timestamp).ToLocalTime().ToString());
+				else
+					Console.WriteLine(LastOnlineModTime);
 
 				// Check if offline version is already the latest
-				if (File.Exists(mFileVerFile) && File.ReadAllText(mFileVerFile) == LastOnlineModTime)
+				if (offlineVersion == LastOnlineModTime)
 				{
 					Console.WriteLine("You already have got the latest version!");
+					if (StartImmediately)
+						TryOpenDIDE();
+					else if (!DontAsk)
+						Console.ReadKey();
+
 					return 0;
 				}
 			}
@@ -47,6 +102,7 @@ namespace D_IDE.Updater
 				return 1;
 			}
 
+			// Check if d-ide instances are running
 			if (!CheckForOpenInstances())
 				return 1;
 
@@ -54,16 +110,39 @@ namespace D_IDE.Updater
 			string archive = "";
 			if (DownloadLatestBuild(ArchiveUrl, out archive) && CheckForOpenInstances() && ExtractFiles(archive, OutputDir))
 			{
+				Console.WriteLine();
 				Console.WriteLine("Download successful!");
 
 				// Save archive modification time to make later watch-outs for program updates working
 				// Note: Just save it AFTER the update was successful!
+				if (File.Exists(mFileVerFile))	File.Delete(mFileVerFile);
 				File.WriteAllText(mFileVerFile, LastOnlineModTime);
+				File.SetAttributes(mFileVerFile, FileAttributes.ReadOnly | FileAttributes.Hidden);
+
+				// Start program if wanted
+				if (StartImmediately)
+					TryOpenDIDE();
 				
 				return 0;
 			}
-			Console.ReadKey(); // Halt on error
+
+			if(!DontAsk)
+				Console.ReadKey(); // Halt on error
 			return 1;
+		}
+
+		public static void TryOpenDIDE()
+		{
+			var dide = OutputDir + "\\d-ide.exe";
+			try
+			{
+				Console.WriteLine("Launch "+dide);
+				Process.Start(dide);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+			}
 		}
 
 		/// <summary>
@@ -101,7 +180,7 @@ namespace D_IDE.Updater
 		public static bool DownloadLatestBuild(string ArchiveUrl,out string TempFile)
 		{
 			TempFile = Path.GetTempFileName();
-			Console.WriteLine("Download "+ArchiveUrl);
+			Console.WriteLine("Download archive");
 			try
 			{
 				var wc = new WebClient();
@@ -121,7 +200,7 @@ namespace D_IDE.Updater
 			CreateDirectoryRecursively(OutputDirectory);
 			try
 			{
-				Console.WriteLine("Extract archive " + ZipFile + " to " + OutputDirectory + "\r\n");
+				Console.WriteLine("Extract temp archive to " + OutputDirectory + "\r\n");
 				using (ZipInputStream s = new ZipInputStream(File.OpenRead(ZipFile)))
 				{
 					ZipEntry theEntry;
@@ -199,6 +278,12 @@ namespace D_IDE.Updater
 		{
 			var ret = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 			return (long)(t - ret).TotalSeconds;
+		}
+
+		public static DateTime DateFromUnixTime(long t)
+		{
+			var ret = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+			return ret.AddSeconds(t);
 		}
 		#endregion
 	}
