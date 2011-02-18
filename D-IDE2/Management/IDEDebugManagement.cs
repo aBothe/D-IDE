@@ -125,6 +125,26 @@ namespace D_IDE
 				GotoCurrentLocation();
 			}
 
+			public static bool SetStackFrameToCurrentLine()
+			{
+				if (!IsDebugging) return false;
+
+				var ed = Instance.CurrentEditor as EditorDocument;
+				if (ed == null)
+					return false;
+
+				ulong offset = 0;
+				if (!Engine.Symbols.GetOffsetByLine(ed.FileName, (uint)(ed.Editor.Document.GetLineByOffset(ed.Editor.CaretOffset).LineNumber), out offset))
+					return false;
+
+				Engine.Execute("p = "+offset.ToString());
+				WaitForDebugEvent();
+				StopWaitingForEvents = false;
+				GotoCurrentLocation();
+
+				return true;
+			}
+
 			public static void GotoCurrentLocation()
 			{
 				string fn;
@@ -305,6 +325,7 @@ namespace D_IDE
 				};*/
 				#endregion
 
+				Engine.Execute("n 10"); // Set decimal numbers
 				Engine.Execute(".lines -e"); // Enable source code locating
 
 				dbgEngineInited = true;

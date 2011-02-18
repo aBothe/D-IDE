@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using Microsoft.Win32;
 
 namespace D_IDE.D
 {
@@ -31,10 +32,10 @@ namespace D_IDE.D
 		}
 
 		public override bool ApplyChanges()
-		{
+		{/*
 			if (!Directory.Exists(textBox_BaseDirectory.Text))
 				return false;
-
+			*/
 			Config.BaseDirectory = textBox_BaseDirectory.Text;
 
 			Config.SoureCompiler = textBox_SrcCompiler.Text;
@@ -80,5 +81,50 @@ namespace D_IDE.D
 		{
 			ShowBuildArgConfig(false);
 		}
+
+		#region Browse buttons
+		private void buttonBaseDirBrowse_Click(object sender, RoutedEventArgs e)
+		{
+			var od = new System.Windows.Forms.FolderBrowserDialog();
+			od.SelectedPath = textBox_BaseDirectory.Text;
+			if (od.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+				textBox_BaseDirectory.Text = od.SelectedPath;
+		}
+
+		void ShowOpenExeDlg(TextBox tb)
+		{
+			var dlg = new OpenFileDialog();
+			dlg.FileName = tb.Text;
+			dlg.Filter = "Executables (*.exe;*.com)|*.exe;*.com";
+
+			if (dlg.ShowDialog().Value)
+				tb.Text = dlg.FileName;
+		}
+
+		private void buttonSrcCompBrowse_Click(object sender, RoutedEventArgs e)
+		{
+			ShowOpenExeDlg(textBox_SrcCompiler);
+		}
+
+		private void button3_Click(object sender, RoutedEventArgs e)
+		{
+			ShowOpenExeDlg(textBox_Win32Linker);
+		}
+
+		private void button4_Click(object sender, RoutedEventArgs e)
+		{
+			ShowOpenExeDlg(textBox_ConsoleLinker);
+		}
+
+		private void button5_Click(object sender, RoutedEventArgs e)
+		{
+			ShowOpenExeDlg(textBox_DllLinker);
+		}
+
+		private void button6_Click(object sender, RoutedEventArgs e)
+		{
+			ShowOpenExeDlg(textBox_LibLinker);
+		}
+		#endregion
 	}
 }

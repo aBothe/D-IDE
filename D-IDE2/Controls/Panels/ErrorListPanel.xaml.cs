@@ -45,7 +45,7 @@ namespace D_IDE.Controls.Panels
 			var item=e.OriginalSource as FrameworkElement;
 			var err=item.DataContext as GenericError;
 
-			if (err == null)
+			if (err == null || string.IsNullOrEmpty( err.FileName))
 				return;
 
 			var editor = IDEManager.EditingManagement.OpenFile(err.FileName) as EditorDocument;

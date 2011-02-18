@@ -136,6 +136,7 @@
 					<r:RibbonButton Name="Button_StepIn" Click="Button_StepIn_Click" Label="Step in" LargeImageSource="Resources/debug-step-into.ico" />
 					<r:RibbonButton Name="Button_StepOver" Click="Button_StepOver_Click" Label="Step over" LargeImageSource="Resources/debug-step-over.ico" />
 					<r:RibbonButton Name="Button_StepOut" Click="Button_StepOut_Click" Label="Step out" LargeImageSource="Resources/debug-step-out.ico" />
+					<r:RibbonButton Name="Button_SetStackFrame" Click="Button_SetStackFrame_Click"  Label="Set current instruction" ToolTip="Set instruction pointer to current source line and execute it" />				
 				</r:RibbonGroup>
 			</r:RibbonTab>
 

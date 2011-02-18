@@ -69,6 +69,9 @@ namespace D_IDE.Core
 
 		public bool CanHandleProject(string ProjectFile)
 		{
+			if (string.IsNullOrEmpty(ProjectFile))
+				return false;
+
 			var ext = Path.GetExtension(ProjectFile).ToLower();
 
 			if (ProjectsSupported)
@@ -85,6 +88,9 @@ namespace D_IDE.Core
 		/// </summary>
 		public bool CanHandleFile(string FileName)
 		{
+			if (string.IsNullOrEmpty(FileName))
+				return false;
+
 			var ext = Path.GetExtension(FileName).ToLower();
 
 			foreach (var p in ModuleTemplates)

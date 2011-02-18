@@ -80,7 +80,7 @@ namespace D_IDE
 			}
 
 			// Start the updater
-			var upt=FileExecution.ExecuteAsync(UpdaterExe, "", ApplicationStartUpPath, null);
+			var upt=FileExecution.ExecuteAsync(UpdaterExe, "-a -o \""+ApplicationStartUpPath+"\"", ApplicationStartUpPath, null);
 
 			// Close main window - the D-IDE.exe will be overwritten!
 			IDEManager.Instance.MainWindow.Dispatcher.Invoke(new EmptyDelegate(() =>

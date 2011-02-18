@@ -594,5 +594,10 @@ namespace D_IDE
 
 			System.Diagnostics.Process.Start("explorer.exe",dir);
 		}
+
+		private void Button_SetStackFrame_Click(object sender, RoutedEventArgs e)
+		{
+			IDEManager.IDEDebugManagement.SetStackFrameToCurrentLine();
+		}
 	}
 }

@@ -9,22 +9,22 @@
     <Grid>
 		<TextBox Height="23" Margin="115,12,42,0" Name="textBox_BaseDirectory" VerticalAlignment="Top" />
 		<Label Content="bin Directory" Height="23" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Padding="0,2" Width="97" />
-		<Button Content="..." Height="23" Margin="0,12,12,0" Name="button1" VerticalAlignment="Top" HorizontalAlignment="Right" Width="24" />
+		<Button Content="..." Height="23" Margin="0,12,12,0" Name="button1" VerticalAlignment="Top" HorizontalAlignment="Right" Width="24" Click="buttonBaseDirBrowse_Click" />
 		<TextBox Height="23" Margin="115,51,42,0" Name="textBox_SrcCompiler" VerticalAlignment="Top" />
 		<Label Content="Source Compiler" Height="23" HorizontalAlignment="Left" Margin="12,51,0,0" Name="label2" Padding="0,2" VerticalAlignment="Top" Width="97" />
-		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,51,12,0" Name="button2" VerticalAlignment="Top" Width="24" />
+		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,51,12,0" Name="button2" VerticalAlignment="Top" Width="24" Click="buttonSrcCompBrowse_Click" />
 		<TextBox Height="23" Margin="115,80,42,0" Name="textBox_Win32Linker" VerticalAlignment="Top" />
 		<Label Content="Win32 Linker" Height="23" HorizontalAlignment="Left" Margin="12,80,0,0" Name="label3" Padding="0,2" VerticalAlignment="Top" Width="97" />
-		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,80,12,0" Name="button3" VerticalAlignment="Top" Width="24" />
+		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,80,12,0" Name="button3" VerticalAlignment="Top" Width="24" Click="button3_Click" />
 		<TextBox Height="23" Margin="115,109,42,0" Name="textBox_ConsoleLinker" VerticalAlignment="Top" />
 		<Label Content="Console Linker" Height="23" HorizontalAlignment="Left" Margin="12,109,0,0" Name="label4" Padding="0,2" VerticalAlignment="Top" Width="97" />
-		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,109,12,0" Name="button4" VerticalAlignment="Top" Width="24" />
+		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,109,12,0" Name="button4" VerticalAlignment="Top" Width="24" Click="button4_Click" />
 		<TextBox Height="23" Margin="115,138,42,0" Name="textBox_DllLinker" VerticalAlignment="Top" />
 		<Label Content="Dll Linker" Height="23" HorizontalAlignment="Left" Margin="12,138,0,0" Name="label5" Padding="0,2" VerticalAlignment="Top" Width="97" />
-		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,138,12,0" Name="button5" VerticalAlignment="Top" Width="24" />
+		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,138,12,0" Name="button5" VerticalAlignment="Top" Width="24" Click="button5_Click" />
 		<TextBox Height="23" Margin="115,167,42,0" Name="textBox_LibLinker" VerticalAlignment="Top" />
 		<Label Content="Lib Linker" Height="23" HorizontalAlignment="Left" Margin="12,167,0,0" Name="label6" Padding="0,2" VerticalAlignment="Top" Width="97" />
-		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,167,12,0" Name="button6" VerticalAlignment="Top" Width="24" />
+		<Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,167,12,0" Name="button6" VerticalAlignment="Top" Width="24" Click="button6_Click" />
 		
 		<Button Content="Debug Arguments" Height="23" HorizontalAlignment="Left" Margin="115,196,0,0" Name="button_DbgArgs" VerticalAlignment="Top" Width="127" Click="button_DbgArgs_Click" />
 		<Button Content="Release Arguments" Height="23" HorizontalAlignment="Left" Margin="248,196,0,0" Name="button_ResArgs" VerticalAlignment="Top" Width="127" Click="button_ResArgs_Click" />
