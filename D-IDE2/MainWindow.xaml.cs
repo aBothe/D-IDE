@@ -154,26 +154,22 @@ namespace D_IDE
 			#region Init panels and their layouts
 			Panel_Locals.Name = "LocalsPanel";
 			Panel_Locals.HideOnClose = true;
-			Panel_Locals.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
 
 			StartPage = new Controls.Panels.StartPage();
 			StartPage.Name = "IDEStartPage";
 			StartPage.HideOnClose = true;
-			StartPage.ShowAsDocument(DockManager);
 
 			// Note: To enable the docking manager saving&restoring procedures it's needed to name all the panels
 			Panel_ProjectExplorer.Name = "ProjectExplorer";
 			Panel_ProjectExplorer.HideOnClose = true;
-			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
 
 			Panel_Log.Name = "Output";
-			Panel_Log.Show(DockMgr,AvalonDock.AnchorStyle.Bottom);
 			Panel_Log.DockableStyle |= DockableStyle.AutoHide;
 
 			Panel_ErrorList.Name = "ErrorList";
 			Panel_ErrorList.HideOnClose = true;
-			Panel_ErrorList.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
 			Panel_ErrorList.DockableStyle |= DockableStyle.AutoHide;
+			RestoreDefaultPanelLayout();
 			#endregion
 
 			// Load layout
@@ -212,6 +208,16 @@ namespace D_IDE
 				IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 		}
 		#endregion
+
+		public void RestoreDefaultPanelLayout()
+		{
+			//TODO: Make this restoring the layouts properly
+			Panel_Locals.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
+			StartPage.ShowAsDocument(DockManager);
+			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
+			Panel_Log.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
+			Panel_ErrorList.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
+		}
 
 		#region Ribbon buttons
 
@@ -599,5 +605,37 @@ namespace D_IDE
 		{
 			IDEManager.IDEDebugManagement.SetStackFrameToCurrentLine();
 		}
+
+		#region View buttons
+		private void ShowLocals_Click(object sender, RoutedEventArgs e)
+		{
+			Panel_Locals.Show();
+		}
+
+		private void ShowPrjExplorerPanel_Click(object sender, RoutedEventArgs e)
+		{
+			Panel_ProjectExplorer.Show();
+		}
+
+		private void ShowStartpage_Click(object sender, RoutedEventArgs e)
+		{
+			StartPage.Show();
+		}
+
+		private void ShowLogPanel_Click(object sender, RoutedEventArgs e)
+		{
+			Panel_Log.Show();
+		}
+
+		private void ShowErrors_Click(object sender, RoutedEventArgs e)
+		{
+			Panel_ErrorList.Show();
+		}
+
+		private void RestoreDefaultLayout_Click(object sender, RoutedEventArgs e)
+		{
+			RestoreDefaultPanelLayout();
+		}
+		#endregion
 	}
 }

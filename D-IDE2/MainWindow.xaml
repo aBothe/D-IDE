@@ -83,19 +83,17 @@
 			<r:RibbonTab Header="View">
 				<r:RibbonGroup Header="View">
 					<r:RibbonMenuButton Label="Panels" LargeImageSource="Resources/panel.png">
-						<r:RibbonMenuItem Header="Project Explorer"></r:RibbonMenuItem>
-						<r:RibbonMenuItem Header="Document Outline"></r:RibbonMenuItem>
-						<r:RibbonMenuItem Header="Start Page"></r:RibbonMenuItem>
-						<r:RibbonSeparator />
-						<r:RibbonMenuItem Header="Build Log"></r:RibbonMenuItem>
-						<r:RibbonMenuItem Header="Output"></r:RibbonMenuItem>
-						<r:RibbonMenuItem Header="Error Log"></r:RibbonMenuItem>
-						<r:RibbonSeparator />
-						<r:RibbonMenuItem Header="Locals"></r:RibbonMenuItem>
-						<r:RibbonMenuItem Header="Breakpoints"></r:RibbonMenuItem>
+						<r:RibbonMenuItem Click="ShowPrjExplorerPanel_Click" Header="Project Explorer"/>
+						<r:RibbonMenuItem Header="Document Outline"/>
+						<r:RibbonMenuItem Click="ShowStartpage_Click" Header="Start Page"/>
+						<r:RibbonSeparator/>
+						<r:RibbonMenuItem Header="Errors" Click="ShowErrors_Click"/>
+						<r:RibbonMenuItem Click="ShowLogPanel_Click" Header="Log"/>
+						<r:RibbonSeparator/>
+						<r:RibbonMenuItem Click="ShowLocals_Click" Header="Locals"/>
 					</r:RibbonMenuButton>
 
-					<r:RibbonButton Label="Restore default layout" SmallImageSource="Resources/109_AllAnnotations_Default_16x16_72.png"></r:RibbonButton>
+					<r:RibbonButton Click="RestoreDefaultLayout_Click" Label="Restore default layout" SmallImageSource="Resources/109_AllAnnotations_Default_16x16_72.png"></r:RibbonButton>
 				</r:RibbonGroup>
 			</r:RibbonTab>
 
