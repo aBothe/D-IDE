@@ -66,7 +66,12 @@ SectionEnd
 ;--------------------------------------------------------
 ;Section /o "Launch D-IDE"
 Section  "Launch D-IDE"
-	ExecShell open "$INSTDIR\D-IDE.exe" SW_SHOWNORMAL
+	StrCmp $IS_DOT_NET_FRESHLY_INSTALLED "Y" SkipLaunch LaunchApp 
+			
+	LaunchApp:
+		ExecShell open "$INSTDIR\D-IDE.exe" SW_SHOWNORMAL
+	
+	SkipLaunch:
 SectionEnd
 
 ;--------------------------------------------------------

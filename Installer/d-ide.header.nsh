@@ -20,6 +20,7 @@
 
 Var IS_CONNECTED
 Var CONFIG_DIR
+Var IS_DOT_NET_FRESHLY_INSTALLED
 
 ;--------------------------------------------------------
 ; Setting various predefined NSIS Variables
@@ -29,6 +30,7 @@ BrandingText "Alexander Bothe"
 InstallDir $PROGRAMFILES\D-IDE
 InstallDirRegKey HKLM "Software\D-IDE" "Install_Dir"
 RequestExecutionLevel highest
+ShowInstDetails show
 
 ;--------------------------------------------------------
 ; The .onInit function is a predifined function that
@@ -42,22 +44,26 @@ Function .onInit
 	
 	SetShellVarContext all
 	StrCpy $CONFIG_DIR "$APPDATA\D-IDE.config"
-	
+	StrCpy $IS_DOT_NET_FRESHLY_INSTALLED "N"
 	Call IsConnected
 	Pop $IS_CONNECTED
 
 FunctionEnd
 
 ;--------------------------------------------------------
-; The .onGUIEnd function is a predifined function that
-; runs when the Gui is closed.
+; The .onInit function is a predifined function that
+; runs before the installer displays the first form.
 ;--------------------------------------------------------
-Function .onInstFailed
-    CLR::Destroy
-FunctionEnd
 Function .onInstSuccess
-    CLR::Destroy
-FunctionEnd
+	StrCmp $IS_DOT_NET_FRESHLY_INSTALLED "Y" PromptReboot NoReboot 
+	
+	PromptReboot:
+		MessageBox MB_YESNO "The .net framework was installed with D-IDE. Would you like to reboot now?" IDNO NoReboot
+		Reboot
+		
+    NoReboot:
+  FunctionEnd
+
 
 ;--------------------------------------------------------
 ; Modern UI Configuration
@@ -110,6 +116,7 @@ Section "-.Net Framework 4" net4_section_id
 
 	FileExistsAlready:
 		DetailPrint "Installing the .Net Framework 4."
+		StrCpy $IS_DOT_NET_FRESHLY_INSTALLED "Y"
 		ExecWait '"$2" /quiet'
 
 		Call DotNet4Exists
