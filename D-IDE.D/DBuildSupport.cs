@@ -102,6 +102,7 @@ namespace D_IDE.D
 					linkerExe = CurrentDMDConfig.DllLinker;
 					linkerArgs = args.DllLinker;
 					break;
+				case OutputTypes.StaticLibrary:
 				case OutputTypes.Other:
 					if (dprj.OutputFile.EndsWith(".lib"))
 					{
@@ -120,8 +121,7 @@ namespace D_IDE.D
 			var obj = Path.ChangeExtension(objFile, ".obj");
 			var br = new BuildResult() { SourceFile = srcFile,TargetFile=obj,Successful=true };
 
-			if (GlobalProperties.Instance.VerboseBuildOutput)
-				ErrorLogger.Log("Compile " + srcFile,ErrorType.Information,ErrorOrigin.Build);
+			ErrorLogger.Log("Compile " + srcFile,ErrorType.Information,ErrorOrigin.Build);
 
 			var dmd_exe = dmd.SoureCompiler;
 
@@ -153,6 +153,8 @@ namespace D_IDE.D
 		{
 			var errList = new List<GenericError>();
 			var br = new BuildResult() { TargetFile=targetFile, Successful=true};
+
+			ErrorLogger.Log("Link files to "+targetFile,ErrorType.Information,ErrorOrigin.Build);
 
 			if (File.Exists(targetFile))
 			{
@@ -287,8 +289,9 @@ namespace D_IDE.D
 		#region Message Callbacks
 		void OnExit()
 		{
+			if(GlobalProperties.Instance.VerboseBuildOutput?true:TempPrc.ExitCode!=0)
 			ErrorLogger.Log("Process ended with code " + TempPrc.ExitCode.ToString(),
-				TempPrc.ExitCode<1?ErrorType.Information:ErrorType.Error,ErrorOrigin.Build);
+				TempPrc.ExitCode==0?ErrorType.Information:ErrorType.Error,ErrorOrigin.Build);
 		}
 
 		static void OnOutput(string s)

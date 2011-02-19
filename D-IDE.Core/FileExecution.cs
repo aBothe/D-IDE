@@ -18,7 +18,7 @@ namespace D_IDE.Core
 		public static Process ExecuteSilentlyAsync(string Executable, string Arguments, string StartDirectory,
 			DataReceivedEvent OnOutput, DataReceivedEvent OnError, ProcessExitedEvent OnExit)
 		{
-			if (GlobalProperties.Instance.VerboseDebugOutput)
+			if (GlobalProperties.Instance.VerboseBuildOutput)
 				ErrorLogger.Log(Executable + " " + Arguments,ErrorType.Error,ErrorOrigin.Build);
 
 			var psi = new ProcessStartInfo(Executable, Arguments) { 
@@ -60,7 +60,8 @@ namespace D_IDE.Core
 		/// </summary>
 		public static Process ExecuteAsync(string Executable, string Arguments, string StartDirectory, ProcessExitedEvent OnExit)
 		{
-			ErrorLogger. Log("Launch "+ Executable + " " + Arguments,ErrorType.Information,ErrorOrigin.Build);
+			if (GlobalProperties.Instance.VerboseBuildOutput)
+				ErrorLogger.Log(Executable + " " + Arguments, ErrorType.Error, ErrorOrigin.Build);
 
 			var psi = new ProcessStartInfo(Executable, Arguments) { WorkingDirectory=StartDirectory, UseShellExecute=OnExit==null};
 			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=OnExit!=null};

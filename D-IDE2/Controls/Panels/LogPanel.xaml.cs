@@ -48,6 +48,8 @@ namespace D_IDE.Controls.Panels
 		/// </summary>
 		public void AppendOutput(string s,ErrorType errorType,ErrorOrigin origin)
 		{
+			if(errorType!=ErrorType.Message)
+			s = "> "+s;
 			TextBox editor=null;
 			LogTab selTab = LogTab.System;
 			switch (origin)
