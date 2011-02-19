@@ -12,7 +12,7 @@ OutFile ".\Builds\D-IDE2.${BUILD_DATE}.exe"
 ;--------------------------------------------------------
 Section "-Install Program Files" install_section_id
 	CreateDirectory "$INSTDIR"
-	CreateDirectory "$CONFIG_DIR"	
+	CreateDirectory "$CONFIG_DIR"
 	SetOutPath "$INSTDIR"
 
 	SetOverwrite on

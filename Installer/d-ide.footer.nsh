@@ -1,4 +1,16 @@
 
+
+;--------------------------------------------------------
+; Install the D-IDE program files
+;--------------------------------------------------------
+Section "-Install Automatic Updater" updater_section_id
+
+	SetOutPath "$INSTDIR"
+	SetOverwrite on
+	File /nonfatal /x .svn /x *.vshost* "${BINARY_UPDATER_FILES}\*.exe"
+	File /nonfatal /x .svn /x *.vshost* "${BINARY_UPDATER_FILES}\*.dll"
+SectionEnd
+
 ;--------------------------------------------------------
 ; Write the unistaller
 ;--------------------------------------------------------
@@ -25,6 +37,7 @@ Section "Start Menu Shortcuts" start_menu_section_id
 
 	CreateDirectory "$SMPROGRAMS\D-IDE"
 	CreateShortCut "$SMPROGRAMS\D-IDE\D-IDE.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
+	CreateShortCut "$SMPROGRAMS\D-IDE\Check for Updates.lnk" "$INSTDIR\D-IDE.Updater.exe" "" "$INSTDIR\D-IDE.Updater.exe" 0
 	CreateShortCut "$SMPROGRAMS\D-IDE\Sample Programs.lnk" "$INSTDIR\Samples"
 	CreateShortCut "$SMPROGRAMS\D-IDE\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
 SectionEnd
@@ -34,6 +47,18 @@ SectionEnd
 ;--------------------------------------------------------
 Section "Desktop Shortcut" desktop_section_id
 	CreateShortCut "$DESKTOP\D-IDE.lnk" "$INSTDIR\D-IDE.exe" "" "$INSTDIR\D-IDE.exe" 0
+SectionEnd
+
+;--------------------------------------------------------
+; Install the Digital Mars D Compiler
+;--------------------------------------------------------
+Section "Digital Mars D Compiler" dmd_section_id
+	
+	DetailPrint "Downloading the DMD Web Installer from Digital Mars."
+	StrCpy $2 "$TEMP\dmd-installer.${FILEDATE}.exe"
+	NSISdl::download "${DMD_URL}" $2
+	ExecWait '"$2"'
+	
 SectionEnd
 
 ;--------------------------------------------------------

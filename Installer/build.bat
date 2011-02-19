@@ -14,6 +14,7 @@ goto :x64
 :done
 
 %DEVENV% "..\D-IDE2.sln"
+%DEVENV% "..\D-IDE.Updater\D-IDE.Updater.sln"
 
 "%MAKENSIS%\makensis.exe" ".\d-ide.std-install.nsi" > ".\installer_build.log"
 "%MAKENSIS%\makensis.exe" ".\d-ide.web-install.nsi" > ".\installer_build.log"

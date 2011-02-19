@@ -7,11 +7,13 @@
 ; Setting custom variables and constants
 ;--------------------------------------------------------
 !define BINARY_APPLICATION_FILES "..\D-IDE2\bin\Release"
+!define BINARY_UPDATER_FILES "..\D-IDE.Updater\bin\Release"
 !define THIRD_PARTY_FILES "..\Misc"
 !define CLR_INSTALLER_HELPER ".\"
 
 !define DNF4_URL "http://download.microsoft.com/download/1/B/E/1BE39E79-7E39-46A3-96FF-047F95396215/dotNetFx40_Full_setup.exe"
 !define VCPPR2010_URL "http://download.microsoft.com/download/5/B/C/5BC5DBB3-652D-4DCE-B14A-475AB85EEF6E/vcredist_x86.exe"
+!define DMD_URL "http://ftp.digitalmars.com/dinstaller.exe"
 
 !define /date FILEDATE "%Y%m%d"
 !define /date DATE "%Y.%m.%d"
