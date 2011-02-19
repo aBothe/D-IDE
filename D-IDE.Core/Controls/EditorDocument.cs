@@ -7,6 +7,8 @@ using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
 using Parser.Core;
 using System.Windows.Media;
+using ICSharpCode.AvalonEdit.CodeCompletion;
+using System.Windows.Controls;
 
 namespace D_IDE
 {
@@ -90,13 +92,20 @@ namespace D_IDE
 			tv.Services.AddService(typeof(TextMarkerService), MarkerStrategy);
 			tv.LineTransformers.Add(MarkerStrategy);
 			tv.BackgroundRenderers.Add(MarkerStrategy);
-			
 
+			// Register CodeCompletion events
+			Editor.TextArea.TextEntered += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntered);
+			Editor.TextArea.TextEntering += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntering);
+			Editor.TextArea.MouseRightButtonDown += new System.Windows.Input.MouseButtonEventHandler(TextArea_MouseRightButtonDown);
+			Editor.MouseHover += new System.Windows.Input.MouseEventHandler(Editor_MouseHover);
+			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
+
+			// Initially draw all probably required text markers
 			RefreshErrorHighlightings();
 			RefreshBreakpointHighlightings();
 			RefreshDebugHighlightings();
 		}
-
+		
 		#region Syntax Highlighting
 		/// <summary>
 		/// Associates a new syntax highligther with the editor
@@ -208,6 +217,44 @@ namespace D_IDE
 		#endregion
 
 		#region Code Completion
+		CompletionWindow CompletionWindow;
+		InsightWindow InsightWindow;
+		ToolTip EditorToolTip=new ToolTip();
+
+		void Editor_MouseHoverStopped(object sender, System.Windows.Input.MouseEventArgs e)
+		{
+			EditorToolTip.IsOpen = false;
+		}
+
+		void Editor_MouseHover(object sender, System.Windows.Input.MouseEventArgs e)
+		{
+			var pos = Editor.GetPositionFromPoint(e.GetPosition(Editor));
+			if (pos != null)
+			{
+				EditorToolTip.PlacementTarget = this; // required for property inheritance
+				EditorToolTip.Content = pos.ToString();
+				EditorToolTip.IsOpen = true;
+				e.Handled = true;
+			}
+		}
+
+		void TextArea_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		{
+			// Automatically move the caret when right-clicking
+			var position = Editor.GetPositionFromPoint(e.GetPosition(Editor));
+			if (position.HasValue)
+				Editor.TextArea.Caret.Position = position.Value;
+		}
+
+		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
+		{
+			
+		}
+
+		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
+		{
+			
+		}
 
 		#endregion
 
