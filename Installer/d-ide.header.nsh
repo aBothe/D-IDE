@@ -30,7 +30,7 @@ BrandingText "Alexander Bothe"
 InstallDir $PROGRAMFILES\D-IDE
 InstallDirRegKey HKLM "Software\D-IDE" "Install_Dir"
 RequestExecutionLevel highest
-ShowInstDetails show
+;ShowInstDetails show
 
 ;--------------------------------------------------------
 ; The .onInit function is a predifined function that

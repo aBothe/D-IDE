@@ -27,8 +27,9 @@ Section "-Install Program Files" install_section_id
 	Delete "$INSTDIR\${DIDE_VERSION_FILE}"
 	
 	DetailPrint "Checking current D-IDE version."
-	inetc::get "${DIDE_VERSION_URL}" "$INSTDIR\${DIDE_VERSION_FILE}"
-	Pop $0 ; will return "OK" if successful.
+	NSISdl::download "${DIDE_VERSION_URL}" "$INSTDIR\${DIDE_VERSION_FILE}"
+	;inetc::get "${DIDE_VERSION_URL}" "$INSTDIR\${DIDE_VERSION_FILE}"
+	;Pop $0 ; will return "OK" if successful.
 	StrCmp $0 "OK" ReadInVersion SkipVersionRead
 	
 	ReadInVersion:
