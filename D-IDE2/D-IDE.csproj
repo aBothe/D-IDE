@@ -408,6 +408,9 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="TODO.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>"$(ProjectDir)7z" u -y -x!*.pdb -x!*.vshost.* "$(SolutionDir)d-ide.zip"</PostBuildEvent>

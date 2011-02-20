@@ -1,0 +1,51 @@
+﻿
+
+Project-wide Todo List:
+----------------------------------------
+
+[
+Todo: -
+Done: +
+]
+
+
+-----------------------------------------
+----- Project management
+-----------------------------------------
+
+- Add executable type to D project settings
+
+
+-----------------------------------------
+----- Build / Debug
+-----------------------------------------
+
+- Manifest creation
+- Resource files
+	- New Project module ? - Perhaps integrate it into the D one
+
+- Add thread selection when debugging
+- Enable symbol value resolution when debugging
+- Enable pausing the debuggee
+- Implement the restart button
+
+
+-----------------------------------------
+----- Editing / Optional layout stuff
+-----------------------------------------
+
+- Make standard editing actions work
+- Commenting:
+	- Commenting "interface" ?
+- Editor context menu
+- Editor options
+- Folding
+
+- Code Completion implementation
+
+
+-----------------------------------------
+----- Non-IDE-related
+-----------------------------------------
+
+
