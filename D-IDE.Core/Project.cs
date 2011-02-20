@@ -507,6 +507,8 @@ namespace D_IDE.Core
 		public string FileName { get; set; }
 		public string Message { get; set; }
 		public CodeLocation Location { get; set; }
+		public int Line { get { return Location.Line; } }
+		public int Column { get { return Location.Column;} }
 
 		public override string ToString()
 		{

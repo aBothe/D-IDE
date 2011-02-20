@@ -51,7 +51,7 @@ namespace D_IDE.Controls.Panels
 			var editor = IDEManager.EditingManagement.OpenFile(err.FileName) as EditorDocument;
 
 			if(editor!=null)
-				editor.Editor.Select(editor.Editor.Document.GetOffset(err.Location.Line,err.Location.Column),0);
+				editor.Editor.Select(editor.Editor.Document.GetOffset(err.Line,err.Column),0);
 		}
 	}
 }

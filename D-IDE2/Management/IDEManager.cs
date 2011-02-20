@@ -1,14 +1,4 @@
-﻿using Parser.Core;
-using D_IDE.Core;
-using System.IO;
-using System.Linq;
-using Microsoft.Win32;
-using D_IDE.Dialogs;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using DebugEngineWrapper;
+﻿using D_IDE.Core;
 
 namespace D_IDE
 {

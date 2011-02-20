@@ -94,11 +94,6 @@ namespace D_IDE.D
 		public override bool CanUseCodeCompletion { get { return true; } }
 		public override bool CanBuild { get { return true; } }
 
-		#region Code Completion
-		DLanguage _Language=new DLanguage();
-		public override ILanguage Language { get { return _Language; } }
-		#endregion
-
 		#region Projecting
 		public override Project CreateEmptyProject(FileTemplate FileType)
 		{
@@ -138,6 +133,18 @@ namespace D_IDE.D
 		}
 		#endregion
 
+		#region Code Completion
+		DCodeCompletionSupport completionSupport = new DCodeCompletionSupport();
+		public override ICodeCompletionSupport CompletionSupport
+		{
+			get
+			{
+				return completionSupport;
+			}
+		}
+		#endregion
+
+		#region Building
 		readonly DBuildSupport _BuildSupport = new DBuildSupport();
 
 		public override IBuildSupport BuildSupport
@@ -147,6 +154,7 @@ namespace D_IDE.D
 				return _BuildSupport;
 			}
 		}
+		#endregion
 
 		#region Debugging
 		GenericDebugSupport DDebugging ;

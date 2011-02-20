@@ -9,7 +9,18 @@ using System.IO;
 
 namespace D_IDE
 {
-	public abstract class AbstractEditorDocument : DocumentContent
+	public interface IAbstractEditor
+	{
+		Project Project { get; }
+		bool HasProject { get; }
+		string FileName { get; set; }
+		string RelativeFilePath { get; set; }
+		string AbsoluteFilePath { get; set;}
+		bool Modified { get; }
+		AbstractLanguageBinding LanguageBinding { get; }
+	}
+
+	public abstract class AbstractEditorDocument : DocumentContent,IAbstractEditor
 	{
 		public AbstractEditorDocument() { }
 		public AbstractEditorDocument(string file)

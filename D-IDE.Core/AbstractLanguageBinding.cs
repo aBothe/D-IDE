@@ -54,16 +54,6 @@ namespace D_IDE.Core
 		}
 		#endregion
 
-		#region Code Completion
-		/// <summary>
-		/// Must not be null if <see cref="CanUseCodeCompletion"/> is set to true
-		/// </summary>
-		public virtual ILanguage Language { get { throw new NotImplementedException(); } }
-
-		public virtual ImageList CodeCompletionImageList { get { return null; } }
-		public virtual int GetNodeImageIndex(INode Node) { return -1; }
-#endregion
-
 		public virtual Project CreateEmptyProject(FileTemplate ProjectType) { throw new NotImplementedException(); } 
 		public virtual Project OpenProject(Solution Solution, string FileName) {  throw new NotImplementedException(); }
 
@@ -105,6 +95,11 @@ namespace D_IDE.Core
 		{
 			return IDEInterface.ConfigDirectory + "\\" + Util.PurifyFileName(Binding.LanguageName) + ".config.xml";
 		}
+
+		/// <summary>
+		/// Code Completion support. Only requested if CanUseCodeCompletion returns true.
+		/// </summary>
+		public virtual ICodeCompletionSupport CompletionSupport { get { return null; } }
 
 		/// <summary>
 		/// Language build support. Only requested if CanBuild returns true.

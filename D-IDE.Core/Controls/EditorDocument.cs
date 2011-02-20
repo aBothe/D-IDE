@@ -12,11 +12,19 @@ using System.Windows.Controls;
 
 namespace D_IDE
 {
-	public class EditorDocument:AbstractEditorDocument
+	public interface IEditorDocument : IAbstractEditor
 	{
-		#region Generic properties
-		public readonly TextEditor Editor = new TextEditor();
-		public AbstractSyntaxTree SyntaxTree=null;
+		TextEditor Editor { get; }
+		bool ReadOnly { get; set; }
+		AbstractSyntaxTree SyntaxTree { get; set; }
+	}
+
+	public class EditorDocument:AbstractEditorDocument,IEditorDocument
+	{
+		#region Properties
+		TextEditor editor = new TextEditor();
+		public TextEditor Editor { get { return editor; } }
+		public AbstractSyntaxTree SyntaxTree { get; set; }
 
 		public TextMarkerService MarkerStrategy { get; protected set; }
 
@@ -25,6 +33,8 @@ namespace D_IDE
 			get { return Editor.IsReadOnly; }
 			set { Editor.IsReadOnly = true; }
 		}
+
+		ToolTip editorToolTip = new ToolTip();
 		#endregion
 
 		public EditorDocument()
@@ -217,45 +227,35 @@ namespace D_IDE
 		#endregion
 
 		#region Code Completion
-		CompletionWindow CompletionWindow;
-		InsightWindow InsightWindow;
-		ToolTip EditorToolTip=new ToolTip();
-
-		void Editor_MouseHoverStopped(object sender, System.Windows.Input.MouseEventArgs e)
-		{
-			EditorToolTip.IsOpen = false;
-		}
-
-		void Editor_MouseHover(object sender, System.Windows.Input.MouseEventArgs e)
-		{
-			var pos = Editor.GetPositionFromPoint(e.GetPosition(Editor));
-			if (pos != null)
-			{
-				EditorToolTip.PlacementTarget = this; // required for property inheritance
-				EditorToolTip.Content = pos.ToString();
-				EditorToolTip.IsOpen = true;
-				e.Handled = true;
-			}
-		}
-
-		void TextArea_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-		{
-			// Automatically move the caret when right-clicking
-			var position = Editor.GetPositionFromPoint(e.GetPosition(Editor));
-			if (position.HasValue)
-				Editor.TextArea.Caret.Position = position.Value;
-		}
+		CompletionWindow completionWindow;
+		InsightWindow insightWindow;
 
 		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
-			
+			if (LanguageBinding == null || !LanguageBinding.CanUseCodeCompletion)
+				return;
+
+			if (e.Text.Length > 0 && completionWindow != null)
+			{
+				if (!LanguageBinding.CompletionSupport.IsIdentifierChar(e.Text[0]))
+					completionWindow.CompletionList.RequestInsertion(e);
+			}
 		}
 
 		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
-			
-		}
+			if (completionWindow!=null||
+				LanguageBinding == null || 
+				!LanguageBinding.CanUseCodeCompletion ||
+				!LanguageBinding.CompletionSupport.CanShowCompletionWindow(this))
+				return;
 
+			completionWindow = new CompletionWindow(Editor.TextArea);
+			LanguageBinding.CompletionSupport.BuildCompletionData(this, completionWindow.CompletionList.CompletionData,e.Text);
+
+			completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null;
+			completionWindow.Show();
+		}
 		#endregion
 
 		#region Editor events
@@ -288,6 +288,58 @@ namespace D_IDE
 						bpm.Breakpoint.Line = Editor.Document.GetLineByOffset(bpm.StartOffset).LineNumber;
 					}
 				}
+		}
+
+		#region Document ToolTips
+		void Editor_MouseHoverStopped(object sender, System.Windows.Input.MouseEventArgs e)
+		{
+			editorToolTip.IsOpen = false;
+		}
+
+		void Editor_MouseHover(object sender, System.Windows.Input.MouseEventArgs e)
+		{
+			var edpos = e.GetPosition(Editor);
+			var pos = Editor.GetPositionFromPoint(edpos);
+			if (pos.HasValue)
+			{
+				// Avoid showing a tooltip if the cursor is located after a line-end
+				var vpos = Editor.TextArea.TextView.GetVisualPosition(new TextViewPosition(pos.Value.Line, Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength), ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineMiddle);
+				// Add TextView position to Editor-related point
+				vpos = Editor.TextArea.TextView.TranslatePoint(vpos, Editor);
+
+				var ttArgs = new ToolTipRequestArgs(edpos.X <= vpos.X, pos.Value);
+				try
+				{
+					if (LanguageBinding != null && LanguageBinding.CanUseCodeCompletion)
+						LanguageBinding.CompletionSupport.BuildToolTip(this, ttArgs);
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex);
+					return;
+				}
+
+				// If no content present, close and return
+				if (ttArgs.ToolTipContent == null)
+				{
+					editorToolTip.IsOpen = false;
+					return;
+				}
+
+				editorToolTip.PlacementTarget = this; // required for property inheritance
+				editorToolTip.Content = ttArgs.ToolTipContent;
+				editorToolTip.IsOpen = true;
+				e.Handled = true;
+			}
+		}
+		#endregion
+
+		void TextArea_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		{
+			// Automatically move the caret when right-clicking
+			var position = Editor.GetPositionFromPoint(e.GetPosition(Editor));
+			if (position.HasValue)
+				Editor.TextArea.Caret.Position = position.Value;
 		}
 		#endregion
 	}

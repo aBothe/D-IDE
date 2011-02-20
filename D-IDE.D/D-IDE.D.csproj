@@ -74,6 +74,7 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DCodeCompletionSupport.cs" />
     <Compile Include="SettingsPages\DSettingsPage.xaml.cs">
       <DependentUpon>DSettingsPage.xaml</DependentUpon>
     </Compile>

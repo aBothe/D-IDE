@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using D_IDE.Core;
-using Parser.Core;
 using System.Net;
 using System.IO;
 using System.Windows;
@@ -13,15 +12,6 @@ namespace D_IDE
 {
     public class IDEUtil:Util
     {
-        public static CodeLocation ToCodeLocation(ICSharpCode.AvalonEdit.Document.TextLocation Caret)
-        {
-            return new CodeLocation(Caret.Column + 1, Caret.Line + 1);
-        }
-        public static CodeLocation ToCodeLocation(CodeLocation loc)
-        {
-            return loc;
-        }
-
 		#region Auto updater
 		static string UpdaterExe = ApplicationStartUpPath + "\\D-IDE.Updater.exe";
 		static string FileVersionFile = ApplicationStartUpPath + "\\LastModificationTime";

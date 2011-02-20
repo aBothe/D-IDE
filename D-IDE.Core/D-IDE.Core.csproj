@@ -106,6 +106,7 @@
     <Compile Include="GlobalProperties.cs" />
     <Compile Include="IBuildSupport.cs" />
     <Compile Include="GenericDebugSupport.cs" />
+    <Compile Include="ICodeCompletionSupport.cs" />
     <Compile Include="IDEInterface.cs" />
     <Compile Include="AbstractLanguageBinding.cs" />
     <Compile Include="CoreManagement\CoreManager.cs" />
