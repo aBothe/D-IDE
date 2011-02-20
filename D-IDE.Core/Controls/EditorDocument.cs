@@ -244,14 +244,25 @@ namespace D_IDE
 
 		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
-			if (completionWindow!=null||
-				LanguageBinding == null || 
+			if (LanguageBinding == null ||
 				!LanguageBinding.CanUseCodeCompletion ||
-				!LanguageBinding.CompletionSupport.CanShowCompletionWindow(this))
+				!LanguageBinding.CompletionSupport.CanShowCompletionWindow(this) || 
+				string.IsNullOrEmpty(e.Text))
+				return;
+			var ccs = LanguageBinding.CompletionSupport;
+
+			/*if (ccs.IsInsightWindowTrigger(e.Text[0]))
+			{
+				insightWindow = new InsightWindow(Editor.TextArea);
+				
+				return;
+			}*/
+
+			if (completionWindow!=null)
 				return;
 
 			completionWindow = new CompletionWindow(Editor.TextArea);
-			LanguageBinding.CompletionSupport.BuildCompletionData(this, completionWindow.CompletionList.CompletionData,e.Text);
+			ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData,e.Text);
 
 			completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null;
 			completionWindow.Show();

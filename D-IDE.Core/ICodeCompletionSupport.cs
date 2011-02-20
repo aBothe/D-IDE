@@ -10,9 +10,11 @@ namespace D_IDE.Core
 	public interface ICodeCompletionSupport
 	{
 		void BuildToolTip(IEditorDocument EditorDocument,ToolTipRequestArgs ToolTipRequest);
-
+		/*
 		bool IsInsightWindowTrigger(char key);
 
+		object BuildInsightWindowContent(IEditorDocument EditorDocument, string EnteredText);
+		*/
 		/// <summary>
 		/// Used to check if recently entered text is still part of the completion process or if e.g. the current identifier ended
 		/// </summary>

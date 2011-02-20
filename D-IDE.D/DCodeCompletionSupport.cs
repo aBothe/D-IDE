@@ -25,15 +25,17 @@ namespace D_IDE.D
 			if (EnteredText == ".")
 			{
 				l.Add(new DCompletionData("aaa"));
-				l.Add(new DCompletionData("bbb"));
-				l.Add(new DCompletionData("ccc"));
+				l.Add(new DCompletionData("bab"));
+				l.Add(new DCompletionData("cca"));
 				l.Add(new DCompletionData("ddd"));
 			}
 		}
 
 		public void BuildToolTip(IEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
 		{
-			ToolTipRequest.ToolTipContent = "DDD "+ToolTipRequest.Position.ToString();
+			if (!ToolTipRequest.InDocument) return;
+
+			ToolTipRequest.ToolTipContent = "A tool tip";
 		}
 
 		public bool IsInsightWindowTrigger(char key)
