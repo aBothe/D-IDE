@@ -14,7 +14,7 @@ namespace D_IDE.Core
 	{
 		public delegate void EmptyDelegate();
 		#region File I/O
-		public static readonly string ApplicationStartUpPath = Directory.GetCurrentDirectory();
+		public static readonly string ApplicationStartUpPath =Path.GetDirectoryName( Assembly.GetEntryAssembly().Location);
 
         /// <summary>
         /// Helper function to check if directory exists. Otherwise the directory will be created.

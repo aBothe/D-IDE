@@ -37,5 +37,7 @@ namespace D_IDE.Core
 			if (CanUpdateGUI)
 				MainWindow.RefreshGUI();
 		}
+
+		public abstract AbstractEditorDocument OpenFile(string file);
 	}
 }

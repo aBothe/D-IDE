@@ -16,5 +16,10 @@ namespace D_IDE
 		{
 			get { return base.MainWindow as MainWindow; }
 		}
+
+		public override AbstractEditorDocument OpenFile(string file)
+		{
+			return EditingManagement.OpenFile(file);
+		}
 	}
 }

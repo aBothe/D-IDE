@@ -6,6 +6,7 @@ using ICSharpCode.AvalonEdit;
 using AvalonDock;
 using D_IDE.Core;
 using System.IO;
+using System.Windows;
 
 namespace D_IDE
 {
@@ -22,10 +23,42 @@ namespace D_IDE
 
 	public abstract class AbstractEditorDocument : DocumentContent,IAbstractEditor
 	{
-		public AbstractEditorDocument() { }
+		public AbstractEditorDocument() { Init(); }
 		public AbstractEditorDocument(string file)
 		{
 			this.FileName = file;
+			Init();
+		}
+
+		void Init()
+		{
+			AllowDrop = true;
+		}
+
+		protected override void OnDragOver(System.Windows.DragEventArgs e)
+		{
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			{
+				e.Effects = DragDropEffects.Link;
+				e.Handled = true;
+				return;
+			}
+
+			base.OnDragOver(e);
+		}
+
+		protected override void OnDrop(DragEventArgs e)
+		{
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			{
+				foreach (var file in e.Data.GetData(DataFormats.FileDrop) as string[])
+					CoreManager.Instance.OpenFile(file);
+
+				e.Handled = true;
+				return;
+			}
+
+			base.OnDrop(e);
 		}
 
 		public Project Project

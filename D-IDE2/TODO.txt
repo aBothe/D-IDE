@@ -13,8 +13,6 @@ Done: +
 ----- Project management
 -----------------------------------------
 
-+ Add executable type to D project settings
-
 
 -----------------------------------------
 ----- Build / Debug
@@ -25,9 +23,8 @@ Done: +
 	- New Project module ? - Perhaps integrate it into the D one
 
 - Add thread selection when debugging
-- Enable symbol value resolution when debugging
+- Implement symbol value resolution when debugging --> Needs access to the parsed syntax tree --> Exported into DebugSupport already
 - Enable pausing the debuggee
-- Implement the restart button
 
 
 -----------------------------------------

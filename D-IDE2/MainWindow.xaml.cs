@@ -109,6 +109,7 @@ namespace D_IDE
 				Button_StopBuilding.IsEnabled = IDEManager.BuildManagement.IsBuilding;
 
 				Button_ResumeExecution.IsEnabled =
+					Button_RestartExecution.IsEnabled=
 					Button_PauseExecution.IsEnabled =
 					Button_StepIn.IsEnabled =
 					Button_StepOut.IsEnabled =
@@ -186,7 +187,7 @@ namespace D_IDE
 			LanguageLoader.Bindings.Add(new GenericFileBinding());
 			try
 			{
-				LanguageLoader.LoadLanguageInterface("D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
+				LanguageLoader.LoadLanguageInterface(Util.ApplicationStartUpPath+"\\D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
@@ -204,6 +205,9 @@ namespace D_IDE
 			RefreshGUI();
 
 			// Load last solution
+			if (args.Length > 0)
+				foreach (var a in args)
+					IDEManager.EditingManagement.OpenFile(a);
 			if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
 				IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 		}

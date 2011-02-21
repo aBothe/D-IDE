@@ -369,7 +369,7 @@ namespace D_IDE
 				StopWaitingForEvents = false;
 
 				DebugCreateProcessOptions opt = new DebugCreateProcessOptions();
-				opt.CreateFlags = CreateFlags.DebugOnlyThisProcess | (true ? CreateFlags.CreateNewConsole : 0);
+				opt.CreateFlags = CreateFlags.DebugOnlyThisProcess | (showConsole ? CreateFlags.CreateNewConsole : 0);
 				opt.EngCreateFlags = EngCreateFlags.Default;
 
 				Engine.CreateProcessAndAttach(0, exe + (string.IsNullOrWhiteSpace(args) ? "" : (" " + args)), opt, Path.GetDirectoryName(exe), "", 0, 0);
