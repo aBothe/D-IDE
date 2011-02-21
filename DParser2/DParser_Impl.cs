@@ -1020,7 +1020,7 @@ namespace D_Parser
 
                 Step();
 
-                if (!HadComma && ret.Count > 0)
+                if (!HadComma && ret.Count > 0 && ret is IBlockNode)
                 {
 					((ret as IBlockNode)[(ret as IBlockNode).Count - 1] as IBlockNode).Type = new VarArgDecl((ret as IBlockNode)[(ret as IBlockNode).Count - 1].Type);
                 }

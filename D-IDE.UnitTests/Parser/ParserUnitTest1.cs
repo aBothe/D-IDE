@@ -15,6 +15,7 @@ namespace D_IDE.UnitTests
     [TestClass]
     public class ParserUnitTest1
     {
+        protected static string currentResource;
         protected static DirectoryInfo phobosDir;
         protected static DirectoryInfo dmdDir;
 
@@ -39,9 +40,9 @@ namespace D_IDE.UnitTests
         [ClassInitialize]
         public static void Initialize(TestContext testContextInstance) 
         {
-            DParser.OnError += delegate(IAbstractSyntaxTree syntaxTree, int line, int col, int kindOf, string message) 
+            DParser.OnError += delegate(IAbstractSyntaxTree syntaxTree, int line, int col, int kindOf, string message)
                 {
-                    Assert.Fail("File \"" + syntaxTree.FileName + "\" - (Ln "+line+", Col " + col + ") [" + kindOf + "] " + message);
+                    Assert.Fail("File \"" + (currentResource??"<NULL>") + "\" - (Ln " + line + ", Col " + col + ") [" + kindOf + "] " + message);
                 };
 
             dmdDir = new DirectoryInfo(D.DSettings.Instance.dmd2.BaseDirectory);
@@ -74,10 +75,36 @@ namespace D_IDE.UnitTests
             SimpleResourceTest("test_003_literals", null);
         }
 
-        private void SimpleResourceTest(string dFile, string tokenFile)
+        [TestMethod]
+        public void ParsePhobos()
         {
-            using (Stream stream = this.GetType().Assembly.GetManifestResourceStream("D_IDE.UnitTests.Resources.D." + dFile + ".d"))
+            FileInfo[] files = phobosDir.GetFiles("*.d", SearchOption.AllDirectories);
+
+            foreach (FileInfo f in files)
             {
+                currentResource = f.FullName;
+
+                using (StreamReader reader = new StreamReader(File.OpenRead(f.FullName)))
+                {
+                    string l = reader.ReadLine();
+                    if (l.Equals("DDoc", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+                    reader.Close();
+                }
+
+                IAbstractSyntaxTree syntaxTree = DParser.ParseFile(f.FullName);
+                Assert.IsNotNull(syntaxTree, "The syntax tree was not instantiated!");
+            }
+        }
+
+        protected void SimpleResourceTest(string dFile, string tokenFile)
+        {
+            string resource = "D_IDE.UnitTests.Resources.D." + dFile + ".d";
+            using (Stream stream = this.GetType().Assembly.GetManifestResourceStream(resource))
+            {
+                currentResource = resource;
                 StreamReader reader = new StreamReader(stream);
                 DModule syntaxTree = DParser.ParseString(reader.ReadToEnd()) as DModule;
                 Assert.IsNotNull(syntaxTree, "The syntax tree was not instantiated or not of the right type!");
@@ -163,17 +190,5 @@ namespace D_IDE.UnitTests
             sb.Append("[").Append(loc.Column.ToString().PadLeft(5, '0')).Append(",")
                 .Append(loc.Line.ToString().PadLeft(6, '0')).Append("]");
         }
-        
-        /*[TestMethod]
-        public void ParsePhobos()
-        {
-            FileInfo[] files = phobosDir.GetFiles("*.d", SearchOption.AllDirectories);
-
-            foreach (FileInfo f in files)
-            {
-                IAbstractSyntaxTree syntaxTree = DParser.ParseFile(f.FullName);
-                Assert.IsNotNull(syntaxTree, "The syntax tree was not instantiated!");
-            }
-        }*/
     }
 }
