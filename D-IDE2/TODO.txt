@@ -13,7 +13,7 @@ Done: +
 ----- Project management
 -----------------------------------------
 
-- Add executable type to D project settings
++ Add executable type to D project settings
 
 
 -----------------------------------------

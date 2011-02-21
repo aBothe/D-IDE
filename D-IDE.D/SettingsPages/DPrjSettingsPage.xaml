@@ -19,8 +19,8 @@
 		<w:Button Content="Apply" Height="23" HorizontalAlignment="Right" Margin="0,64,82,0" Name="button_ApplyLib" VerticalAlignment="Top" Width="64" Click="button_ApplyLib_Click" />
 		<w:Button Content="Delete" Height="23" Margin="0,63,12,0" Name="button_DeleteLib" VerticalAlignment="Top" Click="button_DeleteLib_Click" HorizontalAlignment="Right" Width="64" />
 		<w:ComboBox Height="23" HorizontalAlignment="Left" Margin="168,12,0,0" Name="comboBox_PrjType" VerticalAlignment="Top" Width="160">
-			<w:ComboBoxItem Content="Win32 Executable" IsSelected="True" />
-			<w:ComboBoxItem Content="Console Executable" />
+			<w:ComboBoxItem Content="Console Executable" IsSelected="True" />
+			<w:ComboBoxItem Content="Win32 Executable" />
 			<w:ComboBoxItem Content="Dynamic Link Library" />
 			<w:ComboBoxItem Content="Static Library" />
 		</w:ComboBox>

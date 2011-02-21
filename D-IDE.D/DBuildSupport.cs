@@ -87,7 +87,7 @@ namespace D_IDE.D
 			// Add import libraries
 			objs.AddRange(dprj.LinkedLibraries);
 
-			// Link files
+			// Link files to console-based application by default
 			var linkerExe = CurrentDMDConfig.ExeLinker;
 			var args=CurrentDMDConfig.BuildArguments(!dprj.IsRelease);
 			var linkerArgs = args.ExeLinker;

@@ -17,7 +17,7 @@ namespace D_IDE.D
 
 		public bool CanShowCompletionWindow(IEditorDocument EditorDocument)
 		{
-			return true;
+			return false;
 		}
 
 		public void BuildCompletionData(IEditorDocument EditorDocument, IList<ICSharpCode.AvalonEdit.CodeCompletion.ICompletionData> l, string EnteredText)
@@ -33,7 +33,8 @@ namespace D_IDE.D
 
 		public void BuildToolTip(IEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
 		{
-			if (!ToolTipRequest.InDocument) return;
+			//if (!ToolTipRequest.InDocument) 
+				return;
 
 			ToolTipRequest.ToolTipContent = "A tool tip";
 		}
