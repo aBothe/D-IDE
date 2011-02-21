@@ -59,20 +59,24 @@ namespace D_IDE.UnitTests
         [TestMethod]
         public void ParseFunction()
         {
-            using (Stream stream = this.GetType().Assembly.GetManifestResourceStream("D_IDE.UnitTests.Resources.D.test_001_function.d"))
-            {
-                StreamReader reader = new StreamReader(stream);
-                DModule syntaxTree = DParser.ParseString(reader.ReadToEnd()) as DModule;
-                Assert.IsNotNull(syntaxTree, "The syntax tree was not instantiated or not of the right type!");
-                string s = SerializeDNode(syntaxTree);
-                TestContext.WriteLine(s);
-            }
+            SimpleResourceTest("test_001_function", null);
         }
 
         [TestMethod]
         public void ParseClass()
         {
-            using (Stream stream = this.GetType().Assembly.GetManifestResourceStream("D_IDE.UnitTests.Resources.D.test_002_class.d"))
+            SimpleResourceTest("test_002_class", null);
+        }
+
+        [TestMethod]
+        public void ParsePrimitiveLiterals()
+        {
+            SimpleResourceTest("test_003_literals", null);
+        }
+
+        private void SimpleResourceTest(string dFile, string tokenFile)
+        {
+            using (Stream stream = this.GetType().Assembly.GetManifestResourceStream("D_IDE.UnitTests.Resources.D." + dFile + ".d"))
             {
                 StreamReader reader = new StreamReader(stream);
                 DModule syntaxTree = DParser.ParseString(reader.ReadToEnd()) as DModule;
