@@ -415,7 +415,7 @@ namespace D_IDE.Core
 		/// <summary>
 		/// Normal console-based application
 		/// </summary>
-		Executable,
+		Executable=0,
 		/// <summary>
 		/// Executable that needs no console, e.g. Win32 executables
 		/// </summary>

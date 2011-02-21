@@ -40,6 +40,7 @@ namespace D_IDE.D
 
 			p.LinkedLibraries.Clear();
 			p.LinkedLibraries.AddRange(Libs);
+			p.OutputType = (OutputTypes)comboBox_PrjType.SelectedIndex;
 
 			return true;
 		}
@@ -69,6 +70,7 @@ namespace D_IDE.D
 			if(Libs.Count>0)
 				List_Libs.SelectedIndex = 0;
 
+			comboBox_PrjType.SelectedIndex = (int)p.OutputType;
 		}
 
 		ObservableCollection<string> Libs = new ObservableCollection<string>();

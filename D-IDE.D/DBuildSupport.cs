@@ -103,12 +103,8 @@ namespace D_IDE.D
 					linkerArgs = args.DllLinker;
 					break;
 				case OutputTypes.StaticLibrary:
-				case OutputTypes.Other:
-					if (dprj.OutputFile.EndsWith(".lib"))
-					{
-						linkerExe = CurrentDMDConfig.LibLinker;
-						linkerArgs = args.LibLinker;
-					}
+					linkerExe = CurrentDMDConfig.LibLinker;
+					linkerArgs = args.LibLinker;
 					break;
 			}
 
