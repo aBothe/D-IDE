@@ -117,12 +117,6 @@
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Parser.Core\Parser.Core.csproj">
-      <Project>{650AD5E8-B84B-45E7-B42B-0AA72199252C}</Project>
-      <Name>Parser.Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="CoreIcons.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CoreIcons.Designer.cs</LastGenOutput>
@@ -173,6 +167,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Controls\Aga.Controls\Aga.Controls.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Parser.Core\Parser.Core.csproj">
+      <Project>{650AD5E8-B84B-45E7-B42B-0AA72199252C}</Project>
+      <Name>Parser.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -13,13 +13,13 @@ namespace D_IDE.Core
 	{
 		#region Properties
 		public Solution Solution;
-		public string Name { get; set; }
+		public virtual string Name { get; set; }
 
 		/// <summary>
 		/// Absolute file path
 		/// </summary>
-		public string FileName;
-		public string BaseDirectory
+		public virtual string FileName { get; set; }
+		public virtual string BaseDirectory
 		{
 			get { return Path.GetDirectoryName(FileName); }
 		}

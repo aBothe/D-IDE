@@ -5,6 +5,7 @@ using System.Text;
 using D_IDE.Core;
 using System.Xml;
 using System.IO;
+using D_IDE.D.CodeCompletion;
 
 namespace D_IDE.D
 {
@@ -33,6 +34,21 @@ namespace D_IDE.D
 				base.OutputFile = value;
 			}
 		}
+
+		public override string FileName
+		{
+			get
+			{
+				return base.FileName;
+			}
+			set
+			{
+				base.FileName = value;
+				ParsedModules.BaseDictionary = value;
+			}
+		}
+
+		public readonly ASTCollection ParsedModules=new ASTCollection();
 
 		public DVersion DMDVersion = DVersion.D2;
 		public bool IsRelease=false;

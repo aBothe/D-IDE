@@ -24,7 +24,7 @@ namespace D_IDE
 		#region Properties
 		TextEditor editor = new TextEditor();
 		public TextEditor Editor { get { return editor; } }
-		public AbstractSyntaxTree SyntaxTree { get; set; }
+		public AbstractSyntaxTree SyntaxTree { get; set; } //TODO: Get it dynamically from the ASTStorage
 
 		public TextMarkerService MarkerStrategy { get; protected set; }
 
