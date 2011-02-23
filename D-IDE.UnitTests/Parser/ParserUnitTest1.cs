@@ -76,6 +76,12 @@ namespace D_IDE.UnitTests
         }
 
         [TestMethod]
+        public void ParsePrimitiveOperators()
+        {
+            SimpleResourceTest("test_004_operators", null);
+        }
+
+        [TestMethod]
         public void ParsePhobos()
         {
             FileInfo[] files = phobosDir.GetFiles("*.d", SearchOption.AllDirectories);
@@ -155,7 +161,7 @@ namespace D_IDE.UnitTests
             else if (node is DVariable)
             {
                 DVariable variable = node as DVariable;
-                sb.Append(indent).Append("VAR:").Append(variable.Type.ToString()).Append("~").Append(variable.Name);
+                sb.Append(indent).Append("VAR:").Append((variable.Type == null) ? "<NULL>" : variable.Type.ToString()).Append("~").Append(variable.Name);
                 if (variable.Initializer != null)
                     sb.Append(indent).Append("~INIT:").Append(variable.Initializer.ToString());
                 sb.AppendLine();
