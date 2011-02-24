@@ -5,7 +5,6 @@ using D_IDE.Core;
 using D_IDE.Core.Controls.Editor;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
-using Parser.Core;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using System.Windows.Controls;
@@ -134,7 +133,7 @@ namespace D_IDE.Core
 			public readonly GenericError Error;
 
 			public ErrorMarker(EditorDocument EditorDoc, GenericError Error)
-				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(Error.Location.Line,Error.Location.Column),false)
+				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(Error.Line,Error.Column),false)
 			{
 				this.EditorDocument = EditorDoc;
 				this.Error = Error;
@@ -234,7 +233,8 @@ namespace D_IDE.Core
 					continue;
 
 				var nloc=bem.EditorDocument.Editor.Document.GetLocation(bem.StartOffset);
-				bem.Error.Location = new CodeLocation(nloc.Column, nloc.Line);
+				bem.Error.Line = nloc.Line;
+				bem.Error.Column = nloc.Column;
 			}
 			//CoreManager.Instance.MainWindow.RefreshErrorList();			
 		}

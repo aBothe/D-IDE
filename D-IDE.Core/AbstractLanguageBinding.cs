@@ -1,5 +1,4 @@
-﻿using Parser.Core;
-using System.IO;
+﻿using System.IO;
 using DebugEngineWrapper;
 using System.Windows.Controls;
 using System;

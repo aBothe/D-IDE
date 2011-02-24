@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Parser.Core;
 using System.Linq;
 using System.IO;
 using System.Xml;
@@ -499,20 +498,19 @@ namespace D_IDE.Core
 		}
 
 		[System.ComponentModel.DefaultValue(ErrorType.Error)]
-		public ErrorType Type { get; set; }
+		public virtual ErrorType Type { get; set; }
 		/// <summary>
 		/// Can be null
 		/// </summary>
-		public Project Project { get; set; }
-		public string FileName { get; set; }
-		public string Message { get; set; }
-		public CodeLocation Location { get; set; }
-		public int Line { get { return Location.Line; } }
-		public int Column { get { return Location.Column;} }
+		public virtual Project Project { get; set; }
+		public virtual string FileName { get; set; }
+		public virtual string Message { get; set; }
+		public virtual int Line { get; set; }
+		public virtual int Column { get; set; }
 
 		public override string ToString()
 		{
-			return Message+ " ("+FileName+":"+Location.Line+")";
+			return Message+ " ("+FileName+":"+Line+")";
 		}
 	}
 
@@ -520,39 +518,12 @@ namespace D_IDE.Core
 	{
 		public BuildError() { }
 		public BuildError(string Message) { this.Message = Message; }
-		public BuildError(string Message, string FileName, CodeLocation Location)
+		public BuildError(string Message, string FileName, int Column, int Line)
 		{
 			this.Message = Message;
 			this.FileName = FileName;
-			this.Location = Location;
-		}
-	}
-
-	public class ParseError : GenericError
-	{
-		public readonly ParserError ParserError;
-
-		public ParseError(ParserError err)
-		{
-			this.ParserError = err;
-
-			if (err.IsSemantic)
-				Type = ErrorType.Warning;
-		}
-
-		public new string Message
-		{
-			get { return ParserError.Message; }
-		}
-
-		public new CodeLocation Location
-		{
-			get { return new CodeLocation(ParserError.Location.Column,ParserError.Location.Line); }
-		}
-
-		public bool IsSemantic
-		{
-			get { return ParserError.IsSemantic; }
+			this.Line = Line;
+			this.Column = Column;
 		}
 	}
 	#endregion

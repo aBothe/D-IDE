@@ -89,7 +89,8 @@ namespace D_IDE.D
 					continue;
 
 				var nloc=bem.EditorDocument.Editor.Document.GetLocation(bem.StartOffset);
-				bem.Error.Location = new CodeLocation(nloc.Column, nloc.Line);
+				bem.Error.Line = nloc.Line;
+				bem.Error.Column = nloc.Column;
 			}
 			//CoreManager.Instance.MainWindow.RefreshErrorList();			
 		}

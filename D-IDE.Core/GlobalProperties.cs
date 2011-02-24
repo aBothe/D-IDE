@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.IO;
-using Parser.Core;
 using System.Xml;
 using D_IDE.Core;
 
