@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="CodeCompletion\ASTStorage.cs" />
     <Compile Include="CodeCompletion\DCodeCompletionSupport.cs" />
+    <Compile Include="CodeCompletion\ICodeCompletionSupport.cs" />
     <Compile Include="DEditor\DEditorDocument.cs" />
     <Compile Include="DUtil.cs" />
     <Compile Include="SettingsPages\DSettingsPage.xaml.cs">

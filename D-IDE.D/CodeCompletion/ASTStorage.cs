@@ -18,7 +18,7 @@ namespace D_IDE.D.CodeCompletion
 	{
 		public static ASTStorage Instance = new ASTStorage();
 
-		public readonly List<ASTCollection> ParsedDictionaries = new List<ASTCollection>();
+		public readonly List<ASTCollection> ParsedGlobalDictionaries = new List<ASTCollection>();
 		/* Notes:
 		 *  When a single, unbound module looks up files, it's allowed only to seek within the global files.
 		 *  
@@ -27,14 +27,14 @@ namespace D_IDE.D.CodeCompletion
 
 		public void Remove(string Dict)
 		{
-			foreach(var c in ParsedDictionaries.ToArray())
+			foreach(var c in ParsedGlobalDictionaries.ToArray())
 				if (c.BaseDictionary == Dict)
-					ParsedDictionaries.Remove(c);
+					ParsedGlobalDictionaries.Remove(c);
 		}
 
 		public bool ContainsDictionary(string Dict)
 		{
-			foreach (var c in ParsedDictionaries)
+			foreach (var c in ParsedGlobalDictionaries)
 				if (c.BaseDictionary == Dict)
 					return true;
 			return false;
@@ -42,10 +42,10 @@ namespace D_IDE.D.CodeCompletion
 
 		public void ParseDictionary(string Dictionary)
 		{
-			foreach (var c in ParsedDictionaries)
+			foreach (var c in ParsedGlobalDictionaries)
 				if (c.BaseDictionary == Dictionary)
 				{
-					c.Update();
+					c.UpdateFromBaseDirectory();
 					return;
 				}
 
@@ -53,19 +53,19 @@ namespace D_IDE.D.CodeCompletion
 				throw new Exception("Cannot parse \""+Dictionary+"\". Directory does not exist!");
 
 			var nc = new ASTCollection(Dictionary);
-			ParsedDictionaries.Add(nc);
+			ParsedGlobalDictionaries.Add(nc);
 
-			nc.Update();
+			nc.UpdateFromBaseDirectory();
 		}
 
 		public IEnumerator<ASTCollection> GetEnumerator()
 		{
-			return ParsedDictionaries.GetEnumerator();
+			return ParsedGlobalDictionaries.GetEnumerator();
 		}
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 		{
-			return ParsedDictionaries.GetEnumerator();
+			return ParsedGlobalDictionaries.GetEnumerator();
 		}
 
 		/// <summary>
@@ -74,7 +74,7 @@ namespace D_IDE.D.CodeCompletion
 		/// <param name="Module"></param>
 		/// <param name="ModuleSolution">Can be null. If so, only globally cached trees will be searched</param>
 		/// <returns></returns>
-		public AbstractSyntaxTree[] ResolveImports(AbstractSyntaxTree Module,Solution ModuleSolution)
+		public IAbstractSyntaxTree[] ResolveImports(IAbstractSyntaxTree Module,Solution ModuleSolution)
 		{
 			//TODO: Do import resolution
 			return null;
@@ -83,7 +83,7 @@ namespace D_IDE.D.CodeCompletion
 
 	}
 
-	public class ASTCollection:List<AbstractSyntaxTree>
+	public class ASTCollection:List<IAbstractSyntaxTree>
 	{
 		public string BaseDictionary { get; set; }
 
@@ -94,10 +94,58 @@ namespace D_IDE.D.CodeCompletion
 			BaseDictionary = baseDir;
 		}
 
+		public void Remove(string file,bool ByModuleName)
+		{
+			foreach (var c in ToArray())
+				if (ByModuleName ? c.ModuleName == file : c.FileName == file)
+				{
+					Remove(c);
+					return;
+				}
+		}
+
+		public bool ContainsDictionary(string file,bool ByModuleName)
+		{
+			foreach (var c in ToArray())
+				if (ByModuleName ? c.ModuleName == file : c.FileName == file)
+					return true;
+			return false;
+		}
+		
+		public new void Add(IAbstractSyntaxTree tree)
+		{
+			if (tree == null)
+				return;
+
+			Remove(tree.FileName, false);
+			base.Add(tree);
+		}
+
+		public IAbstractSyntaxTree this[string file]
+		{
+			get { return this[file, false]; }
+			set { this[file, false] = value; }
+		}
+
+		public IAbstractSyntaxTree this[string AbsoluteFileName,bool ByModuleName]
+		{
+			get{
+				foreach (var ast in this)
+					if (ByModuleName ? ast.ModuleName == AbsoluteFileName : ast.FileName == AbsoluteFileName)
+						return ast;
+				return null;
+			}
+			set
+			{
+				Remove(AbsoluteFileName, ByModuleName);
+				base.Add(value);
+			}
+		}
+
 		/// <summary>
 		/// Parse the base directory.
 		/// </summary>
-		public void Update()
+		public void UpdateFromBaseDirectory()
 		{
 			Clear();
 

@@ -7,14 +7,14 @@ using ICSharpCode.AvalonEdit;
 
 namespace D_IDE.Core
 {
-	public interface ICodeCompletionSupport
+	/*public interface ICodeCompletionSupport
 	{
 		void BuildToolTip(IEditorDocument EditorDocument,ToolTipRequestArgs ToolTipRequest);
-		/*
+		
 		bool IsInsightWindowTrigger(char key);
 
 		object BuildInsightWindowContent(IEditorDocument EditorDocument, string EnteredText);
-		*/
+		
 		/// <summary>
 		/// Used to check if recently entered text is still part of the completion process or if e.g. the current identifier ended
 		/// </summary>
@@ -30,7 +30,7 @@ namespace D_IDE.Core
 		/// </summary>
 		/// <param name="EnteredText">Can be null. Then, all available members are requested to be shown.</param>
 		void BuildCompletionData(IEditorDocument EditorDocument, IList<ICompletionData> CompletionDataList, string EnteredText);
-	}
+	}*/
 
 	public class ToolTipRequestArgs
 	{

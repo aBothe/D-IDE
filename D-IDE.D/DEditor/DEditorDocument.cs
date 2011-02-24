@@ -9,13 +9,34 @@ using Parser.Core;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using System.Windows.Controls;
+using D_Parser;
 
 namespace D_IDE.D
 {
 	public class DEditorDocument:EditorDocument
 	{
 		#region Properties
-		public AbstractSyntaxTree SyntaxTree { get; set; } //TODO: Get it dynamically from the ASTStorage
+		IAbstractSyntaxTree _unboundTree;
+		public IAbstractSyntaxTree SyntaxTree { 
+			get {
+				if (HasProject)
+				{
+					var prj = Project as DProject;
+					if(prj!=null)
+						return prj.ParsedModules[AbsoluteFilePath];
+				}
+				return _unboundTree;
+			}
+			set {
+				if (HasProject)
+				{
+					var prj = Project as DProject;
+					if (prj != null)
+						prj.ParsedModules[AbsoluteFilePath]=value;
+				}
+				_unboundTree=value;
+			}
+		}
 
 		ToolTip editorToolTip = new ToolTip();
 		#endregion
@@ -46,6 +67,15 @@ namespace D_IDE.D
 		}
 
 		#region Code Completion
+		
+		/// <summary>
+		/// Parses the current document content
+		/// </summary>
+		public void Parse()
+		{
+			this.SyntaxTree=DParser.ParseString(Editor.Text);
+		}
+
 		CompletionWindow completionWindow;
 		InsightWindow insightWindow;
 
@@ -53,6 +83,7 @@ namespace D_IDE.D
 		{
 			if (e.Text.Length > 0 && completionWindow != null)
 			{
+				// If entered key isn't part of the identifier anymore, close the completion window and insert the item text.
 				if (!DCodeCompletionSupport.Instance. IsIdentifierChar(e.Text[0]))
 					completionWindow.CompletionList.RequestInsertion(e);
 			}
@@ -60,6 +91,12 @@ namespace D_IDE.D
 
 		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
+			/*
+			 * Note: Once we opened the completion list, it's not needed to care about a later refill of that list.
+			 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.
+			 * - So there's just an initial filling required.
+			 */
+
 			if (!DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || 
 				string.IsNullOrEmpty(e.Text))
 				return;
@@ -71,7 +108,14 @@ namespace D_IDE.D
 			completionWindow = new CompletionWindow(Editor.TextArea);
 			ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData,e.Text);
 
-			completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null;
+			// If no data present, return
+			if (completionWindow.CompletionList.CompletionData.Count < 1)
+			{
+				completionWindow = null;
+				return;
+			}
+
+			completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null; // After the window closed, reset it to null
 			completionWindow.Show();
 		}
 		#endregion
@@ -154,10 +198,7 @@ namespace D_IDE.D
 
 		void TextArea_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
 		{
-			// Automatically move the caret when right-clicking
-			var position = Editor.GetPositionFromPoint(e.GetPosition(Editor));
-			if (position.HasValue)
-				Editor.TextArea.Caret.Position = position.Value;
+			// Pop up context menu
 		}
 		#endregion
 	}

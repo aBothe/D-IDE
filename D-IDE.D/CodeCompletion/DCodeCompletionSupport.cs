@@ -5,10 +5,11 @@ using System.Text;
 using D_IDE.Core;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using Parser.Core;
+using D_Parser;
 
 namespace D_IDE.D
 {
-	public class DCodeCompletionSupport:ICodeCompletionSupport
+	public class DCodeCompletionSupport
 	{
 		public static DCodeCompletionSupport Instance = new DCodeCompletionSupport();
 
@@ -17,19 +18,16 @@ namespace D_IDE.D
 			return char.IsLetterOrDigit(key) || key == '_';
 		}
 
-		public bool CanShowCompletionWindow(IEditorDocument EditorDocument)
+		public bool CanShowCompletionWindow(DEditorDocument EditorDocument)
 		{
-			return false;
+			return false; // While cc isn't available, disable cc functionality
 		}
 
-		public void BuildCompletionData(IEditorDocument EditorDocument, IList<ICSharpCode.AvalonEdit.CodeCompletion.ICompletionData> l, string EnteredText)
+		public void BuildCompletionData(DEditorDocument EditorDocument, IList<ICSharpCode.AvalonEdit.CodeCompletion.ICompletionData> l, string EnteredText)
 		{
 			if (EnteredText == ".")
 			{
-				l.Add(new DCompletionData("aaa"));
-				l.Add(new DCompletionData("bab"));
-				l.Add(new DCompletionData("cca"));
-				l.Add(new DCompletionData("ddd"));
+				l.Add(new DCompletionData( new DVariable() { Name="myVar", Description="A description for myVar"}));
 			}
 		}
 
@@ -49,9 +47,9 @@ namespace D_IDE.D
 
 	public class DCompletionData : ICompletionData
 	{
-		public DCompletionData(string text)
+		public DCompletionData(INode n)
 		{
-			Text = text;
+			Node = n;
 		}
 
 		public INode Node { get; protected set; }
@@ -68,7 +66,7 @@ namespace D_IDE.D
 
 		public object Description
 		{
-			get { return "Description for "+Text; }
+			get { return Node.Description; }
 		}
 
 		public System.Windows.Media.ImageSource Image
@@ -83,8 +81,8 @@ namespace D_IDE.D
 
 		public string Text
 		{
-			get;
-			protected set;
+			get { return Node.Name; }
+			protected set { }
 		}
 	}
 }
