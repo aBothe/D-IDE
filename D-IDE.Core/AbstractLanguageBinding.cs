@@ -41,7 +41,6 @@ namespace D_IDE.Core
 		public virtual bool ProjectsSupported { get { return false; } }
 
 		public virtual bool CanUseDebugging { get { return false; } }
-		public virtual bool CanUseCodeCompletion { get { return false; } }
 		public virtual bool CanBuild { get { return false; } }
 
 		public static AbstractLanguageBinding SearchBinding(string file, out bool IsProject)
@@ -91,15 +90,19 @@ namespace D_IDE.Core
 			return false;
 		}
 
+		#region Editor support
+		public virtual bool SupportsEditor(string SourceFile)
+		{
+			return false;
+		}
+
+		public virtual EditorDocument OpenFile(Project Project, string SourceFile) { return null; }
+		#endregion
+
 		public static string CreateSettingsFileName(AbstractLanguageBinding Binding)
 		{
 			return IDEInterface.ConfigDirectory + "\\" + Util.PurifyFileName(Binding.LanguageName) + ".config.xml";
 		}
-
-		/// <summary>
-		/// Code Completion support. Only requested if CanUseCodeCompletion returns true.
-		/// </summary>
-		public virtual ICodeCompletionSupport CompletionSupport { get { return null; } }
 
 		/// <summary>
 		/// Language build support. Only requested if CanBuild returns true.

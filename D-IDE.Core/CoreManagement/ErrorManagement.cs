@@ -32,13 +32,10 @@ namespace D_IDE.Core
 				get
 				{
 					var ed = Instance.CurrentEditor as EditorDocument;
-					if (ed == null || ed.SyntaxTree == null)
+					if (ed == null || ed.ParserErrors == null)
 						return new GenericError[] { };
 
-					var ret = new List<GenericError>();
-					foreach (var err in ed.SyntaxTree.ParseErrors)
-						ret.Add(new ParseError(err));
-					return ret.ToArray();
+					return ed.ParserErrors.ToArray();
 				}
 			}
 

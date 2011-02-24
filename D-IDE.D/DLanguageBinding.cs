@@ -91,7 +91,6 @@ namespace D_IDE.D
 
 		public override bool ProjectsSupported{get { return true; }}
 		public override bool CanUseDebugging { get { return true; } }
-		public override bool CanUseCodeCompletion { get { return true; } }
 		public override bool CanBuild { get { return true; } }
 
 		#region Projecting
@@ -133,15 +132,18 @@ namespace D_IDE.D
 		}
 		#endregion
 
-		#region Code Completion
-		DCodeCompletionSupport completionSupport = new DCodeCompletionSupport();
-		public override ICodeCompletionSupport CompletionSupport
+		#region Editing
+
+		public override bool SupportsEditor(string SourceFile)
 		{
-			get
-			{
-				return completionSupport;
-			}
+			return SourceFile.EndsWith(".d") || SourceFile.EndsWith(".di");
 		}
+
+		public override EditorDocument OpenFile(Project Project, string SourceFile)
+		{
+			return new DEditorDocument(SourceFile);
+		}
+
 		#endregion
 
 		#region Building

@@ -145,7 +145,18 @@ namespace D_IDE
 				// Add file to recently used files
 				AdjustLastFileList(absPath, false);
 
-				var newEd = new EditorDocument(absPath);
+				EditorDocument newEd = null;
+
+				foreach(var lang in LanguageLoader.Bindings)
+					if (lang.SupportsEditor(absPath))
+					{
+						newEd = lang.OpenFile(_prj, absPath);
+						break;
+					}
+
+				if (newEd == null)
+					newEd = new EditorDocument(absPath);
+
 				// Set read only state if e.g. debugging currently
 				newEd.Editor.IsReadOnly = AllDocumentsReadOnly;
 				newEd.Show(Instance.MainWindow.DockManager);

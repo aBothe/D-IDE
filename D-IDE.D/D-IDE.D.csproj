@@ -53,6 +53,10 @@
     <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AvalonDock, Version=1.3.3571.0, Culture=neutral, PublicKeyToken=85a1e0ada7ec13e4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Misc\AvalonDock.dll</HintPath>
+    </Reference>
     <Reference Include="DebugEngineWrapper">
       <HintPath>..\DebugEngineWrapper\DebugEngineWrapper.dll</HintPath>
     </Reference>
@@ -76,6 +80,7 @@
   <ItemGroup>
     <Compile Include="CodeCompletion\ASTStorage.cs" />
     <Compile Include="CodeCompletion\DCodeCompletionSupport.cs" />
+    <Compile Include="DEditor\DEditorDocument.cs" />
     <Compile Include="SettingsPages\DSettingsPage.xaml.cs">
       <DependentUpon>DSettingsPage.xaml</DependentUpon>
     </Compile>

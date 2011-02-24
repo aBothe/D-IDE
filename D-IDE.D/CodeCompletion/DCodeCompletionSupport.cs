@@ -10,6 +10,8 @@ namespace D_IDE.D
 {
 	public class DCodeCompletionSupport:ICodeCompletionSupport
 	{
+		public static DCodeCompletionSupport Instance = new DCodeCompletionSupport();
+
 		public bool IsIdentifierChar(char key)
 		{
 			return char.IsLetterOrDigit(key) || key == '_';
@@ -33,7 +35,7 @@ namespace D_IDE.D
 
 		public void BuildToolTip(IEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
 		{
-			//if (!ToolTipRequest.InDocument) 
+			if (!ToolTipRequest.InDocument) 
 				return;
 
 			ToolTipRequest.ToolTipContent = "A tool tip";

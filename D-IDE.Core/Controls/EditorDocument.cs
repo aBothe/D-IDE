@@ -9,14 +9,15 @@ using Parser.Core;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using System.Windows.Controls;
+using System.Collections.Generic;
 
-namespace D_IDE
+namespace D_IDE.Core
 {
 	public interface IEditorDocument : IAbstractEditor
 	{
 		TextEditor Editor { get; }
 		bool ReadOnly { get; set; }
-		AbstractSyntaxTree SyntaxTree { get; set; }
+		IEnumerable<GenericError> ParserErrors { get; }
 	}
 
 	public class EditorDocument:AbstractEditorDocument,IEditorDocument
@@ -24,7 +25,6 @@ namespace D_IDE
 		#region Properties
 		TextEditor editor = new TextEditor();
 		public TextEditor Editor { get { return editor; } }
-		public AbstractSyntaxTree SyntaxTree { get; set; } //TODO: Get it dynamically from the ASTStorage
 
 		public TextMarkerService MarkerStrategy { get; protected set; }
 
@@ -33,8 +33,6 @@ namespace D_IDE
 			get { return Editor.IsReadOnly; }
 			set { Editor.IsReadOnly = true; }
 		}
-
-		ToolTip editorToolTip = new ToolTip();
 		#endregion
 
 		public EditorDocument()
@@ -86,7 +84,9 @@ namespace D_IDE
 
 		void Init()
 		{
-			AddChild(Editor);
+			var gr = new Grid();
+			AddChild(gr);
+			gr.Children.Add(Editor);
 			Editor.Margin = new System.Windows.Thickness(0);
 			Editor.BorderBrush = null;
 
@@ -103,12 +103,7 @@ namespace D_IDE
 			tv.LineTransformers.Add(MarkerStrategy);
 			tv.BackgroundRenderers.Add(MarkerStrategy);
 
-			// Register CodeCompletion events
-			Editor.TextArea.TextEntered += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntered);
-			Editor.TextArea.TextEntering += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntering);
 			Editor.TextArea.MouseRightButtonDown += new System.Windows.Input.MouseButtonEventHandler(TextArea_MouseRightButtonDown);
-			Editor.MouseHover += new System.Windows.Input.MouseEventHandler(Editor_MouseHover);
-			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
 
 			// Initially draw all probably required text markers
 			RefreshErrorHighlightings();
@@ -226,49 +221,6 @@ namespace D_IDE
 		}
 		#endregion
 
-		#region Code Completion
-		CompletionWindow completionWindow;
-		InsightWindow insightWindow;
-
-		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
-		{
-			if (LanguageBinding == null || !LanguageBinding.CanUseCodeCompletion)
-				return;
-
-			if (e.Text.Length > 0 && completionWindow != null)
-			{
-				if (!LanguageBinding.CompletionSupport.IsIdentifierChar(e.Text[0]))
-					completionWindow.CompletionList.RequestInsertion(e);
-			}
-		}
-
-		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
-		{
-			if (LanguageBinding == null ||
-				!LanguageBinding.CanUseCodeCompletion ||
-				!LanguageBinding.CompletionSupport.CanShowCompletionWindow(this) || 
-				string.IsNullOrEmpty(e.Text))
-				return;
-			var ccs = LanguageBinding.CompletionSupport;
-
-			/*if (ccs.IsInsightWindowTrigger(e.Text[0]))
-			{
-				insightWindow = new InsightWindow(Editor.TextArea);
-				
-				return;
-			}*/
-
-			if (completionWindow!=null)
-				return;
-
-			completionWindow = new CompletionWindow(Editor.TextArea);
-			ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData,e.Text);
-
-			completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null;
-			completionWindow.Show();
-		}
-		#endregion
-
 		#region Editor events
 		void Editor_TextChanged(object sender, EventArgs e)
 		{
@@ -301,50 +253,6 @@ namespace D_IDE
 				}
 		}
 
-		#region Document ToolTips
-		void Editor_MouseHoverStopped(object sender, System.Windows.Input.MouseEventArgs e)
-		{
-			editorToolTip.IsOpen = false;
-		}
-
-		void Editor_MouseHover(object sender, System.Windows.Input.MouseEventArgs e)
-		{
-			var edpos = e.GetPosition(Editor);
-			var pos = Editor.GetPositionFromPoint(edpos);
-			if (pos.HasValue)
-			{
-				// Avoid showing a tooltip if the cursor is located after a line-end
-				var vpos = Editor.TextArea.TextView.GetVisualPosition(new TextViewPosition(pos.Value.Line, Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength), ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineMiddle);
-				// Add TextView position to Editor-related point
-				vpos = Editor.TextArea.TextView.TranslatePoint(vpos, Editor);
-
-				var ttArgs = new ToolTipRequestArgs(edpos.X <= vpos.X, pos.Value);
-				try
-				{
-					if (LanguageBinding != null && LanguageBinding.CanUseCodeCompletion)
-						LanguageBinding.CompletionSupport.BuildToolTip(this, ttArgs);
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex);
-					return;
-				}
-
-				// If no content present, close and return
-				if (ttArgs.ToolTipContent == null)
-				{
-					editorToolTip.IsOpen = false;
-					return;
-				}
-
-				editorToolTip.PlacementTarget = this; // required for property inheritance
-				editorToolTip.Content = ttArgs.ToolTipContent;
-				editorToolTip.IsOpen = true;
-				e.Handled = true;
-			}
-		}
-		#endregion
-
 		void TextArea_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
 		{
 			// Automatically move the caret when right-clicking
@@ -353,5 +261,10 @@ namespace D_IDE
 				Editor.TextArea.Caret.Position = position.Value;
 		}
 		#endregion
+
+		public virtual IEnumerable<GenericError> ParserErrors
+		{
+			get { return null; }
+		}
 	}
 }
