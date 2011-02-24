@@ -10,6 +10,7 @@ using System.Windows.Media;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using System.Windows.Controls;
 using D_Parser;
+using System.Threading;
 
 namespace D_IDE.D
 {
@@ -64,6 +65,8 @@ namespace D_IDE.D
 			//TODO: Modify the layout - add two selection combo boxes to the editor view
 			// One for selecting types that were declared in the module
 			// The second for the type's members
+
+			//Parse();
 		}
 
 		#region Code Completion
@@ -73,7 +76,22 @@ namespace D_IDE.D
 		/// </summary>
 		public void Parse()
 		{
-			this.SyntaxTree=DParser.ParseString(Editor.Text);
+			Dispatcher.BeginInvoke(new Util.EmptyDelegate(()=>{
+				try{
+					this.SyntaxTree=DParser.ParseString(Editor.Text);
+				}catch(Exception ex){ErrorLogger.Log(ex);}
+				CoreManager.ErrorManagement.RefreshErrorList();
+			}));
+		}
+
+		public override System.Collections.Generic.IEnumerable<GenericError> ParserErrors
+		{
+			get
+			{
+				if (SyntaxTree != null)
+					foreach (var pe in SyntaxTree.ParseErrors)
+						yield return new DParseError(pe);
+			}
 		}
 
 		CompletionWindow completionWindow;
@@ -89,8 +107,44 @@ namespace D_IDE.D
 			}
 		}
 
+		bool KeysTyped = false;
+		Thread parseThread =null;
 		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
+			if (false || parseThread == null)
+			{
+				// This thread will continously check if the file was modified.
+				// If so, it'll reparse
+				parseThread=new Thread(()=>{
+					Thread.CurrentThread.IsBackground = true;
+					while (true)
+					{
+						// While no keys were typed, do nothing
+						while (!KeysTyped)
+							Thread.Sleep(50);
+
+						// Reset keystyped state for waiting again
+						KeysTyped = false;
+
+						// If a key was typed, wait.
+						Thread.Sleep(1500);
+
+						// If no other key was typed after waiting, parse the file
+						if (KeysTyped)
+							continue;
+
+						// Prevent parsing it again; Assign 'false' to it before parsing the document, so if something was typed while parsing, it'll simply parse again
+						KeysTyped = false; 
+
+						Parse();
+					}
+				});
+				parseThread.Start();
+			}
+
+			KeysTyped = true;
+			
+
 			/*
 			 * Note: Once we opened the completion list, it's not needed to care about a later refill of that list.
 			 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.

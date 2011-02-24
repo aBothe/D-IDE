@@ -31,7 +31,7 @@ namespace D_IDE.D
 			}
 		}
 
-		public void BuildToolTip(IEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
+		public void BuildToolTip(DEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
 		{
 			if (!ToolTipRequest.InDocument) 
 				return;

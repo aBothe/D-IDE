@@ -183,7 +183,7 @@ namespace D_Parser
         /// <param name="cc"></param>
         /// <param name="ActualModule"></param>
         /// <returns></returns>
-        public static List<IAbstractSyntaxTree> ResolveImports(List<IAbstractSyntaxTree> CodeCache, IAbstractSyntaxTree ActualModule)
+        public static List<IAbstractSyntaxTree> ResolveImports(IEnumerable<IAbstractSyntaxTree> CodeCache, IAbstractSyntaxTree ActualModule)
         {
             var ret = new List<IAbstractSyntaxTree>();
             if (CodeCache == null || ActualModule == null) return ret;
@@ -235,7 +235,7 @@ namespace D_Parser
             return ret;
         }
 
-        public static void ResolveImports(ref List<IAbstractSyntaxTree> ImportModules, List<IAbstractSyntaxTree> CodeCache, IAbstractSyntaxTree ActualModule)
+        public static void ResolveImports(ref List<IAbstractSyntaxTree> ImportModules, IEnumerable <IAbstractSyntaxTree> CodeCache, IAbstractSyntaxTree ActualModule)
         {
             var localImps = new List<string>();
             foreach (var kv in ActualModule.Imports)
@@ -289,7 +289,7 @@ namespace D_Parser
             return false;
         }
 
-        public static IAbstractSyntaxTree SearchModuleInCache(List<IAbstractSyntaxTree> HayStack,string ModuleName)
+        public static IAbstractSyntaxTree SearchModuleInCache(IEnumerable<IAbstractSyntaxTree> HayStack,string ModuleName)
         {
             foreach (var m in HayStack)
             {

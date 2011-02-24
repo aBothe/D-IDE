@@ -133,10 +133,11 @@ namespace D_IDE
 			set { FileName = value; }
 		}
 
+		bool _mod = false;
 		public bool Modified
 		{
-			get { return Title != null && Title.EndsWith("*"); }
-			set { Title = Path.GetFileName(FileName) + (value ? "*" : ""); }
+			get { return _mod; }
+			set { Title = Path.GetFileName(FileName) + ((_mod=value) ? "*" : ""); }
 		}
 
 		public abstract bool Save();

@@ -62,8 +62,11 @@ namespace D_IDE.Core
 							if(m.LastBuildResult!=null)
 								el.AddRange(m.LastBuildResult.BuildErrors);
 					}
+				
 				// Errors that occurred while parsing source files
-				el.AddRange(LastParseErrors);
+				var ced = Instance.CurrentEditor as EditorDocument;
+				if (ced!=null && ced.ParserErrors!=null)
+					el.AddRange(ced.ParserErrors);
 
 				Errors = el.ToArray();
 

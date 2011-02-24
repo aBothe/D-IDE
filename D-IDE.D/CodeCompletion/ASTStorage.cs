@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Parser.Core;
 using D_IDE.Core;
+using D_Parser;
 
 namespace D_IDE.D.CodeCompletion
 {
@@ -19,6 +20,7 @@ namespace D_IDE.D.CodeCompletion
 		public static ASTStorage Instance = new ASTStorage();
 
 		public readonly List<ASTCollection> ParsedGlobalDictionaries = new List<ASTCollection>();
+
 		/* Notes:
 		 *  When a single, unbound module looks up files, it's allowed only to seek within the global files.
 		 *  
@@ -69,18 +71,36 @@ namespace D_IDE.D.CodeCompletion
 		}
 
 		/// <summary>
+		/// Seeks the module named ModulePath within all parsed global directories.
+		/// </summary>
+		/// <param name="ModulePath"></param>
+		/// <returns></returns>
+		public IAbstractSyntaxTree LookUpModulePath(string ModulePath)
+		{
+			foreach (var dir in ParsedGlobalDictionaries)
+			{
+				var ret=dir[ModulePath, true];
+				if (ret != null)
+					return ret;
+			}
+			return null;
+		}
+
+		/// <summary>
 		/// 
 		/// </summary>
 		/// <param name="Module"></param>
 		/// <param name="ModuleSolution">Can be null. If so, only globally cached trees will be searched</param>
 		/// <returns></returns>
-		public IAbstractSyntaxTree[] ResolveImports(IAbstractSyntaxTree Module,Solution ModuleSolution)
+		public IAbstractSyntaxTree[] ResolveImports(IAbstractSyntaxTree Module)
 		{
-			//TODO: Do import resolution
-			return null;
+			var allMods = new List<IAbstractSyntaxTree>();
+
+			foreach (var dir in this)
+				allMods.AddRange(dir);
+
+			return DCodeResolver.ResolveImports(allMods, Module).ToArray();
 		}
-
-
 	}
 
 	public class ASTCollection:List<IAbstractSyntaxTree>
