@@ -262,4 +262,19 @@ namespace D_IDE.D
 		}
 		#endregion
 	}
+
+	public class ToolTipRequestArgs
+	{
+		public ToolTipRequestArgs(bool isDoc, TextViewPosition pos)
+		{
+			InDocument = isDoc;
+			Position = pos;
+		}
+
+		public bool InDocument { get; protected set; }
+		public TextViewPosition Position { get; protected set; }
+		public int Line { get { return Position.Line; } }
+		public int Column { get { return Position.Column; } }
+		public object ToolTipContent { get; set; }
+	}
 }

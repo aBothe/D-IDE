@@ -33,7 +33,7 @@ namespace D_IDE.D
 
 		public void BuildToolTip(DEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
 		{
-			if (!ToolTipRequest.InDocument) 
+			//if (!ToolTipRequest.InDocument) 
 				return;
 
 			ToolTipRequest.ToolTipContent = "A tool tip";
