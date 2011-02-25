@@ -1,0 +1,24 @@
+﻿<core:AbstractSettingsPage x:Class="D_IDE.D.GlobalParseCachePage"
+			 xmlns:core="clr-namespace:D_IDE.Core;assembly=d-ide.core"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+						   Background="White"
+             mc:Ignorable="d" 
+             d:DesignHeight="212" d:DesignWidth="727">
+    <Grid>
+		<Label Content="D Library Paths" Height="22" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Padding="3" Width="107" />
+		<Button Content="Add" Height="23" HorizontalAlignment="Left" Margin="125,12,0,0" Name="button_AddDir" VerticalAlignment="Top" Width="50" Click="button_AddDir_Click" />
+		<Button Content="Delete" Height="23" HorizontalAlignment="Left" Margin="181,12,0,0" Name="button_DelDir" VerticalAlignment="Top" Width="50" Click="button_DelDir_Click" />
+		<ListView  Margin="125,41,12,12" Name="list_Dirs" SelectionMode="Multiple">
+			<ListView.View>
+				<GridView>
+					<GridViewColumn Header="Directory" DisplayMemberBinding="{Binding BaseDirectory}" Width="250"/>
+					<GridViewColumn Header="Parsed files" DisplayMemberBinding="{Binding Count}" Width="80" />
+				</GridView>
+			</ListView.View>
+		</ListView>
+		<Button Content="Reparse directories" Height="23" HorizontalAlignment="Left" Margin="250,12,0,0" Name="button_Reparse" VerticalAlignment="Top" Width="141" ToolTip="Click to update the internal code completion database. Therefore, all the directories from below will be scanned and analyzed." Click="button_Reparse_Click" />
+	</Grid>
+</core:AbstractSettingsPage>

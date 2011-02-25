@@ -134,9 +134,14 @@ namespace D_IDE.D
 
 		#region Editing
 
-		public override bool SupportsEditor(string SourceFile)
+		public static bool IsDSource(string file)
 		{
-			return SourceFile.EndsWith(".d") || SourceFile.EndsWith(".di");
+			return file.EndsWith(".d") || file.EndsWith(".di");
+		}
+
+		public override bool SupportsEditor(string file)
+		{
+			return IsDSource(file);
 		}
 
 		public override EditorDocument OpenFile(Project Project, string SourceFile)

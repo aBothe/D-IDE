@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
 using Microsoft.Win32;
+using D_IDE.Core;
 
 namespace D_IDE.D
 {
@@ -63,6 +64,20 @@ namespace D_IDE.D
 			get
 			{
 				return "dmd"+(int)Config.Version;
+			}
+		}
+
+		List<AbstractSettingsPage> _subCats = new List<AbstractSettingsPage>();
+		public override IEnumerable<Core.AbstractSettingsPage> SubCategories
+		{
+			get
+			{
+				if (_subCats.Count < 1)
+				{
+					_subCats.Add(new GlobalParseCachePage(Config));
+				}
+
+				return _subCats;
 			}
 		}
 

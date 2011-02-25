@@ -5,6 +5,8 @@ using System.Text;
 using Parser.Core;
 using D_IDE.Core;
 using D_Parser;
+using System.IO;
+using System.Windows;
 
 namespace D_IDE.D.CodeCompletion
 {
@@ -17,9 +19,17 @@ namespace D_IDE.D.CodeCompletion
 	/// </summary>
 	public class ASTStorage:IEnumerable<ASTCollection>
 	{
-		public static ASTStorage Instance = new ASTStorage();
-
 		public readonly List<ASTCollection> ParsedGlobalDictionaries = new List<ASTCollection>();
+
+		public void LoadFromDatabase(string file)
+		{
+			//TODO: Get all these BinaryStorage procedures working
+		}
+
+		public void SaveToFile(string file)
+		{
+
+		}
 
 		/* Notes:
 		 *  When a single, unbound module looks up files, it's allowed only to seek within the global files.
@@ -30,22 +40,26 @@ namespace D_IDE.D.CodeCompletion
 		public void Remove(string Dict)
 		{
 			foreach(var c in ParsedGlobalDictionaries.ToArray())
-				if (c.BaseDictionary == Dict)
+				if (c.BaseDirectory == Dict)
 					ParsedGlobalDictionaries.Remove(c);
 		}
 
 		public bool ContainsDictionary(string Dict)
 		{
 			foreach (var c in ParsedGlobalDictionaries)
-				if (c.BaseDictionary == Dict)
+				if (c.BaseDirectory == Dict)
 					return true;
 			return false;
 		}
 
-		public void ParseDictionary(string Dictionary)
+		/// <summary>
+		/// Adds and parses a dictionary to the collection
+		/// </summary>
+		/// <param name="Dictionary"></param>
+		public void Add(string Dictionary)
 		{
 			foreach (var c in ParsedGlobalDictionaries)
-				if (c.BaseDictionary == Dictionary)
+				if (c.BaseDirectory == Dictionary)
 				{
 					c.UpdateFromBaseDirectory();
 					return;
@@ -105,13 +119,13 @@ namespace D_IDE.D.CodeCompletion
 
 	public class ASTCollection:List<IAbstractSyntaxTree>
 	{
-		public string BaseDictionary { get; set; }
+		public string BaseDirectory { get; set; }
 
 		public ASTCollection() { }
 
 		public ASTCollection(string baseDir)
 		{
-			BaseDictionary = baseDir;
+			BaseDirectory = baseDir;
 		}
 
 		public void Remove(string file,bool ByModuleName)
@@ -137,7 +151,7 @@ namespace D_IDE.D.CodeCompletion
 			if (tree == null)
 				return;
 
-			Remove(tree.FileName, false);
+			//Remove(tree.FileName, false);
 			base.Add(tree);
 		}
 
@@ -169,7 +183,28 @@ namespace D_IDE.D.CodeCompletion
 		{
 			Clear();
 
-			//TODO: Scan the base directory for D sources (*.d?) -- .d as well as .di!
+			string[] files = Directory.GetFiles(BaseDirectory, "*.d?", SearchOption.AllDirectories);
+			foreach (string tf in files)
+			{
+				if (tf.EndsWith("phobos.d")) continue; // Skip phobos.d
+
+				try
+				{
+					string tmodule = Path.ChangeExtension(tf, null).Remove(0, BaseDirectory.Length + 1).Replace('\\', '.');
+
+					var ast = DParser.ParseFile(tf);
+					ast.ModuleName = tmodule;
+					ast.FileName = tf;
+
+					Add(ast);
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex);
+					if (MessageBox.Show("Continue Parsing?", "Parsing exception", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+						return;
+				}
+			}
 		}
 	}
 }

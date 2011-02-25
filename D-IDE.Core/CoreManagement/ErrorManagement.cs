@@ -64,9 +64,9 @@ namespace D_IDE.Core
 					}
 				
 				// Errors that occurred while parsing source files
-				var ced = Instance.CurrentEditor as EditorDocument;
-				if (ced!=null && ced.ParserErrors!=null)
-					el.AddRange(ced.ParserErrors);
+				foreach(var ed in CoreManager.Instance.Editors)
+					if(ed is IEditorDocument && ed.HasProject && (ed as IEditorDocument).ParserErrors!=null)
+						el.AddRange((ed as IEditorDocument).ParserErrors);
 
 				Errors = el.ToArray();
 

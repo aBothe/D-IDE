@@ -6,6 +6,7 @@ using D_IDE.Core;
 using System.Xml;
 using System.IO;
 using D_IDE.D.CodeCompletion;
+using D_Parser;
 
 namespace D_IDE.D
 {
@@ -44,11 +45,27 @@ namespace D_IDE.D
 			set
 			{
 				base.FileName = value;
-				ParsedModules.BaseDictionary = value;
+				ParsedModules.BaseDirectory = value;
 			}
 		}
 
 		public readonly ASTCollection ParsedModules=new ASTCollection();
+
+		/// <summary>
+		/// Parse all D sources that belong to the project
+		/// </summary>
+		public void ParseDSources()
+		{
+			ParsedModules.Clear();
+			foreach (var mod in _Files)
+			{
+				if (DLanguageBinding.IsDSource(mod.FileName))
+				{
+					var ast = DParser.ParseFile(mod.AbsoluteFileName);
+					ParsedModules.Add(ast);
+				}
+			}
+		}
 
 		public DVersion DMDVersion = DVersion.D2;
 		public bool IsRelease=false;

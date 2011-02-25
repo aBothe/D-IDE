@@ -79,6 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeCompletion\ASTStorage.cs" />
+    <Compile Include="CodeCompletion\BinaryDataTypeStorage.cs" />
     <Compile Include="CodeCompletion\DCodeCompletionSupport.cs" />
     <Compile Include="CodeCompletion\ICodeCompletionSupport.cs" />
     <Compile Include="DEditor\DEditorDocument.cs" />
@@ -106,6 +107,9 @@
       <DependentUpon>DPrjSettingsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SettingsPages\GlobalParseCachePage.xaml.cs">
+      <DependentUpon>GlobalParseCachePage.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DParser2\DParser2.csproj">
@@ -164,6 +168,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="SettingsPages\DPrjSettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SettingsPages\GlobalParseCachePage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

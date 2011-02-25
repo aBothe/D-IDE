@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using D_IDE.Core;
 using System.Xml;
+using D_IDE.D.CodeCompletion;
 
 namespace D_IDE.D
 {
@@ -156,6 +157,8 @@ namespace D_IDE.D
 		}
 
 		public DVersion Version = DVersion.D2;
+
+		public readonly ASTStorage ASTCache = new ASTStorage();
 
 		/// <summary>
 		/// TODO: Change default to C:\dmd2\windows\bin
