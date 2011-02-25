@@ -8,7 +8,7 @@ namespace Parser.Core
 	{
 		string FileName { get; set; }
 		string ModuleName { get; set; }
-		List<ParserError> ParseErrors { get; }
+		IEnumerable<ParserError> ParseErrors { get; set; }
 		Dictionary<ITypeDeclaration, bool> Imports { get; set; }
 		bool ContainsImport(ITypeDeclaration ImportIdentifier);
 	}
@@ -19,6 +19,14 @@ namespace Parser.Core
 		public readonly string Message;
 		public readonly int Token;
 		public readonly CodeLocation Location;
+
+		public ParserError(bool IsSemanticError, string Message, int KeyToken, CodeLocation ErrorLocation)
+		{
+			IsSemantic = IsSemanticError;
+			this.Message = Message;
+			this.Token = KeyToken;
+			this.Location = ErrorLocation;
+		}
 	}
 
 	public interface IBlockNode: INode, IEnumerable<INode>

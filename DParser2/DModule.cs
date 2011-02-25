@@ -30,7 +30,6 @@ namespace D_Parser
 
 		string _FileName;
 		Dictionary<ITypeDeclaration, bool> _Imports = new Dictionary<ITypeDeclaration, bool>();
-		List<ParserError> LastParseErrors = new List<ParserError>();
 
 		/// <summary>
 		/// Name alias
@@ -53,9 +52,10 @@ namespace D_Parser
 			}
 		}
 
-		public List<ParserError> ParseErrors
+		public IEnumerable<ParserError> ParseErrors
 		{
-			get { return LastParseErrors; }
+			get;
+			set;
 		}
 
 		public Dictionary<ITypeDeclaration, bool> Imports

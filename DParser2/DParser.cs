@@ -370,33 +370,50 @@ namespace D_Parser
         {
             this.ParseStructureOnly = ParseStructureOnly;
             doc=Root();
+			doc.ParseErrors = Errors;
             return doc;
         }
         
         #region Error handlers
+		List<ParserError> parseErrors = new List<ParserError>();
+
+		public IEnumerable<ParserError> Errors { get { return parseErrors; } }
+
         public delegate void ErrorHandler(IAbstractSyntaxTree tempModule, int line, int col, int kindOf, string message);
         static public event ErrorHandler OnError, OnSemanticError;
 
         void SynErr(int n, string msg)
         {
+			if(OnError!=null)
             OnError(Document, la.Location.Line, la.Location.Column, n, msg);
             //errors.Error(la.Location.Line, la.Location.Column, msg);
+
+			parseErrors.Add(new ParserError(false,msg,n,la.Location));
         }
         void SynErr(int n)
-        {
+		{
+			if (OnError != null)
             OnError(Document, la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n, DTokens.GetTokenString(n)+" expected");
             //errors.SynErr(la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n);
+
+			parseErrors.Add(new ParserError(false, DTokens.GetTokenString(n) + " expected", n,la!=null? la.Location:new CodeLocation()));
         }
 
         void SemErr(int n, string msg)
         {
+			if(OnSemanticError!=null)
             OnSemanticError(Document, la.Location.Line, la.Location.Column, n, msg);
             //errors.Error(la.Location.Line, la.Location.Column, msg);
+
+			parseErrors.Add(new ParserError(true, msg, n, la.Location));
         }
         void SemErr(int n)
         {
+			if(OnSemanticError!=null)
             OnSemanticError(Document, la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n, "");
             //errors.SemErr(la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n);
+
+			parseErrors.Add(new ParserError(true, DTokens.GetTokenString(n) + " expected", n, la != null ? la.Location : new CodeLocation()));
         }
         #endregion
     }

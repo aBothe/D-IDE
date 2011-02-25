@@ -503,6 +503,16 @@ namespace D_IDE.Core
 		/// Can be null
 		/// </summary>
 		public virtual Project Project { get; set; }
+
+		public virtual string DisplayedFileName {
+			get { 
+				if (Project != null)
+					return Project.ToRelativeFileName(FileName); 
+				return Path.GetFileName( FileName); 
+			} 
+			set { }
+		}
+
 		public virtual string FileName { get; set; }
 		public virtual string Message { get; set; }
 		public virtual int Line { get; set; }

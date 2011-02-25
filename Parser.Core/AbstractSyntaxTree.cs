@@ -8,8 +8,6 @@ namespace Parser.Core
 	{
 		string _FileName;
 		Dictionary<ITypeDeclaration, bool> _Imports = new Dictionary<ITypeDeclaration, bool>();
-		List<ParserError> LastParseErrors = new List<ParserError>();
-
 		/// <summary>
 		/// Name alias
 		/// </summary>
@@ -31,9 +29,10 @@ namespace Parser.Core
 			}
 		}
 
-		public List<ParserError> ParseErrors
+		public IEnumerable<ParserError> ParseErrors
 		{
-			get { return LastParseErrors; }
+			get;
+			set;
 		}
 
 		public Dictionary<ITypeDeclaration, bool> Imports

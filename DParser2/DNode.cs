@@ -9,7 +9,8 @@ namespace D_Parser
     {
         public INode[] TemplateParameters=null; // Functions, Templates
 
-        public IBlockNode Parent; // Functions, Templates
+        public new IBlockNode Parent{get{return base.Parent as IBlockNode;}
+		set{base.Parent=value;}} // Functions, Templates
 
         public List<DAttribute> Attributes = new List<DAttribute>();
         public bool ContainsAttribute(params int[] Token)

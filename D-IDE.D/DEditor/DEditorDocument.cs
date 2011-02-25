@@ -29,6 +29,8 @@ namespace D_IDE.D
 				return _unboundTree;
 			}
 			set {
+				if(value!=null)
+				value.FileName = AbsoluteFilePath;
 				if (HasProject)
 				{
 					var prj = Project as DProject;
@@ -58,6 +60,7 @@ namespace D_IDE.D
 			// Register CodeCompletion events
 			Editor.TextArea.TextEntered += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntered);
 			Editor.TextArea.TextEntering += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntering);
+			Editor.Document.TextChanged += new EventHandler(Document_TextChanged);
 			Editor.TextArea.MouseRightButtonDown += new System.Windows.Input.MouseButtonEventHandler(TextArea_MouseRightButtonDown);
 			Editor.MouseHover += new System.Windows.Input.MouseEventHandler(Editor_MouseHover);
 			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
@@ -66,56 +69,19 @@ namespace D_IDE.D
 			// One for selecting types that were declared in the module
 			// The second for the type's members
 
-			//Parse();
-		}
-
-		#region Code Completion
-		
-		/// <summary>
-		/// Parses the current document content
-		/// </summary>
-		public void Parse()
-		{
-			Dispatcher.BeginInvoke(new Util.EmptyDelegate(()=>{
-				try{
-					this.SyntaxTree=DParser.ParseString(Editor.Text);
-				}catch(Exception ex){ErrorLogger.Log(ex);}
-				CoreManager.ErrorManagement.RefreshErrorList();
-			}));
-		}
-
-		public override System.Collections.Generic.IEnumerable<GenericError> ParserErrors
-		{
-			get
-			{
-				if (SyntaxTree != null)
-					foreach (var pe in SyntaxTree.ParseErrors)
-						yield return new DParseError(pe);
-			}
-		}
-
-		CompletionWindow completionWindow;
-		InsightWindow insightWindow;
-
-		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
-		{
-			if (e.Text.Length > 0 && completionWindow != null)
-			{
-				// If entered key isn't part of the identifier anymore, close the completion window and insert the item text.
-				if (!DCodeCompletionSupport.Instance. IsIdentifierChar(e.Text[0]))
-					completionWindow.CompletionList.RequestInsertion(e);
-			}
+			Parse();
 		}
 
 		bool KeysTyped = false;
-		Thread parseThread =null;
-		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
+		Thread parseThread = null;
+		void Document_TextChanged(object sender, EventArgs e)
 		{
-			if (false || parseThread == null)
+			if (parseThread == null || !parseThread.IsAlive)
 			{
 				// This thread will continously check if the file was modified.
 				// If so, it'll reparse
-				parseThread=new Thread(()=>{
+				parseThread = new Thread(() =>
+				{
 					Thread.CurrentThread.IsBackground = true;
 					while (true)
 					{
@@ -134,7 +100,7 @@ namespace D_IDE.D
 							continue;
 
 						// Prevent parsing it again; Assign 'false' to it before parsing the document, so if something was typed while parsing, it'll simply parse again
-						KeysTyped = false; 
+						KeysTyped = false;
 
 						Parse();
 					}
@@ -143,8 +109,48 @@ namespace D_IDE.D
 			}
 
 			KeysTyped = true;
-			
+		}
 
+		#region Code Completion
+		
+		/// <summary>
+		/// Parses the current document content
+		/// </summary>
+		public void Parse()
+		{
+			Dispatcher.BeginInvoke(new Util.EmptyDelegate(()=>{
+				try{
+					SyntaxTree =DParser.ParseString(Editor.Text);
+				}catch(Exception ex){ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.System);}
+				CoreManager.ErrorManagement.RefreshErrorList();
+			}));
+		}
+
+		public override System.Collections.Generic.IEnumerable<GenericError> ParserErrors
+		{
+			get
+			{
+				if (SyntaxTree != null)
+					foreach (var pe in SyntaxTree.ParseErrors)
+						yield return new DParseError(pe) { Project=HasProject?Project:null, FileName=AbsoluteFilePath};
+			}
+		}
+
+		CompletionWindow completionWindow;
+		InsightWindow insightWindow;
+
+		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
+		{
+			if (e.Text.Length > 0 && completionWindow != null)
+			{
+				// If entered key isn't part of the identifier anymore, close the completion window and insert the item text.
+				if (!DCodeCompletionSupport.Instance. IsIdentifierChar(e.Text[0]))
+					completionWindow.CompletionList.RequestInsertion(e);
+			}
+		}
+
+		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
+		{
 			/*
 			 * Note: Once we opened the completion list, it's not needed to care about a later refill of that list.
 			 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.
