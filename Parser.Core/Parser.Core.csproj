@@ -59,13 +59,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeLocation.cs" />
-    <Compile Include="ILanguage.cs" />
     <Compile Include="NodeInterfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AbstractBlockNode.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ICodeResolver.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AbstractNode.cs">

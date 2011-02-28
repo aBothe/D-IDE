@@ -99,22 +99,6 @@ namespace D_IDE.D.CodeCompletion
 			}
 			return null;
 		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="Module"></param>
-		/// <param name="ModuleSolution">Can be null. If so, only globally cached trees will be searched</param>
-		/// <returns></returns>
-		public IAbstractSyntaxTree[] ResolveImports(IAbstractSyntaxTree Module)
-		{
-			var allMods = new List<IAbstractSyntaxTree>();
-
-			foreach (var dir in this)
-				allMods.AddRange(dir);
-
-			return DCodeResolver.ResolveImports(allMods, Module).ToArray();
-		}
 	}
 
 	public class ASTCollection:List<IAbstractSyntaxTree>

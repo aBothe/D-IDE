@@ -15,6 +15,13 @@ namespace D_IDE.D
 		public DMDConfig dmd1 = new DMDConfig() { Version=DVersion.D1};
 		public DMDConfig dmd2 = new DMDConfig() { Version=DVersion.D2};
 
+		public DVersion DefaultDMDVersion = DVersion.D2;
+
+		public DMDConfig DMDConfig()
+		{
+			return DMDConfig(DefaultDMDVersion);
+		}
+
 		public DMDConfig DMDConfig(DVersion v)
 		{
 			if (v == DVersion.D1)

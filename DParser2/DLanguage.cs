@@ -6,18 +6,13 @@ using System.IO;
 
 namespace D_Parser
 {
-	public class DLanguage:ILanguage
+	public class DLanguage
 	{
 		public string DefaultFileExtension { get { return ".d"; } }
 
 		public IParser CreateParser()
 		{
 			return new DParserWrapper();
-		}
-
-		public ICodeResolver CreateCodeResolver()
-		{
-			return new DCodeResolver();
 		}
 
 		public void SaveModuleCache(IAbstractSyntaxTree[] Modules, string[] ImportDirectories, string FileName)
