@@ -69,6 +69,11 @@ namespace D_Parser
 				_Imports = value;
 			}
 		}
+
+		public override string ToString()
+		{
+			return ModuleName;
+		}
 	}
 
 	public class DBlockStatement : DNode, IBlockNode

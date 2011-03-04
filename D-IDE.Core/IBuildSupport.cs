@@ -12,17 +12,17 @@ namespace D_IDE.Core
 	{
 		protected Thread buildThread;
 		public abstract void BuildProject(Project Project);
-		public abstract void BuildModule(SourceModule Module, string OutputDirectory, bool LinkToStandAlone);
+		public abstract void BuildModule(SourceModule Module, string OutputDirectory, string ExecDirectory, bool LinkToStandAlone);
 
 		#region TODO: Async build support
-		public virtual void BuildModuleAsync(SourceModule Module, string OutputDirectory, bool LinkToStandAlone)
+		public virtual void BuildModuleAsync(SourceModule Module, string OutputDirectory, string ExecDirectory, bool LinkToStandAlone)
 		{
 			if (buildThread != null && buildThread.IsAlive)
 				buildThread.Abort();
 
 			buildThread = new Thread(delegate()
 			{
-				BuildModule(Module,OutputDirectory,LinkToStandAlone);
+				BuildModule(Module,OutputDirectory,ExecDirectory,LinkToStandAlone);
 			});
 
 			buildThread.IsBackground = true;
@@ -31,7 +31,7 @@ namespace D_IDE.Core
 
 		public void BuildStandAlone(SourceModule Module)
 		{
-			BuildModule(Module,Path.GetDirectoryName(Module.FileName),true);
+			BuildModule(Module, Path.GetDirectoryName(Module.FileName), Path.GetDirectoryName(Module.FileName), true);
 		}
 
 		public delegate void BuildFinishedEvent(BuildResult Result);

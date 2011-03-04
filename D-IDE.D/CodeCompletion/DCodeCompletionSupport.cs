@@ -40,25 +40,26 @@ namespace D_IDE.D
 					DCodeResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text,offset)) 
 				return;
 
-			DToken tk=null;
-			var id=DCodeResolver.BuildIdentifierList(EditorDocument.Editor.Text,
-				offset, false, out tk);
+			try
+			{
+				var types = DCodeResolver.ResolveTypeDeclarations(
+					EditorDocument.SyntaxTree, 
+					EditorDocument.Editor.Text,
+					offset, 
+					new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line),
+					ResolveImportedModules(EditorDocument));
 
-			if (id == null)
-				return;
+				string tt = "";
 
-			var types=DCodeResolver.ResolveTypeDeclarations(
-				DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,new CodeLocation(ToolTipRequest.Column,ToolTipRequest.Line)),
-				id,ResolveImportedModules(EditorDocument));
+				//TODO: Build well-formatted tool tip string
+				if (types != null)
+					foreach (var n in types)
+						tt += (n.Type!=null?(n.Type.ToString() + " "):"") + n.Name + "\r\n";
 
-			string tt = "";
-
-			//TODO: Build well-formatted tool tip string
-			if(types!=null)
-				foreach(var n in types)
-					tt+=n.Type.ToString() +" "+ n.Name+"\r\n";
-
-			ToolTipRequest.ToolTipContent = tt.Trim();
+				tt = tt.Trim();
+				if(!string.IsNullOrEmpty(tt))
+					ToolTipRequest.ToolTipContent = tt;
+			}catch{}
 		}
 
 		public bool IsInsightWindowTrigger(char key)

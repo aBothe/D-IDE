@@ -100,6 +100,7 @@ namespace D_Parser
             var p=Create(new StreamReader(s));
             var m = p.Parse(SkipFunctionBodies);
             m.FileName = File;
+			m.ModuleName = Path.GetFileNameWithoutExtension(File);
             s.Close();
             return m;
         }

@@ -112,7 +112,14 @@ namespace D_IDE.D
 		}
 
 		#region Code Completion
-		
+
+		public string ProposedModuleName
+		{
+			get {
+				return Path.ChangeExtension(RelativeFilePath,null).Replace('\\','.');
+			}
+		}
+
 		/// <summary>
 		/// Parses the current document content
 		/// </summary>
@@ -120,7 +127,13 @@ namespace D_IDE.D
 		{
 			Dispatcher.BeginInvoke(new Util.EmptyDelegate(()=>{
 				try{
-					SyntaxTree =DParser.ParseString(Editor.Text);
+					if (SyntaxTree != null)
+						lock (SyntaxTree)
+							DParser.UpdateModuleFromText(SyntaxTree, Editor.Text);
+					else
+						SyntaxTree =DParser.ParseString(Editor.Text);
+					SyntaxTree.FileName = AbsoluteFilePath;
+					SyntaxTree.ModuleName = ProposedModuleName;
 				}catch(Exception ex){ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.System);}
 				CoreManager.ErrorManagement.RefreshErrorList();
 			}));

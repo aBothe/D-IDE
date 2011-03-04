@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Parser.Core;
+using System.IO;
 
 namespace D_Parser
 {
@@ -24,7 +25,76 @@ namespace D_Parser
 
 		#endregion
 
-		public static ITypeDeclaration BuildIdentifierList(string Text, int CaretOffset, bool BackwardOnly, out DToken OptionalInitToken)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="Module"></param>
+		/// <param name="Text"></param>
+		/// <param name="CaretOffset"></param>
+		/// <param name="CaretLocation"
+		/// <param name="ImportCache"></param>
+		/// <returns></returns>
+		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module, string Text, int CaretOffset, CodeLocation CaretLocation, IEnumerable<IAbstractSyntaxTree> ImportCache)
+		{
+			DToken tk = null;
+			var id = DCodeResolver.BuildIdentifierList(Text,
+				CaretOffset, /*true,*/ out tk);
+
+			if (id == null && tk==null)
+				return null;
+
+			IBlockNode SearchParent = null;
+
+			if (tk!=null &&( tk.Kind == DTokens.This || tk.Kind == DTokens.Super)) // this.myProp; super.baseProp;
+				SearchParent = SearchClassLikeAt(Module, CaretLocation);
+			else 
+				SearchParent = SearchBlockAt(Module, CaretLocation);
+
+			if (tk != null)
+			{
+				if (tk.Kind == DTokens.Super) // super.baseProp
+					SearchParent = ResolveBaseClass(SearchParent as DClassLike, ImportCache);
+				else if (tk.Kind == DTokens.__FILE__)
+				{
+					var n = new DVariable()
+					{
+						Parent = SearchParent,
+						Type = new NormalDeclaration("string"),
+						Name = "__FILE__",
+						Initializer = new IdentExpression(Module.FileName),
+						Description = "Module file name"
+					};
+					return new[] { n };
+				}
+				else if (tk.Kind == DTokens.__LINE__)
+				{
+					var n = new DVariable()
+					{
+						Parent = SearchParent,
+						Type = new NormalDeclaration("int"),
+						Name = "__LINE__",
+						Initializer = new IdentExpression(CaretLocation.Line),
+						Description = "Code line"
+					};
+					return new[] { n };
+				}
+			}
+
+			// If no addtitional identifiers are given, return immediately
+			if (id == null || SearchParent==null)
+				return new[]{ SearchParent};
+
+			try
+			{
+				return DCodeResolver.ResolveTypeDeclarations(
+					SearchParent,
+					id, ImportCache);
+			}
+			catch { }
+			return null;
+		}
+
+		public static ITypeDeclaration BuildIdentifierList(string Text, int CaretOffset, /*bool BackwardOnly,*/ out DToken OptionalInitToken)
 		{
 			OptionalInitToken = null;
 
@@ -151,10 +221,9 @@ namespace D_Parser
 				ch = Text[IdentListStart];
 			}
 
-			if (BackwardOnly && IdentListStart >= CaretOffset)
-				return null;
+			//if (BackwardOnly && IdentListStart >= CaretOffset)return null;
 
-			var psr = DParser.ParseBasicType(BackwardOnly ? Text.Substring(IdentListStart, CaretOffset - IdentListStart) : Text.Substring(IdentListStart), out OptionalInitToken);
+			var psr = DParser.ParseBasicType(Text.Substring(IdentListStart), out OptionalInitToken);
 			#endregion
 
 			return psr;
@@ -339,7 +408,7 @@ namespace D_Parser
 				/* If the id list start with the name of BlockNode's root module, 
 				 * skip those identifiers first to proceed seeking the rest of the list
 				 */
-				if (mod != null && istr.StartsWith(mod.ModuleName))
+				if (mod != null && !string.IsNullOrEmpty(mod.ModuleName) && istr.StartsWith(mod.ModuleName))
 				{
 					skippedIds += mod.ModuleName.Split('.').Length;
 					istr = il.ToString(skippedIds);
@@ -676,76 +745,6 @@ namespace D_Parser
 			}
 		}
 
-
-		/// <summary>
-		/// classA.classB.memberC
-		/// </summary>
-		/// <param name="mouseOffset"></param>
-		/// <param name="isNewConstructor"></param>
-		/// <returns><![CDATA[string["classA","classB","memberC"]]]></returns>
-		public static string[] GetExpressionStringsAtOffset(string TextContent, ref int mouseOffset, out bool isNewConstructor, bool backwardOnly)
-		{
-			int origOff = mouseOffset;
-			isNewConstructor = false;
-			if (mouseOffset < 1 || String.IsNullOrEmpty(TextContent)) return null;
-
-			int TextLength = TextContent.Length;
-
-			try
-			{
-				List<string> expressions = new List<string>();
-
-				char tch;
-				string texpr = "";
-				int psb = 0;
-				for (; mouseOffset > 0 && mouseOffset < TextLength; mouseOffset--)
-				{
-					tch = TextContent[mouseOffset];
-
-					if (tch == ']') psb++;
-
-					if (char.IsLetterOrDigit(tch) || tch == '_' || psb > 0) texpr += tch;
-
-					if (!char.IsLetterOrDigit(tch) && tch != '_' && psb < 1)
-					{
-						if (mouseOffset > 3 && TextContent.Substring(mouseOffset - 3, 3) == "new") isNewConstructor = true; // =>new< MyClass()
-						expressions.Add(ReverseString(texpr.Trim()));
-
-						if (tch != '.')
-						{
-							break;
-						}
-						texpr = "";
-						//off = i;
-					}
-
-					if (tch == '[') psb--;
-				}
-
-				int off = origOff;
-				texpr = "";
-
-				if (!backwardOnly)
-				{
-					if (!char.IsLetterOrDigit(TextContent[off]) && TextContent[off] != '_') return null;
-					for (int i = off + 1; i > 0 && i < TextLength - 1; i++) // Parse forward
-					{
-						tch = TextContent[i];
-						if (!char.IsLetterOrDigit(tch) && tch != '_') break;
-						if (expressions.Count < 1) expressions.Add("");
-						texpr += tch;
-					}
-					expressions[0] += texpr.Trim();
-				}
-
-				expressions.Reverse();
-
-				if (expressions[0].Trim() == "") return null;
-				return expressions.ToArray();
-			}
-			catch { }
-			return null;
-		}
 
 		/*
 		/// <summary>

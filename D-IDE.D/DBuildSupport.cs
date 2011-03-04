@@ -53,7 +53,7 @@ namespace D_IDE.D
 				if (lang == null || _u || !lang.CanBuild)
 					continue;
 
-				lang.BuildSupport.BuildModule(f,objectDirectory,false);
+				lang.BuildSupport.BuildModule(f,objectDirectory,prj.BaseDirectory,false);
 
 				if (!f.LastBuildResult.Successful)
 					return;
@@ -62,9 +62,7 @@ namespace D_IDE.D
 					AllObjectsUnchanged = false;
 
 				// To save command line space, make the targetfile relative to our objectDirectory
-				objs.Add(f.LastBuildResult.TargetFile.StartsWith(dprj.BaseDirectory) 
-					? f.LastBuildResult.TargetFile.Substring(dprj.BaseDirectory.Length + 1) 
-					: f.LastBuildResult.TargetFile);
+				objs.Add(dprj.ToRelativeFileName(f.LastBuildResult.TargetFile));
 			}
 
 			if (objs.Count < 1)
@@ -192,7 +190,7 @@ namespace D_IDE.D
 			return br;
 		}
 
-		public override void BuildModule(SourceModule Module, string OutputDirectory, bool Link)
+		public override void BuildModule(SourceModule Module, string OutputDirectory,string ExecDir, bool Link)
 		{
 			var dmd = CurrentDMDConfig;
 			var dmd_exe = dmd.SoureCompiler;
@@ -212,7 +210,7 @@ namespace D_IDE.D
 				return;
 			}
 
-			var br =Module.LastBuildResult= CompileSource(dmd,compileDebug,src,obj,Path.GetDirectoryName(src));
+			var br =Module.LastBuildResult= CompileSource(dmd,compileDebug,src,obj,ExecDir);
 
 			if (Link && br.Successful)
 			{
