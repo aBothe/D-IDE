@@ -47,6 +47,7 @@ namespace D_IDE.D
 					EditorDocument.Editor.Text,
 					offset, 
 					new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line),
+					true,
 					ResolveImportedModules(EditorDocument));
 
 				string tt = "";

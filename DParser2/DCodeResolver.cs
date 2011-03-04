@@ -34,7 +34,7 @@ namespace D_Parser
 		/// <param name="CaretLocation"
 		/// <param name="ImportCache"></param>
 		/// <returns></returns>
-		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module, string Text, int CaretOffset, CodeLocation CaretLocation, IEnumerable<IAbstractSyntaxTree> ImportCache)
+		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module, string Text, int CaretOffset, CodeLocation CaretLocation, bool EnableVariableTypeResolving, IEnumerable<IAbstractSyntaxTree> ImportCache)
 		{
 			DToken tk = null;
 			var id = DCodeResolver.BuildIdentifierList(Text,
@@ -86,9 +86,18 @@ namespace D_Parser
 
 			try
 			{
-				return DCodeResolver.ResolveTypeDeclarations(
+				var ret= DCodeResolver.ResolveTypeDeclarations(
 					SearchParent,
 					id, ImportCache);
+
+				if (EnableVariableTypeResolving && ret != null && ret.Length > 0)
+				{
+					var ret2=DCodeResolver.ResolveTypeDeclarations(SearchParent, GetDNodeType(ret[0]), ImportCache);
+					if (ret2 != null && ret2.Length > 0)
+						return ret2;
+				}
+
+				return ret;
 			}
 			catch { }
 			return null;
@@ -380,6 +389,33 @@ namespace D_Parser
 			return null;
 		}
 
+		public static ITypeDeclaration GetDNodeType(INode VariableOrMethod)
+		{
+			var ret = VariableOrMethod.Type;
+
+			// If our node contains an auto attribute, expect that there is an initializer that implies its type
+			if (VariableOrMethod is DVariable && (VariableOrMethod as DNode).ContainsAttribute(DTokens.Auto))
+			{
+				var init = (VariableOrMethod as DVariable).Initializer;
+				if (init is InitializerExpression)
+				{
+					var tex = (init as InitializerExpression).Initializer;
+					while (tex != null)
+					{
+						if (tex is TypeDeclarationExpression)
+						{
+							ret = (tex as TypeDeclarationExpression).Declaration;
+							break;
+						}
+
+						tex = tex.Base;
+					}
+				}
+			}
+
+			return ret;
+		}
+
 		/// <summary>
 		/// Finds the location (module node) where a type (TypeExpression) has been declared.
 		/// Note: This function only searches within 1 module only!
@@ -434,30 +470,9 @@ namespace D_Parser
 							// If we retrieve deeper levels, we are only allowed to scan for public members
 							tFilter = NodeFilter.PublicOnly;
 							var v = DeeperLevel[0];
-							var newType = v.Type;
 							DeeperLevel.Clear();
 
-							// If our node contains an auto attribute, expect that there is an initializer that implies its type
-							if (v is DVariable && (v as DNode).ContainsAttribute(DTokens.Auto))
-							{
-								var init = (v as DVariable).Initializer;
-								if (init is InitializerExpression)
-								{
-									var tex = (init as InitializerExpression).Initializer;
-									while (tex != null)
-									{
-										if (tex is TypeDeclarationExpression)
-										{
-											newType = (tex as TypeDeclarationExpression).Declaration;
-											break;
-										}
-
-										tex = tex.Base;
-									}
-								}
-							}
-
-							DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(v.Parent as IBlockNode, newType, NodeFilter.PublicOnly, ImportCache));
+							DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(v.Parent as IBlockNode, GetDNodeType(v), NodeFilter.PublicOnly, ImportCache));
 						}
 					}
 
