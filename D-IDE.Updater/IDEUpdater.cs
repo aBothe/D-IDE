@@ -114,10 +114,8 @@ namespace D_IDE.Updater
 				Console.WriteLine("Download successful!");
 
 				// Save archive modification time to make later watch-outs for program updates working
-				// Note: Just save it AFTER the update was successful!
-				if (File.Exists(mFileVerFile))	File.Delete(mFileVerFile);
+				// Note: Just save it after the update was successful!
 				File.WriteAllText(mFileVerFile, LastOnlineModTime);
-				File.SetAttributes(mFileVerFile, FileAttributes.ReadOnly | FileAttributes.Hidden);
 
 				// Start program if wanted
 				if (StartImmediately)
