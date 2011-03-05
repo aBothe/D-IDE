@@ -310,6 +310,17 @@ namespace D_Parser
                     imp = _Import();
                     if(!doc.ContainsImport(imp)) // Check if import is already done
                         doc.Imports.Add(imp,IsPublic);
+
+                    if (la.Kind == (Colon))
+                    {
+                        Step();
+                        ImportBind();
+                        while (la.Kind == (Comma))
+                        {
+                            Step();
+                            ImportBind();
+                        }
+                    }
                 }
 
             Expect(Semicolon);

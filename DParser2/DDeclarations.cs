@@ -338,7 +338,15 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return (Base != null ? (Base.ToString() + " ") : "") + ((Value is string) ? (string)Value : Value.ToString());
+            return 
+                ((Base != null) ? 
+                    (Base.ToString() + " ") : 
+                    string.Empty) + 
+                ((Value is string) ? 
+                    Value as String :
+                    ((Value == null) ? 
+                        string.Empty : 
+                        Value.ToString()));
         }
     }
 

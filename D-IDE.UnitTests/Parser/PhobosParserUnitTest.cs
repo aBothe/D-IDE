@@ -119,9 +119,6 @@ namespace D_IDE.UnitTests.Parser
         public void ParseStdGregorian() { SimpleFileTest(phobosDir.FullName + @"\std\gregorian.d", null); }
 
         [TestMethod]
-        public void ParseStdInternal() { SimpleFileTest(phobosDir.FullName + @"\std\internal", null); }
-
-        [TestMethod]
         public void ParseStdIntrinsic() { SimpleFileTest(phobosDir.FullName + @"\std\intrinsic.d", null); }
 
         [TestMethod]
@@ -233,9 +230,6 @@ namespace D_IDE.UnitTests.Parser
         public void ParseStdVariant() { SimpleFileTest(phobosDir.FullName + @"\std\variant.d", null); }
 
         [TestMethod]
-        public void ParseStdWindows() { SimpleFileTest(phobosDir.FullName + @"\std\windows", null); }
-
-        [TestMethod]
         public void ParseStdXml() { SimpleFileTest(phobosDir.FullName + @"\std\xml.d", null); }
 
         [TestMethod]
@@ -246,6 +240,33 @@ namespace D_IDE.UnitTests.Parser
 
         [TestMethod]
         public void ParseStd__Fileinit() { SimpleFileTest(phobosDir.FullName + @"\std\__fileinit.d", null); }
+
+        [TestMethod]
+        public void ParseStdWindowsCharset() { SimpleFileTest(phobosDir.FullName + @"\std\windows\charset.d", null); }
+
+        [TestMethod]
+        public void ParseStdWindowsIunknown() { SimpleFileTest(phobosDir.FullName + @"\std\windows\iunknown.d", null); }
+
+        [TestMethod]
+        public void ParseStdWindowsRegistry() { SimpleFileTest(phobosDir.FullName + @"\std\windows\registry.d", null); }
+
+        [TestMethod]
+        public void ParseStdWindowsSyserror() { SimpleFileTest(phobosDir.FullName + @"\std\windows\syserror.d", null); }
+
+        [TestMethod]
+        public void ParseStdInternalMathBiguintcore() { SimpleFileTest(phobosDir.FullName + @"\std\internal\math\biguintcore.d", null); }
+
+        [TestMethod]
+        public void ParseStdInternalMathBiguintnoasm() { SimpleFileTest(phobosDir.FullName + @"\std\internal\math\biguintnoasm.d", null); }
+
+        [TestMethod]
+        public void ParseStdInternalMathBiguintx86() { SimpleFileTest(phobosDir.FullName + @"\std\internal\math\biguintx86.d", null); }
+
+        [TestMethod]
+        public void ParseStdInternalMathErrorfunction() { SimpleFileTest(phobosDir.FullName + @"\std\internal\math\errorfunction.d", null); }
+
+        [TestMethod]
+        public void ParseStdInternalMathGammafunction() { SimpleFileTest(phobosDir.FullName + @"\std\internal\math\gammafunction.d", null); }
 
     }
 }
