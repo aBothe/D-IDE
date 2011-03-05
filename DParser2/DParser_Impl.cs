@@ -2872,10 +2872,16 @@ namespace D_Parser
                 dm.Parameters = Parameters();
             }
 
+            // handle post argument attributes
+            while (IsAttributeSpecifier())
+            {
+                AttributeSpecifier();
+            }
+
             if (la.Kind==(If))
                 Constraint();
 
-            // handle post argument attributes?
+            // handle post argument attributes
             while (IsAttributeSpecifier())
             {
                 AttributeSpecifier();
