@@ -2875,6 +2875,12 @@ namespace D_Parser
             if (la.Kind==(If))
                 Constraint();
 
+            // handle post argument attributes?
+            while (IsAttributeSpecifier())
+            {
+                AttributeSpecifier();
+            }
+
             var dm_ = dm as IBlockNode;
             FunctionBody(ref dm_);
             return dm;

@@ -1,12 +1,11 @@
 ﻿import std.stdio;
 
-class C {}
+struct C 
+{
+public:
+    this(immutable int i) nothrow {}
+}
 
 void main(string[] args)
 {
-	auto c = new C();
-	auto d = c;
-	
-	if (c is d || c == d) {}
-	if (c !is d || c == d) {}
 }
