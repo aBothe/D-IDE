@@ -21,15 +21,41 @@ namespace D_IDE.D
 
 		public bool CanShowCompletionWindow(DEditorDocument EditorDocument)
 		{
-			return false; // While cc isn't available, disable cc functionality
+			return true; // While cc isn't available, disable cc functionality
 		}
 
 		public void BuildCompletionData(DEditorDocument EditorDocument, IList<ICSharpCode.AvalonEdit.CodeCompletion.ICompletionData> l, string EnteredText)
 		{
+			var caretOffset = EditorDocument.Editor.CaretOffset;
+			var caretLocation = new CodeLocation(EditorDocument.Editor.TextArea.Caret.Column,EditorDocument.Editor.TextArea.Caret.Line);
+
+			var curBlock = DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLocation);
+
+			if (curBlock == null)
+				return;
+
+			var importCache=ResolveImportedModules(EditorDocument);
+
+			IEnumerable<INode> listedItems = null;
+
+			// Usually shows variable members
 			if (EnteredText == ".")
 			{
-				l.Add(new DCompletionData( new DVariable() { Name="myVar", Description="A description for myVar"}));
+				//l.Add(new DCompletionData( new DVariable() { Name="myVar", Description="A description for myVar"}));
 			}
+
+			// Enum all nodes that can be accessed in the current scope
+			else if(string.IsNullOrEmpty(EnteredText) || IsIdentifierChar(EnteredText[0]))
+			{
+				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock, importCache);
+
+				//TODO: Add D keywords including their descriptions
+			}
+
+			// Add all found items to the referenced list
+			if(listedItems!=null)
+				foreach(var i in listedItems)
+					l.Add(new DCompletionData(i));
 		}
 
 		public void BuildToolTip(DEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
@@ -68,6 +94,7 @@ namespace D_IDE.D
 			return key == '(' || key==',';
 		}
 
+		#region Import resolving helper
 		public IEnumerable<IAbstractSyntaxTree> ResolveImportedModules(DEditorDocument Editor)
 		{
 			var availableNodes = EnumAvailableModules(Editor).ToArray();
@@ -105,6 +132,7 @@ namespace D_IDE.D
 
 			return ret;
 		}
+		#endregion
 	}
 
 	public class DCompletionData : ICompletionData

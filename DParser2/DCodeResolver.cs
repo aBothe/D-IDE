@@ -25,6 +25,8 @@ namespace D_Parser
 
 		#endregion
 
+		
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -101,6 +103,84 @@ namespace D_Parser
 			}
 			catch { }
 			return null;
+		}
+
+		/// <summary>
+		/// Returns a list of all items that can be accessed in the current scope.
+		/// </summary>
+		/// <param name="ScopedBlock"></param>
+		/// <param name="ImportCache"></param>
+		/// <returns></returns>
+		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock, IEnumerable<IAbstractSyntaxTree> ImportCache)
+		{
+			/* First walk through the current scope.
+			 * Walk up the node hierarchy and add all their items (private as well as public members).
+			 * Resolve base classes and add their non-private|static members.
+			 * 
+			 * Then add public members of the imported modules 
+			 */
+			var ret = new List<INode>();
+
+			#region Current module/scope related members
+			var curScope = ScopedBlock;
+
+			while (curScope != null)
+			{
+				foreach (var n in curScope)
+				{
+					//TODO: Skip on anonymous blocks like if-blocks or for-loops
+					//TODO: (More parser-related!) Add anonymous blocks (e.g. delegates) to the syntax tree
+
+					ret.Add(n);
+					if (n is DNode)
+					{
+						var dn = n as DNode;
+						// Add function params as well as DNode-specific template params
+						if (n is DMethod)
+							ret.AddRange((n as DMethod).Parameters);
+
+						if (dn.TemplateParameters != null)
+							ret.AddRange(dn.TemplateParameters);
+
+						// Walk up inheritance hierarchy
+						if (n is DClassLike)
+						{
+							var curWatchedClass = n as DClassLike;
+							// MyClass > BaseA > BaseB > Object
+							while (curWatchedClass != null)
+							{
+								foreach (var m in curWatchedClass)
+								{
+									var dm2 = m as DNode;
+									if (dm2 == null)
+										continue;
+
+									// Add static and non-private members of all base classes
+									if (dm2.IsStatic || !dm2.ContainsAttribute(DTokens.Private))
+										ret.Add(m);
+								}
+
+								// Stop adding if Object class level got reached
+								if (curWatchedClass.Name.ToLower() == "object")
+									break;
+
+								curWatchedClass = ResolveBaseClass(curWatchedClass, ImportCache);
+							}
+						}
+					}
+				}
+
+				curScope = curScope.Parent as IBlockNode;
+			}
+			#endregion
+
+			#region Global members
+			//TODO
+			#endregion
+
+			if (ret.Count < 1)
+				return null;
+			return ret;
 		}
 
 		public static ITypeDeclaration BuildIdentifierList(string Text, int CaretOffset, /*bool BackwardOnly,*/ out DToken OptionalInitToken)
