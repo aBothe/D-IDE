@@ -545,15 +545,31 @@ namespace D_Parser
                                 if (IsQuoted) endDelim += "\"";
 
                                 // Read tokens
+                                bool inSuperComment = false,
+                                     inNestedComment = false;
+
                                 while ((next = ReaderRead()) != -1)
                                 {
                                     ch = (char)next;
 
                                     tokenString += ch;
-                                    if (!IsQuoted && ch == '{')
-                                        BracketLevel++;
-                                    if (!IsQuoted && ch == '}')
-                                        BracketLevel--;
+
+                                    // comments are treated as part of the string inside of tokenized string. curly braces inside the comments are ignored. WEIRD!
+                                    if (!inSuperComment && tokenString.EndsWith("/+")) inSuperComment = true;
+                                    else if (inSuperComment && tokenString.EndsWith("+/")) inSuperComment = false;
+                                    if (!inSuperComment)
+                                    {
+                                        if (!inNestedComment && tokenString.EndsWith("/*")) inNestedComment = true;
+                                        else if (inNestedComment && tokenString.EndsWith("*/")) inNestedComment = false;
+                                    }
+
+                                    if (!inNestedComment && !inSuperComment)
+                                    {
+                                        if (!IsQuoted && ch == '{')
+                                            BracketLevel++;
+                                        if (!IsQuoted && ch == '}')
+                                            BracketLevel--;
+                                    }
 
                                     if (tokenString.EndsWith(endDelim) && (IsQuoted || BracketLevel<1))
                                     {

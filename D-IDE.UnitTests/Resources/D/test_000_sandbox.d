@@ -2,5 +2,5 @@
 
 void main(string[] args)
 {
+	auto s = q{/*}*/ };
 }
-__EOF__
