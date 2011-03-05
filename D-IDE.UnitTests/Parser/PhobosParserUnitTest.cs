@@ -29,46 +29,25 @@ namespace D_IDE.UnitTests.Parser
         }
 
         [TestMethod]
-        public void ParseStdAlgorithm()
-        {
-            SimpleFileTest(phobosDir.FullName + @"\std\algorithm.d", null);
-        }
+        public void ParseStdAlgorithm() { SimpleFileTest(phobosDir.FullName + @"\std\algorithm.d", null); }
 
         [TestMethod]
-        public void ParseStdArray()
-        {
-            SimpleFileTest(phobosDir.FullName + @"\std\array.d", null);
-        }
+        public void ParseStdArray() { SimpleFileTest(phobosDir.FullName + @"\std\array.d", null); }
 
         [TestMethod]
-        public void ParseStdAtomics()
-        {
-            SimpleFileTest(phobosDir.FullName + @"\std\atomics.d", null);
-        }
+        public void ParseStdAtomics() { SimpleFileTest(phobosDir.FullName + @"\std\atomics.d", null); }
 
         [TestMethod]
-        public void ParseStdBase64()
-        {
-            SimpleFileTest(phobosDir.FullName + @"\std\base64.d", null);
-        }
+        public void ParseStdBase64() { SimpleFileTest(phobosDir.FullName + @"\std\base64.d", null); }
 
         [TestMethod]
-        public void ParseStdBigint()
-        {
-            SimpleFileTest(phobosDir.FullName + @"\std\bigint.d", null);
-        }
+        public void ParseStdBigint() { SimpleFileTest(phobosDir.FullName + @"\std\bigint.d", null); }
 
         [TestMethod]
-        public void ParseStdBind()
-        {
-            SimpleFileTest(phobosDir.FullName + @"\std\bind.d", null);
-        }
+        public void ParseStdBind() { SimpleFileTest(phobosDir.FullName + @"\std\bind.d", null); }
 
         [TestMethod]
-        public void ParseStdBitarray()
-        {
-            SimpleFileTest(phobosDir.FullName + @"\std\bitarray.d", null);
-        }
+        public void ParseStdBitarray() { SimpleFileTest(phobosDir.FullName + @"\std\bitarray.d", null); }
 
         [TestMethod]
         public void ParseStdBitmanip() { SimpleFileTest(phobosDir.FullName + @"\std\bitmanip.d", null); }
@@ -101,9 +80,7 @@ namespace D_IDE.UnitTests.Parser
         public void ParseStdCstream() { SimpleFileTest(phobosDir.FullName + @"\std\cstream.d", null); }
 
         [TestMethod]
-        public void ParseStdCtype()
-        {
-            SimpleFileTest(phobosDir.FullName + @"\std\ctype.d", null);
+        public void ParseStdCtype() { SimpleFileTest(phobosDir.FullName + @"\std\ctype.d", null);
 
             /*
     date.d

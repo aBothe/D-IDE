@@ -1323,14 +1323,17 @@ namespace D_Parser
 
                                 if (lexer.CurrentPeekToken.Kind == Identifier)
                                     Peek();
-                                
+
                                 if (lexer.CurrentPeekToken.Kind == (Not))
                                 {
                                     HadTemplateInst = true;
                                     Peek();
-                                    if (lexer.CurrentPeekToken.Kind == (OpenParenthesis))
-                                        OverPeekBrackets(OpenParenthesis);
-                                    else Peek();
+                                    if (lexer.CurrentPeekToken.Kind != (Is) && lexer.CurrentPeekToken.Kind != (In))
+                                    {
+                                        if (lexer.CurrentPeekToken.Kind == (OpenParenthesis))
+                                            OverPeekBrackets(OpenParenthesis);
+                                        else Peek();
+                                    }
                                 }
                             }
                             //if (!init && !HadTemplateInst) Peek();
