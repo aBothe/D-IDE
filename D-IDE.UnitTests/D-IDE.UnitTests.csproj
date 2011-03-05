@@ -45,6 +45,9 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Parser\BaseParserUnitTest.cs" />
+    <Compile Include="Parser\StdLibExternCParserUnitTest.cs" />
+    <Compile Include="Parser\PhobosParserUnitTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parser\ParserUnitTest1.cs" />
   </ItemGroup>
@@ -80,6 +83,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\D\test_004_operators.d" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\D\test_000_sandbox.d" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

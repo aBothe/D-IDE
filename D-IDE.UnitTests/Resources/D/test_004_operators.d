@@ -57,7 +57,4 @@ void main(string[] args)
 	auto u6 = *u5;
 	auto u7 = +12u;
 	auto u8 = ~12u;
-
-	while(c !is c && c is null)
-    { break;}
 }

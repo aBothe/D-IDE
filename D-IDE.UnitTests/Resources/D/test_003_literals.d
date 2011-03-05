@@ -19,7 +19,7 @@ heredoc string
 EOS";
 	auto s11 = q"(foo(xxx))";
 	auto s12 = q"/foo]/";
-	auto s13 = q{/*}*/ };
+	//auto s13 = q{/*}*/ };
 	auto s14 = q{ foo(q{hello}); };
 	auto s15 = q{ __TIME__ };
 	
