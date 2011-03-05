@@ -350,7 +350,7 @@ namespace D_Parser
 
         bool IsEOF
         {
-            get { return la == null || la.Kind == EOF; }
+            get { return la == null || la.Kind == EOF || la.Kind == __EOF__; }
         }
 
         DToken Step() { lexer.NextToken(); Peek(1); return t; }

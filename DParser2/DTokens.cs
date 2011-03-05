@@ -191,8 +191,9 @@ namespace D_Parser
         public const int TrustedAttribute = 172; // @trusted
         public const int __FILE__ = 173;
         public const int __LINE__ = 174;
+        public const int __EOF__ = 175;
 
-        public const int MaxToken = 175;
+        public const int MaxToken = 176;
         static BitArray NewSet(params int[] values)
         {
             BitArray bitArray = new BitArray(MaxToken);
@@ -216,6 +217,7 @@ namespace D_Parser
             {TrustedAttribute,            "@trusted"},
             {__LINE__,"__LINE__"},
             {__FILE__,"__FILE__"},
+            {__EOF__,"__EOF__"},
 
             {Abstract,"abstract"},
             {Alias,"alias"},
