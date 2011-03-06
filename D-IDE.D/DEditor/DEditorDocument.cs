@@ -58,7 +58,6 @@ namespace D_IDE.D
 		void Init()
 		{
 			// Register CodeCompletion events
-			Editor.TextArea.TextEntered += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntered);
 			Editor.TextArea.TextEntering += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntering);
 			Editor.Document.TextChanged += new EventHandler(Document_TextChanged);
 			Editor.TextArea.MouseRightButtonDown += new System.Windows.Input.MouseButtonEventHandler(TextArea_MouseRightButtonDown);
@@ -154,42 +153,45 @@ namespace D_IDE.D
 
 		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
-			if (e.Text.Length > 0 && completionWindow != null)
+			if (string.IsNullOrEmpty(e.Text)) return;
+
+			if (completionWindow != null)
 			{
 				// If entered key isn't part of the identifier anymore, close the completion window and insert the item text.
 				if (!DCodeCompletionSupport.Instance. IsIdentifierChar(e.Text[0]))
 					completionWindow.CompletionList.RequestInsertion(e);
 			}
-		}
 
-		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
-		{
-			/*
-			 * Note: Once we opened the completion list, it's not needed to care about a later refill of that list.
-			 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.
-			 * - So there's just an initial filling required.
-			 */
-
-			if (!DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || 
-				string.IsNullOrEmpty(e.Text))
-				return;
-			var ccs = DCodeCompletionSupport.Instance;
-
-			if (completionWindow!=null)
-				return;
-
-			completionWindow = new CompletionWindow(Editor.TextArea);
-			ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData,e.Text);
-
-			// If no data present, return
-			if (completionWindow.CompletionList.CompletionData.Count < 1)
+			// Note: Show completion window even before the first key has been processed by the editor!
+			else
 			{
-				completionWindow = null;
-				return;
-			}
+				if (!DCodeCompletionSupport.Instance.CanShowCompletionWindow(this))
+					return;
 
-			completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null; // After the window closed, reset it to null
-			completionWindow.Show();
+				/*
+				 * Note: Once we opened the completion list, it's not needed to care about a later refill of that list.
+				 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.
+				 * - So there's just an initial filling required.
+				 */
+
+				var ccs = DCodeCompletionSupport.Instance;
+
+				if (completionWindow != null)
+					return;
+
+				completionWindow = new CompletionWindow(Editor.TextArea);
+				ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData, e.Text);
+
+				// If no data present, return
+				if (completionWindow.CompletionList.CompletionData.Count < 1)
+				{
+					completionWindow = null;
+					return;
+				}
+
+				completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null; // After the window closed, reset it to null
+				completionWindow.Show();
+			}
 		}
 		#endregion
 
@@ -208,8 +210,7 @@ namespace D_IDE.D
 				var nloc=bem.EditorDocument.Editor.Document.GetLocation(bem.StartOffset);
 				bem.Error.Line = nloc.Line;
 				bem.Error.Column = nloc.Column;
-			}
-			//CoreManager.Instance.MainWindow.RefreshErrorList();			
+			}			
 		}
 
 		void Document_LineCountChanged(object sender, EventArgs e)

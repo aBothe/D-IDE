@@ -92,11 +92,15 @@ namespace D_Parser
 					SearchParent,
 					id, ImportCache);
 
-				if (EnableVariableTypeResolving && ret != null && ret.Length > 0)
+				if (EnableVariableTypeResolving && ret != null && ret.Length > 0 && (ret[0] is DVariable || ret[0] is DMethod))
 				{
-					var ret2=DCodeResolver.ResolveTypeDeclarations(SearchParent, GetDNodeType(ret[0]), ImportCache);
-					if (ret2 != null && ret2.Length > 0)
-						return ret2;
+					var ntype = GetDNodeType(ret[0]);
+					if (ntype != null)
+					{
+						var ret2 = DCodeResolver.ResolveTypeDeclarations(SearchParent, ntype, ImportCache);
+						if (ret2 != null && ret2.Length > 0)
+							return ret2;
+					}
 				}
 
 				return ret;
@@ -111,7 +115,7 @@ namespace D_Parser
 		/// <param name="ScopedBlock"></param>
 		/// <param name="ImportCache"></param>
 		/// <returns></returns>
-		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock, IEnumerable<IAbstractSyntaxTree> ImportCache)
+		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock, IEnumerable<IAbstractSyntaxTree> CodeCache)
 		{
 			/* First walk through the current scope.
 			 * Walk up the node hierarchy and add all their items (private as well as public members).
@@ -120,17 +124,43 @@ namespace D_Parser
 			 * Then add public members of the imported modules 
 			 */
 			var ret = new List<INode>();
+			var ImportCache = ResolveImports(ScopedBlock.NodeRoot as IAbstractSyntaxTree, CodeCache);
 
 			#region Current module/scope related members
 			var curScope = ScopedBlock;
 
 			while (curScope != null)
 			{
-				foreach (var n in curScope)
+				// Walk up inheritance hierarchy
+				if (curScope is DClassLike)
+				{
+					var curWatchedClass = curScope as DClassLike;
+					// MyClass > BaseA > BaseB > Object
+					while (curWatchedClass != null)
+					{
+						foreach (var m in curWatchedClass)
+						{
+							var dm2 = m as DNode;
+							if (dm2 == null)
+								continue;
+
+							// Add static and non-private members of all base classes
+							if (dm2.IsStatic || !dm2.ContainsAttribute(DTokens.Private))
+								ret.Add(m);
+						}
+
+						// Stop adding if Object class level got reached
+						if (curWatchedClass.Name.ToLower() == "object")
+							break;
+
+						curWatchedClass = ResolveBaseClass(curWatchedClass, ImportCache);
+					}
+				}
+				else foreach (var n in curScope)
 				{
 					//TODO: Skip on anonymous blocks like if-blocks or for-loops
 					//TODO: (More parser-related!) Add anonymous blocks (e.g. delegates) to the syntax tree
-
+					
 					ret.Add(n);
 					if (n is DNode)
 					{
@@ -141,32 +171,6 @@ namespace D_Parser
 
 						if (dn.TemplateParameters != null)
 							ret.AddRange(dn.TemplateParameters);
-
-						// Walk up inheritance hierarchy
-						if (n is DClassLike)
-						{
-							var curWatchedClass = n as DClassLike;
-							// MyClass > BaseA > BaseB > Object
-							while (curWatchedClass != null)
-							{
-								foreach (var m in curWatchedClass)
-								{
-									var dm2 = m as DNode;
-									if (dm2 == null)
-										continue;
-
-									// Add static and non-private members of all base classes
-									if (dm2.IsStatic || !dm2.ContainsAttribute(DTokens.Private))
-										ret.Add(m);
-								}
-
-								// Stop adding if Object class level got reached
-								if (curWatchedClass.Name.ToLower() == "object")
-									break;
-
-								curWatchedClass = ResolveBaseClass(curWatchedClass, ImportCache);
-							}
-						}
 					}
 				}
 
@@ -175,7 +179,23 @@ namespace D_Parser
 			#endregion
 
 			#region Global members
-			//TODO
+			// Add all non-private and non-package-only nodes
+			foreach (var mod in ImportCache)
+			{
+				if (mod.FileName == (ScopedBlock.NodeRoot as IAbstractSyntaxTree).FileName)
+					continue;
+
+				foreach (var i in mod)
+				{
+					var dn = i as DNode;
+					if (dn != null)
+					{
+						if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package))
+							ret.Add(dn);
+					}
+					else ret.Add(i);
+				}
+			}
 			#endregion
 
 			if (ret.Count < 1)
@@ -353,7 +373,7 @@ namespace D_Parser
 		/// <param name="cc"></param>
 		/// <param name="ActualModule"></param>
 		/// <returns></returns>
-		public static IEnumerable<IAbstractSyntaxTree> ResolveImports(IAbstractSyntaxTree ActualModule, params IAbstractSyntaxTree[] CodeCache)
+		public static IEnumerable<IAbstractSyntaxTree> ResolveImports(IAbstractSyntaxTree ActualModule, IEnumerable<IAbstractSyntaxTree> CodeCache)
 		{
 			var ret = new List<IAbstractSyntaxTree>();
 			if (CodeCache == null || ActualModule == null) return ret;
@@ -406,7 +426,7 @@ namespace D_Parser
 		}
 
 		public static void ResolveImports(List<IAbstractSyntaxTree> ImportModules,
-			IAbstractSyntaxTree ActualModule, params IAbstractSyntaxTree[] CodeCache)
+			IAbstractSyntaxTree ActualModule, IEnumerable< IAbstractSyntaxTree> CodeCache)
 		{
 			var localImps = new List<string>();
 			foreach (var kv in ActualModule.Imports)

@@ -21,7 +21,7 @@ namespace D_IDE.D
 
 		public bool CanShowCompletionWindow(DEditorDocument EditorDocument)
 		{
-			return true; // While cc isn't available, disable cc functionality
+			return !DCodeResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text, EditorDocument.Editor.CaretOffset);
 		}
 
 		public void BuildCompletionData(DEditorDocument EditorDocument, IList<ICSharpCode.AvalonEdit.CodeCompletion.ICompletionData> l, string EnteredText)
@@ -34,9 +34,8 @@ namespace D_IDE.D
 			if (curBlock == null)
 				return;
 
-			var importCache=ResolveImportedModules(EditorDocument);
-
 			IEnumerable<INode> listedItems = null;
+			var codeCache = EnumAvailableModules(EditorDocument);
 
 			// Usually shows variable members
 			if (EnteredText == ".")
@@ -47,9 +46,24 @@ namespace D_IDE.D
 			// Enum all nodes that can be accessed in the current scope
 			else if(string.IsNullOrEmpty(EnteredText) || IsIdentifierChar(EnteredText[0]))
 			{
-				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock, importCache);
+				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock, codeCache);
 
 				//TODO: Add D keywords including their descriptions
+
+				// Add module name stubs of importable modules
+				var nameStubs=new List<string>();
+				foreach (var mod in codeCache)
+				{
+					if (string.IsNullOrEmpty(mod.ModuleName))
+						continue;
+					var firstPart = mod.ModuleName.Split('.')[0];
+
+					if (!nameStubs.Contains(firstPart))
+						nameStubs.Add(firstPart);
+				}
+
+				foreach (var name in nameStubs)
+					l.Add(new NamespaceCompletionData(name));
 			}
 
 			// Add all found items to the referenced list
@@ -74,11 +88,13 @@ namespace D_IDE.D
 					offset, 
 					new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line),
 					true,
-					ResolveImportedModules(EditorDocument));
+					EnumAvailableModules(EditorDocument) // std.cstream.din.getc(); <<-- It's resolvable but not imported explictily! So also scan the global cache!
+					//DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument))
+					);
 
 				string tt = "";
 
-				//TODO: Build well-formatted tool tip string
+				//TODO: Build well-formatted tool tip string/ Do a better tool tip layout
 				if (types != null)
 					foreach (var n in types)
 						tt += (n.Type!=null?(n.Type.ToString() + " "):"") + n.Name + "\r\n";
@@ -94,13 +110,7 @@ namespace D_IDE.D
 			return key == '(' || key==',';
 		}
 
-		#region Import resolving helper
-		public IEnumerable<IAbstractSyntaxTree> ResolveImportedModules(DEditorDocument Editor)
-		{
-			var availableNodes = EnumAvailableModules(Editor).ToArray();
-			return DCodeResolver.ResolveImports(Editor.SyntaxTree, availableNodes);
-		}
-
+		#region Module enumeration helper
 		public IEnumerable<IAbstractSyntaxTree> EnumAvailableModules(DEditorDocument Editor)
 		{
 			return EnumAvailableModules(Editor.HasProject ? Editor.Project as DProject : null);
@@ -135,6 +145,46 @@ namespace D_IDE.D
 		#endregion
 	}
 
+	public class NamespaceCompletionData : ICompletionData
+	{
+		public string ModuleName{get;set;}
+
+		public NamespaceCompletionData(string ModuleName)
+		{
+			this.ModuleName=ModuleName;
+		}
+
+		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
+		{
+			textArea.Document.Replace(completionSegment, Text);
+		}
+
+		public object Content
+		{
+			get { return Text; }
+		}
+
+		public object Description
+		{
+			get { return null; }
+		}
+
+		public System.Windows.Media.ImageSource Image
+		{
+			get { return null; }
+		}
+
+		public double Priority
+		{
+			get { return 1; }
+		}
+
+		public string Text
+		{
+			get { return ModuleName; }
+		}
+	}
+
 	public class DCompletionData : ICompletionData
 	{
 		public DCompletionData(INode n)
@@ -156,11 +206,14 @@ namespace D_IDE.D
 
 		public object Description
 		{
-			get { return Node.Description; }
+			// If an empty description was given, do not show an empty decription tool tip
+			get { return string.IsNullOrEmpty(Node.Description)?null:Node.Description; }
+			//TODO: Make a more smarter tool tip
 		}
 
 		public System.Windows.Media.ImageSource Image
 		{
+			//TODO: Add node images
 			get { return null; }
 		}
 
