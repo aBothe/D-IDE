@@ -25,7 +25,16 @@ namespace D_Parser
 
 		#endregion
 
-		
+
+		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module, 
+			string Text, 
+			int CaretOffset, 
+			CodeLocation CaretLocation, bool EnableVariableTypeResolving, 
+			IEnumerable<IAbstractSyntaxTree> CodeCache)
+		{
+			ITypeDeclaration id = null;
+			return ResolveTypeDeclarations(Module,Text,CaretOffset,CaretLocation,EnableVariableTypeResolving,CodeCache,out id);
+		}
 
 		/// <summary>
 		/// 
@@ -36,13 +45,19 @@ namespace D_Parser
 		/// <param name="CaretLocation"
 		/// <param name="ImportCache"></param>
 		/// <returns></returns>
-		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module, string Text, int CaretOffset, CodeLocation CaretLocation, bool EnableVariableTypeResolving, IEnumerable<IAbstractSyntaxTree> ImportCache)
+		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module, 
+			string Text, 
+			int CaretOffset, 
+			CodeLocation CaretLocation, 
+			bool EnableVariableTypeResolving,
+			IEnumerable<IAbstractSyntaxTree> CodeCache,
+			out ITypeDeclaration optIdentifierList)
 		{
 			DToken tk = null;
-			var id = DCodeResolver.BuildIdentifierList(Text,
+			optIdentifierList = DCodeResolver.BuildIdentifierList(Text,
 				CaretOffset, /*true,*/ out tk);
 
-			if (id == null && tk==null)
+			if (optIdentifierList == null && tk==null)
 				return null;
 
 			IBlockNode SearchParent = null;
@@ -55,7 +70,7 @@ namespace D_Parser
 			if (tk != null)
 			{
 				if (tk.Kind == DTokens.Super) // super.baseProp
-					SearchParent = ResolveBaseClass(SearchParent as DClassLike, ImportCache);
+					SearchParent = ResolveBaseClass(SearchParent as DClassLike, CodeCache);
 				else if (tk.Kind == DTokens.__FILE__)
 				{
 					var n = new DVariable()
@@ -83,21 +98,21 @@ namespace D_Parser
 			}
 
 			// If no addtitional identifiers are given, return immediately
-			if (id == null || SearchParent==null)
+			if (optIdentifierList == null || SearchParent==null)
 				return new[]{ SearchParent};
 
 			try
 			{
 				var ret= DCodeResolver.ResolveTypeDeclarations(
 					SearchParent,
-					id, ImportCache);
+					optIdentifierList, CodeCache);
 
 				if (EnableVariableTypeResolving && ret != null && ret.Length > 0 && (ret[0] is DVariable || ret[0] is DMethod))
 				{
 					var ntype = GetDNodeType(ret[0]);
 					if (ntype != null)
 					{
-						var ret2 = DCodeResolver.ResolveTypeDeclarations(SearchParent, ntype, ImportCache);
+						var ret2 = DCodeResolver.ResolveTypeDeclarations(SearchParent, ntype, CodeCache);
 						if (ret2 != null && ret2.Length > 0)
 							return ret2;
 					}
@@ -222,6 +237,7 @@ namespace D_Parser
 			var bracketStack = new Stack<char>();
 			bool stopSeeking = false;
 
+			// Step backward
 			for (int i = CaretOffset; i >= 0 && !stopSeeking; i--)
 			{
 				IdentListStart = i;
@@ -316,6 +332,7 @@ namespace D_Parser
 
 				stopSeeking = true;
 			}
+
 			#endregion
 
 			#region 2: Init the parser

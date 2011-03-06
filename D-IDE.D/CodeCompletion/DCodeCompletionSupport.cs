@@ -40,6 +40,48 @@ namespace D_IDE.D
 			// Usually shows variable members
 			if (EnteredText == ".")
 			{
+				ITypeDeclaration id = null;
+				var accessedItems=DCodeResolver.ResolveTypeDeclarations(EditorDocument.SyntaxTree,
+					EditorDocument.Editor.Text.Substring(0,caretOffset-1),
+					caretOffset-2,
+					caretLocation,
+					false,
+					codeCache,
+					out id);
+
+				if (accessedItems == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
+					return;
+
+				/*
+				 * So, after getting the accessed variable or class or namespace it's needed either 
+				 * - to resolve its type and show all its public items
+				 * - or to show all public|static members of a class
+				 * - or to show all public members of a namespace
+				 * 
+				 * Note: When having entered a module name stub only (e.g. "std." or "core.") it's needed to show all packages that belong to that root namespace
+				 */
+				foreach (var n in accessedItems)
+				{
+					if (n is IAbstractSyntaxTree)
+					{
+						var idParts = (n as IAbstractSyntaxTree).ModuleName.Split('.');
+						int skippableParts = 0;
+
+						if (id is NormalDeclaration)
+							skippableParts = 1;
+						else if (id is IdentifierList)
+							skippableParts = (id as IdentifierList).Parts.Count;
+
+						if (skippableParts >= idParts.Length)
+						{
+
+						}
+						else l.Add(new NamespaceCompletionData(idParts[skippableParts]));
+
+					}
+				}
+				
+
 				//l.Add(new DCompletionData( new DVariable() { Name="myVar", Description="A description for myVar"}));
 			}
 
