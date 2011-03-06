@@ -540,7 +540,7 @@ namespace D_Parser
 				// Now search the entire block
 				var istr = il.ToString();
 
-				var mod = BlockNode.NodeRoot as DModule;
+				var mod = BlockNode is DModule?BlockNode as DModule: BlockNode.NodeRoot as DModule;
 				/* If the id list start with the name of BlockNode's root module, 
 				 * skip those identifiers first to proceed seeking the rest of the list
 				 */
