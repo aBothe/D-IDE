@@ -128,6 +128,7 @@ namespace D_IDE.D
 		{
 			var ret = new DProject(sln,FileName);
 			ret.ReloadProject();
+			ret.ParseDSources();
 			return ret;
 		}
 		#endregion

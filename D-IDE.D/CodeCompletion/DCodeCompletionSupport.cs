@@ -62,7 +62,55 @@ namespace D_IDE.D
 				 */
 				foreach (var n in accessedItems)
 				{
-					if (n is IAbstractSyntaxTree)
+					if (n is DVariable || n is DMethod)
+					{
+						var type = DCodeResolver.GetDNodeType(n);
+
+						if (type == null)
+							continue;
+
+						var declarationNodes = DCodeResolver.ResolveTypeDeclarations(EditorDocument.SyntaxTree, type, codeCache);
+
+						foreach (var declNode in declarationNodes)
+							if (declNode is IBlockNode)
+							{
+								var declClass = declNode as DClassLike;
+
+								if(declClass!=null) // If declaration type is a class-like type, also scan through all base classes
+									while (declClass != null)
+									{
+										foreach (var n2 in declClass)
+										{
+											var dn = n2 as DNode;
+											if (dn != null ? (dn.IsPublic || dn.IsStatic) : true)
+												l.Add(new DCompletionData(n2));
+										}
+										declClass = DCodeResolver.ResolveBaseClass(declClass, codeCache);
+									}
+								else // 
+									foreach (var n2 in declNode as IBlockNode)
+									{
+										var dn = n2 as DNode;
+										if (dn != null ? (dn.IsPublic || dn.IsStatic) : true)
+											l.Add(new DCompletionData(n2));
+									}
+							}
+					}
+					else if (n is DClassLike) // Add public static members of the class and including all base classes
+					{
+						var curClass = n as DClassLike;
+						while (curClass != null)
+						{
+							foreach (var i in curClass)
+							{
+								var dn = i as DNode;
+								if (dn != null ? (dn.IsStatic && dn.IsPublic) : true)
+									l.Add(new DCompletionData(i));
+							}
+							curClass = DCodeResolver.ResolveBaseClass(curClass, codeCache);
+						}
+					}
+					else if (n is IAbstractSyntaxTree)
 					{
 						var idParts = (n as IAbstractSyntaxTree).ModuleName.Split('.');
 						int skippableParts = 0;
@@ -74,15 +122,22 @@ namespace D_IDE.D
 
 						if (skippableParts >= idParts.Length)
 						{
-
+							// Add public items of a module
+							foreach (var i in n as IBlockNode)
+							{
+								var dn = i as DNode;
+								if (dn != null)
+								{
+									if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package))
+										l.Add(new DCompletionData(dn));
+								}
+							}
 						}
-						else l.Add(new NamespaceCompletionData(idParts[skippableParts]));
-
+						else // Add next part of the module name path
+							l.Add(new NamespaceCompletionData(idParts[skippableParts]));
 					}
 				}
 				
-
-				//l.Add(new DCompletionData( new DVariable() { Name="myVar", Description="A description for myVar"}));
 			}
 
 			// Enum all nodes that can be accessed in the current scope
@@ -90,7 +145,8 @@ namespace D_IDE.D
 			{
 				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock, codeCache);
 
-				//TODO: Add D keywords including their descriptions
+				foreach (var kv in DTokens.Keywords)
+					l.Add(new TokenCompletionData(kv.Key));
 
 				// Add module name stubs of importable modules
 				var nameStubs=new List<string>();
@@ -185,6 +241,46 @@ namespace D_IDE.D
 			return ret;
 		}
 		#endregion
+	}
+
+	public class TokenCompletionData : ICompletionData
+	{
+		public int Token { get; set; }
+
+		public TokenCompletionData(int Token)
+		{
+			this.Token = Token;
+		}
+
+		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
+		{
+			textArea.Document.Replace(completionSegment, Text);
+		}
+
+		public object Content
+		{
+			get { return Text; ; }
+		}
+
+		public object Description
+		{
+			get { return DTokens.GetDescription(Token); }
+		}
+
+		public System.Windows.Media.ImageSource Image
+		{
+			get { return null; }
+		}
+
+		public double Priority
+		{
+			get { return 1; }
+		}
+
+		public string Text
+		{
+			get { return DTokens.GetTokenString(Token); }
+		}
 	}
 
 	public class NamespaceCompletionData : ICompletionData

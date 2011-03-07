@@ -61,8 +61,15 @@ namespace D_IDE.D
 			{
 				if (DLanguageBinding.IsDSource(mod.FileName))
 				{
-					var ast = DParser.ParseFile(mod.AbsoluteFileName);
-					ParsedModules.Add(ast);
+					try
+					{
+						var ast = DParser.ParseFile(mod.AbsoluteFileName);
+						ParsedModules.Add(ast);
+					}
+					catch (Exception ex)
+					{
+						ErrorLogger.Log(ex);
+					}
 				}
 			}
 		}

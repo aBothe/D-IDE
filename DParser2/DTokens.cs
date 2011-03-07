@@ -671,7 +671,10 @@ namespace D_Parser
         "^^",
         "...",
 
-    "@trusted"
+    "@trusted",
+	"__FILE__",
+	"__LINE__",
+	"__EOF__"
 		};
         public static string GetTokenString(int token)
         {
