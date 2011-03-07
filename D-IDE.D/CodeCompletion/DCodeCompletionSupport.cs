@@ -7,6 +7,7 @@ using ICSharpCode.AvalonEdit.CodeCompletion;
 using Parser.Core;
 using D_Parser;
 using D_IDE.D.CodeCompletion;
+using System.Windows.Media.Imaging;
 
 namespace D_IDE.D
 {
@@ -250,6 +251,9 @@ namespace D_IDE.D
 		public TokenCompletionData(int Token)
 		{
 			this.Token = Token;
+			Text = DTokens.GetTokenString(Token);
+			Description = DTokens.GetDescription(Token);
+			//Image = new BitmapImage(new Uri("/D-IDE.D;component/Resources/cc/Icons.16x16.Keyword.png",UriKind.Relative));
 		}
 
 		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
@@ -264,12 +268,14 @@ namespace D_IDE.D
 
 		public object Description
 		{
-			get { return DTokens.GetDescription(Token); }
+			get;
+			private set;
 		}
 
 		public System.Windows.Media.ImageSource Image
 		{
-			get { return null; }
+			get;
+			private set;
 		}
 
 		public double Priority
@@ -279,7 +285,8 @@ namespace D_IDE.D
 
 		public string Text
 		{
-			get { return DTokens.GetTokenString(Token); }
+			get;
+			private set;
 		}
 	}
 
