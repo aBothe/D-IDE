@@ -8,12 +8,19 @@ using Parser.Core;
 using D_Parser;
 using D_IDE.D.CodeCompletion;
 using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.Windows;
 
 namespace D_IDE.D
 {
 	public class DCodeCompletionSupport
 	{
 		public static DCodeCompletionSupport Instance = new DCodeCompletionSupport();
+
+		public DCodeCompletionSupport()
+		{
+			InitImages();
+		}
 
 		public bool IsIdentifierChar(char key)
 		{
@@ -242,6 +249,38 @@ namespace D_IDE.D
 			return ret;
 		}
 		#endregion
+
+		#region Image helper
+		Dictionary<string, ImageSource> images = new Dictionary<string, ImageSource>();
+
+		BitmapSource ConvertWFToWPFBitmap(System.Drawing.Bitmap bmp)
+		{
+			return System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bmp.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+		}
+
+		void InitImages()
+		{
+			try
+			{
+				var bi = new BitmapImage();
+				
+				//DIcons.Icons_16x16_Keyword.
+				
+				images["keyword"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Keyword);
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex);
+			}
+		}
+
+		public ImageSource GetNodeImage(string key)
+		{
+			if (images.ContainsKey(key))
+				return images[key];
+			return null;
+		}
+		#endregion
 	}
 
 	public class TokenCompletionData : ICompletionData
@@ -253,7 +292,7 @@ namespace D_IDE.D
 			this.Token = Token;
 			Text = DTokens.GetTokenString(Token);
 			Description = DTokens.GetDescription(Token);
-			//Image = new BitmapImage(new Uri("/D-IDE.D;component/Resources/cc/Icons.16x16.Keyword.png",UriKind.Relative));
+			Image = DCodeCompletionSupport.Instance.GetNodeImage("keyword");
 		}
 
 		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)

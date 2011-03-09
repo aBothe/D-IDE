@@ -24,6 +24,7 @@ namespace D_Parser
         /// <param name="Other"></param>
         public void Assign(DModule Other)
         {
+			ParseErrors = Other.ParseErrors;
 			FileName = Other.FileName;
 			base.Assign(Other as IBlockNode);
         }

@@ -136,5 +136,264 @@ namespace D_IDE.D {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Class {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Class", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Delegate {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Delegate", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Enum {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Enum", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Field {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Field", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Interface {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Interface", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_InternalClass {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_InternalClass", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_InternalDelegate {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_InternalDelegate", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_InternalEnum {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_InternalEnum", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_InternalField {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_InternalField", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_InternalInterface {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_InternalInterface", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_InternalMethod {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_InternalMethod", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_InternalProperty {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_InternalProperty", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_InternalStruct {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_InternalStruct", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Keyword {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Keyword", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Local {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Local", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Method {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Method", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_NameSpace {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_NameSpace", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Parameter {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Parameter", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_PrivateClass {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_PrivateClass", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_PrivateDelegate {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_PrivateDelegate", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_PrivateEnum {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_PrivateEnum", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_PrivateEvent {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_PrivateEvent", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_PrivateField {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_PrivateField", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_PrivateInterface {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_PrivateInterface", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_PrivateMethod {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_PrivateMethod", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_PrivateProperty {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_PrivateProperty", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_PrivateStruct {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_PrivateStruct", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Property {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Property", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_ProtectedClass {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_ProtectedClass", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_ProtectedDelegate {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_ProtectedDelegate", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_ProtectedEnum {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_ProtectedEnum", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_ProtectedField {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_ProtectedField", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_ProtectedInterface {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_ProtectedInterface", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_ProtectedMethod {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_ProtectedMethod", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_ProtectedProperty {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_ProtectedProperty", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_ProtectedStruct {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_ProtectedStruct", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Icons_16x16_Struct {
+            get {
+                object obj = ResourceManager.GetObject("Icons_16x16_Struct", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

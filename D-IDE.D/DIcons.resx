@@ -151,4 +151,115 @@
   <data name="d_xshd" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>d.xshd;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Icons_16x16_Class" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.class.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Delegate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.delegate.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Enum" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.enum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Field" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.field.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Interface" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.interface.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_InternalClass" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.internalclass.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_InternalDelegate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.internaldelegate.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_InternalEnum" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.internalenum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_InternalField" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.internalfield.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_InternalInterface" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.internalinterface.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_InternalMethod" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.internalmethod.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_InternalProperty" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.internalproperty.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_InternalStruct" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.internalstruct.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Keyword" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.keyword.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Local" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.local.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Method" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.method.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_NameSpace" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.namespace.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Parameter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.parameter.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_PrivateClass" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.privateclass.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_PrivateDelegate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.privatedelegate.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_PrivateEnum" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.privateenum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_PrivateEvent" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.privateevent.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_PrivateField" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.privatefield.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_PrivateInterface" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.privateinterface.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_PrivateMethod" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.privatemethod.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_PrivateProperty" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.privateproperty.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_PrivateStruct" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.privatestruct.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Property" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.property.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_ProtectedClass" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.protectedclass.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_ProtectedDelegate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.protecteddelegate.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_ProtectedEnum" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.protectedenum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_ProtectedField" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.protectedfield.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_ProtectedInterface" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.protectedinterface.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_ProtectedMethod" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.protectedmethod.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_ProtectedProperty" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.protectedproperty.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_ProtectedStruct" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.protectedstruct.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icons_16x16_Struct" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.struct.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>
