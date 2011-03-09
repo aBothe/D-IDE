@@ -11,6 +11,7 @@ using ICSharpCode.AvalonEdit.CodeCompletion;
 using System.Windows.Controls;
 using D_Parser;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace D_IDE.D
 {
@@ -61,6 +62,7 @@ namespace D_IDE.D
 			Editor.TextArea.TextEntering += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntering);
 			Editor.TextArea.TextEntered += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntered);
 			Editor.Document.TextChanged += new EventHandler(Document_TextChanged);
+			Editor.TextArea.Caret.PositionChanged += new EventHandler(TextArea_SelectionChanged);
 			Editor.TextArea.MouseRightButtonDown += new System.Windows.Input.MouseButtonEventHandler(TextArea_MouseRightButtonDown);
 			Editor.MouseHover += new System.Windows.Input.MouseEventHandler(Editor_MouseHover);
 			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
@@ -149,6 +151,29 @@ namespace D_IDE.D
 			}
 		}
 
+		public CodeLocation CaretLocation
+		{
+			get { return new CodeLocation(Editor.TextArea.Caret.Column,Editor.TextArea.Caret.Line); }
+		}
+
+		IBlockNode lastSelectedBlock = null;
+		IEnumerable<ICompletionData> currentEnvCompletionData = null;
+		void TextArea_SelectionChanged(object sender, EventArgs e)
+		{
+			var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation);
+			if (curBlock != lastSelectedBlock)
+			{
+				currentEnvCompletionData = null;
+
+				// If different code blocks was selected, 
+				// update the list of items that are available in the current scope
+				var l=new List<ICompletionData>();
+				DCodeCompletionSupport.Instance.BuildCompletionData(this, l, null);
+				currentEnvCompletionData = l;
+			}
+			curBlock = lastSelectedBlock;
+		}
+
 		CompletionWindow completionWindow;
 		InsightWindow insightWindow;
 
@@ -169,7 +194,12 @@ namespace D_IDE.D
 				return;
 
 			completionWindow = new CompletionWindow(Editor.TextArea);
-			ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData, EnteredText);
+
+			if (string.IsNullOrEmpty(EnteredText))
+				foreach(var i in currentEnvCompletionData)
+					completionWindow.CompletionList.CompletionData.Add(i);
+			else
+				ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData, EnteredText);
 
 			// If no data present, return
 			if (completionWindow.CompletionList.CompletionData.Count < 1)
