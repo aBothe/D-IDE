@@ -68,6 +68,8 @@ namespace D_IDE
 					sln.AddProject(prj);
 					sln.Save();
 				}
+
+				Instance.UpdateGUI();
 				return prj;
 			}
 

@@ -214,7 +214,7 @@ namespace D_IDE.D
 
 		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
-			if (string.IsNullOrEmpty(e.Text)) return;
+			if (string.IsNullOrWhiteSpace(e.Text)) return;
 
 			if (completionWindow != null)
 			{
