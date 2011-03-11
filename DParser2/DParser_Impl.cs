@@ -240,8 +240,7 @@ namespace D_Parser
 
                 var dm = new DMethod();
                 dm.Name = "new";
-                var dn = dm as DNode;
-                ApplyAttributes(ref dn);
+                ApplyAttributes(dm);
 
                 dm.Parameters = Parameters();
                 var dbs = dm as IBlockNode;
@@ -449,8 +448,7 @@ namespace D_Parser
                 Step();
                 // _t is just a synthetic node
                 var _t = new DStatementBlock() as IBlockNode;
-                var dn = _t as DNode;
-                ApplyAttributes(ref dn);
+                ApplyAttributes(_t as DNode);
 
                 // AliasThis
                 if (la.Kind == Identifier && PK(This))
@@ -528,8 +526,7 @@ namespace D_Parser
             else
                 firstNode.Type.MostBasic = ttd;
 
-			var iN = firstNode as DNode;
-            ApplyAttributes(ref iN);
+            ApplyAttributes(firstNode as DNode);
 
             // Check for declaration constraints
             if (la.Kind == (If))
@@ -2753,6 +2750,7 @@ namespace D_Parser
             Step();
 
             IBlockNode ret = new DClassLike(t.Kind);
+			ApplyAttributes(ret as DNode);
 
             // Allow anonymous structs&unions
             if (la.Kind == Identifier)
@@ -2789,6 +2787,7 @@ namespace D_Parser
             Expect(Class);
 
             IBlockNode dc = new DClassLike(Class);
+			ApplyAttributes(dc as DNode);
             dc.StartLocation = t.Location;
 
             Expect(Identifier);
@@ -2921,8 +2920,7 @@ namespace D_Parser
             Expect(Interface);
             IBlockNode dc = new DClassLike();
             dc.StartLocation = t.Location;
-            DNode n = dc as DNode;
-            ApplyAttributes(ref n);
+            ApplyAttributes(dc as DNode);
 
             Expect(Identifier);
             dc.Name = t.Value;
@@ -2962,8 +2960,7 @@ namespace D_Parser
 
             DEnum mye = new DEnum();
             mye.StartLocation = t.Location;
-            DNode n = mye as DNode;
-            ApplyAttributes(ref n);
+            ApplyAttributes(mye);
 
             if (IsBasicType() && la.Kind != Identifier)
                 mye.Type = Type();
@@ -3133,8 +3130,7 @@ namespace D_Parser
         {
             Expect(Template);
             IBlockNode dc = new DClassLike(Template);
-            var n = dc as DNode;
-            ApplyAttributes(ref n);
+            ApplyAttributes(dc as DNode);
             dc.StartLocation = t.Location;
 
             Expect(Identifier);

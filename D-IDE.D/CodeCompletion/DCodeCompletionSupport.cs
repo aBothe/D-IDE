@@ -264,9 +264,28 @@ namespace D_IDE.D
 			{
 				var bi = new BitmapImage();
 				
-				//DIcons.Icons_16x16_Keyword.
-				
 				images["keyword"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Keyword);
+				images["namespace"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_NameSpace);
+
+				images["class"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Class);
+				images["class_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalClass);
+				images["class_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateClass);
+				images["class_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedClass);
+
+				images["struct"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Struct);
+				images["struct_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalStruct);
+				images["struct_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateStruct);
+				images["struct_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedStruct);
+				
+				images["interface"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Interface);
+				images["interface_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalInterface);
+				images["interface_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateInterface);
+				images["interface_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedInterface);
+
+				images["enum"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Enum);
+				images["enum_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalEnum);
+				images["enum_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateEnum);
+				images["enum_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedEnum);
 			}
 			catch (Exception ex)
 			{
@@ -355,7 +374,7 @@ namespace D_IDE.D
 
 		public System.Windows.Media.ImageSource Image
 		{
-			get { return null; }
+			get { return DCodeCompletionSupport.Instance.GetNodeImage("namespace"); }
 		}
 
 		public double Priority
@@ -397,8 +416,60 @@ namespace D_IDE.D
 
 		public System.Windows.Media.ImageSource Image
 		{
-			//TODO: Add node images
-			get { return null; }
+			get {
+
+				var n = Node as DNode;
+
+				if (n == null)
+					return null;
+
+				if (n is DClassLike)
+				{
+					switch ((n as DClassLike).ClassType)
+					{
+						case DTokens.Template:
+						case DTokens.Class:
+							if (n.ContainsAttribute(DTokens.Package))
+								return DCodeCompletionSupport.Instance.GetNodeImage("class_internal");
+							else if (n.ContainsAttribute(DTokens.Protected))
+								return DCodeCompletionSupport.Instance.GetNodeImage("class_protected");
+							else if (n.ContainsAttribute(DTokens.Private))
+								return DCodeCompletionSupport.Instance.GetNodeImage("class_private");
+							return DCodeCompletionSupport.Instance.GetNodeImage("class");
+
+						case DTokens.Union:
+						case DTokens.Struct:
+							if (n.ContainsAttribute(DTokens.Package))
+								return DCodeCompletionSupport.Instance.GetNodeImage("struct_internal");
+							else if (n.ContainsAttribute(DTokens.Protected))
+								return DCodeCompletionSupport.Instance.GetNodeImage("struct_protected");
+							else if (n.ContainsAttribute(DTokens.Private))
+								return DCodeCompletionSupport.Instance.GetNodeImage("struct_private");
+							return DCodeCompletionSupport.Instance.GetNodeImage("struct");
+
+						case DTokens.Interface:
+							if (n.ContainsAttribute(DTokens.Package))
+								return DCodeCompletionSupport.Instance.GetNodeImage("interface_internal");
+							else if (n.ContainsAttribute(DTokens.Protected))
+								return DCodeCompletionSupport.Instance.GetNodeImage("interface_protected");
+							else if (n.ContainsAttribute(DTokens.Private))
+								return DCodeCompletionSupport.Instance.GetNodeImage("interface_private");
+							return DCodeCompletionSupport.Instance.GetNodeImage("interface");
+					}
+				}
+				else if (n is DEnum)
+				{
+					if (n.ContainsAttribute(DTokens.Package))
+						return DCodeCompletionSupport.Instance.GetNodeImage("enum_internal");
+					else if (n.ContainsAttribute(DTokens.Protected))
+						return DCodeCompletionSupport.Instance.GetNodeImage("enum_protected");
+					else if (n.ContainsAttribute(DTokens.Private))
+						return DCodeCompletionSupport.Instance.GetNodeImage("enum_private");
+					return DCodeCompletionSupport.Instance.GetNodeImage("enum");
+				}
+
+				return null;
+			}
 		}
 
 		public double Priority

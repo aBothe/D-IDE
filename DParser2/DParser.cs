@@ -140,7 +140,7 @@ namespace D_Parser
         /// </summary>
         Stack<DAttribute> DeclarationAttributes=new Stack<DAttribute>();
 
-        void ApplyAttributes(ref DNode n)
+        void ApplyAttributes(DNode n)
         {
             foreach (var attr in BlockAttributes.ToArray())
                 n.Attributes.Add(attr);
