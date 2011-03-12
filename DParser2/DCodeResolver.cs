@@ -159,7 +159,10 @@ namespace D_Parser
 						foreach (var m in curWatchedClass)
 						{
 							var dm2 = m as DNode;
-							if (dm2 == null)
+							var dm3 = m as DMethod; // Only show normal & delegate methods
+							if (dm2 == null || 
+								(dm3!=null && !(dm3.SpecialType==DMethod.MethodType.Normal || dm3.SpecialType==DMethod.MethodType.Delegate))
+								)
 								continue;
 
 							// Add static and non-private members of all base classes
@@ -188,8 +191,14 @@ namespace D_Parser
 				}
 				else foreach (var n in curScope)
 						if (!(n is DStatementBlock))
+						{
+							var dm3 = n as DMethod; // Only show normal & delegate methods
+							if ((dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate)))
+								continue;
+
 							//TODO: (More parser-related!) Add anonymous blocks (e.g. delegates) to the syntax tree
 							ret.Add(n);
+						}
 
 				curScope = curScope.Parent as IBlockNode;
 			}

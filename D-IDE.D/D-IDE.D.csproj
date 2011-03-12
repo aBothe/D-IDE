@@ -176,6 +176,7 @@
     <EmbeddedResource Include="Resources\cc\Icons.16x16.ProtectedProperty.png" />
     <EmbeddedResource Include="Resources\cc\Icons.16x16.ProtectedStruct.png" />
     <EmbeddedResource Include="Resources\cc\Icons.16x16.Struct.png" />
+    <Content Include="Resources\cc\Icons.16x16.Literal.png" />
     <Content Include="Resources\cmd.png" />
     <Content Include="Resources\dfile16.png" />
     <Content Include="Resources\dfile32.png" />

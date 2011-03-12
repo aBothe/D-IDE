@@ -298,6 +298,13 @@ namespace D_IDE.D
 				images["field_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalField);
 				images["field_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateField);
 				images["field_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedField);
+
+				images["property"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Property);
+				images["property_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalProperty);
+				images["property_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateProperty);
+				images["property_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedProperty);
+
+				images["literal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Literal);
 			}
 			catch (Exception ex)
 			{
@@ -497,8 +504,13 @@ namespace D_IDE.D
 							return DCodeCompletionSupport.Instance.GetNodeImage("method_private");
 						return DCodeCompletionSupport.Instance.GetNodeImage("method");
 					}
+					else if (n is DEnumValue)
+						return DCodeCompletionSupport.Instance.GetNodeImage("literal");
 					else if (n is DVariable)
 					{
+						if (n.ContainsAttribute(DTokens.Const))
+							return DCodeCompletionSupport.Instance.GetNodeImage("literal");
+
 						var realParent = n.Parent as DBlockStatement;
 						while (realParent is DStatementBlock)
 							realParent = realParent.Parent as DBlockStatement;
@@ -527,7 +539,6 @@ namespace D_IDE.D
 						if (realParent.TemplateParameters != null && realParent.TemplateParameters.Contains(n))
 							return DCodeCompletionSupport.Instance.GetNodeImage("parameter");
 					}
-
 				}
 				catch (Exception ex) { ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Parser); }
 				return null;

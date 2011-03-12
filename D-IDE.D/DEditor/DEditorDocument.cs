@@ -179,37 +179,41 @@ namespace D_IDE.D
 
 		void ShowCodeCompletionWindow(string EnteredText)
 		{
-			if (!DCodeCompletionSupport.Instance.CanShowCompletionWindow(this))
-				return;
-
-			/*
-			 * Note: Once we opened the completion list, it's not needed to care about a later refill of that list.
-			 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.
-			 * - So there's just an initial filling required.
-			 */
-
-			var ccs = DCodeCompletionSupport.Instance;
-
-			if (completionWindow != null)
-				return;
-
-			completionWindow = new CompletionWindow(Editor.TextArea);
-
-			if (string.IsNullOrEmpty(EnteredText))
-				foreach(var i in currentEnvCompletionData)
-					completionWindow.CompletionList.CompletionData.Add(i);
-			else
-				ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData, EnteredText);
-
-			// If no data present, return
-			if (completionWindow.CompletionList.CompletionData.Count < 1)
+			try
 			{
-				completionWindow = null;
-				return;
-			}
+				if (!DCodeCompletionSupport.Instance.CanShowCompletionWindow(this))
+					return;
 
-			completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null; // After the window closed, reset it to null
-			completionWindow.Show();
+				/*
+				 * Note: Once we opened the completion list, it's not needed to care about a later refill of that list.
+				 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.
+				 * - So there's just an initial filling required.
+				 */
+
+				var ccs = DCodeCompletionSupport.Instance;
+
+				if (completionWindow != null)
+					return;
+
+				completionWindow = new CompletionWindow(Editor.TextArea);
+
+				if (string.IsNullOrEmpty(EnteredText))
+					foreach (var i in currentEnvCompletionData)
+						completionWindow.CompletionList.CompletionData.Add(i);
+				else
+					ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData, EnteredText);
+
+				// If no data present, return
+				if (completionWindow.CompletionList.CompletionData.Count < 1)
+				{
+					completionWindow = null;
+					return;
+				}
+
+				completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null; // After the window closed, reset it to null
+				completionWindow.Show();
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
 
 		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)

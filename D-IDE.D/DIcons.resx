@@ -262,4 +262,7 @@
   <data name="Icons_16x16_Struct" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>resources\cc\icons.16x16.struct.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Icons_16x16_Literal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\cc\icons.16x16.literal.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>
