@@ -138,9 +138,9 @@ namespace D_Parser
             else if (la.Kind == (Unittest))
             {
                 Step();
-                var dbs = new DMethod(DMethod.MethodType.Unittest) as IBlockNode;
+                var dbs = new DMethod(DMethod.MethodType.Unittest);
                 dbs.StartLocation = t.Location;
-                FunctionBody(ref dbs);
+                FunctionBody(dbs);
                 dbs.EndLocation = t.EndLocation;
                 module.Add(dbs);
             }
@@ -242,9 +242,8 @@ namespace D_Parser
                 dm.Name = "new";
                 ApplyAttributes(dm);
 
-                dm.Parameters = Parameters();
-                var dbs = dm as IBlockNode;
-                FunctionBody(ref dbs);
+                dm.Parameters = Parameters(dm);
+                FunctionBody(dm);
 
             }
 
@@ -568,8 +567,7 @@ namespace D_Parser
             // BasicType Declarator FunctionBody
             else if (firstNode is IBlockNode)
             {
-                var _block = firstNode as IBlockNode; 
-                FunctionBody(ref _block);
+                FunctionBody(firstNode as IBlockNode);
                 
                 par.Add(firstNode);
             }
@@ -691,7 +689,7 @@ namespace D_Parser
                 var dd = new DelegateDeclaration();
                 dd.IsFunction = t.Kind == Function;
 
-                dd.Parameters = Parameters();
+                dd.Parameters = Parameters(null);
                 td = dd;
                 //TODO: add attributes to declaration
                 while (FunctionAttribute[la.Kind])
@@ -811,6 +809,8 @@ namespace D_Parser
                     var dm = new DMethod();
                     dm.Assign(ret);
                     dm.Parameters = _Parameters;
+					foreach (var pp in dm.Parameters)
+						pp.Parent = dm;
                     ret = dm;
                 }
             }
@@ -859,7 +859,7 @@ namespace D_Parser
                 {
                     TemplateParameters = TemplateParameterList();
                 }
-                _Parameters = Parameters();
+                _Parameters = Parameters(null);
 
                 //TODO: MemberFunctionAttributes -- add them to the declaration
                 while (StorageClass[la.Kind] || Attributes[la.Kind])
@@ -995,7 +995,7 @@ namespace D_Parser
         /// <summary>
         /// Parse parameters
         /// </summary>
-        List<INode> Parameters()
+        List<INode> Parameters(IBlockNode Parent)
         {
             var ret = new List<INode>();
             Expect(OpenParenthesis);
@@ -1015,7 +1015,9 @@ namespace D_Parser
                 Step();
                 if (la.Kind == TripleDot)
                     break;
-                ret.Add(Parameter());
+				var p = Parameter();
+				p.Parent = p;
+                ret.Add(p);
             }
 
             /*
@@ -1035,6 +1037,7 @@ namespace D_Parser
                 else
                 {
                     var dv = new DVariable();
+					dv.Parent = Parent;
                     dv.Type = new VarArgDecl();
                     ret.Add(dv);
                 }
@@ -1234,7 +1237,7 @@ namespace D_Parser
 
         bool IsAttributeSpecifier()
         {
-            return (la.Kind==(Extern) || la.Kind==(Export) || la.Kind==(Align) || la.Kind==(Pragma) || la.Kind==(Deprecated) || IsProtectionAttribute()
+            return (la.Kind==(Extern) || la.Kind==(Export) || la.Kind==(Align) || la.Kind==Pragma || la.Kind==(Deprecated) || IsProtectionAttribute()
                 || la.Kind==(Static) || la.Kind==(Final) || la.Kind==(Override) || la.Kind==(Abstract) || la.Kind==(Scope) || la.Kind==(__gshared)
                 || ((la.Kind==(Auto) || MemberFunctionAttribute[la.Kind]) && (lexer.CurrentPeekToken.Kind!=(OpenParenthesis) && lexer.CurrentPeekToken.Kind!=(Identifier)))
                 || Attributes[la.Kind]);
@@ -1726,7 +1729,7 @@ namespace D_Parser
                     Step();
                     var de = new FunctionLiteral(t.Kind);
                     de.Base = retEx;
-                    de.AnonymousMethod.Parameters = Parameters();
+                    de.AnonymousMethod.Parameters = Parameters(de.AnonymousMethod);
                     retEx = de;
                 }
 
@@ -1939,10 +1942,9 @@ namespace D_Parser
                         fl.AnonymousMethod.Type = Type();
 
                     if (la.Kind == OpenParenthesis)
-                        fl.AnonymousMethod.Parameters = Parameters();
+                        fl.AnonymousMethod.Parameters = Parameters(fl.AnonymousMethod);
                 }
-                var dbs = fl.AnonymousMethod as IBlockNode;
-                FunctionBody(ref dbs);
+                FunctionBody(fl.AnonymousMethod);
                 return fl;
             }
             #endregion
@@ -2868,7 +2870,7 @@ namespace D_Parser
                 if (IsTemplateParameterList())
                     dm.TemplateParameters = TemplateParameterList();
 
-                dm.Parameters = Parameters();
+                dm.Parameters = Parameters(dm);
             }
 
             // handle post argument attributes
@@ -2886,8 +2888,7 @@ namespace D_Parser
                 AttributeSpecifier();
             }
 
-            var dm_ = dm as IBlockNode;
-            FunctionBody(ref dm_);
+            FunctionBody(dm);
             return dm;
         }
 
@@ -2903,13 +2904,12 @@ namespace D_Parser
             if (IsTemplateParameterList())
                 dm.TemplateParameters = TemplateParameterList();
 
-            dm.Parameters = Parameters();
+            dm.Parameters = Parameters(dm);
 
             if (la.Kind==(If))
                 Constraint();
 
-            var dm_ = dm as IBlockNode;
-            FunctionBody(ref dm_);
+            FunctionBody(dm);
             return dm;
         }
         #endregion
@@ -3072,7 +3072,7 @@ namespace D_Parser
         #endregion
 
         #region Functions
-        void FunctionBody(ref IBlockNode par)
+        void FunctionBody(IBlockNode par)
         {
             bool HadIn = false, HadOut = false;
 

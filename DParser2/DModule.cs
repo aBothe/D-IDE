@@ -164,6 +164,11 @@ namespace D_Parser
 				AddRange(other as IBlockNode);
 			}
 
+			if (other is IAbstractSyntaxTree)
+			{ 
+				
+			}
+
 			base.Assign(other);
 		}
 	}

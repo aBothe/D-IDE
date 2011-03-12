@@ -280,11 +280,13 @@ namespace D_IDE.Core
 		/// <summary>
 		/// Message that comes from the debugger
 		/// </summary>
-		Debug,
+		Debug=2,
 		/// <summary>
 		/// Redirected program output
 		/// </summary>
-		Program
+		Program=3,
+
+		Parser=4,
 	}
 
 	/// <summary>

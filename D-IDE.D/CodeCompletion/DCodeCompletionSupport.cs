@@ -145,7 +145,6 @@ namespace D_IDE.D
 							l.Add(new NamespaceCompletionData(idParts[skippableParts]));
 					}
 				}
-				
 			}
 
 			// Enum all nodes that can be accessed in the current scope
@@ -286,6 +285,19 @@ namespace D_IDE.D
 				images["enum_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalEnum);
 				images["enum_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateEnum);
 				images["enum_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedEnum);
+
+				images["method"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Method);
+				images["method_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalMethod);
+				images["method_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateMethod);
+				images["method_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedMethod);
+
+				images["parameter"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Parameter);
+				images["local"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Local);
+
+				images["field"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Field);
+				images["field_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalField);
+				images["field_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateField);
+				images["field_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedField);
 			}
 			catch (Exception ex)
 			{
@@ -410,64 +422,114 @@ namespace D_IDE.D
 		public object Description
 		{
 			// If an empty description was given, do not show an empty decription tool tip
-			get { return string.IsNullOrEmpty(Node.Description)?null:Node.Description; }
+			get {
+				try
+				{
+					return Node.ToString();
+				}
+				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
+				return null;
+			}
 			//TODO: Make a more smarter tool tip
 		}
 
 		public System.Windows.Media.ImageSource Image
 		{
 			get {
-
-				var n = Node as DNode;
-
-				if (n == null)
-					return null;
-
-				if (n is DClassLike)
+				try
 				{
-					switch ((n as DClassLike).ClassType)
+					var n = Node as DNode;
+
+					if (n == null)
+						return null;
+
+					if (n is DClassLike)
 					{
-						case DTokens.Template:
-						case DTokens.Class:
-							if (n.ContainsAttribute(DTokens.Package))
-								return DCodeCompletionSupport.Instance.GetNodeImage("class_internal");
-							else if (n.ContainsAttribute(DTokens.Protected))
-								return DCodeCompletionSupport.Instance.GetNodeImage("class_protected");
-							else if (n.ContainsAttribute(DTokens.Private))
-								return DCodeCompletionSupport.Instance.GetNodeImage("class_private");
-							return DCodeCompletionSupport.Instance.GetNodeImage("class");
+						switch ((n as DClassLike).ClassType)
+						{
+							case DTokens.Template:
+							case DTokens.Class:
+								if (n.ContainsAttribute(DTokens.Package))
+									return DCodeCompletionSupport.Instance.GetNodeImage("class_internal");
+								else if (n.ContainsAttribute(DTokens.Protected))
+									return DCodeCompletionSupport.Instance.GetNodeImage("class_protected");
+								else if (n.ContainsAttribute(DTokens.Private))
+									return DCodeCompletionSupport.Instance.GetNodeImage("class_private");
+								return DCodeCompletionSupport.Instance.GetNodeImage("class");
 
-						case DTokens.Union:
-						case DTokens.Struct:
-							if (n.ContainsAttribute(DTokens.Package))
-								return DCodeCompletionSupport.Instance.GetNodeImage("struct_internal");
-							else if (n.ContainsAttribute(DTokens.Protected))
-								return DCodeCompletionSupport.Instance.GetNodeImage("struct_protected");
-							else if (n.ContainsAttribute(DTokens.Private))
-								return DCodeCompletionSupport.Instance.GetNodeImage("struct_private");
-							return DCodeCompletionSupport.Instance.GetNodeImage("struct");
+							case DTokens.Union:
+							case DTokens.Struct:
+								if (n.ContainsAttribute(DTokens.Package))
+									return DCodeCompletionSupport.Instance.GetNodeImage("struct_internal");
+								else if (n.ContainsAttribute(DTokens.Protected))
+									return DCodeCompletionSupport.Instance.GetNodeImage("struct_protected");
+								else if (n.ContainsAttribute(DTokens.Private))
+									return DCodeCompletionSupport.Instance.GetNodeImage("struct_private");
+								return DCodeCompletionSupport.Instance.GetNodeImage("struct");
 
-						case DTokens.Interface:
-							if (n.ContainsAttribute(DTokens.Package))
-								return DCodeCompletionSupport.Instance.GetNodeImage("interface_internal");
-							else if (n.ContainsAttribute(DTokens.Protected))
-								return DCodeCompletionSupport.Instance.GetNodeImage("interface_protected");
-							else if (n.ContainsAttribute(DTokens.Private))
-								return DCodeCompletionSupport.Instance.GetNodeImage("interface_private");
-							return DCodeCompletionSupport.Instance.GetNodeImage("interface");
+							case DTokens.Interface:
+								if (n.ContainsAttribute(DTokens.Package))
+									return DCodeCompletionSupport.Instance.GetNodeImage("interface_internal");
+								else if (n.ContainsAttribute(DTokens.Protected))
+									return DCodeCompletionSupport.Instance.GetNodeImage("interface_protected");
+								else if (n.ContainsAttribute(DTokens.Private))
+									return DCodeCompletionSupport.Instance.GetNodeImage("interface_private");
+								return DCodeCompletionSupport.Instance.GetNodeImage("interface");
+						}
 					}
-				}
-				else if (n is DEnum)
-				{
-					if (n.ContainsAttribute(DTokens.Package))
-						return DCodeCompletionSupport.Instance.GetNodeImage("enum_internal");
-					else if (n.ContainsAttribute(DTokens.Protected))
-						return DCodeCompletionSupport.Instance.GetNodeImage("enum_protected");
-					else if (n.ContainsAttribute(DTokens.Private))
-						return DCodeCompletionSupport.Instance.GetNodeImage("enum_private");
-					return DCodeCompletionSupport.Instance.GetNodeImage("enum");
-				}
+					else if (n is DEnum)
+					{
+						if (n.ContainsAttribute(DTokens.Package))
+							return DCodeCompletionSupport.Instance.GetNodeImage("enum_internal");
+						else if (n.ContainsAttribute(DTokens.Protected))
+							return DCodeCompletionSupport.Instance.GetNodeImage("enum_protected");
+						else if (n.ContainsAttribute(DTokens.Private))
+							return DCodeCompletionSupport.Instance.GetNodeImage("enum_private");
+						return DCodeCompletionSupport.Instance.GetNodeImage("enum");
+					}
+					else if (n is DMethod)
+					{
+						if (n.ContainsAttribute(DTokens.Package))
+							return DCodeCompletionSupport.Instance.GetNodeImage("method_internal");
+						else if (n.ContainsAttribute(DTokens.Protected))
+							return DCodeCompletionSupport.Instance.GetNodeImage("method_protected");
+						else if (n.ContainsAttribute(DTokens.Private))
+							return DCodeCompletionSupport.Instance.GetNodeImage("method_private");
+						return DCodeCompletionSupport.Instance.GetNodeImage("method");
+					}
+					else if (n is DVariable)
+					{
+						var realParent = n.Parent as DBlockStatement;
+						while (realParent is DStatementBlock)
+							realParent = realParent.Parent as DBlockStatement;
 
+						if (realParent == null)
+							return null;
+
+						if (realParent is DClassLike)
+						{
+							if (n.ContainsAttribute(DTokens.Package))
+								return DCodeCompletionSupport.Instance.GetNodeImage("field_internal");
+							else if (n.ContainsAttribute(DTokens.Protected))
+								return DCodeCompletionSupport.Instance.GetNodeImage("field_protected");
+							else if (n.ContainsAttribute(DTokens.Private))
+								return DCodeCompletionSupport.Instance.GetNodeImage("field_private");
+							return DCodeCompletionSupport.Instance.GetNodeImage("field");
+						}
+
+						if (realParent is DMethod)
+						{
+							if ((realParent as DMethod).Parameters.Contains(n))
+								return DCodeCompletionSupport.Instance.GetNodeImage("parameter");
+							return DCodeCompletionSupport.Instance.GetNodeImage("local");
+						}
+
+						if (realParent.TemplateParameters != null && realParent.TemplateParameters.Contains(n))
+							return DCodeCompletionSupport.Instance.GetNodeImage("parameter");
+					}
+
+				}
+				catch (Exception ex) { ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Parser); }
 				return null;
 			}
 		}

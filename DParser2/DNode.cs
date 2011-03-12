@@ -27,6 +27,9 @@ namespace D_Parser
 			if (other is DNode)
 			{
 				TemplateParameters = (other as DNode).TemplateParameters;
+				if(TemplateParameters!=null)
+				foreach (var tp in TemplateParameters)
+					tp.Parent = this;
 				Attributes = (other as DNode).Attributes;
 			}
 			base.Assign(other);

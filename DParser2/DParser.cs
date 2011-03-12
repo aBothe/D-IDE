@@ -112,12 +112,14 @@ namespace D_Parser
         public static void UpdateModule(IAbstractSyntaxTree Module)
         {
             var m = DParser.ParseFile(Module.FileName);
+			Module.ParseErrors = m.ParseErrors;
             Module.Assign(m);
         }
 
         public static void UpdateModuleFromText(IAbstractSyntaxTree Module, string Code)
         {
             var m = DParser.ParseString(Code);
+			Module.ParseErrors = m.ParseErrors;
             Module.Assign(m);
         }
 

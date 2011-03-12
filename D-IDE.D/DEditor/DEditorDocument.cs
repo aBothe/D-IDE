@@ -214,7 +214,8 @@ namespace D_IDE.D
 
 		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
-			if (string.IsNullOrWhiteSpace(e.Text)) return;
+			// Return also if there are parser errors - just to prevent crashes
+			if (string.IsNullOrWhiteSpace(e.Text) || (SyntaxTree!=null && SyntaxTree.ParseErrors!=null && SyntaxTree.ParseErrors.Count()>0)) return;
 
 			if (completionWindow != null)
 			{

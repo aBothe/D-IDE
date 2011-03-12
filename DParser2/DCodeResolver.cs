@@ -153,6 +153,9 @@ namespace D_Parser
 					// MyClass > BaseA > BaseB > Object
 					while (curWatchedClass != null)
 					{
+						if (curWatchedClass.TemplateParameters != null)
+							ret.AddRange(curWatchedClass.TemplateParameters);
+
 						foreach (var m in curWatchedClass)
 						{
 							var dm2 = m as DNode;
@@ -171,23 +174,22 @@ namespace D_Parser
 						curWatchedClass = ResolveBaseClass(curWatchedClass, ImportCache);
 					}
 				}
-				else foreach (var n in curScope)
+				else if (curScope is DMethod)
 				{
-					//TODO: Skip on anonymous blocks like if-blocks or for-loops
-					//TODO: (More parser-related!) Add anonymous blocks (e.g. delegates) to the syntax tree
-					
-					ret.Add(n);
-					if (n is DNode)
-					{
-						var dn = n as DNode;
-						// Add function params as well as DNode-specific template params
-						if (n is DMethod)
-							ret.AddRange((n as DMethod).Parameters);
+					var dm = curScope as DMethod;
+					ret.AddRange(dm.Parameters);
 
-						if (dn.TemplateParameters != null)
-							ret.AddRange(dn.TemplateParameters);
-					}
+					if (dm.TemplateParameters != null)
+						ret.AddRange(dm.TemplateParameters);
+
+					foreach (var n in dm)
+						if (!(n is DStatementBlock))
+							ret.Add(n);
 				}
+				else foreach (var n in curScope)
+						if (!(n is DStatementBlock))
+							//TODO: (More parser-related!) Add anonymous blocks (e.g. delegates) to the syntax tree
+							ret.Add(n);
 
 				curScope = curScope.Parent as IBlockNode;
 			}
