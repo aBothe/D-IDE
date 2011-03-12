@@ -304,6 +304,11 @@ namespace D_IDE.D
 				images["property_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateProperty);
 				images["property_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedProperty);
 
+				images["delegate"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Delegate);
+				images["delegate_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalDelegate);
+				images["delegate_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateDelegate);
+				images["delegate_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedDelegate);
+
 				images["literal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Literal);
 			}
 			catch (Exception ex)
@@ -496,6 +501,29 @@ namespace D_IDE.D
 					}
 					else if (n is DMethod)
 					{
+						if ((n as DMethod).SpecialType == DMethod.MethodType.Delegate)
+						{
+							if (n.ContainsAttribute(DTokens.Package))
+								return DCodeCompletionSupport.Instance.GetNodeImage("delegate_internal");
+							else if (n.ContainsAttribute(DTokens.Protected))
+								return DCodeCompletionSupport.Instance.GetNodeImage("delegate_protected");
+							else if (n.ContainsAttribute(DTokens.Private))
+								return DCodeCompletionSupport.Instance.GetNodeImage("delegate_private");
+							return DCodeCompletionSupport.Instance.GetNodeImage("delegate");
+						}
+
+						//TODO: Getter or setter functions should be declared as a >single< property only
+						if (n.ContainsAttribute(DTokens.PropertyAttribute))
+						{
+							if (n.ContainsAttribute(DTokens.Package))
+								return DCodeCompletionSupport.Instance.GetNodeImage("property_internal");
+							else if (n.ContainsAttribute(DTokens.Protected))
+								return DCodeCompletionSupport.Instance.GetNodeImage("property_protected");
+							else if (n.ContainsAttribute(DTokens.Private))
+								return DCodeCompletionSupport.Instance.GetNodeImage("property_private");
+							return DCodeCompletionSupport.Instance.GetNodeImage("property");
+						}
+
 						if (n.ContainsAttribute(DTokens.Package))
 							return DCodeCompletionSupport.Instance.GetNodeImage("method_internal");
 						else if (n.ContainsAttribute(DTokens.Protected))
@@ -520,6 +548,8 @@ namespace D_IDE.D
 
 						if (realParent is DClassLike)
 						{
+							
+
 							if (n.ContainsAttribute(DTokens.Package))
 								return DCodeCompletionSupport.Instance.GetNodeImage("field_internal");
 							else if (n.ContainsAttribute(DTokens.Protected))
