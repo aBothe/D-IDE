@@ -202,7 +202,7 @@ namespace D_IDE.D
 				//TODO: Build well-formatted tool tip string/ Do a better tool tip layout
 				if (types != null)
 					foreach (var n in types)
-						tt += (n.Type!=null?(n.Type.ToString() + " "):"") + n.Name + "\r\n";
+						tt += n.ToString() + "\r\n";
 
 				tt = tt.Trim();
 				if(!string.IsNullOrEmpty(tt))
