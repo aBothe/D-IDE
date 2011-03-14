@@ -72,6 +72,7 @@ namespace D_IDE.D
 			// The second for the type's members
 
 			Parse();
+
 		}
 
 		bool KeysTyped = false;
@@ -118,7 +119,10 @@ namespace D_IDE.D
 		public string ProposedModuleName
 		{
 			get {
-				return Path.ChangeExtension(RelativeFilePath,null).Replace('\\','.');
+				if (HasProject)
+					return Path.ChangeExtension(RelativeFilePath, null).Replace('\\', '.');
+				else 
+					return Path.GetFileNameWithoutExtension(FileName);
 			}
 		}
 
@@ -136,6 +140,8 @@ namespace D_IDE.D
 						SyntaxTree =DParser.ParseString(Editor.Text);
 					SyntaxTree.FileName = AbsoluteFilePath;
 					SyntaxTree.ModuleName = ProposedModuleName;
+
+					UpdateBlockCompletionData();
 				}catch(Exception ex){ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.System);}
 				CoreManager.ErrorManagement.RefreshErrorList();
 			}));
@@ -158,7 +164,8 @@ namespace D_IDE.D
 
 		IBlockNode lastSelectedBlock = null;
 		IEnumerable<ICompletionData> currentEnvCompletionData = null;
-		void TextArea_SelectionChanged(object sender, EventArgs e)
+
+		public void UpdateBlockCompletionData()
 		{
 			var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation);
 			if (curBlock != lastSelectedBlock)
@@ -167,11 +174,16 @@ namespace D_IDE.D
 
 				// If different code blocks was selected, 
 				// update the list of items that are available in the current scope
-				var l=new List<ICompletionData>();
+				var l = new List<ICompletionData>();
 				DCodeCompletionSupport.Instance.BuildCompletionData(this, l, null);
 				currentEnvCompletionData = l;
 			}
 			curBlock = lastSelectedBlock;
+		}
+
+		void TextArea_SelectionChanged(object sender, EventArgs e)
+		{
+			UpdateBlockCompletionData();
 		}
 
 		CompletionWindow completionWindow;
