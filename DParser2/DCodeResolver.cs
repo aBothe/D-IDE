@@ -616,6 +616,8 @@ namespace D_Parser
 			while (td != null && !(td is NormalDeclaration))
 				td = td.Base;
 
+			var baseTypes = new List<INode>();
+
 			if (td is NormalDeclaration)
 			{
 				var nameIdent = td as NormalDeclaration;
@@ -628,7 +630,7 @@ namespace D_Parser
 					foreach (var ch in currentParent)
 					{
 						if (nameIdent.Name == ch.Name && !ret.Contains(ch) && MatchesFilter(Filter, ch))
-							ret.Add(ch);
+							baseTypes.Add(ch);
 					}
 
 					// If our current Level node is a class-like, also attempt to search in its baseclass!
@@ -636,7 +638,7 @@ namespace D_Parser
 					{
 						var baseClass = ResolveBaseClass(currentParent as DClassLike, ImportCache);
 						if (baseClass != null)
-							ret.AddRange(ResolveTypeDeclarations_ModuleOnly(baseClass, nameIdent, NodeFilter.NonPrivate, ImportCache));
+							baseTypes.AddRange(ResolveTypeDeclarations_ModuleOnly(baseClass, nameIdent, NodeFilter.NonPrivate, ImportCache));
 					}
 
 					// Check parameters
@@ -644,7 +646,7 @@ namespace D_Parser
 						foreach (var ch in (currentParent as DMethod).Parameters)
 						{
 							if (nameIdent.Name == ch.Name)
-								ret.Add(ch);
+								baseTypes.Add(ch);
 						}
 
 					// and template parameters
@@ -652,11 +654,18 @@ namespace D_Parser
 						foreach (var ch in (currentParent as DNode).TemplateParameters)
 						{
 							if (nameIdent.Name == ch.Name)
-								ret.Add(ch);
+								baseTypes.Add(ch);
 						}
 
 					// Move root-ward
 					currentParent = currentParent.Parent as IBlockNode;
+				}
+
+				if (td == IdentifierList)
+					ret.AddRange(baseTypes);
+				else
+				{
+					
 				}
 			}
 
@@ -664,6 +673,8 @@ namespace D_Parser
 
 			return ret.ToArray();
 		}
+
+
 
 		/// <summary>
 		/// Search a type within an entire Module Cache.

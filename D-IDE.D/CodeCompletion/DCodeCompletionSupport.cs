@@ -501,17 +501,6 @@ namespace D_IDE.D
 					}
 					else if (n is DMethod)
 					{
-						if ((n as DMethod).SpecialType == DMethod.MethodType.Delegate)
-						{
-							if (n.ContainsAttribute(DTokens.Package))
-								return DCodeCompletionSupport.Instance.GetNodeImage("delegate_internal");
-							else if (n.ContainsAttribute(DTokens.Protected))
-								return DCodeCompletionSupport.Instance.GetNodeImage("delegate_protected");
-							else if (n.ContainsAttribute(DTokens.Private))
-								return DCodeCompletionSupport.Instance.GetNodeImage("delegate_private");
-							return DCodeCompletionSupport.Instance.GetNodeImage("delegate");
-						}
-
 						//TODO: Getter or setter functions should be declared as a >single< property only
 						if (n.ContainsAttribute(DTokens.PropertyAttribute))
 						{
@@ -536,6 +525,17 @@ namespace D_IDE.D
 						return DCodeCompletionSupport.Instance.GetNodeImage("literal");
 					else if (n is DVariable)
 					{
+						if (n.Type is DelegateDeclaration)
+						{
+							if (n.ContainsAttribute(DTokens.Package))
+								return DCodeCompletionSupport.Instance.GetNodeImage("delegate_internal");
+							else if (n.ContainsAttribute(DTokens.Protected))
+								return DCodeCompletionSupport.Instance.GetNodeImage("delegate_protected");
+							else if (n.ContainsAttribute(DTokens.Private))
+								return DCodeCompletionSupport.Instance.GetNodeImage("delegate_private");
+							return DCodeCompletionSupport.Instance.GetNodeImage("delegate");
+						}
+
 						if (n.ContainsAttribute(DTokens.Const))
 							return DCodeCompletionSupport.Instance.GetNodeImage("literal");
 

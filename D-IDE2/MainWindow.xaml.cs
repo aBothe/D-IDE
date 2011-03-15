@@ -234,8 +234,18 @@ namespace D_IDE
 			var sdlg = new NewSrcDlg();
 			if (sdlg.ShowDialog().Value)
 			{
-				var ed = new EditorDocument(sdlg.FileName);
-				ed.Show(DockMgr);
+				foreach (var lang in LanguageLoader.Bindings)
+					if (lang.CanHandleFile(sdlg.FileName))
+					{
+						var ed= lang.OpenFile(null, sdlg.FileName);
+						ed.Show(DockMgr);
+						ed.Activate();
+						return;
+					}
+
+				var _ed = new EditorDocument(sdlg.FileName);
+				_ed.Show(DockMgr);
+				_ed.Activate();
 			}
 		}
 
