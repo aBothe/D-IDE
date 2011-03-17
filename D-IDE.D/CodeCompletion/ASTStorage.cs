@@ -74,6 +74,15 @@ namespace D_IDE.D.CodeCompletion
 			nc.UpdateFromBaseDirectory();
 		}
 
+		/// <summary>
+		/// Updates (reparses) all sources in all directories of this storage
+		/// </summary>
+		public void UpdateCache()
+		{
+			foreach (var pdir in this)
+				pdir.UpdateFromBaseDirectory();
+		}
+
 		public IEnumerator<ASTCollection> GetEnumerator()
 		{
 			return ParsedGlobalDictionaries.GetEnumerator();
