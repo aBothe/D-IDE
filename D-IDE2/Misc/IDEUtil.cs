@@ -55,7 +55,8 @@ namespace D_IDE
 				}
 				catch (Exception ex)
 				{
-					ErrorLogger.Log(ex);
+					ErrorLogger.Log(ex,ErrorType.Information,ErrorOrigin.System);
+					return false;
 				}
 				return true;
 			}
