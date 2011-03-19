@@ -36,7 +36,7 @@ namespace D_Parser
             // Now only declarations or other statements are allowed!
             while (!IsEOF)
             {
-                DeclDef(ref _block);
+                DeclDef(_block);
             }
             module.EndLocation = la.Location;
             return module;
@@ -112,143 +112,143 @@ namespace D_Parser
         }
         #endregion
 
-        void DeclDef(ref IBlockNode module)
+        void DeclDef(IBlockNode module)
         {
             //AttributeSpecifier
-            if (IsAttributeSpecifier())
-                AttributeSpecifier();
+			if (IsAttributeSpecifier())
+				AttributeSpecifier();
 
-            //ImportDeclaration
-            else if (la.Kind==(Import))
-                ImportDeclaration();
+			//ImportDeclaration
+			else if (la.Kind == (Import))
+				ImportDeclaration();
 
-            //Constructor
-            else if (la.Kind == (This))
-                module.Add(Constructor(module is DClassLike?(module as DClassLike).ClassType==DTokens.Struct:false));
+			//Constructor
+			else if (la.Kind == (This))
+				module.Add(Constructor(module is DClassLike ? (module as DClassLike).ClassType == DTokens.Struct : false));
 
-            //Destructor
-            else if (la.Kind == (Tilde) && lexer.CurrentPeekToken.Kind == (This))
-                module.Add(Destructor());
+			//Destructor
+			else if (la.Kind == (Tilde) && lexer.CurrentPeekToken.Kind == (This))
+				module.Add(Destructor());
 
-            //Invariant
-            else if (la.Kind == (Invariant))
-                module.Add(_Invariant());
+			//Invariant
+			else if (la.Kind == (Invariant))
+				module.Add(_Invariant());
 
-            //UnitTest
-            else if (la.Kind == (Unittest))
-            {
-                Step();
-                var dbs = new DMethod(DMethod.MethodType.Unittest);
-                dbs.StartLocation = t.Location;
-                FunctionBody(dbs);
-                dbs.EndLocation = t.EndLocation;
-                module.Add(dbs);
-            }
+			//UnitTest
+			else if (la.Kind == (Unittest))
+			{
+				Step();
+				var dbs = new DMethod(DMethod.MethodType.Unittest);
+				dbs.StartLocation = t.Location;
+				FunctionBody(dbs);
+				dbs.EndLocation = t.EndLocation;
+				module.Add(dbs);
+			}
 
-            //ConditionalDeclaration
-            else if (la.Kind == (Version) || la.Kind == (Debug) || la.Kind == (If))
-            {
-                Step();
-                var n = t.ToString();
+			//ConditionalDeclaration
+			else if (la.Kind == (Version) || la.Kind == (Debug) || la.Kind == (If))
+			{
+				Step();
+				var n = t.ToString();
 
-                if (t.Kind == (If))
-                {
-                    Expect(OpenParenthesis);
-                    AssignExpression();
-                    Expect(CloseParenthesis);
-                }
-                else if (la.Kind == (Assign))
-                {
-                    Step();
-                    Step();
-                    Expect(Semicolon);
-                }
-                else if (t.Kind == (Version))
-                {
-                    Expect(OpenParenthesis);
-                    n += "(";
-                    Step();
-                    n += t.ToString();
-                    Expect(CloseParenthesis);
-                    n += ")";
-                }
-                else if (t.Kind == (Debug) && la.Kind == (OpenParenthesis))
-                {
-                    Expect(OpenParenthesis);
-                    n += "(";
-                    Step();
-                    n += t.ToString();
-                    Expect(CloseParenthesis);
-                    n += ")";
-                }
+				if (t.Kind == (If))
+				{
+					Expect(OpenParenthesis);
+					AssignExpression();
+					Expect(CloseParenthesis);
+				}
+				else if (la.Kind == (Assign))
+				{
+					Step();
+					Step();
+					Expect(Semicolon);
+				}
+				else if (t.Kind == (Version))
+				{
+					Expect(OpenParenthesis);
+					n += "(";
+					Step();
+					n += t.ToString();
+					Expect(CloseParenthesis);
+					n += ")";
+				}
+				else if (t.Kind == (Debug) && la.Kind == (OpenParenthesis))
+				{
+					Expect(OpenParenthesis);
+					n += "(";
+					Step();
+					n += t.ToString();
+					Expect(CloseParenthesis);
+					n += ")";
+				}
 
-                if (la.Kind == (Colon))
-                    Step();
-            }
+				if (la.Kind == (Colon))
+					Step();
+			}
 
-            //TODO
-            else if (la.Kind == (Else))
-            {
-                Step();
-            }
+			//TODO
+			else if (la.Kind == (Else))
+			{
+				Step();
+			}
 
-            //StaticAssert
-            else if (la.Kind == (Assert))
-            {
-                Step();
-                Expect(OpenParenthesis);
-                AssignExpression();
-                if (la.Kind == (Comma))
-                {
-                    Step();
-                    AssignExpression();
-                }
-                Expect(CloseParenthesis);
-                Expect(Semicolon);
-            }
-            //TemplateMixin
+			//StaticAssert
+			else if (la.Kind == (Assert))
+			{
+				Step();
+				Expect(OpenParenthesis);
+				AssignExpression();
+				if (la.Kind == (Comma))
+				{
+					Step();
+					AssignExpression();
+				}
+				Expect(CloseParenthesis);
+				Expect(Semicolon);
+			}
+			//TemplateMixin
 
-            //MixinDeclaration
-            else if (la.Kind == (Mixin))
-                MixinDeclaration();
+			//MixinDeclaration
+			else if (la.Kind == (Mixin))
+				MixinDeclaration();
 
-            //;
-            else if (la.Kind == (Semicolon))
-                Step();
+			//;
+			else if (la.Kind == (Semicolon))
+				Step();
 
-            // {
-            else if (la.Kind == (OpenCurlyBrace))
-            {
-                // Due to having a new attribute scope, we'll have use a new attribute stack here
-                var AttrBackup = BlockAttributes;
-                BlockAttributes = new Stack<DAttribute>();
+			// {
+			else if (la.Kind == (OpenCurlyBrace))
+			{
+				// Due to having a new attribute scope, we'll have use a new attribute stack here
+				var AttrBackup = BlockAttributes;
+				BlockAttributes = new Stack<DAttribute>();
 
-                while (DeclarationAttributes.Count > 0)
-                    BlockAttributes.Push(DeclarationAttributes.Pop());
+				while (DeclarationAttributes.Count > 0)
+					BlockAttributes.Push(DeclarationAttributes.Pop());
 
-                ClassBody(ref module);
+				ClassBody(ref module);
 
-                // After the block ended, restore the previous block attributes
-                BlockAttributes = AttrBackup;
-            }
+				// After the block ended, restore the previous block attributes
+				BlockAttributes = AttrBackup;
+			}
 
-            // Class Allocators
-            // Note: Although occuring in global scope, parse it anyway but declare it as semantic nonsense;)
-            else if (la.Kind == (New))
-            {
-                Step();
+			// Class Allocators
+			// Note: Although occuring in global scope, parse it anyway but declare it as semantic nonsense;)
+			else if (la.Kind == (New))
+			{
+				Step();
 
-                var dm = new DMethod();
-                dm.Name = "new";
-                ApplyAttributes(dm);
+				var dm = new DMethod();
+				dm.Name = "new";
+				ApplyAttributes(dm);
 
-                dm.Parameters = Parameters(dm);
-                FunctionBody(dm);
+				dm.Parameters = Parameters(dm);
+				FunctionBody(dm);
 
-            }
+			}
 
-            // else:
-            else Declaration(ref module);
+			// else:
+			else Declaration(module);
         }
 
         ITypeDeclaration ModuleDeclaration()
@@ -405,7 +405,7 @@ namespace D_Parser
                 {
                     Step();
                     if (!DAttribute.ContainsAttribute(DeclarationAttributes.ToArray(), t.Kind))
-                        DeclarationAttributes.Push(new DAttribute(t.Kind));
+						PushAttribute(new DAttribute(t.Kind),false);
                 }
                 ret = true;
             }
@@ -423,19 +423,19 @@ namespace D_Parser
                 {
                     Step();
                     if (!DAttribute.ContainsAttribute(DeclarationAttributes.ToArray(), t.Kind))
-                        DeclarationAttributes.Push(new DAttribute(t.Kind));
+                        PushAttribute(new DAttribute(t.Kind),false);
                 }
                 ret = true;
             }
             return ret;
         }
 
-        void Declaration(ref IBlockNode par)
+        void Declaration(IBlockNode par)
         {
             // Skip ref token
             if (la.Kind == (Ref))
             {
-                DeclarationAttributes.Push(new DAttribute( Ref));
+				PushAttribute(new DAttribute(Ref),false);
                 Step();
             }
             
@@ -500,7 +500,7 @@ namespace D_Parser
             if (la.Kind==(Ref))
             {
                 if (!DAttribute.ContainsAttribute(DeclarationAttributes, Ref))
-                    DeclarationAttributes.Push(new DAttribute( Ref));
+					PushAttribute(new DAttribute(Ref),false);
                 Step();
             }
 
@@ -1271,13 +1271,14 @@ namespace D_Parser
             else
                 Step();
 
-            if (la.Kind==(Colon))
-            {
-                BlockAttributes.Push(attr);
-                Step();
-            }
+			if (la.Kind == (Colon))
+			{
+				PushAttribute(attr, true);
+				Step();
+			}
 
-            else DeclarationAttributes.Push(attr);
+			else if(la.Kind!=Semicolon)
+				PushAttribute(attr, false);
         }
         #endregion
 
@@ -2719,7 +2720,7 @@ namespace D_Parser
                 Expect(Semicolon);
             }
             else
-                Declaration(ref par);
+                Declaration(par);
         }
 
         void BlockStatement(ref IBlockNode par)
@@ -2844,7 +2845,7 @@ namespace D_Parser
             ret.BlockStartLocation = t.Location;
             while (!IsEOF && la.Kind!=(CloseCurlyBrace))
             {
-                DeclDef(ref ret);
+                DeclDef(ret);
             }
             Expect(CloseCurlyBrace);
             ret.EndLocation = t.EndLocation;

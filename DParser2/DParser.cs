@@ -142,6 +142,17 @@ namespace D_Parser
         /// </summary>
         Stack<DAttribute> DeclarationAttributes=new Stack<DAttribute>();
 
+		void PushAttribute(DAttribute attr, bool BlockAttributes)
+		{
+			var stk=BlockAttributes?this.BlockAttributes:this.DeclarationAttributes;
+
+			// If attr would change the accessability of an item, remove all previously found (so the most near attribute that's next to the item is significant)
+			if (DTokens.VisModifiers[attr.Token])
+				DAttribute.CleanupAccessorAttributes(stk);
+
+			stk.Push(attr);
+		}
+
         void ApplyAttributes(DNode n)
         {
             foreach (var attr in BlockAttributes.ToArray())
@@ -150,6 +161,11 @@ namespace D_Parser
             while (DeclarationAttributes.Count > 0)
             {
                 var attr = DeclarationAttributes.Pop();
+
+				// If accessor already in attribute array, remove it
+				if (DTokens.VisModifiers[attr.Token])
+					DAttribute.CleanupAccessorAttributes(n.Attributes);
+
                 if (!DAttribute.ContainsAttribute(n.Attributes.ToArray(),attr.Token))
                     n.Attributes.Add(attr);
             }

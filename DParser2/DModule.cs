@@ -205,7 +205,7 @@ namespace D_Parser
         {
             var s= base.ToString()+"(";
             foreach (var p in Parameters)
-                s += p.ToString()+",";
+                s += (p is AbstractNode? (p as AbstractNode).ToString(false):p.ToString())+",";
             return s.Trim(',')+")";
         }
     }

@@ -33,6 +33,44 @@ namespace D_Parser
                 return DTokens.GetTokenString(Token);
         }
 
+		/// <summary>
+		/// Removes all public,private,protected or package attributes from the list
+		/// </summary>
+		public static void CleanupAccessorAttributes(List<DAttribute> HayStack)
+		{
+			foreach (var i in HayStack.ToArray())
+			{
+				if (DTokens.VisModifiers[i.Token])
+					HayStack.Remove(i);
+			}
+		}
+
+		/// <summary>
+		/// Removes all public,private,protected or package attributes from the stack
+		/// </summary>
+		public static void CleanupAccessorAttributes(Stack<DAttribute> HayStack)
+		{
+			var l=new List<DAttribute>();
+
+			while(HayStack.Count>0)
+			{
+				var attr=HayStack.Pop();
+				if (!DTokens.VisModifiers[attr.Token])
+					l.Add(attr);
+			}
+
+			foreach (var i in l)
+				HayStack.Push(i);
+		}
+
+		public static bool ContainsAccessorAttribute(Stack<DAttribute> HayStack)
+		{
+			foreach (var i in HayStack)
+				if (DTokens.VisModifiers[i.Token])
+					return true;
+			return false;
+		}
+
         public static bool ContainsAttribute(DAttribute[] HayStack,params int[] NeedleToken)
         {
             var l = new List<int>(NeedleToken);
@@ -49,6 +87,7 @@ namespace D_Parser
                     return true;
             return false;
         }
+
         public static bool ContainsAttribute(Stack<DAttribute> HayStack,params int[] NeedleToken)
         {
             var l = new List<int>(NeedleToken);

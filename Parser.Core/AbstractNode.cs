@@ -51,24 +51,32 @@ namespace Parser.Core
 
 		public override string ToString()
 		{
+			return ToString(true);
+		}
+
+		public string ToString(bool IncludePath)
+		{
 			string s = "";
 			// Type
 			if (Type != null)
 				s += Type.ToString() + " ";
 
 			// Path + Name
-			string path = "";
-			var curParent = this as INode;
-			while (curParent != null)
-			{
-				// Also include module path
-				if (curParent is IAbstractSyntaxTree)
-					path = (curParent as IAbstractSyntaxTree).ModuleName + "." + path;
-				else
-					path = curParent.Name + "." + path;
-				curParent = curParent.Parent;
-			}
-			s += path.Trim('.');
+				string path = "";
+				var curParent = this as INode;
+				while (curParent != null)
+				{
+					// Also include module path
+					if (curParent is IAbstractSyntaxTree)
+						path = (curParent as IAbstractSyntaxTree).ModuleName + "." + path;
+					else
+						path = curParent.Name + "." + path;
+
+					if (!IncludePath)
+						break;
+					curParent = curParent.Parent;
+				}
+				s += path.Trim('.');
 
 			return s.Trim();
 		}
