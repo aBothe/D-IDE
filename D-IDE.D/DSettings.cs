@@ -270,6 +270,16 @@ namespace D_IDE.D
 				{
 					ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.Parser);
 				}
+
+				// For debugging purposes dump all parse results (errors etc.) to a log file.
+				try
+				{
+					ASTCache.WriteParseLog(IDEInterface.ConfigDirectory + "\\" + Version.ToString() + ".GlobalParseLog.log");
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.Parser);
+				}
 			}).Start();
 		}
 

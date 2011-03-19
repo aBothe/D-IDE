@@ -81,6 +81,31 @@ namespace D_IDE.D.CodeCompletion
 				pdir.UpdateFromBaseDirectory();
 		}
 
+		public void WriteParseLog(string outputLog)
+		{
+			var ms = new MemoryStream();
+			var sw = new StreamWriter(ms);
+
+			foreach (var pdir in this)
+			{
+				sw.WriteLine("--- "+pdir.BaseDirectory+" ---");
+				sw.WriteLine();
+				foreach (var t in pdir)
+				{
+					sw.WriteLine(t.ModuleName + "\t\t("+t.FileName+")");
+					if (t.ParseErrors != null)
+						foreach (var err in t.ParseErrors)
+							sw.WriteLine(string.Format("\t\t{0}\t{1}\t{2}",err.Location.Line, err.Location.Column,err.Message));
+				}
+
+				sw.WriteLine();
+			}
+
+			ms.Flush();
+			File.WriteAllBytes(outputLog, ms.GetBuffer());
+			ms.Close();
+		}
+
 		public IEnumerator<ASTCollection> GetEnumerator()
 		{
 			return ParsedGlobalDictionaries.GetEnumerator();

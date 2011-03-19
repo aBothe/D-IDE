@@ -27,6 +27,7 @@ namespace D_IDE.D
 					if(prj!=null)
 						return prj.ParsedModules[AbsoluteFilePath];
 				}
+
 				return _unboundTree;
 			}
 			set {
