@@ -248,6 +248,9 @@ namespace D_IDE.Core
 				icon = MessageBoxIcon.Information;
 
 			MessageBox.Show(Message,origin.ToString() +" "+ ErrorType.ToString(),MessageBoxButtons.OK,icon);
+
+			if (origin == ErrorOrigin.System)
+				File.AppendAllText(IDEInterface.ConfigDirectory+"\\sys.log",Message+"\r\n",System.Text.Encoding.Unicode);
 		}
 
 		public static void Log(string Message, ErrorType ErrorType,ErrorOrigin Origin)

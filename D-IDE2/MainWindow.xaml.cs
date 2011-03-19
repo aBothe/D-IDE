@@ -598,12 +598,12 @@ namespace D_IDE
 
 		private void RibbonWindow_Loaded(object sender, RoutedEventArgs e)
 		{
-			IDEUtil.CheckForUpdates();
+			IDEUtil.CheckForUpdates(false);
 		}
 
 		private void Button_Update_Click(object sender, RoutedEventArgs e)
 		{
-			IDEUtil.CheckForUpdates();
+			IDEUtil.CheckForUpdates(true);
 		}
 
 		private void Button_OpenPrjDir_Click(object sender, RoutedEventArgs e)

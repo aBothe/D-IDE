@@ -17,9 +17,9 @@ namespace D_IDE
 		static string FileVersionFile = ApplicationStartUpPath + "\\LastModificationTime";
 		const string TimeStampUrl = "http://d-ide.sourceforge.net/d-ide.php?action=fileversion";
 
-		public static void CheckForUpdates()
+		public static void CheckForUpdates(bool ForceWatch)
 		{
-			if (GlobalProperties.Instance.WatchForUpdates)
+			if (GlobalProperties.Instance.WatchForUpdates || ForceWatch)
 				new Thread(() =>
 				{
 					Thread.CurrentThread.IsBackground = true;
