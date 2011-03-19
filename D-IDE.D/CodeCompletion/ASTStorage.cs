@@ -83,8 +83,8 @@ namespace D_IDE.D.CodeCompletion
 
 		public void WriteParseLog(string outputLog)
 		{
-			var ms = new MemoryStream();
-			var sw = new StreamWriter(ms);
+			var ms = new MemoryStream(32000);
+			var sw = new StreamWriter(ms,Encoding.Unicode);
 
 			foreach (var pdir in this)
 			{
@@ -96,13 +96,15 @@ namespace D_IDE.D.CodeCompletion
 					if (t.ParseErrors != null)
 						foreach (var err in t.ParseErrors)
 							sw.WriteLine(string.Format("\t\t{0}\t{1}\t{2}",err.Location.Line, err.Location.Column,err.Message));
+
+					sw.Flush();
 				}
 
 				sw.WriteLine();
+				sw.Flush();
 			}
-
-			ms.Flush();
-			File.WriteAllBytes(outputLog, ms.GetBuffer());
+			
+			File.WriteAllBytes(outputLog, ms.ToArray());
 			ms.Close();
 		}
 
