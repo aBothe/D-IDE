@@ -70,8 +70,6 @@ namespace D_IDE.D.CodeCompletion
 
 			var nc = new ASTCollection(Dictionary);
 			ParsedGlobalDictionaries.Add(nc);
-
-			nc.UpdateFromBaseDirectory();
 		}
 
 		/// <summary>

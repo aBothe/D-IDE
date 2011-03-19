@@ -5,6 +5,7 @@ using System.Text;
 using D_IDE.Core;
 using System.Xml;
 using D_IDE.D.CodeCompletion;
+using System.Threading;
 
 namespace D_IDE.D
 {
@@ -241,8 +242,35 @@ namespace D_IDE.D
 						else 
 							ReleaseArgs = args;
 						break;
+
+					case "parsedDirectories":
+						if (x2.IsEmptyElement)
+							break;
+
+						var st = x2.ReadSubtree();
+						if(st!=null)
+							while (st.Read())
+							{
+								if (st.LocalName == "dir")
+									ASTCache.Add(st.ReadString());
+							}
+						break;
 				}
 			}
+
+			// After having loaded the directory paths, parse them asynchronously
+			new Thread(() =>
+			{
+				Thread.CurrentThread.IsBackground = true;
+				try
+				{
+					ASTCache.UpdateCache();
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.Parser);
+				}
+			}).Start();
 		}
 
 		public void Save(XmlWriter x)
@@ -283,6 +311,16 @@ namespace D_IDE.D
 				x.WriteCData(LibLinker);
 				x.WriteEndElement();
 			}
+
+			x.WriteStartElement("parsedDirectories");
+			foreach (var pdir in ASTCache)
+			{
+				x.WriteStartElement("dir");
+				x.WriteCData(pdir.BaseDirectory);
+				x.WriteEndElement();
+			}
+			x.WriteEndElement();
+
 			DebugArgs.Save(x);
 			ReleaseArgs.Save(x);
 

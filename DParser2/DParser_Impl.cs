@@ -281,7 +281,7 @@ namespace D_Parser
 
         void ImportDeclaration()
         {
-            bool IsPublic = DeclarationAttributes.Count > 0 && DAttribute.ContainsAttribute(DeclarationAttributes,Public);
+            bool IsPublic = DAttribute.ContainsAttribute(BlockAttributes,Public) || DAttribute.ContainsAttribute(DeclarationAttributes,Public);
             DeclarationAttributes.Clear();
             CheckForDocComments();
             Expect(Import);
