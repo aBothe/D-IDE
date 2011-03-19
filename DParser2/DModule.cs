@@ -194,7 +194,9 @@ namespace D_Parser
             Normal=0,
             Delegate,
             Constructor,
+			Allocator,
             Destructor,
+			Deallocator,
             Unittest
         }
 

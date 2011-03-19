@@ -226,7 +226,7 @@ namespace D_Parser
 				while (DeclarationAttributes.Count > 0)
 					BlockAttributes.Push(DeclarationAttributes.Pop());
 
-				ClassBody(ref module);
+				ClassBody(module);
 
 				// After the block ended, restore the previous block attributes
 				BlockAttributes = AttrBackup;
@@ -238,13 +238,27 @@ namespace D_Parser
 			{
 				Step();
 
-				var dm = new DMethod();
+				var dm = new DMethod(DMethod.MethodType.Allocator);
 				dm.Name = "new";
 				ApplyAttributes(dm);
 
 				dm.Parameters = Parameters(dm);
 				FunctionBody(dm);
+				module.Add(dm);
+			}
 
+			// Class Deallocators
+			else if (la.Kind == Delete)
+			{
+				Step();
+
+				var dm = new DMethod(DMethod.MethodType.Deallocator);
+				dm.Name = "delete";
+				ApplyAttributes(dm);
+
+				dm.Parameters = Parameters(dm);
+				FunctionBody(dm);
+				module.Add(dm);
 			}
 
 			// else:
@@ -1643,7 +1657,7 @@ namespace D_Parser
 
                 //TODO: Add the parsed results to node tree somehow
                 var _block = new DClassLike() as IBlockNode;
-                ClassBody(ref _block);
+                ClassBody(_block);
 
                 return ex;
             }
@@ -2755,8 +2769,8 @@ namespace D_Parser
                 SynErr(t.Kind, "union or struct required");
             Step();
 
-            IBlockNode ret = new DClassLike(t.Kind);
-			ApplyAttributes(ret as DNode);
+            var ret = new DClassLike(t.Kind);
+			ApplyAttributes(ret);
 
             // Allow anonymous structs&unions
             if (la.Kind == Identifier)
@@ -2774,14 +2788,14 @@ namespace D_Parser
             // StructTemplateDeclaration
             if (la.Kind==(OpenParenthesis))
             {
-                (ret as DNode).TemplateParameters = TemplateParameterList();
+                ret .TemplateParameters = TemplateParameterList();
 
                 // Constraint[opt]
                 if (la.Kind==(If))
                     Constraint();
             }
 
-            ClassBody(ref ret);
+            ClassBody(ret);
 
             return ret;
         }
@@ -2805,7 +2819,7 @@ namespace D_Parser
             if (la.Kind==(Colon))
                 (dc as DClassLike).BaseClasses = BaseClassList();
 
-            ClassBody(ref dc);
+            ClassBody(dc);
 
             dc.EndLocation = t.EndLocation;
             return dc;
@@ -2835,7 +2849,7 @@ namespace D_Parser
             return ret;
         }
 
-        private void ClassBody(ref IBlockNode ret)
+        private void ClassBody(IBlockNode ret)
         {
             if (String.IsNullOrEmpty(ret.Description)) ret.Description = GetComments();
             var OldPreviousCommentString = PreviousComment;
@@ -2922,27 +2936,27 @@ namespace D_Parser
         private IBlockNode InterfaceDeclaration()
         {
             Expect(Interface);
-            IBlockNode dc = new DClassLike();
+            var dc = new DClassLike();
             dc.StartLocation = t.Location;
-            ApplyAttributes(dc as DNode);
+            ApplyAttributes(dc);
 
             Expect(Identifier);
             dc.Name = t.Value;
 
             if (la.Kind==(OpenParenthesis))
-                (dc as DNode).TemplateParameters = TemplateParameterList();
+                dc.TemplateParameters = TemplateParameterList();
 
             if (la.Kind==(If))
                 Constraint();
 
             if (la.Kind==(Colon))
-                (dc as DClassLike).BaseClasses = BaseClassList();
+                dc.BaseClasses = BaseClassList();
 
             // Empty interfaces are allowed
             if (la.Kind == Semicolon)
                 Step();
             else
-                ClassBody(ref dc);
+                ClassBody(dc);
 
             dc.EndLocation = t.EndLocation;
             return dc;
@@ -3133,22 +3147,22 @@ namespace D_Parser
         private INode TemplateDeclaration()
         {
             Expect(Template);
-            IBlockNode dc = new DClassLike(Template);
-            ApplyAttributes(dc as DNode);
+            var dc = new DClassLike(Template);
+            ApplyAttributes(dc);
             dc.StartLocation = t.Location;
 
             Expect(Identifier);
             dc.Name = t.Value;
 
-            (dc as DNode).TemplateParameters = TemplateParameterList();
+            dc.TemplateParameters = TemplateParameterList();
 
             if (la.Kind==(If))
                 Constraint();
 
             if (la.Kind==(Colon))
-                (dc as DClassLike).BaseClasses = BaseClassList();
+                dc.BaseClasses = BaseClassList();
 
-            ClassBody(ref dc);
+            ClassBody( dc);
 
             dc.EndLocation = t.EndLocation;
             return dc;
