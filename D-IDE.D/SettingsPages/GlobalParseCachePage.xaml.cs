@@ -21,6 +21,7 @@ namespace D_IDE.D
 			this.cfg = Config;
 
 			list_Dirs.ItemsSource = Dirs;
+			LoadCurrent();
 		}
 
 		public override bool ApplyChanges()
