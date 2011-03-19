@@ -64,9 +64,17 @@ namespace D_IDE.Core
 					}
 				
 				// Errors that occurred while parsing source files
-				foreach(var ed in CoreManager.Instance.Editors)
-					if(ed is IEditorDocument && ed.HasProject && (ed as IEditorDocument).ParserErrors!=null)
-						el.AddRange((ed as IEditorDocument).ParserErrors);
+				var curEd=CoreManager.Instance.CurrentEditor as IEditorDocument;
+				if (curEd!=null)
+				{
+					// If current module is unbound, show its errors exclusively
+					if (!curEd.HasProject && curEd.ParserErrors != null)
+						el.AddRange(curEd.ParserErrors);
+					else
+						foreach (var ed in CoreManager.Instance.Editors)
+							if (ed is IEditorDocument && ed.HasProject && (ed as IEditorDocument).ParserErrors != null)
+								el.AddRange((ed as IEditorDocument).ParserErrors);
+				}
 
 				Errors = el.ToArray();
 

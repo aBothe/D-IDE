@@ -2217,7 +2217,7 @@ namespace D_Parser
             }
         }
 
-        void Statement(ref IBlockNode par, bool CanBeEmpty, bool BlocksAllowed)
+        void Statement(IBlockNode par, bool CanBeEmpty, bool BlocksAllowed)
         {
             if (CanBeEmpty && la.Kind == (Semicolon))
             {
@@ -2257,7 +2257,7 @@ namespace D_Parser
                 Expect(CloseParenthesis);
                 // ThenStatement
 
-                Statement(ref bs, false, true);
+                Statement(bs, false, true);
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
 
                 // ElseStatement
@@ -2267,7 +2267,7 @@ namespace D_Parser
                     dbs = new DStatementBlock(Else);
                     dbs.StartLocation = t.Location;
                     bs = dbs as IBlockNode;
-                    Statement(ref bs, false, true);
+                    Statement(bs, false, true);
                     dbs.EndLocation = t.EndLocation;
 					if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
                 }
@@ -2287,7 +2287,7 @@ namespace D_Parser
                 IfCondition(ref bs);
                 Expect(CloseParenthesis);
 
-                Statement(ref bs, false, true);
+                Statement(bs, false, true);
                 dbs.EndLocation = t.EndLocation;
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
@@ -2300,7 +2300,7 @@ namespace D_Parser
 
                 var dbs = new DStatementBlock(Do) as IBlockNode;
                 dbs.StartLocation = t.Location;
-                Statement(ref dbs, false, true);
+                Statement(dbs, false, true);
 
                 Expect(While);
                 Expect(OpenParenthesis);
@@ -2339,7 +2339,7 @@ namespace D_Parser
 
                 Expect(CloseParenthesis);
 
-                Statement(ref dbs, false, true);
+                Statement(dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
             }
@@ -2400,7 +2400,7 @@ namespace D_Parser
 
                 Expect(CloseParenthesis);
 
-                Statement(ref dbs, false, true);
+                Statement(dbs, false, true);
 
                 dbs.EndLocation = t.EndLocation;
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
@@ -2422,7 +2422,7 @@ namespace D_Parser
                 Expect(OpenParenthesis);
                 (dbs as DStatementBlock).Expression=Expression();
                 Expect(CloseParenthesis);
-                Statement(ref dbs, false, true);
+                Statement(dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
 
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
@@ -2457,7 +2457,7 @@ namespace D_Parser
                 }
 
                 if(la.Kind!=CloseCurlyBrace) // {case 1:} is allowed
-                    Statement(ref dbs, true, true);
+                    Statement(dbs, true, true);
                 dbs.EndLocation = t.EndLocation;
 
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
@@ -2474,7 +2474,7 @@ namespace D_Parser
 
                 Expect(Colon);
                 if(la.Kind!=CloseCurlyBrace) // switch(...) { default: }  is allowed!
-                    Statement(ref dbs, true, true);
+                    Statement(dbs, true, true);
                 dbs.EndLocation = t.EndLocation;
 
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
@@ -2534,7 +2534,7 @@ namespace D_Parser
                 (dbs as DStatementBlock).Expression=Expression();
 
                 Expect(CloseParenthesis);
-                Statement(ref dbs, false, true);
+                Statement(dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
 
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
@@ -2554,7 +2554,7 @@ namespace D_Parser
                     (dbs as DStatementBlock).Expression=Expression();
                     Expect(CloseParenthesis);
                 }
-                Statement(ref dbs, false, true);
+                Statement(dbs, false, true);
 
                 dbs.EndLocation = t.EndLocation;
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
@@ -2568,7 +2568,7 @@ namespace D_Parser
 
                 IBlockNode dbs = new DStatementBlock(Try);
                 dbs.StartLocation = t.Location;
-                Statement(ref dbs, false, true);
+                Statement(dbs, false, true);
                 dbs.EndLocation = t.EndLocation;
                 if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
 
@@ -2601,7 +2601,7 @@ namespace D_Parser
                         dbs.Add(catchVar);
                     }
 
-                    Statement(ref dbs, false, true);
+                    Statement(dbs, false, true);
                     dbs.EndLocation = t.EndLocation;
                     if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
 
@@ -2615,7 +2615,7 @@ namespace D_Parser
 
                     dbs = new DStatementBlock(Finally);
                     dbs.StartLocation = t.Location;
-                    Statement(ref dbs, false, true);
+                    Statement(dbs, false, true);
                     dbs.EndLocation = t.EndLocation;
                     if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
                 }
@@ -2635,10 +2635,13 @@ namespace D_Parser
             else if (la.Kind == (Scope))
             {
                 Step();
-                Expect(OpenParenthesis);
-                Expect(Identifier); // exit, failure, success
-                Expect(CloseParenthesis);
-                Statement(ref par, false, true);
+				if (la.Kind == OpenParenthesis)
+				{
+					Expect(OpenParenthesis);
+					Expect(Identifier); // exit, failure, success
+					Expect(CloseParenthesis);
+				}
+				Statement(par, false, true);
             }
 
             // AsmStatement
@@ -2659,7 +2662,7 @@ namespace D_Parser
             else if (la.Kind == (Pragma))
             {
                 _Pragma();
-                Statement(ref par, true, true);
+                Statement(par, true, true);
             }
 
             // MixinStatement
@@ -2696,12 +2699,12 @@ namespace D_Parser
                 if (LA(Colon)) 
                     Step();
                 else 
-                    Statement(ref par, false, true);
+                    Statement(par, false, true);
 
                 if (la.Kind == Else)
                 {
                     Step();
-                    Statement(ref par, false, true);
+                    Statement(par, false, true);
                 }
             }
             #endregion
@@ -2734,7 +2737,7 @@ namespace D_Parser
                 else
                     while (!IsEOF && la.Kind != (CloseCurlyBrace))
                     {
-                        Statement(ref par, true, true);
+                        Statement(par, true, true);
                     }
             }
             Expect(CloseCurlyBrace);

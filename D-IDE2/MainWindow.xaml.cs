@@ -206,11 +206,12 @@ namespace D_IDE
 			RefreshGUI();
 
 			// Load last solution
+			if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
+				IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
+
 			if (args.Length > 0)
 				foreach (var a in args)
 					IDEManager.EditingManagement.OpenFile(a);
-			if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
-				IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 		}
 		#endregion
 
@@ -557,6 +558,7 @@ namespace D_IDE
 		private void DockMgr_ActiveDocumentChanged(object sender, EventArgs e)
 		{
 			RefreshMenu();
+			IDEManager.ErrorManagement.RefreshErrorList();
 		}
 
 		private void DockMgr_DocumentClosed(object sender, EventArgs e)
