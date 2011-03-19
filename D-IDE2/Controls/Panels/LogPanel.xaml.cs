@@ -69,6 +69,9 @@ namespace D_IDE.Controls.Panels
 					break;
 			}
 
+			if (editor == null)
+				return;
+
 			//TODO: Find out why invoking the dispatcher thread blocks the entire application sometimes
 			if (!Util.IsDispatcherThread)
 				Dispatcher.BeginInvoke(new D_IDE.Core.Util.EmptyDelegate(() =>
