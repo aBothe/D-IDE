@@ -142,6 +142,21 @@ namespace DIDE.Installer
             GetLocalDMDInstallations();
         }
 
+        private static string[] GetInstallFromPath
+        {
+            get
+            {
+                List<string> paths = new List<string>();
+                // check path environemnt variable.
+                var env = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.User);
+                if (env.Contains("PATH"))
+                {
+                    //env["PATH"];
+                }
+                return paths.ToArray();
+            }
+        }
+
         private static void GetLocalDMDInstallations()
         {
             if (localDMDInstallations == null)

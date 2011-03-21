@@ -46,6 +46,12 @@ namespace TestInstallerHelper
             WriteLine("----------------------------------------------------------------------------------");
             WriteLine(File.ReadAllText(file));
             WriteLine("----------------------------------------------------------------------------------");
+
+            var env = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.User);
+            if (env.Contains("PATH"))
+            {
+                WriteLine(env["PATH"].ToString());
+            }
         }
 
         private void TestForm_Load(object sender, EventArgs e)
