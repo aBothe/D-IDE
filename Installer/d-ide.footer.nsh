@@ -93,6 +93,18 @@ Section "Uninstall"
 SectionEnd
 
 ;--------------------------------------------------------
+; The .onGUIEnd function is a predifined function that
+; runs when the Gui is closed.
+;--------------------------------------------------------
+Function .onInstFailed
+    CLR::Destroy
+FunctionEnd
+
+Function .onInstSuccess
+    CLR::Destroy
+FunctionEnd
+
+;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 4
 ;--------------------------------------------------------
 Function DotNet4Exists

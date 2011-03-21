@@ -47,6 +47,7 @@ Section "-Install Program Files" install_section_id
 	
 	SetOverwrite on
 	nsisunz::Unzip "$2" "$INSTDIR"
+	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
 
 	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
 SectionEnd

@@ -154,12 +154,32 @@ namespace DIDE.Installer
             LocalCompiler.Refresh();
         }
 
+        public static string IsConfigurationValid(string filePath)
+        {
+            string isValid = Boolean.FalseString;
+            try
+            {
+                if (File.Exists(filePath))
+                {
+                    var list = new List<string>();
+
+                    list.Add("//dsettings/dmd[@version='1']/basedirectory");
+                    list.Add("//dsettings/dmd[@version='2']/basedirectory");
+                    
+                    isValid = Configuration.IsValid(filePath, dict).ToString();
+                }
+            }
+            catch {}
+
+            return isValid;
+        }
+
         public static string CreateConfigurationFile(string filePath)
         {
             string error = "";
             try
             {
-                Dictionary<string, string[]> dict = new Dictionary<string, string[]>();
+                var dict = new Dictionary<string, string[]>();
                 if (LocalCompiler.DMD1Info != null)
                 {
                     dict.Add("//dsettings/dmd[@version='1']/basedirectory", new string[] { LocalCompiler.DMD1Info.ExecutableFile.Directory.FullName });

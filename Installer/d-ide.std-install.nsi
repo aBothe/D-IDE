@@ -22,6 +22,7 @@ Section "-Install Program Files" install_section_id
 	File /nonfatal /x .svn "${BINARY_APPLICATION_FILES}\*.xshd"
 
 	File /nonfatal /x .svn "${THIRD_PARTY_FILES}\*.dll"
+	File /oname=DIDE.Installer.dll "${CLR_INSTALLER_HELPER}\DIDE.Installer.dll"
 
 	WriteRegStr HKLM "Software\D-IDE" "" $INSTDIR
 SectionEnd

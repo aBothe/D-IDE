@@ -9,6 +9,20 @@ namespace DIDE.Installer
 {
     public class Configuration
     {
+        public static bool IsValid(string filePath)
+        {
+            var isValid = false;
+            var file = new FileInfo(filePath);
+
+            var xmlDoc = new XmlDocument();
+            if (file.Exists)
+            {
+                xmlDoc.Load(file.FullName);
+                isValid = false;
+            }
+            return true;
+        }
+
         public static void CreateConfigurationFile(string filePath, Dictionary<string, string[]> nodeHash)
         {
             FileInfo file = new FileInfo(filePath);
