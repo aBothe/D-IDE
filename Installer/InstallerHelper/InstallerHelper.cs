@@ -165,8 +165,8 @@ namespace DIDE.Installer
 
                     list.Add("//dsettings/dmd[@version='1']/basedirectory");
                     list.Add("//dsettings/dmd[@version='2']/basedirectory");
-                    
-                    isValid = Configuration.IsValid(filePath, dict).ToString();
+
+                    isValid = Configuration.IsValid(filePath, list).ToString();
                 }
             }
             catch {}

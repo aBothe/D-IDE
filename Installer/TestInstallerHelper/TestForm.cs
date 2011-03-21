@@ -79,6 +79,8 @@ namespace TestInstallerHelper
                         f.IndexOf(@"dmd2\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0)
                         WriteLine(f);
             }
+
+            Configuration.IsValid("c:\");
         }
 
         private void TestForm_Load(object sender, EventArgs e)

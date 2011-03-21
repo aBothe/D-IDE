@@ -9,7 +9,7 @@ namespace DIDE.Installer
 {
     public class Configuration
     {
-        public static bool IsValid(string filePath)
+        public static bool IsValid(string filePath, List<string> xmlPaths)
         {
             var isValid = false;
             var file = new FileInfo(filePath);
@@ -18,9 +18,25 @@ namespace DIDE.Installer
             if (file.Exists)
             {
                 xmlDoc.Load(file.FullName);
+                Dictionary<string, string> dict = GetNodeValues(xmlPaths, xmlDoc);
+                foreach (string p in dict.Values) isValid = true;
                 isValid = false;
             }
             return true;
+        }
+
+        public static Dictionary<string, string> GetNodeValues(List<string> xmlPaths, XmlDocument xmlDoc)
+        {
+            var nodeValues = new Dictionary<string, string>();
+            foreach (string nodePath in xmlPaths)
+            {
+                XmlNodeList nodes = xmlDoc.SelectNodes(nodePath);
+                if (nodes.Count == 1)
+                {
+                    nodeValues[nodePath] = nodes[0].Value;
+                }
+            }
+            return nodeValues;
         }
 
         public static void CreateConfigurationFile(string filePath, Dictionary<string, string[]> nodeHash)
