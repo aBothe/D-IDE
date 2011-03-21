@@ -142,16 +142,31 @@ namespace DIDE.Installer
             GetLocalDMDInstallations();
         }
 
-        private static string[] GetInstallFromPath
+        private static string[] DmdFoldersFromSystemPath
         {
             get
             {
-                List<string> paths = new List<string>();
-                // check path environemnt variable.
-                var env = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.User);
-                if (env.Contains("PATH"))
+                var paths = new List<string>();
+                var evts = new EnvironmentVariableTarget[]
+                               {EnvironmentVariableTarget.Machine, EnvironmentVariableTarget.Process};
+
+                foreach (var evt in evts)
                 {
-                    //env["PATH"];
+                    var env = Environment.GetEnvironmentVariables(evt);
+                    if (env.Contains("Path"))
+                    {
+                        string pathString = env["Path"].ToString();
+                        string[] folders = pathString.Split(';');
+                        foreach (var f in folders)
+                        {
+                            if (!paths.Contains(f) &&
+                                (f.IndexOf(@"dmd\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                                 f.IndexOf(@"dmd2\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0))
+                            {
+                                paths.Add(f);
+                            }
+                        }
+                    }
                 }
                 return paths.ToArray();
             }
@@ -183,6 +198,19 @@ namespace DIDE.Installer
                 else
                 {
                     Version v1 = null, v2 = null;
+
+                    foreach (string folder in DmdFoldersFromSystemPath)
+                    {
+                        string path = folder + COMPILER_EXE;
+                        if (File.Exists(path))
+                        {
+                            CompilerInstallInfo inf = GetLocalDMDInstallation(path, ref v1, ref v2);
+                            if (inf != null)
+                            {
+                                localDMDInstallations.Add(inf);
+                            }
+                        }
+                    }
 
                     string reg1 = ReadRegKey(BASE_REG_KEY, DMD1_PATH_REG_KEY),
                         reg2 = ReadRegKey(BASE_REG_KEY, DMD2_PATH_REG_KEY),

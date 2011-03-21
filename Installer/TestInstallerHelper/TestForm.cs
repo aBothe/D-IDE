@@ -44,13 +44,40 @@ namespace TestInstallerHelper
             WriteLine("Local Path Valid DMD 2          --> " + InstallerHelper.IsValidDMDInstallForVersion(2, InstallerHelper.GetLocalDMD2Path()));
             WriteLine("Generated Config File           --> " + file);
             WriteLine("----------------------------------------------------------------------------------");
-            WriteLine(File.ReadAllText(file));
+            if (File.Exists(file)) WriteLine(File.ReadAllText(file));
             WriteLine("----------------------------------------------------------------------------------");
 
-            var env = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.User);
-            if (env.Contains("PATH"))
+            var env = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
+            foreach (string key in env.Keys) WriteLine(key);
+            WriteLine("----------------");
+            env = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Process);
+            foreach (string key in env.Keys) WriteLine(key);
+            WriteLine("----------------");
+
+
+            env = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Process);
+            if (env.Contains("Path"))
             {
-                WriteLine(env["PATH"].ToString());
+                string pathString = env["Path"].ToString();
+                //WriteLine(pathString);
+                string[] folders = pathString.Split(';');
+                foreach (var f in folders)
+                    if (f.IndexOf("dmd", StringComparison.CurrentCultureIgnoreCase) >= 0)
+                        WriteLine(f);
+            }
+            env = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Machine);
+            if (env.Contains("Path"))
+            {
+                string pathString = env["Path"].ToString();
+                string[] folders = pathString.Split(';');
+                foreach (var f in folders)
+                    if (f.IndexOf(@"dmd\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                        f.IndexOf(@"dmd2\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0)
+                        WriteLine(f);
+                foreach (var f in folders)
+                    if (f.IndexOf(@"dmd\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                        f.IndexOf(@"dmd2\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0)
+                        WriteLine(f);
             }
         }
 
