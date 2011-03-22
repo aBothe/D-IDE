@@ -80,7 +80,8 @@ namespace TestInstallerHelper
                         WriteLine(f);
             }
 
-            Configuration.IsValid("c:\");
+            InstallerHelper.CreateConfigurationFile(@"C:\ProgramData\D-IDE.config\D.config.xml");
+            WriteLine(InstallerHelper.IsConfigurationValid(@"C:\ProgramData\D-IDE.config\D.config.xml"));
         }
 
         private void TestForm_Load(object sender, EventArgs e)

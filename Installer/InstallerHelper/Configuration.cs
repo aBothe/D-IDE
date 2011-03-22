@@ -19,10 +19,17 @@ namespace DIDE.Installer
             {
                 xmlDoc.Load(file.FullName);
                 Dictionary<string, string> dict = GetNodeValues(xmlPaths, xmlDoc);
-                foreach (string p in dict.Values) isValid = true;
-                isValid = false;
+                if (dict.Count > 0) isValid = true;
+                foreach (string p in dict.Values)
+                {
+                    if (!Directory.Exists(p) && !File.Exists(p))
+                    {
+                        isValid = false;
+                        break;
+                    }
+                }
             }
-            return true;
+            return isValid;
         }
 
         public static Dictionary<string, string> GetNodeValues(List<string> xmlPaths, XmlDocument xmlDoc)
@@ -33,7 +40,7 @@ namespace DIDE.Installer
                 XmlNodeList nodes = xmlDoc.SelectNodes(nodePath);
                 if (nodes.Count == 1)
                 {
-                    nodeValues[nodePath] = nodes[0].Value;
+                    nodeValues[nodePath] = nodes[0].InnerText;
                 }
             }
             return nodeValues;

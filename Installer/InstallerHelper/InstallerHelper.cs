@@ -164,7 +164,9 @@ namespace DIDE.Installer
                     var list = new List<string>();
 
                     list.Add("//dsettings/dmd[@version='1']/basedirectory");
+                    list.Add("//dsettings/dmd[@version='1']/parsedDirectories/dir");
                     list.Add("//dsettings/dmd[@version='2']/basedirectory");
+                    list.Add("//dsettings/dmd[@version='2']/parsedDirectories/dir");
 
                     isValid = Configuration.IsValid(filePath, list).ToString();
                 }
@@ -183,12 +185,12 @@ namespace DIDE.Installer
                 if (LocalCompiler.DMD1Info != null)
                 {
                     dict.Add("//dsettings/dmd[@version='1']/basedirectory", new string[] { LocalCompiler.DMD1Info.ExecutableFile.Directory.FullName });
-                    //dict.Add("//dsettings/dmd[@version='1']/imports/dir", LocalCompiler.DMD1Info.LibraryPaths);
+                    dict.Add("//dsettings/dmd[@version='1']/parsedDirectories/dir", LocalCompiler.DMD1Info.LibraryPaths);
                 }
                 if (LocalCompiler.DMD2Info != null)
                 {
                     dict.Add("//dsettings/dmd[@version='2']/basedirectory", new string[] { LocalCompiler.DMD2Info.ExecutableFile.Directory.FullName });
-                    //dict.Add("//dsettings/dmd[@version='2']/imports/dir", LocalCompiler.DMD2Info.LibraryPaths);
+                    dict.Add("//dsettings/dmd[@version='2']/parsedDirectories/dir", LocalCompiler.DMD2Info.LibraryPaths);
                 }
 
                 Configuration.CreateConfigurationFile(filePath, dict);

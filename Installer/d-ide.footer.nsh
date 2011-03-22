@@ -1,4 +1,45 @@
 
+;--------------------------------------------------------
+; Setup DMD Configuration
+;--------------------------------------------------------
+Section "-Setup DMD Configuration" configuredmd_section_id
+
+	
+	IfFileExists "$CONFIG_DIR\D.config.xml" CheckConfigFile Configure
+
+	CheckConfigFile:
+		; copy file to temp area to be checked
+		StrCpy $0 "$CONFIG_DIR\D.config.xml"
+		StrCpy $1 "$TEMP\D.config.xml"
+		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
+		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
+		MessageBox MB_OK "1"
+
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "IsConfigurationValid" 1 "$TEMP\D.config.xml"
+		pop $1
+		MessageBox MB_OK "$1"
+		StrCmp $1 "True" AlreadyConfigured Configure
+	
+	Configure:
+		MessageBox MB_OK "2"
+		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$TEMP\D.config.xml"
+		pop $1
+		StrCmp $1 "" +2 0
+		DetailPrint $1
+		
+		MessageBox MB_OK "3"
+		StrCpy $0 "$TEMP\D.config.xml"
+		StrCpy $1 "$CONFIG_DIR\D.config.xml"
+		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
+		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
+		MessageBox MB_OK "$TEMP\D.config.xml"
+		MessageBox MB_OK "$CONFIG_DIR\D.config.xml"
+		;Delete "$TEMP\D.config.xml"
+    
+	
+	AlreadyConfigured:
+	
+SectionEnd
 
 ;--------------------------------------------------------
 ; Install the D-IDE program files
@@ -92,17 +133,6 @@ Section "Uninstall"
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\D-IDE"
 SectionEnd
 
-;--------------------------------------------------------
-; The .onGUIEnd function is a predifined function that
-; runs when the Gui is closed.
-;--------------------------------------------------------
-Function .onInstFailed
-    CLR::Destroy
-FunctionEnd
-
-Function .onInstSuccess
-    CLR::Destroy
-FunctionEnd
 
 ;--------------------------------------------------------
 ; Detects Microsoft .Net Framework 4

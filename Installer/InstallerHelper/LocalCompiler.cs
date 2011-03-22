@@ -161,6 +161,7 @@ namespace DIDE.Installer
                         {
                             if (!paths.Contains(f) &&
                                 (f.IndexOf(@"dmd\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                                 f.IndexOf(@"dmd1\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0 ||
                                  f.IndexOf(@"dmd2\windows\bin", StringComparison.CurrentCultureIgnoreCase) >= 0))
                             {
                                 paths.Add(f);
