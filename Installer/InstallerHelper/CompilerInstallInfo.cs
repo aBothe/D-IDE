@@ -75,24 +75,35 @@ public class CompilerInstallInfo
 
             private void GetVersion()
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.FileName = executableFile.FullName;
-                startInfo.UseShellExecute = false;
-                startInfo.CreateNoWindow = true;
-                startInfo.RedirectStandardOutput = true;
-                using (Process process = Process.Start(startInfo))
+                try
                 {
-                    this.compilerString = process.StandardOutput.ReadLine();
-                    process.StandardOutput.ReadToEnd();
-                    process.WaitForExit();
-                    process.Close();
-
-                    int idx = this.compilerString.LastIndexOf('v');
-                    if (idx > 0)
+                    ProcessStartInfo startInfo = new ProcessStartInfo();
+                    startInfo.FileName = executableFile.FullName;
+                    startInfo.UseShellExecute = false;
+                    startInfo.CreateNoWindow = true;
+                    startInfo.RedirectStandardOutput = true;
+                    using (Process process = Process.Start(startInfo))
                     {
-                        versionString = this.CompilerString.Substring(idx + 1).Trim();
-                        versionInfo = new Version(versionString);
+                        this.compilerString = process.StandardOutput.ReadLine();
+                        process.StandardOutput.ReadToEnd();
+                        process.WaitForExit();
+                        process.Close();
+
+                        int idx = this.compilerString.LastIndexOf('v');
+                        if (idx > 0)
+                        {
+                            versionString = this.CompilerString.Substring(idx + 1).Trim();
+                            versionInfo = new Version(versionString);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    DirectoryInfo
+                        dir = executableFile.Directory.Parent.Parent,
+                        druntime = new DirectoryInfo(dir.FullName + @"\src\druntime\import");
+                    versionString = druntime.Exists ? "2.0" : "1.0";
+                    versionInfo = new Version(versionString);
                 }
             }
 

@@ -197,7 +197,12 @@ namespace DIDE.Installer
             }
             catch (Exception ex)
             {
-                error = ex.Message + Environment.NewLine + ex.StackTrace;
+                var iex = ex;
+                while (iex != null)
+                {
+                    error = iex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine;
+                    iex = iex.InnerException;
+                }
             }
             return error;
         }

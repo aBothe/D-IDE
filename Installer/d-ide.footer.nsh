@@ -13,15 +13,12 @@ Section "-Setup DMD Configuration" configuredmd_section_id
 		StrCpy $1 "$TEMP\D.config.xml"
 		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
 		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
-		MessageBox MB_OK "1"
 
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "IsConfigurationValid" 1 "$TEMP\D.config.xml"
 		pop $1
-		MessageBox MB_OK "$1"
 		StrCmp $1 "True" AlreadyConfigured Configure
 	
 	Configure:
-		MessageBox MB_OK "2"
 		CLR::Call /NOUNLOAD "DIDE.Installer.dll" "DIDE.Installer.InstallerHelper" "CreateConfigurationFile" 1 "$TEMP\D.config.xml"
 		pop $1
 		StrCmp $1 "" +2 0
@@ -32,11 +29,8 @@ Section "-Setup DMD Configuration" configuredmd_section_id
 		StrCpy $1 "$CONFIG_DIR\D.config.xml"
 		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
 		System::Call 'kernel32::CopyFile(t r0, t r1, b r2) ?e'
-		MessageBox MB_OK "$TEMP\D.config.xml"
-		MessageBox MB_OK "$CONFIG_DIR\D.config.xml"
-		;Delete "$TEMP\D.config.xml"
+		Delete "$TEMP\D.config.xml"
     
-	
 	AlreadyConfigured:
 	
 SectionEnd
