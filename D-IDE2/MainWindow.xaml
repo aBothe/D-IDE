@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:r="clr-namespace:Microsoft.Windows.Controls.Ribbon;assembly=RibbonControlsLibrary"
+		xmlns:d="clr-namespace:D_IDE"
         Title="D-IDE"
 		x:Name="RibbonWindow"
 		Icon="d-ide.ico"
@@ -10,14 +11,15 @@
 		KeyDown="RibbonWindow_KeyDown"
 		Closing="RibbonWindow_Closing" Loaded="RibbonWindow_Loaded">
 	
-	<!-- Menu commands -->
+	<!-- UI Commands & shortcuts -->
 	
 	<r:RibbonWindow.CommandBindings>
-		
+		<CommandBinding Command="d:IDEUICommands.GoTo" Executed="GotoLine" />
 	</r:RibbonWindow.CommandBindings>
 	
 	<r:RibbonWindow.InputBindings>
 		<KeyBinding Key="X" Modifiers="Alt" Command="Close" />
+		<KeyBinding Key="G" Modifiers="Ctrl" Command="d:IDEUICommands.GoTo" />
 	</r:RibbonWindow.InputBindings>
 	
 	<!-- UI Definitions -->
@@ -64,7 +66,7 @@
 				<r:RibbonGroup Header="Search">
 					<r:RibbonButton Label="Search &amp; Replace" SmallImageSource="Resources/Icons.16x16.FindInFiles.png"></r:RibbonButton>
 					<r:RibbonButton Label="Find Next" SmallImageSource="Resources/Icons.16x16.FindIcon.png"></r:RibbonButton>
-					<r:RibbonButton Label="Go to line" SmallImageSource="Resources/goto.ico"></r:RibbonButton>
+					<r:RibbonButton Label="Go to line" Command="d:IDEUICommands.GoTo" SmallImageSource="Resources/goto.ico"></r:RibbonButton>
 				</r:RibbonGroup>
 
 				<r:RibbonGroup Header="Code">

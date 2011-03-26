@@ -223,7 +223,7 @@ namespace D_IDE.D
 					return;
 				}
 
-				completionWindow.Closed += (object o, EventArgs _e) => completionWindow = null; // After the window closed, reset it to null
+				completionWindow.Closed += (object o, EventArgs _e) => { completionWindow = null; }; // After the window closed, reset it to null
 				completionWindow.Show();
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }

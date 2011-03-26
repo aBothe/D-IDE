@@ -205,13 +205,16 @@ namespace D_IDE
 
 			RefreshGUI();
 
+			if (args.Length > 0)
+				foreach (var a in args)
+					IDEManager.EditingManagement.OpenFile(a);
+			else
+
 			// Load last solution
 			if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
 				IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 
-			if (args.Length > 0)
-				foreach (var a in args)
-					IDEManager.EditingManagement.OpenFile(a);
+			
 		}
 		#endregion
 
@@ -654,5 +657,15 @@ namespace D_IDE
 			RestoreDefaultPanelLayout();
 		}
 		#endregion
+
+		private void GotoLine(object sender, ExecutedRoutedEventArgs e)
+		{
+
+		}
+	}
+
+	public static class IDEUICommands
+	{
+		public static readonly RoutedUICommand GoTo = new RoutedUICommand("Go to line","GoTo",typeof(Window));
 	}
 }
