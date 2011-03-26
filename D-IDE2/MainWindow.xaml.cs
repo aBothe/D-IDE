@@ -478,20 +478,6 @@ namespace D_IDE
 			bool shift=Keyboard.IsKeyDown(Key.LeftShift)|| Keyboard.IsKeyDown(Key.RightShift);
 			var k = e.Key == Key.System ? e.SystemKey : e.Key;
 
-			if (ctrl)
-				switch (k)
-				{
-					case Key.N:
-						NewSource(sender, null);
-						return;
-					case Key.O:
-						Open(sender, null);
-						return;
-					case Key.S:
-						Save(sender, null);
-						return;
-				}
-			else 
 				switch (k)
 				{
 					case Key.F5:
@@ -664,8 +650,9 @@ namespace D_IDE
 		}
 	}
 
-	public static class IDEUICommands
+	internal static class IDEUICommands
 	{
-		public static readonly RoutedUICommand GoTo = new RoutedUICommand("Go to line","GoTo",typeof(Window));
+		public static readonly RoutedUICommand GoTo = new RoutedUICommand("Go to line", "GoTo", typeof(Window));
+		public static readonly RoutedUICommand SaveAll = new RoutedUICommand("Save all documents", "SaveAll", typeof(Window));
 	}
 }

@@ -15,11 +15,22 @@
 	
 	<r:RibbonWindow.CommandBindings>
 		<CommandBinding Command="d:IDEUICommands.GoTo" Executed="GotoLine" />
+		<CommandBinding Command="New" Executed="NewSource" />
+		<CommandBinding Command="Open" Executed="Open" />
+		<CommandBinding Command="Save" Executed="Save" />
+		<CommandBinding Command="d:IDEUICommands.SaveAll" Executed="SaveAll" />
+		<CommandBinding Command="SaveAs" Executed="SaveAs" />
+		<CommandBinding Command="Properties" Executed="Settings" />
 	</r:RibbonWindow.CommandBindings>
 	
 	<r:RibbonWindow.InputBindings>
 		<KeyBinding Key="X" Modifiers="Alt" Command="Close" />
 		<KeyBinding Key="G" Modifiers="Ctrl" Command="d:IDEUICommands.GoTo" />
+		<KeyBinding Key="N" Modifiers="Ctrl" Command="New" />
+		<KeyBinding Key="O" Modifiers="Ctrl" Command="Open" />
+		<KeyBinding Key="S" Modifiers="Ctrl" Command="d:IDEUICommands.SaveAll" />
+		<KeyBinding Key="F" Modifiers="Ctrl" Command="Search" />
+		<KeyBinding Key="F3" Command="Find" />
 	</r:RibbonWindow.InputBindings>
 	
 	<!-- UI Definitions -->
@@ -33,8 +44,8 @@
         <r:Ribbon x:Name="Ribbon">
 			<r:Ribbon.QuickAccessToolBar>
 				<r:RibbonQuickAccessToolBar>
-					<r:RibbonButton SmallImageSource="Resources/open16.png" Click="Open" ToolTipTitle="Open (Ctrl+O)" />
-					<r:RibbonButton SmallImageSource="Resources/save16.png" Click="SaveAll" ToolTipTitle="Save All" />
+					<r:RibbonButton SmallImageSource="Resources/open16.png" Command="Open" ToolTipTitle="Open (Ctrl+O)" />
+					<r:RibbonButton SmallImageSource="Resources/save16.png" Command="d:IDEUICommands.SaveAll" ToolTipTitle="Save All" />
 				</r:RibbonQuickAccessToolBar>
 			</r:Ribbon.QuickAccessToolBar>
 			
@@ -42,15 +53,15 @@
 				<r:RibbonApplicationMenu SmallImageSource="Resources/list-drop-down.png">
 					<r:RibbonApplicationMenuItem Header="New" Name="Button_New" ImageSource="Resources/NewDocument_32x32.png">
 						<r:RibbonApplicationMenuItem ImageSource="Resources/prj_32.png" Header="Project" Click="NewProject" />
-						<r:RibbonApplicationMenuItem Header="File" Click="NewSource" ImageSource="Resources/NewDocument_32x32.png" ToolTipTitle="New File (Ctrl+N)" ToolTipDescription="Create a new source file" />
+						<r:RibbonApplicationMenuItem Header="File" Command="New" ImageSource="Resources/NewDocument_32x32.png" ToolTipTitle="New File (Ctrl+N)" ToolTipDescription="Create a new source file" />
 					</r:RibbonApplicationMenuItem>
-					<r:RibbonApplicationMenuItem Header="Open" ImageSource="Resources/OpenPH.png" Name="Button_Open" />
+					<r:RibbonApplicationMenuItem Header="Open" Command="Open" ImageSource="Resources/OpenPH.png" Name="Button_Open" />
 					<r:RibbonSeparator />
-					<r:RibbonApplicationMenuItem Header="Save" Click="Save" ImageSource="Resources/SaveHH.png" ToolTipTitle="Save (Ctrl+S)" />
-					<r:RibbonApplicationMenuItem Header="Save All" Click="SaveAll" ImageSource="Resources/SaveAllHH.png" />
-					<r:RibbonApplicationMenuItem Header="Save as" Click="SaveAs" ImageSource="Resources/SaveAsHH.png" />
+					<r:RibbonApplicationMenuItem Header="Save" Command="Save" ImageSource="Resources/SaveHH.png" ToolTipTitle="Save (Ctrl+S)" />
+					<r:RibbonApplicationMenuItem Header="Save All" Command="d:IDEUICommands.SaveAll" ImageSource="Resources/SaveAllHH.png" />
+					<r:RibbonApplicationMenuItem Header="Save as" Command="SaveAs" ImageSource="Resources/SaveAsHH.png" />
 					<r:RibbonSeparator />
-					<r:RibbonApplicationMenuItem Header="Settings" ImageSource="Resources/settings_32.png" Click="Settings" />
+					<r:RibbonApplicationMenuItem Header="Settings" Command="Properties" ImageSource="Resources/settings_32.png" />
 					<r:RibbonSeparator />
 					<r:RibbonApplicationMenuItem Header="Exit" Command="Close" ImageSource="Resources/application-exit-3.ico" ToolTipTitle="Exit D-IDE (Alt+X)" />
 				</r:RibbonApplicationMenu>
@@ -64,15 +75,15 @@
 				</r:RibbonGroup>
 
 				<r:RibbonGroup Header="Search">
-					<r:RibbonButton Label="Search &amp; Replace" SmallImageSource="Resources/Icons.16x16.FindInFiles.png"></r:RibbonButton>
-					<r:RibbonButton Label="Find Next" SmallImageSource="Resources/Icons.16x16.FindIcon.png"></r:RibbonButton>
-					<r:RibbonButton Label="Go to line" Command="d:IDEUICommands.GoTo" SmallImageSource="Resources/goto.ico"></r:RibbonButton>
+					<r:RibbonButton Label="Search &amp; Replace" Command="Search" SmallImageSource="Resources/Icons.16x16.FindInFiles.png"></r:RibbonButton>
+					<r:RibbonButton Label="Find Next" Command="Find" SmallImageSource="Resources/Icons.16x16.FindIcon.png"></r:RibbonButton>
+					<r:RibbonButton Label="Go to line" Command="d:IDEUICommands.GoTo" ToolTipTitle="Go to line (Ctrl+G)" SmallImageSource="Resources/goto.ico"></r:RibbonButton>
 				</r:RibbonGroup>
 
 				<r:RibbonGroup Header="Code">
 					<r:RibbonButton Label="Comment selection"></r:RibbonButton>
 					<r:RibbonButton Label="Uncomment selection"></r:RibbonButton>
-					<r:RibbonButton Label="Double line"></r:RibbonButton>
+					<r:RibbonButton Label="Duplicate line"></r:RibbonButton>
 					<r:RibbonButton Label="Reformat document"></r:RibbonButton>
 				</r:RibbonGroup>
 
