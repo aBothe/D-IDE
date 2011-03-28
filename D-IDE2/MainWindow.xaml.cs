@@ -654,5 +654,10 @@ namespace D_IDE
 	{
 		public static readonly RoutedUICommand GoTo = new RoutedUICommand("Go to line", "GoTo", typeof(Window));
 		public static readonly RoutedUICommand SaveAll = new RoutedUICommand("Save all documents", "SaveAll", typeof(Window));
+		public static readonly RoutedUICommand CommentBlock = new RoutedUICommand("Comment code", "CommentBlock", typeof(Window));
+		public static readonly RoutedUICommand UncommentBlock = new RoutedUICommand("Uncomment code", "UncommentBlock", typeof(Window));
+		public static readonly RoutedUICommand DuplicateLine = new RoutedUICommand("Duplicate current line", "DuplicateLine", typeof(Window));
+		public static readonly RoutedUICommand ReformatDoc = new RoutedUICommand("Reformat current document", "ReformatDoc", typeof(Window));
+		public static readonly RoutedUICommand ToggleBreakpoint = new RoutedUICommand("Toggle breakpoint", "ToggleBreakpoint", typeof(Window));
 	}
 }

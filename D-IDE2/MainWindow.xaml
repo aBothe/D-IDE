@@ -31,6 +31,7 @@
 		<KeyBinding Key="S" Modifiers="Ctrl" Command="d:IDEUICommands.SaveAll" />
 		<KeyBinding Key="F" Modifiers="Ctrl" Command="Search" />
 		<KeyBinding Key="F3" Command="Find" />
+		<KeyBinding Key="D" Modifiers="Ctrl"  Command="d:IDEUICommands.DuplicateLine" />
 	</r:RibbonWindow.InputBindings>
 	
 	<!-- UI Definitions -->
@@ -81,14 +82,14 @@
 				</r:RibbonGroup>
 
 				<r:RibbonGroup Header="Code">
-					<r:RibbonButton Label="Comment selection"></r:RibbonButton>
-					<r:RibbonButton Label="Uncomment selection"></r:RibbonButton>
-					<r:RibbonButton Label="Duplicate line"></r:RibbonButton>
-					<r:RibbonButton Label="Reformat document"></r:RibbonButton>
+					<r:RibbonButton Command="d:IDEUICommands.CommentBlock" Label="Comment selection"></r:RibbonButton>
+					<r:RibbonButton Command="d:IDEUICommands.UncommentBlock" Label="Uncomment selection"></r:RibbonButton>
+					<r:RibbonButton Command="d:IDEUICommands.DuplicateLine" Label="Duplicate line"></r:RibbonButton>
+					<r:RibbonButton Command="d:IDEUICommands.ReformatDoc" Label="Reformat document"></r:RibbonButton>
 				</r:RibbonGroup>
 
 				<r:RibbonGroup Header="Breakpoints" >
-					<r:RibbonButton Label="Toggle Breakpoint" Click="ToggleBreakpoint_Click" SmallImageSource="Resources/breakpoint.png" />
+					<r:RibbonButton Command="d:IDEUICommands.ToggleBreakpoint" Label="Toggle Breakpoint" SmallImageSource="Resources/breakpoint.png" />
 					<r:RibbonButton Label="Refresh Breakpoints" Click="RefreshBreakpoints_Click" SmallImageSource="Resources/Icons.16x16.BrowserRefresh.png" />
 				</r:RibbonGroup>
 			</r:RibbonTab>
