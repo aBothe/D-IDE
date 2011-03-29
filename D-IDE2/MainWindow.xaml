@@ -21,6 +21,7 @@
 		<CommandBinding Command="d:IDEUICommands.SaveAll" Executed="SaveAll" />
 		<CommandBinding Command="SaveAs" Executed="SaveAs" />
 		<CommandBinding Command="Properties" Executed="Settings" />
+		<CommandBinding Command="d:IDEUICommands.ToggleBreakpoint" Executed="ToggleBreakpoint_Click" />
 	</r:RibbonWindow.CommandBindings>
 	
 	<r:RibbonWindow.InputBindings>
@@ -32,6 +33,9 @@
 		<KeyBinding Key="F" Modifiers="Ctrl" Command="Search" />
 		<KeyBinding Key="F3" Command="Find" />
 		<KeyBinding Key="D" Modifiers="Ctrl"  Command="d:IDEUICommands.DuplicateLine" />
+		<KeyBinding Key="K" Modifiers="Ctrl" Command="d:IDEUICommands.CommentBlock" />
+		<KeyBinding Key="K" Modifiers="Ctrl+Shift" Command="d:IDEUICommands.UncommentBlock" />
+		<KeyBinding Key="F9" Command="d:IDEUICommands.ToggleBreakpoint" />
 	</r:RibbonWindow.InputBindings>
 	
 	<!-- UI Definitions -->

@@ -126,6 +126,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Dialogs\GotoDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\ProjectSettingsDlg.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -179,6 +183,9 @@
     </Compile>
     <Compile Include="Dialogs\GlobalSettingsDlg.xaml.cs">
       <DependentUpon>GlobalSettingsDlg.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\GotoDialog.xaml.cs">
+      <DependentUpon>GotoDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\ProjectSettingsDlg.xaml.cs">
       <DependentUpon>ProjectSettingsDlg.xaml</DependentUpon>

@@ -646,7 +646,13 @@ namespace D_IDE
 
 		private void GotoLine(object sender, ExecutedRoutedEventArgs e)
 		{
+			var dlg = new GotoDialog();
 
+			if (dlg.ShowDialog().Value)
+			{
+				var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+				ed.Editor.TextArea.Caret.Line = dlg.EnteredNumber;
+			}
 		}
 	}
 
