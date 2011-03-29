@@ -649,6 +649,7 @@ namespace D_IDE
 			{
 				var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
 				ed.Editor.TextArea.Caret.Line = dlg.EnteredNumber;
+				ed.Editor.ScrollToLine(dlg.EnteredNumber);
 			}
 		}
 	}
