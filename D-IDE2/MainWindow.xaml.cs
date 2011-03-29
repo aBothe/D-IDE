@@ -489,9 +489,6 @@ namespace D_IDE
 							else
 								LaunchDebugger_Click(null, null);
 						return;
-					case Key.F9:
-						ToggleBreakpoint_Click(null,null);
-						return;
 					case Key.F10:
 						Button_StepOver_Click(null, null);
 						return;
@@ -647,7 +644,7 @@ namespace D_IDE
 		private void GotoLine(object sender, ExecutedRoutedEventArgs e)
 		{
 			var dlg = new GotoDialog();
-
+			dlg.Owner=this;
 			if (dlg.ShowDialog().Value)
 			{
 				var ed = IDEManager.Instance.CurrentEditor as EditorDocument;

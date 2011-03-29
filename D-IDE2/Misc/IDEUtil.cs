@@ -25,13 +25,15 @@ namespace D_IDE
 					Thread.CurrentThread.IsBackground = true;
 					if (IDEUtil.IsUpdateAvailable)
 					{
-						if (MessageBox.Show("A program update is available. Install it now?\r\nWarning: The program will be closed then!", 
-							"Update available", 
-							MessageBoxButton.YesNo, 
-							MessageBoxImage.Question, 
+						if (MessageBox.Show("A program update is available. Install it now?\r\nWarning: The program will be closed then!",
+							"Update available",
+							MessageBoxButton.YesNo,
+							MessageBoxImage.Question,
 							MessageBoxResult.Yes) == MessageBoxResult.Yes)
 							IDEUtil.DoUpdate();
 					}
+					else if (ForceWatch)
+						MessageBox.Show("No update available.","Obtaining online status.");
 				}).Start();
 		}
 
@@ -53,9 +55,9 @@ namespace D_IDE
 					if (File.ReadAllText(FileVersionFile) == LastOnlineModTime)
 						return false;
 				}
-				catch (Exception ex)
+				catch
 				{
-					ErrorLogger.Log(ex,ErrorType.Information,ErrorOrigin.System);
+					//ErrorLogger.Log(ex,ErrorType.Information,ErrorOrigin.System);
 					return false;
 				}
 				return true;
