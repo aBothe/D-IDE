@@ -663,5 +663,9 @@ namespace D_IDE
 		public static readonly RoutedUICommand DuplicateLine = new RoutedUICommand("Duplicate current line", "DuplicateLine", typeof(Window));
 		public static readonly RoutedUICommand ReformatDoc = new RoutedUICommand("Reformat current document", "ReformatDoc", typeof(Window));
 		public static readonly RoutedUICommand ToggleBreakpoint = new RoutedUICommand("Toggle breakpoint", "ToggleBreakpoint", typeof(Window));
+		public static readonly RoutedUICommand StepIn = new RoutedUICommand("", "StepIn", typeof(Window));
+		public static readonly RoutedUICommand StepOver = new RoutedUICommand("", "StepOver", typeof(Window));
+		public static readonly RoutedUICommand Launch = new RoutedUICommand("", "Launch", typeof(Window));
+		public static readonly RoutedUICommand LaunchWithoutDebugger = new RoutedUICommand("", "LaunchWithoutDebugger", typeof(Window));
 	}
 }

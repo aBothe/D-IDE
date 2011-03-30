@@ -22,6 +22,11 @@
 		<CommandBinding Command="SaveAs" Executed="SaveAs" />
 		<CommandBinding Command="Properties" Executed="Settings" />
 		<CommandBinding Command="d:IDEUICommands.ToggleBreakpoint" Executed="ToggleBreakpoint_Click" />
+		<CommandBinding Command="d:IDEUICommands.StepIn" Executed="Button_StepIn_Click" />
+		<CommandBinding Command="d:IDEUICommands.StepOver" Executed="Button_StepOver_Click" />
+
+		<CommandBinding Command="d:IDEUICommands.Launch" Executed="LaunchDebugger_Click" />
+		<CommandBinding Command="d:IDEUICommands.Launch" Executed="LaunchWithoutDebugger_Click" />
 	</r:RibbonWindow.CommandBindings>
 	
 	<r:RibbonWindow.InputBindings>
@@ -35,7 +40,13 @@
 		<KeyBinding Key="D" Modifiers="Ctrl"  Command="d:IDEUICommands.DuplicateLine" />
 		<KeyBinding Key="K" Modifiers="Ctrl" Command="d:IDEUICommands.CommentBlock" />
 		<KeyBinding Key="K" Modifiers="Ctrl+Shift" Command="d:IDEUICommands.UncommentBlock" />
+
 		<KeyBinding Key="F9" Command="d:IDEUICommands.ToggleBreakpoint" />
+		<KeyBinding Key="F10" Command="d:IDEUICommands.StepOver" />
+		<KeyBinding Key="F11" Command="d:IDEUICommands.StepIn" />
+		
+		<KeyBinding Key="F5" Command="d:IDEUICommands.Launch" />
+		<KeyBinding Key="F5" Modifiers="Shift" Command="d:IDEUICommands.LaunchWithoutDebugger" />
 	</r:RibbonWindow.InputBindings>
 	
 	<!-- UI Definitions -->
@@ -133,8 +144,8 @@
 				</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Run">
-					<r:RibbonButton Label="Launch Debugger" Click="LaunchDebugger_Click" SmallImageSource="Resources/build_dbg.png" ToolTipTitle="Build &amp; Debug Solution/Current Module (F5)" />
-					<r:RibbonSplitButton Label="Run without Debugger" Click="LaunchWithoutDebugger_Click" SmallImageSource="Resources/build.png" ToolTipTitle="Build &amp; Launch Solution/Current Module without attaching a debugger to it (Shift+F5)">
+					<r:RibbonButton Label="Launch Debugger" Command="d:IDEUICommands.LaunchDebugger" SmallImageSource="Resources/build_dbg.png" ToolTipTitle="Build &amp; Debug Solution/Current Module (F5)" />
+					<r:RibbonSplitButton Label="Run without Debugger" Command="d:IDEUICommands.LaunchWithoutDebugger" SmallImageSource="Resources/build.png" ToolTipTitle="Build &amp; Launch Solution/Current Module without attaching a debugger to it (Shift+F5)">
 						<r:RibbonMenuItem Header="Run in external console" Click="LaunchInConsole_Click" ToolTipTitle="Build &amp; Launch the program in an external console box" />
 					</r:RibbonSplitButton>
 					</r:RibbonGroup>
@@ -149,8 +160,8 @@
 				</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Debugging">
-					<r:RibbonButton Name="Button_StepIn" Click="Button_StepIn_Click" Label="Step in" LargeImageSource="Resources/debug-step-into.ico" />
-					<r:RibbonButton Name="Button_StepOver" Click="Button_StepOver_Click" Label="Step over" LargeImageSource="Resources/debug-step-over.ico" />
+					<r:RibbonButton Name="Button_StepIn" Command="d:IDEUICommands.StepIn" Label="Step in" LargeImageSource="Resources/debug-step-into.ico" />
+					<r:RibbonButton Name="Button_StepOver" Command="d:IDEUICommands.StepOver" Label="Step over" LargeImageSource="Resources/debug-step-over.ico" />
 					<r:RibbonButton Name="Button_StepOut" Click="Button_StepOut_Click" Label="Step out" LargeImageSource="Resources/debug-step-out.ico" />
 					<r:RibbonButton Name="Button_SetStackFrame" Click="Button_SetStackFrame_Click"  Label="Set current instruction" ToolTip="Set instruction pointer to current source line and execute it" />				
 				</r:RibbonGroup>
