@@ -63,7 +63,8 @@ namespace D_IDE.Updater
 
 			// Output local version if possible
 			string offlineVersion ="";
-			if (File.Exists(mFileVerFile))
+			bool OfflineVersionExists = false;
+			if (OfflineVersionExists=File.Exists(mFileVerFile))
 			{
 				long timestamp;
 				if (long.TryParse(offlineVersion=File.ReadAllText(mFileVerFile), out timestamp))
@@ -108,7 +109,7 @@ namespace D_IDE.Updater
 
 			// Get the latest build archive
 			string archive = "";
-			if (DownloadLatestBuild(ArchiveUrl, out archive) && CheckForOpenInstances() && ExtractFiles(archive, OutputDir))
+			if (DownloadLatestBuild(ArchiveUrl+(OfflineVersionExists ? "?IsUpdate=true" : ""), out archive) && CheckForOpenInstances() && ExtractFiles(archive, OutputDir))
 			{
 				Console.WriteLine();
 				Console.WriteLine("Download successful!");
