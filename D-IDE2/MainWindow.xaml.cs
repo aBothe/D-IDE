@@ -32,11 +32,6 @@ namespace D_IDE
 			get { return StatusLabel1.Text; }
 			set { StatusLabel1.Text=value; }
 		}
-		public string Status2
-		{
-			get { return StatusLabel2.Text; }
-			set { StatusLabel2.Text = value; }
-		}
 
 		public bool RunCurrentModuleOnly
 		{
