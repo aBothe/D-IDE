@@ -104,7 +104,7 @@ Section  "Launch D-IDE"
 	StrCmp $IS_DOT_NET_FRESHLY_INSTALLED "Y" SkipLaunch LaunchApp 
 			
 	LaunchApp:
-		ExecShell open "$INSTDIR\D-IDE.exe" SW_SHOWNORMAL
+		ExecShell open "$INSTDIR\D-IDE.exe"
 	
 	SkipLaunch:
 SectionEnd
