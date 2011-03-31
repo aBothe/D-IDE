@@ -354,7 +354,9 @@ namespace D_IDE
 
 		private void LaunchDebugger_Click(object sender, RoutedEventArgs e)
 		{
-			if (RunCurrentModuleOnly ? IDEManager.BuildManagement.BuildSingle() : IDEManager.BuildManagement.Build())
+			if (CoreManager.DebugManagement.IsDebugging)
+				Button_ResumeExecution_Click(null, null);
+			else if (RunCurrentModuleOnly ? IDEManager.BuildManagement.BuildSingle() : IDEManager.BuildManagement.Build())
 				IDEManager.IDEDebugManagement.LaunchWithDebugger();
 		}
 
@@ -466,38 +468,6 @@ namespace D_IDE
 				Button_Open.Items.Add(new LastFileItem(i,true));
 
 			StartPage.RefreshLastProjects();
-		}
-
-		/// <summary>
-		/// Catches all menu shortcuts
-		/// </summary>
-		private void RibbonWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-		{
-			e.Handled = true;
-			bool ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
-			bool shift=Keyboard.IsKeyDown(Key.LeftShift)|| Keyboard.IsKeyDown(Key.RightShift);
-			var k = e.Key == Key.System ? e.SystemKey : e.Key;
-
-				switch (k)
-				{
-					case Key.F5:
-						if (CoreManager.DebugManagement.IsDebugging)
-							Button_ResumeExecution_Click(null, null);
-						else if (!IDEManager.IDEDebugManagement.IsExecuting)
-							if (shift)
-								LaunchWithoutDebugger_Click(null, null);
-							else
-								LaunchDebugger_Click(null, null);
-						return;
-					case Key.F10:
-						Button_StepOver_Click(null, null);
-						return;
-					case Key.F11:
-						Button_StepIn_Click(null, null);
-						return;
-				}
-
-			e.Handled = false;
 		}
 
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -665,7 +635,7 @@ namespace D_IDE
 		public static readonly RoutedUICommand ToggleBreakpoint = new RoutedUICommand("Toggle breakpoint", "ToggleBreakpoint", typeof(Window));
 		public static readonly RoutedUICommand StepIn = new RoutedUICommand("", "StepIn", typeof(Window));
 		public static readonly RoutedUICommand StepOver = new RoutedUICommand("", "StepOver", typeof(Window));
-		public static readonly RoutedUICommand Launch = new RoutedUICommand("", "Launch", typeof(Window));
+		public static readonly RoutedUICommand LaunchDebugger = new RoutedUICommand("", "LaunchDebugger", typeof(Window));
 		public static readonly RoutedUICommand LaunchWithoutDebugger = new RoutedUICommand("", "LaunchWithoutDebugger", typeof(Window));
 	}
 }

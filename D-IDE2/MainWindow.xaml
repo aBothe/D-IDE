@@ -8,7 +8,6 @@
 		Icon="d-ide.ico"
 		Width="1054" Height="852" MinWidth="640" MinHeight="480" 
 		xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock"
-		KeyDown="RibbonWindow_KeyDown"
 		Closing="RibbonWindow_Closing" Loaded="RibbonWindow_Loaded">
 	
 	<!-- UI Commands & shortcuts -->
@@ -25,8 +24,8 @@
 		<CommandBinding Command="d:IDEUICommands.StepIn" Executed="Button_StepIn_Click" />
 		<CommandBinding Command="d:IDEUICommands.StepOver" Executed="Button_StepOver_Click" />
 
-		<CommandBinding Command="d:IDEUICommands.Launch" Executed="LaunchDebugger_Click" />
-		<CommandBinding Command="d:IDEUICommands.Launch" Executed="LaunchWithoutDebugger_Click" />
+		<CommandBinding Command="d:IDEUICommands.LaunchDebugger" Executed="LaunchDebugger_Click" />
+		<CommandBinding Command="d:IDEUICommands.LaunchWithoutDebugger" Executed="LaunchWithoutDebugger_Click" />
 	</r:RibbonWindow.CommandBindings>
 	
 	<r:RibbonWindow.InputBindings>
@@ -45,7 +44,7 @@
 		<KeyBinding Key="F10" Command="d:IDEUICommands.StepOver" />
 		<KeyBinding Key="F11" Command="d:IDEUICommands.StepIn" />
 		
-		<KeyBinding Key="F5" Command="d:IDEUICommands.Launch" />
+		<KeyBinding Key="F5" Command="d:IDEUICommands.LaunchDebugger" />
 		<KeyBinding Key="F5" Modifiers="Shift" Command="d:IDEUICommands.LaunchWithoutDebugger" />
 	</r:RibbonWindow.InputBindings>
 	
@@ -176,9 +175,7 @@
 		</r:Ribbon>
 		
 		<StatusBar Grid.Row="1" Name="statusBar1" VerticalAlignment="Bottom">
-			<TextBlock Name="StatusLabel1">Status 1</TextBlock>
-			<Separator />
-			<TextBlock Name="StatusLabel2">Status 2</TextBlock>
+			<TextBlock HorizontalAlignment="Stretch" Name="StatusLabel1" />
 		</StatusBar>
 		<my:DockingManager Grid.Row="1" Name="DockMgr" Margin="0,0,0,22" ActiveDocumentChanged="DockMgr_ActiveDocumentChanged" DocumentClosed="DockMgr_DocumentClosed" DocumentClosing="DockMgr_DocumentClosing" />
 	</Grid>
