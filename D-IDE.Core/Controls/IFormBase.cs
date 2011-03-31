@@ -16,5 +16,7 @@ namespace D_IDE.Core.Controls
 		void RefreshErrorList();
 		void RefreshTitle();
 		void RefreshProjectExplorer();
+
+		string LeftStatusText { get; set; }
 	}
 }

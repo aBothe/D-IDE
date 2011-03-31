@@ -23,6 +23,7 @@ namespace D_IDE
 			/// <param name="ShowConsole">Show an external program console?</param>
 			public static void LaunchWithDebugger()
 			{
+				IDEManager.Instance.MainWindow.LeftStatusText = "Launch debugger";
 				if (ErrorManagement.LastSingleBuildResult != null)
 				{
 					if (ErrorManagement.LastSingleBuildResult.Successful)
@@ -186,7 +187,7 @@ namespace D_IDE
 			{
 				if (!IsDebugging) return;
 
-				Log("Waiting for the program to interrupt...",ErrorType.Information);
+				Log(IDEManager.Instance.MainWindow.LeftStatusText = "Waiting for the program to interrupt...", ErrorType.Information);
 				var wr = WaitResult.OK;
 				while (IsDebugging && (wr = Engine.WaitForEvent(10)) == WaitResult.TimeOut)
 				{
@@ -195,7 +196,7 @@ namespace D_IDE
 					System.Windows.Forms.Application.DoEvents();
 				}
 				if (wr != WaitResult.Unexpected)
-					Log("Program execution halted...",ErrorType.Information);
+					Log(IDEManager.Instance.MainWindow.LeftStatusText="Program execution halted...",ErrorType.Information);
 				/*
 				 * After a program paused its execution, we'll be able to access its breakpoints and symbol data.
 				 * When resuming the program, WaitForDebugEvent() will be called again.
@@ -344,6 +345,7 @@ namespace D_IDE
 				// If there's an external debugger specified and if it's wanted to launch it, start that one
 				if (GlobalProperties.Instance.UseExternalDebugger)
 				{
+					IDEManager.Instance.MainWindow.LeftStatusText = "Launch external debugger";
 					CurrentProcess = FileExecution.ExecuteAsync(GlobalProperties.Instance.ExternalDebugger_Bin,
 						IBuildSupport.BuildArgumentString(GlobalProperties.Instance.ExternalDebugger_Arguments, new Dictionary<string, string>{
 							{"$sourcePath",sourcePath},
@@ -359,6 +361,8 @@ namespace D_IDE
 
 					return;
 				}
+
+				IDEManager.Instance.MainWindow.LeftStatusText = "Start debugging "+Path.GetFileName(exe);
 
 				if (!dbgEngineInited)
 					InitDebugger();
@@ -402,6 +406,8 @@ namespace D_IDE
 					return null;
 				}
 
+				IDEManager.Instance.MainWindow.LeftStatusText = "Launch "+Path.GetFileName( exe)+" without debugger";
+
 				// Make all documents read-only
 				EditingManagement.AllDocumentsReadOnly = true;
 
@@ -418,7 +424,7 @@ namespace D_IDE
 
 			static void CurrentProcess_Exited()
 			{
-				ErrorLogger.Log("Process exited with code "+CurrentProcess.ExitCode.ToString()+" ("+(CurrentProcess.ExitTime-CurrentProcess.StartTime).ToString()+")",
+				ErrorLogger.Log(IDEManager.Instance.MainWindow.LeftStatusText = "Process exited with code " + CurrentProcess.ExitCode.ToString() + " (" + (CurrentProcess.ExitTime - CurrentProcess.StartTime).ToString() + ")",
 					CurrentProcess.ExitCode<1?ErrorType.Information:ErrorType.Error,
 					ErrorOrigin.Program);
 
@@ -450,6 +456,8 @@ namespace D_IDE
 			{
 				if (IsDebugging)
 				{
+					IDEManager.Instance.MainWindow.LeftStatusText = "Terminate debugger";
+
 					IsDebugging = false;
 					Engine.EndPendingWaits();
 					Engine.Terminate();
@@ -460,6 +468,7 @@ namespace D_IDE
 				}
 				if (CurrentProcess != null && !CurrentProcess.HasExited)
 				{
+					IDEManager.Instance.MainWindow.LeftStatusText = "Terminate executed process";
 					CurrentProcess.Kill();
 					CurrentProcess = null;
 				}

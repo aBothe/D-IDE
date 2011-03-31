@@ -27,12 +27,6 @@ namespace D_IDE
 		public StartPage StartPage;
 		public DebugLocalsPanel Panel_Locals = new DebugLocalsPanel();
 
-		public string Status1
-		{
-			get { return StatusLabel1.Text; }
-			set { StatusLabel1.Text=value; }
-		}
-
 		public bool RunCurrentModuleOnly
 		{
 			get { return Check_RunCurModule.IsEnabled?Check_RunCurModule.IsChecked.Value:true; }
@@ -616,6 +610,13 @@ namespace D_IDE
 				ed.Editor.TextArea.Caret.Line = dlg.EnteredNumber;
 				ed.Editor.ScrollToLine(dlg.EnteredNumber);
 			}
+		}
+
+
+		public string LeftStatusText
+		{
+			get { return StatusLabel1.Text; }
+			set { StatusLabel1.Text = value; }
 		}
 	}
 

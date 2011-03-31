@@ -50,6 +50,8 @@ namespace D_IDE
 				IsBuilding = true;
 				IDEManager.Instance.MainWindow.RefreshMenu();
 
+				IDEManager.Instance.MainWindow.LeftStatusText = "Build "+sln.Name;
+
 				// Iterate through all projects
 				// Note: see above
 				foreach (var prj in sln)
@@ -60,6 +62,8 @@ namespace D_IDE
 						break;
 					}
 				}
+
+				IDEManager.Instance.MainWindow.LeftStatusText = ret ? "Build successful" : "Build failed";
 
 				// Disable build menu
 				IsBuilding = false;
@@ -72,6 +76,7 @@ namespace D_IDE
 				// Enable build menu
 				IsBuilding = true;
 				IDEManager.Instance.MainWindow.RefreshMenu();
+				IDEManager.Instance.MainWindow.LeftStatusText = "Build " + Project.Name;
 
 				// Build project with the interal method that's dedicated to build a project
 				var r = InternalBuild(Project, Incrementally);
@@ -79,6 +84,7 @@ namespace D_IDE
 				// Disable build menu, Refresh error list
 				IsBuilding = false;
 				IDEManager.Instance.MainWindow.RefreshMenu();
+				IDEManager.Instance.MainWindow.LeftStatusText = r ? "Build successful" : "Build failed";
 				return r;
 			}
 
