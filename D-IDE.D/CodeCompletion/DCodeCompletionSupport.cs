@@ -55,7 +55,8 @@ namespace D_IDE.D
 					caretLocation,
 					false,
 					codeCache,
-					out id);
+					out id,
+					true);
 
 				if (accessedItems == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
@@ -77,7 +78,7 @@ namespace D_IDE.D
 						if (type == null)
 							continue;
 
-						var declarationNodes = DCodeResolver.ResolveTypeDeclarations(EditorDocument.SyntaxTree, type, codeCache);
+						var declarationNodes = DCodeResolver.ResolveTypeDeclarations(EditorDocument.SyntaxTree, type, codeCache,true);
 
 						foreach (var declNode in declarationNodes)
 							if (declNode is IBlockNode)
@@ -90,7 +91,7 @@ namespace D_IDE.D
 										foreach (var n2 in declClass)
 										{
 											var dn = n2 as DNode;
-											if (dn != null ? (dn.IsPublic || dn.IsStatic) : true)
+											if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
 												l.Add(new DCompletionData(n2));
 										}
 										declClass = DCodeResolver.ResolveBaseClass(declClass, codeCache);
@@ -99,7 +100,7 @@ namespace D_IDE.D
 									foreach (var n2 in declNode as IBlockNode)
 									{
 										var dn = n2 as DNode;
-										if (dn != null ? (dn.IsPublic || dn.IsStatic) : true)
+										if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
 											l.Add(new DCompletionData(n2));
 									}
 							}
@@ -116,6 +117,17 @@ namespace D_IDE.D
 									l.Add(new DCompletionData(i));
 							}
 							curClass = DCodeResolver.ResolveBaseClass(curClass, codeCache);
+						}
+					}
+					else if (n is DEnum)
+					{
+						var de = n as DEnum;
+
+						foreach (var i in de)
+						{
+							var dn = i as DEnumValue;
+							if (dn != null)
+								l.Add(new DCompletionData(i));
 						}
 					}
 					else if (n is IAbstractSyntaxTree)
@@ -195,6 +207,7 @@ namespace D_IDE.D
 					true,
 					EnumAvailableModules(EditorDocument) // std.cstream.din.getc(); <<-- It's resolvable but not imported explictily! So also scan the global cache!
 					//DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument))
+					,true
 					);
 
 				string tt = "";

@@ -30,10 +30,10 @@ namespace D_Parser
 			string Text, 
 			int CaretOffset, 
 			CodeLocation CaretLocation, bool EnableVariableTypeResolving, 
-			IEnumerable<IAbstractSyntaxTree> CodeCache)
+			IEnumerable<IAbstractSyntaxTree> CodeCache, bool IsCompleteIdentifier)
 		{
 			ITypeDeclaration id = null;
-			return ResolveTypeDeclarations(Module,Text,CaretOffset,CaretLocation,EnableVariableTypeResolving,CodeCache,out id);
+			return ResolveTypeDeclarations(Module,Text,CaretOffset,CaretLocation,EnableVariableTypeResolving,CodeCache,out id,IsCompleteIdentifier);
 		}
 
 		/// <summary>
@@ -44,6 +44,7 @@ namespace D_Parser
 		/// <param name="CaretOffset"></param>
 		/// <param name="CaretLocation"
 		/// <param name="ImportCache"></param>
+		/// <param name="IsCompleteIdentifier">True if Text is not only the beginning of a type name - instead, it's handled as the complete one</param>
 		/// <returns></returns>
 		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module, 
 			string Text, 
@@ -51,7 +52,8 @@ namespace D_Parser
 			CodeLocation CaretLocation, 
 			bool EnableVariableTypeResolving,
 			IEnumerable<IAbstractSyntaxTree> CodeCache,
-			out ITypeDeclaration optIdentifierList)
+			out ITypeDeclaration optIdentifierList,
+			bool IsCompleteIdentifier)
 		{
 			DToken tk = null;
 			optIdentifierList = DCodeResolver.BuildIdentifierList(Text,
@@ -105,14 +107,14 @@ namespace D_Parser
 			{
 				var ret= DCodeResolver.ResolveTypeDeclarations(
 					SearchParent,
-					optIdentifierList, CodeCache);
+					optIdentifierList, CodeCache,IsCompleteIdentifier);
 
 				if (EnableVariableTypeResolving && ret != null && ret.Length > 0 && (ret[0] is DVariable || ret[0] is DMethod))
 				{
 					var ntype = GetDNodeType(ret[0]);
 					if (ntype != null)
 					{
-						var ret2 = DCodeResolver.ResolveTypeDeclarations(SearchParent, ntype, CodeCache);
+						var ret2 = DCodeResolver.ResolveTypeDeclarations(SearchParent, ntype, CodeCache,IsCompleteIdentifier);
 						if (ret2 != null && ret2.Length > 0)
 							return ret2;
 					}
@@ -165,8 +167,8 @@ namespace D_Parser
 								)
 								continue;
 
-							// Add static and non-private members of all base classes
-							if (dm2.IsStatic || !dm2.ContainsAttribute(DTokens.Private))
+							// Add static and non-private members of all base classes; add everything if we're still handling the currently scoped class
+							if (curWatchedClass==curScope|| dm2.IsStatic || !dm2.ContainsAttribute(DTokens.Private))
 								ret.Add(m);
 						}
 
@@ -533,6 +535,10 @@ namespace D_Parser
 						if (tex is TypeDeclarationExpression)
 						{
 							ret = (tex as TypeDeclarationExpression).Declaration;
+
+							// If variable initializer contains template arguments, skip those and pass the raw name only
+							if (ret is TemplateDecl)
+								ret = (ret as TemplateDecl).Base;
 							break;
 						}
 
@@ -540,6 +546,7 @@ namespace D_Parser
 					}
 				}
 			}
+
 
 			return ret;
 		}
@@ -600,7 +607,7 @@ namespace D_Parser
 							var v = DeeperLevel[0];
 							DeeperLevel.Clear();
 
-							DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(v.Parent as IBlockNode, GetDNodeType(v), NodeFilter.PublicOnly, ImportCache));
+							DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(v.Parent as IBlockNode, GetDNodeType(v), Filter, ImportCache));
 						}
 					}
 
@@ -683,7 +690,8 @@ namespace D_Parser
 		/// <param name="CurrentlyScopedBlock"></param>
 		/// <param name="IdentifierList"></param>
 		/// <returns></returns>
-		public static INode[] ResolveTypeDeclarations(IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList, IEnumerable<IAbstractSyntaxTree> ImportCache)
+		public static INode[] ResolveTypeDeclarations(IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList, IEnumerable<IAbstractSyntaxTree> ImportCache,
+			bool IsCompleteIdentifier)
 		{
 			var ret = new List<INode>();
 
@@ -697,7 +705,8 @@ namespace D_Parser
 			foreach (var m in ImportCache)
 			{
 				// Add the module itself to the returned list if its name starts with the identifierlist
-				if (m.Name.StartsWith(IdentifierList.ToString()))
+				if (IsCompleteIdentifier? (m.Name.StartsWith(IdentifierList.ToString()+".") || m.Name==IdentifierList.ToString()) // If entire identifer was typed, check if the entire id is part of the module name
+					: m.Name.StartsWith(IdentifierList.ToString()))
 					ret.Add(m);
 
 				else if (m.FileName != ThisModule.FileName) // We already parsed this module
@@ -718,13 +727,13 @@ namespace D_Parser
 			// Implicitly set the object class to the inherited class if no explicit one was done
 			if (ActualClass.BaseClasses.Count < 1)
 			{
-				var ObjectClass = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, new NormalDeclaration("Object"), ModuleCache);
+				var ObjectClass = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, new NormalDeclaration("Object"), ModuleCache,true);
 				if (ObjectClass.Length > 0 && ObjectClass[0] != ActualClass) // Yes, it can be null - like the Object class which can't inherit itself
 					return ObjectClass[0] as DClassLike;
 			}
 			else // Take the first only (since D forces single inheritance)
 			{
-				var ClassMatches = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, ActualClass.BaseClasses[0], ModuleCache);
+				var ClassMatches = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, ActualClass.BaseClasses[0], ModuleCache,true);
 				if (ClassMatches.Length > 0)
 					return ClassMatches[0] as DClassLike;
 			}
