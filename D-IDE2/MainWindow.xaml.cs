@@ -113,6 +113,9 @@ namespace D_IDE
 		#region Initializer
 		public MainWindow(string[] args)
 		{
+			var splashScreen = new SplashScreen("Resources/d-ide_256.png");
+			splashScreen.Show(false,true);
+
 			// Init Manager
 			IDEManager.Instance = new IDEManager(this);
 
@@ -203,7 +206,7 @@ namespace D_IDE
 			if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
 				IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 
-			
+			splashScreen.Close(TimeSpan.FromSeconds(0.5));
 		}
 		#endregion
 

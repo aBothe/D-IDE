@@ -418,6 +418,9 @@
   <ItemGroup>
     <Resource Include="TODO.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\d-ide_256.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>"$(ProjectDir)7z" u -y -x!*.pdb -x!*.vshost.* "$(SolutionDir)d-ide.zip"</PostBuildEvent>
