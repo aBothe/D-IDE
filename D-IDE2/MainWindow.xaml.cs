@@ -331,9 +331,16 @@ namespace D_IDE
 
 		private void Settings(object sender, RoutedEventArgs e)
 		{
-			var dlg = new GlobalSettingsDlg();
-			dlg.Owner = this;
-			dlg.ShowDialog();
+			try
+			{
+				var dlg = new GlobalSettingsDlg();
+				dlg.Owner = this;
+				dlg.ShowDialog();
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex);
+			}
 		}
 
 		private void BuildSolution_Click(object sender, RoutedEventArgs e)
