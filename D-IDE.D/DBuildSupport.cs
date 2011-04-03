@@ -107,7 +107,7 @@ namespace D_IDE.D
 			}
 
 			if (ShallStop) return;
-			dprj.LastBuildResult = LinkFiles(linkerExe, linkerArgs, dprj.BaseDirectory, dprj.OutputFile, !dprj.IsRelease, objs.ToArray());
+			dprj.LastBuildResult = LinkFiles(CurrentDMDConfig,linkerExe, linkerArgs, dprj.BaseDirectory, dprj.OutputFile, !dprj.IsRelease, objs.ToArray());
 		}
 
 		public BuildResult CompileSource(DMDConfig dmd,bool DebugCompile, string srcFile, string objFile, string execDirectory)
@@ -143,7 +143,7 @@ namespace D_IDE.D
 		/// <summary>
 		/// Links several object files to an executable, dynamic or static library
 		/// </summary>
-		public BuildResult LinkFiles(string linkerExe, string linkerArgs, string startDirectory, string targetFile, bool CreatePDB, params string[] files)
+		public BuildResult LinkFiles(DMDConfig dmd,string linkerExe, string linkerArgs, string startDirectory, string targetFile, bool CreatePDB, params string[] files)
 		{
 			var errList = new List<GenericError>();
 			var br = new BuildResult() { TargetFile=targetFile, Successful=true};
@@ -163,8 +163,14 @@ namespace D_IDE.D
 				}
 			}
 
+			var linker = linkerExe;
+
+			// Always enable it to use environment paths to find dmd.exe
+			if (!Path.IsPathRooted(linker) && Directory.Exists(dmd.BaseDirectory))
+				linker = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
+
 			TempPrc = FileExecution.ExecuteSilentlyAsync(
-					linkerExe,	BuildDLinkerArgumentString(linkerArgs,targetFile,files), startDirectory,
+					linker,	BuildDLinkerArgumentString(linkerArgs,targetFile,files), startDirectory,
 					OnOutput, delegate(string s)
 			{
 				var err = ParseErrorMessage(s);
@@ -219,7 +225,7 @@ namespace D_IDE.D
 				var exe = OutputDirectory + "\\" + Path.GetFileNameWithoutExtension(src) + ".exe";
 				br.TargetFile = exe;
 
-				var br_ = LinkFiles(dmd.ExeLinker, dmd.BuildArguments(compileDebug).ExeLinker, Path.GetDirectoryName(obj), exe,compileDebug, obj);
+				var br_ = LinkFiles(dmd,dmd.ExeLinker, dmd.BuildArguments(compileDebug).ExeLinker, Path.GetDirectoryName(obj), exe,compileDebug, obj);
 				
 				br.BuildErrors.AddRange(br_.BuildErrors);
 				br.AdditionalFiles = br_.AdditionalFiles;
