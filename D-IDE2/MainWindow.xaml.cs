@@ -268,12 +268,15 @@ namespace D_IDE
 						pdlg.ProjectName,
 						pdir);
 				else if (!pdlg.AddToCurrentSolution)
+				{
 					IDEManager.CurrentSolution = IDEManager.ProjectManagement.CreateNewProjectAndSolution(
 						pdlg.SelectedLanguageBinding,
 						pdlg.SelectedProjectType,
 						pdlg.ProjectName,
 						pdir,
 						pdlg.SolutionName);
+					IDEManager.EditingManagement.AdjustLastFileList(IDEManager.CurrentSolution.FileName, true);
+				}
 
 				RefreshGUI();
 			}

@@ -40,7 +40,7 @@ namespace D_IDE
 			/// </summary>
 			/// <param name="openedFile">The file which got opened recently</param>
 			/// <param name="IsPrj">Add it to the LastProjects List?</param>
-			static void AdjustLastFileList(string openedFile, bool IsPrj)
+			public static void AdjustLastFileList(string openedFile, bool IsPrj)
 			{
 				var l = IsPrj ? GlobalProperties.Instance.LastProjects : GlobalProperties.Instance.LastFiles;
 				if (l.Contains(openedFile))
