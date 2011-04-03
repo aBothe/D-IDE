@@ -121,13 +121,24 @@ namespace D_IDE.D.CodeCompletion
 		/// <summary>
 		/// Seeks the module named ModulePath within all parsed global directories.
 		/// </summary>
-		/// <param name="ModulePath"></param>
+		/// <param name="ModuleName"></param>
 		/// <returns></returns>
+		public IAbstractSyntaxTree LookUpModuleName(string ModuleName)
+		{
+			foreach (var dir in ParsedGlobalDictionaries)
+			{
+				var ret=dir[ModuleName, true];
+				if (ret != null)
+					return ret;
+			}
+			return null;
+		}
+
 		public IAbstractSyntaxTree LookUpModulePath(string ModulePath)
 		{
 			foreach (var dir in ParsedGlobalDictionaries)
 			{
-				var ret=dir[ModulePath, true];
+				var ret = dir[ModulePath, false];
 				if (ret != null)
 					return ret;
 			}

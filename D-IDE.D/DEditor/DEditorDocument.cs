@@ -194,7 +194,7 @@ namespace D_IDE.D
 		{
 			try
 			{
-				if (!DCodeCompletionSupport.Instance.CanShowCompletionWindow(this))
+				if (!DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || Editor.IsReadOnly)
 					return;
 
 				/*

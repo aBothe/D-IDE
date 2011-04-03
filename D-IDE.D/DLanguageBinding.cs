@@ -11,6 +11,7 @@ using Parser.Core;
 using System.Xml;
 using System.IO;
 using System.Diagnostics;
+using D_IDE.D.CodeCompletion;
 
 namespace D_IDE.D
 {
@@ -148,6 +149,45 @@ namespace D_IDE.D
 		public override EditorDocument OpenFile(Project Project, string SourceFile)
 		{
 			return new DEditorDocument(SourceFile);
+		}
+
+		/// <summary>
+		/// Searches in current solution and in the global cache for the given file and returns it.
+		/// If not found, file will be parsed.
+		/// </summary>
+		/// <param name="file"></param>
+		/// <returns></returns>
+		public static IAbstractSyntaxTree GetFileSyntaxTree(string file)
+		{
+			DProject a = null;
+			return GetFileSyntaxTree(file, out a);
+		}
+
+		public static IAbstractSyntaxTree GetFileSyntaxTree(string file,out DProject OwnerProject)
+		{
+			OwnerProject = null;
+			if (CoreManager.CurrentSolution != null)
+			{
+				foreach (var prj in CoreManager.CurrentSolution)
+				{
+					var dprj = prj as DProject;
+					if (dprj == null) continue;
+					if (dprj.ContainsFile(file))
+					{
+						OwnerProject = dprj;
+						return dprj.ParsedModules[file];
+					}
+				}
+			}
+
+			var ret=DSettings.Instance.dmd2.ASTCache.LookUpModulePath(file);
+			if (ret == null)
+				ret = DSettings.Instance.dmd1.ASTCache.LookUpModulePath(file);
+
+			if (ret != null)
+				return ret;
+
+			return DParser.ParseFile(file);
 		}
 
 		#endregion
