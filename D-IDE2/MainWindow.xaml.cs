@@ -203,8 +203,11 @@ namespace D_IDE
 			else
 
 			// Load last solution
-			if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
-				IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
+				if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
+				{
+					if(File.Exists(GlobalProperties.Instance.LastProjects[0]))
+						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
+				}
 
 			splashScreen.Close(TimeSpan.FromSeconds(0.5));
 		}

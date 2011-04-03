@@ -52,7 +52,7 @@ namespace D_IDE.Core
 		}
 		#endregion
 
-		public virtual Project CreateEmptyProject(FileTemplate ProjectType) { throw new NotImplementedException(); } 
+		public virtual Project CreateEmptyProject(string Name, string ProjectFile,FileTemplate ProjectType) { throw new NotImplementedException(); } 
 		public virtual Project OpenProject(Solution Solution, string FileName) {  throw new NotImplementedException(); }
 
 		public bool CanHandleProject(string ProjectFile)

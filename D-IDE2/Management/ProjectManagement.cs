@@ -31,11 +31,8 @@ namespace D_IDE
 
 				Util.CreateDirectoryRecursively(baseDir);
 
-				var prj = Binding.CreateEmptyProject(ProjectType);
-				prj.Name = Name;
-				prj.FileName =
-					baseDir + "\\" +
-					Path.ChangeExtension(Util.PurifyFileName(Name), ProjectType.Extensions[0]);
+				var prj = Binding.CreateEmptyProject(Name, baseDir + "\\" +
+					Path.ChangeExtension(Util.PurifyFileName(Name), ProjectType.Extensions[0]), ProjectType);
 				return prj;
 			}
 

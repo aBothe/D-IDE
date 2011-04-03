@@ -65,6 +65,12 @@ namespace D_IDE
 
 				if (ext == Solution.SolutionExtension)
 				{
+					if (!File.Exists(FileName))
+					{
+						ErrorLogger.Log("Solution "+FileName+" not found!",ErrorType.Error,ErrorOrigin.System);
+						return null;
+					}
+
 					/*
 					 * - Load solution
 					 * - Load all of its projects
@@ -95,6 +101,12 @@ namespace D_IDE
 				var langs = LanguageLoader.Bindings.Where(l => l.CanHandleProject(FileName)).ToArray();
 				if (langs.Length > 0)
 				{
+					if (!File.Exists(FileName))
+					{
+						ErrorLogger.Log("Project " + FileName + " not found!", ErrorType.Error, ErrorOrigin.System);
+						return null;
+					}
+
 					/* 
 					 * - Load project
 					 * - Create anonymous solution that holds the project virtually

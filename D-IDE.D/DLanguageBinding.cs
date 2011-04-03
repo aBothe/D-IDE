@@ -95,14 +95,31 @@ namespace D_IDE.D
 		public override bool CanBuild { get { return true; } }
 
 		#region Projecting
-		public override Project CreateEmptyProject(FileTemplate FileType)
+		public override Project CreateEmptyProject(string name, string prjfile,FileTemplate FileType)
 		{
 			var prj=new DProject();
+			prj.Name = name;
+			prj.FileName = prjfile;
 
 			switch (_ProjectTypes.IndexOf(FileType))
 			{
 				case 0: // Console app
 					prj.OutputType = OutputTypes.Executable;
+
+
+					var mainFile = prj.BaseDirectory+ "\\main.d";
+
+					File.WriteAllText(mainFile,
+						"import std.stdio, std.cstream;\r\n"+
+						"\r\n"+
+						"void main(string[] args)\t{\r\n"+
+						"\twriteln(\"Hello World!\");\r\n"+
+						"\tdin.getc();\r\n"+
+						"}");
+
+					prj.Add(mainFile);
+					prj.Save();
+
 					break;
 				case 1: // Win32 app
 					prj.OutputType = OutputTypes.CommandWindowLessExecutable;
