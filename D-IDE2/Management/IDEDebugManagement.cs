@@ -411,11 +411,18 @@ namespace D_IDE
 				// Make all documents read-only
 				EditingManagement.AllDocumentsReadOnly = true;
 
-				if (ShowConsole)
-					CurrentProcess = FileExecution.ExecuteAsync(exe, args, Path.GetDirectoryName(exe), CurrentProcess_Exited);
-				else
-					CurrentProcess = FileExecution.ExecuteSilentlyAsync(exe, args, Path.GetDirectoryName(exe),
-						CurrentProcess_OutputDataReceived, CurrentProcess_ErrorDataReceived, CurrentProcess_Exited);
+				try
+				{
+					if (ShowConsole)
+						CurrentProcess = FileExecution.ExecuteAsync(exe, args, Path.GetDirectoryName(exe), CurrentProcess_Exited);
+					else
+						CurrentProcess = FileExecution.ExecuteSilentlyAsync(exe, args, Path.GetDirectoryName(exe),
+							CurrentProcess_OutputDataReceived, CurrentProcess_ErrorDataReceived, CurrentProcess_Exited);
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Program);
+				}
 
 				Instance.UpdateGUI();
 
@@ -424,12 +431,15 @@ namespace D_IDE
 
 			static void CurrentProcess_Exited()
 			{
-				ErrorLogger.Log(IDEManager.Instance.MainWindow.LeftStatusText = "Process exited with code " + CurrentProcess.ExitCode.ToString() + " (" + (CurrentProcess.ExitTime - CurrentProcess.StartTime).ToString() + ")",
-					CurrentProcess.ExitCode<1?ErrorType.Information:ErrorType.Error,
-					ErrorOrigin.Program);
+				IDEManager.Instance.MainWindow.Dispatcher.BeginInvoke(new Util.EmptyDelegate( () =>
+				{
+					ErrorLogger.Log(IDEManager.Instance.MainWindow.LeftStatusText = "Process exited with code " + CurrentProcess.ExitCode.ToString() + " (" + (CurrentProcess.ExitTime - CurrentProcess.StartTime).ToString() + ")",
+						CurrentProcess.ExitCode < 1 ? ErrorType.Information : ErrorType.Error,
+						ErrorOrigin.Program);
 
-				EditingManagement.AllDocumentsReadOnly = false;
-				Instance.MainWindow.RefreshMenu();
+					EditingManagement.AllDocumentsReadOnly = false;
+					Instance.MainWindow.RefreshMenu();
+				}));
 			}
 
 			static void CurrentProcess_ErrorDataReceived(string Data)

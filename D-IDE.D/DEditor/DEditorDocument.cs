@@ -213,6 +213,7 @@ namespace D_IDE.D
 					Thread.CurrentThread.IsBackground = true;
 
 					completionWindow = new CompletionWindow(Editor.TextArea);
+					completionWindow.CloseAutomatically = true;
 
 					if (string.IsNullOrEmpty(EnteredText))
 						foreach (var i in currentEnvCompletionData)
