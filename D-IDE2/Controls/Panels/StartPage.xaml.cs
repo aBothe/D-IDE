@@ -81,7 +81,7 @@ namespace D_IDE.Controls.Panels
 					}
 					xr.Close();
 				}
-				catch (Exception ex) { ErrorLogger.Log(ex); }
+				catch {  }
 
 				NewsList.Dispatcher.Invoke(new Util.EmptyDelegate(delegate()
 				{

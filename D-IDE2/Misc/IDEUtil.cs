@@ -46,10 +46,11 @@ namespace D_IDE
 				// Get latest online file timestamp
 				try
 				{
-					if (!File.Exists(FileVersionFile))
-						return true;
+					var wc = new WebClient();
+					var LastOnlineModTime = wc.DownloadString(TimeStampUrl);
 
-					var LastOnlineModTime = new WebClient().DownloadString(TimeStampUrl);
+					if (!File.Exists(FileVersionFile))
+						return false;
 
 					// Check if offline version is already the latest
 					if (File.ReadAllText(FileVersionFile) == LastOnlineModTime)

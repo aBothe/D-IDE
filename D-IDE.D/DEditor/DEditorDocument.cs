@@ -72,8 +72,36 @@ namespace D_IDE.D
 			// One for selecting types that were declared in the module
 			// The second for the type's members
 
+			// Init context menu
+			var cm = new ContextMenu();
+			Editor.ContextMenu = cm;
+
+			var cmi = new MenuItem() { Header = "Add import directive", ToolTip="Add an import directive to the document if type cannot be resolved currently"};
+			cmi.Click += ContextMenu_AddImportStatement_Click;
+			cm.Items.Add(cmi);
+
+			cmi = new MenuItem() { Header = "Go to definition", ToolTip = "Go to the definition that defined the currently hovered item" };
+			cmi.Click += new System.Windows.RoutedEventHandler(ContextMenu_GotoDefinition_Click);
+			cm.Items.Add(cmi);
+
+			cmi = new MenuItem() { Header = "Toggle Breakpoint", 
+				ToolTip = "Toggle breakpoint on the currently selected line",
+				Command=D_IDE.Core.Controls.IDEUICommands.ToggleBreakpoint
+			};
+			cm.Items.Add(cmi);
+
 			Parse();
 
+		}
+
+		void ContextMenu_GotoDefinition_Click(object sender, System.Windows.RoutedEventArgs e)
+		{
+			//throw new NotImplementedException();
+		}
+
+		void ContextMenu_AddImportStatement_Click(object sender, System.Windows.RoutedEventArgs e)
+		{
+			//throw new NotImplementedException();
 		}
 
 		bool KeysTyped = false;
