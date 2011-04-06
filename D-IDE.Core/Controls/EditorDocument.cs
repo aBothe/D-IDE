@@ -9,6 +9,9 @@ using System.Windows.Media;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using System.Windows.Controls;
 using System.Collections.Generic;
+using System.Windows.Input;
+using D_IDE.Core.Controls;
+using System.Windows;
 
 namespace D_IDE.Core
 {
@@ -83,6 +86,9 @@ namespace D_IDE.Core
 
 		void Init()
 		{
+			CommandBindings.Add(new CommandBinding(ApplicationCommands.Save,Save_event));
+			CommandBindings.Add(new CommandBinding(IDEUICommands.ToggleBreakpoint,ToggleBreakpoint_event));
+
 			var gr = new Grid();
 			AddChild(gr);
 			gr.Children.Add(Editor);
@@ -108,6 +114,17 @@ namespace D_IDE.Core
 			RefreshErrorHighlightings();
 			RefreshBreakpointHighlightings();
 			RefreshDebugHighlightings();
+		}
+
+		void Save_event(object sender, RoutedEventArgs e)
+		{
+			Save();
+		}
+
+		void ToggleBreakpoint_event(object sender, RoutedEventArgs e)
+		{
+			CoreManager.BreakpointManagement.ToggleBreakpoint(AbsoluteFilePath, Editor.TextArea.Caret.Line);
+			RefreshBreakpointHighlightings();
 		}
 		
 		#region Syntax Highlighting

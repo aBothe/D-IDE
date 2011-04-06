@@ -12,6 +12,8 @@ using System.Windows.Controls;
 using D_Parser;
 using System.Threading;
 using System.Collections.Generic;
+using System.Windows.Input;
+using D_IDE.Core.Controls;
 
 namespace D_IDE.D
 {
@@ -72,7 +74,7 @@ namespace D_IDE.D
 			// One for selecting types that were declared in the module
 			// The second for the type's members
 
-			// Init context menu
+			#region Init context menu
 			var cm = new ContextMenu();
 			Editor.ContextMenu = cm;
 
@@ -90,7 +92,50 @@ namespace D_IDE.D
 			};
 			cm.Items.Add(cmi);
 
+			cm.Items.Add(new Separator());
+
+			cmi = new MenuItem()
+			{
+				Header = "Comment selection",
+				ToolTip = "Comment out current selection. If nothing is selected, the current line will be commented only",
+				Command = D_IDE.Core.Controls.IDEUICommands.CommentBlock
+			};
+			cm.Items.Add(cmi);
+
+			cmi = new MenuItem()
+			{
+				Header = "Uncomment selection",
+				ToolTip = "Uncomment current block. The nearest comment tags will be removed.",
+				Command = D_IDE.Core.Controls.IDEUICommands.UncommentBlock
+			};
+			cm.Items.Add(cmi);
+
+			cm.Items.Add(new Separator());
+
+			cmi = new MenuItem(){	Header = "Cut",	Command = System.Windows.Input.ApplicationCommands.Cut	};
+			cm.Items.Add(cmi);
+
+			cmi = new MenuItem() { Header = "Copy", Command = System.Windows.Input.ApplicationCommands.Copy };
+			cm.Items.Add(cmi);
+
+			cmi = new MenuItem() { Header = "Paste", Command = System.Windows.Input.ApplicationCommands.Paste };
+			cm.Items.Add(cmi);
+			#endregion
+
+			CommandBindings.Add(new CommandBinding(IDEUICommands.CommentBlock,CommentBlock));
+			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock,UncommentBlock));
+
 			Parse();
+
+		}
+
+		void CommentBlock(object s, ExecutedRoutedEventArgs e)
+		{
+
+		}
+
+		void UncommentBlock(object s, ExecutedRoutedEventArgs e)
+		{
 
 		}
 

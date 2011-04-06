@@ -304,11 +304,6 @@ namespace D_IDE
 					IDEManager.EditingManagement.OpenFile(fn);
 		}
 
-		private void Save(object sender, RoutedEventArgs e)
-		{
-			IDEManager.EditingManagement.SaveCurrentFile();
-		}
-
 		private void SaveAll(object sender, RoutedEventArgs e)
 		{
 			IDEManager.EditingManagement.SaveAllFiles();
@@ -540,15 +535,6 @@ namespace D_IDE
 				else if (res == MessageBoxResult.Yes)
 					ed.Save();
 			}
-		}
-
-		private void ToggleBreakpoint_Click(object sender, RoutedEventArgs e)
-		{
-			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
-			if (ed == null) return;
-
-			CoreManager.BreakpointManagement.ToggleBreakpoint(ed.AbsoluteFilePath, ed.Editor.TextArea.Caret.Line);
-			ed.RefreshBreakpointHighlightings();
 		}
 
 		private void PrjSettings_Click(object sender, RoutedEventArgs e)
