@@ -13,11 +13,11 @@
 	<!-- UI Commands & shortcuts -->
 	
 	<r:RibbonWindow.CommandBindings>
-		<CommandBinding Command="d:IDEUICommands.GoTo" Executed="GotoLine" />
+		<CommandBinding Command="d:IDEUICommands.GoTo" Executed="GotoLine" CanExecute="CommandBinding_CanExecute_SaveAs" />
 		<CommandBinding Command="New" Executed="NewSource" />
 		<CommandBinding Command="Open" Executed="Open" />
 		<CommandBinding Command="d:IDEUICommands.SaveAll" Executed="SaveAll" />
-		<CommandBinding Command="SaveAs" Executed="SaveAs" />
+		<CommandBinding Command="SaveAs" Executed="SaveAs" CanExecute="CommandBinding_CanExecute_SaveAs" />
 		<CommandBinding Command="Properties" Executed="Settings" />
 		<CommandBinding Command="d:IDEUICommands.StepIn" Executed="Button_StepIn_Click" />
 		<CommandBinding Command="d:IDEUICommands.StepOver" Executed="Button_StepOver_Click" />

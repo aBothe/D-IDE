@@ -131,22 +131,93 @@ namespace D_IDE.D
 
 		void CommentBlock(object s, ExecutedRoutedEventArgs e)
 		{
+			if (Editor.SelectionLength<1)
+			{
+				Editor.Document.Insert(
+					Editor.Document.GetOffset(Editor.TextArea.Caret.Line,0),
+					"//"
+					);
+			}
+			else
+			{
+				Editor.Document.UndoStack.StartUndoGroup();
 
+				bool a, b, IsInBlock, IsInNested;
+				DCodeResolver.Commenting.IsInCommentAreaOrString(Editor.Text,Editor.SelectionStart, out a, out b, out IsInBlock, out IsInNested);
+
+				if (!IsInBlock && !IsInNested)
+				{
+					Editor.Document.Insert(Editor.SelectionStart+Editor.SelectionLength, "*/");
+					Editor.Document.Insert(Editor.SelectionStart, "/*");
+				}
+				else
+				{
+					Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "+/");
+					Editor.Document.Insert(Editor.SelectionStart, "/+");
+				}
+
+				Editor.SelectionLength -= 2;
+
+				Editor.Document.UndoStack.EndUndoGroup();
+			}
 		}
 
 		void UncommentBlock(object s, ExecutedRoutedEventArgs e)
 		{
+			var CaretOffset = Editor.CaretOffset;
+			#region Remove line comments first
+			var ls = Editor.Document.GetLineByNumber(Editor.TextArea.Caret.Line);
+			int commStart = CaretOffset;
+			for (; commStart > ls.Offset; commStart--)
+			{
+				if (Editor.Document.GetCharAt(commStart) == '/' && commStart > 0 &&
+					Editor.Document.GetCharAt(commStart - 1) == '/')
+				{
+					Editor.Document.Remove(commStart - 1, 2);
+					return;
+				}
+			}
+			#endregion
+			#region If no single-line comment was removed, delete multi-line comment block tags
+			if (CaretOffset < 2) return;
+			int off = CaretOffset - 2;
 
+			// Seek the comment block opener
+			commStart = DCodeResolver.Commenting.LastIndexOf(Editor.Text, false, off);
+			int nestedCommStart = DCodeResolver.Commenting.LastIndexOf(Editor.Text, true, off);
+			if (commStart < 0 && nestedCommStart < 0) return;
+
+			// Seek the fitting comment block closer
+			int off2 = off + (Math.Max(nestedCommStart, commStart) == off ? 2 : 0);
+			int commEnd = DCodeResolver.Commenting.IndexOf(Editor.Text, false, off2);
+			int commEnd2 = DCodeResolver.Commenting.IndexOf(Editor.Text, true, off2);
+
+			if (nestedCommStart > commStart && commEnd2 > nestedCommStart)
+			{
+				commStart = nestedCommStart;
+				commEnd = commEnd2;
+			}
+
+			if (commStart < 0 || commEnd < 0) return;
+
+			Editor.Document.UndoStack.StartUndoGroup();
+			Editor.Document.Remove(commEnd, 2);
+			Editor.Document.Remove(commStart, 2);
+
+			if (commStart != off) Editor.CaretOffset = off;
+
+			Editor.Document.UndoStack.EndUndoGroup();
+			#endregion
 		}
 
 		void ContextMenu_GotoDefinition_Click(object sender, System.Windows.RoutedEventArgs e)
 		{
-			//throw new NotImplementedException();
+			
 		}
 
 		void ContextMenu_AddImportStatement_Click(object sender, System.Windows.RoutedEventArgs e)
 		{
-			//throw new NotImplementedException();
+			
 		}
 
 		bool KeysTyped = false;

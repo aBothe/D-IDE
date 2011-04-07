@@ -20,7 +20,10 @@ namespace D_IDE.Core
 
 		public AbstractEditorDocument CurrentEditor
 		{
-			get { return MainWindow.DockManager.ActiveDocument as AbstractEditorDocument; }
+			get {
+				if (MainWindow==null || MainWindow.DockManager == null)
+					return null;
+				return MainWindow.DockManager.ActiveDocument as AbstractEditorDocument; }
 		}
 
 		public IEnumerable<AbstractEditorDocument> Editors

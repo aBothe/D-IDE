@@ -620,6 +620,11 @@ namespace D_IDE
 			get { return StatusLabel1.Text; }
 			set { StatusLabel1.Text = value; }
 		}
+
+		private void CommandBinding_CanExecute_SaveAs(object sender, CanExecuteRoutedEventArgs e)
+		{
+			e.CanExecute = (IDEManager.Instance!=null && IDEManager.Instance.CurrentEditor is EditorDocument);
+		}
 	}
 	
 }
