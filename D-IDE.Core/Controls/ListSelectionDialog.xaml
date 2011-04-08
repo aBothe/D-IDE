@@ -6,8 +6,8 @@
              mc:Ignorable="d" 
              Height="195" Width="464" Title="Select an item" ShowInTaskbar="False" SizeToContent="Manual" WindowStartupLocation="CenterOwner">
     <Grid>
-		<ListView Name="SelectionList" Margin="12,12,12,41" />
 		<Button Content="Cancel" Margin="0,0,12,12" Name="button1" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" IsCancel="True" />
 		<Button Content="OK" Height="23" HorizontalAlignment="Right" Margin="0,0,93,12" Name="button2" VerticalAlignment="Bottom" Width="75" IsDefault="True" Click="button2_Click" />
+		<ListBox Margin="12,12,12,41" Name="SelectionList" IsSynchronizedWithCurrentItem="True" MouseDoubleClick="SelectionList_MouseDoubleClick" />
 	</Grid>
 </Window>

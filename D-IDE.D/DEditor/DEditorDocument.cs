@@ -228,8 +228,9 @@ namespace D_IDE.D
 					var dlg = new ListSelectionDialog();
 					
 					var l = new List<string>();
+					int j = 0;
 					foreach (var i in types)
-						l.Add(i.ToString());
+						l.Add("("+(++j).ToString()+") "+i.ToString()); // Bug: To make items unique (which is needed for the listbox to run properly), it's needed to add some kind of an identifier to the beginning of the string
 					dlg.List.ItemsSource = l;
 
 					dlg.List.SelectedIndex = 0;
@@ -248,9 +249,8 @@ namespace D_IDE.D
 				var ed = CoreManager.Instance.OpenFile(mod.FileName) as EditorDocument;
 				if (ed != null)
 				{
-					var ln=ed.Editor.TextArea.Caret.Line=n.StartLocation.Line;
-					var col=ed.Editor.TextArea.Caret.Column = n.StartLocation.Column;
-					ed.Editor.ScrollTo(ln,col);
+					ed.Editor.CaretOffset=ed.Editor.Document.GetOffset(n.StartLocation.Line,n.StartLocation.Column);
+					ed.Editor.ScrollTo(n.StartLocation.Line,n.StartLocation.Column);
 				}
 			}
 			catch { }

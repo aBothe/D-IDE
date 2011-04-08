@@ -27,9 +27,14 @@ namespace D_IDE.Core.Controls
 			SelectionList.Focus();
 		}
 
-		public ListView List { get { return SelectionList; } }
+		public ListBox List { get { return SelectionList; } }
 
 		private void button2_Click(object sender, RoutedEventArgs e)
+		{
+			DialogResult = true;
+		}
+
+		private void SelectionList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
 		{
 			DialogResult = true;
 		}
