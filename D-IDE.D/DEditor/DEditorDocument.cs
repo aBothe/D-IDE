@@ -232,6 +232,8 @@ namespace D_IDE.D
 						l.Add(i.ToString());
 					dlg.List.ItemsSource = l;
 
+					dlg.List.SelectedIndex = 0;
+
 					if (dlg.ShowDialog().Value)
 					{
 						n = types[dlg.List.SelectedIndex];
