@@ -66,7 +66,6 @@ namespace D_IDE.D
 			Editor.TextArea.TextEntered += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntered);
 			Editor.Document.TextChanged += new EventHandler(Document_TextChanged);
 			Editor.TextArea.Caret.PositionChanged += new EventHandler(TextArea_SelectionChanged);
-			Editor.TextArea.MouseRightButtonDown += new System.Windows.Input.MouseButtonEventHandler(TextArea_MouseRightButtonDown);
 			Editor.MouseHover += new System.Windows.Input.MouseEventHandler(Editor_MouseHover);
 			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
 
@@ -133,10 +132,7 @@ namespace D_IDE.D
 		{
 			if (Editor.SelectionLength<1)
 			{
-				Editor.Document.Insert(
-					Editor.Document.GetOffset(Editor.TextArea.Caret.Line,0),
-					"//"
-					);
+				Editor.Document.Insert(Editor.Document.GetOffset(Editor.TextArea.Caret.Line,0),"//");
 			}
 			else
 			{
@@ -212,7 +208,50 @@ namespace D_IDE.D
 
 		void ContextMenu_GotoDefinition_Click(object sender, System.Windows.RoutedEventArgs e)
 		{
-			
+			try
+			{
+				var types = DCodeResolver.ResolveTypeDeclarations(
+					SyntaxTree,
+					Editor.Text,
+					Editor.CaretOffset,
+					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
+					false,
+					DCodeCompletionSupport.EnumAvailableModules(this) // std.cstream.din.getc(); <<-- It's resolvable but not imported explictily! So also scan the global cache!
+					//DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument))
+					,true
+					).ToArray();
+
+				INode n = null;
+				// If there are multiple types, show a list of those items
+				if (types.Length > 1)
+				{
+					var dlg = new ListSelectionDialog();
+
+					var l = new List<string>();
+					foreach (var i in types)
+						l.Add(i.ToString());
+					dlg.List.ItemsSource = l;
+
+					if (dlg.ShowDialog().Value)
+					{
+						n = types[dlg.List.SelectedIndex];
+					}
+				}
+				else
+					n = types[0];
+
+				var mod = n.NodeRoot as IAbstractSyntaxTree;
+				if (mod == null)
+					return;
+				var ed = CoreManager.Instance.OpenFile(mod.FileName) as EditorDocument;
+				if (ed != null)
+				{
+					ed.Editor.TextArea.Focus();
+					ed.Editor.CaretOffset = ed.Editor.Document.GetOffset(n.StartLocation.Line, n.StartLocation.Column);
+					ed.Editor.ScrollTo(n.StartLocation.Line,n.StartLocation.Column);
+				}
+			}
+			catch { }
 		}
 
 		void ContextMenu_AddImportStatement_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -478,11 +517,6 @@ namespace D_IDE.D
 			}
 		}
 		#endregion
-
-		void TextArea_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-		{
-			// Pop up context menu
-		}
 		#endregion
 	}
 

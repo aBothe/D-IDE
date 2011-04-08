@@ -53,7 +53,7 @@ namespace D_IDE.Controls.Panels
 			if (editor != null)
 			{
 				editor.Editor.CaretOffset=editor.Editor.Document.GetOffset(err.Line, err.Column);
-				editor.Editor.ScrollToLine(err.Line);
+				editor.Editor.ScrollTo(err.Line,err.Column);
 				editor.Editor.Focus();
 			}
 		}

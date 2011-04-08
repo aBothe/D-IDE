@@ -94,6 +94,9 @@
     <Compile Include="Controls\Aga.Controls\Tree\TreeNode.cs" />
     <Compile Include="Controls\EditorDocument.cs" />
     <Compile Include="Controls\IFormBase.cs" />
+    <Compile Include="Controls\ListSelectionDialog.xaml.cs">
+      <DependentUpon>ListSelectionDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\TextEditor\TextMarkerService.cs" />
     <Compile Include="CoreIcons.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -160,6 +163,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="Controls\Aga.Controls\Tree\RowExpander.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ListSelectionDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

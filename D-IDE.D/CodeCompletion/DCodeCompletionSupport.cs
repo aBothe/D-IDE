@@ -229,12 +229,12 @@ namespace D_IDE.D
 		}
 
 		#region Module enumeration helper
-		public IEnumerable<IAbstractSyntaxTree> EnumAvailableModules(DEditorDocument Editor)
+		public static IEnumerable<IAbstractSyntaxTree> EnumAvailableModules(DEditorDocument Editor)
 		{
 			return EnumAvailableModules(Editor.HasProject ? Editor.Project as DProject : null);
 		}
 
-		public IEnumerable<IAbstractSyntaxTree> EnumAvailableModules(DProject Project)
+		public static IEnumerable<IAbstractSyntaxTree> EnumAvailableModules(DProject Project)
 		{
 			var ret =new List<IAbstractSyntaxTree>();
 
