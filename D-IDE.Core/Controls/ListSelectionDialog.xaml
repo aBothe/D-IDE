@@ -4,9 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="200" d:DesignWidth="300" Title="Select an item" ShowInTaskbar="False">
+             Height="195" Width="464" Title="Select an item" ShowInTaskbar="False" SizeToContent="Manual" WindowStartupLocation="CenterOwner">
     <Grid>
-		<ListView Name="SelectionList" Margin="12,12,12,41" ItemsSource="{Binding}" />
+		<ListView Name="SelectionList" Margin="12,12,12,41" />
 		<Button Content="Cancel" Margin="0,0,12,12" Name="button1" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" IsCancel="True" />
 		<Button Content="OK" Height="23" HorizontalAlignment="Right" Margin="0,0,93,12" Name="button2" VerticalAlignment="Bottom" Width="75" IsDefault="True" Click="button2_Click" />
 	</Grid>

@@ -14,6 +14,7 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Windows.Input;
 using D_IDE.Core.Controls;
+using System.Windows;
 
 namespace D_IDE.D
 {
@@ -125,7 +126,6 @@ namespace D_IDE.D
 			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock,UncommentBlock));
 
 			Parse();
-
 		}
 
 		void CommentBlock(object s, ExecutedRoutedEventArgs e)
@@ -226,7 +226,7 @@ namespace D_IDE.D
 				if (types.Length > 1)
 				{
 					var dlg = new ListSelectionDialog();
-
+					
 					var l = new List<string>();
 					foreach (var i in types)
 						l.Add(i.ToString());
@@ -248,9 +248,9 @@ namespace D_IDE.D
 				var ed = CoreManager.Instance.OpenFile(mod.FileName) as EditorDocument;
 				if (ed != null)
 				{
-					ed.Editor.TextArea.Focus();
-					ed.Editor.CaretOffset = ed.Editor.Document.GetOffset(n.StartLocation.Line, n.StartLocation.Column);
-					ed.Editor.ScrollTo(n.StartLocation.Line,n.StartLocation.Column);
+					var ln=ed.Editor.TextArea.Caret.Line=n.StartLocation.Line;
+					var col=ed.Editor.TextArea.Caret.Column = n.StartLocation.Column;
+					ed.Editor.ScrollTo(ln,col);
 				}
 			}
 			catch { }

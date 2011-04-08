@@ -84,8 +84,15 @@ namespace D_IDE.Core
 		}
 		#endregion
 
+
 		void Init()
 		{
+			/*
+			 * HACK: To re-focus the editor when this document is activated (the user chose this document tab page)
+			 * , it's simply needed to catch the Loaded-Event which calls Focus on the editor instance then!
+			 */
+			Editor.Loaded += new RoutedEventHandler((object sender, RoutedEventArgs e)=> Editor.Focus() );
+
 			CommandBindings.Add(new CommandBinding(ApplicationCommands.Save,Save_event));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.ToggleBreakpoint,ToggleBreakpoint_event));
 

@@ -23,6 +23,8 @@ namespace D_IDE.Core.Controls
 		public ListSelectionDialog()
 		{
 			InitializeComponent();
+
+			SelectionList.Focus();
 		}
 
 		public ListView List { get { return SelectionList; } }

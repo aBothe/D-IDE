@@ -609,8 +609,15 @@ namespace D_IDE
 			if (dlg.ShowDialog().Value)
 			{
 				var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+
+				if (dlg.EnteredNumber >= ed.Editor.Document.LineCount)
+				{
+					MessageBox.Show("Number must be a value between 0 and "+ed.Editor.Document.LineCount);
+					return;
+				}
+
 				ed.Editor.TextArea.Caret.Line = dlg.EnteredNumber;
-				ed.Editor.ScrollToLine(dlg.EnteredNumber);
+				ed.Editor.TextArea.Caret.BringCaretToView();
 			}
 		}
 

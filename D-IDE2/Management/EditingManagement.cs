@@ -174,6 +174,7 @@ namespace D_IDE
 				newEd.Show(Instance.MainWindow.DockManager);
 				newEd.Activate();
 				Instance.UpdateGUI();
+				newEd.Editor.Focus();
 				return newEd;
 			}
 
