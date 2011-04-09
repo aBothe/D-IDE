@@ -81,7 +81,7 @@ namespace D_Parser.Core
 			return s.Trim();
 		}
 
-		public void Assign(INode other)
+		public virtual void Assign(INode other)
 		{
 			Type = other.Type;
 			Name = other.Name;

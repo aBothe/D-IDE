@@ -128,6 +128,7 @@ namespace D_IDE.D
 			Parse();
 		}
 
+		#region Code operations
 		void CommentBlock(object s, ExecutedRoutedEventArgs e)
 		{
 			if (Editor.SelectionLength<1)
@@ -210,6 +211,9 @@ namespace D_IDE.D
 		{
 			try
 			{
+				if (SyntaxTree == null)
+					return;
+
 				var types = DCodeResolver.ResolveTypeDeclarations(
 					SyntaxTree,
 					Editor.Text,
@@ -226,11 +230,11 @@ namespace D_IDE.D
 				if (types.Length > 1)
 				{
 					var dlg = new ListSelectionDialog();
-					
+
 					var l = new List<string>();
 					int j = 0;
 					foreach (var i in types)
-						l.Add("("+(++j).ToString()+") "+i.ToString()); // Bug: To make items unique (which is needed for the listbox to run properly), it's needed to add some kind of an identifier to the beginning of the string
+						l.Add("(" + (++j).ToString() + ") " + i.ToString()); // Bug: To make items unique (which is needed for the listbox to run properly), it's needed to add some kind of an identifier to the beginning of the string
 					dlg.List.ItemsSource = l;
 
 					dlg.List.SelectedIndex = 0;
@@ -240,8 +244,11 @@ namespace D_IDE.D
 						n = types[dlg.List.SelectedIndex];
 					}
 				}
-				else
+				else if (types.Length == 1)
 					n = types[0];
+				else {
+					MessageBox.Show("No symbol found!");
+					return; }
 
 				var mod = n.NodeRoot as IAbstractSyntaxTree;
 				if (mod == null)
@@ -258,8 +265,71 @@ namespace D_IDE.D
 
 		void ContextMenu_AddImportStatement_Click(object sender, System.Windows.RoutedEventArgs e)
 		{
-			
+			try
+			{
+				if (SyntaxTree == null)
+					return;
+
+				var types = DCodeResolver.ResolveTypeDeclarations(
+					SyntaxTree,
+					Editor.Text,
+					Editor.CaretOffset,
+					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
+					false,
+					DCodeCompletionSupport.EnumAvailableModules(this) // std.cstream.din.getc(); <<-- It's resolvable but not imported explictily! So also scan the global cache!
+					, true
+					).ToArray();
+
+				INode n = null;
+				// If there are multiple types, show a list of those items
+				if (types.Length > 1)
+				{
+					var dlg = new ListSelectionDialog();
+
+					var l = new List<string>();
+					int j = 0;
+					foreach (var i in types)
+						l.Add("(" + (++j).ToString() + ") " + i.ToString()); // Bug: To make items unique (which is needed for the listbox to run properly), it's needed to add some kind of an identifier to the beginning of the string
+					dlg.List.ItemsSource = l;
+
+					dlg.List.SelectedIndex = 0;
+
+					if (dlg.ShowDialog().Value)
+					{
+						n = types[dlg.List.SelectedIndex];
+					}
+				}
+				else if (types.Length == 1)
+					n = types[0];
+				else {
+					MessageBox.Show("No symbol found!");
+					return; }
+
+				var mod = n.NodeRoot as IAbstractSyntaxTree;
+				if (mod == null)
+					return;
+
+				if (mod == SyntaxTree)
+				{
+					MessageBox.Show("Symbol is part of the current module. No import required!");
+					return;
+				}
+
+				if (SyntaxTree.ContainsImport(mod.ModuleName))
+				{
+					MessageBox.Show("Module "+mod.ModuleName+" already imported!");
+					return;
+				}
+
+				var loc = DParser.FindLastImportStatementEndLocation(Editor.Text);
+				Editor.Document.BeginUpdate();
+				Editor.Document.Insert(Editor.Document.GetOffset(loc.Line+1,0),"import "+mod.ModuleName+";\r\n");
+				KeysTyped = true;
+				Editor.Document.EndUpdate();
+			}
+			catch { }
 		}
+		#endregion
 
 		bool KeysTyped = false;
 		Thread parseThread = null;

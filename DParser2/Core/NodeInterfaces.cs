@@ -11,6 +11,7 @@ namespace D_Parser.Core
 		IEnumerable<ParserError> ParseErrors { get; set; }
 		Dictionary<ITypeDeclaration, bool> Imports { get; set; }
 		bool ContainsImport(ITypeDeclaration ImportIdentifier);
+		bool ContainsImport(string ImportIdentifier);
 	}
 
 	public class ParserError

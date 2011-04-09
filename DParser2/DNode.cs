@@ -22,7 +22,7 @@ namespace D_Parser
         {
         }
 		
-        public new INode Assign(INode other)
+        public override void Assign(INode other)
         {
 			if (other is DNode)
 			{
@@ -33,7 +33,6 @@ namespace D_Parser
 				Attributes = (other as DNode).Attributes;
 			}
 			base.Assign(other);
-            return this;
         }
 
         public string AttributeString

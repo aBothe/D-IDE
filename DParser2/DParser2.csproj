@@ -72,7 +72,6 @@
     <Compile Include="Core\AbstractNode.cs" />
     <Compile Include="Core\AbstractTypeDeclaration.cs" />
     <Compile Include="Core\CodeLocation.cs" />
-    <Compile Include="Core\IParser.cs" />
     <Compile Include="Core\NodeInterfaces.cs" />
     <Compile Include="DCodeResolver.cs" />
     <Compile Include="DAttribute.cs" />

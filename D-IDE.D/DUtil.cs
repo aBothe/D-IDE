@@ -6,7 +6,7 @@ using D_IDE.Core;
 using D_Parser.Core;
 
 namespace D_IDE.D
-{
+{	
 	public class DParseError : GenericError
 {
 	public readonly ParserError ParserError;

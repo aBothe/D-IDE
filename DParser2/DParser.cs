@@ -7,42 +7,32 @@ using D_Parser.Core;
 
 namespace D_Parser
 {
-	public class DParserWrapper : IParser
-	{
-		public ITypeDeclaration ParseType(string Code, out object OptToken)
-		{
-			DToken tk = null;
-			var t=DParser.ParseBasicType(Code, out tk);
-			OptToken = tk;
-			return t;
-		}
-
-		public IAbstractSyntaxTree ParseString(string Code, bool OuterStructureOnly)
-		{
-			return DParser.ParseString(Code, OuterStructureOnly);
-		}
-
-		public IAbstractSyntaxTree ParseFile(string FileName, bool OuterStructureOnly)
-		{
-			return DParser.ParseFile(FileName, OuterStructureOnly);
-		}
-
-		public void UpdateModule(IAbstractSyntaxTree Module)
-		{
-			DParser.UpdateModule(Module);
-		}
-
-		public void UpdateModuleFromText(string Code, IAbstractSyntaxTree Module)
-		{
-			DParser.UpdateModuleFromText(Module, Code);
-		}
-	}
-
     /// <summary>
     /// Parser for D Code
     /// </summary>
     public partial class DParser:DTokens
     {
+		/// <summary>
+		/// Finds the last import statement and returns its end location (the position after the semicolon).
+		/// If no import but module statement was found, the end location of this module statement will be returned.
+		/// </summary>
+		/// <param name="Code"></param>
+		/// <returns></returns>
+		public static CodeLocation FindLastImportStatementEndLocation(string Code)
+		{
+			var p = Create(new StringReader(Code));
+			p.doc = new DModule();// create dummy module to prevent crash at ImportDeclaration();
+			p.Step();
+
+			if (p.LA(Module))
+				p.ModuleDeclaration();
+
+			while (p.LA(Import))
+				p.ImportDeclaration();
+
+			return p.t.EndLocation;
+		}
+
         public static DExpression ParseExpression(string Code)
         {
             var p = Create(new StringReader(Code));

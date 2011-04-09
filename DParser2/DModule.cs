@@ -18,15 +18,29 @@ namespace D_Parser
 			return false;
 		}
 
+		public bool ContainsImport(string ImportIdentifier)
+		{
+			foreach (var kv in _Imports)
+				if (kv.Key.ToString() == ImportIdentifier)
+					return true;
+			return false;
+		}
+
         /// <summary>
         /// Applies file name, children and imports from an other module instance
          /// </summary>
         /// <param name="Other"></param>
-        public void Assign(DModule Other)
+        public override void Assign(INode Other)
         {
-			ParseErrors = Other.ParseErrors;
-			FileName = Other.FileName;
-			base.Assign(Other as IBlockNode);
+			if (Other is IAbstractSyntaxTree)
+			{
+				var ast = Other as IAbstractSyntaxTree;
+				_Imports = new Dictionary<ITypeDeclaration, bool>(ast.Imports);
+				ParseErrors = ast.ParseErrors;
+				//FileName = ast.FileName;
+			}
+
+			base.Assign(Other);
         }
 
 		string _FileName;
@@ -155,18 +169,13 @@ namespace D_Parser
 			return _Children.GetEnumerator();
 		}
 
-		public new void Assign(INode other)
+		public virtual void Assign(INode other)
 		{
 			if (other is IBlockNode)
 			{
 				BlockStartLocation = (other as IBlockNode).BlockStartLocation;
 				Clear();
 				AddRange(other as IBlockNode);
-			}
-
-			if (other is IAbstractSyntaxTree)
-			{ 
-				
 			}
 
 			base.Assign(other);
