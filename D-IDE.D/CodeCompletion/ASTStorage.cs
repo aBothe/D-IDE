@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Parser.Core;
+using D_Parser.Core;
 using D_IDE.Core;
 using D_Parser;
 using System.IO;

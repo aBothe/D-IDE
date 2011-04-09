@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using Parser.Core;
+using D_Parser.Core;
 
 namespace D_Parser
 {

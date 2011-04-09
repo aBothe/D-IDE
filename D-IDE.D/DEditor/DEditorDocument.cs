@@ -5,7 +5,7 @@ using D_IDE.Core;
 using D_IDE.Core.Controls.Editor;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
-using Parser.Core;
+using D_Parser.Core;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using System.Windows.Controls;

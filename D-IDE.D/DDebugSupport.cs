@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using D_IDE.Core;
 using DebugEngineWrapper;
-using Parser.Core;
+using D_Parser.Core;
 using D_Parser;
 using System.Runtime.InteropServices;
 

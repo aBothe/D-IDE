@@ -4,7 +4,7 @@ using System.Text;
 using System.IO;
 using System.Globalization;
 using System.Collections;
-using Parser.Core;
+using D_Parser.Core;
 
 namespace D_Parser
 {

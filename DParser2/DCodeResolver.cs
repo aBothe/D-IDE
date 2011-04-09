@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Parser.Core;
+using D_Parser.Core;
 using System.IO;
 
 namespace D_Parser

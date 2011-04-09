@@ -7,7 +7,7 @@ using D_Parser;
 using DebugEngineWrapper;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using Parser.Core;
+using D_Parser.Core;
 using System.Xml;
 using System.IO;
 using System.Diagnostics;

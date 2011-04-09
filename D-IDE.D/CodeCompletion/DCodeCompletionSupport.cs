@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using D_IDE.Core;
 using ICSharpCode.AvalonEdit.CodeCompletion;
-using Parser.Core;
+using D_Parser.Core;
 using D_Parser;
 using D_IDE.D.CodeCompletion;
 using System.Windows.Media.Imaging;

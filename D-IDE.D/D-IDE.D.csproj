@@ -116,10 +116,6 @@
       <Name>DParser2</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </ProjectReference>
-    <ProjectReference Include="..\Parser.Core\Parser.Core.csproj">
-      <Project>{650AD5E8-B84B-45E7-B42B-0AA72199252C}</Project>
-      <Name>Parser.Core</Name>
-    </ProjectReference>
     <ProjectReference Include="..\D-IDE.Core\D-IDE.Core.csproj">
       <Project>{97A8A088-8820-4A2D-82F4-2AA5CBDE093F}</Project>
       <Name>D-IDE.Core</Name>

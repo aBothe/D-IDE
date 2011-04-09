@@ -5,7 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using D_IDE.Core;
 using System.IO;
-using Parser.Core;
+using D_Parser.Core;
 
 namespace D_IDE.D
 {

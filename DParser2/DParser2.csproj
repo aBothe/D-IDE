@@ -69,6 +69,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryNodeStorage.cs" />
+    <Compile Include="Core\AbstractNode.cs" />
+    <Compile Include="Core\AbstractTypeDeclaration.cs" />
+    <Compile Include="Core\CodeLocation.cs" />
+    <Compile Include="Core\IParser.cs" />
+    <Compile Include="Core\NodeInterfaces.cs" />
     <Compile Include="DCodeResolver.cs" />
     <Compile Include="DAttribute.cs" />
     <Compile Include="DModule.cs" />
@@ -83,12 +88,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Parser.Core\Parser.Core.csproj">
-      <Project>{650AD5E8-B84B-45E7-B42B-0AA72199252C}</Project>
-      <Name>Parser.Core</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

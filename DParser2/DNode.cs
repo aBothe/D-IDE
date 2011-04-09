@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Parser.Core;
+using D_Parser.Core;
 
 namespace D_Parser
 {
@@ -51,7 +51,7 @@ namespace D_Parser
         /// Returns attributes, type and name combined to one string
         /// </summary>
         /// <returns></returns>
-        public string ToString(bool Attributes)
+        public new string ToString(bool Attributes)
         {
             string s = "";
             // Attributes
