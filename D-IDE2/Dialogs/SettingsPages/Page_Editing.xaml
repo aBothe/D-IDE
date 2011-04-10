@@ -24,7 +24,7 @@
 	<Grid DataContext="{StaticResource familyCollection}">
 		<GroupBox Header="Editor font" Margin="12,12,12,0" Name="groupBox1" Height="82" VerticalAlignment="Top">
 			<Grid>
-				<ComboBox ItemsSource="{Binding}" ItemTemplate="{StaticResource fontFamilyData}" Height="23" Margin="6,26,309,0" Name="comboBox_FontFamily" VerticalAlignment="Top" />
+				<ComboBox ItemsSource="{Binding}" ItemTemplate="{StaticResource fontFamilyData}" Height="23" Margin="6,26,309,0" Name="comboBox_FontFamily" VerticalAlignment="Top" SelectionChanged="comboBox_FontFamily_SelectionChanged" />
 				<Label Content="Font Family" Height="14" HorizontalAlignment="Left" Margin="6,6,0,0" Name="label1" VerticalAlignment="Top" Padding="0" Width="119" />
 				
 				<Label Content="Font Size" Height="14" HorizontalAlignment="Right" Margin="0,6,62,0" Name="label2" VerticalAlignment="Top" Padding="0" Width="72" />

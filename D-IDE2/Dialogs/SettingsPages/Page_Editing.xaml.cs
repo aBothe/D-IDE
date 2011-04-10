@@ -58,5 +58,11 @@ namespace D_IDE.Dialogs.SettingsPages
 			comboBox_FontStyle.SelectedItem = ces.Typeface;
 			fontSizeSlider.Value = ces.FontSize;
 		}
+
+		private void comboBox_FontFamily_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (comboBox_FontStyle!=null && comboBox_FontStyle.Items.Count > 0)
+				comboBox_FontStyle.SelectedIndex = 0;
+		}
 	}
 }
