@@ -6,6 +6,8 @@ using System.Windows;
 using System.IO;
 using System.Xml;
 using D_IDE.Core;
+using System.Windows.Media;
+using ICSharpCode.AvalonEdit;
 
 namespace D_IDE
 {
@@ -58,6 +60,10 @@ namespace D_IDE
                         switch (xr.LocalName)
                         {
                             default: break;
+
+							case "CommonEditorSettings":
+								CommonEditorSettings.Instance.LoadFromXml(xr.ReadSubtree());
+								break;
                                 
                             case "codetemplates":
                                 //CodeTemplate.Load(xr);
@@ -385,6 +391,10 @@ namespace D_IDE
             //Code templates
             //CodeTemplate.Save(xw);
 
+			xw.WriteStartElement("CommonEditorSettings");
+			CommonEditorSettings.Instance.SaveToXml(xw);
+			xw.WriteEndElement();
+
 			xw.WriteEndDocument();
 			xw.Close();
 		}
@@ -451,5 +461,139 @@ namespace D_IDE
 		#endregion
 
 		public string lastSearchDir =Util.ApplicationStartUpPath;
+	}
+
+	public class CommonEditorSettings : System.ComponentModel.INotifyPropertyChanged
+	{
+		FontFamily ff;
+		FamilyTypeface ft;
+		double fs;
+
+		public FontFamily FontFamily
+		{
+			get
+			{
+				return ff;
+			}
+			set
+			{
+				ff = value;
+				propChanged("FontFamily");
+			}
+		}
+		public FamilyTypeface Typeface
+		{
+			get
+			{
+				return ft;
+			}
+			set
+			{
+				ft = value;
+				propChanged("TypeFace");
+			}
+		}
+		public double FontSize
+		{
+			get { return fs; }
+			set { fs = value; propChanged("FontSize"); }
+		}
+
+		public CommonEditorSettings()
+		{
+			RestoreDefaults();
+		}
+
+		/// <summary>
+		/// Assigns editor settings to an editor instance.
+		/// </summary>
+		/// <param name="Ctrl"></param>
+		public void AssignToEditor(TextEditor Ctrl)
+		{
+			Ctrl.FontFamily = FontFamily;
+			Ctrl.FontStyle = Typeface.Style;
+			Ctrl.FontWeight = Typeface.Weight;
+			Ctrl.FontStretch = Typeface.Stretch;
+			Ctrl.FontSize = FontSize;
+		}
+
+		/// <summary>
+		/// Assign editor settings to all open editor instances
+		/// </summary>
+		public void AssignAllOpenEditors()
+		{
+			foreach (var ed in CoreManager.Instance.Editors)
+				if (ed is EditorDocument)
+					AssignToEditor((ed as EditorDocument).Editor);
+		}
+
+		public void LoadFromXml(XmlReader x)
+		{
+			while (x.Read())
+			{
+				switch (x.LocalName)
+				{
+					default: break;
+
+					case "FontFamily":
+						try
+						{
+							FontFamily = new FontFamily(x.ReadString());
+						}
+						catch { }
+						break;
+
+					case "TypefaceIndex":
+						try
+						{
+							var i_str = x.ReadString();
+							if (!string.IsNullOrEmpty(i_str))
+								Typeface = FontFamily.FamilyTypefaces[Convert.ToInt32(i_str)];
+						}
+						catch { }
+						break;
+
+					case "FontSize":
+						try
+						{
+							FontSize = Double.Parse(x.ReadString());
+						}
+						catch { }
+						break;
+				}
+			}
+		}
+
+		public void SaveToXml(XmlWriter x)
+		{
+			x.WriteStartElement("FontFamily");
+			x.WriteCData(FontFamily.Source);
+			x.WriteEndElement();
+
+			x.WriteStartElement("TypefaceIndex");
+			x.WriteValue(FontFamily.FamilyTypefaces.IndexOf(Typeface));
+			x.WriteEndElement();
+
+			x.WriteStartElement("FontSize");
+			x.WriteValue((int)FontSize);
+			x.WriteEndElement();
+		}
+
+		public static CommonEditorSettings Instance = new CommonEditorSettings();
+
+		public void RestoreDefaults()
+		{
+			FontFamily = new FontFamily("Consolas");
+			Typeface = FontFamily.FamilyTypefaces[0];
+			FontSize = 15;
+		}
+
+		void propChanged(string n)
+		{
+			if (PropertyChanged != null)
+				PropertyChanged(this, new System.ComponentModel.PropertyChangedEventArgs(n));
+		}
+		public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+
 	}
 }

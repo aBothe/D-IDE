@@ -36,17 +36,27 @@ namespace D_IDE.Dialogs.SettingsPages
 
 		public override void RestoreDefaults()
 		{
-			
+			CommonEditorSettings.Instance.RestoreDefaults();
 		}
 
 		public override bool ApplyChanges()
 		{
+			var ces=CommonEditorSettings.Instance;
+			ces.FontFamily=comboBox_FontFamily.SelectedItem as FontFamily;
+			ces.Typeface = comboBox_FontStyle.SelectedItem as FamilyTypeface;
+			ces.FontSize = fontSizeSlider.Value;
+
+			ces.AssignAllOpenEditors();
+
 			return true;
 		}
 
 		public override void LoadCurrent()
 		{
-
+			var ces=CommonEditorSettings.Instance;
+			comboBox_FontFamily.SelectedItem = ces.FontFamily;
+			comboBox_FontStyle.SelectedItem = ces.Typeface;
+			fontSizeSlider.Value = ces.FontSize;
 		}
 	}
 }

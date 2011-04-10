@@ -87,6 +87,20 @@ namespace D_IDE.Core
 
 		void Init()
 		{
+			CommonEditorSettings.Instance.AssignToEditor(Editor);
+
+			// If Ctrl+MouseWheel was pressed/turned, increase/decrease font size
+			Editor.PreviewMouseWheel += new MouseWheelEventHandler((object sender, MouseWheelEventArgs e)=>
+			{
+				if (Keyboard.IsKeyDown(Key.LeftCtrl) ||	Keyboard.IsKeyDown(Key.RightCtrl))
+				{
+					CommonEditorSettings.Instance.FontSize = CommonEditorSettings.Instance.FontSize+( e.Delta > 0 ? 1 : -1);
+					CommonEditorSettings.Instance.AssignAllOpenEditors();
+					e.Handled = true;
+				}
+			});
+
+
 			/*
 			 * HACK: To re-focus the editor when this document is activated (the user chose this document tab page)
 			 * , it's simply needed to catch the Loaded-Event which calls Focus on the editor instance then!
