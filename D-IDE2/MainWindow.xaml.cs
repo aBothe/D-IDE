@@ -12,6 +12,7 @@ using System.IO;
 using System.Threading;
 using AvalonDock;
 using D_IDE.Core.Controls;
+using System.Diagnostics;
 
 namespace D_IDE
 {
@@ -631,6 +632,11 @@ namespace D_IDE
 		private void CommandBinding_CanExecute_SaveAs(object sender, CanExecuteRoutedEventArgs e)
 		{
 			e.CanExecute = (IDEManager.Instance!=null && IDEManager.Instance.CurrentEditor is EditorDocument);
+		}
+
+		private void Visitdide_sourceforge_net_Click(object sender, RoutedEventArgs e)
+		{
+			Process.Start("http://d-ide.sourceforge.net");
 		}
 	}
 	

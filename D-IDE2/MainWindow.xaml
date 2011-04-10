@@ -153,9 +153,10 @@
 				</r:RibbonGroup>
 			</r:RibbonTab>
 
-			<r:RibbonTab Header="Help">
+			<r:RibbonTab Header="Help" >
 				<r:RibbonGroup Header="Internet resources">
 					<r:RibbonButton Name="Button_Update" Click="Button_Update_Click" Label="Check for updates" />
+					<r:RibbonButton Label="Visit d-ide.sourceforge.net" Click="Visitdide_sourceforge_net_Click" />
 				</r:RibbonGroup>
 			</r:RibbonTab>
 				
