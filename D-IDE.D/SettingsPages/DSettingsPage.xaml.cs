@@ -23,16 +23,19 @@ namespace D_IDE.D
 		public DSettingsPage()
 		{
 			InitializeComponent();
+			LoadCurrent();
 		}
 
 		public override bool ApplyChanges()
 		{
+			DSettings.Instance.UseCodeCompletion = checkBox_UseCC.IsChecked.Value;
+
 			return true;
 		}
 
 		public override void LoadCurrent()
 		{
-			
+			checkBox_UseCC.IsChecked=DSettings.Instance.UseCodeCompletion;
 		}
 
 		public override string SettingCategoryName

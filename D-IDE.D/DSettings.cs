@@ -31,6 +31,7 @@ namespace D_IDE.D
 		}
 
 		public string cv2pdb_exe = "cv2pdb.exe";
+		public bool UseCodeCompletion = true;
 
 		#region Saving&Loading
 		public void Save(XmlWriter x)
@@ -41,6 +42,10 @@ namespace D_IDE.D
 
 			x.WriteStartElement("cv2pdb");
 			x.WriteCData(cv2pdb_exe);
+			x.WriteEndElement();
+
+			x.WriteStartElement("UseCodeCompletion");
+			x.WriteAttributeString("value",UseCodeCompletion.ToString().ToLower());
 			x.WriteEndElement();
 
 			dmd1.Save(x);
@@ -55,6 +60,11 @@ namespace D_IDE.D
 			{
 				switch (x.LocalName)
 				{
+					case "UseCodeCompletion":
+						if (x.MoveToAttribute("value"))
+							UseCodeCompletion = x.ReadContentAsBoolean();
+						break;
+
 					case "cv2pdb":
 						cv2pdb_exe = x.ReadString();
 						break;

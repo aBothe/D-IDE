@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Windows.Input;
 using D_IDE.Core.Controls;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace D_IDE.D
 {
@@ -387,7 +388,10 @@ namespace D_IDE.D
 		/// </summary>
 		public void Parse()
 		{
-			Dispatcher.BeginInvoke(new Util.EmptyDelegate(()=>{
+			if (parseOperation != null && parseOperation.Status != DispatcherOperationStatus.Completed)
+				parseOperation.Abort();
+
+			parseOperation= Dispatcher.BeginInvoke(new Util.EmptyDelegate(()=>{
 				try{
 					if (SyntaxTree != null)
 						lock (SyntaxTree)
@@ -421,20 +425,31 @@ namespace D_IDE.D
 		IBlockNode lastSelectedBlock = null;
 		IEnumerable<ICompletionData> currentEnvCompletionData = null;
 
+		DispatcherOperation blockCompletionDataOperation = null;
+		//DispatcherOperation showCompletionWindowOperation = null;
+		DispatcherOperation parseOperation = null;
+
+
+		/// <summary>
+		/// If different code block was selected, 
+		/// update the list of items that are available in the current scope
+		/// </summary>
 		public void UpdateBlockCompletionData()
 		{
 			var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation);
 			if (curBlock != lastSelectedBlock)
 			{
-				currentEnvCompletionData = null;
+				if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
+					blockCompletionDataOperation.Abort();
 
-				// If different code blocks was selected, 
-				// update the list of items that are available in the current scope
-				var l = new List<ICompletionData>();
-				DCodeCompletionSupport.Instance.BuildCompletionData(this, l, null);
-				currentEnvCompletionData = l;
+				blockCompletionDataOperation = Dispatcher.BeginInvoke(new Action(() =>
+				{
+					var l = new List<ICompletionData>();
+					DCodeCompletionSupport.Instance.BuildCompletionData(this, l, null);
+					currentEnvCompletionData = l;
+					curBlock = lastSelectedBlock;
+				}));
 			}
-			curBlock = lastSelectedBlock;
 		}
 
 		void TextArea_SelectionChanged(object sender, EventArgs e)
@@ -462,14 +477,16 @@ namespace D_IDE.D
 
 				if (completionWindow != null)
 					return;
+				/*
+				if (showCompletionWindowOperation != null &&showCompletionWindowOperation.Status != DispatcherOperationStatus.Completed)
+					showCompletionWindowOperation.Abort();
+				*/
+				// Init completion window here
+				completionWindow = new CompletionWindow(Editor.TextArea);
+				completionWindow.CloseAutomatically = true;
 
-				Dispatcher.Invoke(new Util.EmptyDelegate(()=>
+				Dispatcher.Invoke(new Action(()=>
 				{
-					Thread.CurrentThread.IsBackground = true;
-
-					completionWindow = new CompletionWindow(Editor.TextArea);
-					completionWindow.CloseAutomatically = true;
-
 					if (string.IsNullOrEmpty(EnteredText))
 						foreach (var i in currentEnvCompletionData)
 							completionWindow.CompletionList.CompletionData.Add(i);
@@ -485,7 +502,6 @@ namespace D_IDE.D
 
 					completionWindow.Closed += (object o, EventArgs _e) => { completionWindow = null; }; // After the window closed, reset it to null
 					completionWindow.Show();
-
 				}));
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
@@ -494,7 +510,9 @@ namespace D_IDE.D
 		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
 			// Return also if there are parser errors - just to prevent crashes
-			if (string.IsNullOrWhiteSpace(e.Text) || (SyntaxTree!=null && SyntaxTree.ParseErrors!=null && SyntaxTree.ParseErrors.Count()>0)) return;
+			if (string.IsNullOrWhiteSpace(e.Text) ||
+				(SyntaxTree!=null && SyntaxTree.ParseErrors!=null && SyntaxTree.ParseErrors.Count()>0) ||
+				!DSettings.Instance.UseCodeCompletion) return;
 
 			if (completionWindow != null)
 			{
@@ -510,7 +528,7 @@ namespace D_IDE.D
 
 		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
-			if (e.Text == ".") // Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
+			if (e.Text == "." && DSettings.Instance.UseCodeCompletion) // Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
 				ShowCodeCompletionWindow(e.Text);
 		}
 		#endregion
