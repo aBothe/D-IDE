@@ -159,8 +159,9 @@ namespace D_IDE
 					var ed = EditingManagement.OpenFile(fn) as EditorDocument;
 					if (ed != null && ln<ed.Editor.Document.LineCount)
 					{
-						var text_off = ed.Editor.Document.GetOffset((int)ln, 0);
-						ed.Editor.TextArea.Caret.Offset = text_off;
+						ed.Editor.TextArea.Caret.Line=(int)ln;
+						ed.Editor.TextArea.Caret.BringCaretToView();
+						ed.Editor.Focus();
 					}
 				}
 				else

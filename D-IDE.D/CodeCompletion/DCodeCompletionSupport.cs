@@ -49,6 +49,7 @@ namespace D_IDE.D
 			if (EnteredText == ".")
 			{
 				ITypeDeclaration id = null;
+				DToken tk = null;
 				var accessedItems=DCodeResolver.ResolveTypeDeclarations(EditorDocument.SyntaxTree,
 					EditorDocument.Editor.Text.Substring(0,caretOffset-1),
 					caretOffset-2,
@@ -56,7 +57,11 @@ namespace D_IDE.D
 					false,
 					codeCache,
 					out id,
-					true);
+					true,
+					out tk);
+
+				bool isThisOrSuper=tk!=null && (tk.Kind==DTokens.This || tk.Kind==DTokens.Super);
+				bool isThis = isThisOrSuper && tk.Kind == DTokens.This;
 
 				if (accessedItems == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
@@ -113,8 +118,17 @@ namespace D_IDE.D
 							foreach (var i in curClass)
 							{
 								var dn = i as DNode;
-								if (dn != null ? (dn.IsStatic && dn.IsPublic) : true)
+
+								if (dn == null)
 									l.Add(new DCompletionData(i));
+
+								// If "this." and if watching the current inheritance level only , add all items
+								// if "super." , add public items
+								// if neither nor, add public static items
+								if( (isThis&&n==curClass) ? true : 
+										(isThisOrSuper ? dn.IsPublic : 
+											(dn.IsStatic && dn.IsPublic)))
+									l.Add(new DCompletionData(dn));
 							}
 							curClass = DCodeResolver.ResolveBaseClass(curClass, codeCache);
 						}

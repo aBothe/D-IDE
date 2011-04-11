@@ -33,7 +33,8 @@ namespace D_Parser
 			IEnumerable<IAbstractSyntaxTree> CodeCache, bool IsCompleteIdentifier)
 		{
 			ITypeDeclaration id = null;
-			return ResolveTypeDeclarations(Module,Text,CaretOffset,CaretLocation,EnableVariableTypeResolving,CodeCache,out id,IsCompleteIdentifier);
+			DToken tk = null;
+			return ResolveTypeDeclarations(Module,Text,CaretOffset,CaretLocation,EnableVariableTypeResolving,CodeCache,out id,IsCompleteIdentifier,out tk);
 		}
 
 		/// <summary>
@@ -53,27 +54,27 @@ namespace D_Parser
 			bool EnableVariableTypeResolving,
 			IEnumerable<IAbstractSyntaxTree> CodeCache,
 			out ITypeDeclaration optIdentifierList,
-			bool IsCompleteIdentifier)
+			bool IsCompleteIdentifier,
+			out DToken optToken)
 		{
-			DToken tk = null;
 			optIdentifierList = DCodeResolver.BuildIdentifierList(Text,
-				CaretOffset, /*true,*/ out tk);
+				CaretOffset, /*true,*/ out optToken);
 
-			if (optIdentifierList == null && tk==null)
+			if (optIdentifierList == null && optToken==null)
 				return null;
 
 			IBlockNode SearchParent = null;
 
-			if (tk!=null &&( tk.Kind == DTokens.This || tk.Kind == DTokens.Super)) // this.myProp; super.baseProp;
+			if (optToken != null && (optToken.Kind == DTokens.This || optToken.Kind == DTokens.Super)) // this.myProp; super.baseProp;
 				SearchParent = SearchClassLikeAt(Module, CaretLocation);
 			else 
 				SearchParent = SearchBlockAt(Module, CaretLocation);
 
-			if (tk != null)
+			if (optToken != null)
 			{
-				if (tk.Kind == DTokens.Super) // super.baseProp
+				if (optToken.Kind == DTokens.Super) // super.baseProp
 					SearchParent = ResolveBaseClass(SearchParent as DClassLike, CodeCache);
-				else if (tk.Kind == DTokens.__FILE__)
+				else if (optToken.Kind == DTokens.__FILE__)
 				{
 					var n = new DVariable()
 					{
@@ -85,7 +86,7 @@ namespace D_Parser
 					};
 					return new[] { n };
 				}
-				else if (tk.Kind == DTokens.__LINE__)
+				else if (optToken.Kind == DTokens.__LINE__)
 				{
 					var n = new DVariable()
 					{
@@ -702,16 +703,17 @@ namespace D_Parser
 				ret.AddRange(ResolveTypeDeclarations_ModuleOnly(CurrentlyScopedBlock, IdentifierList, NodeFilter.All, ImportCache));
 
 			// Then search within the imports for our IdentifierList
-			foreach (var m in ImportCache)
-			{
-				// Add the module itself to the returned list if its name starts with the identifierlist
-				if (IsCompleteIdentifier? (m.Name.StartsWith(IdentifierList.ToString()+".") || m.Name==IdentifierList.ToString()) // If entire identifer was typed, check if the entire id is part of the module name
-					: m.Name.StartsWith(IdentifierList.ToString()))
-					ret.Add(m);
+			if(ImportCache!=null)
+				foreach (var m in ImportCache)
+				{
+					// Add the module itself to the returned list if its name starts with the identifierlist
+					if (IsCompleteIdentifier? (m.Name.StartsWith(IdentifierList.ToString()+".") || m.Name==IdentifierList.ToString()) // If entire identifer was typed, check if the entire id is part of the module name
+						: m.Name.StartsWith(IdentifierList.ToString()))
+						ret.Add(m);
 
-				else if (m.FileName != ThisModule.FileName) // We already parsed this module
-					ret.AddRange(ResolveTypeDeclarations_ModuleOnly(m, IdentifierList, NodeFilter.PublicOnly, ImportCache));
-			}
+					else if (m.FileName != ThisModule.FileName) // We already parsed this module
+						ret.AddRange(ResolveTypeDeclarations_ModuleOnly(m, IdentifierList, NodeFilter.PublicOnly, ImportCache));
+				}
 
 			return ret.ToArray();
 		}
