@@ -549,12 +549,10 @@ namespace D_IDE.D
 					if(watchedParent!=null)
 						foreach (var n in watchedParent)
 						{
-							var completionData = new DCompletionData(n);
-
-							if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation < n.EndLocation)
-								selectedItem = completionData;
-
-							members.Add(completionData);
+							var cData = new DCompletionData(n);
+							if (selectedItem == null && CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
+								selectedItem = cData;
+							members.Add(cData);
 						}
 					lookup_Members.ItemsSource = members;
 					lookup_Members.SelectedItem = selectedItem;
@@ -563,6 +561,15 @@ namespace D_IDE.D
 					#endregion
 				}));
 			}
+			else
+			// Update the member selection anyway
+			if(lookup_Members.ItemsSource!=null)
+				foreach (DCompletionData cData in lookup_Members.ItemsSource)
+					if (CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
+					{
+						lookup_Members.SelectedItem = cData;
+						break;
+					}
 		}
 
 		void TextArea_SelectionChanged(object sender, EventArgs e)

@@ -50,11 +50,14 @@ namespace D_Parser
         /// Returns attributes, type and name combined to one string
         /// </summary>
         /// <returns></returns>
-        public override string ToString(bool IncludePath)
+        public override string ToString(bool Attributes,bool IncludePath)
         {
-            string s = AttributeString+" ";
+			string s = ""; 
+				
+			if(Attributes)
+				s=AttributeString+" ";
 
-			s += base.ToString(IncludePath);
+			s += base.ToString(Attributes,IncludePath);
 
             // Template parameters
             if (TemplateParameters!=null && TemplateParameters.Length > 0)

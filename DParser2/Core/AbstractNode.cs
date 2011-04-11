@@ -51,10 +51,15 @@ namespace D_Parser.Core
 
 		public override string ToString()
 		{
-			return ToString(true);
+			return ToString(true,true);
 		}
 
-		public virtual string ToString(bool IncludePath)
+		public string ToString(bool IncludePath)
+		{
+			return ToString(true, IncludePath);
+		}
+
+		public virtual string ToString(bool Attributes,bool IncludePath)
 		{
 			string s = "";
 			// Type

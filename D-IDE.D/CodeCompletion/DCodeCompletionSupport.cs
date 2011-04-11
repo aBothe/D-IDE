@@ -445,7 +445,7 @@ namespace D_IDE.D
 			get
 			{
 				if (Node is DNode)
-					return (Node as DNode).ToString(false);
+					return (Node as DNode).ToString(false,false);
 				return Node.ToString();
 			}
 		}

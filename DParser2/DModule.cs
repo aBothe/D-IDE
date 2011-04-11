@@ -85,7 +85,7 @@ namespace D_Parser
 			}
 		}
 
-		public override string ToString(bool IncludePath)
+		public override string ToString(bool Attributes, bool IncludePath)
 		{
 			if (!IncludePath)
 			{
@@ -193,9 +193,9 @@ namespace D_Parser
         public DExpression Initializer; // Variable
         public bool IsAlias = false;
 
-        public override string ToString(bool IncludePath)
+		public override string ToString(bool Attributes, bool IncludePath)
         {
-            return (IsAlias?"alias ":"")+base.ToString(IncludePath)+(Initializer!=null?(" = "+Initializer.ToString()):"");
+            return (IsAlias?"alias ":"")+base.ToString(Attributes,IncludePath)+(Initializer!=null?(" = "+Initializer.ToString()):"");
         }
     }
 
@@ -218,9 +218,9 @@ namespace D_Parser
         public DMethod() { }
         public DMethod(MethodType Type) { SpecialType = Type; }
 
-        public override string ToString(bool IncludePath)
+		public override string ToString(bool Attributes, bool IncludePath)
         {
-            var s= base.ToString(IncludePath)+"(";
+            var s= base.ToString(Attributes,IncludePath)+"(";
             foreach (var p in Parameters)
                 s += (p is AbstractNode? (p as AbstractNode).ToString(false):p.ToString())+",";
             return s.Trim(',')+")";
@@ -239,7 +239,7 @@ namespace D_Parser
 
         public DStatementBlock() { }
 
-        public override string ToString(bool IncludePath)
+		public override string ToString(bool Attributes, bool IncludePath)
         {
             return DTokens.GetTokenString(Token)+(Expression!=null?("("+Expression.ToString()+")"):"");
         }
@@ -256,9 +256,9 @@ namespace D_Parser
             this.ClassType = ClassType;
         }
 
-        public override string ToString(bool IncludePath)
+		public override string ToString(bool Attributes, bool IncludePath)
         {
-            string ret = AttributeString + " " + DTokens.GetTokenString(ClassType) + " " + base.ToString(IncludePath);
+            var ret = (Attributes? (AttributeString + " "):"") + DTokens.GetTokenString(ClassType) + " " + base.ToString(false,IncludePath);
             if (BaseClasses.Count > 0)
                 ret += ":";
             foreach (var c in BaseClasses)
@@ -270,9 +270,9 @@ namespace D_Parser
 
     public class DEnum : DBlockStatement
     {
-        public override string ToString(bool IncludePath)
+		public override string ToString(bool Attributes, bool IncludePath)
         {
-            return "enum "+ToString(IncludePath);
+			return (Attributes ? (AttributeString + " ") : "") + "enum " + base.ToString(false, IncludePath);
         }
     }
 
