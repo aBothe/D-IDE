@@ -22,6 +22,9 @@ namespace D_IDE.D
 	public class DEditorDocument:EditorDocument
 	{
 		#region Properties
+		ComboBox lookup_Types;
+		ComboBox lookup_Members;
+
 		IAbstractSyntaxTree _unboundTree;
 		public IAbstractSyntaxTree SyntaxTree { 
 			get {
@@ -63,6 +66,34 @@ namespace D_IDE.D
 
 		void Init()
 		{
+			#region Setup type lookup dropdowns
+			
+			var stk = new Grid();
+
+			stk.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(0.5, GridUnitType.Star) });
+			stk.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(0.5, GridUnitType.Star) });
+
+			stk.Margin = new Thickness(0);
+			stk.Height = 24;
+			Editor.Margin = new Thickness() { Top = stk.Height };
+			
+			
+			MainEditorContainer.Children.Insert(0, stk);
+
+			lookup_Types = new ComboBox();
+			lookup_Members = new ComboBox();
+
+			lookup_Types.SetValue(Grid.ColumnProperty,0);
+			lookup_Members.SetValue(Grid.ColumnProperty,1);
+
+			lookup_Types.Items.Add(new TextBlock() { Text = "asdf" });
+			lookup_Members. Items.Add(new TextBlock() { Text = "asdf" });
+			
+			stk.Children.Add(lookup_Types);
+			stk.Children.Add(lookup_Members);
+
+			#endregion
+
 			// Register CodeCompletion events
 			Editor.TextArea.TextEntering += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntering);
 			Editor.TextArea.TextEntered += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntered);

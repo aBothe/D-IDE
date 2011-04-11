@@ -27,6 +27,7 @@ namespace D_IDE.Core
 		#region Properties
 		TextEditor editor = new TextEditor();
 		public TextEditor Editor { get { return editor; } }
+		public Grid MainEditorContainer { get; protected set; }
 
 		public TextMarkerService MarkerStrategy { get; protected set; }
 
@@ -111,8 +112,10 @@ namespace D_IDE.Core
 			CommandBindings.Add(new CommandBinding(IDEUICommands.ToggleBreakpoint,ToggleBreakpoint_event));
 
 			var gr = new Grid();
+			MainEditorContainer = gr;
 			AddChild(gr);
 			gr.Children.Add(Editor);
+
 			Editor.Margin = new System.Windows.Thickness(0);
 			Editor.BorderBrush = null;
 

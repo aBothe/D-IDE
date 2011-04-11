@@ -1,0 +1,18 @@
+﻿<UserControl x:Class="D_IDE.Core.Controls.UserControl1"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="596" Loaded="UserControl_Loaded">
+    <Grid>
+		<Grid Height="36" HorizontalAlignment="Left" Name="grid1" VerticalAlignment="Top" Width="596">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="0.5" />
+				<ColumnDefinition Width="596*" />
+			</Grid.ColumnDefinitions>
+			<ComboBox Height="23" HorizontalAlignment="Left" Name="comboBox1" VerticalAlignment="Top" Width="120" />
+			<ComboBox HorizontalAlignment="Stretch" Name="comboBox2" VerticalAlignment="Top" Grid.Column="1" />
+		</Grid>
+	</Grid>
+</UserControl>
