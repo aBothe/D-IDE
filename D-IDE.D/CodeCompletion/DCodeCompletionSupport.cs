@@ -432,6 +432,24 @@ namespace D_IDE.D
 			Node = n;
 		}
 
+		public string NodeString { get {
+			if (Node is DNode)
+				return (Node as DNode).ToString();
+			return Node.ToString(); } }
+
+		/// <summary>
+		/// Returns node string without attributes and without node path
+		/// </summary>
+		public string PureNodeString
+		{
+			get
+			{
+				if (Node is DNode)
+					return (Node as DNode).ToString(false);
+				return Node.ToString();
+			}
+		}
+
 		public INode Node { get; protected set; }
 
 		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
@@ -450,7 +468,7 @@ namespace D_IDE.D
 			get {
 				try
 				{
-					return Node.ToString();
+					return NodeString;
 				}
 				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
 				return null;

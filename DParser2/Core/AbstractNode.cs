@@ -54,7 +54,7 @@ namespace D_Parser.Core
 			return ToString(true);
 		}
 
-		public string ToString(bool IncludePath)
+		public virtual string ToString(bool IncludePath)
 		{
 			string s = "";
 			// Type

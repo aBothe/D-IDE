@@ -50,30 +50,26 @@ namespace D_Parser
         /// Returns attributes, type and name combined to one string
         /// </summary>
         /// <returns></returns>
-        public new string ToString(bool Attributes)
+        public override string ToString(bool IncludePath)
         {
-            string s = "";
-            // Attributes
-            if(Attributes)
-                s = AttributeString+" ";
+            string s = AttributeString+" ";
 
-			s += base.ToString();
+			s += base.ToString(IncludePath);
 
             // Template parameters
             if (TemplateParameters!=null && TemplateParameters.Length > 0)
             {
                 s += "!(";
-                foreach (var p in TemplateParameters)
-                    s += p.ToString() + ",";
+				foreach (var p in TemplateParameters)
+					if (p is DNode)
+						s += (p as DNode).ToString(false) + ",";
+					else
+					s += p.ToString() + ",";
+
                 s = s.Trim(',')+ ")";
             }
             
             return s.Trim();
-        }
-
-        public override string ToString()
-        {
-            return ToString(true);
         }
 
         public bool IsPublic

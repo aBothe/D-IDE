@@ -16,6 +16,7 @@ using System.Windows.Input;
 using D_IDE.Core.Controls;
 using System.Windows;
 using System.Windows.Threading;
+using System.Windows.Data;
 
 namespace D_IDE.D
 {
@@ -24,6 +25,7 @@ namespace D_IDE.D
 		#region Properties
 		ComboBox lookup_Types;
 		ComboBox lookup_Members;
+		ToolTip editorToolTip = new ToolTip();
 
 		IAbstractSyntaxTree _unboundTree;
 		public IAbstractSyntaxTree SyntaxTree { 
@@ -50,7 +52,10 @@ namespace D_IDE.D
 			}
 		}
 
-		ToolTip editorToolTip = new ToolTip();
+		bool KeysTyped = false;
+		Thread parseThread = null;
+
+		bool isUpdatingLookupDropdowns = false;
 		#endregion
 
 		public DEditorDocument()
@@ -67,31 +72,52 @@ namespace D_IDE.D
 		void Init()
 		{
 			#region Setup type lookup dropdowns
-			
-			var stk = new Grid();
+			// Create a grid which is located at the very top of the editor document
+			var stk = new Grid() {
+				HorizontalAlignment = HorizontalAlignment.Stretch,
+				Height=24,
+				VerticalAlignment=VerticalAlignment.Top
+			};
 
+			// Give it two columns that have an equal width
 			stk.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(0.5, GridUnitType.Star) });
 			stk.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(0.5, GridUnitType.Star) });
 
-			stk.Margin = new Thickness(0);
-			stk.Height = 24;
+			// Move the editor away from the upper boundary
 			Editor.Margin = new Thickness() { Top = stk.Height };
 			
-			
-			MainEditorContainer.Children.Insert(0, stk);
+			MainEditorContainer.Children.Add(stk);
 
-			lookup_Types = new ComboBox();
-			lookup_Members = new ComboBox();
+			lookup_Types = new ComboBox() { HorizontalAlignment=HorizontalAlignment.Stretch	};
+			lookup_Members = new ComboBox() { HorizontalAlignment = HorizontalAlignment.Stretch };
 
-			lookup_Types.SetValue(Grid.ColumnProperty,0);
-			lookup_Members.SetValue(Grid.ColumnProperty,1);
+			lookup_Types.SelectionChanged +=lookup_Types_SelectionChanged;
+			lookup_Members.SelectionChanged+=lookup_Types_SelectionChanged;
 
-			lookup_Types.Items.Add(new TextBlock() { Text = "asdf" });
-			lookup_Members. Items.Add(new TextBlock() { Text = "asdf" });
-			
 			stk.Children.Add(lookup_Types);
 			stk.Children.Add(lookup_Members);
 
+			#region Setup dropdown item template
+			var lookupItemTemplate =lookup_Members.ItemTemplate=lookup_Types.ItemTemplate= new DataTemplate { DataType = typeof(DCompletionData) };
+
+			var sp = new FrameworkElementFactory(typeof( StackPanel));
+			sp.SetValue(StackPanel.OrientationProperty,Orientation.Horizontal);
+			sp.SetBinding(StackPanel.ToolTipProperty,new Binding("Description"));
+
+			var iTemplate_Img = new FrameworkElementFactory( typeof(Image));
+			iTemplate_Img.SetBinding(Image.SourceProperty,new Binding("Image"));
+			iTemplate_Img.SetValue(Image.MarginProperty,new Thickness(1,1,4,1));
+			sp.AppendChild(iTemplate_Img);
+
+			var iTemplate_Name = new FrameworkElementFactory(typeof(TextBlock));
+			iTemplate_Name.SetBinding(TextBlock.TextProperty,new Binding("PureNodeString"));
+			sp.AppendChild(iTemplate_Name);
+
+			lookupItemTemplate.VisualTree = sp;
+			#endregion
+
+			// Important: Move the members-lookup to column 1
+			lookup_Members.SetValue(Grid.ColumnProperty,1);
 			#endregion
 
 			// Register CodeCompletion events
@@ -158,6 +184,21 @@ namespace D_IDE.D
 			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock,UncommentBlock));
 
 			Parse();
+		}
+
+		void lookup_Types_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (isUpdatingLookupDropdowns)
+				return;
+
+			var completionData = e.AddedItems[0] as DCompletionData;
+
+			if (completionData == null)
+				return;
+
+			Editor.TextArea.Caret.Position = new TextViewPosition(completionData.Node.StartLocation.Line,completionData.Node.StartLocation.Column);
+			Editor.TextArea.Caret.BringCaretToView();
+			Editor.Focus();
 		}
 
 		#region Code operations
@@ -363,8 +404,6 @@ namespace D_IDE.D
 		}
 		#endregion
 
-		bool KeysTyped = false;
-		Thread parseThread = null;
 		void Document_TextChanged(object sender, EventArgs e)
 		{
 			if (parseThread == null || !parseThread.IsAlive)
@@ -473,12 +512,55 @@ namespace D_IDE.D
 				if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
 					blockCompletionDataOperation.Abort();
 
+				lastSelectedBlock = curBlock;
+
 				blockCompletionDataOperation = Dispatcher.BeginInvoke(new Action(() =>
 				{
 					var l = new List<ICompletionData>();
 					DCodeCompletionSupport.Instance.BuildCompletionData(this, l, null);
 					currentEnvCompletionData = l;
-					curBlock = lastSelectedBlock;
+
+					#region Update the type & member selectors
+					isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
+
+					// First fill the Types-Dropdown
+					var types = new List<DCompletionData>();
+					DCompletionData selectedItem=null;
+					// Show all members of the current module
+					if(SyntaxTree!=null)
+						foreach (var n in SyntaxTree){
+							var completionData=new DCompletionData(n);
+							if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation < n.EndLocation)
+								selectedItem = completionData;
+							types.Add(completionData);
+						}
+					lookup_Types.ItemsSource = types;
+					lookup_Types.SelectedItem = selectedItem;
+					selectedItem = null;
+
+					// Fill the Members-Dropdown
+					var members = new List<DCompletionData>();
+
+					// Search a parent class to show all this one's members and to select that member where the caret currently is located
+					var watchedParent = curBlock as IBlockNode;
+					while (watchedParent!=null && !(watchedParent is DClassLike || watchedParent is DEnum))
+						watchedParent = watchedParent.Parent as IBlockNode;
+
+					if(watchedParent!=null)
+						foreach (var n in watchedParent)
+						{
+							var completionData = new DCompletionData(n);
+
+							if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation < n.EndLocation)
+								selectedItem = completionData;
+
+							members.Add(completionData);
+						}
+					lookup_Members.ItemsSource = members;
+					lookup_Members.SelectedItem = selectedItem;
+
+					isUpdatingLookupDropdowns = false;
+					#endregion
 				}));
 			}
 		}
