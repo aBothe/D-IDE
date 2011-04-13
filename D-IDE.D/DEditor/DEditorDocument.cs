@@ -629,17 +629,17 @@ namespace D_IDE.D
 
 		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
-			// Return also if there are parser errors - just to prevent crashes
-			if (string.IsNullOrWhiteSpace(e.Text) ||
-				(SyntaxTree!=null && SyntaxTree.ParseErrors!=null && SyntaxTree.ParseErrors.Count()>0) ||
-				!DSettings.Instance.UseCodeCompletion) return;
-
 			if (completionWindow != null)
 			{
 				// If entered key isn't part of the identifier anymore, close the completion window and insert the item text.
 				if (!DCodeCompletionSupport.Instance. IsIdentifierChar(e.Text[0]))
 					completionWindow.CompletionList.RequestInsertion(e);
 			}
+
+			// Return also if there are parser errors - just to prevent crashes
+			if (string.IsNullOrWhiteSpace(e.Text) ||
+				(SyntaxTree != null && SyntaxTree.ParseErrors != null && SyntaxTree.ParseErrors.Count() > 0) ||
+				!DSettings.Instance.UseCodeCompletion) return;
 
 			// Note: Show completion window even before the first key has been processed by the editor!
 			else if(e.Text!=".")

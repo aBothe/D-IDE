@@ -63,6 +63,8 @@ namespace D_IDE.D
 				bool isThisOrSuper=tk!=null && (tk.Kind==DTokens.This || tk.Kind==DTokens.Super);
 				bool isThis = isThisOrSuper && tk.Kind == DTokens.This;
 
+				var addedModuleNames = new List<string>();
+
 				if (accessedItems == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
 
@@ -167,8 +169,11 @@ namespace D_IDE.D
 								}
 							}
 						}
-						else // Add next part of the module name path
-							l.Add(new NamespaceCompletionData(idParts[skippableParts]));
+						else if (!addedModuleNames.Contains(idParts[skippableParts])) // Add next part of the module name path only if it wasn't added before
+						{
+							addedModuleNames.Add(idParts[skippableParts]); // e.g.  std.c.  ... in this virtual package, there are several sub-packages that contain the .c-part
+							l.Add(new NamespaceCompletionData(idParts[skippableParts],GetModulePath((n as IAbstractSyntaxTree).FileName,idParts.Length,skippableParts+1)));
+						}
 					}
 				}
 			}
@@ -182,25 +187,47 @@ namespace D_IDE.D
 					l.Add(new TokenCompletionData(kv.Key));
 
 				// Add module name stubs of importable modules
-				var nameStubs=new List<string>();
+				var nameStubs=new Dictionary<string,string>();
 				foreach (var mod in codeCache)
 				{
 					if (string.IsNullOrEmpty(mod.ModuleName))
 						continue;
-					var firstPart = mod.ModuleName.Split('.')[0];
 
-					if (!nameStubs.Contains(firstPart))
-						nameStubs.Add(firstPart);
+					var parts = mod.ModuleName.Split('.');
+
+					if (!nameStubs.ContainsKey(parts[0]))
+						nameStubs.Add(parts[0], GetModulePath(mod.FileName, parts.Length, 1));
 				}
 
-				foreach (var name in nameStubs)
-					l.Add(new NamespaceCompletionData(name));
+				foreach (var kv in nameStubs)
+					l.Add(new NamespaceCompletionData(kv.Key,kv.Value));
 			}
 
 			// Add all found items to the referenced list
 			if(listedItems!=null)
 				foreach(var i in listedItems)
 					l.Add(new DCompletionData(i));
+		}
+
+		/// <summary>
+		/// Returns C:\fx\a\b when PhysicalFileName was "C:\fx\a\b\c\Module.d" , ModuleName= "a.b.c.Module" and WantedDirectory= "a.b"
+		/// 
+		/// Used when formatting package names in BuildCompletionData();
+		/// </summary>
+		public static string GetModulePath(string PhysicalFileName, string ModuleName, string WantedDirectory)
+		{
+			return GetModulePath(PhysicalFileName,ModuleName.Split('.').Length,WantedDirectory.Split('.').Length);
+		}
+
+		public static string GetModulePath(string PhysicalFileName, int ModuleNamePartAmount, int WantedDirectoryNamePartAmount)
+		{
+			var ret = "";
+
+			var physFileNameParts = PhysicalFileName.Split('\\');
+			for (int i = 0; i < physFileNameParts.Length - ModuleNamePartAmount + WantedDirectoryNamePartAmount; i++)
+				ret += physFileNameParts[i] + "\\";
+
+			return ret.TrimEnd('\\');
 		}
 
 		public void BuildToolTip(DEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
@@ -402,10 +429,19 @@ namespace D_IDE.D
 	public class NamespaceCompletionData : ICompletionData
 	{
 		public string ModuleName{get;set;}
+		public IAbstractSyntaxTree AssociatedModule { get; set; }
+		public string _desc;
 
-		public NamespaceCompletionData(string ModuleName)
+		public NamespaceCompletionData(string ModuleName, IAbstractSyntaxTree AssocModule)
 		{
 			this.ModuleName=ModuleName;
+			AssociatedModule = AssocModule;
+		}
+
+		public NamespaceCompletionData(string ModuleName, string Description)
+		{
+			this.ModuleName = ModuleName;
+			_desc = Description;
 		}
 
 		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
@@ -420,7 +456,7 @@ namespace D_IDE.D
 
 		public object Description
 		{
-			get { return null; }
+			get { return !string.IsNullOrEmpty(_desc)?_desc: (AssociatedModule!=null?AssociatedModule.FileName:null); }
 		}
 
 		public System.Windows.Media.ImageSource Image
