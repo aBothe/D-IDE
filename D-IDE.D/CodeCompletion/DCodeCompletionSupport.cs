@@ -205,8 +205,18 @@ namespace D_IDE.D
 
 			// Add all found items to the referenced list
 			if(listedItems!=null)
-				foreach(var i in listedItems)
+				foreach (var i in listedItems)
+				{
+					// Skip on unit tests or static c(d)tors
+					if (i is DMethod)
+					{
+						var dm = i as DMethod;
+
+						if (dm.SpecialType == DMethod.MethodType.Unittest || ((dm.SpecialType == DMethod.MethodType.Destructor || dm.SpecialType == DMethod.MethodType.Constructor) && dm.IsStatic))
+							continue;
+						}
 					l.Add(new DCompletionData(i));
+				}
 		}
 
 		/// <summary>
