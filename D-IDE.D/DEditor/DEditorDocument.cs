@@ -295,7 +295,7 @@ namespace D_IDE.D
 					false,
 					DCodeCompletionSupport.EnumAvailableModules(this) // std.cstream.din.getc(); <<-- It's resolvable but not imported explictily! So also scan the global cache!
 					//DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument))
-					,true
+					, true
 					).ToArray();
 
 				INode n = null;
@@ -319,19 +319,16 @@ namespace D_IDE.D
 				}
 				else if (types.Length == 1)
 					n = types[0];
-				else {
+				else
+				{
 					MessageBox.Show("No symbol found!");
-					return; }
+					return;
+				}
 
 				var mod = n.NodeRoot as IAbstractSyntaxTree;
 				if (mod == null)
 					return;
-				var ed = CoreManager.Instance.OpenFile(mod.FileName) as EditorDocument;
-				if (ed != null)
-				{
-					ed.Editor.CaretOffset=ed.Editor.Document.GetOffset(n.StartLocation.Line,n.StartLocation.Column);
-					ed.Editor.ScrollTo(n.StartLocation.Line,n.StartLocation.Column);
-				}
+				CoreManager.Instance.OpenFile(mod.FileName, n.StartLocation.Line, n.StartLocation.Column);
 			}
 			catch { }
 		}
@@ -627,6 +624,21 @@ namespace D_IDE.D
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
 
+		void ShowInsightWindow(string EnteredText)
+		{
+			//TODO: Show insight window and do all the function name resolution stuff...  Note: Remember deciding whether entering the template or normal arguments! foo!(int,bool)(23,"my String"); 
+		}
+
+		public bool CanShowCodeCompletionPopup
+		{
+			get {
+				return 
+					DSettings.Instance.UseCodeCompletion &&
+					SyntaxTree!=null && (SyntaxTree.ParseErrors!=null?SyntaxTree.ParseErrors.Count() > 0:true) &&
+					!DCodeResolver.Commenting.IsInCommentAreaOrString(Editor.Text, Editor.CaretOffset);
+			}
+		}
+
 		void TextArea_TextEntering(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
 			if (completionWindow != null)
@@ -636,10 +648,15 @@ namespace D_IDE.D
 					completionWindow.CompletionList.RequestInsertion(e);
 			}
 
-			// Return also if there are parser errors - just to prevent crashes
-			if (string.IsNullOrWhiteSpace(e.Text) ||
-				(SyntaxTree != null && SyntaxTree.ParseErrors != null && SyntaxTree.ParseErrors.Count() > 0) ||
-				!DSettings.Instance.UseCodeCompletion) return;
+			// Return if there are parser errors - just to prevent crashes
+			if (!CanShowCodeCompletionPopup)
+				return;
+
+			if (string.IsNullOrWhiteSpace(e.Text))
+				return;
+
+			else if (e.Text == "," || e.Text == "(")
+				ShowInsightWindow(e.Text);
 
 			// Note: Show completion window even before the first key has been processed by the editor!
 			else if(e.Text!=".")
@@ -648,7 +665,8 @@ namespace D_IDE.D
 
 		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
-			if (e.Text == "." && DSettings.Instance.UseCodeCompletion) // Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
+			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
+			if (e.Text == "." && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
 		}
 		#endregion

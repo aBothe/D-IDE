@@ -142,6 +142,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Dialogs\SearchAndReplaceDlg.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Dialogs\SettingsPages\Page_General_Prj.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -196,6 +200,9 @@
     <Compile Include="Dialogs\NewProjectDlg.xaml.cs">
       <DependentUpon>NewProjectDlg.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\SearchAndReplaceDlg.xaml.cs">
+      <DependentUpon>SearchAndReplaceDlg.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\SettingsPages\Page_General_Prj.xaml.cs">
       <DependentUpon>Page_General_Prj.xaml</DependentUpon>
     </Compile>
@@ -212,6 +219,7 @@
       <DependentUpon>Page_General.xaml</DependentUpon>
     </Compile>
     <Compile Include="GenericFileBinding.cs" />
+    <Compile Include="Management\FileSearchManagement.cs" />
     <Compile Include="Management\IDEDebugManagement.cs" />
     <Compile Include="Misc\IDEUtil.cs" />
     <Compile Include="MainWindow.xaml.cs">

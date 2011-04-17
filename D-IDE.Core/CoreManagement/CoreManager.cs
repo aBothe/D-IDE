@@ -42,5 +42,6 @@ namespace D_IDE.Core
 		}
 
 		public abstract AbstractEditorDocument OpenFile(string file);
+		public abstract AbstractEditorDocument OpenFile(string file,int line,int col);
 	}
 }

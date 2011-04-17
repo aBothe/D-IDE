@@ -48,14 +48,7 @@ namespace D_IDE.Controls.Panels
 			if (err == null || string.IsNullOrEmpty( err.FileName))
 				return;
 
-			var editor = IDEManager.EditingManagement.OpenFile(err.FileName) as IEditorDocument;
-
-			if (editor != null)
-			{
-				editor.Editor.CaretOffset=editor.Editor.Document.GetOffset(err.Line, err.Column);
-				editor.Editor.ScrollTo(err.Line,err.Column);
-				editor.Editor.Focus();
-			}
+			IDEManager.EditingManagement.OpenFile(err.FileName,err.Line,err.Column);
 		}
 	}
 }

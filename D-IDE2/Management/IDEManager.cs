@@ -21,5 +21,10 @@ namespace D_IDE
 		{
 			return EditingManagement.OpenFile(file);
 		}
+
+		public override AbstractEditorDocument OpenFile(string file, int line, int col)
+		{
+			return EditingManagement.OpenFile(file, line, col);
+		}
 	}
 }

@@ -1,0 +1,26 @@
+﻿<a:DockableContent x:Class="D_IDE.Dialogs.SearchAndReplaceDlg"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:a="clr-namespace:AvalonDock;assembly=AvalonDock"
+        Height="291" Width="544" Title="Search &amp; Replace">
+	<Grid Background="#FFF0F0F0">
+		<Label Content="Find..." Height="16" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" Padding="0" VerticalAlignment="Top" Width="76" />
+		<ComboBox Height="23" Margin="12,34,12,0" Name="comboBox_InputString" VerticalAlignment="Top" IsEditable="True" />
+		<Label Content="Search in..." Height="16" HorizontalAlignment="Left" Margin="12,63,0,0" Name="label2" Padding="0" VerticalAlignment="Top" Width="76" />
+		<ComboBox Height="23" Margin="12,85,12,0" Name="comboBox_SearchLocation" VerticalAlignment="Top">
+			<ComboBoxItem Content="Current Document" IsSelected="True" />
+			<ComboBoxItem Content="Open Documents" />
+			<ComboBoxItem Content="Current Project" />
+			<ComboBoxItem Content="Current Solution" />
+		</ComboBox>
+		<CheckBox Content="Case sensitive" Height="16" HorizontalAlignment="Left" Margin="12,187,0,0" Name="checkBox1" VerticalAlignment="Top" Width="101" />
+		<Label Content="Search options:" Height="16" HorizontalAlignment="Left" Margin="12,165,0,0" Name="label3" Padding="0" VerticalAlignment="Top" Width="86" />
+		<CheckBox Content="Word only" Height="16" HorizontalAlignment="Left" Margin="119,187,0,0" Name="checkBox2" VerticalAlignment="Top" />
+		<CheckBox Content="Search upward" Height="16" HorizontalAlignment="Left" Margin="207,187,0,0" Name="checkBox3" VerticalAlignment="Top" />
+		<Button Height="23" HorizontalAlignment="Left" Margin="457,227,0,0" Name="button1" VerticalAlignment="Top" Width="75" Content="Replace" />
+		<Button Content="Replace All" Height="23" HorizontalAlignment="Left" Margin="457,256,0,0" Name="button2" VerticalAlignment="Top" Width="75" />
+		<Label Content="Replace with..." Height="16" HorizontalAlignment="Left" Margin="12,114,0,0" Name="label4" Padding="0" VerticalAlignment="Top" Width="76" />
+		<ComboBox Height="23" Margin="12,136,12,0" Name="comboBox1" VerticalAlignment="Top" IsEditable="True" />
+		<Button Content="Find next" Height="23" HorizontalAlignment="Left" Margin="366,227,0,0" Name="button3" VerticalAlignment="Top" Width="80" />
+	</Grid>
+</a:DockableContent>

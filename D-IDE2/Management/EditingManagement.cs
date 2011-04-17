@@ -178,6 +178,24 @@ namespace D_IDE
 				return newEd;
 			}
 
+			/// <summary>
+			/// Opens a file and moves caret to Line,Col. Scrolls down the view if needed.
+			/// </summary>
+			public static AbstractEditorDocument OpenFile(string FileName, int Line, int Col)
+			{
+				var ret = OpenFile(FileName);
+				var ed = ret as EditorDocument;
+
+				if (ed == null)
+					return null;
+
+				ed.Editor.CaretOffset = ed.Editor.Document.GetOffset(Line, Col);
+				ed.Editor.ScrollTo(Line,Col);
+				ed.Editor.Focus();
+
+				return ed;
+			}
+
 			public static void SaveCurrentFile()
 			{
 				if (Instance.CurrentEditor != null)
