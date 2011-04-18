@@ -24,6 +24,9 @@
 
 		<CommandBinding Command="d:IDEUICommands.LaunchDebugger" Executed="LaunchDebugger_Click" />
 		<CommandBinding Command="d:IDEUICommands.LaunchWithoutDebugger" Executed="LaunchWithoutDebugger_Click" />
+		
+		<CommandBinding Command="Search" Executed="SearchAndReplace_Executed" />
+		<CommandBinding Command="Find" Executed="FindNext_Executed" />
 	</r:RibbonWindow.CommandBindings>
 	
 	<r:RibbonWindow.InputBindings>

@@ -27,6 +27,7 @@ namespace D_IDE
 		public LogPanel Panel_Log = new LogPanel();
 		public StartPage StartPage;
 		public DebugLocalsPanel Panel_Locals = new DebugLocalsPanel();
+		public SearchAndReplaceDlg SearchAndReplaceDlg = new SearchAndReplaceDlg();
 
 		public bool RunCurrentModuleOnly
 		{
@@ -637,6 +638,16 @@ namespace D_IDE
 		private void Visitdide_sourceforge_net_Click(object sender, RoutedEventArgs e)
 		{
 			Process.Start("http://d-ide.sourceforge.net");
+		}
+
+		private void SearchAndReplace_Executed(object sender, ExecutedRoutedEventArgs e)
+		{
+			SearchAndReplaceDlg.ShowAsFloatingWindow(DockManager, true);
+		}
+
+		private void FindNext_Executed(object sender, ExecutedRoutedEventArgs e)
+		{
+			SearchAndReplaceDlg.DoFindNext();
 		}
 	}
 	

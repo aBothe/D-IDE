@@ -196,6 +196,22 @@ namespace D_IDE
 				return ed;
 			}
 
+			public static AbstractEditorDocument OpenFile(string FileName, int Offset)
+			{
+				var ret = OpenFile(FileName);
+				var ed = ret as EditorDocument;
+
+				if (ed == null)
+					return null;
+
+				ed.Editor.CaretOffset = Offset;
+				var loc = ed.Editor.Document.GetLocation(Offset);
+				ed.Editor.ScrollTo(loc.Line,loc.Column);
+				ed.Editor.Focus();
+
+				return ed;
+			}
+
 			public static void SaveCurrentFile()
 			{
 				if (Instance.CurrentEditor != null)
