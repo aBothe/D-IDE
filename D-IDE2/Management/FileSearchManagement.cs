@@ -237,7 +237,7 @@ namespace D_IDE
 				if (FindNext_Internal(out file, out offset))
 				{
 					var ed=EditingManagement.OpenFile(file, offset) as EditorDocument;
-
+					
 					if (ed == null)
 						return;
 

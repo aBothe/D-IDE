@@ -642,7 +642,8 @@ namespace D_IDE
 
 		private void SearchAndReplace_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
-			SearchAndReplaceDlg.ShowAsFloatingWindow(DockManager, true);
+			SearchAndReplaceDlg.Owner=this;
+			SearchAndReplaceDlg.Show();
 		}
 
 		private void FindNext_Executed(object sender, ExecutedRoutedEventArgs e)

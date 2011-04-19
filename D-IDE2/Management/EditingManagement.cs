@@ -151,6 +151,7 @@ namespace D_IDE
 					{
 						// Activate the wanted item and return it
 						doc.Activate();
+						IDEManager.Instance.MainWindow.DockManager.ActiveDocument = doc;
 						return doc as AbstractEditorDocument;
 					}
 
@@ -187,7 +188,7 @@ namespace D_IDE
 				var ed = ret as EditorDocument;
 
 				if (ed == null)
-					return null;
+					return ret;
 
 				ed.Editor.CaretOffset = ed.Editor.Document.GetOffset(Line, Col);
 				ed.Editor.ScrollTo(Line,Col);
@@ -202,7 +203,7 @@ namespace D_IDE
 				var ed = ret as EditorDocument;
 
 				if (ed == null)
-					return null;
+					return ret;
 
 				ed.Editor.CaretOffset = Offset;
 				var loc = ed.Editor.Document.GetLocation(Offset);
