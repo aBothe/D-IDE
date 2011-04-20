@@ -181,6 +181,8 @@ namespace D_IDE
 
 						foreach (var pf in IDEManager.Instance.CurrentEditor.Project)
 							files.Add(pf.AbsoluteFileName);
+
+						files.Sort();
 						break;
 					case SearchLocations.CurrentSolution:
 						if (IDEManager.CurrentSolution == null)
@@ -189,10 +191,10 @@ namespace D_IDE
 						foreach (var prj in IDEManager.CurrentSolution)
 							foreach (var pf2 in prj)
 								files.Add(pf2.AbsoluteFileName);
+
+						files.Sort();
 						break;
 				}
-
-				files.Sort();
 
 
 				// 2)

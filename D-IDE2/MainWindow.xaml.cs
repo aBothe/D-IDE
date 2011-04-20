@@ -27,7 +27,7 @@ namespace D_IDE
 		public LogPanel Panel_Log = new LogPanel();
 		public StartPage StartPage;
 		public DebugLocalsPanel Panel_Locals = new DebugLocalsPanel();
-		public SearchAndReplaceDlg SearchAndReplaceDlg = new SearchAndReplaceDlg();
+		public SearchAndReplaceDlg SearchAndReplaceDlg;
 
 		public bool RunCurrentModuleOnly
 		{
@@ -474,6 +474,10 @@ namespace D_IDE
 
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
+			// Important: To free the handle of the search&replace-dlg it's needed to destroy the dlg
+			if(SearchAndReplaceDlg!=null && SearchAndReplaceDlg.IsLoaded)
+			SearchAndReplaceDlg.Close();
+
 			// Save window state & size
 			GlobalProperties.Instance.lastFormSize = new Size(Width,Height);
 			GlobalProperties.Instance.lastFormState = this.WindowState;
@@ -642,6 +646,13 @@ namespace D_IDE
 
 		private void SearchAndReplace_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
+			if (SearchAndReplaceDlg != null && SearchAndReplaceDlg.IsLoaded)
+			{
+				SearchAndReplaceDlg.Focus();
+				return;
+			}
+
+			SearchAndReplaceDlg = new Dialogs.SearchAndReplaceDlg();
 			SearchAndReplaceDlg.Owner=this;
 			SearchAndReplaceDlg.Show();
 		}
