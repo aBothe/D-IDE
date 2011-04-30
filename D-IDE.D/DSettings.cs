@@ -179,9 +179,9 @@ namespace D_IDE.D
 		public readonly ASTStorage ASTCache = new ASTStorage();
 
 		/// <summary>
-		/// TODO: Change default to C:\dmd2\windows\bin
+		/// The "bin" directory of the dmd installation
 		/// </summary>
-		public string BaseDirectory = @"D:\dmd2\windows\bin";
+		public string BaseDirectory = @"C:\dmd2\windows\bin";
 
 		public string SoureCompiler = "dmd.exe";
 		public string ExeLinker = "dmd.exe";
@@ -197,19 +197,21 @@ namespace D_IDE.D
 		}
 
 		public DBuildArguments DebugArgs=new DBuildArguments(){
-		IsDebug=true,
-		SoureCompiler = "-c \"$src\" -of\"$obj\" -gc -debug",
-		Win32ExeLinker = "$objs -L/su:windows -L/exet:nt -of\"$exe\" -gc -debug",
-		ExeLinker = "$objs -of\"$exe\" -gc -debug",
-		DllLinker = "$objs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc -debug",
-		LibLinker = "-c -n \"$lib\" $objs"};
+			IsDebug=true,
+			SoureCompiler = "-c \"$src\" -of\"$obj\" $importPaths -gc -debug",
+			Win32ExeLinker = "$objs -L/su:windows -L/exet:nt -of\"$exe\" -gc -debug",
+			ExeLinker = "$objs -of\"$exe\" -gc -debug",
+			DllLinker = "$objs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc -debug",
+			LibLinker = "-c -n -of\"$lib\" $objs"
+		};
 
 		public DBuildArguments ReleaseArgs=new DBuildArguments(){
-		SoureCompiler = "-c \"$src\" -of\"$obj\" -release -O -inline",
-		Win32ExeLinker = "$objs -L/su:windows -L/exet:nt -of\"$exe\" -release -O -inline",
-		ExeLinker = "$objs -of\"$exe\" -release -O -inline",
-		DllLinker = "$objs -L/IMPLIB:\"$lib\" -of\"$dll\" -release -O -inline",
-		LibLinker = "-c -n \"$lib\" $objs"};
+			SoureCompiler = "-c \"$src\" -of\"$obj\" $importPaths -release -O -inline",
+			Win32ExeLinker = "$objs -L/su:windows -L/exet:nt -of\"$exe\" -release -O -inline",
+			ExeLinker = "$objs -of\"$exe\" -release -O -inline",
+			DllLinker = "$objs -L/IMPLIB:\"$lib\" -of\"$dll\" -release -O -inline",
+			LibLinker = "-c -n \"$lib\" $objs"
+		};
 
 		public void Load(XmlReader x)
 		{

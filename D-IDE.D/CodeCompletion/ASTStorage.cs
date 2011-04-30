@@ -21,6 +21,21 @@ namespace D_IDE.D.CodeCompletion
 	{
 		public readonly List<ASTCollection> ParsedGlobalDictionaries = new List<ASTCollection>();
 
+		/// <summary>
+		/// List of all paths of all added directories
+		/// </summary>
+		public string[] DirectoryPaths
+		{
+			get {
+				var ret = new List<string>();
+
+				foreach (var dir in ParsedGlobalDictionaries)
+					ret.Add(dir.BaseDirectory);
+
+				return ret.ToArray();
+			}
+		}
+
 		public void LoadFromDatabase(string file)
 		{
 			//TODO: Get all these BinaryStorage procedures working

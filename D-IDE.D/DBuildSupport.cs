@@ -124,7 +124,7 @@ namespace D_IDE.D
 				dmd_exe = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
 
 			TempPrc = FileExecution.ExecuteSilentlyAsync(dmd_exe,
-					BuildDSourceCompileArgumentString(dmd.BuildArguments(DebugCompile).SoureCompiler, srcFile, obj), // Compile our program always in debug mode
+					BuildDSourceCompileArgumentString(dmd.BuildArguments(DebugCompile).SoureCompiler, srcFile, obj,dmd.ASTCache.DirectoryPaths), // Compile our program always in debug mode
 					execDirectory,
 					OnOutput, delegate(string s) {
 						var err = ParseErrorMessage(s);
@@ -170,7 +170,7 @@ namespace D_IDE.D
 				linker = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
 
 			TempPrc = FileExecution.ExecuteSilentlyAsync(
-					linker,	BuildDLinkerArgumentString(linkerArgs,targetFile,files), startDirectory,
+					linker,	BuildDLinkerArgumentString(linkerArgs,targetFile,dmd.ASTCache.DirectoryPaths,files), startDirectory,
 					OnOutput, delegate(string s)
 			{
 				var err = ParseErrorMessage(s);
@@ -328,12 +328,20 @@ namespace D_IDE.D
 		/// <param name="srcFile"></param>
 		/// <param name="objDir"></param>
 		/// <returns></returns>
-		public static string BuildDSourceCompileArgumentString(string input, string srcFile, string objFile)
+		public static string BuildDSourceCompileArgumentString(string input, string srcFile, string objFile, IEnumerable<string> ImportPaths)
 		{
+			string importPaths = "";
+
+			foreach (var p in ImportPaths)
+				importPaths += "-I\""+p+"\" ";
+
+			importPaths = importPaths.TrimEnd();
+
 			return BuildArgumentString(input, new Dictionary<string, string>{
 				{"$src",srcFile},
 				{"$objDir",Path.Combine( Path.GetDirectoryName(srcFile), Path.GetDirectoryName(objFile))},
 				{"$obj",objFile},
+				{"$importPaths",importPaths},
 				{"$filename",Path.GetFileNameWithoutExtension(srcFile)}
 			});
 		}
@@ -346,8 +354,15 @@ namespace D_IDE.D
 		/// <param name="targetFile"></param>
 		/// <param name="Objects"></param>
 		/// <returns></returns>
-		public static string BuildDLinkerArgumentString(string input, string targetFile, params string[] Objects)
+		public static string BuildDLinkerArgumentString(string input, string targetFile, IEnumerable<string> ImportPaths, params string[] Objects)
 		{
+			string importPaths = "";
+
+			foreach (var p in ImportPaths)
+				importPaths += "-I\""+p+"\" ";
+
+			importPaths = importPaths.TrimEnd();
+
 			string objs = "";
 
 			if(Objects!=null && Objects.Length>0)
@@ -357,6 +372,7 @@ namespace D_IDE.D
 				{"$objs",objs},
 				{"$targetDir",Path.GetDirectoryName(targetFile)},
 				{"$target",targetFile},
+				{"$importPaths",importPaths},
 				{"$exe",Path.ChangeExtension(targetFile,".exe")},
 				{"$dll",Path.ChangeExtension(targetFile,".dll")},
 				{"$lib",Path.ChangeExtension(targetFile,".lib")},
