@@ -28,7 +28,7 @@ namespace D_IDE
 						foreach (var ed in from e in Instance.Editors where e is EditorDocument select e as EditorDocument)
 							ed.Editor.IsReadOnly = value;
 					else 
-						IDEManager.Instance.MainWindow.Dispatcher.Invoke(new Util.EmptyDelegate(() => {
+						IDEManager.Instance.MainWindow.Dispatcher.Invoke(new Action(() => {
 						foreach (var ed in from e in Instance.Editors where e is EditorDocument select e as EditorDocument)
 							ed.Editor.IsReadOnly = value;
 					}));

@@ -12,7 +12,6 @@ namespace D_IDE.Core
 {
     public class Util
 	{
-		public delegate void EmptyDelegate();
 		#region File I/O
 		public static readonly string ApplicationStartUpPath =Path.GetDirectoryName( Assembly.GetEntryAssembly().Location);
 

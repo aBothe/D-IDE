@@ -426,13 +426,12 @@ namespace D_IDE
 				}
 
 				Instance.UpdateGUI();
-
 				return CurrentProcess;
 			}
 
 			static void CurrentProcess_Exited()
 			{
-				IDEManager.Instance.MainWindow.Dispatcher.BeginInvoke(new Util.EmptyDelegate( () =>
+				IDEManager.Instance.MainWindow.Dispatcher.BeginInvoke(new Action( () =>
 				{
 					ErrorLogger.Log(IDEManager.Instance.MainWindow.LeftStatusText = "Process exited with code " + CurrentProcess.ExitCode.ToString() + " (" + (CurrentProcess.ExitTime - CurrentProcess.StartTime).ToString() + ")",
 						CurrentProcess.ExitCode < 1 ? ErrorType.Information : ErrorType.Error,

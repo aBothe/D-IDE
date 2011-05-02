@@ -83,7 +83,7 @@ namespace D_IDE.Controls.Panels
 				}
 				catch {  }
 
-				NewsList.Dispatcher.Invoke(new Util.EmptyDelegate(delegate()
+				NewsList.Dispatcher.Invoke(new Action(delegate()
 				{
 					NewsList.ItemsSource = _LastRetrievedNews;
 				}));
