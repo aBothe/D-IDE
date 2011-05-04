@@ -22,7 +22,7 @@ namespace D_IDE.D
 
 		public void IndentLine(TextDocument document, DocumentLine line)
 		{
-			try
+			/*try
 			{
 				// Get block level
 				var lexer = new DLexer(new StringReader(dEditor.Editor.Text));
@@ -51,7 +51,7 @@ namespace D_IDE.D
 			catch (Exception ex)
 			{
 				ErrorLogger.Log(ex);
-			}
+			}*/
 		}
 
 		public void IndentLines(TextDocument document, int beginLine, int endLine)
