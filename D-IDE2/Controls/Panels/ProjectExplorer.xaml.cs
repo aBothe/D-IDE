@@ -130,7 +130,7 @@ namespace D_IDE.Controls.Panels
 			}
 
 			if (!e.CancelEdit)
-				MainTree.Sort();
+				Update();
 		}
 
 		void MainTree_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -683,12 +683,19 @@ namespace D_IDE.Controls.Panels
 
 		bool _IsRefreshing= false;
 		List<string> _ExpandedNodes = new List<string>();
+		string _lastSelectedPath=null;
 		public void Update()
 		{
 			_IsRefreshing = true;
 			MainTree.BeginUpdate();
 			
 			SetupTreeIcons();
+
+			if (MainTree.SelectedNode != null)
+			{
+				var n = MainTree.SelectedNode as PrjExplorerNode;
+				_lastSelectedPath = n.AbsolutePath;
+			}
 
 			foreach (TreeNode n in MainTree.Nodes)
 				_CheckForExpansionStates(n, ref _ExpandedNodes);
@@ -719,6 +726,9 @@ namespace D_IDE.Controls.Panels
 
 		void _ApplyExpansionStates(TreeNode node, List<string> lst)
 		{
+			if (node is PrjExplorerNode && (node as PrjExplorerNode).AbsolutePath == _lastSelectedPath)
+				MainTree.SelectedNode=node;
+
 			// Expand project nodes by default
 			if (node is ProjectNode ? !lst.Contains(node.FullPath) : lst.Contains(node.FullPath))
 				node.Expand();

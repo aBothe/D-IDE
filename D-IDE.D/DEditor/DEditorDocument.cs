@@ -128,9 +128,7 @@ namespace D_IDE.D
 			Editor.MouseHover += new System.Windows.Input.MouseEventHandler(Editor_MouseHover);
 			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
 
-			//TODO: Modify the layout - add two selection combo boxes to the editor view
-			// One for selecting types that were declared in the module
-			// The second for the type's members
+			Editor.TextArea.IndentationStrategy = new DIndentationStrategy(this);
 
 			#region Init context menu
 			var cm = new ContextMenu();
@@ -489,7 +487,7 @@ namespace D_IDE.D
 			get { return new CodeLocation(Editor.TextArea.Caret.Column,Editor.TextArea.Caret.Line); }
 		}
 
-		IBlockNode lastSelectedBlock = null;
+		public IBlockNode lastSelectedBlock{get;protected set;}
 		IEnumerable<ICompletionData> currentEnvCompletionData = null;
 
 		DispatcherOperation blockCompletionDataOperation = null;
@@ -503,6 +501,13 @@ namespace D_IDE.D
 		/// </summary>
 		public void UpdateBlockCompletionData()
 		{
+			if (SyntaxTree == null)
+			{
+				lookup_Members.ItemsSource =lookup_Types.ItemsSource= null;
+				currentEnvCompletionData = null;
+				return;
+			}
+
 			var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation);
 			if (curBlock != lastSelectedBlock)
 			{

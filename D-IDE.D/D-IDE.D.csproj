@@ -82,6 +82,7 @@
     <Compile Include="CodeCompletion\BinaryDataTypeStorage.cs" />
     <Compile Include="CodeCompletion\DCodeCompletionSupport.cs" />
     <Compile Include="DEditor\DEditorDocument.cs" />
+    <Compile Include="DEditor\DIndentationStrategy.cs" />
     <Compile Include="DUtil.cs" />
     <Compile Include="SettingsPages\DSettingsPage.xaml.cs">
       <DependentUpon>DSettingsPage.xaml</DependentUpon>
