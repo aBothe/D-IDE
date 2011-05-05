@@ -26,6 +26,7 @@ namespace D_IDE.D
 		ComboBox lookup_Types;
 		ComboBox lookup_Members;
 		ToolTip editorToolTip = new ToolTip();
+		DIndentationStrategy indentationStrategy;
 
 		IAbstractSyntaxTree _unboundTree;
 		public IAbstractSyntaxTree SyntaxTree { 
@@ -128,7 +129,7 @@ namespace D_IDE.D
 			Editor.MouseHover += new System.Windows.Input.MouseEventHandler(Editor_MouseHover);
 			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
 
-			Editor.TextArea.IndentationStrategy = new DIndentationStrategy(this);
+			Editor.TextArea.IndentationStrategy= indentationStrategy = new DIndentationStrategy(this);
 
 			#region Init context menu
 			var cm = new ContextMenu();
@@ -586,7 +587,7 @@ namespace D_IDE.D
 		{
 			try
 			{
-				if (!DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || Editor.IsReadOnly)
+				if (string.IsNullOrEmpty(EnteredText) || !(char.IsLetter(EnteredText[0]) || EnteredText[0]=='.') || !DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || Editor.IsReadOnly)
 					return;
 
 				/*
@@ -607,8 +608,7 @@ namespace D_IDE.D
 				completionWindow = new CompletionWindow(Editor.TextArea);
 				completionWindow.CloseAutomatically = true;
 
-				Dispatcher.Invoke(new Action(()=>
-				{
+				//Dispatcher.Invoke(new Action(()=>{
 					if (string.IsNullOrEmpty(EnteredText))
 						foreach (var i in currentEnvCompletionData)
 							completionWindow.CompletionList.CompletionData.Add(i);
@@ -624,7 +624,7 @@ namespace D_IDE.D
 
 					completionWindow.Closed += (object o, EventArgs _e) => { completionWindow = null; }; // After the window closed, reset it to null
 					completionWindow.Show();
-				}));
+				//}));
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
@@ -671,6 +671,10 @@ namespace D_IDE.D
 
 		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
+			// If typed a block-related char, update line indentation
+			if (e.Text == "{" || e.Text == "}")
+				indentationStrategy.UpdateIndentation(e.Text);			
+
 			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
 			if (e.Text == "." && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
