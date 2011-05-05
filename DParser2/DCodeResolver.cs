@@ -174,7 +174,7 @@ namespace D_Parser
 						}
 
 						// Stop adding if Object class level got reached
-						if (curWatchedClass.Name.ToLower() == "object")
+						if (!string.IsNullOrEmpty(curWatchedClass.Name) && curWatchedClass.Name.ToLower() == "object")
 							break;
 
 						curWatchedClass = ResolveBaseClass(curWatchedClass, ImportCache);
