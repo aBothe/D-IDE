@@ -126,11 +126,8 @@ namespace D_IDE
 			// Init logging support
 			ErrorLogger.Instance = new IDELogger(this);
 
-			// Load global settings
 			try
 			{
-				GlobalProperties.Init();
-
 				// Apply window state & size
 				WindowState = GlobalProperties.Instance.lastFormState;
 				if (!GlobalProperties.Instance.lastFormSize.IsEmpty)

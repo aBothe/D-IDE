@@ -36,7 +36,7 @@ namespace D_IDE.D
 			if (curOff < document.TextLength)
 			{
 				char curChar = '\0';
-				while ((curChar = document.GetCharAt(curOff)) == ' ' || curChar == '\t')
+				while (curOff<document.TextLength&& ((curChar = document.GetCharAt(curOff)) == ' ' || curChar == '\t'))
 				{
 					prevInd++;
 					curOff++;
@@ -46,7 +46,7 @@ namespace D_IDE.D
 			}
 			
 			// 2)
-			string indentString = "";
+			string indentString ="";
 			for (int i = 0; i < tabsToInsert; i++)
 				indentString += dEditor.Editor.Options.IndentationString;
 
@@ -85,13 +85,8 @@ namespace D_IDE.D
 
 				var prevLineText = line.PreviousLine != null ? document.GetText(line.PreviousLine) : "";
 
-				// If no new block possible, don't insert anything
-				if(typedText=="{"&& prevLineText.TrimEnd().EndsWith(";"))
-					return;
-
-				// Simply decrease indentation by 1 if everything's fine
-				int newInd = GetLineTabIndentation(lineText);
-				newInd--;
+				// New indentation is that of the previous line - 1
+				int newInd = GetLineTabIndentation(prevLineText)-1;
 				RawlyIndentLine(newInd, document, line);
 			}
 		}
@@ -110,28 +105,23 @@ namespace D_IDE.D
 			if (line.PreviousLine == null)
 				return;
 
+			string lineText = null;
+
 			var prevLineText = document.GetText(line.PreviousLine);
-			var caretChar = dEditor.Editor.CaretOffset>=document.TextLength?'\0':document.GetCharAt(dEditor.Editor.CaretOffset);
+
+			var caretChar = 
+				_doBeginUpdateManually? // When doing a multi-line reformat, take the first non-ws line character instead of the character beneath the caret
+				(!string.IsNullOrWhiteSpace(lineText=document.GetText(line))?lineText.TrimStart()[0]:'\0'):
+
+				(dEditor.Editor.CaretOffset>=document.TextLength?'\0':document.GetCharAt(dEditor.Editor.CaretOffset));
 
 			// 1)
 			int prevInd = GetLineTabIndentation(prevLineText);
 
 			// 2)
 			prevLineText=prevLineText.TrimEnd();
-			if (!string.IsNullOrWhiteSpace(prevLineText) && !prevLineText.EndsWith("}") && !prevLineText.EndsWith(";") && caretChar!='{')
+			if (!string.IsNullOrWhiteSpace(prevLineText) && !prevLineText.EndsWith("}") && prevLineText.EndsWith("{") && caretChar!='{')
 			{
-				// Do a comma check (e.g. for enum or parameter blocks, there only is one initial indentation - then all following values stick at the same level)
-				if (prevLineText.EndsWith(","))
-				{
-					var ppLine = line.PreviousLine.PreviousLine;
-					if (ppLine != null)
-					{
-						var ppLineText = document.GetText(ppLine).TrimEnd();
-						if (ppLineText.EndsWith(","))
-							prevInd--;
-					}
-				}
-				
 				prevInd++;
 			}
 
