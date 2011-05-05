@@ -3082,7 +3082,7 @@ namespace D_Parser
                         mye.Add(ev);
                 }
                 Expect(CloseCurlyBrace);
-                mye.EndLocation = t.Location;
+                mye.EndLocation = t.EndLocation;
                 if (!String.IsNullOrEmpty(mye.Name))
                     par.Add(mye);
             }

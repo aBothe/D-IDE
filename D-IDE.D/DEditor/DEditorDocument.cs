@@ -17,6 +17,7 @@ using D_IDE.Core.Controls;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Data;
+using ICSharpCode.AvalonEdit.Folding;
 
 namespace D_IDE.D
 {
@@ -27,6 +28,7 @@ namespace D_IDE.D
 		ComboBox lookup_Members;
 		ToolTip editorToolTip = new ToolTip();
 		DIndentationStrategy indentationStrategy;
+		FoldingManager foldingManager;
 
 		IAbstractSyntaxTree _unboundTree;
 		public IAbstractSyntaxTree SyntaxTree { 
@@ -130,6 +132,7 @@ namespace D_IDE.D
 			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
 
 			Editor.TextArea.IndentationStrategy= indentationStrategy = new DIndentationStrategy(this);
+			foldingManager= ICSharpCode.AvalonEdit.Folding.FoldingManager.Install(Editor.TextArea);
 
 			#region Init context menu
 			var cm = new ContextMenu();
@@ -183,6 +186,29 @@ namespace D_IDE.D
 			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock,UncommentBlock));
 
 			Parse();
+		}
+
+		public void UpdateFoldings()
+		{
+			foldingManager.Clear();
+
+			if(SyntaxTree!=null)
+			updateFoldingsInternal(SyntaxTree);
+		}
+
+		void updateFoldingsInternal(IBlockNode block)
+		{
+			if (!(block is IAbstractSyntaxTree) && !block.BlockStartLocation.IsEmpty)
+			{
+				var fn=foldingManager.CreateFolding(
+					Editor.Document.GetOffset(block.BlockStartLocation.Line, block.BlockStartLocation.Column),
+					Editor.Document.GetOffset(block.EndLocation.Line, block.EndLocation.Column));
+				//fn.Title = (block as AbstractNode).ToString(false,false);
+			}
+
+			foreach (var n in block)
+				if (n is IBlockNode)
+					updateFoldingsInternal(n as IBlockNode);
 		}
 
 		void lookup_Types_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -468,6 +494,7 @@ namespace D_IDE.D
 					SyntaxTree.ModuleName = ProposedModuleName;
 
 					UpdateBlockCompletionData();
+					UpdateFoldings();
 				}catch(Exception ex){ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.System);}
 				CoreManager.ErrorManagement.RefreshErrorList();
 			}));
