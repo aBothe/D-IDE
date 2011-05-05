@@ -188,8 +188,13 @@ namespace D_IDE.D
 			Parse();
 		}
 
+		List<string> foldedNodeNames = new List<string>();
 		public void UpdateFoldings()
 		{
+			foreach (var fs in foldingManager.AllFoldings)
+				if (fs.IsFolded)
+					foldedNodeNames.Add(fs.Tag as string);
+
 			foldingManager.Clear();
 
 			if(SyntaxTree!=null)
@@ -204,6 +209,10 @@ namespace D_IDE.D
 					Editor.Document.GetOffset(block.BlockStartLocation.Line, block.BlockStartLocation.Column),
 					Editor.Document.GetOffset(block.EndLocation.Line, block.EndLocation.Column));
 				//fn.Title = (block as AbstractNode).ToString(false,false);
+				var nn=fn.Tag = block.ToString();
+
+				if (foldedNodeNames.Contains(nn))
+					fn.IsFolded = true;
 			}
 
 			foreach (var n in block)
@@ -748,38 +757,42 @@ namespace D_IDE.D
 
 		void Editor_MouseHover(object sender, System.Windows.Input.MouseEventArgs e)
 		{
-			var edpos = e.GetPosition(Editor);
-			var pos = Editor.GetPositionFromPoint(edpos);
-			if (pos.HasValue)
+			try
 			{
-				// Avoid showing a tooltip if the cursor is located after a line-end
-				var vpos = Editor.TextArea.TextView.GetVisualPosition(new TextViewPosition(pos.Value.Line, Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength), ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineMiddle);
-				// Add TextView position to Editor-related point
-				vpos = Editor.TextArea.TextView.TranslatePoint(vpos, Editor);
-
-				var ttArgs = new ToolTipRequestArgs(edpos.X <= vpos.X, pos.Value);
-				try
+				var edpos = e.GetPosition(Editor);
+				var pos = Editor.GetPositionFromPoint(edpos);
+				if (pos.HasValue)
 				{
-					DCodeCompletionSupport.Instance.BuildToolTip(this, ttArgs);
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex);
-					return;
-				}
+					// Avoid showing a tooltip if the cursor is located after a line-end
+					var vpos = Editor.TextArea.TextView.GetVisualPosition(new TextViewPosition(pos.Value.Line, Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength), ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineMiddle);
+					// Add TextView position to Editor-related point
+					vpos = Editor.TextArea.TextView.TranslatePoint(vpos, Editor);
 
-				// If no content present, close and return
-				if (ttArgs.ToolTipContent == null)
-				{
-					editorToolTip.IsOpen = false;
-					return;
-				}
+					var ttArgs = new ToolTipRequestArgs(edpos.X <= vpos.X, pos.Value);
+					try
+					{
+						DCodeCompletionSupport.Instance.BuildToolTip(this, ttArgs);
+					}
+					catch (Exception ex)
+					{
+						ErrorLogger.Log(ex);
+						return;
+					}
 
-				editorToolTip.PlacementTarget = this; // required for property inheritance
-				editorToolTip.Content = ttArgs.ToolTipContent;
-				editorToolTip.IsOpen = true;
-				e.Handled = true;
+					// If no content present, close and return
+					if (ttArgs.ToolTipContent == null)
+					{
+						editorToolTip.IsOpen = false;
+						return;
+					}
+
+					editorToolTip.PlacementTarget = this; // required for property inheritance
+					editorToolTip.Content = ttArgs.ToolTipContent;
+					editorToolTip.IsOpen = true;
+					e.Handled = true;
+				}
 			}
+			catch { }
 		}
 		#endregion
 		#endregion
