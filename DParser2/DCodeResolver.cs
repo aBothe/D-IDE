@@ -758,7 +758,7 @@ namespace D_Parser
 				bool IsInString = false;
 				int block = 0, nested = 0;
 
-				while (off < HayStack.Length)
+				while (off < HayStack.Length-1)
 				{
 					cur = HayStack[off];
 
@@ -781,7 +781,7 @@ namespace D_Parser
 
 					if (!IsInString && cur == Needle[0])
 					{
-						if (off + Needle.Length >= HayStack.Length)
+						if (off + Needle.Length-1 >= HayStack.Length)
 							return -1;
 
 						if (HayStack.Substring(off, Needle.Length) == Needle)
