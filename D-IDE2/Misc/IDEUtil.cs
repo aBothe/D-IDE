@@ -7,6 +7,7 @@ using System.Net;
 using System.IO;
 using System.Windows;
 using System.Threading;
+using D_IDE.Dialogs;
 
 namespace D_IDE
 {
@@ -89,6 +90,12 @@ namespace D_IDE
 		public IDELogger(MainWindow Owner)
 		{
 			this.Owner = Owner;
+		}
+
+		protected override void OnLog(Exception ex, ErrorType ErrorType, ErrorOrigin Origin)
+		{
+			new CrashDialog(ex).ShowDialog();
+			//base.OnLog(ex, ErrorType, Origin);
 		}
 
 		protected override void OnLog(string Message, ErrorType etype, ErrorOrigin Origin)

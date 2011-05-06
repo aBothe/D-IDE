@@ -677,7 +677,7 @@ namespace D_IDE.D
 			get {
 				return 
 					DSettings.Instance.UseCodeCompletion &&
-					SyntaxTree!=null && (SyntaxTree.ParseErrors!=null?SyntaxTree.ParseErrors.Count() <1 :true) &&
+					SyntaxTree!=null && //(SyntaxTree.ParseErrors!=null?SyntaxTree.ParseErrors.Count() <1 :true) &&
 					!DCodeResolver.Commenting.IsInCommentAreaOrString(Editor.Text, Editor.CaretOffset);
 			}
 		}

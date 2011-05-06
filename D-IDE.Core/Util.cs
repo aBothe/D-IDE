@@ -225,17 +225,22 @@ namespace D_IDE.Core
 
         public static void Log(Exception ex)
         {
-			Log(ex.Message,ErrorType.Error,ErrorOrigin.System);
+			Log(ex,ErrorType.Error,ErrorOrigin.System);
         }
 
 		public static void Log(Exception ex, ErrorType ErrorType, ErrorOrigin Origin)
 		{
-			Log(ex.Message,ErrorType,Origin);
+			Instance.OnLog(ex,ErrorType,Origin);
 		}
 
 		public static void Log(string Message)
 		{
 			Log(Message, ErrorType.Error, ErrorOrigin. System);
+		}
+
+		protected virtual void OnLog(Exception ex, ErrorType ErrorType, ErrorOrigin Origin)
+		{
+			OnLog(ex.Message, ErrorType, Origin);
 		}
 
 		protected virtual void OnLog(string Message, ErrorType ErrorType, ErrorOrigin origin)
