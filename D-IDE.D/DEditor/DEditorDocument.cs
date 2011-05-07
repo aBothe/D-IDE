@@ -192,6 +192,9 @@ namespace D_IDE.D
 		List<string> foldedNodeNames = new List<string>();
 		public void UpdateFoldings()
 		{
+			if (foldingManager == null)
+				return;
+
 			foreach (var fs in foldingManager.AllFoldings)
 				if (fs.IsFolded)
 					foldedNodeNames.Add(fs.Tag as string);
