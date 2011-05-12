@@ -910,427 +910,45 @@ namespace D_Parser
 			}
 		}
 
-
-		/*
 		/// <summary>
-		/// Reinterpretes all given expression strings to scan the global class hierarchy and find the member called like the last given expression
+		/// Helper class for e.g. finding the initial offset of a statement.
 		/// </summary>
-		/// <param name="local"></param>
-		/// <param name="expressions"></param>
-		/// <returns></returns>
-		public static DNode FindActualExpression(DProject prj, DModule local, CodeLocation caretLocation, string[] expressions, bool dotPressed, bool ResolveBaseType, out bool isSuper, out bool isInstance, out bool isNameSpace, out DModule module)
+		public class ReverseParsing
 		{
-			CompilerConfiguration cc = prj != null ? prj.Compiler : D_IDE_Properties.Default.DefaultCompiler;
-			module = local;
-			isSuper = false;
-			isInstance = false;
-			isNameSpace = false;
-			try
+			/// <summary>
+			/// Parses/Skips through the code backward to find the beginning of the method call statement.
+			/// 
+			/// ModuleA.StaticClass.MyFoo!(int,bool)(1,true);
+			/// </summary>
+			/// <param name="Code"></param>
+			/// <param name="CaretOffset"></param>
+			/// <param name="TriggerChar">The key the user recently typed (usually '!', '(' or ',')</param>
+			/// <returns>The call-statement's start offset</returns>
+			public static int ResolveMethodCallStatementOffset(
+				string Code,
+				int CaretOffset,
+				char TriggerChar,
+				
+				out bool IsTemplateParameter,
+				out int ParameterNumber)
 			{
-				int i = 0;
-				if (expressions == null || expressions.Length < 1) return null;
+				IsTemplateParameter = false;
+				ParameterNumber = 0;
 
-				DNode seldt = null, seldd = null; // Selected DNode - Will be returned later
-
-				if (expressions[0] == "this")
+				var startOffset = 0;
+				var curChar='\0';
+				int i = CaretOffset;
+				while (i >= 0)
 				{
-					seldt = GetClassAt(local.dom, caretLocation);
-					i++;
-				}
-				else if (expressions[0] == "super")
-				{
-					seldt = GetClassAt(local.dom, caretLocation);
-					if (seldt is DClassLike && (seldt as DClassLike).BaseClasses.Count > 0)
-					{
-						seldt = SearchGlobalExpr(prj, local, (seldt as DClassLike).BaseClasses[0].ToString(), false, out module);
-					}
-					isSuper = true;
-					i++;
-				}
-				else
-				{
-					// Search expression in all superior blocks
-					DNode cblock = GetBlockAt(local.dom, caretLocation);
-					seldt = SearchExprInClassHierarchyBackward(cc, cblock, RemoveTemplatePartFromDecl(expressions[0]));
-					// Search expression in current module root first
-					if (seldt == null) seldt = SearchGlobalExpr(prj, local, RemoveTemplatePartFromDecl(expressions[0]), true, out module);
-					// If there wasn't found anything, search deeper and recursive
-					//if (seldt == null) seldt = SearchExprInClassHierarchy(local.dom, GetBlockAt(local.dom, caretLocation), RemoveArrayOrTemplatePartFromDecl(expressions[0]));
-					// EDIT: Don't search recursively in all blocks of local.dom because you'd resolve something you couldn't access...
+					curChar = Code[i];
 
-					// If seldt is a variable, resolve its basic type such as a class etc
 
-					seldd = seldt;
-					bool IsLastInChain = i >= expressions.Length - 1;
-					if ((ResolveBaseType && IsLastInChain) || !IsLastInChain) seldt = ResolveReturnOrBaseType(prj, local, seldt, IsLastInChain);
-					if (seldt != seldd) isInstance = true;
-					if (seldt != null) i++;
 
-					#region Seek in global and local(project) namespace names
-					if (seldt == null) // if there wasn't still anything found in global space
-					{
-						string modpath = "";
-						string[] modpath_packages;
-						List<DModule> dmods = new List<DModule>(cc.GlobalModules),
-							dmods2 = new List<DModule>();
-						if (prj != null) dmods.AddRange(prj.files);// Very important: add the project's files to the search list
-
-						i = expressions.Length;
-						/*
-						 * i=0	i=1			i=2			i=3
-						 * std.
-						 * std.	socket.
-						 * std. socketstream
-						 * std.	windows.	windows.
-						 * std.	c.			stdio.		printf();
-						 * std.	complex
-						 * /
-						while (i > 0)
-						{
-							modpath = "";
-							for (int _i = 0; _i < i; _i++) modpath += (_i > 0 ? "." : "") + expressions[_i];
-							modpath_packages = modpath.Split('.');
-							module = null;
-							seldt = null;
-
-							foreach (DModule gpf in dmods)
-							{
-								if (gpf.ModuleName.StartsWith(modpath, StringComparison.Ordinal))
-								{
-									string[] path_packages = gpf.ModuleName.Split('.');
-									dmods2.Add(gpf);
-									module = gpf;
-									seldt = gpf.dom;
-									if (gpf.ModuleName == modpath) // if this module has the same path as equally typed in the editor, take this as the only one
-									{
-										dmods2.Clear();
-										dmods2.Add(gpf);
-										break;
-									}
-								}
-							}
-
-							if (dmods2.Count < 1) { i--; continue; }
-							isNameSpace = true;
-
-							if (prj == null || (module = prj.FileDataByFile(modpath)) == null)
-								module = D_IDE_Properties.Default.GetModule(D_IDE_Properties.Default.DefaultCompiler, modpath);
-
-							if (dmods2.Count == 1 && dmods2[0].ModuleName == modpath)
-							{
-								break;
-							}
-
-							//Create a synthetic node which only contains module names
-							seldt = new DNode(FieldType.Root);
-							seldt.module = modpath;
-							if (module != null)
-							{
-								seldt.module = module.ModuleName;
-								seldt.children = module.Children;
-								seldt.endLoc = module.dom.endLoc;
-							}
-
-							foreach (DModule dm in dmods2)
-							{
-								seldt.Add(dm.dom);
-							}
-							break;
-						}
-					}
-					#endregion
+					i--;
 				}
 
-				for (; i < expressions.Length && seldt != null; i++)
-				{
-					isInstance = false;
-					seldt = SearchExprInClassHierarchy(cc, seldt, null, RemoveTemplatePartFromDecl(expressions[i]));
-					if (seldt == null) break;
-
-					seldd = seldt;
-					bool IsLastInChain = i == expressions.Length - 1;
-					if ((ResolveBaseType && IsLastInChain) || !IsLastInChain) seldt = ResolveReturnOrBaseType(prj, local, seldt, IsLastInChain);
-					if (seldt != seldd) isInstance = true;
-				}
-
-				return seldt;
+				return startOffset;
 			}
-			catch (Exception ex)
-			{
-				D_IDEForm.thisForm.Log(ex.Message);
-			}
-			return null;
 		}
-		*/
-
-		/*
-		public ICompletionData[] GenerateCompletionData(string fn, TextArea ta, char ch)
-		{
-			ImageList icons = D_IDEForm.icons;
-
-			List<ICompletionData> rl = new List<ICompletionData>();
-			List<string> expressions = new List<string>();
-			try
-			{
-				DocumentInstanceWindow diw = D_IDEForm.SelectedTabPage;
-				DProject project = diw.project;
-				if (project != null) cc = project.Compiler;
-				DModule pf = diw.fileData;
-
-				CodeLocation tl = new CodeLocation(ta.Caret.Column + 1, ta.Caret.Line + 1);
-				DNode seldt, seldd;
-
-				int off = ta.Caret.Offset;
-
-				bool isInst = false; // Here the return type of a function is the base type for which the data will be generated
-				bool isSuper = false;
-				bool isNameSpace = false;
-
-				#region Compute expressions based on caret location
-				char tch;
-				string texpr = "";
-				int KeyWord = -1, psb = 0;
-				for (int i = off - 1; i > 0; i--)
-				{
-					tch = ta.Document.GetCharAt(i);
-
-					if (tch == ']') psb++;
-
-					if (char.IsLetterOrDigit(tch) || tch == '_' || psb > 0) texpr += tch;
-
-					if (!char.IsLetterOrDigit(tch) && tch != '_' && psb < 1)
-					{
-						if (texpr == "") break;
-						texpr = ReverseString(texpr);
-						if (KeyWord < 0 && (KeyWord = DKeywords.GetToken(texpr)) >= 0 && texpr != "this" && texpr != "super")
-						{
-							break;
-						}
-						else
-						{
-							expressions.Add(texpr);
-						}
-						texpr = "";
-
-						if (!char.IsWhiteSpace(tch) && tch != ';' && tch != '.')
-						{
-							break;
-						}
-						off = i;
-					}
-					if (tch == '[') psb--;
-				}
-
-				if (KeyWord == DTokens.New && expressions.Count < 1)
-				{
-					rl.AddRange(cc.GlobalCompletionList);
-					presel = null;
-					return rl.ToArray();
-				}
-
-				if (expressions.Count < 1 && ch != '\0') return rl.ToArray();
-
-				expressions.Reverse();
-				#endregion
-
-				if (expressions.Count < 1)
-				{
-					if (ch == '\0') expressions.Add("");
-					else return null;
-				}
-
-				if (ch != '.' && (expressions.Count == 1 && expressions[0].Length < 2) && KeyWord < 0) // Reflect entire cache content including D KeyWords
-				{
-					if (expressions.Count > 0) presel = expressions[expressions.Count - 1];
-					else presel = null;
-					rl.AddRange(diw.CurrentCompletionData);
-
-					//rl.Sort();
-					return rl.ToArray();
-				}
-
-				if (ch == '.')
-				{
-					#region A.B.c>.<
-					presel = null; // Important: After a typed dot ".", set previous selection string to null!
-					DModule gpf = null;
-
-					seldt = FindActualExpression(project, pf, tl, expressions.ToArray(), ch == '.', true, out isSuper, out isInst, out isNameSpace, out gpf);
-
-					if (seldt == null) return rl.ToArray();
-					//Debugger.Log(0,"parsing", DCompletionData.BuildDescriptionString(seldt.Parent) + " " + DCompletionData.BuildDescriptionString(seldt));
-
-					//seldd = seldt;
-					//seldt = ResolveReturnOrBaseType(prj, pf, seldt, expressions.Count==2);
-					if (seldt.fieldtype == FieldType.Function	//||(seldt.fieldtype == FieldType.Variable && !DTokens.BasicTypes[(int)seldt.TypeToken])
-					   )
-					{
-						seldd = seldt;
-						seldt = SearchGlobalExpr(cc, pf.dom, seldt.Type.ToString());
-						isInst = true;
-					}
-
-					if (seldt != null)
-					{
-						if (expressions[0] == "this" && expressions.Count < 2) // this.
-						{
-							AddAllClassMembers(cc, seldt, ref rl, true);
-
-							foreach (DNode arg in (seldt as DMethod).Parameters)
-							{
-								if (arg.Type == null || arg.name == null) continue;
-								rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
-							}
-						}
-						else if (expressions[0] == "super" && expressions.Count < 2) // super.
-						{
-							if (seldt is DClassLike && (seldt as DClassLike).BaseClasses.Count > 0)
-							{
-								foreach (D_Parser.TypeDeclaration td in (seldt as DClassLike).BaseClasses)
-								{
-									seldd = SearchGlobalExpr(cc, pf.dom, td.ToString());
-									if (seldd != null)
-									{
-										AddAllClassMembers(cc, seldd, ref rl, true);
-
-										foreach (DNode arg in (seldt as DMethod).Parameters)
-										{
-											if (arg.Type == null || arg.name == null) continue;
-											rl.Add(new DCompletionData(arg, seldd, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
-										}
-									}
-								}
-							}
-						}
-						else if (seldt.fieldtype == FieldType.Enum && seldt.Count > 0) // Flags.
-						{
-							foreach (DNode dt in seldt)
-							{
-								rl.Add(new DCompletionData(dt, seldt));
-							}
-						}
-						else if (seldt.fieldtype == FieldType.Variable) // myVar.
-						{
-							AddAllClassMembers(cc, seldt, ref rl, false);
-							AddTypeStd(seldt, ref rl);
-						}
-						else // e.g. MessageBox>.<
-						{
-							if (isInst || isNameSpace)
-							{
-								AddAllClassMembers(cc, seldt, ref rl, !isNameSpace);
-							}
-							else
-							{
-								foreach (DNode dt in seldt)
-								{
-									if (
-										//showAll ||
-										(isSuper && dt.modifiers.Contains(DTokens.Protected)) || // super.ProtectedMember
-										(isInst && dt.modifiers.Contains(DTokens.Public)) || // (MyType) foo().MyMember
-										(dt.modifiers.Contains(DTokens.Static) && // 
-										(dt.modifiers.Contains(DTokens.Public)  // 
-										|| dt.modifiers.Count < 2)) ||
-										(dt.fieldtype == FieldType.EnumValue && // 
-											(dt.modifiers.Contains(DTokens.Public)  // 
-											|| dt.modifiers.Count < 2)
-										)
-										) // int a;
-										rl.Add(new DCompletionData(dt, seldt));
-								}
-							}
-							if (!isNameSpace) AddTypeStd(seldt, ref rl);
-
-							foreach (DNode arg in seldt.TemplateParameters)
-							{
-								if (arg.Type == null || arg.name == null) continue;
-								rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
-							}
-							if (seldt is DMethod)
-								foreach (DNode arg in (seldt as DMethod).Parameters)
-								{
-									if (arg.Type == null || arg.name == null) continue;
-									rl.Add(new DCompletionData(arg, seldt, icons.Images.IndexOfKey("Icons.16x16.Parameter.png")));
-								}
-						}
-					}
-					#endregion
-				}
-			}
-			catch (Exception ex)
-			{
-				D_IDEForm.thisForm.Log(ex.Message);
-			}
-			//rl.Sort();
-			return rl.ToArray();
-		}
-		*/
-
-		/*
-
-		/// <summary>
-		/// Resolves either the return type of a method or the base type of a variable
-		/// </summary>
-		/// <param name="IsLastInExpressionChain">This value is needed for resolving functions because if this parameter is true then it returns the owner node</param>
-		/// <returns>The base type or return type of a node</returns>
-		public static INode ResolveReturnOrBaseType(INode Node, bool IsLastInExpressionChain,params IAbstractSyntaxTree[] Cache)
-		{
-			return null;
-		}
-
-		/// <summary>
-		/// A subroutine for ResolveMultipleNodes
-		/// </summary><see cref="ResolveMultipleNodes"/>
-		/// <param name="prj"></param>
-		/// <param name="local"></param>
-		/// <param name="parent"></param>
-		/// <param name="i"></param>
-		/// <param name="expressions"></param>
-		/// <returns></returns>
-		static List<DNode> _res(DProject prj, DModule local, DNode parent, int i, string[] expressions)
-		{
-			List<DNode> tl = new List<DNode>();
-			if (expressions == null || i >= expressions.Length)
-			{
-				tl.Add(parent);
-				return tl;
-			}
-
-			foreach (DNode dt in GetExprsByName(parent, expressions[i], true))
-			{
-				DNode seldt = ResolveReturnOrBaseType(prj, local, dt, i >= expressions.Length - 1);
-
-				if (seldt == null) seldt = dt;
-
-				tl.AddRange(_res(prj, local, seldt, i + 1, expressions));
-			}
-			return tl;
-		}
-
-		/// <summary>
-		/// Searches nodes in global space which have the same name and returns all of these
-		/// </summary>
-		/// <param name="prj"></param>
-		/// <param name="local"></param>
-		/// <param name="expressions"></param>
-		/// <returns></returns>
-		public static List<DNode> ResolveMultipleNodes(DProject prj, DModule local, string[] expressions)
-		{
-			if (expressions == null || expressions.Length < 1) return new List<DNode>();
-
-			List<DNode> rl = SearchGlobalExprs(prj, local.dom, expressions[0]);
-			if (expressions.Length < 2 || rl.Count < 1) return rl;
-
-			List<DNode> ret = new List<DNode>();
-			foreach (DNode dt in rl)
-			{
-				DNode seldt = ResolveReturnOrBaseType(prj, local, dt, expressions.Length == 2);
-				if (seldt == null) seldt = dt;
-				ret.AddRange(_res(prj, local, seldt, 1, expressions));
-			}
-			return ret;
-		}
-
-		*/
 	}
 }
