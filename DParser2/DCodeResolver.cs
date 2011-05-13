@@ -935,14 +935,47 @@ namespace D_Parser
 				IsTemplateParameter = false;
 				ParameterNumber = 0;
 
+				// The last pushed block opener will be expected if there is a block closer
+				var expectedOpeners=new Stack<string>();
 				var startOffset = 0;
 				var curChar='\0';
 				int i = CaretOffset;
+				var tokenBuffer = "";
 				while (i >= 0)
 				{
 					curChar = Code[i];
 
+					tokenBuffer += curChar;
 
+					switch (tokenBuffer)
+					{
+						case ")":
+							expectedOpeners.Push("(");
+							break;
+						case "]":
+							expectedOpeners.Push("[");
+							break;
+						case "}":
+							expectedOpeners.Push("{");
+							break;
+						case "*/":
+							expectedOpeners.Push("/*");
+							break;
+						case "+/":
+							expectedOpeners.Push("/+");
+							break;
+						case "\"": //TODO: r"", Token Strings, EOS-Literals
+							expectedOpeners.Push("\"");
+							break;
+
+						case "//":
+
+							break;
+
+						default: 
+							tokenBuffer = "";
+							break;
+					}
 
 					i--;
 				}
