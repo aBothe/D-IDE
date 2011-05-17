@@ -29,10 +29,6 @@ namespace D_Parser
         /// </summary>
         protected StringBuilder originalValue = new StringBuilder();
 
-        public bool SkipAllComments { get; set; }
-        public delegate void CommentHandler(Comment comment);
-        public abstract event CommentHandler OnComment;
-
         protected int Line
         {
             get
@@ -373,7 +369,6 @@ namespace D_Parser
         /// A temporary storage for DDoc comments
         /// </summary>
         public Stack<Comment> Comments= new Stack<Comment>();
-        public override event AbstractLexer.CommentHandler OnComment;
         void OnError(int line, int col, string message)
         {
             //errors.Error(line, col, message);
@@ -1479,7 +1474,6 @@ namespace D_Parser
             var nComm = new Comment(commentType, comm.Trim(), st.Column < 2, st, end);
             if(commentType==Comment.Type.Documentation)
                 Comments.Push(nComm);
-            OnComment(nComm);
         }
 
         void ReadMultiLineComment(Comment.Type commentType, bool isNestingComment)
@@ -1500,7 +1494,6 @@ namespace D_Parser
                     nComm = new Comment(commentType, scCurWord.ToString().Trim(ch, ' ', '\t', '\r', '\n', '*', '+'), st.Column < 2, st, new CodeLocation(Col, Line));
                     if(commentType==Comment.Type.Documentation)
                         Comments.Push(nComm);
-                    OnComment(nComm);
                     return;
                 }
 
@@ -1514,7 +1507,6 @@ namespace D_Parser
             nComm = new Comment(commentType, scCurWord.ToString().Trim(), st.Column < 2, st, new CodeLocation(Col, Line));
             if (commentType == Comment.Type.Documentation)
                 Comments.Push(nComm);
-            OnComment(nComm);
             
             OnError(Line, Col, String.Format("Reached EOF before the end of a multiline comment"));
         }

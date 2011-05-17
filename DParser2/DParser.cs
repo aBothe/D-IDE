@@ -173,7 +173,6 @@ namespace D_Parser
             this.lexer = lexer;
             //errors = lexer.Errors;
             //errors.SynErr = new ErrorCodeProc(SynErr);
-            lexer.OnComment += new AbstractLexer.CommentHandler(lexer_OnComment);
         }
 
         #region DDoc handling
