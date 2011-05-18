@@ -365,13 +365,15 @@ namespace D_Parser
         {}
 
         #region Abstract Lexer Props & Methods
+		public IList<ParserError> LexerErrors = new List<ParserError>();
         /// <summary>
         /// A temporary storage for DDoc comments
         /// </summary>
         public Stack<Comment> Comments= new Stack<Comment>();
         void OnError(int line, int col, string message)
         {
-            //errors.Error(line, col, message);
+			if(LexerErrors!=null)
+				LexerErrors.Add(new ParserError(false,message,CurrentToken.Kind,new CodeLocation(col,line)));
         }
         #endregion
 

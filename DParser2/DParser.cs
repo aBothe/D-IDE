@@ -166,13 +166,11 @@ namespace D_Parser
             get { return doc; }
         }
         bool ParseStructureOnly = false;
-        public DLexer lexer;
-        //public Errors errors;
+        public DLexer Lexer;
         public DParser(DLexer lexer)
         {
-            this.lexer = lexer;
-            //errors = lexer.Errors;
-            //errors.SynErr = new ErrorCodeProc(SynErr);
+            this.Lexer = lexer;
+			Lexer.LexerErrors = ParseErrors;
         }
 
         #region DDoc handling
@@ -217,7 +215,7 @@ namespace D_Parser
             [System.Diagnostics.DebuggerStepThrough]
             get
             {
-                return (DToken)lexer.CurrentToken;
+                return (DToken)Lexer.CurrentToken;
             }
         }
 
@@ -233,7 +231,7 @@ namespace D_Parser
             else if (OpenBracketKind == OpenCurlyBrace) CloseBracket = CloseCurlyBrace;
 
             int i = LAIsOpenBracket?1:0;
-            while (lexer.CurrentPeekToken.Kind != EOF)
+            while (Lexer.CurrentPeekToken.Kind != EOF)
             {
                 if (PK(OpenBracketKind))
                     i++;
@@ -254,7 +252,7 @@ namespace D_Parser
             [System.Diagnostics.DebuggerStepThrough]
             get
             {
-                return (DToken)lexer.LookAhead;
+                return (DToken)Lexer.LookAhead;
             }
         }
 
@@ -276,7 +274,7 @@ namespace D_Parser
         {
             if (la.Kind == n)
             {
-                lexer.NextToken();
+                Lexer.NextToken();
                 return true;
             }
             else
@@ -307,7 +305,7 @@ namespace D_Parser
         /// <returns></returns>
         bool PK(int n)
         {
-            return lexer.CurrentPeekToken.Kind == n;
+            return Lexer.CurrentPeekToken.Kind == n;
         }
 
         private bool Expect(int n)
@@ -335,21 +333,21 @@ namespace D_Parser
         /* Return the n-th token after the current lookahead token */
         void StartPeek()
         {
-            lexer.StartPeek();
+            Lexer.StartPeek();
         }
 
         DToken Peek()
         {
-            return lexer.Peek();
+            return Lexer.Peek();
         }
 
         DToken Peek(int n)
         {
-            lexer.StartPeek();
+            Lexer.StartPeek();
             DToken x = la;
             while (n > 0)
             {
-                x = lexer.Peek();
+                x = Lexer.Peek();
                 n--;
             }
             return x;
@@ -360,7 +358,7 @@ namespace D_Parser
             get { return la == null || la.Kind == EOF || la.Kind == __EOF__; }
         }
 
-        DToken Step() { lexer.NextToken(); Peek(1); return t; }
+        DToken Step() { Lexer.NextToken(); Peek(1); return t; }
 
         [DebuggerStepThrough()]
         public IAbstractSyntaxTree Parse()
@@ -378,50 +376,29 @@ namespace D_Parser
         {
             this.ParseStructureOnly = ParseStructureOnly;
             doc=Root();
-			doc.ParseErrors = Errors;
+			doc.ParseErrors = ParseErrors;
             return doc;
         }
         
         #region Error handlers
-		List<ParserError> parseErrors = new List<ParserError>();
-
-		public IEnumerable<ParserError> Errors { get { return parseErrors; } }
-
-        public delegate void ErrorHandler(IAbstractSyntaxTree tempModule, int line, int col, int kindOf, string message);
-        static public event ErrorHandler OnError, OnSemanticError;
+		public IList<ParserError> ParseErrors = new List<ParserError>();
 
         void SynErr(int n, string msg)
         {
-			if(OnError!=null)
-            OnError(Document, la.Location.Line, la.Location.Column, n, msg);
-            //errors.Error(la.Location.Line, la.Location.Column, msg);
-
-			parseErrors.Add(new ParserError(false,msg,n,la.Location));
+			ParseErrors.Add(new ParserError(false,msg,n,la.Location));
         }
         void SynErr(int n)
 		{
-			if (OnError != null)
-            OnError(Document, la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n, DTokens.GetTokenString(n)+" expected");
-            //errors.SynErr(la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n);
-
-			parseErrors.Add(new ParserError(false, DTokens.GetTokenString(n) + " expected", n,la!=null? la.Location:new CodeLocation()));
+			ParseErrors.Add(new ParserError(false, DTokens.GetTokenString(n) + " expected", n,la!=null? la.Location:new CodeLocation()));
         }
 
         void SemErr(int n, string msg)
         {
-			if(OnSemanticError!=null)
-            OnSemanticError(Document, la.Location.Line, la.Location.Column, n, msg);
-            //errors.Error(la.Location.Line, la.Location.Column, msg);
-
-			parseErrors.Add(new ParserError(true, msg, n, la.Location));
+			ParseErrors.Add(new ParserError(true, msg, n, la.Location));
         }
         void SemErr(int n)
         {
-			if(OnSemanticError!=null)
-            OnSemanticError(Document, la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n, "");
-            //errors.SemErr(la != null ? la.Location.Line : 0, la != null ? la.Location.Column : 0, n);
-
-			parseErrors.Add(new ParserError(true, DTokens.GetTokenString(n) + " expected", n, la != null ? la.Location : new CodeLocation()));
+			ParseErrors.Add(new ParserError(true, DTokens.GetTokenString(n) + " expected", n, la != null ? la.Location : new CodeLocation()));
         }
         #endregion
     }

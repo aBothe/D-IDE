@@ -49,9 +49,9 @@ namespace D_Parser
         {
             string ret = "";
 
-            while (lexer.Comments.Count > 0)
+            while (Lexer.Comments.Count > 0)
             {
-                var c = lexer.Comments.Pop();
+                var c = Lexer.Comments.Pop();
 
                 foreach (var line in c.CommentText.Split('\n'))
                     ret += line.Trim().TrimStart('*') + "\r\n";
@@ -79,9 +79,9 @@ namespace D_Parser
 
             string ret = "";
 
-            while (lexer.Comments.Count > 0 && lexer.Comments.Peek().StartPosition.Line == ExpectedLine)
+            while (Lexer.Comments.Count > 0 && Lexer.Comments.Peek().StartPosition.Line == ExpectedLine)
             {
-                var c = lexer.Comments.Pop();
+                var c = Lexer.Comments.Pop();
 
                 foreach (var line in c.CommentText.Split('\n'))
                     ret += line.Trim().TrimStart('*') + "\n";
@@ -108,7 +108,7 @@ namespace D_Parser
 
         void ClearCommentCache()
         {
-            lexer.Comments.Clear();
+            Lexer.Comments.Clear();
         }
         #endregion
 
@@ -127,7 +127,7 @@ namespace D_Parser
 				module.Add(Constructor(module is DClassLike ? (module as DClassLike).ClassType == DTokens.Struct : false));
 
 			//Destructor
-			else if (la.Kind == (Tilde) && lexer.CurrentPeekToken.Kind == (This))
+			else if (la.Kind == (Tilde) && Lexer.CurrentPeekToken.Kind == (This))
 				module.Add(Destructor());
 
 			//Invariant
@@ -341,7 +341,7 @@ namespace D_Parser
         ITypeDeclaration _Import()
         {
             // ModuleAliasIdentifier
-            if (lexer.CurrentPeekToken.Kind==(Assign))
+            if (Lexer.CurrentPeekToken.Kind==(Assign))
             {
                 Expect(Identifier);
                 string ModuleAliasIdentifier = t.Value;
@@ -469,7 +469,7 @@ namespace D_Parser
                     Step();
                     var dv = new DVariable();
                     dv.Description = GetComments();
-                    dv.StartLocation = lexer.LastToken.Location;
+                    dv.StartLocation = Lexer.LastToken.Location;
                     dv.IsAlias=true;
                     dv.Name = "this";
                     dv.Type = new NormalDeclaration(t.Value);
@@ -593,7 +593,7 @@ namespace D_Parser
 
         bool IsBasicType()
         {
-            return BasicTypes[la.Kind] || la.Kind==(Typeof) || MemberFunctionAttribute[la.Kind] || (la.Kind==(Dot) && lexer.CurrentPeekToken.Kind==(Identifier)) || la.Kind==(Identifier);
+            return BasicTypes[la.Kind] || la.Kind==(Typeof) || MemberFunctionAttribute[la.Kind] || (la.Kind==(Dot) && Lexer.CurrentPeekToken.Kind==(Identifier)) || la.Kind==(Identifier);
         }
 
         ITypeDeclaration BasicType()
@@ -892,7 +892,7 @@ namespace D_Parser
                 SynErr(Identifier);
 
             // Template instancing
-            if (lexer.CurrentPeekToken.Kind==(Not))
+            if (Lexer.CurrentPeekToken.Kind==(Not))
                 td=TemplateInstance();
 
             // Identifier
@@ -916,7 +916,7 @@ namespace D_Parser
             {
                 Step();
                 // Template instancing
-                if (lexer.CurrentPeekToken.Kind==(Not))
+                if (Lexer.CurrentPeekToken.Kind==(Not))
                     ret.Add(TemplateInstance());
                 // Identifier
                 else
@@ -934,7 +934,7 @@ namespace D_Parser
             {
                 return la.Kind==(Abstract) ||
             la.Kind==(Auto) ||
-            ((MemberFunctionAttribute[la.Kind]) && lexer.CurrentPeekToken.Kind!=(OpenParenthesis)) ||
+            ((MemberFunctionAttribute[la.Kind]) && Lexer.CurrentPeekToken.Kind!=(OpenParenthesis)) ||
             la.Kind==(Deprecated) ||
             la.Kind==(Extern) ||
             la.Kind==(Final) ||
@@ -1072,7 +1072,7 @@ namespace D_Parser
                 attr.Add(new DAttribute(t.Kind));
             }
 
-            if (la.Kind == Auto && lexer.CurrentPeekToken.Kind == Ref) // functional.d:595 // auto ref F fp
+            if (la.Kind == Auto && Lexer.CurrentPeekToken.Kind == Ref) // functional.d:595 // auto ref F fp
             {
                 Step();
                 Step();
@@ -1153,7 +1153,7 @@ namespace D_Parser
                     if (IsStructInit)
                     {
                         // Identifier : NonVoidInitializer
-                        if (la.Kind==(Identifier) && lexer.CurrentPeekToken.Kind==(Colon))
+                        if (la.Kind==(Identifier) && Lexer.CurrentPeekToken.Kind==(Colon))
                         {
                             Step();
                             var inh = new AssignTokenExpression(Colon);
@@ -1253,7 +1253,7 @@ namespace D_Parser
         {
             return (la.Kind==(Extern) || la.Kind==(Export) || la.Kind==(Align) || la.Kind==Pragma || la.Kind==(Deprecated) || IsProtectionAttribute()
                 || la.Kind==(Static) || la.Kind==(Final) || la.Kind==(Override) || la.Kind==(Abstract) || la.Kind==(Scope) || la.Kind==(__gshared)
-                || ((la.Kind==(Auto) || MemberFunctionAttribute[la.Kind]) && (lexer.CurrentPeekToken.Kind!=(OpenParenthesis) && lexer.CurrentPeekToken.Kind!=(Identifier)))
+                || ((la.Kind==(Auto) || MemberFunctionAttribute[la.Kind]) && (Lexer.CurrentPeekToken.Kind!=(OpenParenthesis) && Lexer.CurrentPeekToken.Kind!=(Identifier)))
                 || Attributes[la.Kind]);
         }
 
@@ -1265,7 +1265,7 @@ namespace D_Parser
         private void AttributeSpecifier()
         {
             var attr = new DAttribute(la.Kind);
-            if (la.Kind==(Extern) && lexer.CurrentPeekToken.Kind==(OpenParenthesis))
+            if (la.Kind==(Extern) && Lexer.CurrentPeekToken.Kind==(OpenParenthesis))
             {
                 Step(); // Skip extern
                 Step(); // Skip (
@@ -1273,7 +1273,7 @@ namespace D_Parser
                     Step();
                 Expect(CloseParenthesis);
             }
-            else if (la.Kind==(Align) && lexer.CurrentPeekToken.Kind==(OpenParenthesis))
+            else if (la.Kind==(Align) && Lexer.CurrentPeekToken.Kind==(OpenParenthesis))
             {
                 Step();
                 Step();
@@ -1334,29 +1334,29 @@ namespace D_Parser
                     if (la.Kind == Dot)
                         Step();
 
-                    if (lexer.CurrentPeekToken.Kind != Identifier)
+                    if (Lexer.CurrentPeekToken.Kind != Identifier)
                     {
                         if (la.Kind == Identifier)
                         {
                             // Skip initial identifier list
                             bool init = true;
                             bool HadTemplateInst = false;
-                            while (init || lexer.CurrentPeekToken.Kind == (Dot))
+                            while (init || Lexer.CurrentPeekToken.Kind == (Dot))
                             {
                                 HadTemplateInst = false;
-                                if (lexer.CurrentPeekToken.Kind ==Dot) Peek();
+                                if (Lexer.CurrentPeekToken.Kind ==Dot) Peek();
                                 init = false;
 
-                                if (lexer.CurrentPeekToken.Kind == Identifier)
+                                if (Lexer.CurrentPeekToken.Kind == Identifier)
                                     Peek();
 
-                                if (lexer.CurrentPeekToken.Kind == (Not))
+                                if (Lexer.CurrentPeekToken.Kind == (Not))
                                 {
                                     HadTemplateInst = true;
                                     Peek();
-                                    if (lexer.CurrentPeekToken.Kind != (Is) && lexer.CurrentPeekToken.Kind != (In))
+                                    if (Lexer.CurrentPeekToken.Kind != (Is) && Lexer.CurrentPeekToken.Kind != (In))
                                     {
-                                        if (lexer.CurrentPeekToken.Kind == (OpenParenthesis))
+                                        if (Lexer.CurrentPeekToken.Kind == (OpenParenthesis))
                                             OverPeekBrackets(OpenParenthesis);
                                         else Peek();
                                     }
@@ -1366,19 +1366,19 @@ namespace D_Parser
                         }
                         else if (la.Kind == (Typeof) || MemberFunctionAttribute[la.Kind])
                         {
-                            if (lexer.CurrentPeekToken.Kind == (OpenParenthesis))
+                            if (Lexer.CurrentPeekToken.Kind == (OpenParenthesis))
                                 OverPeekBrackets(OpenParenthesis);
                         }
                     }
                 }
 
                 // Skip basictype2's
-                while (lexer.CurrentPeekToken.Kind==(Times) || lexer.CurrentPeekToken.Kind==(OpenSquareBracket))
+                while (Lexer.CurrentPeekToken.Kind==(Times) || Lexer.CurrentPeekToken.Kind==(OpenSquareBracket))
                 {
                     if (PK(Times))
                         HadPointerDeclaration = true;
 
-                    if (lexer.CurrentPeekToken.Kind==(OpenSquareBracket))
+                    if (Lexer.CurrentPeekToken.Kind==(OpenSquareBracket))
                         OverPeekBrackets(OpenSquareBracket);
                     else Peek();
 
@@ -1393,7 +1393,7 @@ namespace D_Parser
                 // we check for an identifier or delegate declaration to ensure that there's a declaration and not an expression
                 // Addition: If a times token ('*') follows an identifier list, we can assume that we have a declaration and NOT an expression!
                 // Example: *a=b is an expression; a*=b is not possible - instead something like A* a should be taken...
-                if (HadPointerDeclaration || lexer.CurrentPeekToken.Kind==(Identifier) || lexer.CurrentPeekToken.Kind==(Delegate) || lexer.CurrentPeekToken.Kind==(Function))
+                if (HadPointerDeclaration || Lexer.CurrentPeekToken.Kind==(Identifier) || Lexer.CurrentPeekToken.Kind==(Delegate) || Lexer.CurrentPeekToken.Kind==(Function))
                 {
                     Peek(1);
                     return false;
@@ -1456,7 +1456,7 @@ namespace D_Parser
                     // EqualExpression
                 la.Kind == (Equal) || la.Kind == (NotEqual) ||
                     // IdentityExpression | InExpression
-                la.Kind == (Is) || la.Kind == (In) || (la.Kind == (Not) && (lexer.CurrentPeekToken.Kind == (Is) || lexer.CurrentPeekToken.Kind == In)) ||
+                la.Kind == (Is) || la.Kind == (In) || (la.Kind == (Not) && (Lexer.CurrentPeekToken.Kind == (Is) || Lexer.CurrentPeekToken.Kind == In)) ||
                     // ShiftExpression
                 la.Kind == (ShiftLeft) || la.Kind == (ShiftRight) || la.Kind == (ShiftRightUnsigned);
             }
@@ -1473,7 +1473,7 @@ namespace D_Parser
                 // EqualExpression
                 la.Kind==(Equal) || la.Kind==(NotEqual) ||
                 // IdentityExpression | InExpression
-                la.Kind==(Is) || la.Kind==(In) || (la.Kind==(Not) && (lexer.CurrentPeekToken.Kind==(Is) || lexer.CurrentPeekToken.Kind == In)) ||
+                la.Kind==(Is) || la.Kind==(In) || (la.Kind==(Not) && (Lexer.CurrentPeekToken.Kind==(Is) || Lexer.CurrentPeekToken.Kind == In)) ||
                 // ShiftExpression
                 IsShift;
 
@@ -1492,8 +1492,8 @@ namespace D_Parser
                 // A Shift expression can be followed by 1) (Not)Equal expr or 2) Relational expr or 3) is/!is or 4) in/!in
                 if (la.Kind == Equal || la.Kind == NotEqual || 
                     RelationalOperators[la.Kind] ||
-                    (la.Kind == Not && lexer.CurrentPeekToken.Kind == In) || la.Kind == In ||
-                    (la.Kind == Not && lexer.CurrentPeekToken.Kind == Is) || la.Kind == Is)
+                    (la.Kind == Not && Lexer.CurrentPeekToken.Kind == In) || la.Kind == In ||
+                    (la.Kind == Not && Lexer.CurrentPeekToken.Kind == Is) || la.Kind == Is)
                 {
                     Step();
                     if (t.Kind == Not)
@@ -1828,7 +1828,7 @@ namespace D_Parser
             }
 
             // TemplateInstance
-            if (la.Kind==(Identifier) && lexer.CurrentPeekToken.Kind==(Not) && (Peek().Kind!=Is && lexer.CurrentPeekToken.Kind!=In) /* Very important: The 'template' could be a '!is' expression - With two tokens! */)
+            if (la.Kind==(Identifier) && Lexer.CurrentPeekToken.Kind==(Not) && (Peek().Kind!=Is && Lexer.CurrentPeekToken.Kind!=In) /* Very important: The 'template' could be a '!is' expression - With two tokens! */)
                 return new TypeDeclarationExpression(TemplateInstance());
 
             // Identifier
@@ -1846,7 +1846,7 @@ namespace D_Parser
             }
 
             #region Literal
-            if ((la.Kind==Minus && lexer.CurrentPeekToken.Kind==Literal) || la.Kind==(Literal))
+            if ((la.Kind==Minus && Lexer.CurrentPeekToken.Kind==Literal) || la.Kind==(Literal))
             {
                 bool IsMinus = false;
                 if (la.Kind == Minus)
@@ -1951,7 +1951,7 @@ namespace D_Parser
                 */
                 if (la.Kind != OpenCurlyBrace) // foo( 1, {bar();} ); -> is a legal delegate
                 {
-                    if (!MemberFunctionAttribute[la.Kind] && lexer.CurrentPeekToken.Kind == OpenParenthesis)
+                    if (!MemberFunctionAttribute[la.Kind] && Lexer.CurrentPeekToken.Kind == OpenParenthesis)
                         fl.AnonymousMethod.Type = BasicType();
                     else if (la.Kind != OpenParenthesis && la.Kind != OpenCurlyBrace)
                         fl.AnonymousMethod.Type = Type();
@@ -2173,7 +2173,7 @@ namespace D_Parser
 
             OverPeekBrackets(OpenParenthesis,true);
 
-            return lexer.CurrentPeekToken.Kind == OpenCurlyBrace;
+            return Lexer.CurrentPeekToken.Kind == OpenCurlyBrace;
         }
         #endregion
 
@@ -2186,7 +2186,7 @@ namespace D_Parser
         {
             var stmtBlock = par as DStatementBlock;
 
-            if ((!IsFor && lexer.CurrentPeekToken.Kind == Times) || IsAssignExpression())
+            if ((!IsFor && Lexer.CurrentPeekToken.Kind == Times) || IsAssignExpression())
             {
                 if (stmtBlock != null)
                     stmtBlock.Expression = Expression();
@@ -2247,7 +2247,7 @@ namespace D_Parser
             }
 
             #region LabeledStatement (loc:... goto loc;)
-            else if (la.Kind == (Identifier) && lexer.CurrentPeekToken.Kind == (Colon))
+            else if (la.Kind == (Identifier) && Lexer.CurrentPeekToken.Kind == (Colon))
             {
                 Step();
                 Step();
@@ -2256,7 +2256,7 @@ namespace D_Parser
             #endregion
 
             #region IfStatement
-            else if (la.Kind == (If) || (la.Kind == Static && lexer.CurrentPeekToken.Kind == If))
+            else if (la.Kind == (If) || (la.Kind == Static && Lexer.CurrentPeekToken.Kind == If))
             {
                 if (la.Kind == Static)
                     Step();
@@ -2384,7 +2384,7 @@ namespace D_Parser
                         Step();
                         forEachVar.Attributes.Add(new DAttribute( Ref));
                     }
-                    if (la.Kind == (Identifier) && (lexer.CurrentPeekToken.Kind == (Semicolon) || lexer.CurrentPeekToken.Kind == Comma))
+                    if (la.Kind == (Identifier) && (Lexer.CurrentPeekToken.Kind == (Semicolon) || Lexer.CurrentPeekToken.Kind == Comma))
                     {
                         Step();
                         forEachVar.Name = t.Value;
@@ -2423,7 +2423,7 @@ namespace D_Parser
             #endregion
 
             #region [Final] SwitchStatement
-            else if ((la.Kind == (Final) && lexer.CurrentPeekToken.Kind == (Switch)) || la.Kind == (Switch))
+            else if ((la.Kind == (Final) && Lexer.CurrentPeekToken.Kind == (Switch)) || la.Kind == (Switch))
             {
                 var dbs = new DStatementBlock(Switch) as IBlockNode;
                 dbs.StartLocation = la.Location;
@@ -2454,7 +2454,7 @@ namespace D_Parser
 
                 (dbs as DStatementBlock).Expression=AssignExpression();
 
-                if (!(la.Kind == (Colon) && lexer.CurrentPeekToken.Kind == (Dot) && Peek().Kind == Dot))
+                if (!(la.Kind == (Colon) && Lexer.CurrentPeekToken.Kind == (Dot) && Peek().Kind == Dot))
                     while (la.Kind == (Comma))
                     {
                         Step();
@@ -2607,7 +2607,7 @@ namespace D_Parser
                         catchVar.Type = BasicType();
                         if (la.Kind != Identifier)
                         {
-                            lexer.CurrentToken = tt;
+                            Lexer.CurrentToken = tt;
                             catchVar.Type =new NormalDeclaration( "Exception");
                         }
                         Expect(Identifier);
@@ -2748,7 +2748,7 @@ namespace D_Parser
             if (la.Kind != CloseCurlyBrace)
             {
                 if (ParseStructureOnly)
-                    lexer.SkipCurrentBlock();
+                    Lexer.SkipCurrentBlock();
                 else
                     while (!IsEOF && la.Kind != (CloseCurlyBrace))
                     {
@@ -2874,7 +2874,7 @@ namespace D_Parser
             dm.StartLocation = t.Location;
             dm.Name = "this";
 
-            if (IsStruct && lexer.CurrentPeekToken.Kind==(This) && la.Kind==(OpenParenthesis))
+            if (IsStruct && Lexer.CurrentPeekToken.Kind==(This) && la.Kind==(OpenParenthesis))
             {
                 var dv = new DVariable();
                 dv.Name = "this";
@@ -2916,7 +2916,7 @@ namespace D_Parser
             Expect(This);
             var dm = new DMethod();
             dm.SpecialType = DMethod.MethodType.Destructor;
-            dm.StartLocation = lexer.LastToken.Location;
+            dm.StartLocation = Lexer.LastToken.Location;
             dm.Name = "~this";
 
             if (IsTemplateParameterList())
@@ -2990,7 +2990,7 @@ namespace D_Parser
 
             if (la.Kind==(Identifier))
             {
-                if (lexer.CurrentPeekToken.Kind==(Assign) || lexer.CurrentPeekToken.Kind==(OpenCurlyBrace) || lexer.CurrentPeekToken.Kind==(Semicolon) || lexer.CurrentPeekToken.Kind==Colon)
+                if (Lexer.CurrentPeekToken.Kind==(Assign) || Lexer.CurrentPeekToken.Kind==(OpenCurlyBrace) || Lexer.CurrentPeekToken.Kind==(Semicolon) || Lexer.CurrentPeekToken.Kind==Colon)
                 {
                     Step();
                     mye.Name = t.Value;
@@ -3056,7 +3056,7 @@ namespace D_Parser
 
                     DEnumValue ev = new DEnumValue();
                     ev.StartLocation = t.Location;
-                    if (la.Kind==(Identifier) && (lexer.CurrentPeekToken.Kind==(Assign) || lexer.CurrentPeekToken.Kind==(Comma) || lexer.CurrentPeekToken.Kind==(CloseCurlyBrace)))
+                    if (la.Kind==(Identifier) && (Lexer.CurrentPeekToken.Kind==(Assign) || Lexer.CurrentPeekToken.Kind==(Comma) || Lexer.CurrentPeekToken.Kind==(CloseCurlyBrace)))
                     {
                         Step();
                         ev.Name = t.Value;
@@ -3173,12 +3173,12 @@ namespace D_Parser
         /// </summary>
         private bool IsTemplateParameterList()
         {
-            lexer.StartPeek();
+            Lexer.StartPeek();
             int r = 0;
-            while (r >= 0 && lexer.CurrentPeekToken.Kind != EOF)
+            while (r >= 0 && Lexer.CurrentPeekToken.Kind != EOF)
             {
-                if (lexer.CurrentPeekToken.Kind == OpenParenthesis) r++;
-                else if (lexer.CurrentPeekToken.Kind == CloseParenthesis)
+                if (Lexer.CurrentPeekToken.Kind == OpenParenthesis) r++;
+                else if (Lexer.CurrentPeekToken.Kind == CloseParenthesis)
                 {
                     r--;
                     if (r <= 0)
@@ -3221,7 +3221,7 @@ namespace D_Parser
                     Step();
 
                 // TemplateTupleParameter
-                if (la.Kind==(Identifier) && lexer.CurrentPeekToken.Kind==TripleDot)
+                if (la.Kind==(Identifier) && Lexer.CurrentPeekToken.Kind==TripleDot)
                 {
                     Step();
                     dv.Type = new VarArgDecl();
@@ -3260,7 +3260,7 @@ namespace D_Parser
                 }
 
                 // TemplateTypeParameter
-                else if (la.Kind==(Identifier) && (lexer.CurrentPeekToken.Kind==(Colon) || lexer.CurrentPeekToken.Kind==(Assign) || lexer.CurrentPeekToken.Kind==(Comma) || lexer.CurrentPeekToken.Kind==(CloseParenthesis)))
+                else if (la.Kind==(Identifier) && (Lexer.CurrentPeekToken.Kind==(Colon) || Lexer.CurrentPeekToken.Kind==(Assign) || Lexer.CurrentPeekToken.Kind==(Comma) || Lexer.CurrentPeekToken.Kind==(CloseParenthesis)))
                 {
                     Step();
                     dv.Name = t.Value;
