@@ -124,6 +124,49 @@ namespace D_IDE.D
 			{
 				prevInd++;
 			}
+			// After a : was typed, check for possible multi-scope attributes (e.g. private, public, protected) and insert a new line + 1 more tab
+			else if (prevLineText.EndsWith(":"))
+			{
+				prevInd++;
+				/*string attrIdentifier = "";
+				bool foundIdChars = false;
+				int modStartOffset = 0;
+
+				for (int i = Editor.CaretOffset - 2; i >= 0; i--)
+				{
+					var c = Editor.Document.GetCharAt(i);
+
+					if (char.IsLetter(c))
+					{
+						foundIdChars = true;
+						attrIdentifier = c + attrIdentifier;
+					}
+					else if (foundIdChars)
+					{
+						modStartOffset = i;
+						break;
+					}
+					else if (!char.IsWhiteSpace(c))
+						break;
+				}
+
+				if (!string.IsNullOrEmpty(attrIdentifier))
+				{
+					int token = DTokens.GetTokenID(attrIdentifier);
+
+					if (token>=0&& DTokens.Modifiers[token])
+					{
+						var stringToInsert = "\n";
+
+						var line = Editor.Document.GetLineByOffset(modStartOffset);
+
+						for (int i = indentationStrategy.GetLineTabIndentation(Editor.Document.GetText(line)); i >= 0; i--)
+							stringToInsert += Editor.Options.IndentationString;
+
+						Editor.Document.Insert(Editor.CaretOffset, stringToInsert);
+					}
+				}*/
+			}
 
 			// 3)
 			if (caretChar == '}')

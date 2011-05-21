@@ -113,7 +113,7 @@ namespace D_Parser
             Module.Assign(m);
         }
 
-        static DParser Create(TextReader tr)
+        public static DParser Create(TextReader tr)
         {
             return new DParser(new DLexer(tr));
         }
