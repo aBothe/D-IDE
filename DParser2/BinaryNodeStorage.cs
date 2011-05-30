@@ -6,6 +6,7 @@ using D_Parser.Core;
 
 namespace D_Parser
 {
+	/*
     /// <summary>
     /// (De-)Serializes node trees to binary files
     /// </summary>
@@ -305,11 +306,11 @@ namespace D_Parser
                 WriteExpression(s.TrueCase);
             }
 
-            else if (e is ArrayExpression)
+            else if (e is ArrayLiteralExpression)
             {
                 bs.Write((byte)7);
 
-                var a = e as ArrayExpression;
+                var a = e as ArrayLiteralExpression;
                 bs.Write((byte)a.Clamps);
 
                 bs.Write(a.Expressions.Count);
@@ -687,11 +688,11 @@ namespace D_Parser
             }
             else if (type == 7)
             {
-                e = new ArrayExpression((ClampExpression.ClampType)s.ReadByte());
+                e = new ArrayLiteralExpression((ClampExpression.ClampType)s.ReadByte());
 
                 int cnt = s.ReadInt32();
                 for (int j = 0; j < cnt; j++)
-                    (e as ArrayExpression).Expressions.Add(ReadExpression());
+                    (e as ArrayLiteralExpression).Expressions.Add(ReadExpression());
             }
             else if (type == 8)
             {
@@ -709,5 +710,5 @@ namespace D_Parser
         }
         #endregion
     }
-
+	*/
 }

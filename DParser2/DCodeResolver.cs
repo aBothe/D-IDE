@@ -81,7 +81,7 @@ namespace D_Parser
 						Parent = SearchParent,
 						Type = new NormalDeclaration("string"),
 						Name = "__FILE__",
-						Initializer = new IdentExpression(Module.FileName),
+						Initializer = new IdentifierExpression(Module.FileName),
 						Description = "Module file name"
 					};
 					return new[] { n };
@@ -93,7 +93,7 @@ namespace D_Parser
 						Parent = SearchParent,
 						Type = new NormalDeclaration("int"),
 						Name = "__LINE__",
-						Initializer = new IdentExpression(CaretLocation.Line),
+						Initializer = new IdentifierExpression(CaretLocation.Line),
 						Description = "Code line"
 					};
 					return new[] { n };
@@ -157,7 +157,7 @@ namespace D_Parser
 					while (curWatchedClass != null)
 					{
 						if (curWatchedClass.TemplateParameters != null)
-							ret.AddRange(curWatchedClass.TemplateParameters);
+							ret.AddRange(curWatchedClass.TemplateParameterNodes as IEnumerable<INode>);
 
 						foreach (var m in curWatchedClass)
 						{
@@ -186,7 +186,7 @@ namespace D_Parser
 					ret.AddRange(dm.Parameters);
 
 					if (dm.TemplateParameters != null)
-						ret.AddRange(dm.TemplateParameters);
+						ret.AddRange(dm.TemplateParameters as IEnumerable<INode>);
 
 					foreach (var n in dm)
 						if (!(n is DStatementBlock))
@@ -528,9 +528,10 @@ namespace D_Parser
 			if (VariableOrMethod is DVariable && (VariableOrMethod as DNode).ContainsAttribute(DTokens.Auto))
 			{
 				var init = (VariableOrMethod as DVariable).Initializer;
-				if (init is InitializerExpression)
+				if (init is NewExpression)
 				{
-					var tex = (init as InitializerExpression).Initializer;
+					return (init as NewExpression).Type;
+					/*var tex = init as NewExpression;
 					while (tex != null)
 					{
 						if (tex is TypeDeclarationExpression)
@@ -544,7 +545,7 @@ namespace D_Parser
 						}
 
 						tex = tex.Base;
-					}
+					}*/
 				}
 			}
 
@@ -662,7 +663,7 @@ namespace D_Parser
 						foreach (var ch in (currentParent as DNode).TemplateParameters)
 						{
 							if (nameIdent.Name == ch.Name)
-								baseTypes.Add(ch);
+								baseTypes.Add(new TemplateParameterNode(ch));
 						}
 
 					// Move root-ward

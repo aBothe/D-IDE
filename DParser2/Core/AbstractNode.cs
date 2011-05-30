@@ -25,19 +25,19 @@ namespace D_Parser.Core
 			set { _StartLocation = value; }
 		}
 
-		public string Description
+		public virtual string Description
 		{
 			get { return _Description; }
 			set { _Description = value; }
 		}
 
-		public ITypeDeclaration Type
+		public virtual ITypeDeclaration Type
 		{
 			get { return _Type; }
 			set { _Type = value; }
 		}
 
-		public string Name
+		public virtual string Name
 		{
 			get { return _Name; }
 			set { _Name = value; }
@@ -59,6 +59,23 @@ namespace D_Parser.Core
 			return ToString(true, IncludePath);
 		}
 
+		public static string GetNodePath(INode n,bool includeActualNodesName)
+		{
+			string path = "";
+			var curParent = includeActualNodesName?n:n.Parent;
+			while (curParent != null)
+			{
+				// Also include module path
+				if (curParent is IAbstractSyntaxTree)
+					path = (curParent as IAbstractSyntaxTree).ModuleName + "." + path;
+				else
+					path = curParent.Name + "." + path;
+
+				curParent = curParent.Parent;
+			}
+			return path.Trim('.');
+		}
+
 		public virtual string ToString(bool Attributes,bool IncludePath)
 		{
 			string s = "";
@@ -67,21 +84,8 @@ namespace D_Parser.Core
 				s += Type.ToString() + " ";
 
 			// Path + Name
-				string path = "";
-				var curParent = this as INode;
-				while (curParent != null)
-				{
-					// Also include module path
-					if (curParent is IAbstractSyntaxTree)
-						path = (curParent as IAbstractSyntaxTree).ModuleName + "." + path;
-					else
-						path = curParent.Name + "." + path;
-
-					if (!IncludePath)
-						break;
-					curParent = curParent.Parent;
-				}
-				s += path.Trim('.');
+			if(IncludePath)
+				s += GetNodePath(this,true);
 
 			return s.Trim();
 		}

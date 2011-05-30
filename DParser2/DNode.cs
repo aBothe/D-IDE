@@ -7,7 +7,26 @@ namespace D_Parser
 {
     public abstract class DNode :AbstractNode
     {
-        public INode[] TemplateParameters=null; // Functions, Templates
+        public ITemplateParameter[] TemplateParameters=null; // Functions, Templates
+
+		public bool ContainsTemplateParameter(string Name)
+		{
+			if (TemplateParameters != null)
+				foreach (var tp in TemplateParameters)
+					if (tp.Name == Name)
+						return true;
+
+			return false;
+		}
+
+		public IEnumerable<TemplateParameterNode> TemplateParameterNodes
+		{
+			get {
+				if (TemplateParameters != null)
+					foreach (var p in TemplateParameters)
+						yield return new TemplateParameterNode(p);
+			}
+		}
 
         public new IBlockNode Parent{get{return base.Parent as IBlockNode;}
 		set{base.Parent=value;}} // Functions, Templates
@@ -27,9 +46,6 @@ namespace D_Parser
 			if (other is DNode)
 			{
 				TemplateParameters = (other as DNode).TemplateParameters;
-				if(TemplateParameters!=null)
-				foreach (var tp in TemplateParameters)
-					tp.Parent = this;
 				Attributes = (other as DNode).Attributes;
 			}
 			base.Assign(other);
@@ -64,9 +80,6 @@ namespace D_Parser
             {
                 s += "!(";
 				foreach (var p in TemplateParameters)
-					if (p is DNode)
-						s += (p as DNode).ToString(false) + ",";
-					else
 					s += p.ToString() + ",";
 
                 s = s.Trim(',')+ ")";

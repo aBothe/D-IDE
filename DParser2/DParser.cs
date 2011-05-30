@@ -33,7 +33,7 @@ namespace D_Parser
 			return p.t.EndLocation;
 		}
 
-        public static DExpression ParseExpression(string Code)
+        public static IExpression ParseExpression(string Code)
         {
             var p = Create(new StringReader(Code));
             p.Step();

@@ -703,10 +703,10 @@ namespace D_Parser
 
                 bool HasDot = false;
                 bool isunsigned = false;
-                bool islong = false;
+                /*bool islong = false;
                 bool isfloat = false;
                 bool isreal = false;
-                bool isimaginary = false;
+                bool isimaginary = false;*/
                 int NumBase = 0; // Set it to 0 initially - it'll be set to another value later for sure
 
                 char peek = (char)ReaderPeek();
@@ -859,7 +859,7 @@ namespace D_Parser
                     {
                         ReaderRead();
                         suffix += "L";
-                        islong = true;
+                        //islong = true;
                         peek = (char)ReaderPeek();
                         if (!isunsigned && (peek == 'u' || peek == 'U'))
                             goto unsigned;
@@ -871,14 +871,14 @@ namespace D_Parser
                 { // float value
                     ReaderRead();
                     suffix += "f";
-                    isfloat = true;
+                    //isfloat = true;
                     peek = (char)ReaderPeek();
                 }
                 else if (peek == 'L')
                 { // real value
                     ReaderRead();
                     suffix += 'L';
-                    isreal = true;
+                    //isreal = true;
                     peek = (char)ReaderPeek();
                 }
 
@@ -886,7 +886,7 @@ namespace D_Parser
                 { // imaginary value
                     ReaderRead();
                     suffix += "i";
-                    isimaginary = true;
+                    //isimaginary = true;
                 }
                 #endregion
 

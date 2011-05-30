@@ -94,7 +94,7 @@ namespace D_IDE.D
 			IAbstractSyntaxTree module;
 			int codeLine;
 			INode variableNode;
-			INode typeNode;
+			//INode typeNode;
 			//IEnumerable<IAbstractSyntaxTree> moduleCache;
 
 			public DDebugSymbolWrapper(DebugScopedSymbol sym):base(sym)
@@ -257,12 +257,12 @@ namespace D_IDE.D
 
         public object[] ExtractArray(ulong Offset, ITypeDeclaration Type, out bool IsString)
         {
+			object[] ret = null;
+			IsString = false;
+			/* 
 			ITypeDeclaration BaseValueType = Type.MostBasic;
             string type = (Type.MostBasic as NormalDeclaration).Name;
-			IsString = false;
-			object[] ret = null;
-            uint elsz = 4;
-			/*
+			uint elsz = 4;
             Type t = DetermineArrayType(type, out elsz, out IsString);
             
             if (!IsString) t = DetermineArrayType(DCodeCompletionProvider.RemoveArrayPartFromDecl(type), out elsz, out IsString);
@@ -272,7 +272,7 @@ namespace D_IDE.D
             {
                 ret = dbg.Symbols.ReadArrayArray(Offset, t, elsz);
             }*/
-            return ret;
+			return ret;
         }
 
         public static string BuildArrayContentString(object[] marr, bool IsString)

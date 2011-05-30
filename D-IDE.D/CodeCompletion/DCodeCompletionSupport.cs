@@ -639,8 +639,6 @@ namespace D_IDE.D
 
 						if (realParent is DClassLike)
 						{
-							
-
 							if (n.ContainsAttribute(DTokens.Package))
 								return DCodeCompletionSupport.Instance.GetNodeImage("field_internal");
 							else if (n.ContainsAttribute(DTokens.Protected))
@@ -657,7 +655,7 @@ namespace D_IDE.D
 							return DCodeCompletionSupport.Instance.GetNodeImage("local");
 						}
 
-						if (realParent.TemplateParameters != null && realParent.TemplateParameters.Contains(n))
+						if (realParent.ContainsTemplateParameter(n.Name))
 							return DCodeCompletionSupport.Instance.GetNodeImage("parameter");
 					}
 				}

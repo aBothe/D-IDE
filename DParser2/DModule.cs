@@ -175,7 +175,7 @@ namespace D_Parser
 			return _Children.GetEnumerator();
 		}
 
-		public virtual void Assign(INode other)
+		public override void Assign(INode other)
 		{
 			if (other is IBlockNode)
 			{
@@ -190,7 +190,7 @@ namespace D_Parser
 
     public class DVariable : DNode
     {
-        public DExpression Initializer; // Variable
+        public IExpression Initializer; // Variable
         public bool IsAlias = false;
 
 		public override string ToString(bool Attributes, bool IncludePath)
@@ -230,7 +230,7 @@ namespace D_Parser
     public class DStatementBlock : DBlockStatement
     {
         public int Token;
-        public DExpression Expression;
+        public IExpression Expression;
 
         public DStatementBlock(int Token)
         {
