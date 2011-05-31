@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Collections.ObjectModel;
 
 namespace D_Parser.Core
 {
@@ -8,7 +9,7 @@ namespace D_Parser.Core
 	{
 		string FileName { get; set; }
 		string ModuleName { get; set; }
-		IEnumerable<ParserError> ParseErrors { get; set; }
+		ReadOnlyCollection<ParserError> ParseErrors { get; set; }
 		Dictionary<ITypeDeclaration, bool> Imports { get; set; }
 		bool ContainsImport(ITypeDeclaration ImportIdentifier);
 		bool ContainsImport(string ImportIdentifier);

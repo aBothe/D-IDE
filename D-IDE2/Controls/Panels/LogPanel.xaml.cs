@@ -54,6 +54,7 @@ namespace D_IDE.Controls.Panels
 			LogTab selTab = LogTab.System;
 			switch (origin)
 			{
+				case ErrorOrigin.Parser:
 				case ErrorOrigin.System:
 					editor = Text_Sys;
 					selTab = LogTab.System;

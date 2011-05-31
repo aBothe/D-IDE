@@ -378,7 +378,7 @@ namespace D_Parser
         {
             this.ParseStructureOnly = ParseStructureOnly;
             doc=Root();
-			doc.ParseErrors = ParseErrors;
+			doc.ParseErrors = new System.Collections.ObjectModel.ReadOnlyCollection<ParserError>(ParseErrors);
             return doc;
         }
         

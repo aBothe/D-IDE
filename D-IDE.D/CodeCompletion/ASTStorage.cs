@@ -101,19 +101,28 @@ namespace D_IDE.D.CodeCompletion
 			var ms = new MemoryStream(32000);
 			var sw = new StreamWriter(ms,Encoding.Unicode);
 
+			sw.WriteLine("Parser error log");
+			sw.WriteLine();
+
 			foreach (var pdir in this)
 			{
 				sw.WriteLine("--- "+pdir.BaseDirectory+" ---");
 				sw.WriteLine();
+				bool hadErrors = false;
 				foreach (var t in pdir)
 				{
+					if (t.ParseErrors.Count<1)
+						continue;
+					hadErrors = true;
 					sw.WriteLine(t.ModuleName + "\t\t("+t.FileName+")");
-					if (t.ParseErrors != null)
-						foreach (var err in t.ParseErrors)
-							sw.WriteLine(string.Format("\t\t{0}\t{1}\t{2}",err.Location.Line, err.Location.Column,err.Message));
+					foreach (var err in t.ParseErrors)
+						sw.WriteLine(string.Format("\t\t{0}\t{1}\t{2}",err.Location.Line, err.Location.Column,err.Message));
 
 					sw.Flush();
 				}
+
+				if (!hadErrors)
+					sw.WriteLine("No errors found.");
 
 				sw.WriteLine();
 				sw.Flush();
@@ -228,6 +237,12 @@ namespace D_IDE.D.CodeCompletion
 			Clear();
 
 			string[] files = Directory.GetFiles(BaseDirectory, "*.d?", SearchOption.AllDirectories);
+
+			var hpt = new HighPrecisionTimer.HighPrecTimer();
+
+			double duration = 0;
+			
+
 			foreach (string tf in files)
 			{
 				if (tf.EndsWith("phobos"+Path.DirectorySeparatorChar+ "index.d")) continue; // Skip index.d
@@ -236,7 +251,10 @@ namespace D_IDE.D.CodeCompletion
 				{
 					string tmodule = Path.ChangeExtension(tf, null).Remove(0, BaseDirectory.Length + 1).Replace('\\', '.');
 
+					hpt.Start();
 					var ast = DParser.ParseFile(tf);
+					hpt.Stop();
+					duration += hpt.Duration;
 					ast.ModuleName = tmodule;
 					ast.FileName = tf;
 
@@ -249,6 +267,9 @@ namespace D_IDE.D.CodeCompletion
 						return;
 				}
 			}
+
+			ErrorLogger.Log("Parsed "+files.Length+" files in "+BaseDirectory+" after "+Math.Round(duration,2).ToString()+"s (~"+Math.Round(duration/files.Length,3).ToString()+"s per file)",
+				ErrorType.Information,ErrorOrigin.Parser);
 		}
 	}
 }

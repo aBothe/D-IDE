@@ -23,7 +23,7 @@ namespace ParserTests
             if (a == 0)
                 Files.Add("abc", File.ReadAllText(
 					//dmdDir+"\\src\\phobos\\std\\path.d"
-					@"D:\dmd2\src\phobos\std\utf.d"
+					@"D:\dmd2\src\phobos\std\algorithm.d"
 					));
             else if(a==1)
             {
@@ -52,10 +52,11 @@ namespace ParserTests
                     i++;
                     var n = DParser.ParseString(Files[file], false);
 
-					//printErrors(n);
+					printErrors(n);
                 }
                 hp.Stop();
                 Console.WriteLine(hp.Duration + "s");
+				Console.WriteLine("~"+(hp.Duration/Files.Count).ToString()+"s per file");
             }
             else if(b==1)
             {

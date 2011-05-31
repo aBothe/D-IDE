@@ -67,7 +67,7 @@ namespace D_Parser
 			}
 		}
 
-		public IEnumerable<ParserError> ParseErrors
+		public System.Collections.ObjectModel.ReadOnlyCollection<ParserError> ParseErrors
 		{
 			get;
 			set;
