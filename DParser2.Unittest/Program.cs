@@ -23,13 +23,13 @@ namespace ParserTests
             if (a == 0)
                 Files.Add("abc", File.ReadAllText(
 					//dmdDir+"\\src\\phobos\\std\\path.d"
-					@"C:\Users\Alexander\Documents\D Projects\Test App\Test App\newDir"
+					@"D:\FXLIB\fx\controls\ipbox.d"
 					));
             else if(a==1)
             {
                 foreach (string fn in Directory.GetFiles(dmdDir+"\\src\\phobos", "*.d?", SearchOption.AllDirectories))
                 {
-                    if (fn.EndsWith("phobos.d")) continue;
+                    if (fn.EndsWith("phobos\\index.d")) continue;
                     Files.Add(fn, File.ReadAllText(fn));
                 }
                 foreach (string fn in Directory.GetFiles(dmdDir+"\\src\\druntime\\import", "*.d?", SearchOption.AllDirectories))
@@ -51,31 +51,22 @@ namespace ParserTests
                     
                     i++;
                     var n = DParser.ParseString(Files[file], false);
+
+					printErrors(n);
                 }
                 hp.Stop();
                 Console.WriteLine(hp.Duration + "s");
             }
             else if(b==1)
             {
-                var n = DParser.ParseString(
+                var n = DParser.ParseExpression(
 @"
+new ubyte[](size)
+");
+				//printErrors(n);Dump(n,"");
 
-import a.b.c;
-void delegate() myDeleg;
-
-
-private class A(T,U):Window
-{
-	void foo()
-{
-	int a=45+7;
-}
-}
-
-", false);
-				printErrors(n);
-				Console.WriteLine();
-				Dump(n,"");
+				Console.WriteLine(n.ToString());
+				
             }
             Console.Read();
             return;

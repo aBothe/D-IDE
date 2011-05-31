@@ -230,7 +230,7 @@ namespace D_IDE.D.CodeCompletion
 			string[] files = Directory.GetFiles(BaseDirectory, "*.d?", SearchOption.AllDirectories);
 			foreach (string tf in files)
 			{
-				if (tf.EndsWith("phobos.d")) continue; // Skip phobos.d
+				if (tf.EndsWith("phobos"+Path.DirectorySeparatorChar+ "index.d")) continue; // Skip index.d
 
 				try
 				{

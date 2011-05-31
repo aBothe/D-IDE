@@ -78,7 +78,10 @@ namespace D_Parser
             // Template parameters
             if (TemplateParameters!=null && TemplateParameters.Length > 0)
             {
-                s += "!(";
+				if (this is DVariable || this is DMethod)
+					s += '!';
+
+                s += "(";
 				foreach (var p in TemplateParameters)
 					s += p.ToString() + ",";
 

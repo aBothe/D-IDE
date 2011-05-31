@@ -1587,7 +1587,22 @@ namespace D_Parser
 				case Times:
 				case Div:
 				case Mod:
+
+					/* Note: Spend attention to *-Tokens (DTokens.Times)!
+					 * After an identifier or basictype they can be meant to be pointer tokens, not multiplication tokens!
+					 * 
+					 * Typical example: (void*).sizeof 
+					 * Note that after the '*' a ')' must follow!
+					 * 
+					 */
 					ae = new MulExpression(la.Kind);
+
+					if (Peek(1).Kind == CloseParenthesis)
+					{
+						Step(); // Skip the *
+						ae.LeftOperand = left;
+						return ae;
+					}
 					break;
 				default:
 					return left;
@@ -1728,6 +1743,7 @@ namespace D_Parser
 				// ClassArguments
 				if (la.Kind == (OpenParenthesis))
 				{
+					Step();
 					if (la.Kind == (CloseParenthesis))
 						Step();
 					else
@@ -1765,10 +1781,11 @@ namespace D_Parser
 				};
 
 				var args = new List<IExpression>();
-				while (la.Kind == (OpenSquareBracket))
+				while (la.Kind == OpenSquareBracket)
 				{
 					Step();
-					args.Add(AssignExpression());
+					if(la.Kind!=CloseSquareBracket)
+						args.Add(AssignExpression());
 					Expect(CloseSquareBracket);
 				}
 
@@ -1877,6 +1894,13 @@ namespace D_Parser
 								Arguments = args.ToArray()
 							};
 						}
+					}
+					else // Empty array literal = SliceExpression
+					{
+						leftExpr = new PostfixExpression_Slice()
+						{
+							PostfixForeExpression=leftExpr
+						};
 					}
 
 					Expect(CloseSquareBracket);
@@ -1990,7 +2014,12 @@ namespace D_Parser
 					var ae = new ArrayLiteralExpression();
 					var expressions = new List<IExpression>();
 					expressions.Add(firstExpression);
-					expressions.AddRange(ArgumentList());
+
+					if (la.Kind == Comma)
+					{
+						Step();
+						expressions.AddRange(ArgumentList());
+					}
 
 					ae.Expressions = expressions;
 
@@ -2232,6 +2261,10 @@ namespace D_Parser
 			}
 			#endregion
 
+			// TODO? Expressions can of course be empty...
+			//return null;
+
+			
 			SynErr(Identifier);
 			Step();
 			return new TokenExpression(t.Kind);
@@ -2801,7 +2834,8 @@ namespace D_Parser
 
 			else if (!(ClassLike[la.Kind] || la.Kind == Enum || Modifiers[la.Kind] || Attributes[la.Kind] || la.Kind == Alias || la.Kind == Typedef) && IsAssignExpression())
 			{
-				var ex = AssignExpression();
+				// a==b, a=9; is possible -> Expressions can be there, not only single AssignExpressions!
+				var ex = Expression();
 				Expect(Semicolon);
 			}
 			else
@@ -3354,7 +3388,6 @@ namespace D_Parser
 			// TemplateTypeParameter
 			if (la.Kind == (Identifier) && (Lexer.CurrentPeekToken.Kind == (Colon) || Lexer.CurrentPeekToken.Kind == (Assign) || Lexer.CurrentPeekToken.Kind == (Comma) || Lexer.CurrentPeekToken.Kind == (CloseParenthesis)))
 			{
-				Step();
 				var tt = new TemplateTypeParameter();
 				Expect(Identifier);
 
@@ -3406,7 +3439,7 @@ namespace D_Parser
 		{
 			Expect(Identifier);
 
-			if (la.Kind != Not)
+			if (la.Kind != Not || (Peek(1).Kind==Is || Lexer.CurrentPeekToken.Kind==In)) // myExpr !is null  --> there, it would parse 'is' as template argument
 				return new NormalDeclaration(t.Value);
 			
 			var td = new TemplateDecl(new NormalDeclaration(t.Value));

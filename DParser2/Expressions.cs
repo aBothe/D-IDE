@@ -34,7 +34,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return LeftOperand.ToString() + DTokens.GetTokenString(OperatorToken) + RightOperand.ToString();
+			return LeftOperand.ToString() + DTokens.GetTokenString(OperatorToken) + (RightOperand!=null? RightOperand.ToString():"");
 		}
 	}
 
@@ -121,7 +121,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return LeftOperand.ToString() + (Not?"!":"")+ DTokens.GetTokenString(OperatorToken) + RightOperand.ToString();
+			return LeftOperand.ToString() + (Not?" !":" ")+ "is " + RightOperand.ToString();
 		}
 	}
 
@@ -138,7 +138,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return LeftOperand.ToString() + (Not?"!":"")+ DTokens.GetTokenString(OperatorToken) + RightOperand.ToString();
+			return LeftOperand.ToString() + (Not ? " !" : " ") + "in " + RightOperand.ToString();
 		}
 	}
 

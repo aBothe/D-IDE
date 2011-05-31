@@ -310,10 +310,12 @@ namespace D_Parser
 
         private bool Expect(int n)
         {
-            if (la.Kind == n)
-            { Step(); return true; }
-            else 
-                SynErr(n, DTokens.GetTokenString(n) + " expected!");
+			if (la.Kind == n)
+			{ Step(); return true; }
+			else
+			{
+				SynErr(n, DTokens.GetTokenString(n) + " expected!");
+			}
             return false;
         }
 
