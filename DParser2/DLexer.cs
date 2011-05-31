@@ -78,35 +78,31 @@ namespace D_Parser
         }
 
         /// <summary>
-        /// The current DToken. <seealso cref="ICSharpCode.NRefactory.Parser.DToken"/>
+        /// Get the current DToken.
         /// </summary>
         public DToken CurrentToken
         {
             get
             {
-                //				Console.WriteLine("Call to DToken");
                 return curToken;
-            }
-            set
-            {
-                if (value == null) return;
-                curToken = value;
-                lookaheadToken = curToken.next;
-                if (lookaheadToken != null)
-                    peekToken = lookaheadToken.next;
             }
         }
 
         /// <summary>
-        /// The next DToken (The <see cref="CurrentToken"/> after <see cref="NextToken"/> call) . <seealso cref="ICSharpCode.NRefactory.Parser.DToken"/>
+        /// The next DToken (The <see cref="CurrentToken"/> after <see cref="NextToken"/> call) .
         /// </summary>
         public DToken LookAhead
         {
             get
             {
-                //				Console.WriteLine("Call to LookAhead");
                 return lookaheadToken;
             }
+			set
+			{
+				if (value == null) return;
+				lookaheadToken = value;
+				peekToken = lookaheadToken.next;
+			}
         }
 
         public DToken CurrentPeekToken
@@ -1480,6 +1476,7 @@ namespace D_Parser
 
         void ReadMultiLineComment(Comment.Type commentType, bool isNestingComment)
         {
+			int nestedCommentDepth=1;
             int nextChar;
             Comment nComm = null;
             CodeLocation st = new CodeLocation(Col, Line);
@@ -1489,14 +1486,27 @@ namespace D_Parser
             {
                 char ch = (char)nextChar;
 
+				// Catch deeper-nesting comments
+				if (ch == '/' && ReaderPeek() == '+')
+				{
+					nestedCommentDepth++;
+					ReaderRead();
+				}
+
                 // End of multiline comment reached ?
                 if ((ch == '+' || (ch == '*' && !isNestingComment)) && ReaderPeek() == '/')
                 {
                     ReaderRead(); // Skip "*" or "+"
-                    nComm = new Comment(commentType, scCurWord.ToString().Trim(ch, ' ', '\t', '\r', '\n', '*', '+'), st.Column < 2, st, new CodeLocation(Col, Line));
-                    if(commentType==Comment.Type.Documentation)
-                        Comments.Push(nComm);
-                    return;
+
+					if (nestedCommentDepth > 1)
+						nestedCommentDepth--;
+					else
+					{
+						nComm = new Comment(commentType, scCurWord.ToString().Trim(ch, ' ', '\t', '\r', '\n', '*', '+'), st.Column < 2, st, new CodeLocation(Col, Line));
+						if (commentType == Comment.Type.Documentation)
+							Comments.Push(nComm);
+						return;
+					}
                 }
 
                 if (HandleLineEnd(ch))

@@ -596,6 +596,11 @@ namespace D_Parser
 			return BasicTypes[la.Kind] || la.Kind == (Typeof) || MemberFunctionAttribute[la.Kind] || (la.Kind == (Dot) && Lexer.CurrentPeekToken.Kind == (Identifier)) || la.Kind == (Identifier);
 		}
 
+		/// <summary>
+		/// Used if the parser is unsure if there's a type or an expression - then, instead of throwing exceptions, the Type()-Methods will simply return null;
+		/// </summary>
+		bool AllowWeakTypeParsing = false;
+
 		ITypeDeclaration BasicType()
 		{
 			ITypeDeclaration td = null;
@@ -639,6 +644,9 @@ namespace D_Parser
 			if (la.Kind == (Dot))
 				Step();
 
+			if (AllowWeakTypeParsing&& la.Kind != Identifier)
+				return null;
+
 			if (td == null)
 				td = IdentifierList() as ITypeDeclaration;
 			else
@@ -666,7 +674,9 @@ namespace D_Parser
 			{
 				Step();
 				// [ ]
-				if (la.Kind == (CloseSquareBracket)) { Step(); return new ClampDecl(); }
+				if (la.Kind == (CloseSquareBracket)) { Step();
+				return new ClampDecl(); 
+				}
 
 				ITypeDeclaration cd = null;
 
@@ -688,6 +698,9 @@ namespace D_Parser
 					else
 						cd = new DExpressionDecl(new PostfixExpression_Index() { Arguments=new[]{fromExpression}});
 				}
+
+				if (AllowWeakTypeParsing && la.Kind != CloseSquareBracket)
+					return null;
 
 				Expect(CloseSquareBracket);
 				return cd;
@@ -855,10 +868,12 @@ namespace D_Parser
 				var ad = new ClampDecl(td);
 				if (la.Kind != (CloseSquareBracket))
 				{
-					if (IsAssignExpression())
+					AllowWeakTypeParsing = true;
+					ad.KeyType = Type();
+					AllowWeakTypeParsing = false;
+
+					if (ad.KeyType==null)
 						ad.KeyType = new DExpressionDecl(AssignExpression());
-					else
-						ad.KeyType = Type();
 				}
 				Expect(CloseSquareBracket);
 				ad.ValueType = td;
@@ -982,6 +997,9 @@ namespace D_Parser
 				Step();
 
 				td = Declarator2();
+				if (AllowWeakTypeParsing && td == null)
+					return null;
+
 				Expect(CloseParenthesis);
 
 				// DeclaratorSuffixes
@@ -997,6 +1015,8 @@ namespace D_Parser
 			while (IsBasicType2())
 			{
 				var ttd = BasicType2();
+				if (AllowWeakTypeParsing && ttd == null)
+					return null;
 				ttd.Base = td;
 				td = ttd;
 			}
@@ -1587,22 +1607,7 @@ namespace D_Parser
 				case Times:
 				case Div:
 				case Mod:
-
-					/* Note: Spend attention to *-Tokens (DTokens.Times)!
-					 * After an identifier or basictype they can be meant to be pointer tokens, not multiplication tokens!
-					 * 
-					 * Typical example: (void*).sizeof 
-					 * Note that after the '*' a ')' must follow!
-					 * 
-					 */
 					ae = new MulExpression(la.Kind);
-
-					if (Peek(1).Kind == CloseParenthesis)
-					{
-						Step(); // Skip the *
-						ae.LeftOperand = left;
-						return ae;
-					}
 					break;
 				default:
 					return left;
@@ -1661,8 +1666,30 @@ namespace D_Parser
 				return ae;
 			}
 
-			// Accsessor probably will remain to-do!
 			// ( Type ) . Identifier
+			if (la.Kind == OpenParenthesis)
+			{
+				AllowWeakTypeParsing = true;
+				var curLA = la;
+				Step();
+				var td = Type();
+
+				AllowWeakTypeParsing = false;
+
+				if (td!=null && la.Kind == CloseParenthesis && Peek(1).Kind == Dot && Peek(2).Kind == Identifier)
+				{
+					Step();
+					Step();
+
+					var accExpr = new UnaryExpression_Type() { Type=td, AccessIdentifier=t.Value };
+				}
+				else
+				{
+					// Reset the current token with the earlier one to enable Expression parsing
+					Lexer.LookAhead=curLA;
+				}
+
+			}
 
 			// CastExpression
 			if (la.Kind == (Cast))
@@ -2124,10 +2151,12 @@ namespace D_Parser
 				Expect(OpenParenthesis);
 				var ce = new TypeidExpression();
 
-				if (IsAssignExpression())
+				AllowWeakTypeParsing = true;
+				ce.Type = Type();
+				AllowWeakTypeParsing = false;
+
+				if (ce.Type==null)
 					ce.Expression = AssignExpression();
-				else
-					ce.Type = Type();
 
 				Expect(CloseParenthesis);
 				return ce;
@@ -2140,11 +2169,13 @@ namespace D_Parser
 				Expect(OpenParenthesis);
 				var ce = new IsExpression();
 
+				AllowWeakTypeParsing = true;
+				ce.Type = Type();
+				AllowWeakTypeParsing = false;
+
 				// Originally, a Type is required!
-				if (IsAssignExpression()) // Just allow function calls - but even doing this is still a mess :-D
+				if (ce.Type==null) // Just allow function calls - but even doing this is still a mess :-D
 					ce.Type = new DExpressionDecl(PostfixExpression());
-				else
-					ce.Type = Type();
 
 				if (la.Kind == CloseParenthesis)
 				{
@@ -2707,11 +2738,11 @@ namespace D_Parser
 					{
 						Step();
 						var catchVar = new DVariable();
-						DToken tt = t;
+						var tt = la; //TODO?
 						catchVar.Type = BasicType();
 						if (la.Kind != Identifier)
 						{
-							Lexer.CurrentToken = tt;
+							Lexer.LookAhead = tt;
 							catchVar.Type = new NormalDeclaration("Exception");
 						}
 						Expect(Identifier);
@@ -3367,20 +3398,25 @@ namespace D_Parser
 				{
 					Step();
 
-					if (IsAssignExpression())
+					AllowWeakTypeParsing=true;
+					al.SpecializationType = Type();
+					AllowWeakTypeParsing=false;
+
+					if (al.SpecializationType==null)
 						al.SpecializationExpression = ConditionalExpression();
-					else 
-						al.SpecializationType = Type();
 				}
 
 				// TemplateAliasParameterDefault
 				if (la.Kind == (Assign))
 				{
 					Step();
-					if (IsAssignExpression())
+
+					AllowWeakTypeParsing=true;
+					al.DefaultType = Type();
+					AllowWeakTypeParsing=false;
+
+					if (al.DefaultType==null)
 						al.DefaultExpression = ConditionalExpression();
-					else
-						al.DefaultType = Type();
 				}
 				return al;
 			}

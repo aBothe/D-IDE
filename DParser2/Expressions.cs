@@ -244,7 +244,6 @@ namespace D_Parser
 		}
 	}
 
-	/* This thing here is simply unusable - it's practically impossible to determine wether an expression is meant as a expression or as a type...
 	/// <summary>
 	/// (Type).Identifier
 	/// </summary>
@@ -257,7 +256,7 @@ namespace D_Parser
 		{
 			return "("+Type.ToString()+")."+AccessIdentifier;
 		}
-	}*/
+	}
 
 
 	/// <summary>
