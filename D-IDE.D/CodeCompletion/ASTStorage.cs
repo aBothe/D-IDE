@@ -268,7 +268,7 @@ namespace D_IDE.D.CodeCompletion
 				}
 			}
 
-			ErrorLogger.Log("Parsed "+files.Length+" files in "+BaseDirectory+" after "+Math.Round(duration,2).ToString()+"s (~"+Math.Round(duration/files.Length,3).ToString()+"s per file)",
+			ErrorLogger.Log("Parsed "+files.Length+" files in "+BaseDirectory+" in "+Math.Round(duration,2).ToString()+"s (~"+Math.Round(duration/files.Length,3).ToString()+"s per file)",
 				ErrorType.Information,ErrorOrigin.Parser);
 		}
 	}
