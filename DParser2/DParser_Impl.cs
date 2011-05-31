@@ -868,10 +868,12 @@ namespace D_Parser
 				var ad = new ClampDecl(td);
 				if (la.Kind != (CloseSquareBracket))
 				{
-					AllowWeakTypeParsing = true;
-					ad.KeyType = Type();
-					AllowWeakTypeParsing = false;
-
+					if (!IsAssignExpression())
+					{
+						AllowWeakTypeParsing = true;
+						ad.KeyType = Type();
+						AllowWeakTypeParsing = false;
+					}
 					if (ad.KeyType==null)
 						ad.KeyType = new DExpressionDecl(AssignExpression());
 				}
@@ -997,7 +999,8 @@ namespace D_Parser
 				Step();
 
 				td = Declarator2();
-				if (AllowWeakTypeParsing && td == null)
+				
+				if (AllowWeakTypeParsing && (td == null||(t.Kind==OpenParenthesis && la.Kind==CloseParenthesis /* -- means if an argumentless function call has been made, return null because this would be an expression */)|| la.Kind!=CloseParenthesis))
 					return null;
 
 				Expect(CloseParenthesis);
@@ -1984,17 +1987,17 @@ namespace D_Parser
 				// Concatenate multiple string literals here
 				if (t.LiteralFormat == LiteralFormat.StringLiteral || t.LiteralFormat == LiteralFormat.VerbatimStringLiteral)
 				{
-					string a = t.Value;
+					var a = t.LiteralValue as string;
 					while (la.LiteralFormat == LiteralFormat.StringLiteral || la.LiteralFormat == LiteralFormat.VerbatimStringLiteral)
 					{
 						Step();
-						a += la.Value;
+						a += la.LiteralValue as string;
 					}
 					return new IdentifierExpression(a);
 				}
 				else if (t.LiteralFormat == LiteralFormat.CharLiteral)
-					return new IdentifierExpression(t.Value);
-				return new IdentifierExpression(t.literalValue);
+					return new IdentifierExpression(t.LiteralValue);
+				return new IdentifierExpression(t.LiteralValue);
 			}
 			#endregion
 
@@ -2042,10 +2045,12 @@ namespace D_Parser
 					var expressions = new List<IExpression>();
 					expressions.Add(firstExpression);
 
-					if (la.Kind == Comma)
+					while (la.Kind == Comma)
 					{
 						Step();
-						expressions.AddRange(ArgumentList());
+						if (la.Kind == CloseSquareBracket) // And again, empty expressions are allowed
+							break;
+						expressions.Add(AssignExpression());
 					}
 
 					ae.Expressions = expressions;
@@ -2218,7 +2223,7 @@ namespace D_Parser
 						return
 				*/
 
-				if (ClassLike[la.Kind] ||
+				if (ClassLike[la.Kind] || LA(Typedef) || // typedef is possible although it's not yet documented in the syntax docs
 					LA(Enum) || LA(Delegate) || LA(Function) || LA(Super) || LA(Return))
 				{
 					Step();

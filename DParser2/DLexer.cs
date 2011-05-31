@@ -1138,6 +1138,50 @@ namespace D_Parser
                         ch = (char)number;
                     }
                     break;
+
+				// NamedCharacterEntities
+				case '&':
+					string charEntity = "";
+
+					while (true)
+					{
+						nextChar= ReaderRead();
+
+						if (nextChar < 0)
+						{
+							OnError(Line, Col - 1, "EOF reached within named char entity");
+							ch = '\0';
+							return string.Empty;
+						}
+
+						c=(char)nextChar;
+
+						if (c == ';')
+							break;
+
+						if (char.IsLetter(c))
+							charEntity += c;
+						else
+						{
+							OnError(Line,Col-1,"Unexpected character found in named char entity: "+c);
+							ch='\0';
+							return string.Empty;
+						}
+					}
+
+					if (string.IsNullOrEmpty(charEntity))
+					{
+						OnError(Line, Col - 1, "Empty named character entities not allowed");
+						ch = '\0';
+						return string.Empty;
+					}
+
+					//TODO: Performance improvement
+					var ret=System.Web.HttpUtility.HtmlDecode("&"+charEntity+";");
+
+					ch = ret[0];
+
+					return "&"+charEntity+";";
                 default:
                     OnError(Line, Col, String.Format("Unexpected escape sequence : {0}", c));
                     ch = '\0';
@@ -1159,13 +1203,13 @@ namespace D_Parser
             char ch = (char)nextChar;
             char chValue = ch;
             string escapeSequence = String.Empty;
+			string surrogatePair=null;
             if (ch == '\\')
             {
-                string surrogatePair;
                 escapeSequence = ReadEscapeSequence(out chValue, out surrogatePair);
                 if (surrogatePair != null)
                 {
-                    OnError(y, x, String.Format("The unicode character must be represented by a surrogate pair and does not fit into a System.Char"));
+					// Although we'll pass back a string as literal value, it's originally handled as char literal!
                 }
             }
 
@@ -1176,7 +1220,7 @@ namespace D_Parser
                     OnError(y, x, String.Format("Char not terminated"));
                 }
             }
-            return new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + 1, y), "'" + ch + escapeSequence + "'", chValue, LiteralFormat.CharLiteral);
+            return new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + 1, y), "'" + ch + escapeSequence + "'", string.IsNullOrEmpty(surrogatePair)?(object)chValue:surrogatePair, LiteralFormat.CharLiteral);
         }
 
         DToken ReadOperator(char ch)

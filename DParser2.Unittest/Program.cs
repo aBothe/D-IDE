@@ -17,13 +17,13 @@ namespace ParserTests
         public static void Main(string[] args)
         {
             var Files = new Dictionary<string, string>();
-            int a = 0; // 0 - Read 1 file; 1 - Read all files; 2 - no action
+            int a = 2; // 0 - Read 1 file; 1 - Read all files; 2 - no action
             int b = a>1?1:0; // 0 - Parse file(s); 1 - Parse specific text only
 
             if (a == 0)
                 Files.Add("abc", File.ReadAllText(
 					//dmdDir+"\\src\\phobos\\std\\path.d"
-					@"D:\dmd2\src\phobos\std\array.d"
+					@"D:\dmd2\src\phobos\std\utf.d"
 					));
             else if(a==1)
             {
@@ -59,9 +59,9 @@ namespace ParserTests
             }
             else if(b==1)
             {
-                var n = DParser.ParseExpression(
+				var n = DParser.ParseExpression(
 @"
-(cast(void[])a).length;
+cast(uint) (Clock.currSystemTick().length ^ rand.front);
 ");
 				//printErrors(n);Dump(n,"");
 

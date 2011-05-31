@@ -314,7 +314,7 @@ namespace D_Parser
 			{ Step(); return true; }
 			else
 			{
-				SynErr(n, DTokens.GetTokenString(n) + " expected!");
+				SynErr(n, DTokens.GetTokenString(n) + " expected, "+DTokens.GetTokenString(la.Kind)+" found!");
 			}
             return false;
         }
