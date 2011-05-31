@@ -263,7 +263,21 @@ namespace D_Parser
 
 		public override string ToString(bool Attributes, bool IncludePath)
         {
-            var ret = (Attributes? (AttributeString + " "):"") + DTokens.GetTokenString(ClassType) + " " + base.ToString(false,IncludePath);
+            var ret = (Attributes? (AttributeString + " "):"") + DTokens.GetTokenString(ClassType) + " ";
+
+			if (IncludePath)
+				ret += GetNodePath(this, true);
+			else
+				ret += Name;
+
+			if (TemplateParameters != null && TemplateParameters.Length>0)
+			{
+				ret += "(";
+				foreach (var tp in TemplateParameters)
+					ret += tp.ToString()+",";
+				ret = ret.TrimEnd(',')+")";
+			}
+
             if (BaseClasses.Count > 0)
                 ret += ":";
             foreach (var c in BaseClasses)
@@ -277,7 +291,7 @@ namespace D_Parser
     {
 		public override string ToString(bool Attributes, bool IncludePath)
         {
-			return (Attributes ? (AttributeString + " ") : "") + "enum " + base.ToString(false, IncludePath);
+			return (Attributes ? (AttributeString + " ") : "") + "enum " + (IncludePath?GetNodePath(this,true):Name);
         }
     }
 

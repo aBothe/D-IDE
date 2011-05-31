@@ -84,8 +84,10 @@ namespace D_Parser.Core
 				s += Type.ToString() + " ";
 
 			// Path + Name
-			if(IncludePath)
-				s += GetNodePath(this,true);
+			if (IncludePath)
+				s += GetNodePath(this, true);
+			else
+				s += Name;
 
 			return s.Trim();
 		}

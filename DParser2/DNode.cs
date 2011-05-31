@@ -78,7 +78,7 @@ namespace D_Parser
             // Template parameters
             if (TemplateParameters!=null && TemplateParameters.Length > 0)
             {
-				if (this is DVariable || this is DMethod)
+				if (this is DVariable)
 					s += '!';
 
                 s += "(";
