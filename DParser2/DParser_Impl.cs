@@ -1000,7 +1000,7 @@ namespace D_Parser
 
 				td = Declarator2();
 				
-				if (AllowWeakTypeParsing && (td == null||(t.Kind==OpenParenthesis && la.Kind==CloseParenthesis /* -- means if an argumentless function call has been made, return null because this would be an expression */)|| la.Kind!=CloseParenthesis))
+				if (AllowWeakTypeParsing && (td == null||(t.Kind==OpenParenthesis && la.Kind==CloseParenthesis) /* -- means if an argumentless function call has been made, return null because this would be an expression */|| la.Kind!=CloseParenthesis))
 					return null;
 
 				Expect(CloseParenthesis);
@@ -1679,7 +1679,7 @@ namespace D_Parser
 
 				AllowWeakTypeParsing = false;
 
-				if (td!=null && la.Kind == CloseParenthesis && Peek(1).Kind == Dot && Peek(2).Kind == Identifier)
+				if (td!=null && t.Kind!=OpenParenthesis && la.Kind == CloseParenthesis && Peek(1).Kind == Dot && Peek(2).Kind == Identifier)
 				{
 					Step();
 					Step();
@@ -2947,18 +2947,31 @@ namespace D_Parser
 		{
 			Expect(Class);
 
-			IBlockNode dc = new DClassLike(Class);
-			ApplyAttributes(dc as DNode);
+			var dc = new DClassLike(Class);
+			ApplyAttributes(dc);
 			dc.StartLocation = t.Location;
 
 			Expect(Identifier);
 			dc.Name = t.Value;
 
 			if (la.Kind == (OpenParenthesis))
-				(dc as DNode).TemplateParameters = TemplateParameterList();
+			{
+				dc.TemplateParameters = TemplateParameterList(true);
+
+				// Constraints
+				if (la.Kind == If)
+				{
+					Step();
+					Expect(OpenParenthesis);
+
+					dc.Constraint = Expression();
+
+					Expect(CloseParenthesis);
+				}
+			}
 
 			if (la.Kind == (Colon))
-				(dc as DClassLike).BaseClasses = BaseClassList();
+				dc.BaseClasses = BaseClassList();
 
 			ClassBody(dc);
 

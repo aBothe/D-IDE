@@ -17,7 +17,7 @@ namespace ParserTests
         public static void Main(string[] args)
         {
             var Files = new Dictionary<string, string>();
-            int a = 2; // 0 - Read 1 file; 1 - Read all files; 2 - no action
+            int a = 1; // 0 - Read 1 file; 1 - Read all files; 2 - no action
             int b = a>1?1:0; // 0 - Parse file(s); 1 - Parse specific text only
 
             if (a == 0)
@@ -52,7 +52,7 @@ namespace ParserTests
                     i++;
                     var n = DParser.ParseString(Files[file], false);
 
-					printErrors(n);
+					//printErrors(n);
                 }
                 hp.Stop();
                 Console.WriteLine(hp.Duration + "s");
