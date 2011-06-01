@@ -6,37 +6,28 @@ namespace D_Parser.Core
 {
 	public abstract class AbstractTypeDeclaration:ITypeDeclaration
 	{
-		private ITypeDeclaration _Base;
-		public new abstract string ToString();
-
-		public ITypeDeclaration MostBasic
+		public ITypeDeclaration InnerMost
 		{
 			get
 			{ 
-				if (Base == null) 
+				if (InnerDeclaration == null) 
 					return this; 
 				else 
-					return Base.MostBasic; 
+					return InnerDeclaration.InnerMost; 
 			}
 			set
 			{
-				if (Base == null)
-					Base = value; 
+				if (InnerDeclaration == null)
+					InnerDeclaration = value; 
 				else 
-					Base.MostBasic = value;
+					InnerDeclaration.InnerMost = value;
 			}
 		}
 
-		public ITypeDeclaration Base
+		public ITypeDeclaration InnerDeclaration
 		{
-			get
-			{
-				return _Base;
-			}
-			set
-			{
-				_Base = value;
-			}
+			get;
+			set;
 		}
 	}
 }

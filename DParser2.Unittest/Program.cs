@@ -60,14 +60,11 @@ namespace ParserTests
             }
             else if(b==1)
             {
-				var n = DParser.ParseString(
+				var n = DParser.ParseExpression(
 @"
-class A
-{
-	int foo();
-}
+cast(
 ");
-				printErrors(n);Dump(n,"");
+				//printErrors(n);Dump(n,"");
 
 				Console.WriteLine(n.ToString());
 				

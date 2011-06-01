@@ -18,7 +18,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return Expression.ToString();
+			return (InnerDeclaration!=null?InnerDeclaration.ToString():"")+Expression.ToString();
 		}
 	}
 
@@ -460,7 +460,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			var ret = PostfixForeExpression.ToString() + "[";
+			var ret = (PostfixForeExpression!=null? PostfixForeExpression.ToString():"") + "[";
 
 			if (Arguments != null)
 				foreach (var a in Arguments)
@@ -798,6 +798,12 @@ namespace D_Parser
 
 		public IExpression SpecializationExpression;
 		public IExpression DefaultExpression;
+
+		public override string ToString()
+		{
+			return Type.ToString()+" "+Name/*+ (SpecializationExpression!=null?(":"+SpecializationExpression.ToString()):"")+
+				(DefaultExpression!=null?("="+DefaultExpression.ToString()):"")*/;
+		}
 	}
 
 	public class TemplateAliasParameter : TemplateValueParameter

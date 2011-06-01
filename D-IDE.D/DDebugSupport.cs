@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using D_IDE.Core;
 using DebugEngineWrapper;
 using D_Parser.Core;
+using D_Parser.Resolver;
 using D_Parser;
 using System.Runtime.InteropServices;
 

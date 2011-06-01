@@ -4,7 +4,7 @@ using System.Text;
 using D_Parser.Core;
 using System.IO;
 
-namespace D_Parser
+namespace D_Parser.Resolver
 {
 	/// <summary>
 	/// Generic class for resolve module relations and/or declarations
@@ -186,7 +186,7 @@ namespace D_Parser
 					ret.AddRange(dm.Parameters);
 
 					if (dm.TemplateParameters != null)
-						ret.AddRange(dm.TemplateParameters as IEnumerable<INode>);
+						ret.AddRange(dm.TemplateParameterNodes as IEnumerable<INode>);
 
 					foreach (var n in dm)
 						if (!(n is DStatementBlock))
@@ -623,7 +623,7 @@ namespace D_Parser
 			//HACK: Scan the type declaration list for any NormalDeclarations
 			var td = IdentifierList;
 			while (td != null && !(td is NormalDeclaration))
-				td = td.Base;
+				td = td.InnerDeclaration;
 
 			var baseTypes = new List<INode>();
 

@@ -66,9 +66,9 @@ namespace D_Parser.Core
 
 	public interface ITypeDeclaration
 	{
-		ITypeDeclaration Base { get; set; }
+		ITypeDeclaration InnerDeclaration { get; set; }
 		string ToString();
 
-		ITypeDeclaration MostBasic { get; set; }
+		ITypeDeclaration InnerMost { get; set; }
 	}
 }

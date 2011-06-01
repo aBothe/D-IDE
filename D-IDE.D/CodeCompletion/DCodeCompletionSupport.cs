@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using D_IDE.Core;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using D_Parser.Core;
 using D_Parser;
-using D_IDE.D.CodeCompletion;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
+using D_Parser.Resolver;
 
 namespace D_IDE.D
 {

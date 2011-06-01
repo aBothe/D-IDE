@@ -537,7 +537,7 @@ namespace D_Parser
 			if (firstNode.Type == null)
 				firstNode.Type = ttd;
 			else
-				firstNode.Type.MostBasic = ttd;
+				firstNode.Type.InnerMost = ttd;
 
 			ApplyAttributes(firstNode as DNode);
 
@@ -650,7 +650,7 @@ namespace D_Parser
 			if (td == null)
 				td = IdentifierList() as ITypeDeclaration;
 			else
-				td.MostBasic = IdentifierList() as ITypeDeclaration;
+				td.InnerMost = IdentifierList() as ITypeDeclaration;
 
 			return td;
 		}
@@ -741,7 +741,7 @@ namespace D_Parser
 			while (IsBasicType2())
 			{
 				if (ret.Type == null) ret.Type = BasicType2();
-				else { ttd = BasicType2(); ttd.Base = ret.Type; ret.Type = ttd; }
+				else { ttd = BasicType2(); ttd.InnerDeclaration = ret.Type; ret.Type = ttd; }
 			}
 			/*
 			 * Add some syntax possibilities here
@@ -765,7 +765,7 @@ namespace D_Parser
 					if (cd.KeyType == null) cd.KeyType = ttd;
 					else
 					{
-						ttd.Base = cd.KeyType;
+						ttd.InnerDeclaration = cd.KeyType;
 						cd.KeyType = ttd;
 					}
 				}
@@ -800,7 +800,7 @@ namespace D_Parser
 							if (cd.KeyType == null) cd.KeyType = ttd;
 							else
 							{
-								ttd.Base = cd.KeyType;
+								ttd.InnerDeclaration = cd.KeyType;
 								cd.KeyType = ttd;
 							}
 						}
@@ -825,7 +825,7 @@ namespace D_Parser
 				ttd = DeclaratorSuffixes(out (ret as DNode).TemplateParameters, out _Parameters);
 				if (ttd != null)
 				{
-					ttd.Base = ret.Type;
+					ttd.InnerDeclaration = ret.Type;
 					ret.Type = ttd;
 				}
 
@@ -971,7 +971,7 @@ namespace D_Parser
 				var ttd = Declarator2();
 				if (ttd != null)
 				{
-					ttd.Base = td;
+					ttd.InnerDeclaration = td;
 					td = ttd;
 				}
 			}
@@ -1020,7 +1020,7 @@ namespace D_Parser
 				var ttd = BasicType2();
 				if (AllowWeakTypeParsing && ttd == null)
 					return null;
-				ttd.Base = td;
+				ttd.InnerDeclaration = td;
 				td = ttd;
 			}
 
@@ -1109,7 +1109,7 @@ namespace D_Parser
 			if (ret.Type == null)
 				ret.Type = td;
 			else
-				ret.Type.Base = td;
+				ret.Type.InnerDeclaration = td;
 
 			// DefaultInitializerExpression
 			if (la.Kind == (Assign))
@@ -2354,7 +2354,7 @@ namespace D_Parser
 				if (n.Type == null)
 					n.Type = tp;
 				else
-					n.Type.MostBasic = tp;
+					n.Type.InnerMost = tp;
 
 				// Initializer is optional
 				if (la.Kind == Assign)
@@ -3473,7 +3473,7 @@ namespace D_Parser
 			if (tv.Type == null)
 				tv.Type = bt;
 			else
-				tv.Type.Base = bt;
+				tv.Type.InnerDeclaration = bt;
 
 			if (la.Kind == (Colon))
 			{

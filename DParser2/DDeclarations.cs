@@ -18,7 +18,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Name + (Base != null ? (" " + Base.ToString()) : "");
+            return Name + (InnerDeclaration != null ? (" " + InnerDeclaration.ToString()) : "");
         }
     }
 
@@ -38,7 +38,7 @@ namespace D_Parser
         public DTokenDeclaration(int p, ITypeDeclaration td)
         {
             Token = p;
-            Base = td;
+            InnerDeclaration = td;
         }
 
         public new string Name
@@ -49,7 +49,7 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return Name + (Base != null ? (" " + Base.ToString()) : "");
+            return Name + (InnerDeclaration != null ? (" " + InnerDeclaration.ToString()) : "");
         }
     }
 
@@ -63,8 +63,8 @@ namespace D_Parser
         /// </summary>
         public ITypeDeclaration ValueType
         {
-            get { return Base; }
-            set { Base = value; }
+            get { return InnerDeclaration; }
+            set { InnerDeclaration = value; }
         }
         public ITypeDeclaration KeyType;
         public enum ClampType
@@ -119,8 +119,8 @@ namespace D_Parser
     {
         public ITypeDeclaration ReturnType
         {
-            get { return Base; }
-            set { Base = value; }
+            get { return InnerDeclaration; }
+            set { InnerDeclaration = value; }
         }
         /// <summary>
         /// Is it a function(), not a delegate() ?
@@ -157,11 +157,11 @@ namespace D_Parser
     public class PointerDecl : AbstractTypeDeclaration
     {
         public PointerDecl() { }
-        public PointerDecl(ITypeDeclaration BaseType) { Base = BaseType; }
+        public PointerDecl(ITypeDeclaration BaseType) { InnerDeclaration = BaseType; }
 
         public override string ToString()
         {
-            return (Base != null ? Base.ToString() : "") + "*";
+            return (InnerDeclaration != null ? InnerDeclaration.ToString() : "") + "*";
         }
     }
 
@@ -186,18 +186,18 @@ namespace D_Parser
 
         public override string ToString()
         {
-            return (Base != null ? (Base.ToString()+" ") : "") +Name + "(" + (InnerType != null ? InnerType.ToString() : "") + ")";
+            return (InnerDeclaration != null ? (InnerDeclaration.ToString()+" ") : "") +Name + "(" + (InnerType != null ? InnerType.ToString() : "") + ")";
         }
     }
 
     public class VarArgDecl : AbstractTypeDeclaration
     {
         public VarArgDecl() { }
-        public VarArgDecl(ITypeDeclaration BaseIdentifier) { Base = BaseIdentifier; }
+        public VarArgDecl(ITypeDeclaration BaseIdentifier) { InnerDeclaration = BaseIdentifier; }
 
         public override string ToString()
         {
-            return (Base != null ? Base.ToString() : "") + "...";
+            return (InnerDeclaration != null ? InnerDeclaration.ToString() : "") + "...";
         }
     }
 
@@ -211,13 +211,13 @@ namespace D_Parser
         public ITypeDeclaration InheritedInterface;
 
         public InheritanceDecl() { }
-        public InheritanceDecl(ITypeDeclaration Base) { this.Base = Base; }
+        public InheritanceDecl(ITypeDeclaration Base) { this.InnerDeclaration = Base; }
 
         public override string ToString()
         {
             string ret = "";
 
-            if (Base != null) ret += Base.ToString();
+            if (InnerDeclaration != null) ret += InnerDeclaration.ToString();
 
             if (InheritedClass != null || InheritedInterface != null) ret += ":";
             if (InheritedClass != null) ret += InheritedClass.ToString();
@@ -238,12 +238,12 @@ namespace D_Parser
         public TemplateDecl() { }
         public TemplateDecl(ITypeDeclaration Base)
         {
-            this.Base = Base;
+            this.InnerDeclaration = Base;
         }
 
         public override string ToString()
         {
-            string s = (Base != null ? Base.ToString() : "").ToString() + "!(";
+            string s = (InnerDeclaration != null ? InnerDeclaration.ToString() : "").ToString() + "!(";
 
             foreach (var t in Template)
                 s += t.ToString()+",";

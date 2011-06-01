@@ -62,7 +62,7 @@ namespace D_Parser
             while (p.IsBasicType2())
             {
                 var bt2 = p.BasicType2();
-                bt2.MostBasic = bt;
+                bt2.InnerMost = bt;
                 bt = bt2;
             }
             return bt;
