@@ -1134,7 +1134,7 @@ namespace D_Parser
 			if (la.Kind == (Void))
 			{
 				Step();
-				return new VoidInitializer();
+				return new VoidInitializer() { Location=t.Location,EndLocation=t.EndLocation};
 			}
 
 			return NonVoidInitializer();
@@ -1148,7 +1148,7 @@ namespace D_Parser
 				Step();
 
 				// ArrayMemberInitializations
-				var ae = new ArrayInitializer();
+				var ae = new ArrayInitializer() { Location=t.Location};
 				var inits=new List<ArrayMemberInitializer>();
 
 				bool IsInit = true;
@@ -1181,6 +1181,7 @@ namespace D_Parser
 				ae.ArrayMemberInitializations = inits.ToArray();
 
 				Expect(CloseSquareBracket);
+				ae.EndLocation = t.EndLocation;
 
 				// auto i=[1,2,3].idup; // in this case, this entire thing is meant to be an AssignExpression but not a dedicated initializer..
 				if (la.Kind == Dot)
@@ -1190,6 +1191,7 @@ namespace D_Parser
 					var ae2 = new PostfixExpression_Access();
 					ae2.PostfixForeExpression = ae;
 					ae2.TemplateOrIdentifier = Type(); //TODO: Is it really a type!?
+					ae2.EndLocation = t.EndLocation;
 
 					return ae2;
 				}
@@ -1202,7 +1204,7 @@ namespace D_Parser
 			if(la.Kind==OpenCurlyBrace)
 			{
 				// StructMemberInitializations
-				var ae = new StructInitializer();
+				var ae = new StructInitializer() { Location=la.Location};
 				var inits=new List<StructMemberInitializer>();
 
 				bool IsInit = true;
@@ -1233,7 +1235,7 @@ namespace D_Parser
 				ae.StructMemberInitializers = inits.ToArray();
 
 				Expect(CloseCurlyBrace);
-
+				ae.EndLocation = t.EndLocation;
 				return ae;
 			}
 
@@ -1664,6 +1666,8 @@ namespace D_Parser
 						break;
 				}
 
+				ae.Location = t.Location;
+
 				ae.UnaryExpression = UnaryExpression();
 
 				return ae;
@@ -1679,12 +1683,18 @@ namespace D_Parser
 
 				AllowWeakTypeParsing = false;
 
-				if (td!=null && t.Kind!=OpenParenthesis && la.Kind == CloseParenthesis && Peek(1).Kind == Dot && Peek(2).Kind == Identifier)
+				if (td!=null && ((t.Kind!=OpenParenthesis && la.Kind == CloseParenthesis && Peek(1).Kind == Dot && Peek(2).Kind == Identifier) || IsEOF))
 				{
-					Step();
-					Step();
+					Step();  // Skip to )
+					Step();  // Skip to .
+					Step();  // Skip to identifier
 
 					var accExpr = new UnaryExpression_Type() { Type=td, AccessIdentifier=t.Value };
+
+					accExpr.Location = curLA.Location;
+					accExpr.EndLocation = t.EndLocation;
+
+					return accExpr;
 				}
 				else
 				{
@@ -1698,6 +1708,7 @@ namespace D_Parser
 			if (la.Kind == (Cast))
 			{
 				Step();
+				var startLoc = t.Location;
 				Expect(OpenParenthesis);
 				ITypeDeclaration castType = null;
 				if (la.Kind != CloseParenthesis) // Yes, it is possible that a cast() can contain an empty type!
@@ -1707,6 +1718,10 @@ namespace D_Parser
 				var ae = new CastExpression();
 				ae.Type = castType;
 				ae.UnaryExpression = UnaryExpression();
+
+				ae.Location = startLoc;
+				ae.EndLocation = t.EndLocation;
+
 				return ae;
 			}
 
@@ -1738,6 +1753,7 @@ namespace D_Parser
 		IExpression NewExpression()
 		{
 			Expect(New);
+			var startLoc = t.Location;
 
 			IExpression[] newArgs = null;
 			// NewArguments
@@ -1797,6 +1813,9 @@ namespace D_Parser
 
 				ac.AnonymousClass = anclass;
 
+				ac.Location = startLoc;
+				ac.EndLocation = t.EndLocation;
+
 				return ac;
 			}
 
@@ -1807,7 +1826,8 @@ namespace D_Parser
 				{
 					NewArguments = newArgs,
 					Type = BasicType(),
-					IsArrayArgument = la.Kind == OpenSquareBracket
+					IsArrayArgument = la.Kind == OpenSquareBracket,
+					Location=startLoc
 				};
 
 				var args = new List<IExpression>();
@@ -1828,6 +1848,8 @@ namespace D_Parser
 				}
 
 				initExpr.Arguments = args.ToArray();
+
+				initExpr.EndLocation = t.EndLocation;
 				return initExpr;
 			}
 		}
@@ -1865,11 +1887,15 @@ namespace D_Parser
 						e.NewExpression = NewExpression();
 					else
 						e.TemplateOrIdentifier = TemplateInstance();
+
+					e.EndLocation = t.EndLocation;
 				}
 				else if (la.Kind == (Increment) || la.Kind == (Decrement))
 				{
 					Step();
 					var e = t.Kind == Increment ? (PostfixExpression)new PostfixExpression_Increment() : new PostfixExpression_Decrement();
+
+					e.EndLocation = t.EndLocation;					
 					e.PostfixForeExpression = leftExpr;
 					leftExpr = e;
 				}
@@ -1885,6 +1911,7 @@ namespace D_Parser
 					if (la.Kind != (CloseParenthesis))
 						ae.Arguments = ArgumentList().ToArray();
 					Step();
+					ae.EndLocation = t.EndLocation;
 				}
 
 				// IndexExpression | SliceExpression
@@ -1934,6 +1961,7 @@ namespace D_Parser
 					}
 
 					Expect(CloseSquareBracket);
+					(leftExpr as PostfixExpression).EndLocation = t.EndLocation;
 				}
 				else break;
 			}
@@ -1944,45 +1972,69 @@ namespace D_Parser
 		IExpression PrimaryExpression()
 		{
 			bool isModuleScoped = false;
-			// For minimizing possible overhead, skip 'useless' tokens like an initial dot
+			// For minimizing possible overhead, skip 'useless' tokens like an initial dot <<< TODO
 			if (isModuleScoped= la.Kind == Dot)
 				Step();
 
 			if (la.Kind == __FILE__ || la.Kind == __LINE__)
 			{
 				Step();
-				return new IdentifierExpression(t.Kind == __FILE__ ? doc.FileName : (object)t.line);
+				return new IdentifierExpression(t.Kind == __FILE__ ? doc.FileName : (object)t.line)
+				{
+					Location=t.Location,
+					EndLocation=t.EndLocation
+				};
 			}
 
 			// Dollar (== Array length expression)
 			if (la.Kind == Dollar)
 			{
 				Step();
-				return new TokenExpression(la.Kind);
+				return new TokenExpression(la.Kind)
+				{
+					Location = t.Location,
+					EndLocation = t.EndLocation
+				};
 			}
 
 			// TemplateInstance
 			if (la.Kind == (Identifier) && Lexer.CurrentPeekToken.Kind == (Not) && (Peek().Kind != Is && Lexer.CurrentPeekToken.Kind != In) /* Very important: The 'template' could be a '!is' expression - With two tokens! */)
-				return new TypeDeclarationExpression(TemplateInstance());
+			{
+				var startLoc = la.Location;
+				return new TypeDeclarationExpression(TemplateInstance())
+				{
+					Location=startLoc,
+					EndLocation=t.EndLocation
+				};
+			}
 
 			// Identifier
 			if (la.Kind == (Identifier))
 			{
 				Step();
-				return new IdentifierExpression(t.Value);
+				return new IdentifierExpression(t.Value)
+				{
+					Location = t.Location,
+					EndLocation = t.EndLocation
+				};
 			}
 
 			// SpecialTokens (this,super,null,true,false,$) // $ has been handled before
 			if (la.Kind == (This) || la.Kind == (Super) || la.Kind == (Null) || la.Kind == (True) || la.Kind == (False))
 			{
 				Step();
-				return new TokenExpression(t.Kind);
+				return new TokenExpression(t.Kind)
+				{
+					Location = t.Location,
+					EndLocation = t.EndLocation
+				};
 			}
 
 			#region Literal
 			if (la.Kind == Literal)
 			{
 				Step();
+				var startLoc = t.Location;
 
 				// Concatenate multiple string literals here
 				if (t.LiteralFormat == LiteralFormat.StringLiteral || t.LiteralFormat == LiteralFormat.VerbatimStringLiteral)
@@ -1993,11 +2045,11 @@ namespace D_Parser
 						Step();
 						a += la.LiteralValue as string;
 					}
-					return new IdentifierExpression(a);
+					return new IdentifierExpression(a) { Location=startLoc,EndLocation=t.EndLocation};
 				}
 				else if (t.LiteralFormat == LiteralFormat.CharLiteral)
-					return new IdentifierExpression(t.LiteralValue);
-				return new IdentifierExpression(t.LiteralValue);
+					return new IdentifierExpression(t.LiteralValue) { Location = startLoc, EndLocation = t.EndLocation };
+				return new IdentifierExpression(t.LiteralValue) { Location = startLoc, EndLocation = t.EndLocation };
 			}
 			#endregion
 
@@ -2005,12 +2057,13 @@ namespace D_Parser
 			if (la.Kind == (OpenSquareBracket))
 			{
 				Step();
+				var startLoc = t.Location;
 
-				// Empty literal
+				// Empty array literal
 				if (la.Kind == CloseSquareBracket)
 				{
 					Step();
-					return new ArrayLiteralExpression();
+					return new ArrayLiteralExpression() {Location=startLoc, EndLocation = t.EndLocation };
 				}
 
 				var firstExpression = AssignExpression();
@@ -2020,7 +2073,7 @@ namespace D_Parser
 				{
 					Step();
 
-					var ae = new AssocArrayExpression();
+					var ae = new AssocArrayExpression() { Location=startLoc};
 
 					var firstValueExpression = AssignExpression();
 
@@ -2037,11 +2090,12 @@ namespace D_Parser
 					}
 
 					Expect(CloseSquareBracket);
+					ae.EndLocation = t.EndLocation;
 					return ae;
 				}
 				else // Normal array literal
 				{
-					var ae = new ArrayLiteralExpression();
+					var ae = new ArrayLiteralExpression() { Location=startLoc};
 					var expressions = new List<IExpression>();
 					expressions.Add(firstExpression);
 
@@ -2056,6 +2110,7 @@ namespace D_Parser
 					ae.Expressions = expressions;
 
 					Expect(CloseSquareBracket);
+					ae.EndLocation = t.EndLocation;
 					return ae;
 				}
 			}
@@ -2064,7 +2119,7 @@ namespace D_Parser
 			#region FunctionLiteral
 			if (la.Kind == Delegate || la.Kind == Function || la.Kind == OpenCurlyBrace || (la.Kind == OpenParenthesis && IsFunctionLiteral()))
 			{
-				var fl = new FunctionLiteral();
+				var fl = new FunctionLiteral() { Location=la.Location};
 
 				if (la.Kind == Delegate || la.Kind == Function)
 				{
@@ -2094,7 +2149,10 @@ namespace D_Parser
 					if (la.Kind == OpenParenthesis)
 						fl.AnonymousMethod.Parameters = Parameters(fl.AnonymousMethod);
 				}
+
 				FunctionBody(fl.AnonymousMethod);
+
+				fl.EndLocation = t.EndLocation;
 				return fl;
 			}
 			#endregion
@@ -2103,8 +2161,9 @@ namespace D_Parser
 			if (la.Kind == (Assert))
 			{
 				Step();
+				var startLoc = t.Location;
 				Expect(OpenParenthesis);
-				var ce = new AssertExpression();
+				var ce = new AssertExpression() { Location=startLoc};
 
 				var exprs = new List<IExpression>();
 				exprs.Add(AssignExpression());
@@ -2116,6 +2175,7 @@ namespace D_Parser
 				}
 				ce.AssignExpressions = exprs.ToArray();
 				Expect(CloseParenthesis);
+				ce.EndLocation = t.EndLocation;
 				return ce;
 			}
 			#endregion
@@ -2124,37 +2184,45 @@ namespace D_Parser
 			if (la.Kind == Mixin)
 			{
 				Step();
+				var e = new MixinExpression() { Location=t.Location};
 				Expect(OpenParenthesis);
 
-				var e = new MixinExpression();
+				
 				e.AssignExpression = AssignExpression();
 
 				Expect(CloseParenthesis);
+				e.EndLocation = t.EndLocation;
 				return e;
 			}
 
 			if (la.Kind == Import)
 			{
 				Step();
+				var e = new ImportExpression() { Location=t.Location};
 				Expect(OpenParenthesis);
 
-				var e = new ImportExpression();
+				
 				e.AssignExpression = AssignExpression();
 
 				Expect(CloseParenthesis);
+				e.EndLocation = t.EndLocation;
 				return e;
 			}
 			#endregion
 
 			if (la.Kind == (Typeof))
-				return new TypeDeclarationExpression(TypeOf());
+			{
+				var startLoc = la.Location;
+				return new TypeDeclarationExpression(TypeOf()) {Location=startLoc,EndLocation=t.EndLocation};
+			}
 
 			// TypeidExpression
 			if (la.Kind == (Typeid))
 			{
 				Step();
+				var ce = new TypeidExpression() { Location=t.Location};
 				Expect(OpenParenthesis);
-				var ce = new TypeidExpression();
+				
 
 				AllowWeakTypeParsing = true;
 				ce.Type = Type();
@@ -2164,6 +2232,7 @@ namespace D_Parser
 					ce.Expression = AssignExpression();
 
 				Expect(CloseParenthesis);
+				ce.EndLocation = t.EndLocation;
 				return ce;
 			}
 
@@ -2171,8 +2240,8 @@ namespace D_Parser
 			if (la.Kind == Is)
 			{
 				Step();
+				var ce = new IsExpression() { Location=t.Location};
 				Expect(OpenParenthesis);
-				var ce = new IsExpression();
 
 				AllowWeakTypeParsing = true;
 				ce.Type = Type();
@@ -2185,6 +2254,7 @@ namespace D_Parser
 				if (la.Kind == CloseParenthesis)
 				{
 					Step();
+					ce.EndLocation = t.EndLocation;
 					return ce;
 				}
 
@@ -2202,6 +2272,7 @@ namespace D_Parser
 				else if (la.Kind == CloseParenthesis)
 				{
 					Step();
+					ce.EndLocation = t.EndLocation;
 					return ce;
 				}
 
@@ -2240,6 +2311,7 @@ namespace D_Parser
 				}
 
 				Expect(CloseParenthesis);
+				ce.EndLocation = t.EndLocation;
 				return ce;
 			}
 			#endregion
@@ -2248,8 +2320,9 @@ namespace D_Parser
 			if (la.Kind == OpenParenthesis)
 			{
 				Step();
-				var ret = new SurroundingParenthesesExpression() { Expression = Expression() };
+				var ret = new SurroundingParenthesesExpression() {Location=t.Location, Expression = Expression() };
 				Expect(CloseParenthesis);
+				ret.EndLocation = t.EndLocation;
 				return ret;
 			}
 
@@ -2261,6 +2334,7 @@ namespace D_Parser
 			if (la.Kind == (Const) || la.Kind == (Immutable) || la.Kind == (Shared) || la.Kind == (InOut) || BasicTypes[la.Kind])
 			{
 				Step();
+				var startLoc = t.Location;
 				IExpression left = null;
 				if (!BasicTypes[t.Kind])
 				{
@@ -2269,27 +2343,28 @@ namespace D_Parser
 					if (la.Kind != OpenParenthesis)
 					{
 						var mttd = new MemberFunctionAttributeDecl(tk);
-						mttd.InnerType=Type();
-						left = new TypeDeclarationExpression(mttd);
+						mttd.InnerType = Type();
+						left = new TypeDeclarationExpression(mttd) { Location = startLoc, EndLocation = t.EndLocation };
 					}
 					else
 					{
 						Expect(OpenParenthesis);
 						var mttd = new MemberFunctionAttributeDecl(tk);
 						mttd.InnerType = Type();
-						left = new TypeDeclarationExpression(mttd);
 						Expect(CloseParenthesis);
+						left = new TypeDeclarationExpression(mttd) { Location = startLoc, EndLocation = t.EndLocation };
 					}
 				}
 				else
-					left = new TokenExpression(t.Kind);
+					left = new TokenExpression(t.Kind) {Location=startLoc,EndLocation=t.EndLocation };
 
 				if (la.Kind == (Dot) && Peek(1).Kind==Identifier)
 				{
 					Step();
 					Step();
 
-					var meaex = new PostfixExpression_Access() { PostfixForeExpression=left, TemplateOrIdentifier=new NormalDeclaration(t.Value) };
+					var meaex = new PostfixExpression_Access() { PostfixForeExpression=left, 
+						TemplateOrIdentifier=new NormalDeclaration(t.Value),EndLocation=t.EndLocation };
 
 					return meaex;
 				}
@@ -2303,7 +2378,7 @@ namespace D_Parser
 			
 			SynErr(Identifier);
 			Step();
-			return new TokenExpression(t.Kind);
+			return new TokenExpression(t.Kind) { Location=t.Location,EndLocation=t.EndLocation};
 		}
 
 		bool IsFunctionLiteral()
@@ -3533,8 +3608,9 @@ namespace D_Parser
 		IExpression TraitsExpression()
 		{
 			Expect(__traits);
+			var ce = new TraitsExpression() { Location=t.Location};
 			Expect(OpenParenthesis);
-			var ce = new TraitsExpression();
+			
 
 			Expect(Identifier);
 			ce.Keyword = t.Value;
@@ -3551,6 +3627,7 @@ namespace D_Parser
 			}
 
 			Expect(CloseParenthesis);
+			ce.EndLocation = t.EndLocation;
 			return ce;
 		}
 		#endregion

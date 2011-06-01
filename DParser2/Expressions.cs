@@ -24,6 +24,8 @@ namespace D_Parser
 
 	public interface IExpression
 	{
+		CodeLocation Location { get; }
+		CodeLocation EndLocation { get; }
 	}
 
 	public abstract class OperatorBasedExpression : IExpression
@@ -35,6 +37,16 @@ namespace D_Parser
 		public override string ToString()
 		{
 			return LeftOperand.ToString() + DTokens.GetTokenString(OperatorToken) + (RightOperand!=null? RightOperand.ToString():"");
+		}
+
+		public CodeLocation Location
+		{
+			get { return LeftOperand.Location; }
+		}
+
+		public CodeLocation EndLocation
+		{
+			get { return RightOperand.EndLocation; }
 		}
 	}
 
@@ -64,6 +76,16 @@ namespace D_Parser
 		{
 			return Expressions.GetEnumerator();
 		}
+
+		public CodeLocation Location
+		{
+			get { return Expressions[0].Location; }
+		}
+
+		public CodeLocation EndLocation
+		{
+			get { return Expressions[Expressions.Count].EndLocation; }
+		}
 	}
 
 	public class AssignExpression : OperatorBasedExpression {
@@ -80,6 +102,16 @@ namespace D_Parser
 		public override string ToString()
 		{
 			return this.OrOrExpression.ToString() + "?" + TrueCaseExpression.ToString() + FalseCaseExpression.ToString();
+		}
+
+		public CodeLocation Location
+		{
+			get { return OrOrExpression.Location; }
+		}
+
+		public CodeLocation EndLocation
+		{
+			get { return FalseCaseExpression.EndLocation; }
 		}
 	}
 
@@ -178,6 +210,17 @@ namespace D_Parser
 		{
 			return DTokens.GetTokenString(ForeToken)+UnaryExpression.ToString();
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get { return UnaryExpression.EndLocation; }
+		}
 	}
 
 	public class UnaryExpression_And : SimpleUnaryExpression
@@ -256,6 +299,18 @@ namespace D_Parser
 		{
 			return "("+Type.ToString()+")."+AccessIdentifier;
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 
@@ -297,6 +352,18 @@ namespace D_Parser
 			ret = ret.TrimEnd(',') + (IsArrayArgument ? ']' : ')');
 
 			return ret;
+		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
@@ -348,6 +415,18 @@ namespace D_Parser
 
 			return ret;
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class DeleteExpression : SimpleUnaryExpression
@@ -391,11 +470,30 @@ namespace D_Parser
 
 			return ret;
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public abstract class PostfixExpression : IExpression
 	{
 		public IExpression PostfixForeExpression { get; set; }
+
+		public CodeLocation Location
+		{
+			get { return PostfixForeExpression.Location; }
+		}
+
+		public abstract CodeLocation EndLocation { get; set; }
 	}
 
 	/// <summary>
@@ -412,6 +510,12 @@ namespace D_Parser
 		{
 			return PostfixForeExpression.ToString()+"."+(TemplateOrIdentifier!=null?TemplateOrIdentifier.ToString():NewExpression.ToString());
 		}
+
+		public override CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class PostfixExpression_Increment : PostfixExpression
@@ -420,6 +524,12 @@ namespace D_Parser
 		{
 			return PostfixForeExpression.ToString()+"++";
 		}
+
+		public override CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class PostfixExpression_Decrement : PostfixExpression
@@ -427,6 +537,12 @@ namespace D_Parser
 		public override string ToString()
 		{
 			return PostfixForeExpression.ToString() + "--";
+		}
+
+		public override CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
@@ -448,6 +564,12 @@ namespace D_Parser
 
 			return ret.TrimEnd(',')+")";
 		}
+
+		public override CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	/// <summary>
@@ -468,8 +590,20 @@ namespace D_Parser
 
 			return ret.TrimEnd(',') + "]";
 		}
+
+		public override CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
+
+	/// <summary>
+	/// SliceExpression:
+	///		PostfixExpression [ ]
+	///		PostfixExpression [ AssignExpression .. AssignExpression ]
+	/// </summary>
 	public class PostfixExpression_Slice : PostfixExpression
 	{
 		public IExpression FromExpression;
@@ -489,6 +623,12 @@ namespace D_Parser
 				ret += ToExpression.ToString();
 
 			return ret + "]";
+		}
+
+		public override CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
@@ -517,6 +657,19 @@ namespace D_Parser
 						string.Empty :
 						Value.ToString()));
 		}
+
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class TokenExpression : PrimaryExpression
@@ -529,6 +682,18 @@ namespace D_Parser
 		public override string ToString()
 		{
 			return DParser.GetTokenString(Token);
+		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
@@ -552,6 +717,18 @@ namespace D_Parser
 		{
 			return Declaration != null ? Declaration.ToString() : "";
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	/// <summary>
@@ -574,6 +751,18 @@ namespace D_Parser
 			s = s.TrimEnd(' ', ',')+"]";
 			return s;
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class AssocArrayExpression : PrimaryExpression
@@ -587,6 +776,18 @@ namespace D_Parser
 				s += expr.Key.ToString()+":"+expr.Value.ToString() + ", ";
 			s = s.TrimEnd(' ', ',') + "]";
 			return s;
+		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
@@ -603,6 +804,18 @@ namespace D_Parser
 		{
 			return DTokens.GetTokenString(LiteralToken) + " " + AnonymousMethod.ToString();
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class AssertExpression : PrimaryExpression
@@ -618,6 +831,18 @@ namespace D_Parser
 
 			return ret.TrimEnd(',')+")";
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class MixinExpression : PrimaryExpression
@@ -627,6 +852,18 @@ namespace D_Parser
 		public override string ToString()
 		{
 			return "mixin(" + AssignExpression.ToString() + ")";
+		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
@@ -638,6 +875,18 @@ namespace D_Parser
 		{
 			return "import(" + AssignExpression.ToString() + ")";
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class TypeidExpression : PrimaryExpression
@@ -648,6 +897,18 @@ namespace D_Parser
 		public override string ToString()
 		{
 			return "typeid("+(Type!=null?Type.ToString():Expression.ToString())+")";
+		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
@@ -683,6 +944,18 @@ namespace D_Parser
 
 			return ret.TrimEnd(' ',',')+")";
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class TraitsExpression : PrimaryExpression
@@ -701,6 +974,18 @@ namespace D_Parser
 
 			return ret + ")";
 		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
 	public class TraitsArgument
@@ -711,6 +996,18 @@ namespace D_Parser
 		public override string ToString()
 		{
 			return Type!=null?Type.ToString():AssignExpression.ToString();
+		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
@@ -724,6 +1021,18 @@ namespace D_Parser
 		public override string ToString()
 		{
 			return "("+Expression.ToString()+")";
+		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
@@ -888,6 +1197,18 @@ namespace D_Parser
 					ret += i.ToString() + ",";
 
 			return ret.TrimEnd(',') + "}";
+		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
 		}
 	}
 
