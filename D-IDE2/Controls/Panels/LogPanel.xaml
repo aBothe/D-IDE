@@ -1,18 +1,19 @@
 ﻿<DockableContent x:Class="D_IDE.Controls.Panels.LogPanel"
         xmlns="clr-namespace:AvalonDock;assembly=AvalonDock"
+		xmlns:a="http://icsharpcode.net/sharpdevelop/avalonedit"
 		xmlns:w="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Log" Height="336" Width="711" HideOnClose="True">
 	<w:Grid>
 		<w:TabControl Name="MainTabs">
 			<w:TabItem Header="System" Name="tab_sys">
-				<w:TextBox Name="Text_Sys" IsReadOnly="True" VerticalScrollBarVisibility="Visible" IsReadOnlyCaretVisible="True" />
+				<a:TextEditor Name="Text_Sys" IsReadOnly="True" VerticalScrollBarVisibility="Visible" />
 			</w:TabItem>
 			<w:TabItem Header="Build" Name="tab_build" IsSelected="True">
-				<w:TextBox Name="Text_Build" IsReadOnly="True" VerticalScrollBarVisibility="Visible" IsReadOnlyCaretVisible="True" />
+				<a:TextEditor Name="Text_Build" IsReadOnly="True" VerticalScrollBarVisibility="Visible" />
 			</w:TabItem>
 			<w:TabItem Header="Output" Name="tab_output">
-				<w:TextBox Name="Text_Output" IsReadOnly="True" VerticalScrollBarVisibility="Visible" IsReadOnlyCaretVisible="True" />
+				<a:TextEditor Name="Text_Output" IsReadOnly="True" VerticalScrollBarVisibility="Visible" />
 			</w:TabItem>
 		</w:TabControl>
 	</w:Grid>

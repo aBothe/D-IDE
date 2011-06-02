@@ -15,9 +15,10 @@ namespace ParserTests
         public static string curFile = "";
         public static void Main(string[] args)
         {
-			var code = @"= (myType.aliasedType*).";
+			var code = @"(cast(char*)mc.str).sizeof";
 
-			ParseTests.TestExpressionStartFinder(code);
+			ParseTests.TestExpression(code);
+			//ParseTests.TestExpressionStartFinder(code);
 
             Console.Read();
             return;

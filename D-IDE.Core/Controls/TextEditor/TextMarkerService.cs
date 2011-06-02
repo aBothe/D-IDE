@@ -24,12 +24,21 @@ namespace D_IDE.Core.Controls.Editor
 		public readonly TextEditor Editor;
 		TextSegmentCollection<TextMarker> markers;
 		
+		/// <summary>
+		/// Initializes the marker service and registers itself with the codeEditor
+		/// </summary>
+		/// <param name="codeEditor"></param>
 		public TextMarkerService(TextEditor codeEditor)
 		{
 			if (codeEditor == null)
 				throw new ArgumentNullException("codeEditor");
 			this.Editor = codeEditor;
 			markers = new TextSegmentCollection<TextMarker>(Editor.Document);
+
+			var tv = Editor.TextArea.TextView;
+			tv.Services.AddService(typeof(TextMarkerService),this);
+			tv.LineTransformers.Add(this);
+			tv.BackgroundRenderers.Add(this);
 		}
 				
 		#region ITextMarkerService

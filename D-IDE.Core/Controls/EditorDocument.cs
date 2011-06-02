@@ -128,11 +128,7 @@ namespace D_IDE.Core
 			Editor.Document.LineCountChanged += new EventHandler(Document_LineCountChanged);
 
 			// Register Marker strategy
-			var tv = Editor.TextArea.TextView;
 			MarkerStrategy=new TextMarkerService(Editor);
-			tv.Services.AddService(typeof(TextMarkerService), MarkerStrategy);
-			tv.LineTransformers.Add(MarkerStrategy);
-			tv.BackgroundRenderers.Add(MarkerStrategy);
 
 			Editor.TextArea.MouseRightButtonDown += new System.Windows.Input.MouseButtonEventHandler(TextArea_MouseRightButtonDown);
 

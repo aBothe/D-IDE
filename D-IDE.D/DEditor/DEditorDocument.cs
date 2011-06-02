@@ -543,84 +543,94 @@ namespace D_IDE.D
 		/// </summary>
 		public void UpdateBlockCompletionData()
 		{
-			// Update highlit bracket offsets
-			if (DSettings.Instance.EnableMatchinBracketHighlighting)
-				CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, Editor.CaretOffset);
-			else
-				CurrentlyHighlitBrackets = null;
-
-
-			if (SyntaxTree == null)
+			try
 			{
-				lookup_Members.ItemsSource =lookup_Types.ItemsSource= null;
-				currentEnvCompletionData = null;
-				return;
-			}
+				// Update highlit bracket offsets
+				if (DSettings.Instance.EnableMatchinBracketHighlighting)
+					CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, Editor.CaretOffset);
+				else
+					CurrentlyHighlitBrackets = null;
 
-			var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation);
-			if (curBlock != lastSelectedBlock)
-			{
-				if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
-					blockCompletionDataOperation.Abort();
 
-				lastSelectedBlock = curBlock;
-
-				blockCompletionDataOperation = Dispatcher.BeginInvoke(new Action(() =>
+				if (SyntaxTree == null)
 				{
-					var l = new List<ICompletionData>();
-					DCodeCompletionSupport.Instance.BuildCompletionData(this, l, null);
-					currentEnvCompletionData = l;
+					lookup_Members.ItemsSource = lookup_Types.ItemsSource = null;
+					currentEnvCompletionData = null;
+					return;
+				}
 
-					#region Update the type & member selectors
-					isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
+				var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation);
+				if (curBlock != lastSelectedBlock)
+				{
+					if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
+						blockCompletionDataOperation.Abort();
 
-					// First fill the Types-Dropdown
-					var types = new List<DCompletionData>();
-					DCompletionData selectedItem=null;
-					// Show all members of the current module
-					if(SyntaxTree!=null)
-						foreach (var n in SyntaxTree){
-							var completionData=new DCompletionData(n);
-							if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation < n.EndLocation)
-								selectedItem = completionData;
-							types.Add(completionData);
-						}
-					lookup_Types.ItemsSource = types;
-					lookup_Types.SelectedItem = selectedItem;
-					selectedItem = null;
+					lastSelectedBlock = curBlock;
 
-					// Fill the Members-Dropdown
-					var members = new List<DCompletionData>();
-
-					// Search a parent class to show all this one's members and to select that member where the caret currently is located
-					var watchedParent = curBlock as IBlockNode;
-					while (watchedParent!=null && !(watchedParent is DClassLike || watchedParent is DEnum))
-						watchedParent = watchedParent.Parent as IBlockNode;
-
-					if(watchedParent!=null)
-						foreach (var n in watchedParent)
-						{
-							var cData = new DCompletionData(n);
-							if (selectedItem == null && CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
-								selectedItem = cData;
-							members.Add(cData);
-						}
-					lookup_Members.ItemsSource = members;
-					lookup_Members.SelectedItem = selectedItem;
-
-					isUpdatingLookupDropdowns = false;
-					#endregion
-				}));
-			}
-			else
-			// Update the member selection anyway
-			if(lookup_Members.ItemsSource!=null)
-				foreach (DCompletionData cData in lookup_Members.ItemsSource)
-					if (CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
+					blockCompletionDataOperation = Dispatcher.BeginInvoke(new Action(() =>
 					{
-						lookup_Members.SelectedItem = cData;
-						break;
-					}
+						try
+						{
+							var l = new List<ICompletionData>();
+							DCodeCompletionSupport.Instance.BuildCompletionData(this, l, null);
+							currentEnvCompletionData = l;
+
+							#region Update the type & member selectors
+							isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
+
+							// First fill the Types-Dropdown
+							var types = new List<DCompletionData>();
+							DCompletionData selectedItem = null;
+							// Show all members of the current module
+							if (SyntaxTree != null)
+								foreach (var n in SyntaxTree)
+								{
+									var completionData = new DCompletionData(n);
+									if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation < n.EndLocation)
+										selectedItem = completionData;
+									types.Add(completionData);
+								}
+							lookup_Types.ItemsSource = types;
+							lookup_Types.SelectedItem = selectedItem;
+							selectedItem = null;
+
+							// Fill the Members-Dropdown
+							var members = new List<DCompletionData>();
+
+							// Search a parent class to show all this one's members and to select that member where the caret currently is located
+							var watchedParent = curBlock as IBlockNode;
+							while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum))
+								watchedParent = watchedParent.Parent as IBlockNode;
+
+							if (watchedParent != null)
+								foreach (var n in watchedParent)
+								{
+									var cData = new DCompletionData(n);
+									if (selectedItem == null && CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
+										selectedItem = cData;
+									members.Add(cData);
+								}
+							lookup_Members.ItemsSource = members;
+							lookup_Members.SelectedItem = selectedItem;
+
+							isUpdatingLookupDropdowns = false;
+							#endregion
+						}
+						catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
+					}));
+				}
+				else
+					// Update the member selection anyway
+					if (lookup_Members.ItemsSource != null)
+						foreach (DCompletionData cData in lookup_Members.ItemsSource)
+							if (CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
+							{
+								lookup_Members.SelectedItem = cData;
+								break;
+							}
+
+			}
+			catch (Exception ex){	ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser);	}
 		}
 
 		void TextArea_SelectionChanged(object sender, EventArgs e)
@@ -775,6 +785,7 @@ namespace D_IDE.D
 				var pos = Editor.GetPositionFromPoint(edpos);
 				if (pos.HasValue)
 				{
+					int offset=Editor.Document.GetOffset(pos.Value.Line,pos.Value.Column);
 					// Avoid showing a tooltip if the cursor is located after a line-end
 					var vpos = Editor.TextArea.TextView.GetVisualPosition(new TextViewPosition(pos.Value.Line, Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength), ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineMiddle);
 					// Add TextView position to Editor-related point
@@ -783,7 +794,21 @@ namespace D_IDE.D
 					var ttArgs = new ToolTipRequestArgs(edpos.X <= vpos.X, pos.Value);
 					try
 					{
-						DCodeCompletionSupport.Instance.BuildToolTip(this, ttArgs);
+						bool handled = false;
+						// Prefer showing error markers' error messages
+						foreach (var tm in MarkerStrategy.TextMarkers)
+							if (tm is ErrorMarker && tm.StartOffset<=offset && offset<=tm.EndOffset)
+							{
+								var em = tm as ErrorMarker;
+
+								ttArgs.ToolTipContent = em.Error.Message;
+
+								handled = true;
+								break;
+							}
+
+						if(!handled)
+							DCodeCompletionSupport.Instance.BuildToolTip(this, ttArgs);
 					}
 					catch (Exception ex)
 					{
