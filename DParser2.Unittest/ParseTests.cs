@@ -6,6 +6,7 @@ using System.IO;
 using HighPrecisionTimer;
 using D_Parser;
 using D_Parser.Core;
+using D_Parser.Resolver;
 
 namespace ParserTests
 {
@@ -13,7 +14,7 @@ namespace ParserTests
 	{
 		public const string dmdDir = "D:\\dmd2";
 
-		public void TestSingleFile(string file)
+		public static void TestSingleFile(string file)
 		{
 			var hp = new HighPrecTimer();
 
@@ -26,7 +27,7 @@ namespace ParserTests
 			Dump(n, "");
 		}
 
-		public void TestSourcePackages()
+		public static void TestSourcePackages()
 		{
 			var Files = new Dictionary<string, string>();
 
@@ -56,14 +57,37 @@ namespace ParserTests
 			Console.WriteLine("~" + (hp.Duration / Files.Count).ToString() + "s per file");
 		}
 
-		public void TestExpression(string e)
+		public static void TestExpression(string e)
 		{
 			var ex = DParser.ParseExpression(e);
 
-			Console.WriteLine(ex);
+			Console.WriteLine(e+"\t>>>\t"+ ex);
 		}
 
+		public static void TestExpressionStartFinder(string code_untilCaretOffset)
+		{
+			var start = ReverseParsing.SearchExpressionStart(code_untilCaretOffset, code_untilCaretOffset.Length);
 
+			var expressionCode = code_untilCaretOffset.Substring(start, code_untilCaretOffset.Length- start);
+
+			Console.WriteLine("unfiltered:\t"+code_untilCaretOffset+"\nfiltered:\t" + expressionCode);
+
+			var parser = DParser.Create(new StringReader(expressionCode));
+			parser.Lexer.NextToken();
+
+			if (parser.IsAssignExpression())
+			{
+				var expr = parser.AssignExpression();
+
+				Console.WriteLine("expression:\t" + expr.ToString());
+			}
+			else
+			{
+				var type = parser.Type();
+
+				Console.WriteLine("type:\t\t" + type.ToString());
+			}
+		}
 
 
 

@@ -814,8 +814,10 @@ namespace D_Parser.Resolver
 
 		public static int SearchExpressionStart(string Text, int CaretOffset)
 		{
-			if (CaretOffset >= Text.Length)
+			if (CaretOffset > Text.Length)
 				throw new ArgumentOutOfRangeException("CaretOffset", "Caret offset must be smaller than text length");
+			else if(CaretOffset==Text.Length)
+				Text+=' ';
 
 			// At first we only want to find the beginning of our identifier list
 			// later we will pass the text beyond the beginning to the parser - there we parse all needed expressions from it
