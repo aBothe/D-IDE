@@ -15,7 +15,7 @@ namespace ParserTests
         public static string curFile = "";
         public static void Main(string[] args)
         {
-			var code = @"else a";
+			var code = @"= (myType.aliasedType*).";
 
 			ParseTests.TestExpressionStartFinder(code);
 

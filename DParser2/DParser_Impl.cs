@@ -1683,7 +1683,8 @@ namespace D_Parser
 
 				AllowWeakTypeParsing = false;
 
-				if (td!=null && ((t.Kind!=OpenParenthesis && la.Kind == CloseParenthesis && Peek(1).Kind == Dot && Peek(2).Kind == Identifier) || IsEOF))
+				if (td!=null && ((t.Kind!=OpenParenthesis && la.Kind == CloseParenthesis && Peek(1).Kind == Dot && Peek(2).Kind == Identifier) || 
+					(IsEOF || Peek(1).Kind==EOF || Peek(2).Kind==EOF))) // Also take it as a type declaration if there's nothing following (see Expression Resolving)
 				{
 					Step();  // Skip to )
 					Step();  // Skip to .
