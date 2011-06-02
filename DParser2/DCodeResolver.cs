@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using D_Parser.Core;
 using System.IO;
+using System.Collections;
+using System.Collections.ObjectModel;
 
 namespace D_Parser.Resolver
 {
@@ -26,15 +28,15 @@ namespace D_Parser.Resolver
 		#endregion
 
 
-		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module, 
-			string Text, 
-			int CaretOffset, 
-			CodeLocation CaretLocation, bool EnableVariableTypeResolving, 
+		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module,
+			string Text,
+			int CaretOffset,
+			CodeLocation CaretLocation, bool EnableVariableTypeResolving,
 			IEnumerable<IAbstractSyntaxTree> CodeCache, bool IsCompleteIdentifier)
 		{
 			ITypeDeclaration id = null;
 			DToken tk = null;
-			return ResolveTypeDeclarations(Module,Text,CaretOffset,CaretLocation,EnableVariableTypeResolving,CodeCache,out id,IsCompleteIdentifier,out tk);
+			return ResolveTypeDeclarations(Module, Text, CaretOffset, CaretLocation, EnableVariableTypeResolving, CodeCache, out id, IsCompleteIdentifier, out tk);
 		}
 
 		/// <summary>
@@ -47,10 +49,10 @@ namespace D_Parser.Resolver
 		/// <param name="ImportCache"></param>
 		/// <param name="IsCompleteIdentifier">True if Text is not only the beginning of a type name - instead, it's handled as the complete one</param>
 		/// <returns></returns>
-		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module, 
-			string Text, 
-			int CaretOffset, 
-			CodeLocation CaretLocation, 
+		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module,
+			string Text,
+			int CaretOffset,
+			CodeLocation CaretLocation,
 			bool EnableVariableTypeResolving,
 			IEnumerable<IAbstractSyntaxTree> CodeCache,
 			out ITypeDeclaration optIdentifierList,
@@ -60,14 +62,14 @@ namespace D_Parser.Resolver
 			optIdentifierList = DCodeResolver.BuildIdentifierList(Text,
 				CaretOffset, /*true,*/ out optToken);
 
-			if (optIdentifierList == null && optToken==null)
+			if (optIdentifierList == null && optToken == null)
 				return null;
 
 			IBlockNode SearchParent = null;
 
 			if (optToken != null && (optToken.Kind == DTokens.This || optToken.Kind == DTokens.Super)) // this.myProp; super.baseProp;
 				SearchParent = SearchClassLikeAt(Module, CaretLocation);
-			else 
+			else
 				SearchParent = SearchBlockAt(Module, CaretLocation);
 
 			if (optToken != null)
@@ -101,21 +103,21 @@ namespace D_Parser.Resolver
 			}
 
 			// If no addtitional identifiers are given, return immediately
-			if (optIdentifierList == null || SearchParent==null)
-				return new[]{ SearchParent};
+			if (optIdentifierList == null || SearchParent == null)
+				return new[] { SearchParent };
 
 			try
 			{
-				var ret= DCodeResolver.ResolveTypeDeclarations(
+				var ret = DCodeResolver.ResolveTypeDeclarations(
 					SearchParent,
-					optIdentifierList, CodeCache,IsCompleteIdentifier);
+					optIdentifierList, CodeCache, IsCompleteIdentifier);
 
 				if (EnableVariableTypeResolving && ret != null && ret.Length > 0 && (ret[0] is DVariable || ret[0] is DMethod))
 				{
 					var ntype = GetDNodeType(ret[0]);
 					if (ntype != null)
 					{
-						var ret2 = DCodeResolver.ResolveTypeDeclarations(SearchParent, ntype, CodeCache,IsCompleteIdentifier);
+						var ret2 = DCodeResolver.ResolveTypeDeclarations(SearchParent, ntype, CodeCache, IsCompleteIdentifier);
 						if (ret2 != null && ret2.Length > 0)
 							return ret2;
 					}
@@ -163,13 +165,13 @@ namespace D_Parser.Resolver
 						{
 							var dm2 = m as DNode;
 							var dm3 = m as DMethod; // Only show normal & delegate methods
-							if (dm2 == null || 
-								(dm3!=null && !(dm3.SpecialType==DMethod.MethodType.Normal || dm3.SpecialType==DMethod.MethodType.Delegate))
+							if (dm2 == null ||
+								(dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate))
 								)
 								continue;
 
 							// Add static and non-private members of all base classes; add everything if we're still handling the currently scoped class
-							if (curWatchedClass==curScope|| dm2.IsStatic || !dm2.ContainsAttribute(DTokens.Private))
+							if (curWatchedClass == curScope || dm2.IsStatic || !dm2.ContainsAttribute(DTokens.Private))
 								ret.Add(m);
 						}
 
@@ -237,120 +239,11 @@ namespace D_Parser.Resolver
 			OptionalInitToken = null;
 
 			#region Step 1: Walk along the code to find the declaration's beginning
-			if (String.IsNullOrEmpty(Text) || CaretOffset >= Text.Length) return null;
-			// At first we only want to find the beginning of our identifier list
-			// later we will pass the text beyond the beginning to the parser - there we parse all needed expressions from it
-			int IdentListStart = -1;
-
-			/*
-			T!(...)>.<
-			 */
-
-			int isComment = 0;
-			bool isString = false, expectDot = false, hadDot = true;
-			var bracketStack = new Stack<char>();
-			bool stopSeeking = false;
-
-			// Step backward
-			for (int i = CaretOffset; i >= 0 && !stopSeeking; i--)
-			{
-				IdentListStart = i;
-				var c = Text[i];
-				var str = Text.Substring(i);
-				char p = ' ';
-				if (i > 0) p = Text[i - 1];
-
-				// Primitive comment check
-				if (!isString && c == '/' && (p == '*' || p == '+'))
-					isComment++;
-				if (!isString && isComment > 0 && (c == '+' || c == '*') && p == '/')
-					isComment--;
-
-				// Primitive string check
-				//TODO: "blah">.<
-				if (isComment < 1 && c == '"' && p != '\\')
-					isString = !isString;
-
-				// If string or comment, just continue
-				if (isString || isComment > 0)
-					continue;
-
-				// If between brackets, skip
-				if (bracketStack.Count > 0 && c != bracketStack.Peek())
-					continue;
-
-				// Bracket check
-				if (hadDot)
-					switch (c)
-					{
-						case ']':
-							bracketStack.Push('[');
-							continue;
-						case ')':
-							bracketStack.Push('(');
-							continue;
-						case '}':
-							if (bracketStack.Count < 1)
-							{
-								IdentListStart++;
-								stopSeeking = true;
-								continue;
-							}
-							bracketStack.Push('{');
-							continue;
-
-						case '[':
-						case '(':
-						case '{':
-							if (bracketStack.Count > 0 && bracketStack.Peek() == c)
-							{
-								bracketStack.Pop();
-								if (p == '!') // Skip template stuff
-									i--;
-							}
-							else
-							{
-								// Stop if we reached the most left existing bracket
-								// e.g. foo>(< bar| )
-								stopSeeking = true;
-								IdentListStart++;
-							}
-							continue;
-					}
-
-				// whitespace check
-				if (Char.IsWhiteSpace(c)) { if (hadDot) expectDot = false; else expectDot = true; continue; }
-
-				if (c == '.')
-				{
-					expectDot = false;
-					hadDot = true;
-					continue;
-				}
-
-				/*
-				 * abc
-				 * abc . abc
-				 * T!().abc[]
-				 * def abc.T
-				 */
-				if (Char.IsLetterOrDigit(c) || c == '_')
-				{
-					hadDot = false;
-
-					if (!expectDot)
-						continue;
-					else
-						IdentListStart++;
-				}
-
-				stopSeeking = true;
-			}
-
+			int IdentListStart = ReverseParsing.SearchExpressionStart(Text, CaretOffset);
 			#endregion
 
 			#region 2: Init the parser
-			if (!stopSeeking || IdentListStart < 0)
+			if (IdentListStart < 0)
 				return null;
 
 			// If code e.g. starts with a bracket, increment IdentListStart
@@ -457,7 +350,7 @@ namespace D_Parser.Resolver
 		}
 
 		public static void ResolveImports(List<IAbstractSyntaxTree> ImportModules,
-			IAbstractSyntaxTree ActualModule, IEnumerable< IAbstractSyntaxTree> CodeCache)
+			IAbstractSyntaxTree ActualModule, IEnumerable<IAbstractSyntaxTree> CodeCache)
 		{
 			var localImps = new List<string>();
 			foreach (var kv in ActualModule.Imports)
@@ -560,7 +453,7 @@ namespace D_Parser.Resolver
 		/// <param name="Module"></param>
 		/// <param name="IdentifierList"></param>
 		/// <returns>When a type was found, the declaration entry will be returned. Otherwise, it'll return null.</returns>
-		public static INode[] ResolveTypeDeclarations_ModuleOnly(IBlockNode BlockNode, ITypeDeclaration IdentifierList, NodeFilter Filter,IEnumerable<IAbstractSyntaxTree> ImportCache)
+		public static INode[] ResolveTypeDeclarations_ModuleOnly(IBlockNode BlockNode, ITypeDeclaration IdentifierList, NodeFilter Filter, IEnumerable<IAbstractSyntaxTree> ImportCache)
 		{
 			var ret = new List<INode>();
 
@@ -577,7 +470,7 @@ namespace D_Parser.Resolver
 				// Now search the entire block
 				var istr = il.ToString();
 
-				var mod = BlockNode is DModule?BlockNode as DModule: BlockNode.NodeRoot as DModule;
+				var mod = BlockNode is DModule ? BlockNode as DModule : BlockNode.NodeRoot as DModule;
 				/* If the id list start with the name of BlockNode's root module, 
 				 * skip those identifiers first to proceed seeking the rest of the list
 				 */
@@ -674,7 +567,7 @@ namespace D_Parser.Resolver
 					ret.AddRange(baseTypes);
 				else
 				{
-					
+
 				}
 			}
 
@@ -704,11 +597,11 @@ namespace D_Parser.Resolver
 				ret.AddRange(ResolveTypeDeclarations_ModuleOnly(CurrentlyScopedBlock, IdentifierList, NodeFilter.All, ImportCache));
 
 			// Then search within the imports for our IdentifierList
-			if(ImportCache!=null)
+			if (ImportCache != null)
 				foreach (var m in ImportCache)
 				{
 					// Add the module itself to the returned list if its name starts with the identifierlist
-					if (IsCompleteIdentifier? (m.Name.StartsWith(IdentifierList.ToString()+".") || m.Name==IdentifierList.ToString()) // If entire identifer was typed, check if the entire id is part of the module name
+					if (IsCompleteIdentifier ? (m.Name.StartsWith(IdentifierList.ToString() + ".") || m.Name == IdentifierList.ToString()) // If entire identifer was typed, check if the entire id is part of the module name
 						: m.Name.StartsWith(IdentifierList.ToString()))
 						ret.Add(m);
 
@@ -730,13 +623,13 @@ namespace D_Parser.Resolver
 			// Implicitly set the object class to the inherited class if no explicit one was done
 			if (ActualClass.BaseClasses.Count < 1)
 			{
-				var ObjectClass = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, new NormalDeclaration("Object"), ModuleCache,true);
+				var ObjectClass = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, new NormalDeclaration("Object"), ModuleCache, true);
 				if (ObjectClass.Length > 0 && ObjectClass[0] != ActualClass) // Yes, it can be null - like the Object class which can't inherit itself
 					return ObjectClass[0] as DClassLike;
 			}
 			else // Take the first only (since D forces single inheritance)
 			{
-				var ClassMatches = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, ActualClass.BaseClasses[0], ModuleCache,true);
+				var ClassMatches = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, ActualClass.BaseClasses[0], ModuleCache, true);
 				if (ClassMatches.Length > 0)
 					return ClassMatches[0] as DClassLike;
 			}
@@ -759,7 +652,7 @@ namespace D_Parser.Resolver
 				bool IsInString = false;
 				int block = 0, nested = 0;
 
-				while (off < HayStack.Length-1)
+				while (off < HayStack.Length - 1)
 				{
 					cur = HayStack[off];
 
@@ -782,7 +675,7 @@ namespace D_Parser.Resolver
 
 					if (!IsInString && cur == Needle[0])
 					{
-						if (off + Needle.Length-1 >= HayStack.Length)
+						if (off + Needle.Length - 1 >= HayStack.Length)
 							return -1;
 
 						if (HayStack.Substring(off, Needle.Length) == Needle)
@@ -910,79 +803,150 @@ namespace D_Parser.Resolver
 				return a || b || c || d;
 			}
 		}
+	}
 
-		/// <summary>
-		/// Helper class for e.g. finding the initial offset of a statement.
-		/// </summary>
-		public class ReverseParsing
+	/// <summary>
+	/// Helper class for e.g. finding the initial offset of a statement.
+	/// </summary>
+	public class ReverseParsing
+	{
+		static IList<string> preParenthesisBreakTokens = new List<string> { "if", "while", "for", "foreach", "foreach_reverse", "with", "try", "catch", "finally", "synchronized", "pragma" };
+
+		public static int SearchExpressionStart(string Text, int CaretOffset)
 		{
-			/// <summary>
-			/// Parses/Skips through the code backward to find the beginning of the method call statement.
-			/// 
-			/// ModuleA.StaticClass.MyFoo!(int,bool)(1,true);
-			/// </summary>
-			/// <param name="Code"></param>
-			/// <param name="CaretOffset"></param>
-			/// <param name="TriggerChar">The key the user recently typed (usually '!', '(' or ',')</param>
-			/// <returns>The call-statement's start offset</returns>
-			public static int ResolveMethodCallStatementOffset(
-				string Code,
-				int CaretOffset,
-				char TriggerChar,
-				
-				out bool IsTemplateParameter,
-				out int ParameterNumber)
+			if (CaretOffset >= Text.Length)
+				throw new ArgumentOutOfRangeException("CaretOffset", "Caret offset must be smaller than text length");
+
+			// At first we only want to find the beginning of our identifier list
+			// later we will pass the text beyond the beginning to the parser - there we parse all needed expressions from it
+			int IdentListStart = -1;
+
+			/*
+			T!(...)>.<
+			 */
+
+			int isComment = 0;
+			bool isString = false, expectDot = false, hadDot = true;
+			var bracketStack = new Stack<char>();
+
+			var identBuffer = "";
+			bool hadBraceOpener = false;
+			int lastBraceOpenerOffset = 0;
+
+			bool stopSeeking = false;
+
+			// Step backward
+			for (int i = CaretOffset; i >= 0 && !stopSeeking; i--)
 			{
-				IsTemplateParameter = false;
-				ParameterNumber = 0;
+				IdentListStart = i;
+				var c = Text[i];
+				var str = Text.Substring(i);
+				char p = ' ';
+				if (i > 0) p = Text[i - 1];
 
-				// The last pushed block opener will be expected if there is a block closer
-				var expectedOpeners=new Stack<string>();
-				var startOffset = 0;
-				var curChar='\0';
-				int i = CaretOffset;
-				var tokenBuffer = "";
-				while (i >= 0)
-				{
-					curChar = Code[i];
+				// Primitive comment check
+				if (!isString && c == '/' && (p == '*' || p == '+'))
+					isComment++;
+				if (!isString && isComment > 0 && (c == '+' || c == '*') && p == '/')
+					isComment--;
 
-					tokenBuffer += curChar;
+				// Primitive string check
+				//TODO: "blah">.<
+				if (isComment < 1 && c == '"' && p != '\\')
+					isString = !isString;
 
-					switch (tokenBuffer)
+				// If string or comment, just continue
+				if (isString || isComment > 0)
+					continue;
+
+				// If between brackets, skip
+				if (bracketStack.Count > 0 && c != bracketStack.Peek())
+					continue;
+
+				// Bracket check
+				if (hadDot)
+					switch (c)
 					{
-						case ")":
-							expectedOpeners.Push("(");
-							break;
-						case "]":
-							expectedOpeners.Push("[");
-							break;
-						case "}":
-							expectedOpeners.Push("{");
-							break;
-						case "*/":
-							expectedOpeners.Push("/*");
-							break;
-						case "+/":
-							expectedOpeners.Push("/+");
-							break;
-						case "\"": //TODO: r"", Token Strings, EOS-Literals
-							expectedOpeners.Push("\"");
-							break;
+						case ']':
+							bracketStack.Push('[');
+							continue;
+						case ')':
+							bracketStack.Push('(');
+							continue;
+						case '}':
+							if (bracketStack.Count < 1)
+							{
+								IdentListStart++;
+								stopSeeking = true;
+								continue;
+							}
+							bracketStack.Push('{');
+							continue;
 
-						case "//":
-
-							break;
-
-						default: 
-							tokenBuffer = "";
-							break;
+						case '[':
+						case '(':
+						case '{':
+							if (bracketStack.Count > 0 && bracketStack.Peek() == c)
+							{
+								bracketStack.Pop();
+								if (p == '!') // Skip template stuff
+									i--;
+							}
+							else if (c == '{')
+							{
+								stopSeeking = true;
+								IdentListStart++;
+							}
+							else
+							{
+								lastBraceOpenerOffset = IdentListStart;
+								// e.g. foo>(< bar| )
+								hadBraceOpener = true;
+								identBuffer = "";
+							}
+							continue;
 					}
 
-					i--;
+				// whitespace check
+				if (Char.IsWhiteSpace(c)) { if (hadDot) expectDot = false; else expectDot = true; continue; }
+
+				if (c == '.')
+				{
+					hadBraceOpener = false;
+					identBuffer = "";
+					expectDot = false;
+					hadDot = true;
+					continue;
 				}
 
-				return startOffset;
+				/*
+				 * abc
+				 * abc . abc
+				 * T!().abc[]
+				 * def abc.T
+				 */
+				if (Char.IsLetterOrDigit(c) || c == '_')
+				{
+					hadDot = false;
+
+					if (!expectDot)
+					{
+						identBuffer += c;
+
+						if (!hadBraceOpener)
+							continue;
+						else if (!preParenthesisBreakTokens.Contains(identBuffer))
+							continue;
+						else
+							IdentListStart = lastBraceOpenerOffset;
+					}
+				}
+
+				IdentListStart++;
+				stopSeeking = true;
 			}
+
+			return IdentListStart;
 		}
 	}
 }

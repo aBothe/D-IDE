@@ -6,91 +6,44 @@ using HighPrecisionTimer;
 using System.Threading;
 using D_Parser;
 using D_Parser.Core;
+using D_Parser.Resolver;
 
 namespace ParserTests
 {
     class Program
     {
-		public const string dmdDir = "D:\\dmd2";
-
         public static string curFile = "";
         public static void Main(string[] args)
         {
-            var Files = new Dictionary<string, string>();
-            int a = 2; // 0 - Read 1 file; 1 - Read all files; 2 - no action
-            int b = a>1?1:0; // 0 - Parse file(s); 1 - Parse specific text only
+			var code = @"
+if(myObj.foo().myprop) a=56+asd.
+";
 
-            if (a == 0)
-                Files.Add("abc", File.ReadAllText(
-					//dmdDir+"\\src\\phobos\\std\\path.d"
-					@"D:\dmd2\src\phobos\std\algorithm.d"
-					));
-            else if(a==1)
-            {
-                foreach (string fn in Directory.GetFiles(dmdDir+"\\src\\phobos", "*.d?", SearchOption.AllDirectories))
-                {
-                    if (fn.EndsWith("phobos\\index.d")) continue;
-                    Files.Add(fn, File.ReadAllText(fn));
-                }
-                foreach (string fn in Directory.GetFiles(dmdDir+"\\src\\druntime\\import", "*.d?", SearchOption.AllDirectories))
-                {
-                    Files.Add(fn, File.ReadAllText(fn));
-                }
-            }
+			int caret = code.Length - 1;
 
-            
-            if (b == 0)
-            {
-                var hp = new HighPrecTimer();
+			var start = ReverseParsing.SearchExpressionStart(code, caret);
 
-                hp.Start();
-                int i = 0;
-                foreach (string file in Files.Keys)
-                {
-                    curFile = file;
-                    
-                    i++;
-                    var n = DParser.ParseString(Files[file], false);
+			var expressionCode = code.Substring(start,caret-start);
 
-					printErrors(n);
-                }
-                hp.Stop();
-                Console.WriteLine(hp.Duration + "s");
-				Console.WriteLine("~"+(hp.Duration/Files.Count).ToString()+"s per file");
-            }
-            else if(b==1)
-            {
-				var n = DParser.ParseString(
-@"
-int a=(cast(Animal)h).a();
-");
-				printErrors(n);Dump(n,"");
+			Console.WriteLine("Parsed Code:\t"+expressionCode);
 
-				Console.WriteLine(n.ToString());
-				
-            }
+			var parser = DParser.Create(new StringReader(expressionCode));
+			parser.Lexer.NextToken();
+
+			if (parser.IsAssignExpression())
+			{
+				var expr = parser.AssignExpression();
+
+				Console.WriteLine("Expression:\t" + expr.ToString());
+			}else
+			{
+				var type = parser.Type();
+
+				Console.WriteLine("Type:\t\t" + type.ToString());
+			}
+
             Console.Read();
             return;
-        }
-
-        static void printErrors(IAbstractSyntaxTree mod)
-        {
-			foreach(var e in mod.ParseErrors)
-				Console.WriteLine("Line " + e.Location.Line.ToString() + " Col " + e.Location.Column.ToString() + ": " + e.Message);
-        }
-
-        static void Dump(INode n, string lev)
-        {
-            Console.WriteLine(lev + n.ToString());
-            if (n is IBlockNode)
-            {
-                Console.WriteLine(lev + "{");
-                foreach (var ch in n as IBlockNode)
-                {
-                    Dump(ch, lev + "  ");
-                }
-                Console.WriteLine(lev + "}");
-            }
         }
     }
 }

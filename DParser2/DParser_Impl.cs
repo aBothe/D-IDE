@@ -599,7 +599,7 @@ namespace D_Parser
 		/// <summary>
 		/// Used if the parser is unsure if there's a type or an expression - then, instead of throwing exceptions, the Type()-Methods will simply return null;
 		/// </summary>
-		bool AllowWeakTypeParsing = false;
+		public bool AllowWeakTypeParsing = false;
 
 		ITypeDeclaration BasicType()
 		{
@@ -907,7 +907,7 @@ namespace D_Parser
 				SynErr(Identifier);
 
 			// Template instancing
-			if (Lexer.CurrentPeekToken.Kind == (Not))
+			if (Peek(1).Kind == (Not))
 				td = TemplateInstance();
 
 			// Identifier
@@ -962,7 +962,7 @@ namespace D_Parser
 			}
 		}
 
-		ITypeDeclaration Type()
+		public ITypeDeclaration Type()
 		{
 			var td = BasicType();
 
@@ -1337,7 +1337,7 @@ namespace D_Parser
 		#endregion
 
 		#region Expressions
-		IExpression Expression()
+		public IExpression Expression()
 		{
 			// AssignExpression
 			var ass = AssignExpression();
@@ -1361,7 +1361,7 @@ namespace D_Parser
 		/// <summary>
 		/// This function has a very high importance because here we decide whether it's a declaration or assignExpression!
 		/// </summary>
-		bool IsAssignExpression()
+		public bool IsAssignExpression()
 		{
 			if (IsBasicType())
 			{
@@ -1374,7 +1374,7 @@ namespace D_Parser
 					if (la.Kind == Dot)
 						Step();
 
-					if (Lexer.CurrentPeekToken.Kind != Identifier)
+					if (Peek(1).Kind != Identifier)
 					{
 						if (la.Kind == Identifier)
 						{
@@ -1446,7 +1446,7 @@ namespace D_Parser
 			return true;
 		}
 
-		IExpression AssignExpression()
+		public IExpression AssignExpression()
 		{
 			var left = ConditionalExpression();
 			if (!AssignOps[la.Kind])
