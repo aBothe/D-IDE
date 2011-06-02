@@ -29,6 +29,7 @@ namespace D_IDE.D
 		public override bool ApplyChanges()
 		{
 			DSettings.Instance.UseCodeCompletion = checkBox_UseCC.IsChecked.Value;
+			DSettings.Instance.EnableMatchinBracketHighlighting = checkBox_EnableBracketHighlighting.IsChecked.Value;
 
 			return true;
 		}
@@ -36,6 +37,7 @@ namespace D_IDE.D
 		public override void LoadCurrent()
 		{
 			checkBox_UseCC.IsChecked=DSettings.Instance.UseCodeCompletion;
+			checkBox_EnableBracketHighlighting.IsChecked = DSettings.Instance.EnableMatchinBracketHighlighting;
 		}
 
 		public override string SettingCategoryName

@@ -26,7 +26,11 @@ namespace D_IDE.D.DEditor
 					return null;
 
 				// Search forward
-				var tk_end = SearchForward(doc, doc.GetOffset(lastToken.Location.Line, lastToken.Location.Column)+ (tk_start==lastToken?1:0), getOppositeBracketToken(tk_start.Kind));
+				var tk_end = SearchForward(doc, 
+					lastToken.Kind!=DTokens.Literal?
+					doc.GetOffset(lastToken.EndLocation.Line,lastToken.EndLocation.Column):
+					doc.GetOffset(lastToken.Location.Line, lastToken.Location.Column)
+					, getOppositeBracketToken(tk_start.Kind));
 
 				if (tk_end == null)
 					return null;
@@ -94,7 +98,8 @@ namespace D_IDE.D.DEditor
 
 		static DToken SearchForward(TextDocument doc, int caretOffset, int searchedBracketToken)
 		{
-			var lexer = new DLexer(new System.IO.StringReader(doc.GetText(caretOffset,doc.TextLength-caretOffset)));
+			var code = doc.GetText(caretOffset, doc.TextLength - caretOffset);
+			var lexer = new DLexer(new System.IO.StringReader(code));
 
 			var caret_ = doc.GetLocation(caretOffset);
 			var caret = new CodeLocation(caret_.Column, caret_.Line);

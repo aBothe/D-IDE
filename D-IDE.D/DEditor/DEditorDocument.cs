@@ -543,7 +543,12 @@ namespace D_IDE.D
 		/// </summary>
 		public void UpdateBlockCompletionData()
 		{
-			CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, Editor.CaretOffset);
+			// Update highlit bracket offsets
+			if (DSettings.Instance.EnableMatchinBracketHighlighting)
+				CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, Editor.CaretOffset);
+			else
+				CurrentlyHighlitBrackets = null;
+
 
 			if (SyntaxTree == null)
 			{
