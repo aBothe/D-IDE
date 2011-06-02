@@ -16,6 +16,8 @@ using D_Parser.Resolver;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
+using ICSharpCode.AvalonEdit.AddIn;
+using D_IDE.D.DEditor;
 
 namespace D_IDE.D
 {
@@ -541,6 +543,8 @@ namespace D_IDE.D
 		/// </summary>
 		public void UpdateBlockCompletionData()
 		{
+			CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, Editor.CaretOffset);
+
 			if (SyntaxTree == null)
 			{
 				lookup_Members.ItemsSource =lookup_Types.ItemsSource= null;

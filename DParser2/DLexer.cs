@@ -1531,14 +1531,14 @@ namespace D_Parser
                 char ch = (char)nextChar;
 
 				// Catch deeper-nesting comments
-				if (ch == '/' && ReaderPeek() == '+')
+				if (isNestingComment && ch == '/' && ReaderPeek() == '+')
 				{
 					nestedCommentDepth++;
 					ReaderRead();
 				}
 
                 // End of multiline comment reached ?
-                if ((ch == '+' || (ch == '*' && !isNestingComment)) && ReaderPeek() == '/')
+                if ((isNestingComment?ch == '+':ch == '*') && ReaderPeek() == '/')
                 {
                     ReaderRead(); // Skip "*" or "+"
 

@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Windows.Input;
 using D_IDE.Core.Controls;
 using System.Windows;
+using ICSharpCode.AvalonEdit.AddIn;
 
 namespace D_IDE.Core
 {
@@ -25,6 +26,7 @@ namespace D_IDE.Core
 	public class EditorDocument:AbstractEditorDocument,IEditorDocument
 	{
 		#region Properties
+		BracketHighlightRenderer bracketHightlighter;
 		TextEditor editor = new TextEditor();
 		public TextEditor Editor { get { return editor; } }
 		public Grid MainEditorContainer { get; protected set; }
@@ -138,6 +140,9 @@ namespace D_IDE.Core
 			RefreshErrorHighlightings();
 			RefreshBreakpointHighlightings();
 			RefreshDebugHighlightings();
+
+			// Init bracket hightlighter
+			bracketHightlighter = new BracketHighlightRenderer(Editor.TextArea.TextView);
 		}
 
 		void Save_event(object sender, RoutedEventArgs e)
@@ -152,6 +157,19 @@ namespace D_IDE.Core
 		}
 		
 		#region Syntax Highlighting
+
+		/// <summary>
+		/// Sets the bracket offsets that shall be highlighted
+		/// </summary>
+		protected BracketSearchResult CurrentlyHighlitBrackets
+		{
+			set
+			{
+				bracketHightlighter.SetHighlight(value);
+			}
+		}
+		
+		
 		/// <summary>
 		/// Associates a new syntax highligther with the editor
 		/// </summary>

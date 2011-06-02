@@ -97,6 +97,8 @@
     <Compile Include="Controls\ListSelectionDialog.xaml.cs">
       <DependentUpon>ListSelectionDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TextEditor\BracketHighlighter.cs" />
+    <Compile Include="Controls\TextEditor\BracketSearchResult.cs" />
     <Compile Include="Controls\TextEditor\TextMarkerService.cs" />
     <Compile Include="CoreIcons.Designer.cs">
       <AutoGen>True</AutoGen>

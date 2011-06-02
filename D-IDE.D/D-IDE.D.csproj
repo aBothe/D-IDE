@@ -81,6 +81,7 @@
     <Compile Include="CodeCompletion\ASTStorage.cs" />
     <Compile Include="CodeCompletion\BinaryDataTypeStorage.cs" />
     <Compile Include="CodeCompletion\DCodeCompletionSupport.cs" />
+    <Compile Include="DEditor\DBracketSearcher.cs" />
     <Compile Include="DEditor\DEditorDocument.cs" />
     <Compile Include="DEditor\DIndentationStrategy.cs" />
     <Compile Include="DUtil.cs" />
