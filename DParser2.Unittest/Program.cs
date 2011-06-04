@@ -15,13 +15,25 @@ namespace ParserTests
         public static string curFile = "";
         public static void Main(string[] args)
         {
-			var code = @"(cast(char*)mc.str).sizeof";
+			string input="";
 
-			ParseTests.TestExpression(code);
+			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);
 
-            Console.Read();
-            return;
+			while (true)
+			{
+				input = Console.ReadLine();
+
+				if (input == "q")
+					return;
+
+				var code = input;
+
+				bool ShowCCPopup = !DResolver.IsTypeIdentifier(code, code.Length-1);
+
+				Console.WriteLine("Code before caret:\t\t" + code);
+				Console.WriteLine("Show the completion popup:\t" + ShowCCPopup.ToString());
+			}
         }
     }
 }

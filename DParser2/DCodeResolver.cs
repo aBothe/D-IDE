@@ -805,6 +805,98 @@ namespace D_Parser.Resolver
 		}
 	}
 
+	/*
+	 * Code completion rules:
+	 * 
+	 * - If a letter has been typed:
+	 *		- Show the popup if:
+	 *			- there's a "*" in front of the identifier, what makes us assume (TODO: ensure it!) that it is meant to be an expression, not a type
+	 *			- there is no type, show the popup
+	 *			- a preceding () belong to:
+	 *				if while for foreach foreach_reverse with try catch finally
+	 *		- Do not show the popup if:
+	 *			- "]" or an other identifier (includes keywords) is located (after at least one whitespace) in front of the identifier
+	 *			- a preceding () does not belong to:
+	 *				! synchronized pragma typeof const immutable shared inout scope
+	 *			- If the caret is already located within an identifier
+	 * 
+	 */
+
+	public class DResolver
+	{
+		static readonly BitArray sigTokens = DTokens.NewSet(
+			DTokens.If,
+			DTokens.Foreach,
+			DTokens.Foreach_Reverse,
+			DTokens.With,
+			DTokens.Try,
+			DTokens.Catch,
+			DTokens.Finally,
+
+			DTokens.Cast // cast(...) myType << Show cc popup after a cast
+			);
+
+		/// <summary>
+		/// Checks if an identifier is about to be typed. Therefore, we assume that this identifier hasn't been typed yet. 
+		/// So, we also will assume that the caret location is the start of the identifier;
+		/// </summary>
+		public static bool IsTypeIdentifier(string code, int caret)
+		{
+			try
+			{
+				if (caret < 1)
+					return false;
+
+				code = code.Insert(caret, " "); // To ensure correct behaviour, insert a phantom ws after the caret
+
+				// Check for preceding letters
+				if (char.IsLetter(code[caret]))
+					return true;
+
+				int precedingExpressionOrTypeStartOffset = ReverseParsing.SearchExpressionStart(code, caret);
+
+				if (precedingExpressionOrTypeStartOffset >= caret)
+					return false;
+
+				var expressionCode = code.Substring(precedingExpressionOrTypeStartOffset, caret - precedingExpressionOrTypeStartOffset);
+
+				if (string.IsNullOrEmpty(expressionCode) || expressionCode.Trim() == string.Empty)
+					return false;
+
+				var lx = new DLexer(new StringReader(expressionCode));
+
+				var firstToken = lx.NextToken();
+
+				while (lx.LookAhead.Kind != DTokens.EOF)
+					lx.NextToken();
+
+				var lastToken = lx.CurrentToken;
+
+				if (lastToken.Kind == DTokens.Times)
+					return false; // TODO: Check if it's an expression or not
+
+				if (lastToken.Kind == DTokens.CloseSquareBracket || lastToken.Kind == DTokens.Identifier)
+					return true;
+
+				if (lastToken.Kind == DTokens.CloseParenthesis)
+				{
+					lx.CurrentToken = firstToken;
+
+					while (lx.LookAhead.Kind != DTokens.OpenParenthesis && lx.LookAhead.Kind != DTokens.EOF)
+						lx.NextToken();
+
+					if (sigTokens[lx.CurrentToken.Kind])
+						return false;
+					else
+						return true;
+				}
+
+			}
+			catch { }
+			return false;
+		}
+	}
+
 	/// <summary>
 	/// Helper class for e.g. finding the initial offset of a statement.
 	/// </summary>

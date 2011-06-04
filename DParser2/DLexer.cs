@@ -86,6 +86,14 @@ namespace D_Parser
             {
                 return curToken;
             }
+			set
+			{
+				if (value == null) return;
+				curToken = value;
+				lookaheadToken = curToken.next;
+				if (lookaheadToken != null)
+					peekToken = lookaheadToken.next;
+			}
         }
 
         /// <summary>

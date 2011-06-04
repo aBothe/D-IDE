@@ -194,7 +194,7 @@ namespace D_Parser
         public const int __EOF__ = 175;
 
         public const int MaxToken = 176;
-        static BitArray NewSet(params int[] values)
+        internal static BitArray NewSet(params int[] values)
         {
             BitArray bitArray = new BitArray(MaxToken);
             foreach (int val in values)

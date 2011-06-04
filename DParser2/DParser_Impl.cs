@@ -1412,6 +1412,9 @@ namespace D_Parser
 					}
 				}
 
+				if (Lexer.CurrentPeekToken == null)
+					Peek();
+
 				// Skip basictype2's
 				while (Lexer.CurrentPeekToken.Kind == (Times) || Lexer.CurrentPeekToken.Kind == (OpenSquareBracket))
 				{
@@ -2379,7 +2382,7 @@ namespace D_Parser
 			
 			SynErr(Identifier);
 			Step();
-			return new TokenExpression(t.Kind) { Location=t.Location,EndLocation=t.EndLocation};
+			return new TokenExpression(t.Kind) { Location = t.Location, EndLocation = t.EndLocation };
 		}
 
 		bool IsFunctionLiteral()

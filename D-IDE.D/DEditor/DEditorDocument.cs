@@ -723,7 +723,7 @@ namespace D_IDE.D
 				ShowInsightWindow(e.Text);
 
 			// Note: Show completion window even before the first key has been processed by the editor!
-			else if(e.Text!=".")
+			else if(char.IsLetter(e.Text[0]) && !DResolver.IsTypeIdentifier(Editor.Text,Editor.CaretOffset))
 				ShowCodeCompletionWindow(e.Text);
 		}
 

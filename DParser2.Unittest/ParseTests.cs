@@ -72,6 +72,12 @@ namespace ParserTests
 
 			Console.WriteLine("unfiltered:\t"+code_untilCaretOffset+"\nfiltered:\t" + expressionCode);
 
+			if (string.IsNullOrWhiteSpace(expressionCode))
+			{
+				Console.WriteLine("No code to parse!");
+				return;
+			}
+
 			var parser = DParser.Create(new StringReader(expressionCode));
 			parser.Lexer.NextToken();
 
