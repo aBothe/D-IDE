@@ -278,7 +278,7 @@ namespace D_Parser
 			Expect(Identifier);
 
 			if (la.Kind != Dot)
-				return new NormalDeclaration(t.Value);
+				return new IdentifierDeclaration(t.Value);
 
 			var il = new D_Parser.IdentifierList();
 			il.Add(t.Value);
@@ -472,7 +472,7 @@ namespace D_Parser
 					dv.StartLocation = Lexer.LastToken.Location;
 					dv.IsAlias = true;
 					dv.Name = "this";
-					dv.Type = new NormalDeclaration(t.Value);
+					dv.Type = new IdentifierDeclaration(t.Value);
 					dv.EndLocation = t.EndLocation;
 					par.Add(dv);
 					Step();
@@ -546,8 +546,7 @@ namespace D_Parser
 				Constraint();
 
 			// BasicType Declarators ;
-			bool ExpectFunctionBody = !(la.Kind == (Assign) || la.Kind == (Comma) || la.Kind == (Semicolon));
-			if (!ExpectFunctionBody)
+			if (la.Kind==Assign || la.Kind==Comma || la.Kind==Semicolon)
 			{
 				// DeclaratorInitializer
 				if (la.Kind == (Assign))
@@ -579,7 +578,7 @@ namespace D_Parser
 			}
 
 			// BasicType Declarator FunctionBody
-			else if (firstNode is IBlockNode)
+			else if (firstNode is IBlockNode && (la.Kind == In || la.Kind == Out || la.Kind == Body || la.Kind == OpenCurlyBrace))
 			{
 				FunctionBody(firstNode as IBlockNode);
 
@@ -587,7 +586,7 @@ namespace D_Parser
 			}
 			else
 			{
-				SynErr(OpenCurlyBrace, "Function declaration expected in front of block statement");
+				SynErr(OpenCurlyBrace, "; or function body expected after declaration stub.");
 			}
 		}
 
@@ -648,9 +647,9 @@ namespace D_Parser
 				return null;
 
 			if (td == null)
-				td = IdentifierList() as ITypeDeclaration;
+				td = IdentifierList();
 			else
-				td.InnerMost = IdentifierList() as ITypeDeclaration;
+				td.InnerMost = IdentifierList();
 
 			return td;
 		}
@@ -675,7 +674,7 @@ namespace D_Parser
 				Step();
 				// [ ]
 				if (la.Kind == (CloseSquareBracket)) { Step();
-				return new ClampDecl(); 
+				return new ArrayDecl(); 
 				}
 
 				ITypeDeclaration cd = null;
@@ -683,7 +682,7 @@ namespace D_Parser
 				// [ Type ]
 				if (!IsAssignExpression())
 				{
-					cd = new ClampDecl() { Clamps=ClampDecl.ClampType.Square, KeyType=Type()};
+					cd = new ArrayDecl() { KeyType=Type()};
 				}
 				else
 				{
@@ -749,11 +748,14 @@ namespace D_Parser
 			 * int (x);
 			 * int(*foo);
 			 */
+			#region This way of declaring function pointers is deprecated
 			if (la.Kind == (OpenParenthesis))
 			{
 				Step();
-				var cd = new ClampDecl(ret.Type, ClampDecl.ClampType.Round);
+				SynErr(OpenParenthesis,"C-style function pointers are deprecated. Use the function() syntax instead.");
+				var cd = new DelegateDeclaration() as ITypeDeclaration;
 				ret.Type = cd;
+				var deleg = cd as DelegateDeclaration;
 
 				/* 
 				 * Parse all basictype2's that are following the initial '('
@@ -762,11 +764,11 @@ namespace D_Parser
 				{
 					ttd = BasicType2();
 
-					if (cd.KeyType == null) cd.KeyType = ttd;
+					if (deleg.ReturnType == null) deleg.ReturnType = ttd;
 					else
 					{
-						ttd.InnerDeclaration = cd.KeyType;
-						cd.KeyType = ttd;
+						ttd.InnerDeclaration = deleg.ReturnType;
+						deleg.ReturnType = ttd;
 					}
 				}
 
@@ -797,18 +799,15 @@ namespace D_Parser
 							List<INode> _unused = null;
 							ttd = DeclaratorSuffixes(out _unused2, out _unused);
 
-							if (cd.KeyType == null) cd.KeyType = ttd;
-							else
-							{
-								ttd.InnerDeclaration = cd.KeyType;
-								cd.KeyType = ttd;
-							}
+							ttd.InnerDeclaration=cd;
+							cd=ttd;
 						}
 					}
 				}
 				ret.Type = cd;
 				Expect(CloseParenthesis);
 			}
+			#endregion
 			else
 			{
 				if (IsParam && la.Kind != (Identifier))
@@ -865,7 +864,8 @@ namespace D_Parser
 			while (la.Kind == (OpenSquareBracket))
 			{
 				Step();
-				var ad = new ClampDecl(td);
+				var ad = new ArrayDecl();
+				ad.InnerDeclaration = td;
 				if (la.Kind != (CloseSquareBracket))
 				{
 					if (!IsAssignExpression())
@@ -878,7 +878,6 @@ namespace D_Parser
 						ad.KeyType = new DExpressionDecl(AssignExpression());
 				}
 				Expect(CloseSquareBracket);
-				ad.ValueType = td;
 				td = ad;
 			}
 
@@ -914,7 +913,7 @@ namespace D_Parser
 			else
 			{
 				Step();
-				td = new NormalDeclaration(t.Value);
+				td = new IdentifierDeclaration(t.Value);
 			}
 
 			// If we have only one identifier, return immediately
@@ -2368,7 +2367,7 @@ namespace D_Parser
 					Step();
 
 					var meaex = new PostfixExpression_Access() { PostfixForeExpression=left, 
-						TemplateOrIdentifier=new NormalDeclaration(t.Value),EndLocation=t.EndLocation };
+						TemplateOrIdentifier=new IdentifierDeclaration(t.Value),EndLocation=t.EndLocation };
 
 					return meaex;
 				}
@@ -2827,7 +2826,7 @@ namespace D_Parser
 						if (la.Kind != Identifier)
 						{
 							Lexer.LookAhead = tt;
-							catchVar.Type = new NormalDeclaration("Exception");
+							catchVar.Type = new IdentifierDeclaration("Exception");
 						}
 						Expect(Identifier);
 						catchVar.Name = t.Value;
@@ -3573,9 +3572,9 @@ namespace D_Parser
 			Expect(Identifier);
 
 			if (la.Kind != Not || (Peek(1).Kind==Is || Lexer.CurrentPeekToken.Kind==In)) // myExpr !is null  --> there, it would parse 'is' as template argument
-				return new NormalDeclaration(t.Value);
+				return new IdentifierDeclaration(t.Value);
 			
-			var td = new TemplateDecl(new NormalDeclaration(t.Value));
+			var td = new TemplateDecl(new IdentifierDeclaration(t.Value));
 			Expect(Not);
 			if (la.Kind == (OpenParenthesis))
 			{
@@ -3600,7 +3599,7 @@ namespace D_Parser
 			{
 				Step();
 				if (t.Kind == (Identifier) || t.Kind == (Literal))
-					td.Template.Add(new NormalDeclaration(t.Value));
+					td.Template.Add(new IdentifierDeclaration(t.Value));
 				else
 					td.Template.Add(new DTokenDeclaration(t.Kind));
 			}

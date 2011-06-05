@@ -71,7 +71,6 @@
   <ItemGroup>
     <Compile Include="BinaryNodeStorage.cs" />
     <Compile Include="Core\AbstractNode.cs" />
-    <Compile Include="Core\AbstractTypeDeclaration.cs" />
     <Compile Include="Core\CodeLocation.cs" />
     <Compile Include="Core\NodeInterfaces.cs" />
     <Compile Include="DCodeResolver.cs" />

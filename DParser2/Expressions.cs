@@ -18,14 +18,62 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return (InnerDeclaration!=null?InnerDeclaration.ToString():"")+Expression.ToString();
+			return (InnerDeclaration != null ? InnerDeclaration.ToString() : "") + Expression.ToString();
 		}
 	}
+
+	public delegate INode[] ResolveTypeHandler(string identifier);
 
 	public interface IExpression
 	{
 		CodeLocation Location { get; }
 		CodeLocation EndLocation { get; }
+
+		ITypeDeclaration ExpressionTypeRepresentation{get;}
+		//bool IsConstant { get; }
+		// bool EvaluateExpressionValue(out ParserError[] semanticErrors);
+	}
+
+	public class ExpressionHelper
+	{
+		public static bool ToBool(object value)
+		{
+			bool b = false;
+
+			try
+			{
+				b = Convert.ToBoolean(value);
+			}
+			catch { }
+
+			return b;
+		}
+
+		public static double ToDouble(object value)
+		{
+			double d = 0;
+
+			try
+			{
+				d = Convert.ToDouble(value);
+			}
+			catch { }
+
+			return d;
+		}
+
+		public static long ToLong(object value)
+		{
+			long d = 0;
+
+			try
+			{
+				d = Convert.ToInt64(value);
+			}
+			catch { }
+
+			return d;
+		}
 	}
 
 	public abstract class OperatorBasedExpression : IExpression
@@ -36,7 +84,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return LeftOperand.ToString() + DTokens.GetTokenString(OperatorToken) + (RightOperand!=null? RightOperand.ToString():"");
+			return LeftOperand.ToString() + DTokens.GetTokenString(OperatorToken) + (RightOperand != null ? RightOperand.ToString() : "");
 		}
 
 		public CodeLocation Location
@@ -47,6 +95,22 @@ namespace D_Parser
 		public CodeLocation EndLocation
 		{
 			get { return RightOperand.EndLocation; }
+		}
+
+		/*public virtual bool IsConstant
+		{
+			get { return LeftOperand.IsConstant && RightOperand.IsConstant; }
+		}
+
+		public virtual object EvaluatedConstValue
+		{
+			get { return null; }
+		}*/
+
+
+		public abstract ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get;
 		}
 	}
 
@@ -86,10 +150,64 @@ namespace D_Parser
 		{
 			get { return Expressions[Expressions.Count].EndLocation; }
 		}
+
+		/*public bool IsConstant
+		{
+			get
+			{
+				foreach (var e in Expressions)
+					if (!e.IsConstant)
+						return false;
+				return true;
+			}
+		}
+
+		/// <summary>
+		/// Will return the const value of the first expression only
+		/// </summary>
+		public object EvaluatedConstValue
+		{
+			get { return Expressions[0].EvaluatedConstValue; }
+		}
+
+		/// <summary>
+		/// Will return all values
+		/// </summary>
+		public object[] EvaluatedConstValues
+		{
+			get
+			{
+				var l = new List<object>(Expressions.Count);
+				foreach (var e in Expressions)
+					l.Add(e.EvaluatedConstValue);
+
+				return l.ToArray();
+			}
+		}*/
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return null; }
+		}
 	}
 
-	public class AssignExpression : OperatorBasedExpression {
+	public class AssignExpression : OperatorBasedExpression
+	{
 		public AssignExpression(int opToken) { OperatorToken = opToken; }
+		/*
+		public override bool IsConstant
+		{
+			get
+			{
+				return false; // An assign expression cannot be constant at all..
+			}
+		}*/
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return RightOperand.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class ConditionalExpression : IExpression
@@ -113,85 +231,205 @@ namespace D_Parser
 		{
 			get { return FalseCaseExpression.EndLocation; }
 		}
+
+		//public bool IsConstant{	get { return OrOrExpression.IsConstant && TrueCaseExpression.IsConstant && FalseCaseExpression.IsConstant; }	}
+		/*
+		public object EvaluatedConstValue
+		{
+			get {
+				var o = OrOrExpression.EvaluatedConstValue;
+				return ExpressionHelper.ToBool(o)?TrueCaseExpression.EvaluatedConstValue : FalseCaseExpression.EvaluatedConstValue;
+			}
+		}*/
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return TrueCaseExpression.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class OrOrExpression : OperatorBasedExpression
 	{
 		public OrOrExpression() { OperatorToken = DTokens.LogicalOr; }
+		/*
+		public override object EvaluatedConstValue
+		{
+			get
+			{
+				return ExpressionHelper.ToBool(LeftOperand.EvaluatedConstValue) || ExpressionHelper.ToBool(RightOperand.EvaluatedConstValue);
+			}
+		}*/
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DTokenDeclaration(DTokens.Bool); }
+		}
 	}
 
 	public class AndAndExpression : OperatorBasedExpression
 	{
 		public AndAndExpression() { OperatorToken = DTokens.LogicalAnd; }
+		/*
+		public override object EvaluatedConstValue
+		{
+			get
+			{
+				return ExpressionHelper.ToBool(LeftOperand.EvaluatedConstValue) && ExpressionHelper.ToBool(RightOperand.EvaluatedConstValue);
+			}
+		}*/
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DTokenDeclaration(DTokens.Bool); }
+		}
 	}
 
 	public class XorExpression : OperatorBasedExpression
 	{
 		public XorExpression() { OperatorToken = DTokens.Xor; }
+		/*
+		public override object EvaluatedConstValue
+		{
+			get
+			{
+				return ExpressionHelper.ToBool(LeftOperand.EvaluatedConstValue) ^ ExpressionHelper.ToBool(RightOperand.EvaluatedConstValue);
+			}
+		}*/
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return LeftOperand.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class OrExpression : OperatorBasedExpression
 	{
 		public OrExpression() { OperatorToken = DTokens.BitwiseOr; }
+		/*
+		public override object EvaluatedConstValue
+		{
+			get
+			{
+				return ExpressionHelper.ToLong(LeftOperand.EvaluatedConstValue) | ExpressionHelper.ToLong(RightOperand.EvaluatedConstValue);
+			}
+		}*/
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return LeftOperand.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class AndExpression : OperatorBasedExpression
 	{
 		public AndExpression() { OperatorToken = DTokens.BitwiseAnd; }
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return LeftOperand.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class EqualExpression : OperatorBasedExpression
 	{
 		public EqualExpression(bool isUnEqual) { OperatorToken = isUnEqual ? DTokens.NotEqual : DTokens.Equal; }
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DTokenDeclaration(DTokens.Bool); }
+		}
 	}
 
 	public class IdendityExpression : OperatorBasedExpression
 	{
 		public bool Not;
 
-		public IdendityExpression(bool notIs) { Not=notIs;OperatorToken = DTokens.Is; }
+		public IdendityExpression(bool notIs) { Not = notIs; OperatorToken = DTokens.Is; }
 
 		public override string ToString()
 		{
-			return LeftOperand.ToString() + (Not?" !":" ")+ "is " + RightOperand.ToString();
+			return LeftOperand.ToString() + (Not ? " !" : " ") + "is " + RightOperand.ToString();
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DTokenDeclaration(DTokens.Bool); }
 		}
 	}
 
 	public class RelExpression : OperatorBasedExpression
 	{
 		public RelExpression(int relationalOperator) { OperatorToken = relationalOperator; }
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DTokenDeclaration(DTokens.Bool); }
+		}
 	}
 
 	public class InExpression : OperatorBasedExpression
 	{
 		public bool Not;
 
-		public InExpression(bool notIn) { Not=notIn;OperatorToken = DTokens.In; }
+		public InExpression(bool notIn) { Not = notIn; OperatorToken = DTokens.In; }
 
 		public override string ToString()
 		{
 			return LeftOperand.ToString() + (Not ? " !" : " ") + "in " + RightOperand.ToString();
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DTokenDeclaration(DTokens.Bool); }
 		}
 	}
 
 	public class ShiftExpression : OperatorBasedExpression
 	{
 		public ShiftExpression(int shiftOperator) { OperatorToken = shiftOperator; }
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return LeftOperand.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class AddExpression : OperatorBasedExpression
 	{
 		public AddExpression(bool isMinus) { OperatorToken = isMinus ? DTokens.Minus : DTokens.Plus; }
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return LeftOperand.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class MulExpression : OperatorBasedExpression
 	{
 		public MulExpression(int mulOperator) { OperatorToken = mulOperator; }
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return LeftOperand.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class CatExpression : OperatorBasedExpression
 	{
 		public CatExpression() { OperatorToken = DTokens.Tilde; }
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get {
+				var lot = LeftOperand.ExpressionTypeRepresentation;
+
+				if (lot is ArrayDecl)
+					return lot;
+				else
+					return new ArrayDecl() { InnerDeclaration=lot};
+			}
+		}
 	}
 
 	public interface UnaryExpression : IExpression { }
@@ -199,6 +437,11 @@ namespace D_Parser
 	public class PowExpression : OperatorBasedExpression, UnaryExpression
 	{
 		public PowExpression() { OperatorToken = DTokens.Pow; }
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return LeftOperand.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public abstract class SimpleUnaryExpression : UnaryExpression
@@ -208,7 +451,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return DTokens.GetTokenString(ForeToken)+UnaryExpression.ToString();
+			return DTokens.GetTokenString(ForeToken) + UnaryExpression.ToString();
 		}
 
 		public CodeLocation Location
@@ -221,6 +464,12 @@ namespace D_Parser
 		{
 			get { return UnaryExpression.EndLocation; }
 		}
+
+
+		public abstract ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get;
+		}
 	}
 
 	public class UnaryExpression_And : SimpleUnaryExpression
@@ -228,6 +477,11 @@ namespace D_Parser
 		public override int ForeToken
 		{
 			get { return DTokens.BitwiseAnd; }
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DExpressionDecl(this) { InnerDeclaration = UnaryExpression.ExpressionTypeRepresentation }; }
 		}
 	}
 
@@ -237,6 +491,11 @@ namespace D_Parser
 		{
 			get { return DTokens.Increment; }
 		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return UnaryExpression.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class UnaryExpression_Decrement : SimpleUnaryExpression
@@ -244,6 +503,11 @@ namespace D_Parser
 		public override int ForeToken
 		{
 			get { return DTokens.Decrement; }
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return UnaryExpression.ExpressionTypeRepresentation; }
 		}
 	}
 
@@ -253,6 +517,11 @@ namespace D_Parser
 		{
 			get { return DTokens.Times; }
 		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DExpressionDecl(this) {InnerDeclaration = UnaryExpression.ExpressionTypeRepresentation }; }
+		}
 	}
 
 	public class UnaryExpression_Add : SimpleUnaryExpression
@@ -260,6 +529,11 @@ namespace D_Parser
 		public override int ForeToken
 		{
 			get { return DTokens.Plus; }
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return UnaryExpression.ExpressionTypeRepresentation; }
 		}
 	}
 
@@ -269,6 +543,11 @@ namespace D_Parser
 		{
 			get { return DTokens.Minus; }
 		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return UnaryExpression.ExpressionTypeRepresentation; }
+		}
 	}
 
 	public class UnaryExpression_Not : SimpleUnaryExpression
@@ -277,13 +556,31 @@ namespace D_Parser
 		{
 			get { return DTokens.Not; }
 		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return UnaryExpression.ExpressionTypeRepresentation; }
+		}
 	}
 
+	/// <summary>
+	/// Bitwise negation operation:
+	/// 
+	/// int a=56;
+	/// int b=~a;
+	/// 
+	/// b will be -57;
+	/// </summary>
 	public class UnaryExpression_Cat : SimpleUnaryExpression
 	{
 		public override int ForeToken
 		{
 			get { return DTokens.Tilde; }
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return UnaryExpression.ExpressionTypeRepresentation; }
 		}
 	}
 
@@ -297,7 +594,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return "("+Type.ToString()+")."+AccessIdentifier;
+			return "(" + Type.ToString() + ")." + AccessIdentifier;
 		}
 
 		public CodeLocation Location
@@ -310,6 +607,11 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DExpressionDecl(this); }
 		}
 	}
 
@@ -324,7 +626,7 @@ namespace D_Parser
 	{
 		public ITypeDeclaration Type { get; set; }
 		public IExpression[] NewArguments { get; set; }
-		public IExpression[] Arguments{get;set;}
+		public IExpression[] Arguments { get; set; }
 
 		/// <summary>
 		/// true if new myType[10]; instead of new myType(1,"asdf"); has been used
@@ -333,21 +635,21 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			var ret= "new";
+			var ret = "new";
 
 			if (NewArguments != null)
 			{
 				ret += "(";
 				foreach (var e in NewArguments)
-					ret += e.ToString()+",";
-				ret = ret.TrimEnd(',') +")";
+					ret += e.ToString() + ",";
+				ret = ret.TrimEnd(',') + ")";
 			}
 
-			ret += " "+Type.ToString();
+			ret += " " + Type.ToString();
 
-			ret += IsArrayArgument?'[':'(';
+			ret += IsArrayArgument ? '[' : '(';
 			foreach (var e in Arguments)
-				ret += e.ToString()+",";
+				ret += e.ToString() + ",";
 
 			ret = ret.TrimEnd(',') + (IsArrayArgument ? ']' : ')');
 
@@ -364,6 +666,11 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return Type; }
 		}
 	}
 
@@ -401,12 +708,12 @@ namespace D_Parser
 				ret = ret.TrimEnd(',') + ")";
 			}
 
-			if(AnonymousClass!=null && AnonymousClass.BaseClasses!=null)
+			if (AnonymousClass != null && AnonymousClass.BaseClasses != null)
 			{
 				ret += ":";
 
 				foreach (var t in AnonymousClass.BaseClasses)
-					ret += t.ToString()+",";
+					ret += t.ToString() + ",";
 
 				ret = ret.TrimEnd(',');
 			}
@@ -427,6 +734,11 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DExpressionDecl(this); }
+		}
 	}
 
 	public class DeleteExpression : SimpleUnaryExpression
@@ -434,6 +746,11 @@ namespace D_Parser
 		public override int ForeToken
 		{
 			get { return DTokens.Delete; }
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return null; }
 		}
 	}
 
@@ -451,22 +768,22 @@ namespace D_Parser
 		public IExpression UnaryExpression;
 
 		public ITypeDeclaration Type { get; set; }
-		public int[] CastParamTokens { get; set; }
+		public int[] CastParamTokens { get; set; } //TODO: Still unused
 
 		public override string ToString()
 		{
-			var ret="cast(";
+			var ret = "cast(";
 
 			if (IsTypeCast)
 				ret += Type.ToString();
 			else
 			{
 				foreach (var tk in CastParamTokens)
-					ret += DTokens.GetTokenString(tk)+" ";
+					ret += DTokens.GetTokenString(tk) + " ";
 				ret = ret.TrimEnd(' ');
 			}
 
-			ret += ") "+UnaryExpression.ToString();
+			ret += ") " + UnaryExpression.ToString();
 
 			return ret;
 		}
@@ -482,6 +799,20 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get 
+			{ 
+				if(IsTypeCast)
+					return Type;
+
+				if (UnaryExpression != null)
+					return UnaryExpression.ExpressionTypeRepresentation;
+
+				return null;
+			}
+		}
 	}
 
 	public abstract class PostfixExpression : IExpression
@@ -494,6 +825,12 @@ namespace D_Parser
 		}
 
 		public abstract CodeLocation EndLocation { get; set; }
+
+
+		public abstract ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get;
+		}
 	}
 
 	/// <summary>
@@ -508,13 +845,29 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return PostfixForeExpression.ToString()+"."+(TemplateOrIdentifier!=null?TemplateOrIdentifier.ToString():NewExpression.ToString());
+			return PostfixForeExpression.ToString() + "." + (TemplateOrIdentifier != null ? TemplateOrIdentifier.ToString() : NewExpression.ToString());
 		}
 
 		public override CodeLocation EndLocation
 		{
 			get;
 			set;
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get {
+				var t = TemplateOrIdentifier;
+
+				if (t==null && NewExpression!=null)
+					return NewExpression.ExpressionTypeRepresentation;
+
+				if (t == null)
+					return null;
+
+				t.InnerDeclaration = PostfixForeExpression.ExpressionTypeRepresentation;
+				return t;
+			}
 		}
 	}
 
@@ -522,13 +875,18 @@ namespace D_Parser
 	{
 		public override string ToString()
 		{
-			return PostfixForeExpression.ToString()+"++";
+			return PostfixForeExpression.ToString() + "++";
 		}
 
 		public override CodeLocation EndLocation
 		{
 			get;
 			set;
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return PostfixForeExpression.ExpressionTypeRepresentation; }
 		}
 	}
 
@@ -544,6 +902,11 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return PostfixForeExpression.ExpressionTypeRepresentation; }
+		}
 	}
 
 	/// <summary>
@@ -556,19 +919,24 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			var ret = PostfixForeExpression.ToString()+"(";
+			var ret = PostfixForeExpression.ToString() + "(";
 
 			if (Arguments != null)
 				foreach (var a in Arguments)
-					ret +=a.ToString()+ ",";
+					ret += a.ToString() + ",";
 
-			return ret.TrimEnd(',')+")";
+			return ret.TrimEnd(',') + ")";
 		}
 
 		public override CodeLocation EndLocation
 		{
 			get;
 			set;
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return PostfixForeExpression.ExpressionTypeRepresentation; }
 		}
 	}
 
@@ -582,7 +950,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			var ret = (PostfixForeExpression!=null? PostfixForeExpression.ToString():"") + "[";
+			var ret = (PostfixForeExpression != null ? PostfixForeExpression.ToString() : "") + "[";
 
 			if (Arguments != null)
 				foreach (var a in Arguments)
@@ -595,6 +963,11 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DExpressionDecl(this) { InnerDeclaration=PostfixForeExpression.ExpressionTypeRepresentation}; }
 		}
 	}
 
@@ -630,9 +1003,14 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+		public override ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DExpressionDecl(this) { InnerDeclaration = PostfixForeExpression.ExpressionTypeRepresentation }; }
+		}
 	}
 
-	public interface PrimaryExpression : IExpression{ }
+	public interface PrimaryExpression : IExpression { }
 
 
 
@@ -670,6 +1048,12 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new IdentifierDeclaration(ToString()); }
+		}
 	}
 
 	public class TokenExpression : PrimaryExpression
@@ -694,6 +1078,12 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DTokenDeclaration(Token); }
 		}
 	}
 
@@ -729,6 +1119,12 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return Declaration; }
+		}
 	}
 
 	/// <summary>
@@ -738,7 +1134,7 @@ namespace D_Parser
 	{
 		public ArrayLiteralExpression()
 		{
-			Expressions = new List<IExpression>(); 
+			Expressions = new List<IExpression>();
 		}
 
 		public virtual IEnumerable<IExpression> Expressions { get; set; }
@@ -748,32 +1144,6 @@ namespace D_Parser
 			var s = "[";
 			foreach (var expr in Expressions)
 				s += expr.ToString() + ", ";
-			s = s.TrimEnd(' ', ',')+"]";
-			return s;
-		}
-
-		public CodeLocation Location
-		{
-			get;
-			set;
-		}
-
-		public CodeLocation EndLocation
-		{
-			get;
-			set;
-		}
-	}
-
-	public class AssocArrayExpression : PrimaryExpression
-	{
-		public IDictionary<IExpression, IExpression> KeyValuePairs = new Dictionary<IExpression, IExpression>();
-
-		public override string ToString()
-		{
-			var s = "[";
-			foreach (var expr in KeyValuePairs)
-				s += expr.Key.ToString()+":"+expr.Value.ToString() + ", ";
 			s = s.TrimEnd(' ', ',') + "]";
 			return s;
 		}
@@ -788,6 +1158,43 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DExpressionDecl(this); }
+		}
+	}
+
+	public class AssocArrayExpression : PrimaryExpression
+	{
+		public IDictionary<IExpression, IExpression> KeyValuePairs = new Dictionary<IExpression, IExpression>();
+
+		public override string ToString()
+		{
+			var s = "[";
+			foreach (var expr in KeyValuePairs)
+				s += expr.Key.ToString() + ":" + expr.Value.ToString() + ", ";
+			s = s.TrimEnd(' ', ',') + "]";
+			return s;
+		}
+
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new ArrayDecl(); }
 		}
 	}
 
@@ -816,6 +1223,11 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DelegateDeclaration() { IsFunction=LiteralToken==DTokens.Function, ReturnType=AnonymousMethod.Type, Parameters=AnonymousMethod.Parameters}; }
+		}
 	}
 
 	public class AssertExpression : PrimaryExpression
@@ -827,9 +1239,9 @@ namespace D_Parser
 			var ret = "assert(";
 
 			foreach (var e in AssignExpressions)
-				ret += e.ToString()+",";
+				ret += e.ToString() + ",";
 
-			return ret.TrimEnd(',')+")";
+			return ret.TrimEnd(',') + ")";
 		}
 
 		public CodeLocation Location
@@ -842,6 +1254,12 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DTokenDeclaration(DTokens.Bool); }
 		}
 	}
 
@@ -896,7 +1314,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return "typeid("+(Type!=null?Type.ToString():Expression.ToString())+")";
+			return "typeid(" + (Type != null ? Type.ToString() : Expression.ToString()) + ")";
 		}
 
 		public CodeLocation Location
@@ -929,20 +1347,20 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			var ret = "is("+Type.ToString();
+			var ret = "is(" + Type.ToString();
 
-			ret += Identifier +( EqualityTest?"==":":");
+			ret += Identifier + (EqualityTest ? "==" : ":");
 
-			ret += TypeSpecialization!=null?TypeSpecialization.ToString():DTokens.GetTokenString(TypeSpecializationToken);
+			ret += TypeSpecialization != null ? TypeSpecialization.ToString() : DTokens.GetTokenString(TypeSpecializationToken);
 
 			if (TemplateParameterList != null)
 			{
 				ret += ",";
 				foreach (var p in TemplateParameterList)
-					ret += p.ToString()+",";
+					ret += p.ToString() + ",";
 			}
 
-			return ret.TrimEnd(' ',',')+")";
+			return ret.TrimEnd(' ', ',') + ")";
 		}
 
 		public CodeLocation Location
@@ -966,11 +1384,11 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			var ret="__traits("+Keyword;
+			var ret = "__traits(" + Keyword;
 
 			if (Arguments != null)
 				foreach (var a in Arguments)
-					ret += ","+a.ToString();
+					ret += "," + a.ToString();
 
 			return ret + ")";
 		}
@@ -995,7 +1413,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return Type!=null?Type.ToString():AssignExpression.ToString();
+			return Type != null ? Type.ToString() : AssignExpression.ToString();
 		}
 
 		public CodeLocation Location
@@ -1020,7 +1438,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return "("+Expression.ToString()+")";
+			return "(" + Expression.ToString() + ")";
 		}
 
 		public CodeLocation Location
@@ -1038,7 +1456,7 @@ namespace D_Parser
 
 
 
-#region Template parameters
+	#region Template parameters
 
 	public interface ITemplateParameter
 	{
@@ -1063,7 +1481,7 @@ namespace D_Parser
 
 		public override string ToString(bool Attributes, bool IncludePath)
 		{
-			return (GetNodePath(this,false)+"."+ToString()).TrimEnd('.');
+			return (GetNodePath(this, false) + "." + ToString()).TrimEnd('.');
 		}
 	}
 
@@ -1079,10 +1497,10 @@ namespace D_Parser
 			var ret = Name;
 
 			if (Specialization != null)
-				ret += ":"+Specialization.ToString();
+				ret += ":" + Specialization.ToString();
 
 			if (Default != null)
-				ret += "="+Default.ToString();
+				ret += "=" + Default.ToString();
 
 			return ret;
 		}
@@ -1096,7 +1514,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return "this"+(FollowParameter!=null?(" "+FollowParameter.ToString()):"");
+			return "this" + (FollowParameter != null ? (" " + FollowParameter.ToString()) : "");
 		}
 	}
 
@@ -1110,7 +1528,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return Type.ToString()+" "+Name/*+ (SpecializationExpression!=null?(":"+SpecializationExpression.ToString()):"")+
+			return Type.ToString() + " " + Name/*+ (SpecializationExpression!=null?(":"+SpecializationExpression.ToString()):"")+
 				(DefaultExpression!=null?("="+DefaultExpression.ToString()):"")*/;
 		}
 	}
@@ -1122,7 +1540,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return "alias "+base.ToString();
+			return "alias " + base.ToString();
 		}
 	}
 
@@ -1132,22 +1550,22 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return Name+" ...";
+			return Name + " ...";
 		}
 	}
 
-#endregion
+	#endregion
 
-#region Initializers
+	#region Initializers
 
-	public interface DInitializer :IExpression { }
+	public interface DInitializer : IExpression { }
 
-	public class VoidInitializer : TokenExpression,DInitializer
+	public class VoidInitializer : TokenExpression, DInitializer
 	{
-		public VoidInitializer():base(DTokens.Void) { }
+		public VoidInitializer() : base(DTokens.Void) { }
 	}
 
-	public class ArrayInitializer : ArrayLiteralExpression,DInitializer
+	public class ArrayInitializer : ArrayLiteralExpression, DInitializer
 	{
 		public ArrayMemberInitializer[] ArrayMemberInitializations;
 
@@ -1158,16 +1576,16 @@ namespace D_Parser
 				foreach (var ami in ArrayMemberInitializations)
 					yield return ami.Left;
 			}
-			set{}
+			set { }
 		}
 
 		public override string ToString()
 		{
-			var ret="[";
+			var ret = "[";
 
-			if(ArrayMemberInitializations!=null)
+			if (ArrayMemberInitializations != null)
 				foreach (var i in ArrayMemberInitializations)
-					ret += i.ToString()+",";
+					ret += i.ToString() + ",";
 
 			return ret.TrimEnd(',') + "]";
 		}
@@ -1180,7 +1598,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return Left.ToString() +(Specialization!=null?(":"+Specialization.ToString()):"");
+			return Left.ToString() + (Specialization != null ? (":" + Specialization.ToString()) : "");
 		}
 	}
 
@@ -1192,7 +1610,7 @@ namespace D_Parser
 		{
 			var ret = "{";
 
-			if(StructMemberInitializers!=null)
+			if (StructMemberInitializers != null)
 				foreach (var i in StructMemberInitializers)
 					ret += i.ToString() + ",";
 
@@ -1214,14 +1632,14 @@ namespace D_Parser
 
 	public class StructMemberInitializer
 	{
-		public string MemberName=string.Empty;
+		public string MemberName = string.Empty;
 		public IExpression Specialization;
 
 		public override string ToString()
 		{
-			return (!string.IsNullOrEmpty(MemberName)? (MemberName+":"):"") + Specialization.ToString();
+			return (!string.IsNullOrEmpty(MemberName) ? (MemberName + ":") : "") + Specialization.ToString();
 		}
 	}
 
-#endregion
+	#endregion
 }

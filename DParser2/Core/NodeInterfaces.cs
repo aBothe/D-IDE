@@ -63,12 +63,4 @@ namespace D_Parser.Core
 		INode Parent { get; set; }
 		INode NodeRoot { get; set; }
 	}
-
-	public interface ITypeDeclaration
-	{
-		ITypeDeclaration InnerDeclaration { get; set; }
-		string ToString();
-
-		ITypeDeclaration InnerMost { get; set; }
-	}
 }

@@ -5,24 +5,57 @@ using D_Parser.Core;
 
 namespace D_Parser
 {
+	public interface ITypeDeclaration
+	{
+		ITypeDeclaration InnerDeclaration { get; set; }
+		ITypeDeclaration InnerMost { get; set; }
+	}
+
+	public abstract class AbstractTypeDeclaration : ITypeDeclaration
+	{
+		public ITypeDeclaration InnerMost
+		{
+			get
+			{
+				if (InnerDeclaration == null)
+					return this;
+				else
+					return InnerDeclaration.InnerMost;
+			}
+			set
+			{
+				if (InnerDeclaration == null)
+					InnerDeclaration = value;
+				else
+					InnerDeclaration.InnerMost = value;
+			}
+		}
+
+		public ITypeDeclaration InnerDeclaration
+		{
+			get;
+			set;
+		}
+	}
+
     /// <summary>
     /// Basic type, e.g. &gt;int&lt;
     /// </summary>
-    public class NormalDeclaration : AbstractTypeDeclaration
+    public class IdentifierDeclaration : AbstractTypeDeclaration
     {
-        public string Name;
+		public virtual string Name { get; set; }
 
-        public NormalDeclaration() { }
-        public NormalDeclaration(string Identifier)
+        public IdentifierDeclaration() { }
+        public IdentifierDeclaration(string Identifier)
         { Name = Identifier; }
 
         public override string ToString()
         {
-            return Name + (InnerDeclaration != null ? (" " + InnerDeclaration.ToString()) : "");
+			return (InnerDeclaration != null ? (InnerDeclaration.ToString()+".") : "") + Name;
         }
     }
 
-    public class DTokenDeclaration : NormalDeclaration
+    public class DTokenDeclaration : IdentifierDeclaration
     {
         public int Token;
 
@@ -41,77 +74,25 @@ namespace D_Parser
             InnerDeclaration = td;
         }
 
-        public new string Name
+        public override string Name
         {
             get { return Token >= 3 ? DTokens.GetTokenString(Token) : ""; }
-            set { Token = DTokens.GetTokenID(value); }
-        }
-
-        public override string ToString()
-        {
-            return Name + (InnerDeclaration != null ? (" " + InnerDeclaration.ToString()) : "");
+			set { }
         }
     }
 
     /// <summary>
-    /// Array decl, e.g. &gt;int[string]&lt; myArray;
+    /// Extends an identifier by an array literal.
     /// </summary>
-    public class ClampDecl : AbstractTypeDeclaration
+    public class ArrayDecl : AbstractTypeDeclaration
     {
-        /// <summary>
-        /// Equals <see cref="Base" />
-        /// </summary>
-        public ITypeDeclaration ValueType
-        {
-            get { return InnerDeclaration; }
-            set { InnerDeclaration = value; }
-        }
         public ITypeDeclaration KeyType;
-        public enum ClampType
-        {
-            Round = 0,
-            Square = 1,
-            Curly = 2
-        }
-        public ClampType Clamps = ClampType.Square;
-        public bool IsArrayDecl
-        {
-            get { return Clamps == ClampType.Square; }
-        }
 
-        public ClampDecl() { }
-        public ClampDecl(ITypeDeclaration ValueType) { this.ValueType = ValueType; }
-        public ClampDecl(ITypeDeclaration ValueType, ClampType clamps) { this.ValueType = ValueType; Clamps = clamps; }
+        public ArrayDecl() { }
 
         public override string ToString()
         {
-            string s = (ValueType != null ? ValueType.ToString() : "");
-            switch (Clamps)
-            {
-                case ClampType.Round:
-                    s += "(";
-                    break;
-                case ClampType.Square:
-                    s += "[";
-                    break;
-                case ClampType.Curly:
-                    s += "{";
-                    break;
-            }
-            s += (KeyType != null ? KeyType.ToString() : "");
-            switch (Clamps)
-            {
-                case ClampType.Round:
-                    s += ")";
-                    break;
-                case ClampType.Square:
-                    s += "]";
-                    break;
-                case ClampType.Curly:
-                    s += "}";
-                    break;
-            }
-            return s;
+            return (InnerDeclaration != null ? InnerDeclaration.ToString() : "")+ "["+(KeyType != null ? KeyType.ToString() : "")+"]";
         }
     }
 
@@ -201,33 +182,6 @@ namespace D_Parser
         }
     }
 
-    // Secondary importance
-    /// <summary>
-    /// class ABC: &gt;A, C&lt;
-    /// </summary>
-    public class InheritanceDecl : AbstractTypeDeclaration
-    {
-        public ITypeDeclaration InheritedClass;
-        public ITypeDeclaration InheritedInterface;
-
-        public InheritanceDecl() { }
-        public InheritanceDecl(ITypeDeclaration Base) { this.InnerDeclaration = Base; }
-
-        public override string ToString()
-        {
-            string ret = "";
-
-            if (InnerDeclaration != null) ret += InnerDeclaration.ToString();
-
-            if (InheritedClass != null || InheritedInterface != null) ret += ":";
-            if (InheritedClass != null) ret += InheritedClass.ToString();
-            if (InheritedClass != null && InheritedInterface != null) ret += ", ";
-            if (InheritedInterface != null) ret += InheritedInterface.ToString();
-
-            return ret;
-        }
-    }
-
     /// <summary>
     /// List&lt;T:base&gt; myList;
     /// </summary>
@@ -273,7 +227,7 @@ namespace D_Parser
 
         public void Add(string Identifier)
         {
-            Parts.Add(new NormalDeclaration(Identifier));
+            Parts.Add(new IdentifierDeclaration(Identifier));
         }
 
         public override string ToString()

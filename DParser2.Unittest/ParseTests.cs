@@ -95,6 +95,14 @@ namespace ParserTests
 			}
 		}
 
+		public static void IsTypeIdentifierTest(string code)
+		{
+			bool ShowCCPopup = !DResolver.IsTypeIdentifier(code, code.Length - 1);
+
+			Console.WriteLine("Code before caret:\t\t" + code);
+			Console.WriteLine("Show the completion popup:\t" + ShowCCPopup.ToString());
+		}
+
 
 
 		static void printErrors(IAbstractSyntaxTree mod)
