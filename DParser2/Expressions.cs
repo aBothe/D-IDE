@@ -16,9 +16,9 @@ namespace D_Parser
 			this.Expression = dExpression;
 		}
 
-		public override string ToString()
+		public override string ToString(bool IncludeBase)
 		{
-			return (InnerDeclaration != null ? InnerDeclaration.ToString() : "") + Expression.ToString();
+			return (IncludeBase&& InnerDeclaration != null ? InnerDeclaration.ToString() : "") + Expression.ToString();
 		}
 	}
 
@@ -1019,9 +1019,10 @@ namespace D_Parser
 	/// </summary>
 	public class IdentifierExpression : PrimaryExpression
 	{
-		public bool IsIdentifier { get { return Value is string; } }
+		public bool IsIdentifier { get { return Value is string && LiteralFormat==LiteralFormat.None; } }
 
 		public object Value = "";
+		public LiteralFormat LiteralFormat=LiteralFormat.None;
 
 		public IdentifierExpression() { }
 		public IdentifierExpression(object Val) { Value = Val; }
@@ -1052,7 +1053,7 @@ namespace D_Parser
 
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return new IdentifierDeclaration(ToString()); }
+			get { return new DExpressionDecl(this); }
 		}
 	}
 
@@ -1283,6 +1284,12 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+		//TODO: How to get this resolved?
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return null; }
+		}
 	}
 
 	public class ImportExpression : PrimaryExpression
@@ -1304,6 +1311,12 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DExpressionDecl(new IdentifierExpression(""){LiteralFormat=LiteralFormat.StringLiteral}); }
 		}
 	}
 
@@ -1327,6 +1340,12 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new IdentifierDeclaration("TypeInfo") { InnerDeclaration=new IdentifierDeclaration("object")}; }
 		}
 	}
 
@@ -1374,6 +1393,12 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DTokenDeclaration(DTokens.Bool); }
+		}
 	}
 
 	public class TraitsExpression : PrimaryExpression
@@ -1403,6 +1428,12 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+		//TODO: Get all the returned value types in detail
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return Keyword.StartsWith("is")||Keyword.StartsWith("has")?new DTokenDeclaration(DTokens.Bool):new IdentifierDeclaration("object"); }
 		}
 	}
 
@@ -1451,6 +1482,12 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return Expression.ExpressionTypeRepresentation; }
 		}
 	}
 
@@ -1627,6 +1664,12 @@ namespace D_Parser
 		{
 			get;
 			set;
+		}
+
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new DExpressionDecl(this); }
 		}
 	}
 

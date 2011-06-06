@@ -277,20 +277,20 @@ namespace D_Parser
 		{
 			Expect(Identifier);
 
-			if (la.Kind != Dot)
-				return new IdentifierDeclaration(t.Value);
 
-			var il = new D_Parser.IdentifierList();
-			il.Add(t.Value);
+			var td=new IdentifierDeclaration(t.Value);
 
 			while (la.Kind == Dot)
 			{
 				Step();
 				Expect(Identifier);
+				var ttd = new IdentifierDeclaration(t.Value);
 
-				il.Add(t.Value);
+				ttd.InnerDeclaration = td;
+				td = ttd;
 			}
-			return il;
+
+			return td;
 		}
 
 		void ImportDeclaration()
@@ -905,41 +905,18 @@ namespace D_Parser
 			if (la.Kind != (Identifier))
 				SynErr(Identifier);
 
-			// Template instancing
-			if (Peek(1).Kind == (Not))
-				td = TemplateInstance();
+			// Template instancing or Identifier
+			td = TemplateInstance();
 
-			// Identifier
-			else
+			while (la.Kind == Dot)
 			{
 				Step();
-				td = new IdentifierDeclaration(t.Value);
+				var ttd = TemplateInstance();
+
+				ttd.InnerDeclaration = td;
+				td = ttd;
 			}
-
-			// If we have only one identifier, return immediately
-			if (la.Kind != Dot)
-				return td;
-
-			// Otherwise go on with parsing an identifierlist declaration
-			var ret = new IdentifierList();
-
-			// Important: Add the already parsed identifier/template decl
-			ret.Add(td);
-
-			while (la.Kind == (Dot))
-			{
-				Step();
-				// Template instancing
-				if (Lexer.CurrentPeekToken.Kind == (Not))
-					ret.Add(TemplateInstance());
-				// Identifier
-				else
-				{
-					Expect(Identifier);
-					ret.Add(t.Value);
-				}
-			}
-			return ret;
+			return td;
 		}
 
 		bool IsStorageClass
@@ -2046,13 +2023,13 @@ namespace D_Parser
 					while (la.LiteralFormat == LiteralFormat.StringLiteral || la.LiteralFormat == LiteralFormat.VerbatimStringLiteral)
 					{
 						Step();
-						a += la.LiteralValue as string;
+						a += t.LiteralValue as string;
 					}
-					return new IdentifierExpression(a) { Location=startLoc,EndLocation=t.EndLocation};
+					return new IdentifierExpression(a) {LiteralFormat=t.LiteralFormat, Location=startLoc,EndLocation=t.EndLocation};
 				}
 				else if (t.LiteralFormat == LiteralFormat.CharLiteral)
-					return new IdentifierExpression(t.LiteralValue) { Location = startLoc, EndLocation = t.EndLocation };
-				return new IdentifierExpression(t.LiteralValue) { Location = startLoc, EndLocation = t.EndLocation };
+					return new IdentifierExpression(t.LiteralValue) { LiteralFormat=t.LiteralFormat,Location = startLoc, EndLocation = t.EndLocation };
+				return new IdentifierExpression(t.LiteralValue) { LiteralFormat=t.LiteralFormat,Location = startLoc, EndLocation = t.EndLocation };
 			}
 			#endregion
 
@@ -2190,7 +2167,6 @@ namespace D_Parser
 				var e = new MixinExpression() { Location=t.Location};
 				Expect(OpenParenthesis);
 
-				
 				e.AssignExpression = AssignExpression();
 
 				Expect(CloseParenthesis);
@@ -3573,8 +3549,8 @@ namespace D_Parser
 
 			if (la.Kind != Not || (Peek(1).Kind==Is || Lexer.CurrentPeekToken.Kind==In)) // myExpr !is null  --> there, it would parse 'is' as template argument
 				return new IdentifierDeclaration(t.Value);
-			
-			var td = new TemplateDecl(new IdentifierDeclaration(t.Value));
+
+			var td = new TemplateDecl() { TemplateIdentifier=t.Value};
 			Expect(Not);
 			if (la.Kind == (OpenParenthesis))
 			{
@@ -3599,7 +3575,7 @@ namespace D_Parser
 			{
 				Step();
 				if (t.Kind == (Identifier) || t.Kind == (Literal))
-					td.Template.Add(new IdentifierDeclaration(t.Value));
+					td.Template.Add(new IdentifierDeclaration(t.LiteralValue));
 				else
 					td.Template.Add(new DTokenDeclaration(t.Kind));
 			}

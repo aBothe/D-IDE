@@ -149,7 +149,7 @@ namespace D_IDE.D
 						var idParts = (n as IAbstractSyntaxTree).ModuleName.Split('.');
 						int skippableParts = 0;
 
-						if (id is NormalDeclaration)
+						if (id is IdentifierDeclaration)
 							skippableParts = 1;
 						else if (id is IdentifierList)
 							skippableParts = (id as IdentifierList).Parts.Count;

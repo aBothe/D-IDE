@@ -57,11 +57,24 @@ namespace ParserTests
 			Console.WriteLine("~" + (hp.Duration / Files.Count).ToString() + "s per file");
 		}
 
-		public static void TestExpression(string e)
+		public static IExpression TestExpression(string e)
 		{
 			var ex = DParser.ParseExpression(e);
 
 			Console.WriteLine(e+"\t>>>\t"+ ex);
+			return ex;
+		}
+
+		public static void TestTypeEval(string e)
+		{
+			var ex = DParser.ParseExpression(e);
+
+			Console.WriteLine("Code:\t\t"+e);
+			Console.WriteLine("Expression:\t"+ex.ToString());
+
+			var tr = ex.ExpressionTypeRepresentation;
+
+			Console.WriteLine("Type representation:\t"+tr.ToString());
 		}
 
 		public static void TestExpressionStartFinder(string code_untilCaretOffset)

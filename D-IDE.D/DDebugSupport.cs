@@ -129,7 +129,7 @@ namespace D_IDE.D
 				{
 					var block = DCodeResolver.SearchBlockAt(module, new CodeLocation(0, codeLine));
 
-					var res = DCodeResolver.ResolveTypeDeclarations_ModuleOnly(block, new NormalDeclaration(Symbol.Name), DCodeResolver.NodeFilter.All, null);
+					var res = DCodeResolver.ResolveTypeDeclarations_ModuleOnly(block, new IdentifierDeclaration(Symbol.Name), DCodeResolver.NodeFilter.All, null);
 
 					if (res.Length > 0)
 					{
@@ -162,16 +162,16 @@ namespace D_IDE.D
 					if (!IsBasicType(curValueType))
 					{
 						if (TypeString == "string") //TODO: Replace this by searching the alias definition in the cache
-							curValueType = new ClampDecl(new DTokenDeclaration(DTokens.Char), ClampDecl.ClampType.Square);
+							curValueType = new ArrayDecl() { InnerDeclaration=new DTokenDeclaration(DTokens.Char)};
 						else if (TypeString == "wstring")
-							curValueType = new ClampDecl(new DTokenDeclaration(DTokens.Wchar), ClampDecl.ClampType.Square);
+							curValueType = new ArrayDecl() { InnerDeclaration = new DTokenDeclaration(DTokens.Wchar) };
 						else if (TypeString == "dstring")
-							curValueType = new ClampDecl(new DTokenDeclaration(DTokens.Dchar), ClampDecl.ClampType.Square);
+							curValueType = new ArrayDecl() { InnerDeclaration = new DTokenDeclaration(DTokens.Dchar) };
 
 						if (IsArray(curValueType))
 						{
-							var clampDecl = curValueType as ClampDecl;
-							var valueType = clampDecl.ValueType;
+							var clampDecl = curValueType as ArrayDecl;
+							var valueType = clampDecl.InnerDeclaration;
 
 							if (valueType is DTokenDeclaration)
 							{
@@ -335,13 +335,13 @@ namespace D_IDE.D
 
 			public static bool IsArray(ITypeDeclaration t)
 			{
-				return (t is ClampDecl && (t as ClampDecl).IsArrayDecl);
+				return t is ArrayDecl;
 			}
 
 			//TODO: Read out (array!) values, class defintion locations and rename base class references to 'base'
 			public static bool IsArray(INode node)
 			{
-				return (node != null && node.Type is ClampDecl && (node.Type as ClampDecl).IsArrayDecl);
+				return (node != null && IsArray(node.Type));
 			}
 
 			string _valueString;

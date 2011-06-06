@@ -15,11 +15,13 @@ namespace ParserTests
         public static string curFile = "";
         public static void Main(string[] args)
         {
-			string input="";
+			string input="a!('a').b.c.d";
 
+			ParseTests.TestTypeEval(input);
+			Console.ReadKey();
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);
-
+			return;
 			while (true)
 			{
 				input = Console.ReadLine();
@@ -29,7 +31,7 @@ namespace ParserTests
 
 				var code = input;
 
-				
+				ParseTests.TestTypeEval(code);
 			}
         }
     }

@@ -531,7 +531,7 @@ namespace D_Parser.Resolver
 					// Scan the node's children for a match - return if we found one
 					foreach (var ch in currentParent)
 					{
-						if (nameIdent.Name == ch.Name && !ret.Contains(ch) && MatchesFilter(Filter, ch))
+						if (nameIdent == ch.Name && !ret.Contains(ch) && MatchesFilter(Filter, ch))
 							baseTypes.Add(ch);
 					}
 
@@ -547,7 +547,7 @@ namespace D_Parser.Resolver
 					if (currentParent is DMethod)
 						foreach (var ch in (currentParent as DMethod).Parameters)
 						{
-							if (nameIdent.Name == ch.Name)
+							if (nameIdent== ch.Name)
 								baseTypes.Add(ch);
 						}
 
@@ -555,7 +555,7 @@ namespace D_Parser.Resolver
 					if (currentParent is DNode && (currentParent as DNode).TemplateParameters != null)
 						foreach (var ch in (currentParent as DNode).TemplateParameters)
 						{
-							if (nameIdent.Name == ch.Name)
+							if (nameIdent == ch.Name)
 								baseTypes.Add(new TemplateParameterNode(ch));
 						}
 
@@ -828,7 +828,118 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class DResolver
 	{
-		
+		public static ResolveResult ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache)
+		{
+			if (declaration == null)
+				return null;
+
+			var rr = new ResolveResult() { ParsedDeclaration = declaration };
+
+			// Walk down recursively to resolve everything from the very first to declaration's base type declaration.
+			ResolveResult rbase = null;
+			if (declaration.InnerDeclaration != null)
+				rr.ResultBase = rbase = ResolveType(declaration.InnerDeclaration, currentlyScopedNode, parseCache);
+
+			/* 
+			 * If there is no parent resolve context (what usually means we are searching the type named like the first identifier in the entire declaration),
+			 * search the very first type declaration by walking along the current block scope hierarchy.
+			 * If there wasn't any item found in that procedure, search in the global parseCache
+			 */
+			if (rbase == null)
+			{
+				if (declaration is IdentifierDeclaration)
+				{
+					string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
+					var matches = new List<INode>();
+
+					// First search along the hierarchy in the current module
+					var curScope = currentlyScopedNode;
+					while (curScope != null)
+					{
+						matches.AddRange( ScanNodeForIdentifier(curScope, searchIdentifier, parseCache));
+
+						curScope = curScope.Parent as IBlockNode;
+					}
+
+					// Then go on searching in the global scope
+					foreach (var mod in parseCache)
+					{
+						matches.AddRange(ScanNodeForIdentifier(mod, searchIdentifier, null));
+					}
+				}
+			}
+
+			return rr;
+		}
+
+		public static ResolveResult ResolveBaseClass(DClassLike ActualClass, IEnumerable<IAbstractSyntaxTree> ModuleCache)
+		{
+			var ret = new List<DClassLike>();
+			// Implicitly set the object class to the inherited class if no explicit one was done
+			if (ActualClass.BaseClasses.Count < 1)
+			{
+				var ObjectClass = ResolveType(new IdentifierDeclaration("Object"), ActualClass.NodeRoot as IBlockNode, ModuleCache);
+				if (ObjectClass.MemberCount > 0 && ObjectClass.ResolvedMembersAndTypes[0].Key!=ActualClass) // Yes, it can be null - like the Object class which can't inherit itself
+					return ObjectClass;
+			}
+			else // Take the first only (since D enforces single inheritance)
+			{
+				var ClassMatches = ResolveType(ActualClass.BaseClasses[0], ActualClass.NodeRoot as IBlockNode, ModuleCache);
+				if (ClassMatches.MemberCount > 0)
+					return ClassMatches;
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Scans through the node. Also checks if n is a DClassLike or an other kind of type node and checks their specific child and/or base class nodes.
+		/// </summary>
+		/// <param name="n"></param>
+		/// <param name="name"></param>
+		/// <param name="parseCache">Needed when trying to search base classes</param>
+		/// <returns></returns>
+		public static IEnumerable<INode> ScanNodeForIdentifier(IBlockNode curScope, string name, IEnumerable<IAbstractSyntaxTree> parseCache)
+		{
+			var matches = new List<INode>();
+			foreach (var n in curScope)
+			{
+				if (n.Name == name)
+					matches.Add(n);
+			}
+
+			// If our current Level node is a class-like, also attempt to search in its baseclass!
+			if (curScope is DClassLike)
+			{
+				var baseClass = ResolveBaseClass(curScope as DClassLike, parseCache);
+				if (baseClass != null && baseClass.MemberCount>0)
+				{
+					// Search for items called name in the base class(es)
+					var r=ScanNodeForIdentifier(baseClass.ResolvedMembersAndTypes[0].Key as IBlockNode,name,parseCache);
+
+					if (r != null)
+						matches.AddRange(r);
+				}
+			}
+
+			// Check parameters
+			if (curScope is DMethod)
+				foreach (var ch in (curScope as DMethod).Parameters)
+				{
+					if (name == ch.Name)
+						matches.Add(ch);
+				}
+
+			// and template parameters
+			if (curScope is DNode && (curScope as DNode).TemplateParameters != null)
+				foreach (var ch in (curScope as DNode).TemplateParameters)
+				{
+					if (name == ch.Name)
+						matches.Add(new TemplateParameterNode(ch));
+				}
+
+			return matches;
+		}
 
 		static readonly BitArray sigTokens = DTokens.NewSet(
 			DTokens.If,

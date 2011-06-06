@@ -9,6 +9,9 @@ namespace D_Parser
 	{
 		ITypeDeclaration InnerDeclaration { get; set; }
 		ITypeDeclaration InnerMost { get; set; }
+
+		string ToString();
+		string ToString(bool IncludesBase);
 	}
 
 	public abstract class AbstractTypeDeclaration : ITypeDeclaration
@@ -36,6 +39,18 @@ namespace D_Parser
 			get;
 			set;
 		}
+
+		public override string ToString()
+		{
+			return ToString(true);
+		}
+
+		public abstract string ToString(bool IncludesBase);
+
+		public static implicit operator String(AbstractTypeDeclaration d)
+		{
+			return d.ToString(false);
+		}
 	}
 
     /// <summary>
@@ -43,17 +58,17 @@ namespace D_Parser
     /// </summary>
     public class IdentifierDeclaration : AbstractTypeDeclaration
     {
-		public virtual string Name { get; set; }
+		public virtual object Value { get; set; }
 
         public IdentifierDeclaration() { }
-        public IdentifierDeclaration(string Identifier)
-        { Name = Identifier; }
+        public IdentifierDeclaration(object Value)
+        { this.Value = Value; }
 
-        public override string ToString()
-        {
-			return (InnerDeclaration != null ? (InnerDeclaration.ToString()+".") : "") + Name;
-        }
-    }
+		public override string ToString(bool IncludesBase)
+		{
+			return (IncludesBase&& InnerDeclaration != null ? (InnerDeclaration.ToString() + ".") : "") +Convert.ToString(Value);
+		}
+	}
 
     public class DTokenDeclaration : IdentifierDeclaration
     {
@@ -74,7 +89,7 @@ namespace D_Parser
             InnerDeclaration = td;
         }
 
-        public override string Name
+        public override object Value
         {
             get { return Token >= 3 ? DTokens.GetTokenString(Token) : ""; }
 			set { }
@@ -90,9 +105,9 @@ namespace D_Parser
 
         public ArrayDecl() { }
 
-        public override string ToString()
+		public override string ToString(bool IncludesBase)
         {
-            return (InnerDeclaration != null ? InnerDeclaration.ToString() : "")+ "["+(KeyType != null ? KeyType.ToString() : "")+"]";
+            return (IncludesBase&& InnerDeclaration != null ? InnerDeclaration.ToString() : "")+ "["+(KeyType != null ? KeyType.ToString() : "")+"]";
         }
     }
 
@@ -110,9 +125,9 @@ namespace D_Parser
 
         public List<INode> Parameters = new List<INode>();
 
-        public override string ToString()
+		public override string ToString(bool IncludesBase)
         {
-            string ret = ReturnType.ToString() + (IsFunction ? " function" : " delegate") + "(";
+            string ret = (IncludesBase? ReturnType.ToString():"") + (IsFunction ? " function" : " delegate") + "(";
 
             foreach (DVariable n in Parameters)
             {
@@ -140,9 +155,9 @@ namespace D_Parser
         public PointerDecl() { }
         public PointerDecl(ITypeDeclaration BaseType) { InnerDeclaration = BaseType; }
 
-        public override string ToString()
+		public override string ToString(bool IncludesBase)
         {
-            return (InnerDeclaration != null ? InnerDeclaration.ToString() : "") + "*";
+            return (IncludesBase&& InnerDeclaration != null ? InnerDeclaration.ToString() : "") + "*";
         }
     }
 
@@ -165,9 +180,9 @@ namespace D_Parser
         public MemberFunctionAttributeDecl() { }
         public MemberFunctionAttributeDecl(int ModifierToken) { this.Modifier = ModifierToken; }
 
-        public override string ToString()
+		public override string ToString(bool IncludesBase)
         {
-            return (InnerDeclaration != null ? (InnerDeclaration.ToString()+" ") : "") +Name + "(" + (InnerType != null ? InnerType.ToString() : "") + ")";
+            return (IncludesBase&& InnerDeclaration != null ? (InnerDeclaration.ToString()+" ") : "") +Value + "(" + (InnerType != null ? InnerType.ToString() : "") + ")";
         }
     }
 
@@ -176,9 +191,9 @@ namespace D_Parser
         public VarArgDecl() { }
         public VarArgDecl(ITypeDeclaration BaseIdentifier) { InnerDeclaration = BaseIdentifier; }
 
-        public override string ToString()
+		public override string ToString(bool IncludesBase)
         {
-            return (InnerDeclaration != null ? InnerDeclaration.ToString() : "") + "...";
+            return (IncludesBase&& InnerDeclaration != null ? InnerDeclaration.ToString() : "") + "...";
         }
     }
 
@@ -187,6 +202,7 @@ namespace D_Parser
     /// </summary>
     public class TemplateDecl : AbstractTypeDeclaration
     {
+		public string TemplateIdentifier = string.Empty;
         public List<ITypeDeclaration> Template=new List<ITypeDeclaration>();
 
         public TemplateDecl() { }
@@ -195,66 +211,15 @@ namespace D_Parser
             this.InnerDeclaration = Base;
         }
 
-        public override string ToString()
+		public override string ToString(bool IncludesBase)
         {
-            string s = (InnerDeclaration != null ? InnerDeclaration.ToString() : "").ToString() + "!(";
+            string s = (IncludesBase&& InnerDeclaration != null ? (InnerDeclaration.ToString()+".") : "").ToString() +TemplateIdentifier+ "!(";
 
             foreach (var t in Template)
                 s += t.ToString()+",";
             s=s.TrimEnd(',',' ');
             s+=")";
             return s;
-        }
-    }
-
-    /// <summary>
-    /// Probably a more efficient way to store identifier lists like a.b.c.d
-    /// </summary>
-    public class IdentifierList : AbstractTypeDeclaration
-    {
-        public readonly List<ITypeDeclaration> Parts = new List<ITypeDeclaration>();
-
-        public ITypeDeclaration this[int i]
-        {
-            get { return Parts[i]; }
-            set { Parts[i] = value;}
-        }
-
-        public void Add(ITypeDeclaration Part)
-        {
-            Parts.Add(Part);
-        }
-
-        public void Add(string Identifier)
-        {
-            Parts.Add(new IdentifierDeclaration(Identifier));
-        }
-
-        public override string ToString()
-        {
-            var s = "";
-            foreach (var p in Parts)
-                s += "." + p.ToString();
-            return s.TrimStart('.');
-        }
-
-        public string ToString(int start)
-        {
-            return ToString(start,Parts.Count-start);
-        }
-
-        public string ToString(int start, int length)
-        {
-            var s = "";
-            if (start <= 0 || length < 0) 
-                throw new ArgumentNullException("Parameter must not be 0 or less");
-            if (start > Parts.Count || (start + length) > Parts.Count) 
-                throw new ArgumentOutOfRangeException();
-
-            for (int i = start; i < (start + length);i++ )
-                s += "." + Parts[i].ToString();
-
-            return s.TrimStart('.');
         }
     }
 }
