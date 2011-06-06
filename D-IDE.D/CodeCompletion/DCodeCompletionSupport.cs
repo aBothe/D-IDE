@@ -46,6 +46,8 @@ namespace D_IDE.D
 			// Usually shows variable members
 			if (EnteredText == ".")
 			{
+				var rr = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset-1, caretLocation, EditorDocument.SyntaxTree, codeCache);
+
 				ITypeDeclaration id = null;
 				DToken tk = null;
 				var accessedItems=DCodeResolver.ResolveTypeDeclarations(EditorDocument.SyntaxTree,
@@ -151,8 +153,8 @@ namespace D_IDE.D
 
 						if (id is IdentifierDeclaration)
 							skippableParts = 1;
-						else if (id is IdentifierList)
-							skippableParts = (id as IdentifierList).Parts.Count;
+						/*else if (id is IdentifierList)
+							skippableParts = (id as IdentifierList).Parts.Count;*/
 
 						if (skippableParts >= idParts.Length)
 						{

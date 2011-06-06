@@ -1053,7 +1053,7 @@ namespace D_Parser
 
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return new DExpressionDecl(this); }
+			get { return IsIdentifier? (ITypeDeclaration)new IdentifierDeclaration(Value): new DExpressionDecl(this); }
 		}
 	}
 

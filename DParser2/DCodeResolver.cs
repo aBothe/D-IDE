@@ -462,7 +462,7 @@ namespace D_Parser.Resolver
 			// Modules    Declaration
 			// |---------|-----|
 			// std.stdio.writeln();
-			if (IdentifierList is IdentifierList)
+			/*if (IdentifierList is IdentifierList)
 			{
 				var il = IdentifierList as IdentifierList;
 				var skippedIds = 0;
@@ -471,9 +471,8 @@ namespace D_Parser.Resolver
 				var istr = il.ToString();
 
 				var mod = BlockNode is DModule ? BlockNode as DModule : BlockNode.NodeRoot as DModule;
-				/* If the id list start with the name of BlockNode's root module, 
-				 * skip those identifiers first to proceed seeking the rest of the list
-				 */
+				// If the id list start with the name of BlockNode's root module, 
+				// skip those identifiers first to proceed seeking the rest of the list
 				if (mod != null && !string.IsNullOrEmpty(mod.ModuleName) && istr.StartsWith(mod.ModuleName))
 				{
 					skippedIds += mod.ModuleName.Split('.').Length;
@@ -511,7 +510,7 @@ namespace D_Parser.Resolver
 				}
 
 				return ret.ToArray();
-			}
+			}*/
 
 			//HACK: Scan the type declaration list for any NormalDeclarations
 			var td = IdentifierList;
@@ -828,6 +827,28 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class DResolver
 	{
+		public static ResolveResult ResolveType(string code, int caret, CodeLocation caretLocation, IAbstractSyntaxTree codeAST, IEnumerable<IAbstractSyntaxTree> parseCache)
+		{
+			var start = ReverseParsing.SearchExpressionStart(code, caret);
+
+			if (start < 0)
+				return null;
+
+			var expressionCode = code.Substring(start, caret - start);
+
+			var parser = DParser.Create(new StringReader(expressionCode));
+			parser.Lexer.NextToken();
+
+			if (parser.IsAssignExpression())
+			{
+				return ResolveType(parser.AssignExpression().ExpressionTypeRepresentation,codeAST,parseCache);
+			}
+			else
+			{
+				return ResolveType(parser.Type(), codeAST, parseCache);
+			}
+		}
+
 		public static ResolveResult ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache)
 		{
 			if (declaration == null)
@@ -864,7 +885,21 @@ namespace D_Parser.Resolver
 					// Then go on searching in the global scope
 					foreach (var mod in parseCache)
 					{
+						if (mod.ModuleName.StartsWith(searchIdentifier))
+							matches.Add(mod);
+
 						matches.AddRange(ScanNodeForIdentifier(mod, searchIdentifier, null));
+					}
+
+					foreach (var m in matches)
+					{
+						IBlockNode type = null;
+						if (m is DVariable)
+						{
+							var v = m as DVariable;
+							
+						}
+						rr.Add(m, type);
 					}
 				}
 			}
