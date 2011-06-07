@@ -56,7 +56,7 @@ namespace D_Parser.Resolver
 		utf32
 	}
 
-	public class ResolveResult:IEnumerable<KeyValuePair<INode,IBlockNode>>
+	public class ResolveResult:IEnumerable<KeyValuePair<INode,IBlockNode[]>>
 	{
 		/// <summary>
 		/// The expression that has been parsed
@@ -71,7 +71,7 @@ namespace D_Parser.Resolver
 		/// Usually there should be only one resolved member or type.
 		/// Only in the case that there are further members/types that are named equally, two or more items will be held by <see cref="ResolvedMembersAndTypes"/>
 		/// </summary>
-		public readonly List<KeyValuePair<INode, IBlockNode>> ResolvedMembersAndTypes = new List<KeyValuePair<INode, IBlockNode>>();
+		public readonly List<KeyValuePair<INode, IBlockNode[]>> ResolvedMembersAndTypes = new List<KeyValuePair<INode, IBlockNode[]>>();
 
 		public IEnumerable<INode> Members
 		{
@@ -81,15 +81,21 @@ namespace D_Parser.Resolver
 			}
 		}
 
-		public void Add(INode member, IBlockNode typeDeclaration)
+		public void Add(INode member, List<IBlockNode> typeDeclarations)
 		{
-			ResolvedMembersAndTypes.Add(new KeyValuePair<INode,IBlockNode>(member,typeDeclaration));
+			ResolvedMembersAndTypes.Add(new KeyValuePair<INode, IBlockNode[]>(member, typeDeclarations.ToArray()));
 		}
 
-		public void Add(IBlockNode type, IBlockNode baseClass)
+		public void Add(INode member, IBlockNode[] typeDeclarations)
 		{
-			ResolvedMembersAndTypes.Add(new KeyValuePair<INode, IBlockNode>(type, baseClass));
+			ResolvedMembersAndTypes.Add(new KeyValuePair<INode, IBlockNode[]>(member, typeDeclarations));
 		}
+
+		public void Add(INode member, IBlockNode typeDeclaration)
+		{
+			ResolvedMembersAndTypes.Add(new KeyValuePair<INode,IBlockNode[]>(member,new[]{ typeDeclaration}));
+		}
+
 
 		public int MemberCount
 		{
@@ -113,7 +119,7 @@ namespace D_Parser.Resolver
 		/// </summary>
 		public ResolveResult ResultBase { get; set; }
 
-		public IEnumerator<KeyValuePair<INode, IBlockNode>> GetEnumerator()
+		public IEnumerator<KeyValuePair<INode, IBlockNode[]>> GetEnumerator()
 		{
 			return ResolvedMembersAndTypes.GetEnumerator();
 		}

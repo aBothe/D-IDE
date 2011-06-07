@@ -47,7 +47,7 @@ namespace D_IDE.D
 			if (EnteredText == ".")
 			{
 				var rr = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset-1, caretLocation, EditorDocument.SyntaxTree, codeCache);
-
+				/*
 				ITypeDeclaration id = null;
 				DToken tk = null;
 				var accessedItems=DCodeResolver.ResolveTypeDeclarations(EditorDocument.SyntaxTree,
@@ -67,7 +67,7 @@ namespace D_IDE.D
 
 				if (accessedItems == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
-
+				*/
 				/*
 				 * So, after getting the accessed variable or class or namespace it's needed either 
 				 * - to resolve its type and show all its public items
@@ -76,18 +76,12 @@ namespace D_IDE.D
 				 * 
 				 * Note: When having entered a module name stub only (e.g. "std." or "core.") it's needed to show all packages that belong to that root namespace
 				 */
-				foreach (var n in accessedItems)
+				foreach (var kv in rr.ResolvedMembersAndTypes)
 				{
+					var n = kv.Key;
 					if (n is DVariable || n is DMethod)
 					{
-						var type = DCodeResolver.GetDNodeType(n);
-
-						if (type == null)
-							continue;
-
-						var declarationNodes = DCodeResolver.ResolveTypeDeclarations(EditorDocument.SyntaxTree, type, codeCache,true);
-
-						foreach (var declNode in declarationNodes)
+						foreach (var declNode in kv.Value)
 							if (declNode is IBlockNode)
 							{
 								var declClass = declNode as DClassLike;
@@ -127,9 +121,9 @@ namespace D_IDE.D
 								// If "this." and if watching the current inheritance level only , add all items
 								// if "super." , add public items
 								// if neither nor, add public static items
-								if( (isThis&&n==curClass) ? true : 
+								/*if( (isThis&&n==curClass) ? true : 
 										(isThisOrSuper ? dn.IsPublic : 
-											(dn.IsStatic && dn.IsPublic)))
+											(dn.IsStatic && dn.IsPublic)))*/
 									l.Add(new DCompletionData(dn));
 							}
 							curClass = DCodeResolver.ResolveBaseClass(curClass, codeCache);
@@ -151,10 +145,8 @@ namespace D_IDE.D
 						var idParts = (n as IAbstractSyntaxTree).ModuleName.Split('.');
 						int skippableParts = 0;
 
-						if (id is IdentifierDeclaration)
-							skippableParts = 1;
-						/*else if (id is IdentifierList)
-							skippableParts = (id as IdentifierList).Parts.Count;*/
+						// if (id is IdentifierDeclaration)	skippableParts = 1;
+						// else if (id is IdentifierList)	skippableParts = (id as IdentifierList).Parts.Count;
 
 						if (skippableParts >= idParts.Length)
 						{
@@ -168,12 +160,12 @@ namespace D_IDE.D
 										l.Add(new DCompletionData(dn));
 								}
 							}
-						}
+						}/*
 						else if (!addedModuleNames.Contains(idParts[skippableParts])) // Add next part of the module name path only if it wasn't added before
 						{
 							addedModuleNames.Add(idParts[skippableParts]); // e.g.  std.c.  ... in this virtual package, there are several sub-packages that contain the .c-part
 							l.Add(new NamespaceCompletionData(idParts[skippableParts],GetModulePath((n as IAbstractSyntaxTree).FileName,idParts.Length,skippableParts+1)));
-						}
+						}*/
 					}
 				}
 			}

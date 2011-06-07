@@ -897,7 +897,7 @@ namespace D_Parser.Resolver
 
 					foreach (var m in matches)
 					{
-						IBlockNode type = null;
+						var types = new List<IBlockNode>();
 						if (m is DVariable)
 						{
 							var v = m as DVariable;
@@ -912,13 +912,13 @@ namespace D_Parser.Resolver
 									{
 										if (kv.Key is IAbstractSyntaxTree)
 											continue;
-										type = kv.Key as IBlockNode;
+										types.Add(kv.Key as IBlockNode);
 										break;
 									}
 								}
 							}
 						}
-						rr.Add(m, type);
+						rr.Add(m, types);
 					}
 				}
 			}
