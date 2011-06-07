@@ -684,7 +684,7 @@ namespace D_IDE.D
 					completionWindow.Show();
 				//}));
 			}
-			catch (Exception ex) { ErrorLogger.Log(ex); }
+			catch (Exception ex) { ErrorLogger.Log(ex); completionWindow = null; }
 		}
 
 		void ShowInsightWindow(string EnteredText)

@@ -883,8 +883,12 @@ namespace D_Parser.Resolver
 					}
 
 					// Then go on searching in the global scope
+					var ThisModule = currentlyScopedNode is IAbstractSyntaxTree?currentlyScopedNode as IAbstractSyntaxTree: currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
 					foreach (var mod in parseCache)
 					{
+						if (mod == ThisModule)
+							continue;
+
 						if (mod.ModuleName.StartsWith(searchIdentifier))
 							matches.Add(mod);
 
@@ -897,7 +901,22 @@ namespace D_Parser.Resolver
 						if (m is DVariable)
 						{
 							var v = m as DVariable;
-							
+
+							if (v.Type != null)
+							{
+								var tr= ResolveType(v.Type,currentlyScopedNode, parseCache);
+
+								if (tr != null && tr.MemberCount > 0)
+								{
+									foreach (var kv in tr)
+									{
+										if (kv.Key is IAbstractSyntaxTree)
+											continue;
+										type = kv.Key as IBlockNode;
+										break;
+									}
+								}
+							}
 						}
 						rr.Add(m, type);
 					}
