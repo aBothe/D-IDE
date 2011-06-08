@@ -56,7 +56,7 @@ namespace D_Parser.Resolver
 		utf32
 	}
 
-	public class ResolveResult
+	public abstract class ResolveResult
 	{
 		/// <summary>
 		/// If the entire resolution took more than one level of type searching, this field represents the resolution base that was used to find the current items.
@@ -73,11 +73,26 @@ namespace D_Parser.Resolver
 		/// If the origin of ResolvedMember seems to be unclear (if there are multiple same-named types), there will be two or more items
 		/// </summary>
 		public ResolveResult[] MemberBaseTypes;
+
+		public override string ToString()
+		{
+			return ResolvedMember.ToString();
+		}
 	}
 
 	public class AliasResult : ResolveResult
 	{
 		public ResolveResult[] AliasDefinition;
+
+		public override string ToString()
+		{
+			string ret = "";
+
+			foreach (var def in AliasDefinition)
+				ret += def.ToString()+"\r\n";
+
+			return ret.Trim();
+		}
 	}
 
 	public class SpecialTypeResult : ResolveResult
@@ -98,6 +113,11 @@ namespace D_Parser.Resolver
 	public class StaticTypeResult : ResolveResult
 	{
 		public ITypeDeclaration Type;
+
+		public override string ToString()
+		{
+			return Type.ToString();
+		}
 	}
 
 	public class TypeResult : ResolveResult
@@ -109,5 +129,10 @@ namespace D_Parser.Resolver
 		/// </summary>
 		public TypeResult[] BaseClass;
 		public TypeResult[] ImplementedInterfaces;
+
+		public override string ToString()
+		{
+			return ResolvedTypeDefinition.ToString();
+		}
 	}
 }

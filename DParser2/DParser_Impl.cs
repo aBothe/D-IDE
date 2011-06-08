@@ -461,7 +461,7 @@ namespace D_Parser
 				Step();
 				// _t is just a synthetic node
 				var _t = new DStatementBlock();
-				ApplyAttributes(_t as DNode);
+				ApplyAttributes(_t);
 
 				// AliasThis
 				if (la.Kind == Identifier && PK(This))
@@ -898,7 +898,7 @@ namespace D_Parser
 			return td;
 		}
 
-		ITypeDeclaration IdentifierList()
+		public ITypeDeclaration IdentifierList()
 		{
 			ITypeDeclaration td = null;
 
@@ -3063,6 +3063,9 @@ namespace D_Parser
 			var OldPreviousCommentString = PreviousComment;
 			PreviousComment = "";
 
+			var stk_backup = BlockAttributes;
+			BlockAttributes = new Stack<DAttribute>();
+
 			Expect(OpenCurlyBrace);
 			ret.BlockStartLocation = t.Location;
 			while (!IsEOF && la.Kind != (CloseCurlyBrace))
@@ -3072,6 +3075,8 @@ namespace D_Parser
 			Expect(CloseCurlyBrace);
 			ret.EndLocation = t.EndLocation;
 			PreviousComment = OldPreviousCommentString;
+
+			BlockAttributes = stk_backup;
 		}
 
 		INode Constructor(bool IsStruct)

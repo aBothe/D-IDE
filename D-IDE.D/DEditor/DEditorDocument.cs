@@ -326,26 +326,20 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var types = DCodeResolver.ResolveTypeDeclarations(
-					SyntaxTree,
-					Editor.Text,
-					Editor.CaretOffset,
+				var rr = DResolver.ResolveType(Editor.Text,Editor.CaretOffset,
 					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
-					false,
-					DCodeCompletionSupport.EnumAvailableModules(this) // std.cstream.din.getc(); <<-- It's resolvable but not imported explictily! So also scan the global cache!
-					//DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument))
-					, true
-					).ToArray();
+					SyntaxTree,DCodeCompletionSupport.EnumAvailableModules(this),
+					true,true);
 
-				INode n = null;
+				ResolveResult res = null;
 				// If there are multiple types, show a list of those items
-				if (types.Length > 1)
+				if (rr != null && rr.Length > 1)
 				{
 					var dlg = new ListSelectionDialog();
 
 					var l = new List<string>();
 					int j = 0;
-					foreach (var i in types)
+					foreach (var i in rr)
 						l.Add("(" + (++j).ToString() + ") " + i.ToString()); // Bug: To make items unique (which is needed for the listbox to run properly), it's needed to add some kind of an identifier to the beginning of the string
 					dlg.List.ItemsSource = l;
 
@@ -353,14 +347,26 @@ namespace D_IDE.D
 
 					if (dlg.ShowDialog().Value)
 					{
-						n = types[dlg.List.SelectedIndex];
+						res = rr[dlg.List.SelectedIndex];
 					}
 				}
-				else if (types.Length == 1)
-					n = types[0];
+				else if (rr.Length == 1)
+					res = rr[0];
 				else
 				{
 					MessageBox.Show("No symbol found!");
+					return;
+				}
+
+				INode n = null;
+
+				if (res is MemberResult)
+					n = (res as MemberResult).ResolvedMember;
+				else if (res is TypeResult)
+					n = (res as TypeResult).ResolvedTypeDefinition;
+				else
+				{
+					MessageBox.Show("Select valid symbol!");
 					return;
 				}
 
@@ -379,25 +385,20 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var types = DCodeResolver.ResolveTypeDeclarations(
-					SyntaxTree,
-					Editor.Text,
-					Editor.CaretOffset,
+				var rr = DResolver.ResolveType(Editor.Text, Editor.CaretOffset,
 					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
-					false,
-					DCodeCompletionSupport.EnumAvailableModules(this) // std.cstream.din.getc(); <<-- It's resolvable but not imported explictily! So also scan the global cache!
-					, true
-					).ToArray();
+					SyntaxTree, DCodeCompletionSupport.EnumAvailableModules(this),
+					true, true);
 
-				INode n = null;
+				ResolveResult res = null;
 				// If there are multiple types, show a list of those items
-				if (types.Length > 1)
+				if (rr != null && rr.Length>1)
 				{
 					var dlg = new ListSelectionDialog();
 
 					var l = new List<string>();
 					int j = 0;
-					foreach (var i in types)
+					foreach (var i in rr)
 						l.Add("(" + (++j).ToString() + ") " + i.ToString()); // Bug: To make items unique (which is needed for the listbox to run properly), it's needed to add some kind of an identifier to the beginning of the string
 					dlg.List.ItemsSource = l;
 
@@ -405,14 +406,28 @@ namespace D_IDE.D
 
 					if (dlg.ShowDialog().Value)
 					{
-						n = types[dlg.List.SelectedIndex];
+						res = rr[dlg.List.SelectedIndex];
 					}
 				}
-				else if (types.Length == 1)
-					n = types[0];
-				else {
+				else if (rr.Length == 1)
+					res = rr[0];
+				else
+				{
 					MessageBox.Show("No symbol found!");
-					return; }
+					return;
+				}
+
+				INode n = null;
+
+				if (res is MemberResult)
+					n = (res as MemberResult).ResolvedMember;
+				else if (res is TypeResult)
+					n = (res as TypeResult).ResolvedTypeDefinition;
+				else
+				{
+					MessageBox.Show("Select valid symbol!");
+					return;
+				}
 
 				var mod = n.NodeRoot as IAbstractSyntaxTree;
 				if (mod == null)

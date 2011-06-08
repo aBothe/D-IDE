@@ -335,12 +335,7 @@ namespace D_IDE.D
 
 				//TODO: Build well-formatted tool tip string / Do a better tool tip layout
 				foreach (var res in rr)
-				{
-					if (res is MemberResult)
-						tt += (res as MemberResult).ResolvedMember.ToString()+"\r\n";
-					else if(res is TypeResult)
-						tt += (res as TypeResult).ResolvedTypeDefinition.ToString() + "\r\n";
-				}
+					tt += res.ToString()+"\r\n";
 
 				tt = tt.Trim();
 				if(!string.IsNullOrEmpty(tt))

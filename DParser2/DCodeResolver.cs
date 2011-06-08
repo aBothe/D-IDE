@@ -28,7 +28,7 @@ namespace D_Parser.Resolver
 		#endregion
 
 
-		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module,
+		/*public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module,
 			string Text,
 			int CaretOffset,
 			CodeLocation CaretLocation, bool EnableVariableTypeResolving,
@@ -37,7 +37,7 @@ namespace D_Parser.Resolver
 			ITypeDeclaration id = null;
 			DToken tk = null;
 			return ResolveTypeDeclarations(Module, Text, CaretOffset, CaretLocation, EnableVariableTypeResolving, CodeCache, out id, IsCompleteIdentifier, out tk);
-		}
+		}*/
 
 		/// <summary>
 		/// 
@@ -49,7 +49,7 @@ namespace D_Parser.Resolver
 		/// <param name="ImportCache"></param>
 		/// <param name="IsCompleteIdentifier">True if Text is not only the beginning of a type name - instead, it's handled as the complete one</param>
 		/// <returns></returns>
-		public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module,
+		/*public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module,
 			string Text,
 			int CaretOffset,
 			CodeLocation CaretLocation,
@@ -60,7 +60,7 @@ namespace D_Parser.Resolver
 			out DToken optToken)
 		{
 			optIdentifierList = DCodeResolver.BuildIdentifierList(Text,
-				CaretOffset, /*true,*/ out optToken);
+				CaretOffset, out optToken);
 
 			if (optIdentifierList == null && optToken == null)
 				return null;
@@ -127,7 +127,7 @@ namespace D_Parser.Resolver
 			}
 			catch { }
 			return null;
-		}
+		}*/
 
 		/// <summary>
 		/// Returns a list of all items that can be accessed in the current scope.
@@ -828,7 +828,8 @@ namespace D_Parser.Resolver
 	public class DResolver
 	{
 		public static ResolveResult[] ResolveType(string code, int caret, CodeLocation caretLocation, IAbstractSyntaxTree codeAST, IEnumerable<IAbstractSyntaxTree> parseCache,
-			bool alsoParseBeyondCaret=false)
+			bool alsoParseBeyondCaret=false,
+			bool onlyAssumeIdentifierList=false)
 		{
 			var start = ReverseParsing.SearchExpressionStart(code, caret);
 
@@ -840,14 +841,12 @@ namespace D_Parser.Resolver
 			var parser = DParser.Create(new StringReader(expressionCode));
 			parser.Lexer.NextToken();
 
-			if (parser.IsAssignExpression())
-			{
+			if (onlyAssumeIdentifierList)
+				return ResolveType(parser.IdentifierList(), codeAST, parseCache);
+			else if (parser.IsAssignExpression())
 				return ResolveType(parser.AssignExpression().ExpressionTypeRepresentation, codeAST, parseCache);
-			}
 			else
-			{
 				return ResolveType(parser.Type(), codeAST, parseCache);
-			}
 		}
 
 		public static ResolveResult[] ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache)
