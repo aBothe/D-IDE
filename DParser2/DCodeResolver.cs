@@ -827,14 +827,15 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class DResolver
 	{
-		public static ResolveResult[] ResolveType(string code, int caret, CodeLocation caretLocation, IAbstractSyntaxTree codeAST, IEnumerable<IAbstractSyntaxTree> parseCache)
+		public static ResolveResult[] ResolveType(string code, int caret, CodeLocation caretLocation, IAbstractSyntaxTree codeAST, IEnumerable<IAbstractSyntaxTree> parseCache,
+			bool alsoParseBeyondCaret=false)
 		{
 			var start = ReverseParsing.SearchExpressionStart(code, caret);
 
 			if (start < 0)
 				return null;
 
-			var expressionCode = code.Substring(start, caret - start);
+			var expressionCode = code.Substring(start, alsoParseBeyondCaret?code.Length-start: caret - start);
 
 			var parser = DParser.Create(new StringReader(expressionCode));
 			parser.Lexer.NextToken();

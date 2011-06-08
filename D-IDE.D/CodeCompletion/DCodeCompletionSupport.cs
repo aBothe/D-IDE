@@ -33,6 +33,8 @@ namespace D_IDE.D
 		public enum ItemVisibility
 		{
 			All,
+			Static,
+			PublicAndStatic,
 			PublicOrStatic,
 			Protected
 		}
@@ -83,80 +85,66 @@ namespace D_IDE.D
 				 * 
 				 * Note: When having entered a module name stub only (e.g. "std." or "core.") it's needed to show all packages that belong to that root namespace
 				 */
-				var trr = new List<ResolveResult>();
 
 				foreach (var rr in resolveResults)
 				{
+					BuildCompletionData(null,rr,curBlock, l);
 
-					if (rr is MemberResult)
+					/*if (n is DVariable || n is DMethod)
 					{
-						var mrr = rr as MemberResult;
-
-						trr.AddRange(mrr.MemberBaseTypes);
-					}
-
-					if (trr != null)
-					{
-						foreach (var rr2 in trr)
-						{
-							BuildCompletionData(rr2, l);
-							/*if (n is DVariable || n is DMethod)
+						foreach (var declNode in kv.Value)
+							if (declNode is IBlockNode)
 							{
-								foreach (var declNode in kv.Value)
-									if (declNode is IBlockNode)
-									{
-										var declClass = declNode as DClassLike;
+								var declClass = declNode as DClassLike;
 
-										if (declClass != null) // If declaration type is a class-like type, also scan through all base classes
-											while (declClass != null)
-											{
-												foreach (var n2 in declClass)
-												{
-													var dn = n2 as DNode;
-													if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
-														l.Add(new DCompletionData(n2));
-												}
-												declClass = DCodeResolver.ResolveBaseClass(declClass, codeCache);
-											}
-										else // 
-											foreach (var n2 in declNode as IBlockNode)
-											{
-												var dn = n2 as DNode;
-												if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
-													l.Add(new DCompletionData(n2));
-											}
+								if (declClass != null) // If declaration type is a class-like type, also scan through all base classes
+									while (declClass != null)
+									{
+										foreach (var n2 in declClass)
+										{
+											var dn = n2 as DNode;
+											if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
+												l.Add(new DCompletionData(n2));
+										}
+										declClass = DCodeResolver.ResolveBaseClass(declClass, codeCache);
+									}
+								else // 
+									foreach (var n2 in declNode as IBlockNode)
+									{
+										var dn = n2 as DNode;
+										if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
+											l.Add(new DCompletionData(n2));
 									}
 							}
-							else if (n is IAbstractSyntaxTree)
-							{
-								var idParts = (n as IAbstractSyntaxTree).ModuleName.Split('.');
-								int skippableParts = 0;
-
-								// if (id is IdentifierDeclaration)	skippableParts = 1;
-								// else if (id is IdentifierList)	skippableParts = (id as IdentifierList).Parts.Count;
-
-								if (skippableParts >= idParts.Length)
-								{
-									// Add public items of a module
-									foreach (var i in n as IBlockNode)
-									{
-										var dn = i as DNode;
-										if (dn != null)
-										{
-											if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package))
-												l.Add(new DCompletionData(dn));
-										}
-									}
-								}
-							/*
-							else if (!addedModuleNames.Contains(idParts[skippableParts])) // Add next part of the module name path only if it wasn't added before
-							{
-								addedModuleNames.Add(idParts[skippableParts]); // e.g.  std.c.  ... in this virtual package, there are several sub-packages that contain the .c-part
-								l.Add(new NamespaceCompletionData(idParts[skippableParts],GetModulePath((n as IAbstractSyntaxTree).FileName,idParts.Length,skippableParts+1)));
-							}* /
-							}*/
-						}
 					}
+					else if (n is IAbstractSyntaxTree)
+					{
+						var idParts = (n as IAbstractSyntaxTree).ModuleName.Split('.');
+						int skippableParts = 0;
+
+						// if (id is IdentifierDeclaration)	skippableParts = 1;
+						// else if (id is IdentifierList)	skippableParts = (id as IdentifierList).Parts.Count;
+
+						if (skippableParts >= idParts.Length)
+						{
+							// Add public items of a module
+							foreach (var i in n as IBlockNode)
+							{
+								var dn = i as DNode;
+								if (dn != null)
+								{
+									if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package))
+										l.Add(new DCompletionData(dn));
+								}
+							}
+						}
+					/*
+					else if (!addedModuleNames.Contains(idParts[skippableParts])) // Add next part of the module name path only if it wasn't added before
+					{
+						addedModuleNames.Add(idParts[skippableParts]); // e.g.  std.c.  ... in this virtual package, there are several sub-packages that contain the .c-part
+						l.Add(new NamespaceCompletionData(idParts[skippableParts],GetModulePath((n as IAbstractSyntaxTree).FileName,idParts.Length,skippableParts+1)));
+					}* /
+					}*/
 				}
 			}
 
@@ -201,21 +189,55 @@ namespace D_IDE.D
 				}
 		}
 
-		public static void BuildCompletionData(ResolveResult rr, IList<ICompletionData> l)
+		public static bool HaveSameAncestors(INode higherLeveledNode, INode lowerLeveledNode)
 		{
-			if (rr is AliasResult)
-				foreach (var rr2 in (rr as AliasResult).AliasDefinition)
-					BuildCompletionData(rr2, l);
-			else if (rr is TypeResult)
-				BuildTypeCompletionData(rr as TypeResult, ItemVisibility.All, l);
+			var curPar = higherLeveledNode;
+
+			while (curPar != null)
+			{
+				if (curPar == lowerLeveledNode)
+					return true;
+
+				curPar = curPar.Parent;
+			}
+			return false;
 		}
 
-		public static void BuildTypeCompletionData(TypeResult tr, ItemVisibility visMod, IList<ICompletionData> l)
+		public static void BuildCompletionData(ResolveResult parentResult,ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l)
+		{
+			if (rr is MemberResult)
+			{
+				var mrr = rr as MemberResult;
+				if (mrr.MemberBaseTypes != null)
+					foreach (var i in mrr.MemberBaseTypes)
+						BuildCompletionData(mrr,i,currentlyScopedBlock, l);
+			}
+			else if (rr is AliasResult)
+				foreach (var rr2 in (rr as AliasResult).AliasDefinition)
+					BuildCompletionData(parentResult,rr2,currentlyScopedBlock, l);
+			else if (rr is TypeResult)
+			{
+				ItemVisibility vis=ItemVisibility.All;
+
+				if(!HaveSameAncestors(currentlyScopedBlock, (rr as TypeResult).ResolvedTypeDefinition))
+				{
+					if(parentResult is MemberResult)
+						vis=ItemVisibility.PublicOrStatic;
+					else
+						vis=ItemVisibility.PublicAndStatic;
+				}
+
+				BuildTypeCompletionData(parentResult, rr as TypeResult,vis, l);
+			}
+		}
+
+		public static void BuildTypeCompletionData(ResolveResult parentResult,TypeResult tr, ItemVisibility visMod, IList<ICompletionData> l)
 		{
 			var n = tr.ResolvedTypeDefinition;
 			if (n is DClassLike) // Add public static members of the class and including all base classes
 			{
 				var curlevel=tr;
+				var tvisMod = visMod;
 				while (curlevel != null)
 				{
 					foreach (var i in curlevel.ResolvedTypeDefinition)
@@ -228,12 +250,38 @@ namespace D_IDE.D
 						// If "this." and if watching the current inheritance level only , add all items
 						// if "super." , add public items
 						// if neither nor, add public static items
-						/*if( (isThis&&n==curClass) ? true : 
-								(isThisOrSuper ? dn.IsPublic : 
-									(dn.IsStatic && dn.IsPublic)))*/
-						l.Add( new DCompletionData(dn));
+
+						bool IsStatic = dn.IsStatic;
+						bool IsPublic = dn.IsPublic || IsStatic;
+						bool IsProtectedOrPublic = IsPublic || dn.ContainsAttribute(DTokens.Protected);
+
+						bool add = false;
+
+						switch (tvisMod)
+						{
+							case ItemVisibility.All:
+								add = true;
+								break;
+							case ItemVisibility.Protected:
+								add = IsProtectedOrPublic;
+								break;
+							case ItemVisibility.PublicOrStatic:
+								add = IsPublic;
+								break;
+							case ItemVisibility.Static:
+								add = IsStatic;
+								break;
+						}
+
+						if(add)
+							l.Add( new DCompletionData(dn));
 					}
 					curlevel = curlevel.BaseClass!=null?curlevel.BaseClass[0]:null;
+
+					// After having shown all items on the current node level,
+					// allow showing public (static) and/or protected items in the more basic levels then
+					if (tvisMod == ItemVisibility.All)
+						tvisMod = ItemVisibility.Protected;
 				}
 			}
 			else if (n is DEnum)
@@ -280,23 +328,19 @@ namespace D_IDE.D
 
 			try
 			{
-				var types = DCodeResolver.ResolveTypeDeclarations(
-					EditorDocument.SyntaxTree, 
-					EditorDocument.Editor.Text,
-					offset, 
-					new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line),
-					true,
-					EnumAvailableModules(EditorDocument) // std.cstream.din.getc(); <<-- It's resolvable but not imported explictily! So also scan the global cache!
-					//DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument))
-					,true
-					);
-
+				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line),
+					EditorDocument.SyntaxTree, EnumAvailableModules(EditorDocument),true);
+				
 				string tt = "";
 
-				//TODO: Build well-formatted tool tip string/ Do a better tool tip layout
-				if (types != null)
-					foreach (var n in types)
-						tt += n.ToString() + "\r\n";
+				//TODO: Build well-formatted tool tip string / Do a better tool tip layout
+				foreach (var res in rr)
+				{
+					if (res is MemberResult)
+						tt += (res as MemberResult).ResolvedMember.ToString()+"\r\n";
+					else if(res is TypeResult)
+						tt += (res as TypeResult).ResolvedTypeDefinition.ToString() + "\r\n";
+				}
 
 				tt = tt.Trim();
 				if(!string.IsNullOrEmpty(tt))
