@@ -56,7 +56,7 @@ namespace D_Parser.Resolver
 		utf32
 	}
 
-	public class ResolveResult:IEnumerable<KeyValuePair<INode,IBlockNode[]>>
+	public class ResolveResult
 	{
 		/// <summary>
 		/// The expression that has been parsed
@@ -103,6 +103,30 @@ namespace D_Parser.Resolver
 		}
 
 		/// <summary>
+		/// If the entire resolution took more than one level of type searching, this field represents the resolution base that was used to find the current items.
+		/// </summary>
+		public ResolveResult ResultBase;
+	}
+
+	public class MemberResult : ResolveResult
+	{
+		public INode ResolvedMember;
+
+		/// <summary>
+		/// Usually there should be only one resolved member type.
+		/// If the origin of ResolvedMember seems to be unclear (if there are multiple same-named types), there will be two or more items
+		/// </summary>
+		public ResolveResult[] MemberBaseTypes;
+	}
+
+	public class AliasResult : ResolveResult
+	{
+		public ResolveResult AliasDefinition;
+	}
+
+	public class SpecialTypeResult : ResolveResult
+	{
+		/// <summary>
 		/// In the case our base expression is a string literal, this field represented its char size - useful e.g. when wanting to show the string's element size
 		/// </summary>
 		[DefaultValue(StringType.None)]
@@ -113,20 +137,18 @@ namespace D_Parser.Resolver
 		/// </summary>
 		[DefaultValue(SpecialType.None)]
 		public SpecialType SpecialType { get; set; }
+	}
 
-		/// <summary>
-		/// If the entire resolution took more than one level of type searching, this field represents the resolution base that was used to find the current items.
-		/// </summary>
-		public ResolveResult ResultBase { get; set; }
+	public class StaticTypeResult : ResolveResult
+	{
+		public ITypeDeclaration Type;
+	}
 
-		public IEnumerator<KeyValuePair<INode, IBlockNode[]>> GetEnumerator()
-		{
-			return ResolvedMembersAndTypes.GetEnumerator();
-		}
+	public class TypeResult : ResolveResult
+	{
+		public IBlockNode ResolvedTypeDefinition;
 
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+		public TypeResult BaseClass;
+		public TypeResult[] ImplementedInterfaces;
 	}
 }
