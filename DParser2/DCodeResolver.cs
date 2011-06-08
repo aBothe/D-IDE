@@ -546,7 +546,7 @@ namespace D_Parser.Resolver
 					if (currentParent is DMethod)
 						foreach (var ch in (currentParent as DMethod).Parameters)
 						{
-							if (nameIdent== ch.Name)
+							if (nameIdent == ch.Name)
 								baseTypes.Add(ch);
 						}
 
@@ -827,7 +827,7 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class DResolver
 	{
-		public static ResolveResult ResolveType(string code, int caret, CodeLocation caretLocation, IAbstractSyntaxTree codeAST, IEnumerable<IAbstractSyntaxTree> parseCache)
+		public static ResolveResult[] ResolveType(string code, int caret, CodeLocation caretLocation, IAbstractSyntaxTree codeAST, IEnumerable<IAbstractSyntaxTree> parseCache)
 		{
 			var start = ReverseParsing.SearchExpressionStart(code, caret);
 
@@ -841,7 +841,7 @@ namespace D_Parser.Resolver
 
 			if (parser.IsAssignExpression())
 			{
-				return ResolveType(parser.AssignExpression().ExpressionTypeRepresentation,codeAST,parseCache);
+				return ResolveType(parser.AssignExpression().ExpressionTypeRepresentation, codeAST, parseCache);
 			}
 			else
 			{
@@ -849,24 +849,24 @@ namespace D_Parser.Resolver
 			}
 		}
 
-		public static ResolveResult ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache)
+		public static ResolveResult[] ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache)
 		{
 			if (declaration == null)
 				return null;
 
-			var rr = new ResolveResult() { ParsedDeclaration = declaration };
+			var returnedResults = new List<ResolveResult>();
 
 			// Walk down recursively to resolve everything from the very first to declaration's base type declaration.
-			ResolveResult rbase = null;
+			ResolveResult[] rbases = null;
 			if (declaration.InnerDeclaration != null)
-				rr.ResultBase = rbase = ResolveType(declaration.InnerDeclaration, currentlyScopedNode, parseCache);
+				rbases = ResolveType(declaration.InnerDeclaration, currentlyScopedNode, parseCache);
 
 			/* 
 			 * If there is no parent resolve context (what usually means we are searching the type named like the first identifier in the entire declaration),
 			 * search the very first type declaration by walking along the current block scope hierarchy.
-			 * If there wasn't any item found in that procedure, search in the global parseCache
+			 * If there wasn't any item found in that procedure, search in the global parse cache
 			 */
-			if (rbase == null)
+			if (rbases == null)
 			{
 				if (declaration is IdentifierDeclaration)
 				{
@@ -877,13 +877,13 @@ namespace D_Parser.Resolver
 					var curScope = currentlyScopedNode;
 					while (curScope != null)
 					{
-						matches.AddRange( ScanNodeForIdentifier(curScope, searchIdentifier, parseCache));
+						matches.AddRange(ScanNodeForIdentifier(curScope, searchIdentifier, parseCache));
 
 						curScope = curScope.Parent as IBlockNode;
 					}
 
 					// Then go on searching in the global scope
-					var ThisModule = currentlyScopedNode is IAbstractSyntaxTree?currentlyScopedNode as IAbstractSyntaxTree: currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
+					var ThisModule = currentlyScopedNode is IAbstractSyntaxTree ? currentlyScopedNode as IAbstractSyntaxTree : currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
 					foreach (var mod in parseCache)
 					{
 						if (mod == ThisModule)
@@ -897,53 +897,65 @@ namespace D_Parser.Resolver
 
 					foreach (var m in matches)
 					{
-						var types = new List<IBlockNode>();
 						if (m is DVariable)
 						{
 							var v = m as DVariable;
 
-							if (v.Type != null)
-							{
-								var tr= ResolveType(v.Type,currentlyScopedNode, parseCache);
-
-								if (tr != null && tr.MemberCount > 0)
-								{
-									foreach (var kv in tr)
-									{
-										if (kv.Key is IAbstractSyntaxTree)
-											continue;
-										types.Add(kv.Key as IBlockNode);
-										break;
-									}
-								}
-							}
+							if (v.IsAlias)
+								returnedResults.Add( new AliasResult() { 
+									AliasDefinition=ResolveType(v.Type,currentlyScopedNode,parseCache)
+								});
+							else
+								returnedResults.Add( new MemberResult() { 
+									ResolvedMember=m,
+									MemberBaseTypes = ResolveType(v.Type, currentlyScopedNode, parseCache)
+								});
 						}
-						rr.Add(m, types);
+						else if (m is DClassLike)
+						{
+							var Class = m as DClassLike;
+
+							returnedResults.Add(new TypeResult() { 
+								ResolvedTypeDefinition=Class,
+								BaseClass=ResolveBaseClass(Class,parseCache)
+							});
+						}
 					}
 				}
 			}
 
-			return rr;
+			return returnedResults.Count > 0 ? returnedResults.ToArray() : null;
 		}
 
-		public static ResolveResult ResolveBaseClass(DClassLike ActualClass, IEnumerable<IAbstractSyntaxTree> ModuleCache)
+		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, IEnumerable<IAbstractSyntaxTree> ModuleCache)
 		{
-			var ret = new List<DClassLike>();
+			if (ActualClass == null || (ActualClass.BaseClasses.Count<1 && ActualClass.Name.ToLower()=="object"))
+				return null;
+
+			var ret = new List<TypeResult>();
 			// Implicitly set the object class to the inherited class if no explicit one was done
 			if (ActualClass.BaseClasses.Count < 1)
 			{
-				var ObjectClass = ResolveType(new IdentifierDeclaration("Object"), ActualClass.NodeRoot as IBlockNode, ModuleCache);
-				if (ObjectClass.MemberCount > 0 && ObjectClass.ResolvedMembersAndTypes[0].Key!=ActualClass) // Yes, it can be null - like the Object class which can't inherit itself
-					return ObjectClass;
+				foreach (var i in ResolveType(new IdentifierDeclaration("Object"), ActualClass.NodeRoot as IBlockNode, ModuleCache))
+					if (i is TypeResult)
+						ret.Add(i as TypeResult);
+				/*if(ObjectClassMatches!=null)
+					foreach (var i in ObjectClassMatches)
+					{
+						var objClass = i as TypeResult;
+						if (objClass != null && objClass.ResolvedTypeDefinition.NodeRoot.Name == "object")
+							return i;
+					}*/
 			}
 			else // Take the first only (since D enforces single inheritance)
 			{
-				var ClassMatches = ResolveType(ActualClass.BaseClasses[0], ActualClass.NodeRoot as IBlockNode, ModuleCache);
-				if (ClassMatches.MemberCount > 0)
-					return ClassMatches;
+				foreach(var i in ResolveType(ActualClass.BaseClasses[0], ActualClass.NodeRoot as IBlockNode, ModuleCache))
+					if (i is TypeResult)
+						ret.Add(i as TypeResult);
+				/*if (ClassMatches.MemberCount > 0)
+					return ClassMatches;*/
 			}
-
-			return null;
+			return ret.Count > 0 ? ret.ToArray() : null;
 		}
 
 		/// <summary>
@@ -965,15 +977,19 @@ namespace D_Parser.Resolver
 			// If our current Level node is a class-like, also attempt to search in its baseclass!
 			if (curScope is DClassLike)
 			{
-				var baseClass = ResolveBaseClass(curScope as DClassLike, parseCache);
-				if (baseClass != null && baseClass.MemberCount>0)
-				{
-					// Search for items called name in the base class(es)
-					var r=ScanNodeForIdentifier(baseClass.ResolvedMembersAndTypes[0].Key as IBlockNode,name,parseCache);
+				var baseClasses = ResolveBaseClass(curScope as DClassLike, parseCache);
+				if (baseClasses != null)
+					foreach(var i in baseClasses)
+					{
+						var baseClass = i as TypeResult;
+						if (baseClass == null)
+							continue;
+						// Search for items called name in the base class(es)
+						var r = ScanNodeForIdentifier(baseClass.ResolvedTypeDefinition, name, parseCache);
 
-					if (r != null)
-						matches.AddRange(r);
-				}
+						if (r != null)
+							matches.AddRange(r);
+					}
 			}
 
 			// Check parameters
@@ -1079,8 +1095,8 @@ namespace D_Parser.Resolver
 		{
 			if (CaretOffset > Text.Length)
 				throw new ArgumentOutOfRangeException("CaretOffset", "Caret offset must be smaller than text length");
-			else if(CaretOffset==Text.Length)
-				Text+=' ';
+			else if (CaretOffset == Text.Length)
+				Text += ' ';
 
 			// At first we only want to find the beginning of our identifier list
 			// later we will pass the text beyond the beginning to the parser - there we parse all needed expressions from it

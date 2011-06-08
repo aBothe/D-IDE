@@ -229,6 +229,14 @@ namespace D_IDE.Core.Controls.Editor
 			int i = WordOffset;
 			bool HadNonWS = false;
 			bool IsIdent = false;
+
+			if (i == ln.EndOffset)
+			{
+				StartOffset = WordOffset;
+				Length = 1;
+				return;
+			}
+
 			while (i < ln.EndOffset)
 			{
 				var c = doc.GetCharAt(i);

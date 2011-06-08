@@ -54,7 +54,7 @@ namespace D_Parser
 	}
 
     /// <summary>
-    /// Basic type, e.g. &gt;int&lt;
+    /// Identifier, e.g. "foo"
     /// </summary>
     public class IdentifierDeclaration : AbstractTypeDeclaration
     {

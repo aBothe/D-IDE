@@ -59,50 +59,6 @@ namespace D_Parser.Resolver
 	public class ResolveResult
 	{
 		/// <summary>
-		/// The expression that has been parsed
-		/// </summary>
-		public ITypeDeclaration ParsedDeclaration { get; set; }
-
-		/// <summary>
-		/// The keys are the resolved members or even types.
-		/// In the case that those are variables or methods, the value part will be either the variable type or the method's return type.
-		/// If the key is a class, the value can optionally be its base class.
-		/// 
-		/// Usually there should be only one resolved member or type.
-		/// Only in the case that there are further members/types that are named equally, two or more items will be held by <see cref="ResolvedMembersAndTypes"/>
-		/// </summary>
-		public readonly List<KeyValuePair<INode, IBlockNode[]>> ResolvedMembersAndTypes = new List<KeyValuePair<INode, IBlockNode[]>>();
-
-		public IEnumerable<INode> Members
-		{
-			get {
-				foreach (var kv in ResolvedMembersAndTypes)
-					yield return kv.Key;
-			}
-		}
-
-		public void Add(INode member, List<IBlockNode> typeDeclarations)
-		{
-			ResolvedMembersAndTypes.Add(new KeyValuePair<INode, IBlockNode[]>(member, typeDeclarations.ToArray()));
-		}
-
-		public void Add(INode member, IBlockNode[] typeDeclarations)
-		{
-			ResolvedMembersAndTypes.Add(new KeyValuePair<INode, IBlockNode[]>(member, typeDeclarations));
-		}
-
-		public void Add(INode member, IBlockNode typeDeclaration)
-		{
-			ResolvedMembersAndTypes.Add(new KeyValuePair<INode,IBlockNode[]>(member,new[]{ typeDeclaration}));
-		}
-
-
-		public int MemberCount
-		{
-			get { return ResolvedMembersAndTypes.Count; }
-		}
-
-		/// <summary>
 		/// If the entire resolution took more than one level of type searching, this field represents the resolution base that was used to find the current items.
 		/// </summary>
 		public ResolveResult ResultBase;
@@ -121,7 +77,7 @@ namespace D_Parser.Resolver
 
 	public class AliasResult : ResolveResult
 	{
-		public ResolveResult AliasDefinition;
+		public ResolveResult[] AliasDefinition;
 	}
 
 	public class SpecialTypeResult : ResolveResult
@@ -148,7 +104,10 @@ namespace D_Parser.Resolver
 	{
 		public IBlockNode ResolvedTypeDefinition;
 
-		public TypeResult BaseClass;
+		/// <summary>
+		/// Only will have two or more items if there are multiple definitions of its base class - theoretically, this should be marked as a precompile error then.
+		/// </summary>
+		public TypeResult[] BaseClass;
 		public TypeResult[] ImplementedInterfaces;
 	}
 }

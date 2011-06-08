@@ -460,7 +460,7 @@ namespace D_Parser
 			{
 				Step();
 				// _t is just a synthetic node
-				var _t = new DStatementBlock() as IBlockNode;
+				var _t = new DStatementBlock();
 				ApplyAttributes(_t as DNode);
 
 				// AliasThis
@@ -481,7 +481,7 @@ namespace D_Parser
 					return;
 				}
 
-				Decl(ref _t, HasStorageClassModifiers);
+				Decl(_t, HasStorageClassModifiers);
 				foreach (var n in _t)
 				{
 					if (n is DVariable)
@@ -501,10 +501,10 @@ namespace D_Parser
 			else if (la.Kind == (Interface))
 				par.Add(InterfaceDeclaration());
 			else
-				Decl(ref par, HasStorageClassModifiers);
+				Decl(par, HasStorageClassModifiers);
 		}
 
-		void Decl(ref IBlockNode par, bool HasStorageClassModifiers)
+		void Decl(IBlockNode par, bool HasStorageClassModifiers)
 		{
 			var startLocation = la.Location;
 			ITypeDeclaration ttd = null;

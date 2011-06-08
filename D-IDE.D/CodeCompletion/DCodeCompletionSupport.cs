@@ -30,7 +30,14 @@ namespace D_IDE.D
 			return !DCodeResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text, EditorDocument.Editor.CaretOffset);
 		}
 
-		public void BuildCompletionData(DEditorDocument EditorDocument, IList<ICSharpCode.AvalonEdit.CodeCompletion.ICompletionData> l, string EnteredText)
+		public enum ItemVisibility
+		{
+			All,
+			PublicOrStatic,
+			Protected
+		}
+
+		public void BuildCompletionData(DEditorDocument EditorDocument, IList<ICompletionData> l, string EnteredText)
 		{
 			var caretOffset = EditorDocument.Editor.CaretOffset;
 			var caretLocation = new CodeLocation(EditorDocument.Editor.TextArea.Caret.Column,EditorDocument.Editor.TextArea.Caret.Line);
@@ -46,7 +53,7 @@ namespace D_IDE.D
 			// Usually shows variable members
 			if (EnteredText == ".")
 			{
-				var rr = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset-1, caretLocation, EditorDocument.SyntaxTree, codeCache);
+				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset-1, caretLocation, EditorDocument.SyntaxTree, codeCache);
 				/*
 				ITypeDeclaration id = null;
 				DToken tk = null;
@@ -76,96 +83,79 @@ namespace D_IDE.D
 				 * 
 				 * Note: When having entered a module name stub only (e.g. "std." or "core.") it's needed to show all packages that belong to that root namespace
 				 */
-				foreach (var kv in rr.ResolvedMembersAndTypes)
+				var trr = new List<ResolveResult>();
+
+				foreach (var rr in resolveResults)
 				{
-					var n = kv.Key;
-					if (n is DVariable || n is DMethod)
-					{
-						foreach (var declNode in kv.Value)
-							if (declNode is IBlockNode)
-							{
-								var declClass = declNode as DClassLike;
 
-								if(declClass!=null) // If declaration type is a class-like type, also scan through all base classes
-									while (declClass != null)
+					if (rr is MemberResult)
+					{
+						var mrr = rr as MemberResult;
+
+						trr.AddRange(mrr.MemberBaseTypes);
+					}
+
+					if (trr != null)
+					{
+						foreach (var rr2 in trr)
+						{
+							BuildCompletionData(rr2, l);
+							/*if (n is DVariable || n is DMethod)
+							{
+								foreach (var declNode in kv.Value)
+									if (declNode is IBlockNode)
 									{
-										foreach (var n2 in declClass)
-										{
-											var dn = n2 as DNode;
-											if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
-												l.Add(new DCompletionData(n2));
-										}
-										declClass = DCodeResolver.ResolveBaseClass(declClass, codeCache);
-									}
-								else // 
-									foreach (var n2 in declNode as IBlockNode)
-									{
-										var dn = n2 as DNode;
-										if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
-											l.Add(new DCompletionData(n2));
+										var declClass = declNode as DClassLike;
+
+										if (declClass != null) // If declaration type is a class-like type, also scan through all base classes
+											while (declClass != null)
+											{
+												foreach (var n2 in declClass)
+												{
+													var dn = n2 as DNode;
+													if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
+														l.Add(new DCompletionData(n2));
+												}
+												declClass = DCodeResolver.ResolveBaseClass(declClass, codeCache);
+											}
+										else // 
+											foreach (var n2 in declNode as IBlockNode)
+											{
+												var dn = n2 as DNode;
+												if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
+													l.Add(new DCompletionData(n2));
+											}
 									}
 							}
-					}
-					else if (n is DClassLike) // Add public static members of the class and including all base classes
-					{
-						var curClass = n as DClassLike;
-						while (curClass != null)
-						{
-							foreach (var i in curClass)
+							else if (n is IAbstractSyntaxTree)
 							{
-								var dn = i as DNode;
+								var idParts = (n as IAbstractSyntaxTree).ModuleName.Split('.');
+								int skippableParts = 0;
 
-								if (dn == null)
-									l.Add(new DCompletionData(i));
+								// if (id is IdentifierDeclaration)	skippableParts = 1;
+								// else if (id is IdentifierList)	skippableParts = (id as IdentifierList).Parts.Count;
 
-								// If "this." and if watching the current inheritance level only , add all items
-								// if "super." , add public items
-								// if neither nor, add public static items
-								/*if( (isThis&&n==curClass) ? true : 
-										(isThisOrSuper ? dn.IsPublic : 
-											(dn.IsStatic && dn.IsPublic)))*/
-									l.Add(new DCompletionData(dn));
-							}
-							curClass = DCodeResolver.ResolveBaseClass(curClass, codeCache);
-						}
-					}
-					else if (n is DEnum)
-					{
-						var de = n as DEnum;
-
-						foreach (var i in de)
-						{
-							var dn = i as DEnumValue;
-							if (dn != null)
-								l.Add(new DCompletionData(i));
-						}
-					}
-					else if (n is IAbstractSyntaxTree)
-					{
-						var idParts = (n as IAbstractSyntaxTree).ModuleName.Split('.');
-						int skippableParts = 0;
-
-						// if (id is IdentifierDeclaration)	skippableParts = 1;
-						// else if (id is IdentifierList)	skippableParts = (id as IdentifierList).Parts.Count;
-
-						if (skippableParts >= idParts.Length)
-						{
-							// Add public items of a module
-							foreach (var i in n as IBlockNode)
-							{
-								var dn = i as DNode;
-								if (dn != null)
+								if (skippableParts >= idParts.Length)
 								{
-									if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package))
-										l.Add(new DCompletionData(dn));
+									// Add public items of a module
+									foreach (var i in n as IBlockNode)
+									{
+										var dn = i as DNode;
+										if (dn != null)
+										{
+											if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package))
+												l.Add(new DCompletionData(dn));
+										}
+									}
 								}
-							}
-						}/*
-						else if (!addedModuleNames.Contains(idParts[skippableParts])) // Add next part of the module name path only if it wasn't added before
-						{
-							addedModuleNames.Add(idParts[skippableParts]); // e.g.  std.c.  ... in this virtual package, there are several sub-packages that contain the .c-part
-							l.Add(new NamespaceCompletionData(idParts[skippableParts],GetModulePath((n as IAbstractSyntaxTree).FileName,idParts.Length,skippableParts+1)));
-						}*/
+							/*
+							else if (!addedModuleNames.Contains(idParts[skippableParts])) // Add next part of the module name path only if it wasn't added before
+							{
+								addedModuleNames.Add(idParts[skippableParts]); // e.g.  std.c.  ... in this virtual package, there are several sub-packages that contain the .c-part
+								l.Add(new NamespaceCompletionData(idParts[skippableParts],GetModulePath((n as IAbstractSyntaxTree).FileName,idParts.Length,skippableParts+1)));
+							}* /
+							}*/
+						}
 					}
 				}
 			}
@@ -209,6 +199,54 @@ namespace D_IDE.D
 						}
 					l.Add(new DCompletionData(i));
 				}
+		}
+
+		public static void BuildCompletionData(ResolveResult rr, IList<ICompletionData> l)
+		{
+			if (rr is AliasResult)
+				foreach (var rr2 in (rr as AliasResult).AliasDefinition)
+					BuildCompletionData(rr2, l);
+			else if (rr is TypeResult)
+				BuildTypeCompletionData(rr as TypeResult, ItemVisibility.All, l);
+		}
+
+		public static void BuildTypeCompletionData(TypeResult tr, ItemVisibility visMod, IList<ICompletionData> l)
+		{
+			var n = tr.ResolvedTypeDefinition;
+			if (n is DClassLike) // Add public static members of the class and including all base classes
+			{
+				var curlevel=tr;
+				while (curlevel != null)
+				{
+					foreach (var i in curlevel.ResolvedTypeDefinition)
+					{
+						var dn = i as DNode;
+
+						if (dn == null)
+							l.Add( new DCompletionData(i));
+
+						// If "this." and if watching the current inheritance level only , add all items
+						// if "super." , add public items
+						// if neither nor, add public static items
+						/*if( (isThis&&n==curClass) ? true : 
+								(isThisOrSuper ? dn.IsPublic : 
+									(dn.IsStatic && dn.IsPublic)))*/
+						l.Add( new DCompletionData(dn));
+					}
+					curlevel = curlevel.BaseClass!=null?curlevel.BaseClass[0]:null;
+				}
+			}
+			else if (n is DEnum)
+			{
+				var de = n as DEnum;
+
+				foreach (var i in de)
+				{
+					var dn = i as DEnumValue;
+					if (dn != null)
+						l.Add(new DCompletionData(i));
+				}
+			}
 		}
 
 		/// <summary>
