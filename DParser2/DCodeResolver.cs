@@ -27,108 +27,6 @@ namespace D_Parser.Resolver
 
 		#endregion
 
-
-		/*public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module,
-			string Text,
-			int CaretOffset,
-			CodeLocation CaretLocation, bool EnableVariableTypeResolving,
-			IEnumerable<IAbstractSyntaxTree> CodeCache, bool IsCompleteIdentifier)
-		{
-			ITypeDeclaration id = null;
-			DToken tk = null;
-			return ResolveTypeDeclarations(Module, Text, CaretOffset, CaretLocation, EnableVariableTypeResolving, CodeCache, out id, IsCompleteIdentifier, out tk);
-		}*/
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="Module"></param>
-		/// <param name="Text"></param>
-		/// <param name="CaretOffset"></param>
-		/// <param name="CaretLocation"
-		/// <param name="ImportCache"></param>
-		/// <param name="IsCompleteIdentifier">True if Text is not only the beginning of a type name - instead, it's handled as the complete one</param>
-		/// <returns></returns>
-		/*public static IEnumerable<INode> ResolveTypeDeclarations(IAbstractSyntaxTree Module,
-			string Text,
-			int CaretOffset,
-			CodeLocation CaretLocation,
-			bool EnableVariableTypeResolving,
-			IEnumerable<IAbstractSyntaxTree> CodeCache,
-			out ITypeDeclaration optIdentifierList,
-			bool IsCompleteIdentifier,
-			out DToken optToken)
-		{
-			optIdentifierList = DCodeResolver.BuildIdentifierList(Text,
-				CaretOffset, out optToken);
-
-			if (optIdentifierList == null && optToken == null)
-				return null;
-
-			IBlockNode SearchParent = null;
-
-			if (optToken != null && (optToken.Kind == DTokens.This || optToken.Kind == DTokens.Super)) // this.myProp; super.baseProp;
-				SearchParent = SearchClassLikeAt(Module, CaretLocation);
-			else
-				SearchParent = SearchBlockAt(Module, CaretLocation);
-
-			if (optToken != null)
-			{
-				if (optToken.Kind == DTokens.Super) // super.baseProp
-					SearchParent = ResolveBaseClass(SearchParent as DClassLike, CodeCache);
-				else if (optToken.Kind == DTokens.__FILE__)
-				{
-					var n = new DVariable()
-					{
-						Parent = SearchParent,
-						Type = new IdentifierDeclaration("string"),
-						Name = "__FILE__",
-						Initializer = new IdentifierExpression(Module.FileName),
-						Description = "Module file name"
-					};
-					return new[] { n };
-				}
-				else if (optToken.Kind == DTokens.__LINE__)
-				{
-					var n = new DVariable()
-					{
-						Parent = SearchParent,
-						Type = new IdentifierDeclaration("int"),
-						Name = "__LINE__",
-						Initializer = new IdentifierExpression(CaretLocation.Line),
-						Description = "Code line"
-					};
-					return new[] { n };
-				}
-			}
-
-			// If no addtitional identifiers are given, return immediately
-			if (optIdentifierList == null || SearchParent == null)
-				return new[] { SearchParent };
-
-			try
-			{
-				var ret = DCodeResolver.ResolveTypeDeclarations(
-					SearchParent,
-					optIdentifierList, CodeCache, IsCompleteIdentifier);
-
-				if (EnableVariableTypeResolving && ret != null && ret.Length > 0 && (ret[0] is DVariable || ret[0] is DMethod))
-				{
-					var ntype = GetDNodeType(ret[0]);
-					if (ntype != null)
-					{
-						var ret2 = DCodeResolver.ResolveTypeDeclarations(SearchParent, ntype, CodeCache, IsCompleteIdentifier);
-						if (ret2 != null && ret2.Length > 0)
-							return ret2;
-					}
-				}
-
-				return ret;
-			}
-			catch { }
-			return null;
-		}*/
-
 		/// <summary>
 		/// Returns a list of all items that can be accessed in the current scope.
 		/// </summary>
@@ -879,6 +777,9 @@ namespace D_Parser.Resolver
 					{
 						matches.AddRange(ScanNodeForIdentifier(curScope, searchIdentifier, parseCache));
 
+						if (curScope is IAbstractSyntaxTree && (curScope as IAbstractSyntaxTree).ModuleName.StartsWith(searchIdentifier))
+							matches.Add(curScope);
+
 						curScope = curScope.Parent as IBlockNode;
 					}
 
@@ -902,24 +803,42 @@ namespace D_Parser.Resolver
 							var v = m as DVariable;
 
 							if (v.IsAlias)
-								returnedResults.Add( new AliasResult() { 
-									AliasDefinition=ResolveType(v.Type,currentlyScopedNode,parseCache)
+								returnedResults.Add(new AliasResult()
+								{
+									AliasDefinition = ResolveType(v.Type, currentlyScopedNode, parseCache)
 								});
 							else
-								returnedResults.Add( new MemberResult() { 
-									ResolvedMember=m,
+								returnedResults.Add(new MemberResult()
+								{
+									ResolvedMember = m,
 									MemberBaseTypes = ResolveType(v.Type, currentlyScopedNode, parseCache)
 								});
+						}
+						else if (m is DMethod)
+						{
+							var method = m as DMethod;
+
+							returnedResults.Add(new MemberResult()
+							{
+								ResolvedMember=m,
+								MemberBaseTypes=ResolveType(method.Type,currentlyScopedNode,parseCache)
+							});
 						}
 						else if (m is DClassLike)
 						{
 							var Class = m as DClassLike;
 
-							returnedResults.Add(new TypeResult() { 
-								ResolvedTypeDefinition=Class,
-								BaseClass=ResolveBaseClass(Class,parseCache)
+							returnedResults.Add(new TypeResult()
+							{
+								ResolvedTypeDefinition = Class,
+								BaseClass = ResolveBaseClass(Class, parseCache)
 							});
 						}
+						else if (m is IAbstractSyntaxTree)
+							returnedResults.Add(new ModuleResult()
+							{
+								ResolvedModule = m as IAbstractSyntaxTree
+							});
 					}
 				}
 			}
@@ -939,21 +858,12 @@ namespace D_Parser.Resolver
 				foreach (var i in ResolveType(new IdentifierDeclaration("Object"), ActualClass.NodeRoot as IBlockNode, ModuleCache))
 					if (i is TypeResult)
 						ret.Add(i as TypeResult);
-				/*if(ObjectClassMatches!=null)
-					foreach (var i in ObjectClassMatches)
-					{
-						var objClass = i as TypeResult;
-						if (objClass != null && objClass.ResolvedTypeDefinition.NodeRoot.Name == "object")
-							return i;
-					}*/
 			}
 			else // Take the first only (since D enforces single inheritance)
 			{
 				foreach(var i in ResolveType(ActualClass.BaseClasses[0], ActualClass.NodeRoot as IBlockNode, ModuleCache))
 					if (i is TypeResult)
 						ret.Add(i as TypeResult);
-				/*if (ClassMatches.MemberCount > 0)
-					return ClassMatches;*/
 			}
 			return ret.Count > 0 ? ret.ToArray() : null;
 		}

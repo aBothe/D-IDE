@@ -120,6 +120,11 @@ namespace D_Parser.Resolver
 		}
 	}
 
+	public class ModuleResult : ResolveResult
+	{
+		public IAbstractSyntaxTree ResolvedModule;
+	}
+
 	public class TypeResult : ResolveResult
 	{
 		public IBlockNode ResolvedTypeDefinition;

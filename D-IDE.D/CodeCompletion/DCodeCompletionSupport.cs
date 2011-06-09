@@ -56,39 +56,16 @@ namespace D_IDE.D
 			if (EnteredText == ".")
 			{
 				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset-1, caretLocation, EditorDocument.SyntaxTree, codeCache);
-				/*
-				ITypeDeclaration id = null;
-				DToken tk = null;
-				var accessedItems=DCodeResolver.ResolveTypeDeclarations(EditorDocument.SyntaxTree,
-					EditorDocument.Editor.Text.Substring(0,caretOffset-1),
-					caretOffset-2,
-					caretLocation,
-					false,
-					codeCache,
-					out id,
-					true,
-					out tk);
 
-				bool isThisOrSuper=tk!=null && (tk.Kind==DTokens.This || tk.Kind==DTokens.Super);
-				bool isThis = isThisOrSuper && tk.Kind == DTokens.This;
-
-				var addedModuleNames = new List<string>();
-
-				if (accessedItems == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
+				if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
-				*/
 				/*
-				 * So, after getting the accessed variable or class or namespace it's needed either 
-				 * - to resolve its type and show all its public items
-				 * - or to show all public|static members of a class
-				 * - or to show all public members of a namespace
-				 * 
 				 * Note: When having entered a module name stub only (e.g. "std." or "core.") it's needed to show all packages that belong to that root namespace
 				 */
 
 				foreach (var rr in resolveResults)
 				{
-					BuildCompletionData(null,rr,curBlock, l);
+					BuildCompletionData(rr,curBlock, l);
 
 					/*if (n is DVariable || n is DMethod)
 					{
@@ -203,35 +180,56 @@ namespace D_IDE.D
 			return false;
 		}
 
-		public static void BuildCompletionData(ResolveResult parentResult,ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l)
+		public static void BuildCompletionData(ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l,bool isVariableInstance=false)
 		{
 			if (rr is MemberResult)
 			{
 				var mrr = rr as MemberResult;
 				if (mrr.MemberBaseTypes != null)
 					foreach (var i in mrr.MemberBaseTypes)
-						BuildCompletionData(mrr,i,currentlyScopedBlock, l);
+						BuildCompletionData(i,currentlyScopedBlock, l,true);
 			}
+
 			else if (rr is AliasResult)
 				foreach (var rr2 in (rr as AliasResult).AliasDefinition)
-					BuildCompletionData(parentResult,rr2,currentlyScopedBlock, l);
+					BuildCompletionData(rr2,currentlyScopedBlock, l,isVariableInstance);
+
+			else if (!isVariableInstance&& rr is ModuleResult)
+				BuildModuleCompletionData(rr as ModuleResult, 0, l);
+
 			else if (rr is TypeResult)
 			{
-				ItemVisibility vis=ItemVisibility.All;
+				ItemVisibility vis = ItemVisibility.All;
 
-				if(!HaveSameAncestors(currentlyScopedBlock, (rr as TypeResult).ResolvedTypeDefinition))
+				if (!HaveSameAncestors(currentlyScopedBlock, (rr as TypeResult).ResolvedTypeDefinition))
 				{
-					if(parentResult is MemberResult)
-						vis=ItemVisibility.PublicOrStatic;
+					if (isVariableInstance)
+						vis = ItemVisibility.PublicOrStatic;
 					else
-						vis=ItemVisibility.PublicAndStatic;
+						vis = ItemVisibility.PublicAndStatic;
 				}
 
-				BuildTypeCompletionData(parentResult, rr as TypeResult,vis, l);
+				BuildTypeCompletionData(rr as TypeResult, vis, l);
 			}
 		}
 
-		public static void BuildTypeCompletionData(ResolveResult parentResult,TypeResult tr, ItemVisibility visMod, IList<ICompletionData> l)
+		public static void BuildModuleCompletionData(ModuleResult tr, ItemVisibility visMod, IList<ICompletionData> l)
+		{
+			foreach (var i in tr.ResolvedModule)
+			{
+				var di = i as DNode;
+				if (di == null)
+				{
+					l.Add(new DCompletionData(i));
+					continue;
+				}
+
+				if (di.IsPublic)
+					l.Add(new DCompletionData(i));
+			}
+		}
+
+		public static void BuildTypeCompletionData(TypeResult tr, ItemVisibility visMod, IList<ICompletionData> l)
 		{
 			var n = tr.ResolvedTypeDefinition;
 			if (n is DClassLike) // Add public static members of the class and including all base classes
