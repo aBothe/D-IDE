@@ -123,6 +123,7 @@ namespace D_Parser.Resolver
 	public class ModuleResult : ResolveResult
 	{
 		public IAbstractSyntaxTree ResolvedModule;
+		public bool OnlyModuleNamePartTyped=true;
 	}
 
 	public class TypeResult : ResolveResult

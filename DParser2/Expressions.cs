@@ -1565,7 +1565,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return Type.ToString() + " " + Name/*+ (SpecializationExpression!=null?(":"+SpecializationExpression.ToString()):"")+
+			return (Type!=null?(Type.ToString() + " "):"") + Name/*+ (SpecializationExpression!=null?(":"+SpecializationExpression.ToString()):"")+
 				(DefaultExpression!=null?("="+DefaultExpression.ToString()):"")*/;
 		}
 	}

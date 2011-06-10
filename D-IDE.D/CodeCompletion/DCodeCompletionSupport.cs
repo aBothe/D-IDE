@@ -55,6 +55,8 @@ namespace D_IDE.D
 			// Usually shows variable members
 			if (EnteredText == ".")
 			{
+				alreadyAddedModuleNameParts.Clear();
+
 				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset-1, caretLocation, EditorDocument.SyntaxTree, codeCache);
 
 				if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
@@ -64,65 +66,7 @@ namespace D_IDE.D
 				 */
 
 				foreach (var rr in resolveResults)
-				{
 					BuildCompletionData(rr,curBlock, l);
-
-					/*if (n is DVariable || n is DMethod)
-					{
-						foreach (var declNode in kv.Value)
-							if (declNode is IBlockNode)
-							{
-								var declClass = declNode as DClassLike;
-
-								if (declClass != null) // If declaration type is a class-like type, also scan through all base classes
-									while (declClass != null)
-									{
-										foreach (var n2 in declClass)
-										{
-											var dn = n2 as DNode;
-											if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
-												l.Add(new DCompletionData(n2));
-										}
-										declClass = DCodeResolver.ResolveBaseClass(declClass, codeCache);
-									}
-								else // 
-									foreach (var n2 in declNode as IBlockNode)
-									{
-										var dn = n2 as DNode;
-										if (dn != null ? (dn.IsPublic || dn.IsStatic) && (dn is DVariable || dn is DMethod) : true)
-											l.Add(new DCompletionData(n2));
-									}
-							}
-					}
-					else if (n is IAbstractSyntaxTree)
-					{
-						var idParts = (n as IAbstractSyntaxTree).ModuleName.Split('.');
-						int skippableParts = 0;
-
-						// if (id is IdentifierDeclaration)	skippableParts = 1;
-						// else if (id is IdentifierList)	skippableParts = (id as IdentifierList).Parts.Count;
-
-						if (skippableParts >= idParts.Length)
-						{
-							// Add public items of a module
-							foreach (var i in n as IBlockNode)
-							{
-								var dn = i as DNode;
-								if (dn != null)
-								{
-									if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package))
-										l.Add(new DCompletionData(dn));
-								}
-							}
-						}
-					/*
-					else if (!addedModuleNames.Contains(idParts[skippableParts])) // Add next part of the module name path only if it wasn't added before
-					{
-						addedModuleNames.Add(idParts[skippableParts]); // e.g.  std.c.  ... in this virtual package, there are several sub-packages that contain the .c-part
-						l.Add(new NamespaceCompletionData(idParts[skippableParts],GetModulePath((n as IAbstractSyntaxTree).FileName,idParts.Length,skippableParts+1)));
-					}* /
-					}*/
-				}
 			}
 
 			// Enum all nodes that can be accessed in the current scope
@@ -180,7 +124,9 @@ namespace D_IDE.D
 			return false;
 		}
 
-		public static void BuildCompletionData(ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l,bool isVariableInstance=false)
+		readonly List<string> alreadyAddedModuleNameParts = new List<string>(); 
+
+		public void BuildCompletionData(ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l,bool isVariableInstance=false)
 		{
 			if (rr is MemberResult)
 			{
@@ -195,11 +141,11 @@ namespace D_IDE.D
 					BuildCompletionData(rr2,currentlyScopedBlock, l,isVariableInstance);
 
 			else if (!isVariableInstance&& rr is ModuleResult)
-				BuildModuleCompletionData(rr as ModuleResult, 0, l);
+				BuildModuleCompletionData(rr as ModuleResult, 0, l,alreadyAddedModuleNameParts);
 
 			else if (rr is TypeResult)
 			{
-				ItemVisibility vis = ItemVisibility.All;
+				var vis = ItemVisibility.All;
 
 				if (!HaveSameAncestors(currentlyScopedBlock, (rr as TypeResult).ResolvedTypeDefinition))
 				{
@@ -213,19 +159,49 @@ namespace D_IDE.D
 			}
 		}
 
-		public static void BuildModuleCompletionData(ModuleResult tr, ItemVisibility visMod, IList<ICompletionData> l)
+		public static void BuildModuleCompletionData(ModuleResult tr, ItemVisibility visMod, IList<ICompletionData> l,
+			List<string> alreadyAddedModuleNames)
 		{
-			foreach (var i in tr.ResolvedModule)
-			{
-				var di = i as DNode;
-				if (di == null)
+			if (!tr.OnlyModuleNamePartTyped)
+				foreach (var i in tr.ResolvedModule)
 				{
-					l.Add(new DCompletionData(i));
-					continue;
+					var di = i as DNode;
+					if (di == null)
+					{
+						l.Add(new DCompletionData(i));
+						continue;
+					}
+
+					if (di.IsPublic)
+						l.Add(new DCompletionData(i));
+				}
+			else
+			{
+				int skippableParts = 0;
+
+				var modNameParts = tr.ResolvedModule.ModuleName.Split('.');
+				string packageDir = modNameParts[0];
+
+				var curRBase = tr as ResolveResult;
+				while (curRBase != null)
+				{
+					skippableParts++;
+					packageDir += "." + modNameParts[skippableParts];
+					curRBase = curRBase.ResultBase;
 				}
 
-				if (di.IsPublic)
-					l.Add(new DCompletionData(i));
+				if (skippableParts >= modNameParts.Length - 1)
+					l.Add(new NamespaceCompletionData(modNameParts[skippableParts], tr.ResolvedModule));
+				else
+				{
+					// Don't add a package name that already has been added before.. so e.g. show only the first module of package "std.c."
+					if (alreadyAddedModuleNames.Contains(packageDir))
+						return;
+
+					alreadyAddedModuleNames.Add(packageDir);
+
+					l.Add(new NamespaceCompletionData(modNameParts[skippableParts], packageDir));
+				}
 			}
 		}
 

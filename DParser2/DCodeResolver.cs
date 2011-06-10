@@ -820,8 +820,8 @@ namespace D_Parser.Resolver
 
 							returnedResults.Add(new MemberResult()
 							{
-								ResolvedMember=m,
-								MemberBaseTypes=ResolveType(method.Type,currentlyScopedNode,parseCache)
+								ResolvedMember = m,
+								MemberBaseTypes = ResolveType(method.Type, currentlyScopedNode, parseCache)
 							});
 						}
 						else if (m is DClassLike)
@@ -838,9 +838,73 @@ namespace D_Parser.Resolver
 							returnedResults.Add(new ModuleResult()
 							{
 								ResolvedModule = m as IAbstractSyntaxTree
+								,
+								OnlyModuleNamePartTyped = (m as IAbstractSyntaxTree).ModuleName != searchIdentifier
 							});
 					}
 				}
+
+				else
+					foreach(var rbase in rbases)
+					{
+						if (declaration is IdentifierDeclaration)
+						{
+							string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
+							var matches = new List<INode>();
+
+							if (rbase is MemberResult)
+							{
+								var memberBases = (rbase as MemberResult).MemberBaseTypes;
+							}
+
+							foreach (var m in matches)
+							{
+								if (m is DVariable)
+								{
+									var v = m as DVariable;
+
+									if (v.IsAlias)
+										returnedResults.Add(new AliasResult()
+										{
+											AliasDefinition = ResolveType(v.Type, currentlyScopedNode, parseCache)
+										});
+									else
+										returnedResults.Add(new MemberResult()
+										{
+											ResolvedMember = m,
+											MemberBaseTypes = ResolveType(v.Type, currentlyScopedNode, parseCache)
+										});
+								}
+								else if (m is DMethod)
+								{
+									var method = m as DMethod;
+
+									returnedResults.Add(new MemberResult()
+									{
+										ResolvedMember = m,
+										MemberBaseTypes = ResolveType(method.Type, currentlyScopedNode, parseCache)
+									});
+								}
+								else if (m is DClassLike)
+								{
+									var Class = m as DClassLike;
+
+									returnedResults.Add(new TypeResult()
+									{
+										ResolvedTypeDefinition = Class,
+										BaseClass = ResolveBaseClass(Class, parseCache)
+									});
+								}
+								else if (m is IAbstractSyntaxTree)
+									returnedResults.Add(new ModuleResult()
+									{
+										ResolvedModule = m as IAbstractSyntaxTree
+										,
+										OnlyModuleNamePartTyped = (m as IAbstractSyntaxTree).ModuleName != searchIdentifier
+									});
+							}
+						}
+					}
 			}
 
 			return returnedResults.Count > 0 ? returnedResults.ToArray() : null;
