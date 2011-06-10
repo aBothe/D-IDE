@@ -236,9 +236,8 @@ namespace D_IDE.D
 						// if "super." , add public items
 						// if neither nor, add public static items
 
-						bool IsStatic = dn.IsStatic;
-						bool IsPublic = dn.IsPublic || IsStatic;
-						bool IsProtectedOrPublic = IsPublic || dn.ContainsAttribute(DTokens.Protected);
+						bool IsPublicOrStatic = dn.IsPublic || dn.IsStatic;
+						bool IsProtectedOrPublic = IsPublicOrStatic || dn.ContainsAttribute(DTokens.Protected);
 
 						bool add = false;
 
@@ -250,11 +249,14 @@ namespace D_IDE.D
 							case ItemVisibility.Protected:
 								add = IsProtectedOrPublic;
 								break;
+							case ItemVisibility.PublicAndStatic:
+								add = dn.IsPublic && dn.IsStatic;
+								break;
 							case ItemVisibility.PublicOrStatic:
-								add = IsPublic;
+								add = IsPublicOrStatic;
 								break;
 							case ItemVisibility.Static:
-								add = IsStatic;
+								add = dn.IsStatic;
 								break;
 						}
 

@@ -820,14 +820,20 @@ namespace D_Parser.Resolver
 							{
 								// First filter out all alias and member results..so that there will be only (Static-)Type or Module results left..
 								if (scanResult is MemberResult)
-									nextResults.AddRange((scanResult as MemberResult).MemberBaseTypes);
+								{
+									var _m = (scanResult as MemberResult).MemberBaseTypes;
+									if(_m!=null)nextResults.AddRange(_m);
+								}
 								else if (scanResult is AliasResult)
-									nextResults.AddRange((scanResult as AliasResult).AliasDefinition);
+								{
+									var _m = (scanResult as AliasResult).AliasDefinition;
+									if(_m!=null)nextResults.AddRange(_m);
+								}
 
 
 								else if (scanResult is TypeResult)
 								{
-									var results=HandleNodeMatches(
+									var results = HandleNodeMatches(
 										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, parseCache),
 										currentlyScopedNode, parseCache, searchIdentifier, rbase);
 									if (results != null)
@@ -843,19 +849,22 @@ namespace D_Parser.Resolver
 
 										if (modNameParts[modRes.AlreadyTypedModuleNameParts] == searchIdentifier)
 										{
-											returnedResults.Add(new ModuleResult(){
-												ResolvedModule= modRes.ResolvedModule,
-												AlreadyTypedModuleNameParts=modRes.AlreadyTypedModuleNameParts+1,
-												ResultBase=modRes
+											returnedResults.Add(new ModuleResult()
+											{
+												ResolvedModule = modRes.ResolvedModule,
+												AlreadyTypedModuleNameParts = modRes.AlreadyTypedModuleNameParts + 1,
+												ResultBase = modRes
 											});
 										}
 									}
-									else returnedResults.Add(new ModuleResult()
+									else
 									{
-										ResolvedModule = modRes.ResolvedModule,
-										AlreadyTypedModuleNameParts = modRes.AlreadyTypedModuleNameParts + 1,
-										ResultBase = modRes
-									});
+										var results = HandleNodeMatches(
+										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, parseCache),
+										currentlyScopedNode, parseCache, searchIdentifier, rbase);
+										if (results != null)
+											returnedResults.AddRange(results);
+									}
 								}
 								else if (scanResult is StaticTypeResult)
 								{
