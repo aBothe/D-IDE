@@ -1565,7 +1565,7 @@ namespace D_Parser
 
 			Step();
 			var ae = new ShiftExpression(t.Kind);
-			ae.LeftOperand = ae;
+			ae.LeftOperand = left;
 			ae.RightOperand = ShiftExpression();
 			return ae;
 		}

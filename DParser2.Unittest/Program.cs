@@ -15,9 +15,10 @@ namespace ParserTests
         public static string curFile = "";
         public static void Main(string[] args)
         {
-			string input="a!('a').b.c.d";
+			//  ) 
+			string input = "cast(int) (IOC_IN | (UINT.sizeof & IOCPARM_MASK) << 16 | (102 << 8) | 126)";
 
-			ParseTests.TestTypeEval(input);
+			var e=ParseTests.TestExpression(input);
 			Console.ReadKey();
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);

@@ -39,6 +39,24 @@ namespace D_IDE.D
 			Protected
 		}
 
+		public static bool CanItemBeShownGenerally(DNode dn)
+		{
+			if (dn.Name == null || dn.Name == "")
+				return false;
+
+			if (dn is DMethod)
+			{
+				var dm = dn as DMethod;
+
+				if (dm.SpecialType == DMethod.MethodType.Unittest || 
+					dm.SpecialType == DMethod.MethodType.Destructor || 
+					dm.SpecialType == DMethod.MethodType.Constructor)
+					return false;
+			}
+
+			return true;
+		}
+
 		public void BuildCompletionData(DEditorDocument EditorDocument, IList<ICompletionData> l, string EnteredText)
 		{
 			var caretOffset = EditorDocument.Editor.CaretOffset;
@@ -103,7 +121,7 @@ namespace D_IDE.D
 					{
 						var dm = i as DMethod;
 
-						if (dm.SpecialType == DMethod.MethodType.Unittest || ((dm.SpecialType == DMethod.MethodType.Destructor || dm.SpecialType == DMethod.MethodType.Constructor) && dm.IsStatic))
+						if (!CanItemBeShownGenerally(dm) && dm.IsStatic)
 							continue;
 						}
 					l.Add(new DCompletionData(i));
@@ -162,7 +180,7 @@ namespace D_IDE.D
 		public static void BuildModuleCompletionData(ModuleResult tr, ItemVisibility visMod, IList<ICompletionData> l,
 			List<string> alreadyAddedModuleNames)
 		{
-			if (!tr.OnlyModuleNamePartTyped)
+			if (!tr.IsOnlyModuleNamePartTyped())
 				foreach (var i in tr.ResolvedModule)
 				{
 					var di = i as DNode;
@@ -172,27 +190,18 @@ namespace D_IDE.D
 						continue;
 					}
 
-					if (di.IsPublic)
+					if (di.IsPublic && CanItemBeShownGenerally(di))
 						l.Add(new DCompletionData(i));
 				}
 			else
 			{
-				int skippableParts = 0;
-
 				var modNameParts = tr.ResolvedModule.ModuleName.Split('.');
+
 				string packageDir = modNameParts[0];
+				for (int i = 1; i <= tr.AlreadyTypedModuleNameParts; i++)
+					packageDir += "." + modNameParts[i];
 
-				var curRBase = tr as ResolveResult;
-				while (curRBase != null)
-				{
-					skippableParts++;
-					packageDir += "." + modNameParts[skippableParts];
-					curRBase = curRBase.ResultBase;
-				}
-
-				if (skippableParts >= modNameParts.Length - 1)
-					l.Add(new NamespaceCompletionData(modNameParts[skippableParts], tr.ResolvedModule));
-				else
+				if (tr.AlreadyTypedModuleNameParts < modNameParts.Length - 1)
 				{
 					// Don't add a package name that already has been added before.. so e.g. show only the first module of package "std.c."
 					if (alreadyAddedModuleNames.Contains(packageDir))
@@ -200,8 +209,10 @@ namespace D_IDE.D
 
 					alreadyAddedModuleNames.Add(packageDir);
 
-					l.Add(new NamespaceCompletionData(modNameParts[skippableParts], packageDir));
+					l.Add(new NamespaceCompletionData(modNameParts[tr.AlreadyTypedModuleNameParts], packageDir));
 				}
+				else 
+					l.Add(new NamespaceCompletionData(modNameParts[modNameParts.Length - 1], tr.ResolvedModule));
 			}
 		}
 
@@ -247,7 +258,7 @@ namespace D_IDE.D
 								break;
 						}
 
-						if(add)
+						if (add && CanItemBeShownGenerally(dn))
 							l.Add( new DCompletionData(dn));
 					}
 					curlevel = curlevel.BaseClass!=null?curlevel.BaseClass[0]:null;

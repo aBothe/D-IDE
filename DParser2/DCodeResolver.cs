@@ -726,15 +726,15 @@ namespace D_Parser.Resolver
 	public class DResolver
 	{
 		public static ResolveResult[] ResolveType(string code, int caret, CodeLocation caretLocation, IAbstractSyntaxTree codeAST, IEnumerable<IAbstractSyntaxTree> parseCache,
-			bool alsoParseBeyondCaret=false,
-			bool onlyAssumeIdentifierList=false)
+			bool alsoParseBeyondCaret = false,
+			bool onlyAssumeIdentifierList = false)
 		{
 			var start = ReverseParsing.SearchExpressionStart(code, caret);
 
 			if (start < 0)
 				return null;
 
-			var expressionCode = code.Substring(start, alsoParseBeyondCaret?code.Length-start: caret - start);
+			var expressionCode = code.Substring(start, alsoParseBeyondCaret ? code.Length - start : caret - start);
 
 			var parser = DParser.Create(new StringReader(expressionCode));
 			parser.Lexer.NextToken();
@@ -764,6 +764,7 @@ namespace D_Parser.Resolver
 			 * search the very first type declaration by walking along the current block scope hierarchy.
 			 * If there wasn't any item found in that procedure, search in the global parse cache
 			 */
+			#region Search initial member/type/module/whatever
 			if (rbases == null)
 			{
 				if (declaration is IdentifierDeclaration)
@@ -796,123 +797,85 @@ namespace D_Parser.Resolver
 						matches.AddRange(ScanNodeForIdentifier(mod, searchIdentifier, null));
 					}
 
-					foreach (var m in matches)
-					{
-						if (m is DVariable)
-						{
-							var v = m as DVariable;
-
-							if (v.IsAlias)
-								returnedResults.Add(new AliasResult()
-								{
-									AliasDefinition = ResolveType(v.Type, currentlyScopedNode, parseCache)
-								});
-							else
-								returnedResults.Add(new MemberResult()
-								{
-									ResolvedMember = m,
-									MemberBaseTypes = ResolveType(v.Type, currentlyScopedNode, parseCache)
-								});
-						}
-						else if (m is DMethod)
-						{
-							var method = m as DMethod;
-
-							returnedResults.Add(new MemberResult()
-							{
-								ResolvedMember = m,
-								MemberBaseTypes = ResolveType(method.Type, currentlyScopedNode, parseCache)
-							});
-						}
-						else if (m is DClassLike)
-						{
-							var Class = m as DClassLike;
-
-							returnedResults.Add(new TypeResult()
-							{
-								ResolvedTypeDefinition = Class,
-								BaseClass = ResolveBaseClass(Class, parseCache)
-							});
-						}
-						else if (m is IAbstractSyntaxTree)
-							returnedResults.Add(new ModuleResult()
-							{
-								ResolvedModule = m as IAbstractSyntaxTree
-								,
-								OnlyModuleNamePartTyped = (m as IAbstractSyntaxTree).ModuleName != searchIdentifier
-							});
-					}
+					var results= HandleNodeMatches(matches, currentlyScopedNode, parseCache, searchIdentifier);
+					if (results != null)
+						returnedResults.AddRange(results);
 				}
+			}
+			#endregion
 
-				else
-					foreach(var rbase in rbases)
+			#region Search in further, deeper levels
+			else foreach(var rbase in rbases){
+					if (declaration is IdentifierDeclaration)
 					{
-						if (declaration is IdentifierDeclaration)
+						string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
+
+						var scanResults = new List<ResolveResult>();
+						scanResults.Add(rbase);
+						var nextResults=new List<ResolveResult>();
+
+						while (scanResults.Count > 0)
 						{
-							string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
-							var matches = new List<INode>();
-
-							if (rbase is MemberResult)
+							foreach (var scanResult in scanResults)
 							{
-								var memberBases = (rbase as MemberResult).MemberBaseTypes;
+								// First filter out all alias and member results..so that there will be only (Static-)Type or Module results left..
+								if (scanResult is MemberResult)
+									nextResults.AddRange((scanResult as MemberResult).MemberBaseTypes);
+								else if (scanResult is AliasResult)
+									nextResults.AddRange((scanResult as AliasResult).AliasDefinition);
+
+
+								else if (scanResult is TypeResult)
+								{
+									var results=HandleNodeMatches(
+										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, parseCache),
+										currentlyScopedNode, parseCache, searchIdentifier, rbase);
+									if (results != null)
+										returnedResults.AddRange(results);
+								}
+								else if (scanResult is ModuleResult)
+								{
+									var modRes = (scanResult as ModuleResult);
+
+									if (modRes.IsOnlyModuleNamePartTyped())
+									{
+										var modNameParts = modRes.ResolvedModule.ModuleName.Split('.');
+
+										if (modNameParts[modRes.AlreadyTypedModuleNameParts] == searchIdentifier)
+										{
+											returnedResults.Add(new ModuleResult(){
+												ResolvedModule= modRes.ResolvedModule,
+												AlreadyTypedModuleNameParts=modRes.AlreadyTypedModuleNameParts+1,
+												ResultBase=modRes
+											});
+										}
+									}
+									else returnedResults.Add(new ModuleResult()
+									{
+										ResolvedModule = modRes.ResolvedModule,
+										AlreadyTypedModuleNameParts = modRes.AlreadyTypedModuleNameParts + 1,
+										ResultBase = modRes
+									});
+								}
+								else if (scanResult is StaticTypeResult)
+								{
+
+								}
 							}
 
-							foreach (var m in matches)
-							{
-								if (m is DVariable)
-								{
-									var v = m as DVariable;
-
-									if (v.IsAlias)
-										returnedResults.Add(new AliasResult()
-										{
-											AliasDefinition = ResolveType(v.Type, currentlyScopedNode, parseCache)
-										});
-									else
-										returnedResults.Add(new MemberResult()
-										{
-											ResolvedMember = m,
-											MemberBaseTypes = ResolveType(v.Type, currentlyScopedNode, parseCache)
-										});
-								}
-								else if (m is DMethod)
-								{
-									var method = m as DMethod;
-
-									returnedResults.Add(new MemberResult()
-									{
-										ResolvedMember = m,
-										MemberBaseTypes = ResolveType(method.Type, currentlyScopedNode, parseCache)
-									});
-								}
-								else if (m is DClassLike)
-								{
-									var Class = m as DClassLike;
-
-									returnedResults.Add(new TypeResult()
-									{
-										ResolvedTypeDefinition = Class,
-										BaseClass = ResolveBaseClass(Class, parseCache)
-									});
-								}
-								else if (m is IAbstractSyntaxTree)
-									returnedResults.Add(new ModuleResult()
-									{
-										ResolvedModule = m as IAbstractSyntaxTree
-										,
-										OnlyModuleNamePartTyped = (m as IAbstractSyntaxTree).ModuleName != searchIdentifier
-									});
-							}
+							scanResults = nextResults;
+							nextResults = new List<ResolveResult>();
 						}
 					}
 			}
+			#endregion
 
 			return returnedResults.Count > 0 ? returnedResults.ToArray() : null;
 		}
 
 		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, IEnumerable<IAbstractSyntaxTree> ModuleCache)
 		{
-			if (ActualClass == null || (ActualClass.BaseClasses.Count<1 && ActualClass.Name.ToLower()=="object"))
+			if (ActualClass == null || (ActualClass.BaseClasses.Count < 1 && ActualClass.Name.ToLower() == "object"))
 				return null;
 
 			var ret = new List<TypeResult>();
@@ -925,7 +888,7 @@ namespace D_Parser.Resolver
 			}
 			else // Take the first only (since D enforces single inheritance)
 			{
-				foreach(var i in ResolveType(ActualClass.BaseClasses[0], ActualClass.NodeRoot as IBlockNode, ModuleCache))
+				foreach (var i in ResolveType(ActualClass.BaseClasses[0], ActualClass.NodeRoot as IBlockNode, ModuleCache))
 					if (i is TypeResult)
 						ret.Add(i as TypeResult);
 			}
@@ -953,7 +916,7 @@ namespace D_Parser.Resolver
 			{
 				var baseClasses = ResolveBaseClass(curScope as DClassLike, parseCache);
 				if (baseClasses != null)
-					foreach(var i in baseClasses)
+					foreach (var i in baseClasses)
 					{
 						var baseClass = i as TypeResult;
 						if (baseClass == null)
@@ -983,6 +946,64 @@ namespace D_Parser.Resolver
 				}
 
 			return matches;
+		}
+
+		static IEnumerable<ResolveResult> HandleNodeMatches(IEnumerable<INode> matches, 
+			IBlockNode currentlyScopedNode, 
+			IEnumerable<IAbstractSyntaxTree> parseCache, 
+			string searchIdentifier="",
+			ResolveResult resultBase = null)
+		{
+			foreach (var m in matches)
+			{
+				if (m is DVariable)
+				{
+					var v = m as DVariable;
+
+					if (v.IsAlias)
+						yield return new AliasResult()
+						{
+							AliasDefinition = ResolveType(v.Type, currentlyScopedNode, parseCache),
+							ResultBase=resultBase
+						};
+					else
+						yield return new MemberResult()
+						{
+							ResolvedMember = m,
+							MemberBaseTypes = ResolveType(v.Type, currentlyScopedNode, parseCache),
+							ResultBase = resultBase
+						};
+				}
+				else if (m is DMethod)
+				{
+					var method = m as DMethod;
+
+					yield return new MemberResult()
+					{
+						ResolvedMember = m,
+						MemberBaseTypes = ResolveType(method.Type, currentlyScopedNode, parseCache),
+						ResultBase = resultBase
+					};
+				}
+				else if (m is DClassLike)
+				{
+					var Class = m as DClassLike;
+
+					yield return new TypeResult()
+					{
+						ResolvedTypeDefinition = Class,
+						BaseClass = ResolveBaseClass(Class, parseCache),
+						ResultBase = resultBase
+					};
+				}
+				else if (m is IAbstractSyntaxTree)
+					yield return new ModuleResult()
+					{
+						ResolvedModule = m as IAbstractSyntaxTree,
+						AlreadyTypedModuleNameParts=1,
+						ResultBase = resultBase
+					};
+			}
 		}
 
 		static readonly BitArray sigTokens = DTokens.NewSet(

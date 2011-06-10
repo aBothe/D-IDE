@@ -123,7 +123,13 @@ namespace D_Parser.Resolver
 	public class ModuleResult : ResolveResult
 	{
 		public IAbstractSyntaxTree ResolvedModule;
-		public bool OnlyModuleNamePartTyped=true;
+		public bool IsOnlyModuleNamePartTyped()
+		{
+			var modNameParts = ResolvedModule.ModuleName.Split('.');
+			return AlreadyTypedModuleNameParts != modNameParts.Length;
+		}
+
+		public int AlreadyTypedModuleNameParts = 0;
 	}
 
 	public class TypeResult : ResolveResult
