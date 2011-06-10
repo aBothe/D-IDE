@@ -175,6 +175,18 @@ namespace D_IDE.D
 
 				BuildTypeCompletionData(rr as TypeResult, vis, l);
 			}
+
+			else if (rr is SpecialTypeResult)
+			{
+				var str = rr as SpecialTypeResult;
+
+				switch (str.SpecialType)
+				{
+					case SpecialType.Array:
+						
+						break;
+				}
+			}
 		}
 
 		public static void BuildModuleCompletionData(ModuleResult tr, ItemVisibility visMod, IList<ICompletionData> l,

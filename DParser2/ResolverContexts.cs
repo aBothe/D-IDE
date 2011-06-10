@@ -110,6 +110,9 @@ namespace D_Parser.Resolver
 		public SpecialType SpecialType { get; set; }
 	}
 
+	/// <summary>
+	/// Encapsules basic types like int, bool, void etc.
+	/// </summary>
 	public class StaticTypeResult : ResolveResult
 	{
 		public ITypeDeclaration Type;

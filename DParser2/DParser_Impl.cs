@@ -500,8 +500,13 @@ namespace D_Parser
 				par.Add(TemplateDeclaration());
 			else if (la.Kind == (Interface))
 				par.Add(InterfaceDeclaration());
-			else
+			else if (IsBasicType() || la.Kind==Ref)
 				Decl(par, HasStorageClassModifiers);
+			else
+			{
+				Step();
+				SynErr(la.Kind,"Declaration expected, not "+GetTokenString(la.Kind));
+			}
 		}
 
 		void Decl(IBlockNode par, bool HasStorageClassModifiers)
@@ -799,8 +804,11 @@ namespace D_Parser
 							List<INode> _unused = null;
 							ttd = DeclaratorSuffixes(out _unused2, out _unused);
 
-							ttd.InnerDeclaration=cd;
-							cd=ttd;
+							if (ttd != null)
+							{
+								ttd.InnerDeclaration = cd;
+								cd = ttd;
+							}
 						}
 					}
 				}
