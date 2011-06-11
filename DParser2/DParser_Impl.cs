@@ -745,7 +745,7 @@ namespace D_Parser
 			while (IsBasicType2())
 			{
 				if (ret.Type == null) ret.Type = BasicType2();
-				else { ttd = BasicType2(); ttd.InnerDeclaration = ret.Type; ret.Type = ttd; }
+				else { ttd = BasicType2(); if(ttd!=null)ttd.InnerDeclaration = ret.Type; ret.Type = ttd; }
 			}
 			/*
 			 * Add some syntax possibilities here
@@ -769,10 +769,12 @@ namespace D_Parser
 				{
 					ttd = BasicType2();
 
-					if (deleg.ReturnType == null) deleg.ReturnType = ttd;
+					if (deleg.ReturnType == null) 
+						deleg.ReturnType = ttd;
 					else
 					{
-						ttd.InnerDeclaration = deleg.ReturnType;
+						if(ttd!=null)
+							ttd.InnerDeclaration = deleg.ReturnType;
 						deleg.ReturnType = ttd;
 					}
 				}
@@ -921,7 +923,8 @@ namespace D_Parser
 				Step();
 				var ttd = TemplateInstance();
 
-				ttd.InnerDeclaration = td;
+				if (ttd != null)
+					ttd.InnerDeclaration = td;
 				td = ttd;
 			}
 			return td;
@@ -954,10 +957,9 @@ namespace D_Parser
 			{
 				var ttd = Declarator2();
 				if (ttd != null)
-				{
 					ttd.InnerDeclaration = td;
 					td = ttd;
-				}
+				
 			}
 
 			return td;
@@ -1004,7 +1006,9 @@ namespace D_Parser
 				var ttd = BasicType2();
 				if (AllowWeakTypeParsing && ttd == null)
 					return null;
-				ttd.InnerDeclaration = td;
+
+				if(ttd!=null)
+					ttd.InnerDeclaration = td;
 				td = ttd;
 			}
 
