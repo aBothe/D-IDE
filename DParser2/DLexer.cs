@@ -366,7 +366,13 @@ namespace D_Parser
     {
         public DLexer(TextReader reader)
             : base(reader)
-        {}
+        {
+			if ((char)reader.Peek() == '#')
+			{
+				reader.ReadLine();
+				HandleLineEnd('\n');
+			}
+		}
 
         #region Abstract Lexer Props & Methods
 		public IList<ParserError> LexerErrors = new List<ParserError>();

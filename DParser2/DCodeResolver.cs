@@ -729,7 +729,7 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class DResolver
 	{
-		public static ResolveResult[] ResolveType(string code, int caret, CodeLocation caretLocation, IAbstractSyntaxTree codeAST, IEnumerable<IAbstractSyntaxTree> parseCache,
+		public static ResolveResult[] ResolveType(string code, int caret, CodeLocation caretLocation, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache,
 			bool alsoParseBeyondCaret = false,
 			bool onlyAssumeIdentifierList = false)
 		{
@@ -744,11 +744,11 @@ namespace D_Parser.Resolver
 			parser.Lexer.NextToken();
 
 			if (onlyAssumeIdentifierList)
-				return ResolveType(parser.IdentifierList(), codeAST, parseCache);
+				return ResolveType(parser.IdentifierList(),currentlyScopedNode, parseCache);
 			else if (parser.IsAssignExpression())
-				return ResolveType(parser.AssignExpression().ExpressionTypeRepresentation, codeAST, parseCache);
+				return ResolveType(parser.AssignExpression().ExpressionTypeRepresentation, currentlyScopedNode, parseCache);
 			else
-				return ResolveType(parser.Type(), codeAST, parseCache);
+				return ResolveType(parser.Type(),currentlyScopedNode, parseCache);
 		}
 
 		public static ResolveResult[] ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache)

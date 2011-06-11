@@ -75,7 +75,7 @@ namespace D_IDE.D
 			{
 				alreadyAddedModuleNameParts.Clear();
 
-				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset-1, caretLocation, EditorDocument.SyntaxTree, codeCache);
+				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset-1, caretLocation, curBlock, codeCache);
 
 				if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
