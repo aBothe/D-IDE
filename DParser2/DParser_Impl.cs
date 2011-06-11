@@ -910,19 +910,19 @@ namespace D_Parser
 		{
 			ITypeDeclaration td = null;
 
-			if (la.Kind != (Identifier))
-				SynErr(Identifier);
-
-			// Template instancing or Identifier
-			td = TemplateInstance();
-
-			while (la.Kind == Dot)
+			if (Expect(Identifier))
 			{
-				Step();
-				var ttd = TemplateInstance();
+				// Template instancing or Identifier
+				td = TemplateInstance();
 
-				ttd.InnerDeclaration = td;
-				td = ttd;
+				while (la.Kind == Dot)
+				{
+					Step();
+					var ttd = TemplateInstance();
+
+					ttd.InnerDeclaration = td;
+					td = ttd;
+				}
 			}
 			return td;
 		}
@@ -3063,7 +3063,9 @@ namespace D_Parser
 				if (IsProtectionAttribute() && la.Kind != (Protected))
 					Step();
 
-				ret.Add(IdentifierList());
+				var ids=IdentifierList();
+				if (ids != null)
+					ret.Add(ids);
 			}
 			return ret;
 		}
