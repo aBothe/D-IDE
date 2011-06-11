@@ -1949,7 +1949,8 @@ namespace D_Parser
 					}
 
 					Expect(CloseSquareBracket);
-					(leftExpr as PostfixExpression).EndLocation = t.EndLocation;
+					if(leftExpr is PostfixExpression)
+						(leftExpr as PostfixExpression).EndLocation = t.EndLocation;
 				}
 				else break;
 			}
@@ -2946,20 +2947,22 @@ namespace D_Parser
 			var OldPreviousCommentString = PreviousComment;
 			PreviousComment = "";
 
-			Expect(OpenCurlyBrace);
-			par.BlockStartLocation = t.Location;
-			if (la.Kind != CloseCurlyBrace)
+			if (Expect(OpenCurlyBrace))
 			{
-				if (ParseStructureOnly)
-					Lexer.SkipCurrentBlock();
-				else
-					while (!IsEOF && la.Kind != (CloseCurlyBrace))
-					{
-						Statement(par, true, true);
-					}
+				par.BlockStartLocation = t.Location;
+				if (la.Kind != CloseCurlyBrace)
+				{
+					if (ParseStructureOnly)
+						Lexer.SkipCurrentBlock();
+					else
+						while (!IsEOF && la.Kind != (CloseCurlyBrace))
+						{
+							Statement(par, true, true);
+						}
+				}
+				Expect(CloseCurlyBrace);
+				par.EndLocation = t.EndLocation;
 			}
-			Expect(CloseCurlyBrace);
-			par.EndLocation = t.EndLocation;
 
 			PreviousComment = OldPreviousCommentString;
 		}
@@ -3067,24 +3070,27 @@ namespace D_Parser
 
 		private void ClassBody(IBlockNode ret)
 		{
-			if (String.IsNullOrEmpty(ret.Description)) ret.Description = GetComments();
+			if (String.IsNullOrEmpty(ret.Description))
+				ret.Description = GetComments();
 			var OldPreviousCommentString = PreviousComment;
 			PreviousComment = "";
 
-			var stk_backup = BlockAttributes;
-			BlockAttributes = new Stack<DAttribute>();
-
-			Expect(OpenCurlyBrace);
-			ret.BlockStartLocation = t.Location;
-			while (!IsEOF && la.Kind != (CloseCurlyBrace))
+			if (Expect(OpenCurlyBrace))
 			{
-				DeclDef(ret);
-			}
-			Expect(CloseCurlyBrace);
-			ret.EndLocation = t.EndLocation;
-			PreviousComment = OldPreviousCommentString;
+				var stk_backup = BlockAttributes;
+				BlockAttributes = new Stack<DAttribute>();
 
-			BlockAttributes = stk_backup;
+				ret.BlockStartLocation = t.Location;
+				while (!IsEOF && la.Kind != (CloseCurlyBrace))
+				{
+					DeclDef(ret);
+				}
+				Expect(CloseCurlyBrace);
+				ret.EndLocation = t.EndLocation;
+				BlockAttributes = stk_backup;
+			}
+
+			PreviousComment = OldPreviousCommentString;
 		}
 
 		INode Constructor(bool IsStruct)

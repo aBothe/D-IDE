@@ -1033,8 +1033,7 @@ namespace D_Parser.Resolver
 		/// </summary>
 		public static bool IsTypeIdentifier(string code, int caret)
 		{
-			try
-			{
+			//try{
 				if (caret < 1)
 					return false;
 
@@ -1057,6 +1056,9 @@ namespace D_Parser.Resolver
 				var lx = new DLexer(new StringReader(expressionCode));
 
 				var firstToken = lx.NextToken();
+
+				if (DTokens.ClassLike[firstToken.Kind])
+					return true;
 
 				while (lx.LookAhead.Kind != DTokens.EOF)
 					lx.NextToken();
@@ -1082,8 +1084,7 @@ namespace D_Parser.Resolver
 						return true;
 				}
 
-			}
-			catch { }
+			//}catch(Exception ex) { }
 			return false;
 		}
 	}

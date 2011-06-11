@@ -522,6 +522,7 @@ namespace D_IDE.D
 					SyntaxTree.FileName = AbsoluteFilePath;
 					SyntaxTree.ModuleName = ProposedModuleName;
 
+					lastSelectedBlock = null;
 					UpdateBlockCompletionData();
 					UpdateFoldings();
 				}catch(Exception ex){ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.System);}
@@ -658,8 +659,7 @@ namespace D_IDE.D
 
 		void ShowCodeCompletionWindow(string EnteredText)
 		{
-			try
-			{
+			try{
 				if (string.IsNullOrEmpty(EnteredText) || !(char.IsLetter(EnteredText[0]) || EnteredText[0]=='.') || !DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || Editor.IsReadOnly)
 					return;
 
@@ -698,8 +698,7 @@ namespace D_IDE.D
 					completionWindow.Closed += (object o, EventArgs _e) => { completionWindow = null; }; // After the window closed, reset it to null
 					completionWindow.Show();
 				//}));
-			}
-			catch (Exception ex) { ErrorLogger.Log(ex); completionWindow = null; }
+			}catch (Exception ex) { ErrorLogger.Log(ex); completionWindow = null; }
 		}
 
 		void ShowInsightWindow(string EnteredText)
