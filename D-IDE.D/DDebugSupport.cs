@@ -129,11 +129,11 @@ namespace D_IDE.D
 				{
 					var block = DCodeResolver.SearchBlockAt(module, new CodeLocation(0, codeLine));
 
-					var res = DCodeResolver.ResolveTypeDeclarations_ModuleOnly(block, new IdentifierDeclaration(Symbol.Name), DCodeResolver.NodeFilter.All, null);
+					var res = DResolver.ResolveType(new IdentifierDeclaration(Symbol.Name),block, null);
 
-					if (res.Length > 0)
+					if (res.Length > 0 && res[0] is MemberResult)
 					{
-						variableNode = res[0];
+						variableNode = (res[0] as MemberResult).ResolvedMember;
 						//moduleCache = DCodeCompletionSupport.Instance.EnumAvailableModules(ownerPrj);
 					}
 				}
@@ -144,7 +144,7 @@ namespace D_IDE.D
 				_typeString= base.TypeString;
 				if (variableNode != null)
 				{
-					var t = DCodeResolver.GetDNodeType(variableNode);
+					var t = variableNode.Type;
 					if (t != null)
 						_typeString= t.ToString();
 				}

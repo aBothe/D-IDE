@@ -77,11 +77,15 @@ namespace D_Parser.Resolver
 						if (!string.IsNullOrEmpty(curWatchedClass.Name) && curWatchedClass.Name.ToLower() == "object")
 							break;
 
-						var curWatchedClass2 = ResolveBaseClass(curWatchedClass, ImportCache);
 
-						if (curWatchedClass == curWatchedClass2)
+
+						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, ImportCache);
+
+						if (baseclassDefs == null)
 							break;
-						curWatchedClass = curWatchedClass2;
+						if (curWatchedClass == baseclassDefs[0].ResolvedTypeDefinition)
+							break;
+						curWatchedClass = baseclassDefs[0].ResolvedTypeDefinition as DClassLike;
 					}
 				}
 				else if (curScope is DMethod)
@@ -312,229 +316,6 @@ namespace D_Parser.Resolver
 			{
 				if (m.Name == ModuleName) return m;
 			}
-			return null;
-		}
-
-		public static ITypeDeclaration GetDNodeType(INode VariableOrMethod)
-		{
-			var ret = VariableOrMethod.Type;
-
-			// If our node contains an auto attribute, expect that there is an initializer that implies its type
-			if (VariableOrMethod is DVariable && (VariableOrMethod as DNode).ContainsAttribute(DTokens.Auto))
-			{
-				var init = (VariableOrMethod as DVariable).Initializer;
-				if (init is NewExpression)
-				{
-					return (init as NewExpression).Type;
-					/*var tex = init as NewExpression;
-					while (tex != null)
-					{
-						if (tex is TypeDeclarationExpression)
-						{
-							ret = (tex as TypeDeclarationExpression).Declaration;
-
-							// If variable initializer contains template arguments, skip those and pass the raw name only
-							if (ret is TemplateDecl)
-								ret = (ret as TemplateDecl).Base;
-							break;
-						}
-
-						tex = tex.Base;
-					}*/
-				}
-			}
-
-
-			return ret;
-		}
-
-		/// <summary>
-		/// Finds the location (module node) where a type (TypeExpression) has been declared.
-		/// Note: This function only searches within 1 module only!
-		/// </summary>
-		/// <param name="Module"></param>
-		/// <param name="IdentifierList"></param>
-		/// <returns>When a type was found, the declaration entry will be returned. Otherwise, it'll return null.</returns>
-		public static INode[] ResolveTypeDeclarations_ModuleOnly(IBlockNode BlockNode, ITypeDeclaration IdentifierList, NodeFilter Filter, IEnumerable<IAbstractSyntaxTree> ImportCache)
-		{
-			var ret = new List<INode>();
-
-			if (BlockNode == null || IdentifierList == null) return ret.ToArray();
-
-			// Modules    Declaration
-			// |---------|-----|
-			// std.stdio.writeln();
-			/*if (IdentifierList is IdentifierList)
-			{
-				var il = IdentifierList as IdentifierList;
-				var skippedIds = 0;
-
-				// Now search the entire block
-				var istr = il.ToString();
-
-				var mod = BlockNode is DModule ? BlockNode as DModule : BlockNode.NodeRoot as DModule;
-				// If the id list start with the name of BlockNode's root module, 
-				// skip those identifiers first to proceed seeking the rest of the list
-				if (mod != null && !string.IsNullOrEmpty(mod.ModuleName) && istr.StartsWith(mod.ModuleName))
-				{
-					skippedIds += mod.ModuleName.Split('.').Length;
-					istr = il.ToString(skippedIds);
-				}
-
-				// Now move stepwise deeper calling ResolveTypeDeclaration recursively
-				ret.Add(BlockNode); // Temporarily add the block node to the return array - it gets proceeded in the next while loop
-
-				var tFilter = Filter;
-				while (skippedIds < il.Parts.Count && ret.Count > 0)
-				{
-					var DeeperLevel = new List<INode>();
-					// As long as our node(s) can contain other nodes, scan it
-					foreach (var n in ret)
-						DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(n as IBlockNode, il[skippedIds], tFilter, ImportCache));
-
-					// If a variable is given and if it's not the last identifier, return it's definition type
-					// If a method is given, search for its return type
-					if (DeeperLevel.Count > 0 && skippedIds < il.Parts.Count - 1)
-					{
-						if (DeeperLevel[0] is DVariable || DeeperLevel[0] is DMethod)
-						{
-							// If we retrieve deeper levels, we are only allowed to scan for public members
-							tFilter = NodeFilter.PublicOnly;
-							var v = DeeperLevel[0];
-							DeeperLevel.Clear();
-
-							DeeperLevel.AddRange(ResolveTypeDeclarations_ModuleOnly(v.Parent as IBlockNode, GetDNodeType(v), Filter, ImportCache));
-						}
-					}
-
-					skippedIds++;
-					ret = DeeperLevel;
-				}
-
-				return ret.ToArray();
-			}*/
-
-			//HACK: Scan the type declaration list for any NormalDeclarations
-			var td = IdentifierList;
-			while (td != null && !(td is IdentifierDeclaration))
-				td = td.InnerDeclaration;
-
-			var baseTypes = new List<INode>();
-
-			if (td is IdentifierDeclaration)
-			{
-				var nameIdent = td as IdentifierDeclaration;
-
-				// Scan from the inner to the outer level
-				var currentParent = BlockNode;
-				while (currentParent != null)
-				{
-					// Scan the node's children for a match - return if we found one
-					foreach (var ch in currentParent)
-					{
-						if (nameIdent == ch.Name && !ret.Contains(ch) && MatchesFilter(Filter, ch))
-							baseTypes.Add(ch);
-					}
-
-					// If our current Level node is a class-like, also attempt to search in its baseclass!
-					if (currentParent is DClassLike)
-					{
-						var baseClass = ResolveBaseClass(currentParent as DClassLike, ImportCache);
-						if (baseClass != null)
-							baseTypes.AddRange(ResolveTypeDeclarations_ModuleOnly(baseClass, nameIdent, NodeFilter.NonPrivate, ImportCache));
-					}
-
-					// Check parameters
-					if (currentParent is DMethod)
-						foreach (var ch in (currentParent as DMethod).Parameters)
-						{
-							if (nameIdent == ch.Name)
-								baseTypes.Add(ch);
-						}
-
-					// and template parameters
-					if (currentParent is DNode && (currentParent as DNode).TemplateParameters != null)
-						foreach (var ch in (currentParent as DNode).TemplateParameters)
-						{
-							if (nameIdent == ch.Name)
-								baseTypes.Add(new TemplateParameterNode(ch));
-						}
-
-					// Move root-ward
-					currentParent = currentParent.Parent as IBlockNode;
-				}
-
-				if (td == IdentifierList)
-					ret.AddRange(baseTypes);
-				else
-				{
-
-				}
-			}
-
-			//TODO: Here a lot of additional checks and more detailed type evaluations are missing!
-
-			return ret.ToArray();
-		}
-
-
-
-		/// <summary>
-		/// Search a type within an entire Module Cache.
-		/// </summary>
-		/// <param name="ImportCache"></param>
-		/// <param name="CurrentlyScopedBlock"></param>
-		/// <param name="IdentifierList"></param>
-		/// <returns></returns>
-		public static INode[] ResolveTypeDeclarations(IBlockNode CurrentlyScopedBlock, ITypeDeclaration IdentifierList, IEnumerable<IAbstractSyntaxTree> ImportCache,
-			bool IsCompleteIdentifier)
-		{
-			var ret = new List<INode>();
-
-			var ThisModule = CurrentlyScopedBlock.NodeRoot as DModule;
-
-			// Of course it's needed to scan our own module at first
-			if (ThisModule != null)
-				ret.AddRange(ResolveTypeDeclarations_ModuleOnly(CurrentlyScopedBlock, IdentifierList, NodeFilter.All, ImportCache));
-
-			// Then search within the imports for our IdentifierList
-			if (ImportCache != null)
-				foreach (var m in ImportCache)
-				{
-					// Add the module itself to the returned list if its name starts with the identifierlist
-					if (IsCompleteIdentifier ? (m.Name.StartsWith(IdentifierList.ToString() + ".") || m.Name == IdentifierList.ToString()) // If entire identifer was typed, check if the entire id is part of the module name
-						: m.Name.StartsWith(IdentifierList.ToString()))
-						ret.Add(m);
-
-					else if (m.FileName != ThisModule.FileName) // We already parsed this module
-						ret.AddRange(ResolveTypeDeclarations_ModuleOnly(m, IdentifierList, NodeFilter.PublicOnly, ImportCache));
-				}
-
-			return ret.ToArray();
-		}
-
-		/// <summary>
-		/// Resolves all base classes of a class, struct, template or interface
-		/// </summary>
-		/// <param name="ModuleCache"></param>
-		/// <param name="ActualClass"></param>
-		/// <returns></returns>
-		public static DClassLike ResolveBaseClass(DClassLike ActualClass, IEnumerable<IAbstractSyntaxTree> ModuleCache)
-		{
-			// Implicitly set the object class to the inherited class if no explicit one was done
-			if (ActualClass.BaseClasses.Count < 1)
-			{
-				var ObjectClass = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, new IdentifierDeclaration("Object"), ModuleCache, true);
-				if (ObjectClass.Length > 0 && ObjectClass[0] != ActualClass) // Yes, it can be null - like the Object class which can't inherit itself
-					return ObjectClass[0] as DClassLike;
-			}
-			else // Take the first only (since D forces single inheritance)
-			{
-				var ClassMatches = ResolveTypeDeclarations(ActualClass.NodeRoot as IBlockNode, ActualClass.BaseClasses[0], ModuleCache, true);
-				if (ClassMatches.Length > 0)
-					return ClassMatches[0] as DClassLike;
-			}
-
 			return null;
 		}
 
@@ -774,36 +555,51 @@ namespace D_Parser.Resolver
 				if (declaration is IdentifierDeclaration)
 				{
 					string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
-					var matches = new List<INode>();
 
-					// First search along the hierarchy in the current module
-					var curScope = currentlyScopedNode;
-					while (curScope != null)
+					if (searchIdentifier == "this")
 					{
-						matches.AddRange(ScanNodeForIdentifier(curScope, searchIdentifier, parseCache));
-
-						if (curScope is IAbstractSyntaxTree && (curScope as IAbstractSyntaxTree).ModuleName.StartsWith(searchIdentifier))
-							matches.Add(curScope);
-
-						curScope = curScope.Parent as IBlockNode;
+						returnedResults.Add(new TypeResult() { ResolvedTypeDefinition=currentlyScopedNode});
 					}
-
-					// Then go on searching in the global scope
-					var ThisModule = currentlyScopedNode is IAbstractSyntaxTree ? currentlyScopedNode as IAbstractSyntaxTree : currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
-					foreach (var mod in parseCache)
+					else if (searchIdentifier == "super")
 					{
-						if (mod == ThisModule)
-							continue;
+						var baseClassDefs = ResolveBaseClass(currentlyScopedNode as DClassLike, parseCache);
 
-						if (mod.ModuleName.StartsWith(searchIdentifier))
-							matches.Add(mod);
-
-						matches.AddRange(ScanNodeForIdentifier(mod, searchIdentifier, null));
+						if (baseClassDefs != null)
+							returnedResults.AddRange(baseClassDefs);
 					}
+					else
+					{
+						var matches = new List<INode>();
 
-					var results= HandleNodeMatches(matches, currentlyScopedNode, parseCache, searchIdentifier);
-					if (results != null)
-						returnedResults.AddRange(results);
+						// First search along the hierarchy in the current module
+						var curScope = currentlyScopedNode;
+						while (curScope != null)
+						{
+							matches.AddRange(ScanNodeForIdentifier(curScope, searchIdentifier, parseCache));
+
+							if (curScope is IAbstractSyntaxTree && (curScope as IAbstractSyntaxTree).ModuleName.StartsWith(searchIdentifier))
+								matches.Add(curScope);
+
+							curScope = curScope.Parent as IBlockNode;
+						}
+
+						// Then go on searching in the global scope
+						var ThisModule = currentlyScopedNode is IAbstractSyntaxTree ? currentlyScopedNode as IAbstractSyntaxTree : currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
+						foreach (var mod in parseCache)
+						{
+							if (mod == ThisModule)
+								continue;
+
+							if (mod.ModuleName.StartsWith(searchIdentifier))
+								matches.Add(mod);
+
+							matches.AddRange(ScanNodeForIdentifier(mod, searchIdentifier, null));
+						}
+
+						var results = HandleNodeMatches(matches, currentlyScopedNode, parseCache, searchIdentifier);
+						if (results != null)
+							returnedResults.AddRange(results);
+					}
 				}
 			}
 			#endregion
@@ -893,18 +689,15 @@ namespace D_Parser.Resolver
 
 			var ret = new List<TypeResult>();
 			// Implicitly set the object class to the inherited class if no explicit one was done
-			if (ActualClass.BaseClasses.Count < 1)
-			{
-				foreach (var i in ResolveType(new IdentifierDeclaration("Object"), ActualClass.NodeRoot as IBlockNode, ModuleCache))
+			var type=ActualClass.BaseClasses.Count<1?new IdentifierDeclaration("Object"):ActualClass.BaseClasses[0];
+
+			var results=ResolveType(type, ActualClass.NodeRoot as IBlockNode, ModuleCache);
+
+			if(results!=null)
+				foreach (var i in results)
 					if (i is TypeResult)
 						ret.Add(i as TypeResult);
-			}
-			else // Take the first only (since D enforces single inheritance)
-			{
-				foreach (var i in ResolveType(ActualClass.BaseClasses[0], ActualClass.NodeRoot as IBlockNode, ModuleCache))
-					if (i is TypeResult)
-						ret.Add(i as TypeResult);
-			}
+
 			return ret.Count > 0 ? ret.ToArray() : null;
 		}
 
