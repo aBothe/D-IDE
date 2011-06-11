@@ -22,7 +22,7 @@ namespace D_IDE.Dialogs
 
 		public void Update()
 		{
-			textBox.Text=Exception.Message+" ("+Exception.Source+")\r\n\r\n"+Exception.StackTrace;
+			textBox_errorMsg.Text=Exception.Message+" ("+Exception.Source+")\r\n\r\n"+Exception.StackTrace;
 		}
 
 		public CrashDialog(Exception exception)
@@ -31,6 +31,12 @@ namespace D_IDE.Dialogs
 
 			Exception=exception;
 			Update();
+		}
+
+		private void button2_Click(object sender, RoutedEventArgs e)
+		{
+			IDELogger.SendErrorReport(textBox_errorMsg.Text, text_userComment.Text);
+			Close();
 		}
 	}
 }

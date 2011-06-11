@@ -515,7 +515,6 @@ namespace D_IDE.D
 
 			parseOperation= Dispatcher.BeginInvoke(new Action(()=>{
 				try{
-
 					var parser=DParser.Create(new StringReader(Editor.Text));
 
 					var newAst = parser.Parse();
