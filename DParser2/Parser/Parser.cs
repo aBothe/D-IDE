@@ -68,31 +68,21 @@ namespace D_Parser.Parser
             return bt;
         }
 
-        public static IAbstractSyntaxTree ParseString(string ModuleCode)
-        {
-            return ParseString(ModuleCode,false);
-        }
-
-        public static IAbstractSyntaxTree ParseString(string ModuleCode,bool SkipFunctionBodies)
+        public static IAbstractSyntaxTree ParseString(string ModuleCode,bool SkipFunctionBodies=false)
         {
             var p = Create(new StringReader(ModuleCode));
             return p.Parse(SkipFunctionBodies);
         }
 
-        public static IAbstractSyntaxTree ParseFile(string File)
+        public static IAbstractSyntaxTree ParseFile(string File, bool SkipFunctionBodies=false)
         {
-            return ParseFile(File, false);
-        }
-
-        public static IAbstractSyntaxTree ParseFile(string File, bool SkipFunctionBodies)
-        {
-            var s=new FileStream(File,FileMode.Open,FileAccess.Read,FileShare.ReadWrite);
-            var p=Create(new StreamReader(s));
+			var s = new StreamReader(File);
+            var p=Create(s);
             var m = p.Parse(SkipFunctionBodies);
             m.FileName = File;
 			m.ModuleName = Path.GetFileNameWithoutExtension(File);
-            s.Close();
-            return m;
+			s.Close();
+			return m;
         }
 
         /// <summary>
@@ -113,9 +103,12 @@ namespace D_Parser.Parser
             Module.Assign(m);
         }
 
-        public static DParser Create(TextReader tr)
+        public static DParser Create(TextReader tr, params TokenTracker[] trackers)
         {
-            return new DParser(new Lexer(tr));
+			var lx = new Lexer(tr);
+			if(trackers!=null && trackers.Length>0)
+				lx.TokenTracker.Trackers.AddRange(trackers);
+			return new DParser(lx);
         }
 
         /// <summary>

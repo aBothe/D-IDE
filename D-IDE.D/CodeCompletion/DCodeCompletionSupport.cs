@@ -328,8 +328,9 @@ namespace D_IDE.D
 
 			try
 			{
-				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line),
-					EditorDocument.SyntaxTree, EnumAvailableModules(EditorDocument),true);
+				var caretLoc = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
+				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
+					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLoc), EnumAvailableModules(EditorDocument),true);
 				
 				string tt = "";
 
@@ -465,10 +466,17 @@ namespace D_IDE.D
 
 		public TokenCompletionData(int Token)
 		{
-			this.Token = Token;
-			Text = DTokens.GetTokenString(Token);
-			Description = DTokens.GetDescription(Token);
-			Image = DCodeCompletionSupport.Instance.GetNodeImage("keyword");
+			try
+			{
+				this.Token = Token;
+				Text = DTokens.GetTokenString(Token);
+				Description = DTokens.GetDescription(Token);
+				Image = DCodeCompletionSupport.Instance.GetNodeImage("keyword");
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex);
+			}
 		}
 
 		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
@@ -478,7 +486,7 @@ namespace D_IDE.D
 
 		public object Content
 		{
-			get { return Text; ; }
+			get { return Text; }
 		}
 
 		public object Description
@@ -561,10 +569,21 @@ namespace D_IDE.D
 			Node = n;
 		}
 
-		public string NodeString { get {
-			if (Node is DNode)
-				return (Node as DNode).ToString();
-			return Node.ToString(); } }
+		public string NodeString
+		{
+			get
+			{
+				try
+				{
+					return Node.ToString();
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser);
+					return "";
+				}
+			}
+		}
 
 		/// <summary>
 		/// Returns node string without attributes and without node path
@@ -573,9 +592,17 @@ namespace D_IDE.D
 		{
 			get
 			{
-				if (Node is DNode)
-					return (Node as DNode).ToString(false,false);
-				return Node.ToString();
+				try
+				{
+					if (Node is DNode)
+						return (Node as DNode).ToString(false, false);
+					return Node.ToString();
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Parser);
+					return "";
+				}
 			}
 		}
 

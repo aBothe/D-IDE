@@ -8,6 +8,7 @@ using System.IO;
 using System.Windows;
 using System.Threading;
 using D_IDE.Dialogs;
+using System.Windows.Threading;
 
 namespace D_IDE
 {
@@ -94,7 +95,10 @@ namespace D_IDE
 
 		protected override void OnLog(Exception ex, ErrorType ErrorType, ErrorOrigin Origin)
 		{
-			new CrashDialog(ex).ShowDialog();
+			Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() =>
+			{
+				new CrashDialog(ex).ShowDialog();
+			}));
 			//base.OnLog(ex, ErrorType, Origin);
 		}
 

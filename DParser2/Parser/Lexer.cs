@@ -22,9 +22,10 @@ namespace D_Parser.Parser
         protected DToken lookaheadToken = null;
         protected DToken peekToken = null;
 
+		public readonly TrackerContainer TokenTracker;
         protected StringBuilder sb = new StringBuilder();
 
-        /// <summary>
+		/// <summary>
         /// used for the original value of strings (with escape sequences).
         /// </summary>
         protected StringBuilder originalValue = new StringBuilder();
@@ -124,6 +125,7 @@ namespace D_Parser.Parser
         protected AbstractLexer(TextReader reader)
         {
             this.reader = reader;
+			TokenTracker = new TrackerContainer(this);
         }
 
         #region System.IDisposable interface implementation
@@ -166,8 +168,7 @@ namespace D_Parser.Parser
             if (lookaheadToken == null)
             {
                 lookaheadToken = Next();
-                //specialTracker.InformToken(curToken.Kind);
-                //Console.WriteLine(ICSharpCode.NRefactory.Parser.CSharp.Tokens.GetTokenString(curToken.kind) + " -- " + curToken.val + "(" + curToken.kind + ")");
+				TokenTracker.InformToken(lookaheadToken.Kind);
                 return lookaheadToken;
             }
 
@@ -179,14 +180,12 @@ namespace D_Parser.Parser
             {
                 lookaheadToken.next = Next();
                 if (lookaheadToken.next != null)
-                {
-                    //specialTracker.InformToken(curToken.next.Kind);
-                }
+					TokenTracker.InformToken(lookaheadToken.next.Kind);
             }
 
             lookaheadToken = lookaheadToken.next;
             StartPeek();
-            //Console.WriteLine(ICSharpCode.NRefactory.Parser.CSharp.Tokens.GetTokenString(curToken.kind) + " -- " + curToken.val + "(" + curToken.kind + ")");
+
             return lookaheadToken;
         }
 

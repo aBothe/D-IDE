@@ -515,11 +515,20 @@ namespace D_IDE.D
 
 			parseOperation= Dispatcher.BeginInvoke(new Action(()=>{
 				try{
+
+					var parser=DParser.Create(new StringReader(Editor.Text));
+
+					var newAst = parser.Parse();
+
 					if (SyntaxTree != null)
 						lock (SyntaxTree)
-							DParser.UpdateModuleFromText(SyntaxTree, Editor.Text);
+						{
+							SyntaxTree.ParseErrors = newAst.ParseErrors;
+							SyntaxTree.Assign(newAst);
+						}
 					else
-						SyntaxTree =DParser.ParseString(Editor.Text);
+						SyntaxTree =newAst;
+
 					SyntaxTree.FileName = AbsoluteFilePath;
 					SyntaxTree.ModuleName = ProposedModuleName;
 
