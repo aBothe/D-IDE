@@ -77,7 +77,11 @@ namespace D_Parser.Resolver
 						if (!string.IsNullOrEmpty(curWatchedClass.Name) && curWatchedClass.Name.ToLower() == "object")
 							break;
 
-						curWatchedClass = ResolveBaseClass(curWatchedClass, ImportCache);
+						var curWatchedClass2 = ResolveBaseClass(curWatchedClass, ImportCache);
+
+						if (curWatchedClass == curWatchedClass2)
+							break;
+						curWatchedClass = curWatchedClass2;
 					}
 				}
 				else if (curScope is DMethod)

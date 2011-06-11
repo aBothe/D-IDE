@@ -910,19 +910,19 @@ namespace D_Parser
 		{
 			ITypeDeclaration td = null;
 
-			if (Expect(Identifier))
+			if (la.Kind != (Identifier))
+				SynErr(Identifier);
+
+			// Template instancing or Identifier
+			td = TemplateInstance();
+
+			while (la.Kind == Dot)
 			{
-				// Template instancing or Identifier
-				td = TemplateInstance();
+				Step();
+				var ttd = TemplateInstance();
 
-				while (la.Kind == Dot)
-				{
-					Step();
-					var ttd = TemplateInstance();
-
-					ttd.InnerDeclaration = td;
-					td = ttd;
-				}
+				ttd.InnerDeclaration = td;
+				td = ttd;
 			}
 			return td;
 		}
@@ -3566,7 +3566,8 @@ namespace D_Parser
 
 		private AbstractTypeDeclaration TemplateInstance()
 		{
-			Expect(Identifier);
+			if (!Expect(Identifier))
+				return null;
 
 			if (la.Kind != Not || (Peek(1).Kind==Is || Lexer.CurrentPeekToken.Kind==In)) // myExpr !is null  --> there, it would parse 'is' as template argument
 				return new IdentifierDeclaration(t.Value);

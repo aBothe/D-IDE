@@ -133,6 +133,11 @@ namespace D_Parser.Resolver
 		}
 
 		public int AlreadyTypedModuleNameParts = 0;
+
+		public override string ToString()
+		{
+			return ResolvedModule.ToString();
+		}
 	}
 
 	public class TypeResult : ResolveResult
