@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using D_Parser.Core;
+using D_Parser.Parser;
 
-namespace D_Parser
+namespace D_Parser.Dom
 {
 	public class DExpressionDecl : AbstractTypeDeclaration
 	{
@@ -1066,7 +1066,7 @@ namespace D_Parser
 
 		public override string ToString()
 		{
-			return DParser.GetTokenString(Token);
+			return DTokens.GetTokenString(Token);
 		}
 
 		public CodeLocation Location

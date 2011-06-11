@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using D_Parser.Core;
+using D_Parser.Parser;
 
-namespace D_Parser
+namespace D_Parser.Dom
 {
     public abstract class DNode :AbstractNode
     {

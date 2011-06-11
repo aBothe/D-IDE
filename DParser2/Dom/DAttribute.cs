@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using D_Parser.Parser;
 
-namespace D_Parser
+namespace D_Parser.Dom
 {
     /// <summary>
     /// Represents an attrribute a declaration may have or consists of

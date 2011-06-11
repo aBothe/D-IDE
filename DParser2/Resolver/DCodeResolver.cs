@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using D_Parser.Core;
+using D_Parser.Dom;
 using System.IO;
 using System.Collections;
 using System.Collections.ObjectModel;
+using D_Parser.Parser;
 
 namespace D_Parser.Resolver
 {
@@ -13,20 +14,6 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class DCodeResolver
 	{
-		#region Util
-		public static string ReverseString(string s)
-		{
-			if (s.Length < 1) return s;
-			char[] ret = new char[s.Length];
-			for (int i = s.Length; i > 0; i--)
-			{
-				ret[s.Length - i] = s[i - 1];
-			}
-			return new string(ret);
-		}
-
-		#endregion
-
 		/// <summary>
 		/// Returns a list of all items that can be accessed in the current scope.
 		/// </summary>
@@ -140,34 +127,6 @@ namespace D_Parser.Resolver
 			return ret;
 		}
 
-		public static ITypeDeclaration BuildIdentifierList(string Text, int CaretOffset, /*bool BackwardOnly,*/ out DToken OptionalInitToken)
-		{
-			OptionalInitToken = null;
-
-			#region Step 1: Walk along the code to find the declaration's beginning
-			int IdentListStart = ReverseParsing.SearchExpressionStart(Text, CaretOffset);
-			#endregion
-
-			#region 2: Init the parser
-			if (IdentListStart < 0)
-				return null;
-
-			// If code e.g. starts with a bracket, increment IdentListStart
-			var ch = Text[IdentListStart];
-			while (IdentListStart < Text.Length - 1 && !Char.IsLetterOrDigit(ch) && ch != '_' && ch != '.')
-			{
-				IdentListStart++;
-				ch = Text[IdentListStart];
-			}
-
-			//if (BackwardOnly && IdentListStart >= CaretOffset)return null;
-
-			var psr = DParser.ParseBasicType(Text.Substring(IdentListStart), out OptionalInitToken);
-			#endregion
-
-			return psr;
-		}
-
 		public static IBlockNode SearchBlockAt(IBlockNode Parent, CodeLocation Where)
 		{
 			foreach (var n in Parent)
@@ -272,44 +231,6 @@ namespace D_Parser.Resolver
 		}
 		#endregion
 
-		#region Declaration resolving
-		public enum NodeFilter
-		{
-			/// <summary>
-			/// Returns all static and public children of a node
-			/// </summary>
-			PublicStaticOnly,
-			/// <summary>
-			/// Returns all public members e.g. of an object
-			/// </summary>
-			PublicOnly,
-
-			/// <summary>
-			/// e.g. in class hierarchies: Returns all public and protected members
-			/// </summary>
-			NonPrivate,
-			/// <summary>
-			/// Returns all members
-			/// </summary>
-			All
-		}
-
-		public static bool MatchesFilter(NodeFilter Filter, INode n)
-		{
-			switch (Filter)
-			{
-				case NodeFilter.All:
-					return true;
-				case NodeFilter.PublicOnly:
-					return (n as DNode).IsPublic;
-				case NodeFilter.NonPrivate:
-					return !(n as DNode).ContainsAttribute(DTokens.Private);
-				case NodeFilter.PublicStaticOnly:
-					return (n as DNode).IsPublic && (n as DNode).IsStatic;
-			}
-			return false;
-		}
-
 		public static IAbstractSyntaxTree SearchModuleInCache(IEnumerable<IAbstractSyntaxTree> HayStack, string ModuleName)
 		{
 			foreach (var m in HayStack)
@@ -318,8 +239,6 @@ namespace D_Parser.Resolver
 			}
 			return null;
 		}
-
-		#endregion
 
 		/// <summary>
 		/// Trivial class which cares about locating Comments and other non-code blocks within a code file
@@ -850,7 +769,7 @@ namespace D_Parser.Resolver
 				if (string.IsNullOrEmpty(expressionCode) || expressionCode.Trim() == string.Empty)
 					return false;
 
-				var lx = new DLexer(new StringReader(expressionCode));
+				var lx = new Lexer(new StringReader(expressionCode));
 
 				var firstToken = lx.NextToken();
 

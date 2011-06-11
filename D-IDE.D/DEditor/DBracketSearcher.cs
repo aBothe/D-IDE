@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using ICSharpCode.AvalonEdit.AddIn;
 using ICSharpCode.AvalonEdit.Document;
-using D_Parser.Core;
+using D_Parser.Dom;
 using D_Parser;
+using D_Parser.Parser;
 
 namespace D_IDE.D.DEditor
 {
@@ -64,7 +65,7 @@ namespace D_IDE.D.DEditor
 
 		static DToken SearchBackward(TextDocument doc, int caretOffset,out DToken lastToken)
 		{
-			var lexer = new DLexer(new System.IO.StringReader(doc.GetText(0,caretOffset)));
+			var lexer = new Lexer(new System.IO.StringReader(doc.GetText(0,caretOffset)));
 			lexer.NextToken();
 
 			var caret_=doc.GetLocation(caretOffset);
@@ -99,7 +100,7 @@ namespace D_IDE.D.DEditor
 		static DToken SearchForward(TextDocument doc, int caretOffset, int searchedBracketToken)
 		{
 			var code = doc.GetText(caretOffset, doc.TextLength - caretOffset);
-			var lexer = new DLexer(new System.IO.StringReader(code));
+			var lexer = new Lexer(new System.IO.StringReader(code));
 
 			var caret_ = doc.GetLocation(caretOffset);
 			var caret = new CodeLocation(caret_.Column, caret_.Line);

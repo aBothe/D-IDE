@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using D_Parser.Core;
+using D_Parser.Dom;
 using System.ComponentModel;
 
 namespace D_Parser.Resolver

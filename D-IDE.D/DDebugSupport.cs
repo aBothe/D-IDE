@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using D_IDE.Core;
 using DebugEngineWrapper;
-using D_Parser.Core;
+using D_Parser.Dom;
 using D_Parser.Resolver;
 using D_Parser;
 using System.Runtime.InteropServices;
+using D_Parser.Parser;
 
 namespace D_IDE.D
 {

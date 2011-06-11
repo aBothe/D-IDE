@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
-using D_Parser.Core;
+using D_Parser.Dom;
 
-namespace D_Parser
+namespace D_Parser.Parser
 {
     /// <summary>
     /// Parser for D Code
@@ -115,7 +115,7 @@ namespace D_Parser
 
         public static DParser Create(TextReader tr)
         {
-            return new DParser(new DLexer(tr));
+            return new DParser(new Lexer(tr));
         }
 
         /// <summary>
@@ -166,8 +166,8 @@ namespace D_Parser
             get { return doc; }
         }
         bool ParseStructureOnly = false;
-        public DLexer Lexer;
-        public DParser(DLexer lexer)
+        public Lexer Lexer;
+        public DParser(Lexer lexer)
         {
             this.Lexer = lexer;
 			Lexer.LexerErrors = ParseErrors;

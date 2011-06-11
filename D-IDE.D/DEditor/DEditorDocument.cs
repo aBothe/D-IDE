@@ -11,13 +11,14 @@ using System.Windows.Threading;
 using D_IDE.Core;
 using D_IDE.Core.Controls;
 using D_Parser;
-using D_Parser.Core;
+using D_Parser.Dom;
 using D_Parser.Resolver;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.AddIn;
 using D_IDE.D.DEditor;
+using D_Parser.Parser;
 
 namespace D_IDE.D
 {

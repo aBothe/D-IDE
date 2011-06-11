@@ -69,23 +69,23 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BinaryNodeStorage.cs" />
-    <Compile Include="Core\AbstractNode.cs" />
-    <Compile Include="Core\CodeLocation.cs" />
-    <Compile Include="Core\NodeInterfaces.cs" />
-    <Compile Include="DCodeResolver.cs" />
-    <Compile Include="DAttribute.cs" />
-    <Compile Include="DModule.cs" />
-    <Compile Include="DLexer.cs" />
-    <Compile Include="DNode.cs" />
-    <Compile Include="DParser.cs" />
-    <Compile Include="DParser_Impl.cs" />
-    <Compile Include="DTokens.cs" />
-    <Compile Include="Expressions.cs" />
+    <Compile Include="Dom\BinaryNodeStorage.cs" />
+    <Compile Include="Dom\AbstractNode.cs" />
+    <Compile Include="Dom\CodeLocation.cs" />
+    <Compile Include="Dom\NodeInterfaces.cs" />
+    <Compile Include="Resolver\DCodeResolver.cs" />
+    <Compile Include="Dom\DAttribute.cs" />
+    <Compile Include="Dom\DModule.cs" />
+    <Compile Include="Parser\Lexer.cs" />
+    <Compile Include="Dom\DNode.cs" />
+    <Compile Include="Parser\Parser.cs" />
+    <Compile Include="Parser\Parser_Impl.cs" />
+    <Compile Include="Parser\DTokens.cs" />
+    <Compile Include="Dom\Expressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ParserUtil.cs" />
-    <Compile Include="DDeclarations.cs" />
-    <Compile Include="ResolverContexts.cs" />
+    <Compile Include="Parser\DToken.cs" />
+    <Compile Include="Dom\DDeclarations.cs" />
+    <Compile Include="Resolver\ResolverContexts.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

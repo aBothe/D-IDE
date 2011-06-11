@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
-using D_Parser.Core;
+using D_Parser.Dom;
 
-namespace D_Parser
+namespace D_Parser.Parser
 {
 	/// <summary>
 	/// Parser for D Code

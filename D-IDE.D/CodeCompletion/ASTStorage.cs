@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using D_Parser.Core;
+using D_Parser.Dom;
 using D_IDE.Core;
 using D_Parser;
 using System.IO;
 using System.Windows;
+using D_Parser.Parser;
 
 namespace D_IDE.D.CodeCompletion
 {

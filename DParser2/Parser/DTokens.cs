@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
+using D_Parser.Dom;
 
-namespace D_Parser
+namespace D_Parser.Parser
 {
     public class DTokens
     {

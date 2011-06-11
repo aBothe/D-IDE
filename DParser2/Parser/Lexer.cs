@@ -4,9 +4,9 @@ using System.Text;
 using System.IO;
 using System.Globalization;
 using System.Collections;
-using D_Parser.Core;
+using D_Parser.Dom;
 
-namespace D_Parser
+namespace D_Parser.Parser
 {
     /// <summary>
     /// Taken from SharpDevelop.NRefactory
@@ -362,9 +362,9 @@ namespace D_Parser
         public abstract void SkipCurrentBlock();
     }
 
-    public class DLexer : AbstractLexer
+    public class Lexer : AbstractLexer
     {
-        public DLexer(TextReader reader)
+        public Lexer(TextReader reader)
             : base(reader)
         {
 			if ((char)reader.Peek() == '#')

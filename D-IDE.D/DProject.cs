@@ -7,6 +7,7 @@ using System.Xml;
 using System.IO;
 using D_IDE.D.CodeCompletion;
 using D_Parser;
+using D_Parser.Parser;
 
 namespace D_IDE.D
 {

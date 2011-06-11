@@ -3,8 +3,9 @@
 /// </summary>
 
 using System;
-using D_Parser.Core;
-namespace D_Parser
+using D_Parser.Dom;
+
+namespace D_Parser.Parser
 {
     public enum LiteralFormat : byte
     {

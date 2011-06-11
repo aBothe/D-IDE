@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Collections.ObjectModel;
 
-namespace D_Parser.Core
+namespace D_Parser.Dom
 {
 	public interface IAbstractSyntaxTree: IBlockNode
 	{

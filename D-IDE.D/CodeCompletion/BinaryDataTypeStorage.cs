@@ -5,7 +5,7 @@ using System.Text;
 using D_Parser;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
-using D_Parser.Core;
+using D_Parser.Dom;
 
 namespace D_IDE.D.CodeCompletion
 {/*

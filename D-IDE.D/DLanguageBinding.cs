@@ -7,11 +7,12 @@ using D_Parser;
 using DebugEngineWrapper;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using D_Parser.Core;
+using D_Parser.Dom;
 using System.Xml;
 using System.IO;
 using System.Diagnostics;
 using D_IDE.D.CodeCompletion;
+using D_Parser.Parser;
 
 namespace D_IDE.D
 {

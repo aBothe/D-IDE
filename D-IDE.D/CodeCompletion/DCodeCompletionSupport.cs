@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using D_IDE.Core;
 using ICSharpCode.AvalonEdit.CodeCompletion;
-using D_Parser.Core;
+using D_Parser.Dom;
 using D_Parser;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
 using D_Parser.Resolver;
+using D_Parser.Parser;
 
 namespace D_IDE.D
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace D_Parser.Core
+namespace D_Parser.Dom
 {
 	/// <summary>
 	/// A line/column position.

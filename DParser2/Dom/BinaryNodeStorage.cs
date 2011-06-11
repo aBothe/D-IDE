@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using D_Parser.Core;
+using D_Parser.Dom;
 
-namespace D_Parser
+namespace D_Parser.Dom
 {
 	/*
     /// <summary>

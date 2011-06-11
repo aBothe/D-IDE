@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using ICSharpCode.AvalonEdit.Indentation;
 using ICSharpCode.AvalonEdit.Document;
-using D_Parser.Core;
+using D_Parser.Dom;
 using D_Parser;
 using System.IO;
 using D_IDE.Core;
