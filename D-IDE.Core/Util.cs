@@ -253,8 +253,12 @@ namespace D_IDE.Core
 
 			MessageBox.Show(Message,origin.ToString() +" "+ ErrorType.ToString(),MessageBoxButtons.OK,icon);
 
-			if (origin == ErrorOrigin.System)
-				File.AppendAllText(IDEInterface.ConfigDirectory+"\\sys.log",Message+"\r\n",System.Text.Encoding.Unicode);
+			try
+			{
+				if (origin == ErrorOrigin.System)
+					File.AppendAllText(IDEInterface.ConfigDirectory + "\\sys.log", Message + "\r\n", System.Text.Encoding.Unicode);
+			}
+			catch { }
 		}
 
 		public static void Log(string Message, ErrorType ErrorType,ErrorOrigin Origin)

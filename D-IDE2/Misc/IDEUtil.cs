@@ -120,10 +120,11 @@ namespace D_IDE
 
 		protected override void OnLog(Exception ex, ErrorType ErrorType, ErrorOrigin Origin)
 		{
-			Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() =>
-			{
-				new CrashDialog(ex).ShowDialog();
-			}));
+				Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() =>
+				{
+					new CrashDialog(ex).ShowDialog();
+				}));
+			
 			//base.OnLog(ex, ErrorType, Origin);
 		}
 
@@ -131,8 +132,12 @@ namespace D_IDE
 		{
 			if(Origin==ErrorOrigin.System)
 				base.OnLog(Message, etype,Origin);
-
-			Owner.Panel_Log.AppendOutput(Message,etype,Origin);
+			try
+			{
+				if (Owner != null && Owner.Panel_Log != null)
+					Owner.Panel_Log.AppendOutput(Message, etype, Origin);
+			}
+			catch { }
 		}
 	}
 }

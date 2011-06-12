@@ -173,7 +173,7 @@ namespace D_IDE
 					File.Exists(layoutFile))
 					DockMgr.RestoreLayout(layoutFile);
 			}
-			catch (Exception ex) { ErrorLogger.Log(ex); }
+			catch{ }
 
 			// Load language bindings
 			LanguageLoader.Bindings.Add(new GenericFileBinding());

@@ -156,11 +156,14 @@ namespace D_IDE.D
 			}
 
 			else if (rr is AliasResult)
-				foreach (var rr2 in (rr as AliasResult).AliasDefinition)
-					BuildCompletionData(rr2,currentlyScopedBlock, l,isVariableInstance);
-
-			else if (!isVariableInstance&& rr is ModuleResult)
-				BuildModuleCompletionData(rr as ModuleResult, 0, l,alreadyAddedModuleNameParts);
+			{
+				var arr=(rr as AliasResult).AliasDefinition;
+				if(arr!=null)
+					foreach (var rr2 in arr)
+						BuildCompletionData(rr2, currentlyScopedBlock, l, isVariableInstance);
+			}
+			else if (!isVariableInstance && rr is ModuleResult)
+				BuildModuleCompletionData(rr as ModuleResult, 0, l, alreadyAddedModuleNameParts);
 
 			else if (rr is TypeResult)
 			{
@@ -184,7 +187,7 @@ namespace D_IDE.D
 				switch (str.SpecialType)
 				{
 					case SpecialType.Array:
-						
+
 						break;
 				}
 			}

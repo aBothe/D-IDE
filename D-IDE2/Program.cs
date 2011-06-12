@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows;
 using D_IDE.Core;
 using System.IO.Pipes;
+using System.Diagnostics;
 
 namespace D_IDE
 {
@@ -23,7 +24,13 @@ namespace D_IDE
 		[STAThread]
 		public static void Main(string[] args)
 		{
-			new Program().Run(args);
+			if(Debugger.IsAttached)
+				new Program().Run(args);
+			else try
+				{
+					new Program().Run(args);
+				}
+				catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
 
 		public Program()
