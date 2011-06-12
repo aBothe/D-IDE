@@ -509,7 +509,9 @@ namespace D_Parser.Resolver
 							if (mod == ThisModule)
 								continue;
 
-							if (mod.ModuleName.StartsWith(searchIdentifier))
+							var modNameParts = mod.ModuleName.Split('.');
+
+							if (modNameParts[0]==searchIdentifier)
 								matches.Add(mod);
 
 							matches.AddRange(ScanNodeForIdentifier(mod, searchIdentifier, null));
@@ -727,6 +729,11 @@ namespace D_Parser.Resolver
 						ResolvedModule = m as IAbstractSyntaxTree,
 						AlreadyTypedModuleNameParts=1,
 						ResultBase = resultBase
+					};
+				else if (m is DEnum)
+					yield return new TypeResult() { 
+						ResolvedTypeDefinition=m as IBlockNode,
+						ResultBase=resultBase
 					};
 			}
 		}

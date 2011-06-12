@@ -380,20 +380,20 @@ namespace D_Parser.Parser
 
         void SynErr(int n, string msg)
         {
-			ParseErrors.Add(new ParserError(false,msg,n,t.EndLocation));
+			ParseErrors.Add(new ParserError(false,msg,n,t==null?la.Location:t.EndLocation));
         }
         void SynErr(int n)
 		{
-			ParseErrors.Add(new ParserError(false, DTokens.GetTokenString(n) + " expected", n,t!=null? t.EndLocation:new CodeLocation()));
+			ParseErrors.Add(new ParserError(false, DTokens.GetTokenString(n) + " expected", n, t == null ? la.Location : t.EndLocation));
         }
 
         void SemErr(int n, string msg)
         {
-			ParseErrors.Add(new ParserError(true, msg, n, t.EndLocation));
+			ParseErrors.Add(new ParserError(true, msg, n, t == null ? la.Location : t.EndLocation));
         }
         void SemErr(int n)
         {
-			ParseErrors.Add(new ParserError(true, DTokens.GetTokenString(n) + " expected", n, t != null ? t.EndLocation : new CodeLocation()));
+			ParseErrors.Add(new ParserError(true, DTokens.GetTokenString(n) + " expected", n, t == null ? la.Location : t.EndLocation));
         }
         #endregion
     }
