@@ -5,7 +5,7 @@ using System.IO;
 using HighPrecisionTimer;
 using System.Threading;
 using D_Parser;
-using D_Parser.Core;
+using D_Parser.Dom;
 using D_Parser.Resolver;
 
 namespace ParserTests
@@ -16,9 +16,9 @@ namespace ParserTests
         public static void Main(string[] args)
         {
 			//  ) 
-			string input = "cast(int) (IOC_IN | (UINT.sizeof & IOCPARM_MASK) << 16 | (102 << 8) | 126)";
+			string input = "foo!(";
 
-			var e=ParseTests.TestExpression(input);
+			ParseTests.TestExpressionStartFinder(input);
 			Console.ReadKey();
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);

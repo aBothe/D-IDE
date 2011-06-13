@@ -196,30 +196,4 @@ namespace D_Parser.Dom
             return (IncludesBase&& InnerDeclaration != null ? InnerDeclaration.ToString() : "") + "...";
         }
     }
-
-    /// <summary>
-    /// List&lt;T:base&gt; myList;
-    /// </summary>
-    public class TemplateDecl : AbstractTypeDeclaration
-    {
-		public string TemplateIdentifier = string.Empty;
-        public List<ITypeDeclaration> Template=new List<ITypeDeclaration>();
-
-        public TemplateDecl() { }
-        public TemplateDecl(ITypeDeclaration Base)
-        {
-            this.InnerDeclaration = Base;
-        }
-
-		public override string ToString(bool IncludesBase)
-        {
-            string s = (IncludesBase&& InnerDeclaration != null ? (InnerDeclaration.ToString()+".") : "").ToString() +TemplateIdentifier+ "!(";
-
-            foreach (var t in Template)
-                s += t.ToString()+",";
-            s=s.TrimEnd(',',' ');
-            s+=")";
-            return s;
-        }
-    }
 }

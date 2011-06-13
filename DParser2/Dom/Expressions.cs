@@ -1012,7 +1012,39 @@ namespace D_Parser.Dom
 
 	public interface PrimaryExpression : IExpression { }
 
+	public class TemplateInstanceExpression : AbstractTypeDeclaration,PrimaryExpression
+	{
+		public string TemplateIdentifier;
+		public IExpression[] Arguments;
 
+		public CodeLocation Location
+		{
+			get;
+			set;
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
+
+		public ITypeDeclaration ExpressionTypeRepresentation
+		{
+			get { return new IdentifierDeclaration(TemplateIdentifier); }
+		}
+
+		public override string ToString(bool IncludesBase)
+		{
+			var ret = (IncludesBase && InnerDeclaration != null ? (InnerDeclaration.ToString() + ".") : "") + TemplateIdentifier + "!(";
+
+			if(Arguments!=null)
+				foreach (var e in Arguments)
+					ret += e.ToString() + ",";
+
+			return ret.TrimEnd(',') + ")";
+		}
+	}
 
 	/// <summary>
 	/// Identifier as well as literal primary expression
@@ -1089,16 +1121,10 @@ namespace D_Parser.Dom
 	}
 
 	/// <summary>
-	/// TemplateInstance
 	/// BasicType . Identifier
 	/// </summary>
 	public class TypeDeclarationExpression : PrimaryExpression
 	{
-		public bool IsTemplateDeclaration
-		{
-			get { return Declaration is TemplateDecl; }
-		}
-
 		public ITypeDeclaration Declaration;
 
 		public TypeDeclarationExpression() { }

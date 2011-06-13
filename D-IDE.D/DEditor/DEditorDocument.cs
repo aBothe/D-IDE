@@ -60,6 +60,29 @@ namespace D_IDE.D
 		Thread parseThread = null;
 
 		bool isUpdatingLookupDropdowns = false;
+
+		List<string> foldedNodeNames = new List<string>();
+
+		public string ProposedModuleName
+		{
+			get
+			{
+				if (HasProject)
+					return Path.ChangeExtension(RelativeFilePath, null).Replace('\\', '.');
+				else
+					return Path.GetFileNameWithoutExtension(FileName);
+			}
+		}
+
+		public IBlockNode lastSelectedBlock { get; protected set; }
+		IEnumerable<ICompletionData> currentEnvCompletionData = null;
+
+		DispatcherOperation blockCompletionDataOperation = null;
+		//DispatcherOperation showCompletionWindowOperation = null;
+		DispatcherOperation parseOperation = null;
+
+		CompletionWindow completionWindow;
+		OverloadInsightWindow insightWindow;
 		#endregion
 
 		public DEditorDocument()
@@ -190,7 +213,6 @@ namespace D_IDE.D
 			Parse();
 		}
 
-		List<string> foldedNodeNames = new List<string>();
 		public void UpdateFoldings()
 		{
 			if (foldingManager == null)
@@ -494,17 +516,6 @@ namespace D_IDE.D
 		}
 
 		#region Code Completion
-
-		public string ProposedModuleName
-		{
-			get {
-				if (HasProject)
-					return Path.ChangeExtension(RelativeFilePath, null).Replace('\\', '.');
-				else 
-					return Path.GetFileNameWithoutExtension(FileName);
-			}
-		}
-
 		/// <summary>
 		/// Parses the current document content
 		/// </summary>
@@ -553,14 +564,6 @@ namespace D_IDE.D
 		{
 			get { return new CodeLocation(Editor.TextArea.Caret.Column,Editor.TextArea.Caret.Line); }
 		}
-
-		public IBlockNode lastSelectedBlock{get;protected set;}
-		IEnumerable<ICompletionData> currentEnvCompletionData = null;
-
-		DispatcherOperation blockCompletionDataOperation = null;
-		//DispatcherOperation showCompletionWindowOperation = null;
-		DispatcherOperation parseOperation = null;
-
 
 		/// <summary>
 		/// If different code block was selected, 
@@ -663,9 +666,6 @@ namespace D_IDE.D
 			UpdateBlockCompletionData();
 		}
 
-		CompletionWindow completionWindow;
-		InsightWindow insightWindow;
-
 		void ShowCodeCompletionWindow(string EnteredText)
 		{
 			try{
@@ -710,9 +710,33 @@ namespace D_IDE.D
 			}catch (Exception ex) { ErrorLogger.Log(ex); completionWindow = null; }
 		}
 
+		public void CloseCompletionPopups()
+		{
+			if (completionWindow != null)
+			{
+				completionWindow.Close();
+				completionWindow = null;
+			}
+
+			if (insightWindow != null)
+			{
+				insightWindow.Close();
+				insightWindow = null;
+			}
+		}
+
 		void ShowInsightWindow(string EnteredText)
 		{
-			//TODO: Show insight window and do all the function name resolution stuff...  Note: Remember deciding whether entering the template or normal arguments! foo!(int,bool)(23,"my String"); 
+			var data = D_IDE.D.CodeCompletion.DMethodOverloadProvider.Create(this);
+
+			if (data == null)
+				return;
+
+			insightWindow = new OverloadInsightWindow(Editor.TextArea);
+			insightWindow.Provider = data;
+
+			insightWindow.Show();
+			
 		}
 
 		public bool CanShowCodeCompletionPopup
@@ -742,9 +766,6 @@ namespace D_IDE.D
 			if (string.IsNullOrWhiteSpace(e.Text))
 				return;
 
-			else if (e.Text == "," || e.Text == "(")
-				ShowInsightWindow(e.Text);
-
 			// Note: Show completion window even before the first key has been processed by the editor!
 			else if(char.IsLetter(e.Text[0]) && !DResolver.IsTypeIdentifier(Editor.Text,Editor.CaretOffset))
 				ShowCodeCompletionWindow(e.Text);
@@ -759,6 +780,9 @@ namespace D_IDE.D
 			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
 			if (e.Text == "." && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
+
+			else if (e.Text == "," || e.Text == "(")
+				ShowInsightWindow(e.Text);
 		}
 		#endregion
 

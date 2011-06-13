@@ -912,16 +912,19 @@ namespace D_Parser.Parser
 		{
 			ITypeDeclaration td = null;
 
-			if (la.Kind != (Identifier))
-				SynErr(Identifier);
-
-			// Template instancing or Identifier
-			td = TemplateInstance();
-
-			while (la.Kind == Dot)
+			bool init = true;
+			while (init|| la.Kind == Dot)
 			{
-				Step();
-				var ttd = TemplateInstance();
+				if(!init)
+					Step();
+				init = false;
+				
+				ITypeDeclaration ttd = null;
+
+				if (IsTemplateInstance)
+					ttd = TemplateInstance();
+				else if (Expect(Identifier))
+					ttd = new IdentifierDeclaration(t.Value);
 
 				if (ttd != null)
 					ttd.InnerDeclaration = td;
@@ -1877,8 +1880,12 @@ namespace D_Parser.Parser
 					leftExpr = e;
 					if (la.Kind == New)
 						e.NewExpression = NewExpression();
-					else
+					else if (IsTemplateInstance)
 						e.TemplateOrIdentifier = TemplateInstance();
+					else {
+						if (Expect(Identifier))
+							e.TemplateOrIdentifier = new IdentifierDeclaration(t.Value);
+					}
 
 					e.EndLocation = t.EndLocation;
 				}
@@ -1992,14 +1999,7 @@ namespace D_Parser.Parser
 
 			// TemplateInstance
 			if (la.Kind == (Identifier) && Lexer.CurrentPeekToken.Kind == (Not) && (Peek().Kind != Is && Lexer.CurrentPeekToken.Kind != In) /* Very important: The 'template' could be a '!is' expression - With two tokens! */)
-			{
-				var startLoc = la.Location;
-				return new TypeDeclarationExpression(TemplateInstance())
-				{
-					Location=startLoc,
-					EndLocation=t.EndLocation
-				};
-			}
+				return TemplateInstance();
 
 			// Identifier
 			if (la.Kind == (Identifier))
@@ -3568,16 +3568,22 @@ namespace D_Parser.Parser
 			return tv;
 		}
 
-		private AbstractTypeDeclaration TemplateInstance()
+		bool IsTemplateInstance
+		{
+			get {
+				return la.Kind == Identifier && Peek(1).Kind == Not && !(Peek(2).Kind == Is || Lexer.CurrentPeekToken.Kind == In);
+			}
+		}
+
+		private TemplateInstanceExpression TemplateInstance()
 		{
 			if (!Expect(Identifier))
 				return null;
 
-			if (la.Kind != Not || (Peek(1).Kind==Is || Lexer.CurrentPeekToken.Kind==In)) // myExpr !is null  --> there, it would parse 'is' as template argument
-				return new IdentifierDeclaration(t.Value);
-
-			var td = new TemplateDecl() { TemplateIdentifier=t.Value};
-			Expect(Not);
+			var td = new TemplateInstanceExpression() { TemplateIdentifier=t.Value, Location=t.Location};
+			var args = new List<IExpression>();
+			if (!Expect(Not))
+				return td;
 			if (la.Kind == (OpenParenthesis))
 			{
 				Step();
@@ -3590,9 +3596,9 @@ namespace D_Parser.Parser
 						init = false;
 
 						if (IsAssignExpression())
-							td.Template.Add(new DExpressionDecl(AssignExpression()));
+							args.Add(AssignExpression());
 						else
-							td.Template.Add(Type());
+							args.Add(new TypeDeclarationExpression(Type()));
 					}
 				}
 				Expect(CloseParenthesis);
@@ -3601,10 +3607,12 @@ namespace D_Parser.Parser
 			{
 				Step();
 				if (t.Kind == (Identifier) || t.Kind == (Literal))
-					td.Template.Add(new IdentifierDeclaration(t.LiteralValue));
+					args.Add(new IdentifierExpression(t.LiteralValue));
 				else
-					td.Template.Add(new DTokenDeclaration(t.Kind));
+					args.Add(new TokenExpression(t.Kind));
 			}
+			td.Arguments = args.ToArray();
+			td.EndLocation = t.EndLocation;
 			return td;
 		}
 		#endregion

@@ -810,6 +810,90 @@ namespace D_Parser.Resolver
 			//}catch(Exception ex) { }
 			return false;
 		}
+
+		public class ArgumentsResolutionResult
+		{
+			public bool IsMethodArguments;
+			public bool IsTemplateInstanceArguments;
+
+			public IExpression ParsedExpression;
+
+			public ResolveResult[] ResolvedTypesOrMethods;
+
+			/// <summary>
+			///	Identifies the currently called method overload. Is an index related to <see cref="ResolvedTypesOrMethods"/>
+			/// </summary>
+			public int CurrentlyCalledMethod;
+			public int CurrentlyTypedArgument;
+		}
+
+		public static ArgumentsResolutionResult ResolveArgumentContext(string code, int caret, CodeLocation caretLocation, IBlockNode currentlyScopedBlock, IEnumerable<IAbstractSyntaxTree> parseCache)
+		{
+			// First step: Search the method's call start offset
+
+			int startOffset = ReverseParsing.SearchExpressionStart(code,caret);
+
+			if (startOffset < 0)
+				return null;
+
+			// Check if it's a method declaration - return null if so
+			if (IsTypeIdentifier(code, startOffset-1))
+				return null;
+
+			// Parse the expression
+			var e = DParser.ParseExpression(code.Substring(startOffset,caret-startOffset));
+
+			/*
+			 * There are at least 3 possibilities here:
+			 * 1) foo(			-- normal arguments only
+			 * 2) foo!(...)(	-- normal arguments + template args
+			 * 3) foo!(		-- template args only
+			 */
+			var res = new ArgumentsResolutionResult()
+			{	ParsedExpression=e	};
+
+			ITypeDeclaration methodIdentifier = null;
+
+			// 1), 2)
+			if (e is PostfixExpression_MethodCall)
+			{
+				res.IsMethodArguments = true;
+				var call = e as PostfixExpression_MethodCall;
+
+				if(call.Arguments!=null)
+					res.CurrentlyTypedArgument = call.Arguments.Length;
+
+				if (call.PostfixForeExpression is TemplateInstanceExpression)
+				{
+					var templ = call.PostfixForeExpression as TemplateInstanceExpression;
+
+					methodIdentifier = templ.ExpressionTypeRepresentation;
+				}
+				else
+					methodIdentifier = call.PostfixForeExpression.ExpressionTypeRepresentation;
+
+			}
+			// 3)
+			else if (e is TemplateInstanceExpression)
+			{
+				var templ = e as TemplateInstanceExpression;
+
+				res.IsTemplateInstanceArguments = true;
+
+				if (templ.Arguments != null)
+					res.CurrentlyTypedArgument = templ.Arguments.Length;
+
+				methodIdentifier = templ.ExpressionTypeRepresentation;
+			}
+			
+ 			if(methodIdentifier==null)
+				return null;
+
+			// Resolve all types, methods etc. which belong to the methodIdentifier
+			res.ResolvedTypesOrMethods = ResolveType(methodIdentifier, currentlyScopedBlock, parseCache);
+
+			return res;
+		}
 	}
 
 	/// <summary>
@@ -898,7 +982,7 @@ namespace D_Parser.Resolver
 							if (bracketStack.Count > 0 && bracketStack.Peek() == c)
 							{
 								bracketStack.Pop();
-								if (p == '!') // Skip template stuff
+								if (c=='(' && p == '!') // Skip template stuff
 									i--;
 							}
 							else if (c == '{')
@@ -908,6 +992,9 @@ namespace D_Parser.Resolver
 							}
 							else
 							{
+								if (c=='(' && p == '!') // Skip template stuff
+									i--;
+
 								lastBraceOpenerOffset = IdentListStart;
 								// e.g. foo>(< bar| )
 								hadBraceOpener = true;
