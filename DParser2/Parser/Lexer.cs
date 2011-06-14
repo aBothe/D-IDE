@@ -382,7 +382,7 @@ namespace D_Parser.Parser
         void OnError(int line, int col, string message)
         {
 			if(LexerErrors!=null)
-				LexerErrors.Add(new ParserError(false,message,CurrentToken.Kind,new CodeLocation(col,line)));
+				LexerErrors.Add(new ParserError(false,message,CurrentToken!=null? CurrentToken.Kind:-1,new CodeLocation(col,line)));
         }
         #endregion
 

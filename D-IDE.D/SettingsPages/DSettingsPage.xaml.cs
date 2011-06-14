@@ -28,16 +28,22 @@ namespace D_IDE.D
 
 		public override bool ApplyChanges()
 		{
-			DSettings.Instance.UseCodeCompletion = checkBox_UseCC.IsChecked.Value;
-			DSettings.Instance.EnableMatchinBracketHighlighting = checkBox_EnableBracketHighlighting.IsChecked.Value;
+			var sett = DSettings.Instance;
+
+			sett.UseCodeCompletion = checkBox_UseCC.IsChecked.Value;
+			sett.EnableMatchinBracketHighlighting = checkBox_EnableBracketHighlighting.IsChecked.Value;
+			sett.UseMethodInsight = checkBox_MethodInsight.IsChecked.Value;
 
 			return true;
 		}
 
 		public override void LoadCurrent()
 		{
-			checkBox_UseCC.IsChecked=DSettings.Instance.UseCodeCompletion;
-			checkBox_EnableBracketHighlighting.IsChecked = DSettings.Instance.EnableMatchinBracketHighlighting;
+			var sett = DSettings.Instance;
+
+			checkBox_UseCC.IsChecked=sett.UseCodeCompletion;
+			checkBox_EnableBracketHighlighting.IsChecked = sett.EnableMatchinBracketHighlighting;
+			checkBox_MethodInsight.IsChecked = sett.UseMethodInsight;
 		}
 
 		public override string SettingCategoryName

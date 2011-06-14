@@ -10,5 +10,6 @@
     <Grid>
 		<CheckBox Content="Use Code Completion" Height="16" HorizontalAlignment="Left" Margin="12,12,0,0" Name="checkBox_UseCC" VerticalAlignment="Top" />
 		<CheckBox Content="Enable Bracket Pair Highlighting" Height="16" HorizontalAlignment="Left" Margin="12,34,0,0" Name="checkBox_EnableBracketHighlighting" VerticalAlignment="Top" />
+		<CheckBox Content="Use Method Insight Popup" Height="16" HorizontalAlignment="Left" Margin="12,56,0,0" Name="checkBox_MethodInsight" VerticalAlignment="Top" />
 	</Grid>
 </core:AbstractSettingsPage>

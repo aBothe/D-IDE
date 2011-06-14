@@ -727,16 +727,23 @@ namespace D_IDE.D
 
 		void ShowInsightWindow(string EnteredText)
 		{
-			var data = D_IDE.D.CodeCompletion.DMethodOverloadProvider.Create(this);
-
-			if (data == null)
+			if (!DSettings.Instance.UseMethodInsight)
 				return;
 
-			insightWindow = new OverloadInsightWindow(Editor.TextArea);
-			insightWindow.Provider = data;
+			try
+			{
+				var data = D_IDE.D.CodeCompletion.DMethodOverloadProvider.Create(this);
 
-			insightWindow.Show();
-			
+				if (data == null)
+					return;
+
+				insightWindow = new OverloadInsightWindow(Editor.TextArea);
+				insightWindow.Provider = data;
+
+				insightWindow.Show();
+
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
 
 		public bool CanShowCodeCompletionPopup
@@ -781,7 +788,7 @@ namespace D_IDE.D
 			if (e.Text == "." && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
 
-			else if (e.Text == "," || e.Text == "(")
+			else if (/*e.Text == "," ||*/ e.Text == "(")
 				ShowInsightWindow(e.Text);
 		}
 		#endregion

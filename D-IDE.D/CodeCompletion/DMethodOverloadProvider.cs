@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using D_Parser.Resolver;
+using D_IDE.Core;
 
 namespace D_IDE.D.CodeCompletion
 {
@@ -11,25 +12,28 @@ namespace D_IDE.D.CodeCompletion
 	{
 		public static DMethodOverloadProvider Create(DEditorDocument doc)
 		{
-			var imports = DCodeResolver.ResolveImports(doc.SyntaxTree, DCodeCompletionSupport.EnumAvailableModules(doc));
+			try
+			{
+				var imports = DCodeResolver.ResolveImports(doc.SyntaxTree, DCodeCompletionSupport.EnumAvailableModules(doc));
 
-			var argsResult = DResolver.ResolveArgumentContext(doc.Editor.Text, doc.Editor.CaretOffset, doc.CaretLocation, doc.lastSelectedBlock, imports);
+				var argsResult = DResolver.ResolveArgumentContext(doc.Editor.Text, doc.Editor.CaretOffset, doc.CaretLocation, doc.lastSelectedBlock, imports);
 
-			if (argsResult == null)
-				return null;
+				if (argsResult == null || argsResult.ResolvedTypesOrMethods == null || argsResult.ResolvedTypesOrMethods.Length < 1)
+					return null;
 
-			return new DMethodOverloadProvider(argsResult);
+				return new DMethodOverloadProvider(argsResult);
+			}
+			catch { return null; }
 		}
-
-
-
-		public DMethodOverloadProvider(DResolver.ArgumentsResolutionResult argsResult)
+		
+		DMethodOverloadProvider(DResolver.ArgumentsResolutionResult argsResult)
 		{
 			args = argsResult;
-			
+			SelectedIndex = args.CurrentlyCalledMethod;
 		}
 
 		DResolver.ArgumentsResolutionResult args;
+		int selIndex = 0;
 
 		public int Count
 		{
@@ -38,23 +42,42 @@ namespace D_IDE.D.CodeCompletion
 
 		public object CurrentContent
 		{
-			get { return args.ResolvedTypesOrMethods[SelectedIndex]; }
+			get { return args.ResolvedTypesOrMethods[selIndex]; }
 		}
 
 		public object CurrentHeader
 		{
-			get { return null; }
+			get {
+
+				if (CurrentContent is MemberResult)
+					return (CurrentContent as MemberResult).ResolvedMember.Description;
+				if (CurrentContent is TypeResult)
+					return (CurrentContent as TypeResult).ResolvedTypeDefinition.Description;
+
+				return null;
+			}
 		}
 
 		public string CurrentIndexText
 		{
-			get { return SelectedIndex.ToString()+" of "+args.ResolvedTypesOrMethods.Length.ToString(); }
+			get { return (SelectedIndex+1).ToString()+" of "+args.ResolvedTypesOrMethods.Length.ToString(); }
 		}
 
 		public int SelectedIndex
 		{
-			get { return args.CurrentlyCalledMethod; }
-			set { args.CurrentlyCalledMethod = value; NotifyPropertyChanged("SelectedIndex"); }
+			get { return selIndex; }
+			set { 
+				selIndex = value;
+
+				try
+				{
+					NotifyPropertyChanged("SelectedIndex");
+					NotifyPropertyChanged("CurrentContent");
+					NotifyPropertyChanged("CurrentHeader");
+					NotifyPropertyChanged("CurrentIndexText");
+				}
+				catch (Exception ex) { ErrorLogger.Log(ex); }
+			}
 		}
 
 

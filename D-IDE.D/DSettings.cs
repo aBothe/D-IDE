@@ -32,6 +32,7 @@ namespace D_IDE.D
 
 		public string cv2pdb_exe = "cv2pdb.exe";
 		public bool UseCodeCompletion = true;
+		public bool UseMethodInsight = true;
 		public bool EnableMatchinBracketHighlighting = true;
 
 		#region Saving&Loading
@@ -53,6 +54,10 @@ namespace D_IDE.D
 			x.WriteAttributeString("value",UseCodeCompletion.ToString().ToLower());
 			x.WriteEndElement();
 
+			x.WriteStartElement("UseMethodInsight");
+			x.WriteAttributeString("value", UseMethodInsight.ToString().ToLower());
+			x.WriteEndElement();
+
 			dmd1.Save(x);
 			dmd2.Save(x);
 
@@ -68,6 +73,11 @@ namespace D_IDE.D
 					case "BracketHightlighting":
 						if (x.MoveToAttribute("value"))
 							EnableMatchinBracketHighlighting = x.ReadContentAsBoolean();
+						break;
+
+					case "UseMethodInsight":
+						if (x.MoveToAttribute("value"))
+							UseMethodInsight = x.ReadContentAsBoolean();
 						break;
 
 					case "UseCodeCompletion":
