@@ -284,7 +284,11 @@ namespace D_IDE.D
 							while (st.Read())
 							{
 								if (st.LocalName == "dir")
-									ASTCache.Add(st.ReadString());
+								{
+									var dir = st.ReadString();
+									if(!string.IsNullOrWhiteSpace(dir))
+										ASTCache.Add(dir);
+								}
 							}
 						break;
 				}

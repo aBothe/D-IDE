@@ -88,7 +88,6 @@
 				<r:RibbonGroup Header="Code">
 					<r:RibbonButton Command="d:IDEUICommands.CommentBlock" Label="Comment selection"></r:RibbonButton>
 					<r:RibbonButton Command="d:IDEUICommands.UncommentBlock" Label="Uncomment selection"></r:RibbonButton>
-					<r:RibbonButton Command="d:IDEUICommands.DuplicateLine" Label="Duplicate line"></r:RibbonButton>
 					<r:RibbonButton Command="d:IDEUICommands.ReformatDoc" Label="Reformat document"></r:RibbonButton>
 				</r:RibbonGroup>
 
