@@ -551,7 +551,6 @@ namespace D_Parser.Resolver
 									if(_m!=null)nextResults.AddRange(_m);
 								}
 
-
 								else if (scanResult is TypeResult)
 								{
 									var results = HandleNodeMatches(
@@ -683,6 +682,11 @@ namespace D_Parser.Resolver
 		{
 			foreach (var m in matches)
 			{
+				bool resType = true;
+				// Prevent infinite recursion if the type accidently equals the node's name
+				if (m.Type != null && m.Type.ToString(false) == m.Name)
+					resType = false;
+
 				if (m is DVariable)
 				{
 					var v = m as DVariable;
@@ -690,14 +694,14 @@ namespace D_Parser.Resolver
 					if (v.IsAlias)
 						yield return new AliasResult()
 						{
-							AliasDefinition = ResolveType(v.Type, currentlyScopedNode, parseCache),
+							AliasDefinition = resType?ResolveType(v.Type, currentlyScopedNode, parseCache):null,
 							ResultBase=resultBase
 						};
 					else
 						yield return new MemberResult()
 						{
 							ResolvedMember = m,
-							MemberBaseTypes = ResolveType(v.Type, currentlyScopedNode, parseCache),
+							MemberBaseTypes = resType? ResolveType(v.Type, currentlyScopedNode, parseCache):null,
 							ResultBase = resultBase
 						};
 				}
@@ -708,7 +712,7 @@ namespace D_Parser.Resolver
 					yield return new MemberResult()
 					{
 						ResolvedMember = m,
-						MemberBaseTypes = ResolveType(method.Type, currentlyScopedNode, parseCache),
+						MemberBaseTypes = resType? ResolveType(method.Type, currentlyScopedNode, parseCache):null,
 						ResultBase = resultBase
 					};
 				}
@@ -719,7 +723,7 @@ namespace D_Parser.Resolver
 					yield return new TypeResult()
 					{
 						ResolvedTypeDefinition = Class,
-						BaseClass = ResolveBaseClass(Class, parseCache),
+						BaseClass = resType? ResolveBaseClass(Class, parseCache):null,
 						ResultBase = resultBase
 					};
 				}
