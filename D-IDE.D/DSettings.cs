@@ -33,7 +33,7 @@ namespace D_IDE.D
 		public string cv2pdb_exe = "cv2pdb.exe";
 		public bool UseCodeCompletion = true;
 		public bool UseMethodInsight = true;
-		public bool EnableMatchinBracketHighlighting = true;
+		public bool EnableMatchingBracketHighlighting = true;
 
 		#region Saving&Loading
 		public void Save(XmlWriter x)
@@ -47,7 +47,7 @@ namespace D_IDE.D
 			x.WriteEndElement();
 
 			x.WriteStartElement("BracketHightlighting");
-			x.WriteAttributeString("value", EnableMatchinBracketHighlighting.ToString().ToLower());
+			x.WriteAttributeString("value", EnableMatchingBracketHighlighting.ToString().ToLower());
 			x.WriteEndElement();
 
 			x.WriteStartElement("UseCodeCompletion");
@@ -72,7 +72,7 @@ namespace D_IDE.D
 				{
 					case "BracketHightlighting":
 						if (x.MoveToAttribute("value"))
-							EnableMatchinBracketHighlighting = x.ReadContentAsBoolean();
+							EnableMatchingBracketHighlighting = x.ReadContentAsBoolean();
 						break;
 
 					case "UseMethodInsight":
