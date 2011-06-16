@@ -203,11 +203,6 @@ namespace D_Parser.Parser
             return Char.IsDigit(digit) || ('A' <= digit && digit <= 'F') || ('a' <= digit && digit <= 'f');
         }
 
-        public static bool IsOct(char digit)
-        {
-            return Char.IsDigit(digit) && digit != '9' && digit != '8';
-        }
-
         public static bool IsBin(char digit)
         {
             return digit == '0' || digit == '1';
@@ -226,7 +221,7 @@ namespace D_Parser.Parser
         /// <returns></returns>
         public static bool IsLegalDigit(char d,int NumBase)
         {
-            return (NumBase == 10 && Char.IsDigit(d)) || (NumBase == 2 && IsBin(d)) || (NumBase == 8 && IsOct(d)) || (NumBase == 16 && IsHex(d)) || d == '_';
+            return (NumBase == 10 && Char.IsDigit(d)) || (NumBase == 2 && IsBin(d)) || (NumBase == 16 && IsHex(d)) || d == '_';
         }
 
         public static int GetHexNumber(char digit)
@@ -755,7 +750,8 @@ namespace D_Parser.Parser
                             peek = (char)ReaderPeek();
                         }
                     }
-                    else if (IsOct(peek) || peek == '_') // Oct values
+						// Oct values have been removed in dmd 2.053
+                    /*else if (IsOct(peek) || peek == '_') // Oct values
                     {
                         NumBase = 8;
                         prefix = "0";
@@ -768,7 +764,7 @@ namespace D_Parser.Parser
                             else ReaderRead();
                             peek = (char)ReaderPeek();
                         }
-                    }
+                    }*/
                     else NumBase = 10;
 
                     if (sb.Length == 0)
