@@ -611,6 +611,10 @@ namespace D_Parser.Resolver
 			// Implicitly set the object class to the inherited class if no explicit one was done
 			var type=ActualClass.BaseClasses.Count<1?new IdentifierDeclaration("Object"):ActualClass.BaseClasses[0];
 
+			// A class cannot inherit itself
+			if (type.ToString(false) == ActualClass.Name)
+				return null;
+
 			var results=ResolveType(type, ActualClass.NodeRoot as IBlockNode, ModuleCache);
 
 			if(results!=null)
@@ -723,7 +727,7 @@ namespace D_Parser.Resolver
 					yield return new TypeResult()
 					{
 						ResolvedTypeDefinition = Class,
-						BaseClass = resType? ResolveBaseClass(Class, parseCache):null,
+						BaseClass = ResolveBaseClass(Class, parseCache),
 						ResultBase = resultBase
 					};
 				}

@@ -250,7 +250,7 @@ namespace D_IDE.D
 
 		void lookup_Types_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (isUpdatingLookupDropdowns)
+			if (isUpdatingLookupDropdowns || e.AddedItems.Count<1)
 				return;
 
 			var completionData = e.AddedItems[0] as DCompletionData;
