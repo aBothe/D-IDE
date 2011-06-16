@@ -50,7 +50,7 @@ namespace D_IDE.D
 			}
 		}
 
-		public readonly ASTCollection ParsedModules=new ASTCollection();
+		public readonly ASTCollection ParsedModules = new ASTCollection() { ParseFunctionBodies=true};
 
 		/// <summary>
 		/// Parse all D sources that belong to the project

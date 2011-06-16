@@ -823,8 +823,8 @@ namespace D_Parser.Parser
 				if (IsParam && la.Kind != (Identifier))
 					return ret;
 
-				Expect(Identifier);
-				ret.Name = t.Value;
+				if(Expect(Identifier))
+					ret.Name = t.Value;
 			}
 
 			if (IsDeclaratorSuffix)

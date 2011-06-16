@@ -287,7 +287,7 @@ namespace D_IDE.D
 								{
 									var dir = st.ReadString();
 									if(!string.IsNullOrWhiteSpace(dir))
-										ASTCache.Add(dir);
+										ASTCache.Add(dir,System.Diagnostics.Debugger.IsAttached);
 								}
 							}
 						break;

@@ -8,6 +8,7 @@ using D_Parser;
 using System.IO;
 using System.Windows;
 using D_Parser.Parser;
+using System.ComponentModel;
 
 namespace D_IDE.D.CodeCompletion
 {
@@ -72,7 +73,7 @@ namespace D_IDE.D.CodeCompletion
 		/// Adds and parses a dictionary to the collection
 		/// </summary>
 		/// <param name="Dictionary"></param>
-		public void Add(string Dictionary)
+		public void Add(string Dictionary,bool ParseFunctionBodies=false)
 		{
 			foreach (var c in ParsedGlobalDictionaries)
 				if (c.BaseDirectory == Dictionary)
@@ -84,7 +85,7 @@ namespace D_IDE.D.CodeCompletion
 			if (!System.IO.Directory.Exists(Dictionary))
 				throw new Exception("Cannot parse \""+Dictionary+"\". Directory does not exist!");
 
-			var nc = new ASTCollection(Dictionary);
+			var nc = new ASTCollection(Dictionary) { ParseFunctionBodies=ParseFunctionBodies};
 			ParsedGlobalDictionaries.Add(nc);
 		}
 
@@ -175,6 +176,9 @@ namespace D_IDE.D.CodeCompletion
 	{
 		public string BaseDirectory { get; set; }
 
+		[DefaultValue(true)]
+		public bool ParseFunctionBodies { get; set; }
+
 		public ASTCollection() { }
 
 		public ASTCollection(string baseDir)
@@ -253,7 +257,7 @@ namespace D_IDE.D.CodeCompletion
 					string tmodule = Path.ChangeExtension(tf, null).Remove(0, BaseDirectory.Length + 1).Replace('\\', '.');
 
 					hpt.Start();
-					var ast = DParser.ParseFile(tf);
+					var ast = DParser.ParseFile(tf,!ParseFunctionBodies);
 					hpt.Stop();
 					duration += hpt.Duration;
 					ast.ModuleName = tmodule;

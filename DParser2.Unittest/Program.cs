@@ -16,9 +16,9 @@ namespace ParserTests
         public static void Main(string[] args)
         {
 			//  ) 
-			string input = "foo!(asd,";
+			string input = "auto a;";
 
-			ParseTests.TestExpressionStartFinder(input);
+			D_Parser.Parser.DParser.ParseString(input);
 			Console.ReadKey();
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);
