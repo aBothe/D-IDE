@@ -734,46 +734,42 @@ namespace D_Parser.Parser
                             peek = (char)ReaderPeek();
                         }
                     }
-                    else if (peek == 'b' || peek == 'B') // Bin values
-                    {
-                        prefix = "0b";
-                        ReaderRead(); // skip 'b'
-                        sb.Length = 0;
-                        NumBase = 2;
+					else if (peek == 'b' || peek == 'B') // Bin values
+					{
+						prefix = "0b";
+						ReaderRead(); // skip 'b'
+						sb.Length = 0;
+						NumBase = 2;
 
-                        peek = (char)ReaderPeek();
-                        while (IsBin(peek) || peek == '_')
-                        {
-                            if (peek != '_')
-                                sb.Append((char)ReaderRead());
-                            else ReaderRead();
-                            peek = (char)ReaderPeek();
-                        }
-                    }
-						// Oct values have been removed in dmd 2.053
-                    /*else if (IsOct(peek) || peek == '_') // Oct values
-                    {
-                        NumBase = 8;
-                        prefix = "0";
-                        sb.Length = 0;
+						peek = (char)ReaderPeek();
+						while (IsBin(peek) || peek == '_')
+						{
+							if (peek != '_')
+								sb.Append((char)ReaderRead());
+							else ReaderRead();
+							peek = (char)ReaderPeek();
+						}
+					}
+					// Oct values have been removed in dmd 2.053
+					/*else if (IsOct(peek) || peek == '_') // Oct values
+					{
+						NumBase = 8;
+						prefix = "0";
+						sb.Length = 0;
 
-                        while (IsOct(peek) || peek == '_')
-                        {
-                            if (peek != '_')
-                                sb.Append((char)ReaderRead());
-                            else ReaderRead();
-                            peek = (char)ReaderPeek();
-                        }
-                    }*/
-                    else NumBase = 10;
-
-                    if (sb.Length == 0)
-                    {
-                        sb.Append('0'); // dummy value to prevent exception
-                        OnError(y, x, "Invalid decimal literal");
-                    }
+						while (IsOct(peek) || peek == '_')
+						{
+							if (peek != '_')
+								sb.Append((char)ReaderRead());
+							else ReaderRead();
+							peek = (char)ReaderPeek();
+						}
+					}*/
+					else
+						NumBase = 10; // Enables pre-comma parsing .. in this case we'd 000 literals or something like that
                 }
-                else if (ch != '.')
+                
+				if (NumBase==10 || (ch != '.' && NumBase==0)) // Only allow further digits for 10-based integers, not for binary or hex values
                 {
                     NumBase = 10;
                     while (Char.IsDigit(peek) || peek == '_')

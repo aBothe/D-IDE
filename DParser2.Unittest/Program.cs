@@ -16,9 +16,9 @@ namespace ParserTests
         public static void Main(string[] args)
         {
 			//  ) 
-			string input = "auto a;";
+			string input = "int a=+007;";
 
-			D_Parser.Parser.DParser.ParseString(input);
+			ParseTests.TestCode(input);
 			Console.ReadKey();
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);

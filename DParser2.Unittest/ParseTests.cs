@@ -28,6 +28,19 @@ namespace ParserTests
 			Dump(n, "");
 		}
 
+		public static void TestCode(string code)
+		{
+			var hp = new HighPrecTimer();
+
+			hp.Start();
+			var n = DParser.ParseString(code);
+			hp.Stop();
+			Console.WriteLine(hp.Duration + "s");
+
+			printErrors(n);
+			Dump(n, "");
+		}
+
 		public static void TestSourcePackages()
 		{
 			var Files = new Dictionary<string, string>();
