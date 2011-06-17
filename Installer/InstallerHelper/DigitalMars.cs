@@ -13,8 +13,6 @@ namespace DIDE.Installer
         private const string ERROR_PREFIX = "[ERROR] ";
         private const string DIGITAL_MARS_FTP = "ftp://ftp.digitalmars.com/";
         private const string DIGITAL_MARS_HTTP = "http://ftp.digitalmars.com/";
-        private const string DIGITAL_MARS_DMD_1 = "ftp://ftp.digitalmars.com/dmd.1.056.zip";
-        private const string DIGITAL_MARS_DMD_2 = "ftp://ftp.digitalmars.com/dmd.2.041.zip";
         //private const string FILE_LIST = "dmd.files.${FILEDATE}.html";
 
         private static Dictionary<int, CompilerVersion> versions = new Dictionary<int, CompilerVersion>();
@@ -124,6 +122,9 @@ namespace DIDE.Installer
 
                         using (FtpWebResponse response = request.GetResponse() as FtpWebResponse)
                         {
+							/*
+							 * Enum all files in the ftp root. While scan through all of them, extract the version number, get the highest version number, and finally download the appropriate zip
+							 */
                             Console.WriteLine(response.StatusDescription);
                             using (StreamReader reader = new StreamReader(response.GetResponseStream()))
                             {

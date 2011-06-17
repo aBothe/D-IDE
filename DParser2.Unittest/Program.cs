@@ -15,13 +15,15 @@ namespace ParserTests
         public static string curFile = "";
         public static void Main(string[] args)
         {
-			//  ) 
-			string input = "int a=+007;";
-
+			string input = @"auto a=""\1111"";";
+			
 			ParseTests.TestCode(input);
-			Console.ReadKey();
+			
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);
+
+			Console.ReadKey();
+
 			return;
 			while (true)
 			{

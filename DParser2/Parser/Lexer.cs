@@ -198,6 +198,11 @@ namespace D_Parser.Parser
             return char.IsLetterOrDigit((char)ch); // accept unicode letters
         }
 
+		public static bool IsOct(char digit)
+		{
+			return Char.IsDigit(digit) && digit != '9' && digit != '8';
+		}
+
         public static bool IsHex(char digit)
         {
             return Char.IsDigit(digit) || ('A' <= digit && digit <= 'F') || ('a' <= digit && digit <= 'f');
@@ -1064,9 +1069,9 @@ namespace D_Parser.Parser
                 case '\\':
                     ch = '\\';
                     break;
-                case '0':
+                /*case '0':
                     ch = '\0';
-                    break;
+                    break;*/
                 case 'a':
                     ch = '\a';
                     break;
@@ -1188,8 +1193,44 @@ namespace D_Parser.Parser
 
 					return "&"+charEntity+";";
                 default:
-                    OnError(Line, Col, String.Format("Unexpected escape sequence : {0}", c));
-                    ch = '\0';
+
+					// Max 3 following octal digits
+					if (IsOct(c))
+					{
+						// Parse+Convert oct to dec integer
+						int oct = GetHexNumber(c);
+
+						for (int i = 0; i < 2; ++i)
+						{
+							if (IsOct((char)ReaderPeek()))
+							{
+								c = (char)ReaderRead();
+								escapeSequenceBuffer[curPos++] = c;
+
+								int idx = GetHexNumber(c);
+								oct = 8 * oct + idx;
+							}
+							else
+								break;
+						}
+						
+						// Convert integer to character
+						if (oct > 0xffff)
+						{
+							ch = '\0';
+							surrogatePair = char.ConvertFromUtf32(oct);
+						}
+						else
+						{
+							ch = (char)oct;
+						}
+
+					}
+					else
+					{
+						OnError(Line, Col, String.Format("Unexpected escape sequence : {0}", c));
+						ch = '\0';
+					}
                     break;
             }
             return new String(escapeSequenceBuffer, 0, curPos);

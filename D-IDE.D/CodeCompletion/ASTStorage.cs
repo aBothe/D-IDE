@@ -250,7 +250,8 @@ namespace D_IDE.D.CodeCompletion
 
 			foreach (string tf in files)
 			{
-				if (tf.EndsWith("phobos"+Path.DirectorySeparatorChar+ "index.d")) continue; // Skip index.d
+				if (tf.EndsWith("phobos"+Path.DirectorySeparatorChar+ "index.d") ||
+					tf.EndsWith("phobos" + Path.DirectorySeparatorChar + "phobos.d")) continue; // Skip index.d (D2) || phobos.d (D2|D1)
 
 				try
 				{

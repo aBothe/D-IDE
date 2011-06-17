@@ -255,7 +255,7 @@ Section "-.Net Framework 4" net4_section_id
 
 	DotNet4Failed:
 		DetailPrint ".Net Framework 4 install failed... Aborting Install"
-		MessageBox MB_OK ".Net Framework 4 install failed... Aborting Install"
+		MessageBox ".Net Framework 4 install failed... Aborting Install"
 		Abort
 
 	SkipDotNet4:
@@ -291,7 +291,7 @@ Section "-Visual C++ 2010 Runtime" vcpp2010runtime_section_id
 
 	VCPP2010RuntimeFailed:
 		DetailPrint "Visual C++ 2010 Runtime install failed... Aborting Install"
-		MessageBox MB_OK "Visual C++ 2010 Runtime install failed... Aborting Install"
+		MessageBox "Visual C++ 2010 Runtime install failed... Aborting Install"
 		Abort
 
 	SkipVCPP2010Runtime:
@@ -338,7 +338,7 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 	WebInstall:
 
 		IntCmp $IS_CONNECTED 1 +2
-			MessageBox MB_OK "It seems that you are not connected to the internet. Please connect now if you wish to download the Digital Mars compilers."
+			MessageBox "It seems that you are not connected to the internet. Please connect now if you wish to download the Digital Mars compilers."
 
 		DetailPrint "Installing DMD with the official DMD Web Installer."
 		StrCpy $1 "dinstaller.exe"
@@ -368,7 +368,7 @@ Section "-Digital-Mars DMD Install/Update" dmd_section_id
 		IntCmp $PERFORM_CLR_FEATURES 0 Finished
 
 		IntCmp $IS_CONNECTED 1 +2
-			MessageBox MB_OK "It seems that you are not connected to the internet. Please connect now if you wish to download the Digital Mars compilers."
+			MessageBox "It seems that you are not connected to the internet. Please connect now if you wish to download the Digital Mars compilers."
 
 		DetailPrint "Downloading and instaling DMD 1.$DMD1_LATEST_VERSION to target location."
 		StrCpy $1 "dmd1.$DMD1_LATEST_VERSION.zip"

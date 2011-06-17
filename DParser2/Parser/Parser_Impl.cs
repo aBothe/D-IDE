@@ -757,7 +757,7 @@ namespace D_Parser.Parser
 			if (la.Kind == (OpenParenthesis))
 			{
 				Step();
-				SynErr(OpenParenthesis,"C-style function pointers are deprecated. Use the function() syntax instead.");
+				//SynErr(OpenParenthesis,"C-style function pointers are deprecated. Use the function() syntax instead."); // Only deprecated in D2
 				var cd = new DelegateDeclaration() as ITypeDeclaration;
 				ret.Type = cd;
 				var deleg = cd as DelegateDeclaration;

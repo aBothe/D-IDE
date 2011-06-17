@@ -12,7 +12,7 @@ namespace TestInstallerHelper
 {
     public partial class TestForm : Form
     {
-        public TestForm()
+		public TestForm()
         {
             InitializeComponent();
         }
@@ -24,7 +24,7 @@ namespace TestInstallerHelper
             InstallerHelper.CreateConfigurationFile(file);
 
             InstallerHelper.Refresh();
-            InstallerHelper.Initialize(@"C:\Users\Justin\AppData\Local\Temp\dmd.files.20100706.html");
+			InstallerHelper.Initialize(Path.GetTempFileName());
             while (InstallerHelper.IsThreadActive)
             {
                 Write(".");
@@ -80,8 +80,8 @@ namespace TestInstallerHelper
                         WriteLine(f);
             }
 
-            InstallerHelper.CreateConfigurationFile(@"C:\ProgramData\D-IDE.config\D.config.xml");
-            WriteLine(InstallerHelper.IsConfigurationValid(@"C:\ProgramData\D-IDE.config\D.config.xml"));
+			InstallerHelper.CreateConfigurationFile(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\D-IDE.config\D.config.xml");
+			WriteLine(InstallerHelper.IsConfigurationValid(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\D-IDE.config\D.config.xml"));
         }
 
         private void TestForm_Load(object sender, EventArgs e)
