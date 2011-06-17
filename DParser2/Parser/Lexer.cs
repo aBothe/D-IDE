@@ -221,7 +221,7 @@ namespace D_Parser.Parser
         /// <returns></returns>
         public static bool IsLegalDigit(char d,int NumBase)
         {
-            return (NumBase == 10 && Char.IsDigit(d)) || (NumBase == 2 && IsBin(d)) || (NumBase == 16 && IsHex(d)) || d == '_';
+			return (NumBase == 10 && Char.IsDigit(d)) || (NumBase == 2 && IsBin(d)) /* (NumBase == 8 && IsOct(d)) || */|| (NumBase == 16 && IsHex(d)) || d == '_';
         }
 
         public static int GetHexNumber(char digit)
