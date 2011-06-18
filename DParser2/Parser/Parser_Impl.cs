@@ -1254,15 +1254,19 @@ namespace D_Parser.Parser
 
 		#region Attributes
 
-		IBlockNode _Invariant()
+		DMethod _Invariant()
 		{
-			IBlockNode inv = new DMethod();
-			inv.Name = "invariant";
+			var inv = new DMethod();
+			inv.Attributes.Add(new DAttribute(Invariant));
 
 			Expect(Invariant);
-			Expect(OpenParenthesis);
-			Expect(CloseParenthesis);
-			BlockStatement(ref inv);
+			inv.StartLocation = t.Location;
+			if (la.Kind == OpenParenthesis)
+			{
+				Step();
+				Expect(CloseParenthesis);
+			}
+			BlockStatement(inv);
 			return inv;
 		}
 
@@ -2449,7 +2453,7 @@ namespace D_Parser.Parser
 
 			else if (BlocksAllowed && la.Kind == (OpenCurlyBrace))
 			{
-				BlockStatement(ref par);
+				BlockStatement(par);
 				return;
 			}
 
@@ -2933,7 +2937,7 @@ namespace D_Parser.Parser
 
 			// Blockstatement
 			else if (la.Kind == (OpenCurlyBrace))
-				BlockStatement(ref par);
+				BlockStatement(par);
 
 			else if (!(ClassLike[la.Kind] || la.Kind == Enum || Modifiers[la.Kind] || Attributes[la.Kind] || la.Kind == Alias || la.Kind == Typedef) && IsAssignExpression())
 			{
@@ -2945,7 +2949,7 @@ namespace D_Parser.Parser
 				Declaration(par);
 		}
 
-		void BlockStatement(ref IBlockNode par)
+		void BlockStatement(IBlockNode par)
 		{
 			if (String.IsNullOrEmpty(par.Description)) par.Description = GetComments();
 			var OldPreviousCommentString = PreviousComment;
@@ -3332,7 +3336,7 @@ namespace D_Parser.Parser
 			{
 				HadIn = true;
 				Step();
-				BlockStatement(ref par);
+				BlockStatement(par);
 
 				if (!HadOut && la.Kind == (Out))
 					goto check_again;
@@ -3350,7 +3354,7 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				BlockStatement(ref par);
+				BlockStatement(par);
 
 				if (!HadIn && la.Kind == (In))
 					goto check_again;
@@ -3367,7 +3371,7 @@ namespace D_Parser.Parser
 				par.Description += CheckForPostSemicolonComment();
 			}
 			else
-				BlockStatement(ref par);
+				BlockStatement(par);
 
 		}
 		#endregion

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using System.Windows;
+using System.IO;
 
 namespace D_IDE.Core
 {
@@ -75,7 +76,10 @@ namespace D_IDE.Core
 			}
 			catch (Exception ex)
 			{
-				ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Build);
+				if (ex is FileNotFoundException)
+					ErrorLogger.Log(Executable+" not found!\r\n\r\nArguments:\t"+Arguments+"\r\nStart Directory:\t"+StartDirectory, ErrorType.Error, ErrorOrigin.Build);
+				else
+					ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Build);
 				return null;
 			}
 

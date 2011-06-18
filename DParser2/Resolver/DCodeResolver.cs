@@ -604,12 +604,12 @@ namespace D_Parser.Resolver
 
 		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, IEnumerable<IAbstractSyntaxTree> ModuleCache)
 		{
-			if (ActualClass == null || (ActualClass.BaseClasses.Count < 1 && ActualClass.Name.ToLower() == "object"))
+			if (ActualClass == null || ((ActualClass.BaseClasses==null ||ActualClass.BaseClasses.Count < 1) && ActualClass.Name.ToLower() == "object"))
 				return null;
 
 			var ret = new List<TypeResult>();
 			// Implicitly set the object class to the inherited class if no explicit one was done
-			var type=ActualClass.BaseClasses.Count<1?new IdentifierDeclaration("Object"):ActualClass.BaseClasses[0];
+			var type = (ActualClass.BaseClasses == null || ActualClass.BaseClasses.Count < 1) ? new IdentifierDeclaration("Object") : ActualClass.BaseClasses[0];
 
 			// A class cannot inherit itself
 			if (type.ToString(false) == ActualClass.Name)
