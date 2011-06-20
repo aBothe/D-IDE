@@ -10,9 +10,9 @@ namespace D_Parser.Dom
 		string FileName { get; set; }
 		string ModuleName { get; set; }
 		ReadOnlyCollection<ParserError> ParseErrors { get; set; }
-		Dictionary<ITypeDeclaration, bool> Imports { get; set; }
+		/*Dictionary<ITypeDeclaration, bool> Imports { get; set; }
 		bool ContainsImport(ITypeDeclaration ImportIdentifier);
-		bool ContainsImport(string ImportIdentifier);
+		bool ContainsImport(string ImportIdentifier);*/
 	}
 
 	public class ParserError

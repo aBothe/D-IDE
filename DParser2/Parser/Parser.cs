@@ -114,7 +114,18 @@ namespace D_Parser.Parser
         /// <summary>
         /// Encapsules whole document structure
         /// </summary>
-        IAbstractSyntaxTree doc;
+        DModule doc;
+
+		List<ImportStatement> imports = new List<ImportStatement>();
+
+		bool ContainsImport(string ModuleId)
+		{
+			foreach (var i in imports)
+				if (string.IsNullOrEmpty(i.ModuleAlias) && i.ExclusivelyImportedSymbols.Count < 1 && i.ModuleIdentifier == ModuleId)
+					return true;
+
+			return false;
+		}
 
         /// <summary>
         /// Modifiers for entire block
@@ -154,7 +165,7 @@ namespace D_Parser.Parser
             }
         }
 
-        public IAbstractSyntaxTree Document
+        public DModule Document
         {
             get { return doc; }
         }

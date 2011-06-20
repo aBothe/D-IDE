@@ -18,7 +18,7 @@ namespace D_Parser.Parser
 		/// <summary>
 		/// Module entry point
 		/// </summary>
-		IAbstractSyntaxTree Root()
+		DModule Root()
 		{
 			Step();
 
@@ -32,12 +32,13 @@ namespace D_Parser.Parser
 				module.ModuleName = ModuleDeclaration().ToString();
 				module.Description += CheckForPostSemicolonComment();
 			}
-			var _block = module as IBlockNode;
+
 			// Now only declarations or other statements are allowed!
 			while (!IsEOF)
 			{
-				DeclDef(_block);
+				DeclDef(module);
 			}
+			module.Imports = imports.ToArray();
 			module.EndLocation = la.Location;
 			return module;
 		}
@@ -119,7 +120,7 @@ namespace D_Parser.Parser
 				AttributeSpecifier();
 
 			//ImportDeclaration
-			else if (la.Kind == (Import))
+			else if (la.Kind == Import)
 				ImportDeclaration();
 
 			//Constructor
@@ -265,7 +266,7 @@ namespace D_Parser.Parser
 			else Declaration(module);
 		}
 
-		ITypeDeclaration ModuleDeclaration()
+		string ModuleDeclaration()
 		{
 			Expect(Module);
 			var ret = ModuleFullyQualifiedName();
@@ -273,21 +274,18 @@ namespace D_Parser.Parser
 			return ret;
 		}
 
-		ITypeDeclaration ModuleFullyQualifiedName()
+		string ModuleFullyQualifiedName()
 		{
 			Expect(Identifier);
-
-
-			var td=new IdentifierDeclaration(t.Value);
+			
+			var td=t.Value;
 
 			while (la.Kind == Dot)
 			{
 				Step();
 				Expect(Identifier);
-				var ttd = new IdentifierDeclaration(t.Value);
 
-				ttd.InnerDeclaration = td;
-				td = ttd;
+				td += "."+t.Value;
 			}
 
 			return td;
@@ -296,12 +294,17 @@ namespace D_Parser.Parser
 		void ImportDeclaration()
 		{
 			bool IsPublic = DAttribute.ContainsAttribute(BlockAttributes, Public) || DAttribute.ContainsAttribute(DeclarationAttributes, Public);
+			bool IsStatic = DAttribute.ContainsAttribute(BlockAttributes, Static) || DAttribute.ContainsAttribute(DeclarationAttributes, Static);
 			DeclarationAttributes.Clear();
 			CheckForDocComments();
 			Expect(Import);
 
 			var imp = _Import();
-			if (!doc.ContainsImport(imp)) // Check if import is already done
+
+			imp.IsPublic = IsPublic;
+			imp.IsStatic = IsStatic;
+
+			if (!ContainsImport(imp.ModuleIdentifier)) // Check if import is already done
 				doc.Imports.Add(imp, IsPublic);
 
 			// ImportBindings
@@ -338,17 +341,20 @@ namespace D_Parser.Parser
 			Expect(Semicolon);
 		}
 
-		ITypeDeclaration _Import()
+		ImportStatement _Import()
 		{
+			var import = new ImportStatement();
 			// ModuleAliasIdentifier
 			if (Lexer.CurrentPeekToken.Kind == (Assign))
 			{
 				Expect(Identifier);
-				string ModuleAliasIdentifier = t.Value;
+				import.ModuleAlias = t.Value;
 				Step();
 			}
 
-			return ModuleFullyQualifiedName();
+			import.ModuleIdentifier = ModuleFullyQualifiedName();
+
+			return import;
 		}
 
 		void ImportBind()

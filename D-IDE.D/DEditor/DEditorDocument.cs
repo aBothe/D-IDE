@@ -387,6 +387,8 @@ namespace D_IDE.D
 					n = (res as MemberResult).ResolvedMember;
 				else if (res is TypeResult)
 					n = (res as TypeResult).ResolvedTypeDefinition;
+				else if (res is ModuleResult)
+					n = (res as ModuleResult).ResolvedModule;
 				else
 				{
 					MessageBox.Show("Select valid symbol!");

@@ -10,22 +10,6 @@ namespace D_Parser.Dom
     /// </summary>
     public class DModule : DBlockStatement, IAbstractSyntaxTree
     {
-		public bool ContainsImport(ITypeDeclaration type)
-		{
-			foreach (var kv in _Imports)
-				if (kv.Key.ToString() == type.ToString())
-					return true;
-			return false;
-		}
-
-		public bool ContainsImport(string ImportIdentifier)
-		{
-			foreach (var kv in _Imports)
-				if (kv.Key.ToString() == ImportIdentifier)
-					return true;
-			return false;
-		}
-
         /// <summary>
         /// Applies file name, children and imports from an other module instance
          /// </summary>
@@ -35,16 +19,20 @@ namespace D_Parser.Dom
 			if (Other is IAbstractSyntaxTree)
 			{
 				var ast = Other as IAbstractSyntaxTree;
-				_Imports = new Dictionary<ITypeDeclaration, bool>(ast.Imports);
 				ParseErrors = ast.ParseErrors;
 				//FileName = ast.FileName;
+			}
+
+			if (Other is DModule)
+			{
+				var dm = Other as DModule;
+				Imports = dm.Imports;
 			}
 
 			base.Assign(Other);
         }
 
 		string _FileName;
-		Dictionary<ITypeDeclaration, bool> _Imports = new Dictionary<ITypeDeclaration, bool>();
 
 		/// <summary>
 		/// Name alias
@@ -73,16 +61,10 @@ namespace D_Parser.Dom
 			set;
 		}
 
-		public Dictionary<ITypeDeclaration, bool> Imports
+		public ImportStatement[] Imports
 		{
-			get
-			{
-				return _Imports;
-			}
-			set
-			{
-				_Imports = value;
-			}
+			get;
+			set;
 		}
 
 		public override string ToString(bool Attributes, bool IncludePath)

@@ -333,7 +333,7 @@ namespace D_IDE.D
 			{
 				var caretLoc = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
 				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
-					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLoc), EnumAvailableModules(EditorDocument),true);
+					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLoc),DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument)),true);
 				
 				string tt = "";
 
