@@ -162,20 +162,24 @@ namespace D_Parser.Resolver
 		/// <param name="cc"></param>
 		/// <param name="ActualModule"></param>
 		/// <returns></returns>
-		public static IEnumerable<IAbstractSyntaxTree> ResolveImports(IAbstractSyntaxTree ActualModule, IEnumerable<IAbstractSyntaxTree> CodeCache)
+		public static IEnumerable<IAbstractSyntaxTree> ResolveImports(DModule ActualModule, IEnumerable<IAbstractSyntaxTree> CodeCache)
 		{
 			var ret = new List<IAbstractSyntaxTree>();
 			if (CodeCache == null || ActualModule == null) return ret;
 
-			// First add all local imports
-			var localImps = new List<string>();
-			foreach (var kv in ActualModule.Imports)
-				localImps.Add(kv.Key.ToString());
-
-			// Then try to add the 'object' module
+			// Try to add the 'object' module
 			var objmod = SearchModuleInCache(CodeCache, "object");
 			if (objmod != null && !ret.Contains(objmod))
 				ret.Add(objmod);
+
+			// First add all local imports
+			var localImps = new List<string>();
+			if (ActualModule.Imports != null)
+				foreach (var kv in ActualModule.Imports)
+					if (kv.IsSimpleBinding && !kv.IsStatic)
+					{
+
+					}
 
 			foreach (var m in CodeCache)
 				if (localImps.Contains(m.Name) && !ret.Contains(m))

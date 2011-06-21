@@ -72,6 +72,7 @@
     <Compile Include="Dom\BinaryNodeStorage.cs" />
     <Compile Include="Dom\AbstractNode.cs" />
     <Compile Include="Dom\CodeLocation.cs" />
+    <Compile Include="Dom\ImportStatement.cs" />
     <Compile Include="Dom\NodeInterfaces.cs" />
     <Compile Include="Parser\TokenTracker.cs" />
     <Compile Include="Resolver\DCodeResolver.cs" />

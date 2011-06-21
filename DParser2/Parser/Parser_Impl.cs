@@ -304,39 +304,48 @@ namespace D_Parser.Parser
 			imp.IsPublic = IsPublic;
 			imp.IsStatic = IsStatic;
 
-			if (!ContainsImport(imp.ModuleIdentifier)) // Check if import is already done
-				doc.Imports.Add(imp, IsPublic);
-
 			// ImportBindings
 			if (la.Kind == (Colon))
 			{
+				imports.Add(imp);
+
 				Step();
-				ImportBind();
+				ImportBind(imp);
 				while (la.Kind == (Comma))
 				{
 					Step();
-					ImportBind();
+					ImportBind(imp);
 				}
 			}
 			else
+			{
+				if (!ContainsImport(imp.ModuleIdentifier))
+					imports.Add(imp);
+
 				while (la.Kind == (Comma))
 				{
 					Step();
 					imp = _Import();
-					if (!doc.ContainsImport(imp)) // Check if import is already done
-						doc.Imports.Add(imp, IsPublic);
+
+					imp.IsPublic = IsPublic;
+					imp.IsStatic = IsStatic;
 
 					if (la.Kind == (Colon))
 					{
+						imports.Add(imp);
+
 						Step();
-						ImportBind();
+						ImportBind(imp);
 						while (la.Kind == (Comma))
 						{
 							Step();
-							ImportBind();
+							ImportBind(imp);
 						}
 					}
+					else if (!ContainsImport(imp.ModuleIdentifier))
+						imports.Add(imp);
 				}
+			}
 
 			Expect(Semicolon);
 		}
@@ -357,8 +366,11 @@ namespace D_Parser.Parser
 			return import;
 		}
 
-		void ImportBind()
+		void ImportBind(ImportStatement imp)
 		{
+			if(imp.ExclusivelyImportedSymbols==null)
+				imp.ExclusivelyImportedSymbols = new Dictionary<string, string>();
+
 			Expect(Identifier);
 			string imbBind = t.Value;
 			string imbBindDef = null;
@@ -369,6 +381,8 @@ namespace D_Parser.Parser
 				Expect(Identifier);
 				imbBindDef = t.Value;
 			}
+
+			imp.ExclusivelyImportedSymbols.Add(imbBind, imbBindDef);
 		}
 
 
