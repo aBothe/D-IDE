@@ -172,48 +172,48 @@ namespace D_Parser.Resolver
 			if (objmod != null && !ret.Contains(objmod))
 				ret.Add(objmod);
 
-			// First add all local imports
-			var localImps = new List<string>();
-			if (ActualModule.Imports != null)
+			/* 
+			 * dmd-feature: public imports only affect the directly superior module
+			 *
+			 * Module A:
+			 * import B;
+			 * 
+			 * foo(); // Will fail, because foo wasn't found
+			 * 
+			 * Module B:
+			 * import C;
+			 * 
+			 * Module C:
+			 * public import D;
+			 * 
+			 * Module D:
+			 * void foo() {}
+			 * 
+			 * 
+			 * Whereas
+			 * Module B:
+			 * public import C;
+			 * 
+			 * will succeed because we have a closed import hierarchy in which all imports are public.
+			 * 
+			 */
+			
+			var curMod=ActualModule;
+
+			while (curMod!=null && curMod.Imports != null)
 				foreach (var kv in ActualModule.Imports)
 					if (kv.IsSimpleBinding && !kv.IsStatic)
 					{
+						var impMod = SearchModuleInCache(CodeCache, kv.ModuleIdentifier);
+
+						if (impMod != null && !ret.Contains(impMod))
+						{
+							ret.Add(impMod);
+
+							
+						}
 
 					}
-
-			foreach (var m in CodeCache)
-				if (localImps.Contains(m.Name) && !ret.Contains(m))
-				{
-					ret.Add(m);
-					/* 
-					 * dmd-feature: public imports only affect the directly superior module
-					 *
-					 * Module A:
-					 * import B;
-					 * 
-					 * foo(); // Will fail, because foo wasn't found
-					 * 
-					 * Module B:
-					 * import C;
-					 * 
-					 * Module C:
-					 * public import D;
-					 * 
-					 * Module D:
-					 * void foo() {}
-					 * 
-					 * 
-					 * Whereas
-					 * Module B:
-					 * public import C;
-					 * 
-					 * will succeed because we have a closed import hierarchy in which all imports are public.
-					 * 
-					 */
-
-					// So if there aren't any public imports in our import, continue without doing anything
-					ResolveImports(ret, m, CodeCache);
-				}
 
 			return ret;
 		}

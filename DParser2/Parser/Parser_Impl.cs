@@ -304,11 +304,11 @@ namespace D_Parser.Parser
 			imp.IsPublic = IsPublic;
 			imp.IsStatic = IsStatic;
 
+			imports.Add(imp);
+
 			// ImportBindings
 			if (la.Kind == (Colon))
 			{
-				imports.Add(imp);
-
 				Step();
 				ImportBind(imp);
 				while (la.Kind == (Comma))
@@ -318,10 +318,6 @@ namespace D_Parser.Parser
 				}
 			}
 			else
-			{
-				if (!ContainsImport(imp.ModuleIdentifier))
-					imports.Add(imp);
-
 				while (la.Kind == (Comma))
 				{
 					Step();
@@ -330,10 +326,10 @@ namespace D_Parser.Parser
 					imp.IsPublic = IsPublic;
 					imp.IsStatic = IsStatic;
 
+					imports.Add(imp);
+
 					if (la.Kind == (Colon))
 					{
-						imports.Add(imp);
-
 						Step();
 						ImportBind(imp);
 						while (la.Kind == (Comma))
@@ -342,10 +338,7 @@ namespace D_Parser.Parser
 							ImportBind(imp);
 						}
 					}
-					else if (!ContainsImport(imp.ModuleIdentifier))
-						imports.Add(imp);
 				}
-			}
 
 			Expect(Semicolon);
 		}
