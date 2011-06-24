@@ -31,7 +31,7 @@ namespace D_IDE
 
 		public bool RunCurrentModuleOnly
 		{
-			get { return Check_RunCurModule.IsEnabled?Check_RunCurModule.IsChecked.Value:true; }
+			get { return Check_RunCurModule.IsEnabled ? Check_RunCurModule.IsChecked.Value : true; }
 			set { Check_RunCurModule.IsChecked = value; }
 		}
 
@@ -39,7 +39,7 @@ namespace D_IDE
 		/// Helper property: Indicates index of tab that shall become selected after debugging/executing finished
 		/// </summary>
 		static int _prevSelectedMainTab = -1;
-			
+
 		#endregion
 
 		#region GUI Interactions
@@ -57,9 +57,9 @@ namespace D_IDE
 		public void RefreshTitle()
 		{
 			string appendix = "D-IDE " + System.Reflection.Assembly.GetCallingAssembly().GetName().Version.ToString(3);
-			
+
 			if (IDEManager.CurrentSolution != null)
-				Title = IDEManager.CurrentSolution.Name + " - "+appendix;
+				Title = IDEManager.CurrentSolution.Name + " - " + appendix;
 			else
 				Title = appendix;
 		}
@@ -84,15 +84,15 @@ namespace D_IDE
 
 				Tab_Edit.IsEnabled = IsEditable;
 				Check_RunCurModule.IsEnabled = Tab_Project.IsEnabled = HasProject || IDEManager.CurrentSolution != null;
-				Tab_Build.IsEnabled = ((IsEditable && ed.LanguageBinding!=null && ed.LanguageBinding.CanBuild) || IDEManager.CurrentSolution != null) && !IDEManager.IDEDebugManagement.IsExecuting;
+				Tab_Build.IsEnabled = ((IsEditable && ed.LanguageBinding != null && ed.LanguageBinding.CanBuild) || IDEManager.CurrentSolution != null) && !IDEManager.IDEDebugManagement.IsExecuting;
 
 				// Restore tab selection when executing finished
 				if (!Tab_Debug.IsEnabled && IDEManager.IDEDebugManagement.IsExecuting)
 				{
 					_prevSelectedMainTab = Ribbon.SelectedIndex;
-					Tab_Debug.IsSelected=true;
+					Tab_Debug.IsSelected = true;
 				}
-				else if (Tab_Debug.IsEnabled && !IDEManager.IDEDebugManagement.IsExecuting && _prevSelectedMainTab>-1)
+				else if (Tab_Debug.IsEnabled && !IDEManager.IDEDebugManagement.IsExecuting && _prevSelectedMainTab > -1)
 					Ribbon.SelectedIndex = _prevSelectedMainTab;
 
 				Tab_Debug.IsEnabled = IDEManager.IDEDebugManagement.IsExecuting;
@@ -100,14 +100,14 @@ namespace D_IDE
 				Button_StopBuilding.IsEnabled = IDEManager.BuildManagement.IsBuilding;
 
 				Button_ResumeExecution.IsEnabled =
-					Button_RestartExecution.IsEnabled=
+					Button_RestartExecution.IsEnabled =
 					Button_PauseExecution.IsEnabled =
 					Button_StepIn.IsEnabled =
 					Button_StepOut.IsEnabled =
 					Button_StepOver.IsEnabled =
 					IDEManager.IDEDebugManagement.IsDebugging;
 				Button_StopExecution.IsEnabled = IDEManager.IDEDebugManagement.IsExecuting;
-			}),this);
+			}), this);
 		}
 
 		#endregion
@@ -116,7 +116,7 @@ namespace D_IDE
 		public MainWindow(string[] args)
 		{
 			var splashScreen = new SplashScreen("Resources/d-ide_256.png");
-			splashScreen.Show(false,true);
+			splashScreen.Show(false, true);
 
 			// Init Manager
 			IDEManager.Instance = new IDEManager(this);
@@ -173,13 +173,13 @@ namespace D_IDE
 					File.Exists(layoutFile))
 					DockMgr.RestoreLayout(layoutFile);
 			}
-			catch{ }
+			catch { }
 
 			// Load language bindings
 			LanguageLoader.Bindings.Add(new GenericFileBinding());
 			try
 			{
-				LanguageLoader.LoadLanguageInterface(Util.ApplicationStartUpPath+"\\D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
+				LanguageLoader.LoadLanguageInterface(Util.ApplicationStartUpPath + "\\D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
@@ -190,7 +190,8 @@ namespace D_IDE
 					if (lang.CanUseSettings)
 						lang.LoadSettings(AbstractLanguageBinding.CreateSettingsFileName(lang));
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					ErrorLogger.Log(ex);
 				}
 
@@ -201,10 +202,10 @@ namespace D_IDE
 					IDEManager.EditingManagement.OpenFile(a);
 			else
 
-			// Load last solution
+				// Load last solution
 				if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
 				{
-					if(File.Exists(GlobalProperties.Instance.LastProjects[0]))
+					if (File.Exists(GlobalProperties.Instance.LastProjects[0]))
 						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 				}
 
@@ -235,7 +236,7 @@ namespace D_IDE
 				foreach (var lang in LanguageLoader.Bindings)
 					if (lang.CanHandleFile(sdlg.FileName))
 					{
-						var ed= lang.OpenFile(null, sdlg.FileName);
+						var ed = lang.OpenFile(null, sdlg.FileName);
 						ed.Show(DockMgr);
 						ed.Activate();
 						return;
@@ -362,7 +363,7 @@ namespace D_IDE
 		bool _showextconsole = false;
 		private void LaunchWithoutDebugger_Click(object sender, RoutedEventArgs e)
 		{
-			if (RunCurrentModuleOnly? IDEManager.BuildManagement.BuildSingle():IDEManager.BuildManagement.Build())
+			if (RunCurrentModuleOnly ? IDEManager.BuildManagement.BuildSingle() : IDEManager.BuildManagement.Build())
 				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(_showextconsole);
 			_showextconsole = false;
 		}
@@ -400,7 +401,7 @@ namespace D_IDE
 			Button_StopExecution_Click(sender, e);
 			if (dbg)
 				LaunchDebugger_Click(sender, e);
-			else 
+			else
 				LaunchWithoutDebugger_Click(sender, e);
 		}
 
@@ -428,7 +429,7 @@ namespace D_IDE
 
 		class LastFileItem : RibbonApplicationMenuItem
 		{
-			public LastFileItem(string file,bool IsPrj)
+			public LastFileItem(string file, bool IsPrj)
 			{
 				Header = Path.GetFileName(file);
 				ToolTipTitle = file;
@@ -444,7 +445,7 @@ namespace D_IDE
 		public void UpdateLastFilesMenus()
 		{
 			Button_Open.Items.Clear();
-			
+
 			var mi = new RibbonApplicationMenuItem();
 			mi.Header = "File/Project";
 			mi.ToolTipTitle = "Open File (Ctrl+O)";
@@ -457,14 +458,14 @@ namespace D_IDE
 				Button_Open.Items.Add(new RibbonSeparator());
 
 			foreach (var i in GlobalProperties.Instance.LastFiles)
-				Button_Open.Items.Add(new LastFileItem(i,false));
+				Button_Open.Items.Add(new LastFileItem(i, false));
 
 			// Then add recent projects
 			if (GlobalProperties.Instance.LastFiles.Count > 0 && GlobalProperties.Instance.LastProjects.Count > 0)
 				Button_Open.Items.Add(new RibbonSeparator());
 
 			foreach (var i in GlobalProperties.Instance.LastProjects)
-				Button_Open.Items.Add(new LastFileItem(i,true));
+				Button_Open.Items.Add(new LastFileItem(i, true));
 
 			StartPage.RefreshLastProjects();
 		}
@@ -472,22 +473,33 @@ namespace D_IDE
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 			// Important: To free the handle of the search&replace-dlg it's needed to destroy the dlg
-			if(SearchAndReplaceDlg!=null && SearchAndReplaceDlg.IsLoaded)
-			SearchAndReplaceDlg.Close();
+			if (SearchAndReplaceDlg != null && SearchAndReplaceDlg.IsLoaded)
+				SearchAndReplaceDlg.Close();
 
 			// Save window state & size
-			GlobalProperties.Instance.lastFormSize = new Size(Width,Height);
+			GlobalProperties.Instance.lastFormSize = new Size(Width, Height);
 			GlobalProperties.Instance.lastFormState = this.WindowState;
 			GlobalProperties.Instance.LastSelectedRibbonTab = Ribbon.SelectedIndex;
+
+			// Save currently opened documents
+			GlobalProperties.Instance.LastOpenFiles.Clear();
+			foreach (var doc in DockManager.Documents)
+			{
+				if (doc is AbstractEditorDocument)
+					GlobalProperties.Instance.LastOpenFiles.Add((doc as AbstractEditorDocument).AbsoluteFilePath);
+			}
 
 			try
 			{
 				// Save docking layout
 				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
+				if (File.Exists(layoutFile))
+					File.Delete(layoutFile);
 				DockMgr.SaveLayout(layoutFile);
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
-			try{
+			try
+			{
 				// Save all files
 				IDEManager.EditingManagement.SaveAllFiles();
 
@@ -495,11 +507,16 @@ namespace D_IDE
 				GlobalProperties.Save();
 
 				// Save language-specific settings
-				foreach(var lang in LanguageLoader.Bindings)
-					if(lang.CanUseSettings)
+				foreach (var lang in LanguageLoader.Bindings)
+					if (lang.CanUseSettings)
 						try
 						{
-							lang.SaveSettings(AbstractLanguageBinding.CreateSettingsFileName(lang));
+							var fn = AbstractLanguageBinding.CreateSettingsFileName(lang);
+
+							if (File.Exists(fn))
+								File.Delete(fn);
+
+							lang.SaveSettings(fn);
 						}
 						catch (Exception ex)
 						{
@@ -531,7 +548,7 @@ namespace D_IDE
 
 			if (ed != null && ed.Modified)
 			{
-				var res = MessageBox.Show(this,"Save file before close?",ed.Title,MessageBoxButton.YesNoCancel,MessageBoxImage.Question,MessageBoxResult.Yes);
+				var res = MessageBox.Show(this, "Save file before close?", ed.Title, MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Yes);
 
 				if (res == MessageBoxResult.Cancel)
 					e.Cancel = true;
@@ -542,7 +559,7 @@ namespace D_IDE
 
 		private void PrjSettings_Click(object sender, RoutedEventArgs e)
 		{
-			if(IDEManager.Instance.CurrentEditor!=null)
+			if (IDEManager.Instance.CurrentEditor != null)
 				IDEManager.ProjectManagement.ShowProjectPropertiesDialog(IDEManager.Instance.CurrentEditor.Project);
 		}
 
@@ -565,7 +582,7 @@ namespace D_IDE
 			else
 				dir = CoreManager.CurrentSolution.BaseDirectory;
 
-			System.Diagnostics.Process.Start("explorer.exe",dir);
+			System.Diagnostics.Process.Start("explorer.exe", dir);
 		}
 
 		private void Button_SetStackFrame_Click(object sender, RoutedEventArgs e)
@@ -608,14 +625,14 @@ namespace D_IDE
 		private void GotoLine(object sender, ExecutedRoutedEventArgs e)
 		{
 			var dlg = new GotoDialog();
-			dlg.Owner=this;
+			dlg.Owner = this;
 			if (dlg.ShowDialog().Value)
 			{
 				var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
 
 				if (dlg.EnteredNumber >= ed.Editor.Document.LineCount)
 				{
-					MessageBox.Show("Number must be a value between 0 and "+ed.Editor.Document.LineCount);
+					MessageBox.Show("Number must be a value between 0 and " + ed.Editor.Document.LineCount);
 					return;
 				}
 
@@ -633,7 +650,7 @@ namespace D_IDE
 
 		private void CommandBinding_CanExecute_SaveAs(object sender, CanExecuteRoutedEventArgs e)
 		{
-			e.CanExecute = (IDEManager.Instance!=null && IDEManager.Instance.CurrentEditor is EditorDocument);
+			e.CanExecute = (IDEManager.Instance != null && IDEManager.Instance.CurrentEditor is EditorDocument);
 		}
 
 		private void Visitdide_sourceforge_net_Click(object sender, RoutedEventArgs e)
@@ -650,7 +667,7 @@ namespace D_IDE
 			}
 
 			SearchAndReplaceDlg = new Dialogs.SearchAndReplaceDlg();
-			SearchAndReplaceDlg.Owner=this;
+			SearchAndReplaceDlg.Owner = this;
 			SearchAndReplaceDlg.Show();
 		}
 
@@ -659,5 +676,5 @@ namespace D_IDE
 			SearchAndReplaceDlg.DoFindNext();
 		}
 	}
-	
+
 }

@@ -47,7 +47,7 @@ namespace D_IDE
 					l.Remove(openedFile);
 				l.Insert(0, openedFile);
 				while (l.Count > 10)
-					l.RemoveAt(10);
+					l.RemoveAt(l.Count-1);
 			}
 
 			/// <summary>
@@ -90,8 +90,8 @@ namespace D_IDE
 
 					foreach (var prj in sln)
 						if (prj != null && prj.LastOpenedFiles.Count > 0)
-						foreach (var fn in prj.LastOpenedFiles)
-							OpenFile(fn);
+						    foreach (var fn in prj.LastOpenedFiles)
+							    OpenFile(fn);
 
 					Instance.UpdateGUI();
 					Instance.MainWindow.Panel_ProjectExplorer.MainTree.ExpandAll();
@@ -144,8 +144,13 @@ namespace D_IDE
 							break;
 						}
 
-				// Check if file already open -- Allow only one open instance of a file!
+                // Make file path absolute
 				var absPath = _prj != null ? _prj.ToAbsoluteFileName(FileName) : FileName;
+
+                // Add file to recently used files
+                AdjustLastFileList(absPath, false);
+
+                // Check if file already open -- Allow only one open instance of a file!
 				foreach (var doc in Instance.MainWindow.DockManager.Documents)
 					if (doc is AbstractEditorDocument && (doc as AbstractEditorDocument).AbsoluteFilePath == absPath)
 					{
@@ -154,9 +159,6 @@ namespace D_IDE
 						IDEManager.Instance.MainWindow.DockManager.ActiveDocument = doc;
 						return doc as AbstractEditorDocument;
 					}
-
-				// Add file to recently used files
-				AdjustLastFileList(absPath, false);
 
 				EditorDocument newEd = null;
 

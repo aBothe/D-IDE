@@ -274,7 +274,7 @@ namespace D_IDE
 		{
 			try
 			{
-				Save(Path.Combine(IDEInterface.ConfigDirectory, MainSettingsFile));
+				Save(IDEInterface.ConfigDirectory+Path.DirectorySeparatorChar+ MainSettingsFile);
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
@@ -282,7 +282,9 @@ namespace D_IDE
 		{
 			if (String.IsNullOrEmpty(fn)) return;
 
-			var xw = new XmlTextWriter(fn, Encoding.UTF8);
+			var ms = new MemoryStream();
+
+			var xw = new XmlTextWriter(ms,Encoding.UTF8);
 			xw.WriteStartDocument();
 			xw.WriteStartElement("settings");
 
@@ -397,6 +399,17 @@ namespace D_IDE
 
 			xw.WriteEndDocument();
 			xw.Close();
+
+			try
+			{
+				if (File.Exists(fn))
+					File.Delete(fn);
+				File.WriteAllBytes(fn, ms.GetBuffer());
+			}
+			finally
+			{
+				ms.Close();
+			}
 		}
 		#endregion
 		public static GlobalProperties Instance=null;

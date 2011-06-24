@@ -129,7 +129,10 @@ namespace D_IDE.D.CodeCompletion
 				sw.WriteLine();
 				sw.Flush();
 			}
-			
+
+			if (File.Exists(outputLog))
+				File.Delete(outputLog);
+
 			File.WriteAllBytes(outputLog, ms.ToArray());
 			ms.Close();
 		}
