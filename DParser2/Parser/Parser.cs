@@ -367,7 +367,7 @@ namespace D_Parser.Parser
         DToken Step() { Lexer.NextToken(); Peek(1); return t; }
 
         [DebuggerStepThrough()]
-        public IAbstractSyntaxTree Parse()
+        public DModule Parse()
         {
             return Parse(false);
         }
@@ -378,7 +378,7 @@ namespace D_Parser.Parser
         /// <param name="imports">List of imports in the module</param>
         /// <param name="ParseStructureOnly">If true, all statements and non-declarations are ignored - useful for analysing libraries</param>
         /// <returns>Completely parsed module structure</returns>
-        public IAbstractSyntaxTree Parse(bool ParseStructureOnly)
+        public DModule Parse(bool ParseStructureOnly)
         {
             this.ParseStructureOnly = ParseStructureOnly;
             doc=Root();

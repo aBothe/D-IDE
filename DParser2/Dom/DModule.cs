@@ -77,7 +77,17 @@ namespace D_Parser.Dom
 
 			return ModuleName;
 		}
-	}
+
+        public bool ContainsImport(string p)
+        {
+            if (Imports != null)
+                foreach (var i in Imports)
+                    if (i.IsSimpleBinding && i.ModuleIdentifier == p)
+                        return true;
+
+            return false;
+        }
+    }
 
 	public class DBlockStatement : DNode, IBlockNode
 	{

@@ -31,14 +31,14 @@ namespace D_IDE.D
 		DIndentationStrategy indentationStrategy;
 		FoldingManager foldingManager;
 
-		IAbstractSyntaxTree _unboundTree;
-		public IAbstractSyntaxTree SyntaxTree { 
+		DModule _unboundTree;
+		public DModule SyntaxTree { 
 			get {
 				if (HasProject)
 				{
 					var prj = Project as DProject;
 					if(prj!=null)
-						return prj.ParsedModules[AbsoluteFilePath];
+						return prj.ParsedModules[AbsoluteFilePath] as DModule;
 				}
 
 				return _unboundTree;

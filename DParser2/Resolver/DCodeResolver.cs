@@ -29,7 +29,7 @@ namespace D_Parser.Resolver
 			 * Then add public members of the imported modules 
 			 */
 			var ret = new List<INode>();
-			var ImportCache = ResolveImports(ScopedBlock.NodeRoot as IAbstractSyntaxTree, CodeCache);
+			var ImportCache = ResolveImports(ScopedBlock.NodeRoot as DModule, CodeCache);
 
 			#region Current module/scope related members
 			var curScope = ScopedBlock;
@@ -197,49 +197,58 @@ namespace D_Parser.Resolver
 			 * will succeed because we have a closed import hierarchy in which all imports are public.
 			 * 
 			 */
+
+            /*
+             * Procedure:
+             * 
+             * 1) Take the imports of the current module
+             * 2) Add the respective modules
+             * 3) If that imported module got public imports, also make that module to the current one and repeat Step 1) recursively
+             * 
+             */
 			
-			var curMod=ActualModule;
+			foreach (var kv in ActualModule.Imports)
+				if (kv.IsSimpleBinding && !kv.IsStatic)
+				{
+					var impMod = SearchModuleInCache(CodeCache, kv.ModuleIdentifier) as DModule;
 
-			while (curMod!=null && curMod.Imports != null)
-				foreach (var kv in ActualModule.Imports)
-					if (kv.IsSimpleBinding && !kv.IsStatic)
+					if (impMod != null && !ret.Contains(impMod))
 					{
-						var impMod = SearchModuleInCache(CodeCache, kv.ModuleIdentifier);
+						ret.Add(impMod);
 
-						if (impMod != null && !ret.Contains(impMod))
-						{
-							ret.Add(impMod);
-
-							
-						}
-
+                        ScanForPublicImports(ret, impMod, CodeCache);
 					}
+
+				}
 
 			return ret;
 		}
 
-		public static void ResolveImports(List<IAbstractSyntaxTree> ImportModules,
-			IAbstractSyntaxTree ActualModule, IEnumerable<IAbstractSyntaxTree> CodeCache)
-		{
-			var localImps = new List<string>();
-			foreach (var kv in ActualModule.Imports)
-				if (kv.Value)
-					localImps.Add(kv.Key.ToString());
+        static void ScanForPublicImports(List<IAbstractSyntaxTree> ret, DModule currentlyWatchedImport, IEnumerable<IAbstractSyntaxTree> CodeCache)
+        {
+            if(currentlyWatchedImport!=null && currentlyWatchedImport.Imports!=null)
+                foreach (var kv2 in currentlyWatchedImport.Imports)
+                    if (kv2.IsSimpleBinding && !kv2.IsStatic && kv2.IsPublic)
+                    {
+                        var impMod2 = SearchModuleInCache(CodeCache, kv2.ModuleIdentifier) as DModule;
 
-			foreach (var m in CodeCache)
-				if (localImps.Contains(m.Name) && !ImportModules.Contains(m))
-				{
-					ImportModules.Add(m);
-					ResolveImports(ImportModules, m, CodeCache);
-				}
-		}
+                        if (impMod2 != null && !ret.Contains(impMod2))
+                        {
+                            ret.Add(impMod2);
+
+                            ScanForPublicImports(ret, impMod2, CodeCache);
+                        }
+
+                    }
+        }
 		#endregion
 
 		public static IAbstractSyntaxTree SearchModuleInCache(IEnumerable<IAbstractSyntaxTree> HayStack, string ModuleName)
 		{
 			foreach (var m in HayStack)
 			{
-				if (m.Name == ModuleName) return m;
+				if (m.Name == ModuleName) 
+                    return m;
 			}
 			return null;
 		}
