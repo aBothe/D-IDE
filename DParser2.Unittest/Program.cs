@@ -15,9 +15,9 @@ namespace ParserTests
         public static string curFile = "";
         public static void Main(string[] args)
         {
-			string input = @"auto a=""\1111"";";
+			string input = @"public{ import asdf;}";
 			
-			ParseTests.TestCode(input);
+			var n=ParseTests.TestCode(input);
 			
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);

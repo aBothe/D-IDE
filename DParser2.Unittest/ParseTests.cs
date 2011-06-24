@@ -28,7 +28,7 @@ namespace ParserTests
 			Dump(n, "");
 		}
 
-		public static void TestCode(string code)
+		public static IAbstractSyntaxTree TestCode(string code)
 		{
 			var hp = new HighPrecTimer();
 
@@ -39,6 +39,7 @@ namespace ParserTests
 
 			printErrors(n);
 			Dump(n, "");
+			return n;
 		}
 
 		public static void TestSourcePackages()

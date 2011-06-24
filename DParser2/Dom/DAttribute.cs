@@ -64,6 +64,21 @@ namespace D_Parser.Dom
 				HayStack.Push(i);
 		}
 
+		public static void RemoveFromStack(Stack<DAttribute> HayStack, int Token)
+		{
+			var l = new List<DAttribute>();
+
+			while (HayStack.Count > 0)
+			{
+				var attr = HayStack.Pop();
+				if (attr.Token!=Token)
+					l.Add(attr);
+			}
+
+			foreach (var i in l)
+				HayStack.Push(i);
+		}
+
 		public static bool ContainsAccessorAttribute(Stack<DAttribute> HayStack)
 		{
 			foreach (var i in HayStack)

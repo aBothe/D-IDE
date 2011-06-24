@@ -227,7 +227,7 @@ namespace D_Parser.Parser
 				while (DeclarationAttributes.Count > 0)
 					BlockAttributes.Push(DeclarationAttributes.Pop());
 
-				ClassBody(module);
+				ClassBody(module,true);
 
 				// After the block ended, restore the previous block attributes
 				BlockAttributes = AttrBackup;
@@ -293,8 +293,22 @@ namespace D_Parser.Parser
 
 		void ImportDeclaration()
 		{
-			bool IsPublic = DAttribute.ContainsAttribute(BlockAttributes, Public) || DAttribute.ContainsAttribute(DeclarationAttributes, Public);
-			bool IsStatic = DAttribute.ContainsAttribute(BlockAttributes, Static) || DAttribute.ContainsAttribute(DeclarationAttributes, Static);
+			bool IsPublic = DAttribute.ContainsAttribute(BlockAttributes, Public);
+
+			if (DAttribute.ContainsAttribute(DeclarationAttributes, Public))
+			{
+				DAttribute.CleanupAccessorAttributes(DeclarationAttributes);
+				IsPublic = true;
+			}
+
+			bool IsStatic = DAttribute.ContainsAttribute(BlockAttributes, Static);
+
+			if (DAttribute.ContainsAttribute(DeclarationAttributes, Static))
+			{
+				DAttribute.RemoveFromStack(DeclarationAttributes, Static);
+				IsStatic = true;
+			}
+
 			DeclarationAttributes.Clear();
 			CheckForDocComments();
 			Expect(Import);
@@ -1340,7 +1354,7 @@ namespace D_Parser.Parser
 			}
 
 			else if (la.Kind != Semicolon)
-				PushAttribute(attr, false);
+				PushAttribute(attr,false);
 		}
 		#endregion
 
@@ -2952,6 +2966,12 @@ namespace D_Parser.Parser
 			else if (la.Kind == (OpenCurlyBrace))
 				BlockStatement(par);
 
+			// D1: VolatileStatement
+			else if (la.Kind == Volatile)
+			{
+				Step();
+			}
+
 			else if (!(ClassLike[la.Kind] || la.Kind == Enum || Modifiers[la.Kind] || Attributes[la.Kind] || la.Kind == Alias || la.Kind == Typedef) && IsAssignExpression())
 			{
 				// a==b, a=9; is possible -> Expressions can be there, not only single AssignExpressions!
@@ -3091,7 +3111,7 @@ namespace D_Parser.Parser
 			return ret;
 		}
 
-		private void ClassBody(IBlockNode ret)
+		private void ClassBody(IBlockNode ret,bool KeepBlockAttributes=false)
 		{
 			if (String.IsNullOrEmpty(ret.Description))
 				ret.Description = GetComments();
@@ -3101,7 +3121,9 @@ namespace D_Parser.Parser
 			if (Expect(OpenCurlyBrace))
 			{
 				var stk_backup = BlockAttributes;
-				BlockAttributes = new Stack<DAttribute>();
+
+				if(!KeepBlockAttributes)
+					BlockAttributes = new Stack<DAttribute>();
 
 				ret.BlockStartLocation = t.Location;
 				while (!IsEOF && la.Kind != (CloseCurlyBrace))
@@ -3110,7 +3132,9 @@ namespace D_Parser.Parser
 				}
 				Expect(CloseCurlyBrace);
 				ret.EndLocation = t.EndLocation;
-				BlockAttributes = stk_backup;
+
+				if(!KeepBlockAttributes)
+					BlockAttributes = stk_backup;
 			}
 
 			PreviousComment = OldPreviousCommentString;

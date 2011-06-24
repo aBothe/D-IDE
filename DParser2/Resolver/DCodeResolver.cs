@@ -238,7 +238,6 @@ namespace D_Parser.Resolver
 
                             ScanForPublicImports(ret, impMod2, CodeCache);
                         }
-
                     }
         }
 		#endregion
