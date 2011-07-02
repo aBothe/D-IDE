@@ -47,7 +47,7 @@ namespace D_IDE
 				var absDir = Project.BaseDirectory + "\\" + relDir;
 				if (Directory.Exists(absDir) && Project.SubDirectories.Contains(relDir))
 				{
-					ErrorLogger.Log(new System.IO.IOException("Directory " + absDir + " already exists"));
+					MessageBox.Show("Directory " + absDir + " already exists","Error");
 					return false;
 				}
 
@@ -112,7 +112,7 @@ namespace D_IDE
 				// If project dir is a subdirectory of DirectoryPath, return false
 				if (Project.BaseDirectory.Contains(DirectoryPath) || DirectoryPath == Project.BaseDirectory)
 				{
-					ErrorLogger.Log(new Exception("Project's base directory is part of " + DirectoryPath + " - cannot add it"));
+					MessageBox.Show("Project's base directory is part of " + DirectoryPath + " - cannot add it","File addition error");
 					return false;
 				}
 
@@ -181,7 +181,7 @@ namespace D_IDE
 				var destDir_abs = Path.Combine(TargetProject.BaseDirectory, NewDir, Path.GetFileName(RelativeDir));
 				if (srcDir_abs == destDir_abs)
 				{
-					ErrorLogger.Log(new Exception("Source and destination are equal"));
+					MessageBox.Show("Source and destination are equal","File copying error");
 					return false;
 				}
 				return AddExistingDirectoryToProject(srcDir_abs.Trim('\\'), TargetProject, NewDir);

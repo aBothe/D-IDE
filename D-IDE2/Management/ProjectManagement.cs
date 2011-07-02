@@ -5,6 +5,7 @@ using System.Text;
 using D_IDE.Core;
 using System.IO;
 using Microsoft.Win32;
+using System.Windows;
 
 namespace D_IDE
 {
@@ -25,7 +26,7 @@ namespace D_IDE
 				var baseDir = BaseDir.Trim('\\', ' ', '\t') + "\\" + Util.PurifyDirName(Name);
 				if (Directory.Exists(baseDir))
 				{
-					ErrorLogger.Log(new Exception("Project directory exists already"));
+					MessageBox.Show("Project directory "+baseDir+" exists already","Project directory creation error");
 					return null;
 				}
 
@@ -90,7 +91,7 @@ namespace D_IDE
 				// a)
 				if (sln.ContainsProject(Projectfile))
 				{
-					ErrorLogger.Log(new ProjectException(sln[Projectfile], "Project already part of solution"));
+					MessageBox.Show("Project" + sln[Projectfile].Name + " is already part of solution "+sln.Name, "Project addition error");
 					return false;
 				}
 				// b)

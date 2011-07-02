@@ -48,9 +48,14 @@ namespace D_IDE.Core
 				prc.BeginErrorReadLine();
 				prc.BeginOutputReadLine();
 			}
+			catch (FileNotFoundException fex)
+			{
+				ErrorLogger.Log(Executable + " not found!\r\n\r\nArguments:\t" + Arguments + "\r\nStart Directory:\t" + StartDirectory, ErrorType.Error, ErrorOrigin.Build);
+				return null;
+			}
 			catch (Exception ex)
 			{
-				ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Build);
+				ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Build);
 				return null;
 			}
 			return prc;

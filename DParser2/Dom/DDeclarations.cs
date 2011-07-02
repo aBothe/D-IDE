@@ -127,7 +127,7 @@ namespace D_Parser.Dom
 
 		public override string ToString(bool IncludesBase)
         {
-            string ret = (IncludesBase? ReturnType.ToString():"") + (IsFunction ? " function" : " delegate") + "(";
+            string ret = (IncludesBase && ReturnType!=null? ReturnType.ToString():"") + (IsFunction ? " function" : " delegate") + "(";
 
             foreach (DVariable n in Parameters)
             {

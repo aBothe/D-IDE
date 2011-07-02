@@ -845,7 +845,9 @@ namespace D_Parser.Dom
 
 		public override string ToString()
 		{
-			return PostfixForeExpression.ToString() + "." + (TemplateOrIdentifier != null ? TemplateOrIdentifier.ToString() : NewExpression.ToString());
+			return PostfixForeExpression.ToString() + "." + 
+				(TemplateOrIdentifier != null ? TemplateOrIdentifier.ToString() : 
+				(NewExpression!=null? NewExpression.ToString(): ""));
 		}
 
 		public override CodeLocation EndLocation

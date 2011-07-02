@@ -380,7 +380,7 @@ namespace D_Parser.Parser
 
 			Expect(Identifier);
 			string imbBind = t.Value;
-			string imbBindDef = null;
+			string imbBindDef = "";
 
 			if (la.Kind == (Assign))
 			{
