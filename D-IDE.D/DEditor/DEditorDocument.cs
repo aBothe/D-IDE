@@ -209,7 +209,11 @@ namespace D_IDE.D
 			//CommandBindings.Add(new CommandBinding(IDEUICommands.ReformatDoc,ReformatFileCmd));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CommentBlock,CommentBlock));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock,UncommentBlock));
+		}
 
+		public override void Reload()
+		{
+			base.Reload();
 			Parse();
 		}
 

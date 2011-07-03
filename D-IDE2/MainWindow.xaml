@@ -8,7 +8,7 @@
 		Icon="d-ide.ico"
 		Width="1054" Height="852" MinWidth="640" MinHeight="480" 
 		xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock"
-		Closing="RibbonWindow_Closing" Loaded="RibbonWindow_Loaded">
+		Closing="RibbonWindow_Closing" Loaded="RibbonWindow_Loaded" Activated="RibbonWindow_Activated">
 	
 	<!-- UI Commands & shortcuts -->
 	
@@ -72,7 +72,7 @@
 				</r:RibbonApplicationMenu>
 			</r:Ribbon.ApplicationMenu>
 
-			<r:RibbonTab Header="Code" Name="Tab_Edit"  IsSelected="True">
+			<r:RibbonTab Header="Code" Name="Tab_Edit" IsSelected="True">
 				<r:RibbonGroup Header="Edit">
 					<r:RibbonButton SmallImageSource="Resources/Icons.16x16.CutIcon.png" Command="Cut" Label="Cut" />
 					<r:RibbonButton SmallImageSource="Resources/Icons.16x16.CopyIcon.png" Command="Copy" Label="Copy" />
@@ -94,6 +94,23 @@
 				<r:RibbonGroup Header="Breakpoints" >
 					<r:RibbonButton Command="d:IDEUICommands.ToggleBreakpoint" Label="Toggle Breakpoint" SmallImageSource="Resources/breakpoint.png" />
 					<r:RibbonButton Label="Refresh Breakpoints" Click="RefreshBreakpoints_Click" SmallImageSource="Resources/Icons.16x16.BrowserRefresh.png" />
+				</r:RibbonGroup>
+				
+				<r:RibbonGroup Header="Encoding">
+					<r:RibbonMenuButton Name="encoding_DropDown">
+						<r:RibbonMenuButton.ItemTemplate>
+							<DataTemplate>
+								<TextBlock MouseUp="encodingDropDown_MouseUp" Text="{Binding EncodingName}" />
+							</DataTemplate>
+						</r:RibbonMenuButton.ItemTemplate>
+					</r:RibbonMenuButton>
+					<!--<r:RibbonGallery Name="encoding_DropDownGallery">
+						<r:RibbonGallery.ItemTemplate>
+							<DataTemplate>
+								<TextBlock Text="{Binding EncodingName}" />
+							</DataTemplate>
+						</r:RibbonGallery.ItemTemplate>
+					</r:RibbonGallery>-->
 				</r:RibbonGroup>
 			</r:RibbonTab>
 

@@ -13,6 +13,7 @@ using System.Windows.Input;
 using D_IDE.Core.Controls;
 using System.Windows;
 using ICSharpCode.AvalonEdit.AddIn;
+using System.Text;
 
 namespace D_IDE.Core
 {
@@ -38,6 +39,7 @@ namespace D_IDE.Core
 			get { return Editor.IsReadOnly; }
 			set { Editor.IsReadOnly = true; }
 		}
+		DateTime lastWriteTime;
 		#endregion
 
 		public EditorDocument()
@@ -69,8 +71,11 @@ namespace D_IDE.Core
 			}
 			try
 			{
-				if(Modified)
+				if (Modified)
+				{
 					Editor.Save(AbsoluteFilePath);
+					lastWriteTime = File.GetLastWriteTimeUtc(AbsoluteFilePath);
+				}
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); return false; }
 			Modified = false;
@@ -80,10 +85,32 @@ namespace D_IDE.Core
 		public override void Reload()
 		{
 			if (File.Exists(AbsoluteFilePath))
+			{
+				var caretOffset = Editor.CaretOffset;
 				Editor.Load(AbsoluteFilePath);
+				if (Editor.Document.TextLength >= caretOffset)
+					Editor.CaretOffset = caretOffset;
+				lastWriteTime = File.GetLastWriteTimeUtc(AbsoluteFilePath);
+			}
 
 			UpdateSyntaxHighlighter();
+			
 			Modified = false;
+		}
+
+		public bool HasBeenModifiedOutside
+		{
+			get { return lastWriteTime != File.GetLastWriteTimeUtc(AbsoluteFilePath); }
+		}
+
+		public void DoOutsideModificationCheck()
+		{
+			if (HasBeenModifiedOutside)
+			{
+				var mbr = MessageBox.Show(CoreManager.Instance.MainWindow as Window,"Reload file?", "File has been modified", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
+				if (mbr == MessageBoxResult.Yes)
+					Reload();
+			}
 		}
 		#endregion
 
@@ -103,12 +130,14 @@ namespace D_IDE.Core
 				}
 			});
 
-
 			/*
 			 * HACK: To re-focus the editor when this document is activated (the user chose this document tab page)
 			 * , it's simply needed to catch the Loaded-Event which calls Focus on the editor instance then!
 			 */
-			Editor.Loaded += new RoutedEventHandler((object sender, RoutedEventArgs e)=> Editor.Focus() );
+			Editor.Loaded += new RoutedEventHandler((object sender, RoutedEventArgs e) => {
+				DoOutsideModificationCheck();
+				Editor.Focus(); 
+			});
 
 			CommandBindings.Add(new CommandBinding(ApplicationCommands.Save,Save_event));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.ToggleBreakpoint,ToggleBreakpoint_event));
@@ -121,24 +150,28 @@ namespace D_IDE.Core
 			Editor.Margin = new System.Windows.Thickness(0);
 			Editor.BorderBrush = null;
 
-			Reload();
+			// Init bracket hightlighter
+			bracketHightlighter = new BracketHighlightRenderer(Editor.TextArea.TextView);
 
 			Editor.ShowLineNumbers = true;
 			Editor.TextChanged += new EventHandler(Editor_TextChanged);
 			Editor.Document.LineCountChanged += new EventHandler(Document_LineCountChanged);
 
 			// Register Marker strategy
-			MarkerStrategy=new TextMarkerService(Editor);
+			MarkerStrategy = new TextMarkerService(Editor);
 
 			Editor.TextArea.MouseRightButtonDown += new System.Windows.Input.MouseButtonEventHandler(TextArea_MouseRightButtonDown);
+
+			// Make UTF-16 encoding default
+			Editor.Encoding = Encoding.Unicode;
+
+			// Load file contents if file path given
+			Reload();
 
 			// Initially draw all probably required text markers
 			RefreshErrorHighlightings();
 			RefreshBreakpointHighlightings();
 			RefreshDebugHighlightings();
-
-			// Init bracket hightlighter
-			bracketHightlighter = new BracketHighlightRenderer(Editor.TextArea.TextView);
 		}
 
 		void Save_event(object sender, RoutedEventArgs e)

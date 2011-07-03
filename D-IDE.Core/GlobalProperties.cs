@@ -599,6 +599,7 @@ namespace D_IDE
 			FontFamily = new FontFamily("Consolas");
 			Typeface = FontFamily.FamilyTypefaces[0];
 			FontSize = 13;
+			
 		}
 
 		void propChanged(string n)

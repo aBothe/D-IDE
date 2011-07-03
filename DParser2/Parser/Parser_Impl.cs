@@ -3016,7 +3016,7 @@ namespace D_Parser.Parser
 				SynErr(t.Kind, "union or struct required");
 			Step();
 
-			var ret = new DClassLike(t.Kind);
+			var ret = new DClassLike(t.Kind) { StartLocation=t.Location};
 			ApplyAttributes(ret);
 
 			// Allow anonymous structs&unions
@@ -3053,9 +3053,8 @@ namespace D_Parser.Parser
 		{
 			Expect(Class);
 
-			var dc = new DClassLike(Class);
+			var dc = new DClassLike(Class) { StartLocation = t.Location };
 			ApplyAttributes(dc);
-			dc.StartLocation = t.Location;
 
 			Expect(Identifier);
 			dc.Name = t.Value;
@@ -3143,10 +3142,11 @@ namespace D_Parser.Parser
 		INode Constructor(bool IsStruct)
 		{
 			Expect(This);
-			var dm = new DMethod();
-			dm.SpecialType = DMethod.MethodType.Constructor;
-			dm.StartLocation = t.Location;
-			dm.Name = "this";
+			var dm = new DMethod(){
+				SpecialType = DMethod.MethodType.Constructor,
+				StartLocation = t.Location,
+				Name = "this"
+			};
 
 			if (IsStruct && Lexer.CurrentPeekToken.Kind == (This) && la.Kind == (OpenParenthesis))
 			{
@@ -3250,7 +3250,7 @@ namespace D_Parser.Parser
 		{
 			Expect(Enum);
 
-			DEnum mye = new DEnum();
+			var mye = new DEnum();
 			mye.StartLocation = t.Location;
 			ApplyAttributes(mye);
 
@@ -3287,7 +3287,7 @@ namespace D_Parser.Parser
 			if (la.Kind == (Assign) || la.Kind == (Semicolon))
 			{
 			another_enumvalue:
-				DVariable enumVar = new DVariable();
+				var enumVar = new DVariable();
 				enumVar.Assign(mye);
 				enumVar.Attributes.Add(new DAttribute(Enum));
 				if (mye.Type != null)
@@ -3328,7 +3328,7 @@ namespace D_Parser.Parser
 
 					if (la.Kind == (CloseCurlyBrace)) break;
 
-					DEnumValue ev = new DEnumValue();
+					var ev = new DEnumValue();
 					ev.StartLocation = t.Location;
 					if (la.Kind == (Identifier) && (Lexer.CurrentPeekToken.Kind == (Assign) || Lexer.CurrentPeekToken.Kind == (Comma) || Lexer.CurrentPeekToken.Kind == (CloseCurlyBrace)))
 					{

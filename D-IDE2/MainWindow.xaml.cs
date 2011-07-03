@@ -13,6 +13,7 @@ using System.Threading;
 using AvalonDock;
 using D_IDE.Core.Controls;
 using System.Diagnostics;
+using System.Text;
 
 namespace D_IDE
 {
@@ -107,6 +108,11 @@ namespace D_IDE
 					Button_StepOver.IsEnabled =
 					IDEManager.IDEDebugManagement.IsDebugging;
 				Button_StopExecution.IsEnabled = IDEManager.IDEDebugManagement.IsExecuting;
+
+				if (encoding_DropDown.IsEnabled = IsEditable)
+					encoding_DropDown.Label = ed.Editor.Encoding.EncodingName;
+				else
+					encoding_DropDown.Label = "(No Encoding)";
 			}), this);
 		}
 
@@ -196,6 +202,8 @@ namespace D_IDE
 				}
 
 			RefreshGUI();
+			
+			encoding_DropDown.ItemsSource = new[] { Encoding.ASCII,Encoding.UTF8,Encoding.Unicode,Encoding.UTF32 };
 
 			if (args.Length > 0)
 				foreach (var a in args)
@@ -674,6 +682,28 @@ namespace D_IDE
 		private void FindNext_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
 			SearchAndReplaceDlg.DoFindNext();
+		}
+
+		private void encodingDropDown_MouseUp(object sender, MouseButtonEventArgs e)
+		{
+			var enc = (sender as FrameworkElement).DataContext as Encoding;
+
+			var ed = DockManager.ActiveDocument as EditorDocument;
+
+			if (ed == null)
+				return;
+
+			ed.Editor.Encoding = enc;
+			ed.Modified = true;
+			encoding_DropDown.Label = enc.EncodingName;
+		}
+
+		private void RibbonWindow_Activated(object sender, EventArgs e)
+		{
+			if (IDEManager.Instance.CurrentEditor is EditorDocument)
+			{
+				Dispatcher.BeginInvoke(new Action((IDEManager.Instance.CurrentEditor as EditorDocument).DoOutsideModificationCheck));
+			}
 		}
 	}
 
