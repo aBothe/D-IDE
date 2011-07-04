@@ -119,9 +119,10 @@ namespace D_IDE
 		#endregion
 
 		#region Initializer
+		SplashScreen splashScreen;
 		public MainWindow(string[] args)
 		{
-			var splashScreen = new SplashScreen("Resources/d-ide_256.png");
+			splashScreen = new SplashScreen("Resources/d-ide_256.png");
 			splashScreen.Show(false, true);
 
 			// Init Manager
@@ -132,22 +133,15 @@ namespace D_IDE
 			// Init logging support
 			ErrorLogger.Instance = new IDELogger(this);
 
-			try
-			{
-				// Apply window state & size
-				WindowState = GlobalProperties.Instance.lastFormState;
-				if (!GlobalProperties.Instance.lastFormSize.IsEmpty)
-				{
-					Width = GlobalProperties.Instance.lastFormSize.Width;
-					Height = GlobalProperties.Instance.lastFormSize.Height;
-				}
-
-				Ribbon.SelectedIndex = GlobalProperties.Instance.LastSelectedRibbonTab;
-			}
-			catch (Exception ex) { ErrorLogger.Log(ex); }
-
 			// Showing the window is required because the DockMgr has to init all panels first before being able to restore last layouts
 			Show();
+
+			// Load global settings
+			try
+			{
+				GlobalProperties.Init();
+			}
+			catch { }
 
 			#region Init panels and their layouts
 			Panel_Locals.Name = "LocalsPanel";
@@ -170,16 +164,24 @@ namespace D_IDE
 			RestoreDefaultPanelLayout();
 			#endregion
 
-			// Load layout
+			Dispatcher.BeginInvoke(new Action<string[]>(Init),(object)args);
+		}
+
+		void Init(string[] args)
+		{
 			try
 			{
-				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
-				// Exclude this call in develop (debug) time
-				if (//!System.Diagnostics.Debugger.IsAttached&&
-					File.Exists(layoutFile))
-					DockMgr.RestoreLayout(layoutFile);
+				// Apply window state & size
+				WindowState = GlobalProperties.Instance.lastFormState;
+				if (!GlobalProperties.Instance.lastFormSize.IsEmpty)
+				{
+					Width = GlobalProperties.Instance.lastFormSize.Width;
+					Height = GlobalProperties.Instance.lastFormSize.Height;
+				}
+
+				Ribbon.SelectedIndex = GlobalProperties.Instance.LastSelectedRibbonTab;
 			}
-			catch { }
+			catch (Exception ex) { ErrorLogger.Log(ex); }
 
 			// Load language bindings
 			LanguageLoader.Bindings.Add(new GenericFileBinding());
@@ -202,8 +204,8 @@ namespace D_IDE
 				}
 
 			RefreshGUI();
-			
-			encoding_DropDown.ItemsSource = new[] { Encoding.ASCII,Encoding.UTF8,Encoding.Unicode,Encoding.UTF32 };
+
+			encoding_DropDown.ItemsSource = new[] { Encoding.ASCII, Encoding.UTF8, Encoding.Unicode, Encoding.UTF32 };
 
 			if (args.Length > 0)
 				foreach (var a in args)
@@ -216,6 +218,16 @@ namespace D_IDE
 					if (File.Exists(GlobalProperties.Instance.LastProjects[0]))
 						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 				}
+
+			try
+			{
+				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
+				// Exclude this call in develop (debug) time
+				if (//!System.Diagnostics.Debugger.IsAttached&&
+					File.Exists(layoutFile))
+					DockMgr.RestoreLayout(layoutFile);
+			}
+			catch { }
 
 			splashScreen.Close(TimeSpan.FromSeconds(0.5));
 		}

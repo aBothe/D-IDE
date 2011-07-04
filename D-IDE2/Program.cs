@@ -35,13 +35,6 @@ namespace D_IDE
 
 		public Program()
 		{
-			try
-			{
-				// Load global settings
-				GlobalProperties.Init();
-			}
-			catch { }
-
 			IsSingleInstance = !GlobalProperties.AllowMultipleProgramInstances;
 		}
 
