@@ -686,33 +686,36 @@ namespace D_IDE.Controls.Panels
 		string _lastSelectedPath=null;
 		public void Update()
 		{
-			_IsRefreshing = true;
-			MainTree.BeginUpdate();
-			
-			SetupTreeIcons();
-
-			if (MainTree.SelectedNode != null)
+			Dispatcher.Invoke(new Action(() =>
 			{
-				var n = MainTree.SelectedNode as PrjExplorerNode;
-				_lastSelectedPath = n.AbsolutePath;
-			}
+				_IsRefreshing = true;
+				MainTree.BeginUpdate();
 
-			foreach (TreeNode n in MainTree.Nodes)
-				_CheckForExpansionStates(n, ref _ExpandedNodes);
+				SetupTreeIcons();
 
-			MainTree.Nodes.Clear();
+				if (MainTree.SelectedNode != null)
+				{
+					var n = MainTree.SelectedNode as PrjExplorerNode;
+					_lastSelectedPath = n.AbsolutePath;
+				}
 
-			if (IDEManager.CurrentSolution != null)
-				MainTree.Nodes.Add(new SolutionNode(IDEManager.CurrentSolution));
+				foreach (TreeNode n in MainTree.Nodes)
+					_CheckForExpansionStates(n, ref _ExpandedNodes);
 
-			foreach (TreeNode n in MainTree.Nodes)
-				_ApplyExpansionStates(n, _ExpandedNodes);
+				MainTree.Nodes.Clear();
 
-			MainTree.Sort();
+				if (IDEManager.CurrentSolution != null)
+					MainTree.Nodes.Add(new SolutionNode(IDEManager.CurrentSolution));
 
-			MainTree.EndUpdate();
-			_ExpandedNodes.Clear();
-			_IsRefreshing = false;
+				foreach (TreeNode n in MainTree.Nodes)
+					_ApplyExpansionStates(n, _ExpandedNodes);
+
+				MainTree.Sort();
+
+				MainTree.EndUpdate();
+				_ExpandedNodes.Clear();
+				_IsRefreshing = false;
+			}));
 		}
 
 		void _CheckForExpansionStates(TreeNode node, ref List<string> lst)

@@ -57,12 +57,15 @@ namespace D_IDE
 		}
 		public void RefreshTitle()
 		{
-			string appendix = "D-IDE " + System.Reflection.Assembly.GetCallingAssembly().GetName().Version.ToString(3);
+			Dispatcher.Invoke(new Action(() =>
+			{
+				string appendix = "D-IDE " + System.Reflection.Assembly.GetCallingAssembly().GetName().Version.ToString(3);
 
-			if (IDEManager.CurrentSolution != null)
-				Title = IDEManager.CurrentSolution.Name + " - " + appendix;
-			else
-				Title = appendix;
+				if (IDEManager.CurrentSolution != null)
+					Title = IDEManager.CurrentSolution.Name + " - " + appendix;
+				else
+					Title = appendix;
+			}));
 		}
 
 		public void ClearLog()
@@ -120,8 +123,10 @@ namespace D_IDE
 
 		#region Initializer
 		SplashScreen splashScreen;
+		string[] args;
 		public MainWindow(string[] args)
 		{
+			this.args = args;
 			splashScreen = new SplashScreen("Resources/d-ide_256.png");
 			splashScreen.Show(false, true);
 
@@ -164,11 +169,15 @@ namespace D_IDE
 			RestoreDefaultPanelLayout();
 			#endregion
 
-			Dispatcher.BeginInvoke(new Action<string[]>(Init),(object)args);
+			//Dispatcher.BeginInvoke(new Action<string[]>(Init),(object)args);
+
+			new Thread(Init).Start();
 		}
 
-		void Init(string[] args)
+		void Init()
 		{
+			Thread.CurrentThread.IsBackground = true;
+
 			try
 			{
 				// Apply window state & size
@@ -205,29 +214,44 @@ namespace D_IDE
 
 			RefreshGUI();
 
-			encoding_DropDown.ItemsSource = new[] { Encoding.ASCII, Encoding.UTF8, Encoding.Unicode, Encoding.UTF32 };
+			encoding_DropDown.Dispatcher.Invoke(new Action(()=>
+			encoding_DropDown.ItemsSource = new[] { Encoding.ASCII, Encoding.UTF8, Encoding.Unicode, Encoding.UTF32 }));
 
-			if (args.Length > 0)
-				foreach (var a in args)
-					IDEManager.EditingManagement.OpenFile(a);
-			else
+				if (args.Length > 0)
+					Dispatcher.Invoke(new Action(() =>{
+						foreach (var a in args)
+							IDEManager.EditingManagement.OpenFile(a);
+					}));
+				else
 
-				// Load last solution
-				if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
+					// Load last solution
+					if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
+					{
+						if (File.Exists(GlobalProperties.Instance.LastProjects[0]))
+							Dispatcher.Invoke(new Action(()=>
+							IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0])));
+					}
+
+				try
 				{
-					if (File.Exists(GlobalProperties.Instance.LastProjects[0]))
-						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
+					var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
+					// Exclude this call in develop (debug) time
+					if (//!System.Diagnostics.Debugger.IsAttached&&
+						File.Exists(layoutFile))
+					{
+						var fcontent = File.ReadAllText(layoutFile);
+						if (!string.IsNullOrWhiteSpace(fcontent))
+						{
+							var s = new StringReader(fcontent);
+							Dispatcher.Invoke(new Action(() =>
+							{
+								DockMgr.RestoreLayout(s);
+								s.Close();
+							}));
+						}
+					}
 				}
-
-			try
-			{
-				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
-				// Exclude this call in develop (debug) time
-				if (//!System.Diagnostics.Debugger.IsAttached&&
-					File.Exists(layoutFile))
-					DockMgr.RestoreLayout(layoutFile);
-			}
-			catch { }
+				catch { }
 
 			splashScreen.Close(TimeSpan.FromSeconds(0.5));
 		}
@@ -464,30 +488,33 @@ namespace D_IDE
 
 		public void UpdateLastFilesMenus()
 		{
-			Button_Open.Items.Clear();
+			Dispatcher.Invoke(new Action(() =>
+			{
+				Button_Open.Items.Clear();
 
-			var mi = new RibbonApplicationMenuItem();
-			mi.Header = "File/Project";
-			mi.ToolTipTitle = "Open File (Ctrl+O)";
-			mi.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri("Resources/OpenPH.png", UriKind.Relative));
-			mi.Click += Open;
-			Button_Open.Items.Add(mi);
+				var mi = new RibbonApplicationMenuItem();
+				mi.Header = "File/Project";
+				mi.ToolTipTitle = "Open File (Ctrl+O)";
+				mi.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri("Resources/OpenPH.png", UriKind.Relative));
+				mi.Click += Open;
+				Button_Open.Items.Add(mi);
 
-			// First add recent files
-			if (GlobalProperties.Instance.LastFiles.Count > 0 || GlobalProperties.Instance.LastProjects.Count > 0)
-				Button_Open.Items.Add(new RibbonSeparator());
+				// First add recent files
+				if (GlobalProperties.Instance.LastFiles.Count > 0 || GlobalProperties.Instance.LastProjects.Count > 0)
+					Button_Open.Items.Add(new RibbonSeparator());
 
-			foreach (var i in GlobalProperties.Instance.LastFiles)
-				Button_Open.Items.Add(new LastFileItem(i, false));
+				foreach (var i in GlobalProperties.Instance.LastFiles)
+					Button_Open.Items.Add(new LastFileItem(i, false));
 
-			// Then add recent projects
-			if (GlobalProperties.Instance.LastFiles.Count > 0 && GlobalProperties.Instance.LastProjects.Count > 0)
-				Button_Open.Items.Add(new RibbonSeparator());
+				// Then add recent projects
+				if (GlobalProperties.Instance.LastFiles.Count > 0 && GlobalProperties.Instance.LastProjects.Count > 0)
+					Button_Open.Items.Add(new RibbonSeparator());
 
-			foreach (var i in GlobalProperties.Instance.LastProjects)
-				Button_Open.Items.Add(new LastFileItem(i, true));
+				foreach (var i in GlobalProperties.Instance.LastProjects)
+					Button_Open.Items.Add(new LastFileItem(i, true));
 
-			StartPage.RefreshLastProjects();
+				StartPage.RefreshLastProjects();
+			}));
 		}
 
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
