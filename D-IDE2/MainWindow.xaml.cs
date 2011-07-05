@@ -59,7 +59,7 @@ namespace D_IDE
 		{
 			Dispatcher.Invoke(new Action(() =>
 			{
-				string appendix = "D-IDE " + System.Reflection.Assembly.GetCallingAssembly().GetName().Version.ToString(3);
+				string appendix = "D-IDE " + System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString(3);
 
 				if (IDEManager.CurrentSolution != null)
 					Title = IDEManager.CurrentSolution.Name + " - " + appendix;
@@ -138,15 +138,15 @@ namespace D_IDE
 			// Init logging support
 			ErrorLogger.Instance = new IDELogger(this);
 
-			// Showing the window is required because the DockMgr has to init all panels first before being able to restore last layouts
-			Show();
-
 			// Load global settings
 			try
 			{
 				GlobalProperties.Init();
 			}
 			catch { }
+
+			// Showing the window is required because the DockMgr has to init all panels first before being able to restore last layouts
+			Show();
 
 			#region Init panels and their layouts
 			Panel_Locals.Name = "LocalsPanel";
@@ -192,6 +192,24 @@ namespace D_IDE
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
+			try
+			{
+				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
+				// Exclude this call in develop (debug) time
+				if (//!System.Diagnostics.Debugger.IsAttached&&
+					File.Exists(layoutFile))
+				{
+					var fcontent = File.ReadAllText(layoutFile);
+					if (!string.IsNullOrWhiteSpace(fcontent))
+					{
+						var s = new StringReader(fcontent);
+						DockMgr.RestoreLayout(s);
+						s.Close();
+					}
+				}
+			}
+			catch { }
+
 			// Load language bindings
 			LanguageLoader.Bindings.Add(new GenericFileBinding());
 			try
@@ -212,8 +230,6 @@ namespace D_IDE
 					ErrorLogger.Log(ex);
 				}
 
-			RefreshGUI();
-
 			encoding_DropDown.Dispatcher.Invoke(new Action(()=>
 			encoding_DropDown.ItemsSource = new[] { Encoding.ASCII, Encoding.UTF8, Encoding.Unicode, Encoding.UTF32 }));
 
@@ -232,26 +248,7 @@ namespace D_IDE
 							IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0])));
 					}
 
-				try
-				{
-					var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
-					// Exclude this call in develop (debug) time
-					if (//!System.Diagnostics.Debugger.IsAttached&&
-						File.Exists(layoutFile))
-					{
-						var fcontent = File.ReadAllText(layoutFile);
-						if (!string.IsNullOrWhiteSpace(fcontent))
-						{
-							var s = new StringReader(fcontent);
-							Dispatcher.Invoke(new Action(() =>
-							{
-								DockMgr.RestoreLayout(s);
-								s.Close();
-							}));
-						}
-					}
-				}
-				catch { }
+				RefreshGUI();
 
 			splashScreen.Close(TimeSpan.FromSeconds(0.5));
 		}
