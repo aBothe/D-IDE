@@ -145,6 +145,20 @@ namespace D_IDE
 			}
 			catch { }
 
+			try
+			{
+				// Apply window state & size
+				WindowState = GlobalProperties.Instance.lastFormState;
+				if (!GlobalProperties.Instance.lastFormSize.IsEmpty)
+				{
+					Width = GlobalProperties.Instance.lastFormSize.Width;
+					Height = GlobalProperties.Instance.lastFormSize.Height;
+				}
+
+				Ribbon.SelectedIndex = GlobalProperties.Instance.LastSelectedRibbonTab;
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
+
 			// Showing the window is required because the DockMgr has to init all panels first before being able to restore last layouts
 			Show();
 
@@ -177,20 +191,6 @@ namespace D_IDE
 		void Init()
 		{
 			Thread.CurrentThread.IsBackground = true;
-
-			try
-			{
-				// Apply window state & size
-				WindowState = GlobalProperties.Instance.lastFormState;
-				if (!GlobalProperties.Instance.lastFormSize.IsEmpty)
-				{
-					Width = GlobalProperties.Instance.lastFormSize.Width;
-					Height = GlobalProperties.Instance.lastFormSize.Height;
-				}
-
-				Ribbon.SelectedIndex = GlobalProperties.Instance.LastSelectedRibbonTab;
-			}
-			catch (Exception ex) { ErrorLogger.Log(ex); }
 
 			try
 			{

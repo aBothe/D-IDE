@@ -43,7 +43,7 @@ Function .onInit
 	File "DIDE.Installer.dll"
 	
 	SetShellVarContext all
-	StrCpy $CONFIG_DIR "$APPDATA\D-IDE.config"
+	StrCpy $CONFIG_DIR "$DOCUMENTS\D-IDE.config"
 	StrCpy $IS_DOT_NET_FRESHLY_INSTALLED "N"
 	Call IsConnected
 	Pop $IS_CONNECTED
@@ -73,6 +73,10 @@ Function .onInstSuccess
     NoReboot:
 FunctionEnd
 
+Function launch_ide
+	ExecShell open "$INSTDIR\D-IDE.exe"
+FunctionEnd
+
 
 ;--------------------------------------------------------
 ; Modern UI Configuration
@@ -85,6 +89,10 @@ FunctionEnd
 !define MUI_HEADERIMAGE_BITMAP ".\d-ide-logo.bmp";
 !define MUI_ABORTWARNING
 !define MUI_UNABORTWARNING
+
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_FUNCTION launch_ide
+!define MUI_FINISHPAGE_RUN_TEXT "Launch D-IDE"
 
 ;Installer Pages
 !insertmacro MUI_PAGE_WELCOME

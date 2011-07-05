@@ -13,12 +13,8 @@ goto :x64
 	if "%MAKENSIS%"=="" set MAKENSIS=%PROGRAMFILES(X86)%\NSIS
 :done
 
-echo Build project...
-%DEVENV% "..\D-IDE2.sln"
+echo Build updater...
 %DEVENV% "..\D-IDE.Updater\D-IDE.Updater.sln"
-
-echo Make offline installer...
-"%MAKENSIS%\makensis.exe" ".\d-ide.std-install.nsi" > ".\installer_build.log"
 
 echo Make web installer...
 "%MAKENSIS%\makensis.exe" ".\d-ide.web-install.nsi" > ".\installer_build.log"

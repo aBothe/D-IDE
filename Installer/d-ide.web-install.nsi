@@ -16,6 +16,7 @@ OutFile ".\Builds\D-IDE2.web-install.exe"
 ; Install the D-IDE program files
 ;--------------------------------------------------------
 Section "-Install Program Files" install_section_id
+	AddSize 4000
 	CreateDirectory "$INSTDIR"
 	CreateDirectory "$CONFIG_DIR"	
 	SetOutPath "$INSTDIR"

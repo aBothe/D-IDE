@@ -26,7 +26,6 @@ Section "-Setup DMD Configuration" configuredmd_section_id
 		StrCmp $1 "" +2 0
 		DetailPrint $1
 		
-		MessageBox MB_OK "3"
 		StrCpy $0 "$TEMP\D.config.xml"
 		StrCpy $1 "$CONFIG_DIR\D.config.xml"
 		StrCpy $2 0 ; only 0 or 1, set 0 to overwrite file if it already exists
@@ -89,8 +88,9 @@ SectionEnd
 ;--------------------------------------------------------
 ; Install the Digital Mars D Compiler
 ;--------------------------------------------------------
-Section "Digital Mars D Compiler" dmd_section_id
+Section "!Digital Mars D Compiler" dmd_section_id
 	
+	AddSize 10000
 	DetailPrint "Downloading the DMD Web Installer from Digital Mars."
 	StrCpy $2 "$TEMP\dmd-installer.${FILEDATE}.exe"
 	NSISdl::download "${DMD_URL}" $2
@@ -98,17 +98,13 @@ Section "Digital Mars D Compiler" dmd_section_id
 	
 SectionEnd
 
-;--------------------------------------------------------
-; Launch Program After Install with popup dialog
-;--------------------------------------------------------
-;Section /o "Launch D-IDE"
-Section  "Launch D-IDE"
-	StrCmp $IS_DOT_NET_FRESHLY_INSTALLED "Y" SkipLaunch LaunchApp 
-			
-	LaunchApp:
-		ExecShell open "$INSTDIR\D-IDE.exe"
+;-----
+; File Associations
+;-----
+Section "Associate D files to D-IDE" fileAssoc_section_id
 	
-	SkipLaunch:
+	DetailPrint "Create file associations"
+	
 SectionEnd
 
 ;--------------------------------------------------------
