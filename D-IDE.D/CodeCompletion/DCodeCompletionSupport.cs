@@ -42,7 +42,7 @@ namespace D_IDE.D
 
 		public static bool CanItemBeShownGenerally(DNode dn)
 		{
-			if (dn.Name == null || dn.Name == "")
+			if (string.IsNullOrWhiteSpace(dn.Name))
 				return false;
 
 			if (dn is DMethod)
@@ -117,15 +117,8 @@ namespace D_IDE.D
 			if(listedItems!=null)
 				foreach (var i in listedItems)
 				{
-					// Skip on unit tests or static c(d)tors
-					if (i is DMethod)
-					{
-						var dm = i as DMethod;
-
-						if (!CanItemBeShownGenerally(dm) && dm.IsStatic)
-							continue;
-						}
-					l.Add(new DCompletionData(i));
+					if(CanItemBeShownGenerally(i as DNode)/* && dm.IsStatic*/)
+						l.Add(new DCompletionData(i));
 				}
 		}
 
