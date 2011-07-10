@@ -270,31 +270,42 @@ namespace D_IDE.D
 		#region Code operations
 		void CommentBlock(object s, ExecutedRoutedEventArgs e)
 		{
-			if (Editor.SelectionLength<1)
+			if (false)
 			{
-				Editor.Document.Insert(Editor.Document.GetOffset(Editor.TextArea.Caret.Line,0),"//");
+				int cOff=Editor.CaretOffset;
+				Editor.Text=Commenting.comment(Editor.Text,Editor.SelectionStart,Editor.SelectionStart+Editor.SelectionLength);
+				Editor.CaretOffset=cOff;
+				var loc=Editor.Document.GetLocation(cOff);
+				Editor.ScrollTo(loc.Line,loc.Column);
 			}
 			else
 			{
-				Editor.Document.UndoStack.StartUndoGroup();
-
-				bool a, b, IsInBlock, IsInNested;
-				DCodeResolver.Commenting.IsInCommentAreaOrString(Editor.Text,Editor.SelectionStart, out a, out b, out IsInBlock, out IsInNested);
-
-				if (!IsInBlock && !IsInNested)
+				if (Editor.SelectionLength < 1)
 				{
-					Editor.Document.Insert(Editor.SelectionStart+Editor.SelectionLength, "*/");
-					Editor.Document.Insert(Editor.SelectionStart, "/*");
+					Editor.Document.Insert(Editor.Document.GetOffset(Editor.TextArea.Caret.Line, 0), "//");
 				}
 				else
 				{
-					Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "+/");
-					Editor.Document.Insert(Editor.SelectionStart, "/+");
+					Editor.Document.UndoStack.StartUndoGroup();
+
+					bool a, b, IsInBlock, IsInNested;
+					DCodeResolver.Commenting.IsInCommentAreaOrString(Editor.Text, Editor.SelectionStart, out a, out b, out IsInBlock, out IsInNested);
+
+					if (!IsInBlock && !IsInNested)
+					{
+						Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "*/");
+						Editor.Document.Insert(Editor.SelectionStart, "/*");
+					}
+					else
+					{
+						Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "+/");
+						Editor.Document.Insert(Editor.SelectionStart, "/+");
+					}
+
+					Editor.SelectionLength -= 2;
+
+					Editor.Document.UndoStack.EndUndoGroup();
 				}
-
-				Editor.SelectionLength -= 2;
-
-				Editor.Document.UndoStack.EndUndoGroup();
 			}
 		}
 

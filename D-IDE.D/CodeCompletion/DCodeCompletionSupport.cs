@@ -333,13 +333,15 @@ namespace D_IDE.D
 			{
 				var caretLoc = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
 				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
-					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLoc),DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument)),true);
+					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLoc),DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument)),true,true);
 				
 				string tt = "";
 
 				//TODO: Build well-formatted tool tip string / Do a better tool tip layout
 				foreach (var res in rr)
-					tt += res.ToString()+"\r\n";
+				{
+					tt += (res is ModuleResult?(res as ModuleResult).ResolvedModule.FileName: res.ToString()) + "\r\n";
+				}
 
 				tt = tt.Trim();
 				if(!string.IsNullOrEmpty(tt))

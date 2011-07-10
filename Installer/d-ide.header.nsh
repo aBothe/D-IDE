@@ -41,7 +41,7 @@ Function .onInit
 
 	SetOutPath $PLUGINSDIR
 	File "DIDE.Installer.dll"
-	
+
 	SetShellVarContext all
 	StrCpy $CONFIG_DIR "$DOCUMENTS\D-IDE.config"
 	StrCpy $IS_DOT_NET_FRESHLY_INSTALLED "N"
