@@ -67,5 +67,14 @@ namespace D_IDE.Dialogs.SettingsPages
 			if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 				tb_PrjRepo.Text = dlg.SelectedPath;
 		}
+
+		Page_FileAssociations fassoc = new Page_FileAssociations();
+		public override IEnumerable<AbstractSettingsPage> SubCategories
+		{
+			get
+			{
+				yield return fassoc;
+			}
+		}
 	}
 }

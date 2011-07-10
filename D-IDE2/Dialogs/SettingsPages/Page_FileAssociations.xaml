@@ -1,0 +1,23 @@
+﻿<AbstractSettingsPage xmlns="clr-namespace:D_IDE.Core;assembly=d-ide.core" x:Class="D_IDE.Dialogs.SettingsPages.Page_FileAssociations"
+             xmlns:w="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="210" d:DesignWidth="624" Background="White">
+	<w:Grid Name="stackPanel1">
+		<w:GroupBox Header="File Associations">
+			<w:Grid>
+				<w:TextBlock Height="30" VerticalAlignment="Top" Padding="0" Margin="6,6,6,0" Text="In order to be able to affect the System's registry values, D-IDE must be launched with administrator rights!" IsHyphenationEnabled="True" TextWrapping="Wrap" />
+				<w:TextBlock Height="15" HorizontalAlignment="Left" Margin="6,42,0,0" Text="Associate D-IDE with the following file extensions:" VerticalAlignment="Top" />
+				<w:ListBox HorizontalAlignment="Left" Margin="6,63,0,6" Width="263" Name="List_FileExtensionAssociations">
+					<w:ListBox.ItemTemplate>
+						<w:DataTemplate>
+							<w:CheckBox Name="CheckBoxZone" Content="{w:Binding Description}" IsChecked="{w:Binding IsAssociated, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0"/>
+						</w:DataTemplate>
+					</w:ListBox.ItemTemplate>
+				</w:ListBox>
+			</w:Grid>
+		</w:GroupBox>
+	</w:Grid>
+</AbstractSettingsPage>

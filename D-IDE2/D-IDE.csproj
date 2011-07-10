@@ -150,6 +150,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Dialogs\SettingsPages\Page_FileAssociations.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Dialogs\SettingsPages\Page_General_Prj.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -210,6 +214,9 @@
     <Compile Include="Dialogs\SearchAndReplaceDlg.xaml.cs">
       <DependentUpon>SearchAndReplaceDlg.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\SettingsPages\Page_FileAssociations.xaml.cs">
+      <DependentUpon>Page_FileAssociations.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\SettingsPages\Page_General_Prj.xaml.cs">
       <DependentUpon>Page_General_Prj.xaml</DependentUpon>
     </Compile>
@@ -228,6 +235,14 @@
     <Compile Include="GenericFileBinding.cs" />
     <Compile Include="Management\FileSearchManagement.cs" />
     <Compile Include="Management\IDEDebugManagement.cs" />
+    <Compile Include="Misc\FileAssociation\AssociationManager.cs" />
+    <Compile Include="Misc\FileAssociation\FileAssociationInfo.cs" />
+    <Compile Include="Misc\FileAssociation\ProgramAssociationInfo.cs" />
+    <Compile Include="Misc\FileAssociation\ProgramIcon.cs" />
+    <Compile Include="Misc\FileAssociation\ProgramVerb.cs" />
+    <Compile Include="Misc\FileAssociation\RegistryException.cs" />
+    <Compile Include="Misc\FileAssociation\RegistryWrapper.cs" />
+    <Compile Include="Misc\FileAssociation\ShellNotification.cs" />
     <Compile Include="Misc\IDEUtil.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
