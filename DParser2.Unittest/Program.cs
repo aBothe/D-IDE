@@ -15,7 +15,12 @@ namespace ParserTests
         public static string curFile = "";
         public static void Main(string[] args)
         {
-			string input = @"public{ import asdf;}";
+			string input = 
+@"void main(){
+pragma(msg, softDeprec!(""2.054"", ""August 2011"", ""listDir"", ""dirEntries""));
+import std.regexp;
+auto result = appender!(string[])();
+}";
 			
 			var n=ParseTests.TestCode(input);
 			

@@ -6,12 +6,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 						   Background="White"
              mc:Ignorable="d" 
-             d:DesignHeight="212" d:DesignWidth="727">
+             d:DesignHeight="242" d:DesignWidth="576">
     <Grid>
 		<Label Content="D Library Paths" Height="22" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Padding="3" Width="107" />
 		<Button Content="Add" Height="23" HorizontalAlignment="Left" Margin="125,12,0,0" Name="button_AddDir" VerticalAlignment="Top" Width="50" Click="button_AddDir_Click" />
 		<Button Content="Delete" Height="23" HorizontalAlignment="Left" Margin="181,12,0,0" Name="button_DelDir" VerticalAlignment="Top" Width="50" Click="button_DelDir_Click" />
-		<ListView  Margin="125,41,12,12" Name="list_Dirs" SelectionMode="Multiple">
+		<ListView  Margin="125,41,12,57" Name="list_Dirs" SelectionMode="Multiple">
 			<ListView.View>
 				<GridView>
 					<GridViewColumn Header="Directory" DisplayMemberBinding="{Binding BaseDirectory}" Width="250"/>
@@ -20,5 +20,6 @@
 			</ListView.View>
 		</ListView>
 		<Button Content="Reparse directories" Height="23" HorizontalAlignment="Left" Margin="250,12,0,0" Name="button_Reparse" VerticalAlignment="Top" Width="141" ToolTip="Click to update the internal code completion database. Therefore, all the directories from below will be scanned and analyzed." Click="button_Reparse_Click" />
+		<TextBlock Margin="125,0,12,12" Text="All D files (*.d;*.di) in these library directories will be analyzed and used for the code completion." TextWrapping="Wrap" Height="39" VerticalAlignment="Bottom" />
 	</Grid>
 </core:AbstractSettingsPage>

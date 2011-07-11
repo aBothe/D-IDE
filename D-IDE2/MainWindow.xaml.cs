@@ -186,6 +186,13 @@ namespace D_IDE
 			//Dispatcher.BeginInvoke(new Action<string[]>(Init),(object)args);
 
 			new Thread(Init).Start();
+
+			if (GlobalProperties.Instance.IsFirstTimeStart)
+			{
+				splashScreen.Close(TimeSpan.FromSeconds( 0));
+				if (MessageBox.Show("D-IDE seems to be launched for the first time. Start configuration now?", "First time startup", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+					new GlobalSettingsDlg() { Owner = this }.ShowDialog();
+			}
 		}
 
 		void Init()
@@ -230,25 +237,26 @@ namespace D_IDE
 					ErrorLogger.Log(ex);
 				}
 
-			encoding_DropDown.Dispatcher.Invoke(new Action(()=>
+			encoding_DropDown.Dispatcher.Invoke(new Action(() =>
 			encoding_DropDown.ItemsSource = new[] { Encoding.ASCII, Encoding.UTF8, Encoding.Unicode, Encoding.UTF32 }));
 
-				if (args.Length > 0)
-					Dispatcher.Invoke(new Action(() =>{
-						foreach (var a in args)
-							IDEManager.EditingManagement.OpenFile(a);
-					}));
-				else
+			if (args.Length > 0)
+				Dispatcher.Invoke(new Action(() =>
+				{
+					foreach (var a in args)
+						IDEManager.EditingManagement.OpenFile(a);
+				}));
+			else
 
-					// Load last solution
-					if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
-					{
-						if (File.Exists(GlobalProperties.Instance.LastProjects[0]))
-							Dispatcher.Invoke(new Action(()=>
-							IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0])));
-					}
+				// Load last solution
+				if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
+				{
+					if (File.Exists(GlobalProperties.Instance.LastProjects[0]))
+						Dispatcher.Invoke(new Action(() =>
+						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0])));
+				}
 
-				RefreshGUI();
+			RefreshGUI();
 
 			splashScreen.Close(TimeSpan.FromSeconds(0.5));
 		}

@@ -2972,6 +2972,10 @@ namespace D_Parser.Parser
 				Step();
 			}
 
+			// ImportDeclaration
+			else if (la.Kind == Import)
+				ImportDeclaration();
+
 			else if (!(ClassLike[la.Kind] || la.Kind == Enum || Modifiers[la.Kind] || Attributes[la.Kind] || la.Kind == Alias || la.Kind == Typedef) && IsAssignExpression())
 			{
 				// a==b, a=9; is possible -> Expressions can be there, not only single AssignExpressions!

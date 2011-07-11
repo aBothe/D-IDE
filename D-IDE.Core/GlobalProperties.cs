@@ -44,13 +44,13 @@ namespace D_IDE
 		}
 		public static GlobalProperties Load(string fn)
 		{
-			if (!File.Exists(fn)) return null;
+			if (!File.Exists(fn)) { return new GlobalProperties() { IsFirstTimeStart=true }; }
 
             try
             {
-                Stream stream = File.Open(fn, FileMode.Open);
+                var stream = File.Open(fn, FileMode.Open);
 
-                XmlTextReader xr = new XmlTextReader(stream);
+                var xr = new XmlTextReader(stream);
                 var p = new GlobalProperties();
 
                 while (xr.Read())// now 'settings' should be the current node
@@ -60,6 +60,10 @@ namespace D_IDE
                         switch (xr.LocalName)
                         {
                             default: break;
+
+							case "firstTime":
+								p.IsFirstTimeStart = true;
+								break;
 
 							case "CommonEditorSettings":
 								CommonEditorSettings.Instance.LoadFromXml(xr.ReadSubtree());
@@ -461,6 +465,8 @@ namespace D_IDE
 					File.Delete(MultipleInstanceFlagFile);
 			}
 		}
+
+		public bool IsFirstTimeStart = false;
 
 		public int LastSelectedRibbonTab = 0;
 
