@@ -76,5 +76,10 @@ namespace D_IDE.Dialogs.SettingsPages
 				yield return fassoc;
 			}
 		}
+
+		private void button_ShowCfgDir_Click(object sender, RoutedEventArgs e)
+		{
+			System.Diagnostics.Process.Start("explorer",IDEInterface.ConfigDirectory);
+		}
 	}
 }
