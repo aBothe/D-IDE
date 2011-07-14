@@ -42,7 +42,7 @@ namespace D_IDE.D
 
 		public static bool CanItemBeShownGenerally(DNode dn)
 		{
-			if (string.IsNullOrWhiteSpace(dn.Name))
+			if (dn==null || string.IsNullOrWhiteSpace(dn.Name))
 				return false;
 
 			if (dn is DMethod)
