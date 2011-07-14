@@ -136,7 +136,7 @@ namespace D_IDE.D
 			if (TempPrc != null && !TempPrc.HasExited)
 				TempPrc.WaitForExit(10000);
 
-			br.Successful = br.Successful && TempPrc.ExitCode==0 && File.Exists(obj);
+			br.Successful = br.Successful && TempPrc!=null && TempPrc.ExitCode==0 && File.Exists(obj);
 			return br;
 		}
 

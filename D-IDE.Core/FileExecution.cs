@@ -20,7 +20,13 @@ namespace D_IDE.Core
 			DataReceivedEvent OnOutput, DataReceivedEvent OnError, ProcessExitedEvent OnExit)
 		{
 			if (GlobalProperties.Instance.VerboseBuildOutput)
-				ErrorLogger.Log(Executable + " " + Arguments,ErrorType.Error,ErrorOrigin.Build);
+				ErrorLogger.Log(Executable + " " + Arguments,ErrorType.Message,ErrorOrigin.Build);
+
+			if (!File.Exists(Executable))
+			{
+				ErrorLogger.Log(Executable + " not found!",ErrorType.Error,ErrorOrigin.Build);
+				return null;
+			}
 
 			var psi = new ProcessStartInfo(Executable, Arguments) { 
 				WorkingDirectory=StartDirectory,
@@ -47,11 +53,6 @@ namespace D_IDE.Core
 				prc.Start();
 				prc.BeginErrorReadLine();
 				prc.BeginOutputReadLine();
-			}
-			catch (FileNotFoundException fex)
-			{
-				ErrorLogger.Log(Executable + " not found!\r\n\r\nArguments:\t" + Arguments + "\r\nStart Directory:\t" + StartDirectory, ErrorType.Error, ErrorOrigin.Build);
-				return null;
 			}
 			catch (Exception ex)
 			{
