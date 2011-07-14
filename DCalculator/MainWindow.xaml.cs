@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using D_Parser.Parser;
+using D_Parser.Dom;
 
 namespace DCalculator
 {
@@ -29,12 +30,20 @@ namespace DCalculator
 
 		public void Calc()
 		{
-			var expr = DParser.ParseExpression(text_input.Text);
-
-			if (expr == null || !expr.IsConstant)
+			IExpression expr = null;
+			try
 			{
-				text_result.Text = "[Not a mathematical expression!]";
-				return;
+				expr = DParser.ParseExpression(text_input.Text);
+
+				if (expr == null || !expr.IsConstant)
+				{
+					text_result.Text = "[Not a mathematical expression!]";
+					return;
+				}
+			}
+			catch (Exception ex)
+			{
+				text_result.Text = "[Expression parsing error | "+ex.Message+"]";
 			}
 
 			try
@@ -43,7 +52,7 @@ namespace DCalculator
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(ex.Message);
+				text_result.Text = "["+ex.Message + "]";
 			}
 		}
 
