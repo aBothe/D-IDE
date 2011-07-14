@@ -296,7 +296,8 @@ namespace D_IDE.D
 
 		static void OnOutput(string s)
 		{
-			ErrorLogger.Log(s,ErrorType.Message,ErrorOrigin.Build);
+			if(!GlobalProperties.Instance.VerboseBuildOutput)
+				ErrorLogger.Log(s,ErrorType.Message,ErrorOrigin.Build);
 		}
 
 		public static BuildError ParseErrorMessage(string s)
