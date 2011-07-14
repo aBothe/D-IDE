@@ -38,13 +38,25 @@ namespace D_IDE.Core
 
 			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=true};
 			prc.ErrorDataReceived += delegate(object s, DataReceivedEventArgs e) {
-				if (!string.IsNullOrEmpty(e.Data) && OnError != null)
-					OnError(e.Data);
+				if (!string.IsNullOrEmpty(e.Data))
+				{ 
+					if(GlobalProperties.Instance.VerboseBuildOutput)
+						ErrorLogger.Log(e.Data,ErrorType.Warning,ErrorOrigin.Build);
+
+					if(OnError != null)
+						OnError(e.Data);
+				}
 			};
 			prc.OutputDataReceived += delegate(object s, DataReceivedEventArgs e)
 			{
-				if (!string.IsNullOrEmpty(e.Data) && OnOutput != null)
-					OnOutput(e.Data);
+				if (!string.IsNullOrEmpty(e.Data))
+				{
+					if(GlobalProperties.Instance.VerboseBuildOutput)
+						ErrorLogger.Log(e.Data,ErrorType.Message,ErrorOrigin.Build);
+
+					if(OnOutput != null)
+						OnOutput(e.Data);
+				}
 			};
 			prc.Exited +=new EventHandler( delegate(object s, EventArgs e) { if (OnExit != null) OnExit(); });
 

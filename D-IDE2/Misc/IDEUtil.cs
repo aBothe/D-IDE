@@ -88,7 +88,7 @@ namespace D_IDE
 
 	public class IDELogger : ErrorLogger
 	{
-		const string ReportContributionUrl = "http://d-ide.sourceforge.net/contrib_error.php";
+		const string ReportContributionUrl = "http://d-ide.sf.net/contrib_error.php";
 
 		readonly MainWindow Owner;
 		public IDELogger(MainWindow Owner)
@@ -112,9 +112,9 @@ namespace D_IDE
 				wc.UploadValues(new Uri(ReportContributionUrl), "POST", nvc);
 				MessageBox.Show("Report uploaded!");
 			}
-			catch
+			catch(Exception ex)
 			{
-				MessageBox.Show("Error occurred while trying to send error report...And yes, I know that it sounds stupid ;-)");
+				MessageBox.Show("Error occurred while trying to send error report - And yes, I know that it sounds stupid:\r\n\r\n"+ex);
 			}
 		}
 

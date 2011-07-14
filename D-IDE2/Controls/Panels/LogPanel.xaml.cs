@@ -63,7 +63,7 @@ namespace D_IDE.Controls.Panels
 			var tm = new TextMarker(tms,beginOffset,true);
 			
 			tm.MarkerType = TextMarkerType.None;
-			tm.ForegroundColor = type==ErrorType.Error? Colors.Red:Colors.Yellow;
+			tm.ForegroundColor = type==ErrorType.Error? Colors.Red:Colors.OrangeRed;
 
 			tms.Add(tm);
 			tm.Redraw();
@@ -77,7 +77,7 @@ namespace D_IDE.Controls.Panels
 			if(errorType!=ErrorType.Message)
 				s = "> ("+DateTime.Now.ToLongTimeString()+") "+s;
 			TextEditor editor=null;
-			LogTab selTab = LogTab.System;
+			var selTab = LogTab.System;
 			TextMarkerService tms = null ;
 			switch (origin)
 			{
