@@ -1,0 +1,11 @@
+﻿<Window x:Class="DCalculator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Mathematical Expression Calculator" Height="108" Width="497" ResizeMode="CanMinimize" Icon="/DCalculator;component/calc.ico">
+    <Grid>
+		<TextBox Height="23" Margin="82,12,12,0" Name="text_input" VerticalAlignment="Top" TextChanged="text_input_TextChanged" />
+		<TextBox Height="23" Margin="82,41,12,0" Name="text_result" VerticalAlignment="Top" IsReadOnly="True" />
+		<TextBlock Height="15" HorizontalAlignment="Left" Margin="12,44,0,0" Name="textBlock1" Text="Result:" VerticalAlignment="Top" Width="64" />
+		<TextBlock Height="15" HorizontalAlignment="Left" Margin="12,15,0,0" Name="textBlock2" Text="Expression:" VerticalAlignment="Top" Width="64" />
+	</Grid>
+</Window>

@@ -80,6 +80,20 @@ namespace ParserTests
 			return ex;
 		}
 
+		public static decimal TestMathExpression(string mathExpression)
+		{
+			var ex = DParser.ParseExpression(mathExpression);
+
+			if (ex == null || !ex.IsConstant)
+			{
+				Console.WriteLine("\""+mathExpression+"\" not a mathematical expression!");
+				return 0;
+			}
+
+			Console.WriteLine(ex.ToString()+" = "+ex.DecValue);
+			return ex.DecValue;
+		}
+
 		public static void TestTypeEval(string e)
 		{
 			var ex = DParser.ParseExpression(e);

@@ -16,20 +16,16 @@ namespace ParserTests
         public static void Main(string[] args)
         {
 			string input = 
-@"void main(){
-pragma(msg, softDeprec!(""2.054"", ""August 2011"", ""listDir"", ""dirEntries""));
-import std.regexp;
-auto result = appender!(string[])();
-}";
+@"2+2";
 			
-			var n=ParseTests.TestCode(input);
+			ParseTests.TestMathExpression(input);
 			
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);
 
 			Console.ReadKey();
 
-			return;
+			//return;
 			while (true)
 			{
 				input = Console.ReadLine();
@@ -39,7 +35,7 @@ auto result = appender!(string[])();
 
 				var code = input;
 
-				ParseTests.TestTypeEval(code);
+				ParseTests.TestMathExpression(code);
 			}
         }
     }
