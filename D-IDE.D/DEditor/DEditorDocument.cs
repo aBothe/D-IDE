@@ -807,6 +807,9 @@ namespace D_IDE.D
 
 			else if (/*e.Text == "," ||*/ e.Text == "(")
 				ShowInsightWindow(e.Text);
+
+			else if (e.Text == ")" && insightWindow!=null && insightWindow.IsLoaded)
+				insightWindow.Close();
 		}
 		#endregion
 

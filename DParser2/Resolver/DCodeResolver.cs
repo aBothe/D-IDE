@@ -851,14 +851,13 @@ namespace D_Parser.Resolver
 		{
 			// First step: Search the method's call start offset
 
-			int startOffset = ReverseParsing.SearchExpressionStart(code,caret);
+			int startOffset = ReverseParsing.SearchExpressionStart(code,caret-1);
 
 			if (startOffset < 0)
 				return null;
 
 			// Check if it's a method declaration - return null if so
-			if (IsTypeIdentifier(code, startOffset-1))
-				return null;
+			//if (IsTypeIdentifier(code, startOffset-1))	return null;
 
 			// Parse the expression
 			var e = DParser.ParseExpression(code.Substring(startOffset,caret-startOffset));
