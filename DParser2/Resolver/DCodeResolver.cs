@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using D_Parser.Parser;
 using D_Parser.Dom.Expressions;
+using D_Parser.Dom.Statements;
 
 namespace D_Parser.Resolver
 {
@@ -21,7 +22,7 @@ namespace D_Parser.Resolver
 		/// <param name="ScopedBlock"></param>
 		/// <param name="ImportCache"></param>
 		/// <returns></returns>
-		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock, IEnumerable<IAbstractSyntaxTree> CodeCache)
+		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock, CodeLocation Caret, IEnumerable<IAbstractSyntaxTree> CodeCache)
 		{
 			/* First walk through the current scope.
 			 * Walk up the node hierarchy and add all their items (private as well as public members).
@@ -84,12 +85,16 @@ namespace D_Parser.Resolver
 					if (dm.TemplateParameters != null)
 						ret.AddRange(dm.TemplateParameterNodes as IEnumerable<INode>);
 
-					foreach (var n in dm)
-						if (!(n is DStatementBlock))
-							ret.Add(n);
+					if (dm.Body != null)
+					{
+						// First search the deepest statement under the caret
+						var stmt = dm.Body.SearchStatementDeeply(Caret);
+
+						// Then go back in hierarchy and add all the declarations made within these scope levels.
+						ret.AddRange(BlockStatement.GetItemHierarchy(stmt,Caret));
+					}
 				}
 				else foreach (var n in curScope)
-						if (!(n is DStatementBlock))
 						{
 							var dm3 = n as DMethod; // Only show normal & delegate methods
 							if ((dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate)))

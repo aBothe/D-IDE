@@ -8,6 +8,7 @@ using D_Parser;
 using D_Parser.Dom;
 using D_Parser.Resolver;
 using D_Parser.Parser;
+using D_Parser.Dom.Expressions;
 
 namespace ParserTests
 {

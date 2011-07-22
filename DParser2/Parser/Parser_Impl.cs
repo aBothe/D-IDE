@@ -265,7 +265,8 @@ namespace D_Parser.Parser
 			}
 
 			// else:
-			else Declaration(module);
+			else
+				module.AddRange( Declaration());
 		}
 
 		string ModuleDeclaration()
@@ -473,7 +474,7 @@ namespace D_Parser.Parser
 			return ret;
 		}
 
-		void Declaration(IBlockNode par)
+		IEnumerable<INode> Declaration()
 		{
 			// Skip ref token
 			if (la.Kind == (Ref))
@@ -488,8 +489,8 @@ namespace D_Parser.Parser
 			if (la.Kind == (Alias) || la.Kind == Typedef)
 			{
 				Step();
-				// _t is just a synthetic node
-				var _t = new DStatementBlock();
+				// _t is just a synthetic node which holds possible following attributes
+				var _t = new DMethod();
 				ApplyAttributes(_t);
 
 				// AliasThis
@@ -503,42 +504,46 @@ namespace D_Parser.Parser
 					dv.Name = "this";
 					dv.Type = new IdentifierDeclaration(t.Value);
 					dv.EndLocation = t.EndLocation;
-					par.Add(dv);
 					Step();
 					Expect(Semicolon);
 					dv.Description += CheckForPostSemicolonComment();
-					return;
+					return new[]{dv};
 				}
 
-				Decl(_t, HasStorageClassModifiers);
-				foreach (var n in _t)
+				var decls=Decl(HasStorageClassModifiers);
+
+				foreach (var n in decls)
 				{
+					if (n is DNode)
+						(n as DNode).Attributes.AddRange(_t.Attributes);
+
 					if (n is DVariable)
 						(n as DVariable).IsAlias = true;
 				}
 
-				par.AddRange(_t);
+				return decls;
 			}
 			else if (la.Kind == (Struct) || la.Kind == (Union))
-				par.Add(AggregateDeclaration());
+				return new[]{ AggregateDeclaration()};
 			else if (la.Kind == (Enum))
-				EnumDeclaration(ref par);
+				return EnumDeclaration();
 			else if (la.Kind == (Class))
-				par.Add(ClassDeclaration());
+				return new[]{ ClassDeclaration()};
 			else if (la.Kind == (Template))
-				par.Add(TemplateDeclaration());
+				return new[]{ TemplateDeclaration()};
 			else if (la.Kind == (Interface))
-				par.Add(InterfaceDeclaration());
+				return new[]{ InterfaceDeclaration()};
 			else if (IsBasicType() || la.Kind==Ref)
-				Decl(par, HasStorageClassModifiers);
+				return Decl(HasStorageClassModifiers);
 			else
 			{
 				Step();
 				SynErr(la.Kind,"Declaration expected, not "+GetTokenString(la.Kind));
 			}
+			return null;
 		}
 
-		void Decl(IBlockNode par, bool HasStorageClassModifiers)
+		IEnumerable<INode> Decl(bool HasStorageClassModifiers)
 		{
 			var startLocation = la.Location;
 			ITypeDeclaration ttd = null;
@@ -586,7 +591,7 @@ namespace D_Parser.Parser
 				if (la.Kind == (Assign))
 					(firstNode as DVariable).Initializer = Initializer();
 				firstNode.EndLocation = t.EndLocation;
-				par.Add(firstNode);
+				yield return firstNode;
 
 				// DeclaratorIdentifierList
 				while (la.Kind == (Comma))
@@ -602,26 +607,24 @@ namespace D_Parser.Parser
 					if (la.Kind == (Assign))
 						otherNode.Initializer = Initializer();
 					otherNode.EndLocation = t.EndLocation;
-					par.Add(otherNode);
+					yield return otherNode;
 				}
 
-				Expect(Semicolon);
+				Expect(Semicolon);/* TODO: DDoc
 				var pb = (par as IBlockNode);
 				if (pb.Count > 0)
-					pb[pb.Count - 1].Description += CheckForPostSemicolonComment();
+					pb[pb.Count - 1].Description += CheckForPostSemicolonComment();*/
 			}
 
 			// BasicType Declarator FunctionBody
 			else if (firstNode is IBlockNode && (la.Kind == In || la.Kind == Out || la.Kind == Body || la.Kind == OpenCurlyBrace))
 			{
-				FunctionBody(firstNode as IBlockNode);
+				FunctionBody(firstNode as DMethod);
 
-				par.Add(firstNode);
+				yield return firstNode;
 			}
 			else
-			{
 				SynErr(OpenCurlyBrace, "; or function body expected after declaration stub.");
-			}
 		}
 
 		bool IsBasicType()
@@ -1050,7 +1053,7 @@ namespace D_Parser.Parser
 		/// <summary>
 		/// Parse parameters
 		/// </summary>
-		List<INode> Parameters(IBlockNode Parent)
+		List<INode> Parameters(DMethod Parent)
 		{
 			var ret = new List<INode>();
 			Expect(OpenParenthesis);
@@ -1071,7 +1074,7 @@ namespace D_Parser.Parser
 				if (la.Kind == TripleDot)
 					break;
 				var p = Parameter();
-				p.Parent = p;
+				p.Parent = Parent;
 				ret.Add(p);
 			}
 
@@ -1092,8 +1095,8 @@ namespace D_Parser.Parser
 				else
 				{
 					var dv = new DVariable();
-					dv.Parent = Parent;
 					dv.Type = new VarArgDecl();
+					dv.Parent = Parent;
 					ret.Add(dv);
 				}
 			}
@@ -1295,7 +1298,8 @@ namespace D_Parser.Parser
 				Step();
 				Expect(CloseParenthesis);
 			}
-			BlockStatement(inv);
+			inv.Body=BlockStatement();
+			inv.EndLocation = t.EndLocation;
 			return inv;
 		}
 
@@ -2472,7 +2476,9 @@ namespace D_Parser.Parser
 			get {
 				return la.Kind == OpenCurlyBrace ||
 					(la.Kind == Identifier && Peek(1).Kind == Colon) ||
-					la.Kind == If || (la.Kind == Static && Lexer.CurrentPeekToken.Kind == If) ||
+					la.Kind == If || (la.Kind == Static && 
+						(Lexer.CurrentPeekToken.Kind == If || 
+						Lexer.CurrentPeekToken.Kind==Assert)) ||
 					la.Kind == While || la.Kind == Do ||
 					la.Kind == For ||
 					la.Kind == Foreach || la.Kind == Foreach_Reverse ||
@@ -2480,23 +2486,35 @@ namespace D_Parser.Parser
 					la.Kind == Case || la.Kind == Default ||
 					la.Kind == Continue || la.Kind == Break||
 					la.Kind==Return ||
-					la.Kind==Goto
+					la.Kind==Goto ||
+					la.Kind==With||
+					la.Kind==Synchronized||
+					la.Kind==Try||
+					la.Kind==Throw||
+					la.Kind==Scope||
+					la.Kind==Asm||
+					la.Kind==Pragma||
+					la.Kind==Mixin||
+					la.Kind==Version||
+					la.Kind==Debug||
+					la.Kind==Assert||
+					la.Kind==Volatile
 					;
 			}
 		}
 
-		IStatement NonDeclarationStatement(bool BlocksAllowed=true)
+		IStatement Statement(bool BlocksAllowed=true,bool EmptyAllowed=true)
 		{
 			IStatement ret = null;
 
-			if (BlocksAllowed && la.Kind == OpenCurlyBrace)
+			if (EmptyAllowed && la.Kind == Semicolon)
 			{
-				var bs = new BlockStatement();
-
-				BlockStatement(bs);
-
-				return bs;
+				Step();
+				return null;
 			}
+
+			if (BlocksAllowed && la.Kind == OpenCurlyBrace)
+				return BlockStatement();
 
 			#region LabeledStatement (loc:... goto loc;)
 			if (la.Kind == Identifier && Lexer.CurrentPeekToken.Kind == Colon)
@@ -2513,10 +2531,14 @@ namespace D_Parser.Parser
 			#region IfStatement
 			else if (la.Kind == (If) || (la.Kind == Static && Lexer.CurrentPeekToken.Kind == If))
 			{
-				if (la.Kind == Static)
+				bool isStatic = la.Kind==Static;
+				if (isStatic)
 					Step();
+
 				Step();
-				var dbs = new IfStatement() { StartLocation = t.Location };
+
+				var dbs = new IfStatement() { StartLocation = t.Location,IsStatic=isStatic };
+				
 				Expect(OpenParenthesis);
 
 				// IfCondition
@@ -2525,13 +2547,13 @@ namespace D_Parser.Parser
 				Expect(CloseParenthesis);
 				// ThenStatement
 
-				dbs.ThenStatement = NonDeclarationStatement();
+				dbs.ThenStatement = Statement();
 
 				// ElseStatement
 				if (la.Kind == (Else))
 				{
 					Step();
-					dbs.ElseStatement = NonDeclarationStatement();
+					dbs.ElseStatement = Statement();
 				}
 
 				dbs.EndLocation = t.EndLocation;
@@ -2551,7 +2573,7 @@ namespace D_Parser.Parser
 				dbs.Condition = Expression();
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = NonDeclarationStatement();
+				dbs.ScopedStatement = Statement();
 
 				return dbs;
 			}
@@ -2564,7 +2586,7 @@ namespace D_Parser.Parser
 
 				var dbs = new WhileStatement() { StartLocation=t.Location };
 
-				dbs.ScopedStatement = NonDeclarationStatement();
+				dbs.ScopedStatement = Statement();
 
 				Expect(While);
 				Expect(OpenParenthesis);
@@ -2588,7 +2610,7 @@ namespace D_Parser.Parser
 
 				// Initialize
 				if (la.Kind != Semicolon)
-					dbs.Initialize=NonDeclarationStatement(false); // Against the D language theory, blocks aren't allowed here!
+					dbs.Initialize=Statement(false); // Against the D language theory, blocks aren't allowed here!
 				Expect(Semicolon);
 
 				// Test
@@ -2603,7 +2625,7 @@ namespace D_Parser.Parser
 
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = NonDeclarationStatement();
+				dbs.ScopedStatement = Statement();
 				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
@@ -2668,7 +2690,7 @@ namespace D_Parser.Parser
 
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = NonDeclarationStatement();
+				dbs.ScopedStatement = Statement();
 
 				return dbs;
 			}
@@ -2689,7 +2711,7 @@ namespace D_Parser.Parser
 				dbs.SwitchExpression = Expression();
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = NonDeclarationStatement();
+				dbs.ScopedStatement = Statement();
 
 				return dbs;
 			}
@@ -2719,7 +2741,7 @@ namespace D_Parser.Parser
 
 				while (la.Kind != Case && la.Kind != Default && la.Kind != CloseCurlyBrace && !IsEOF)
 				{
-					var stmt = NonDeclarationStatement();
+					var stmt = Statement();
 
 					if (stmt != null)
 						sl.Add(stmt);
@@ -2748,7 +2770,7 @@ namespace D_Parser.Parser
 
 				while (la.Kind != Case && la.Kind != Default && la.Kind != CloseCurlyBrace && !IsEOF)
 				{
-					var stmt = NonDeclarationStatement();
+					var stmt = Statement();
 
 					if (stmt != null)
 						sl.Add(stmt);
@@ -2854,7 +2876,7 @@ namespace D_Parser.Parser
 
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = NonDeclarationStatement();
+				dbs.ScopedStatement = Statement();
 
 				dbs.EndLocation = t.EndLocation;
 				return dbs;
@@ -2874,7 +2896,7 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				dbs.ScopedStatement = NonDeclarationStatement();
+				dbs.ScopedStatement = Statement();
 
 				dbs.EndLocation = t.EndLocation;
 				return dbs;
@@ -2888,7 +2910,7 @@ namespace D_Parser.Parser
 
 				var s=new TryStatement(){StartLocation=t.Location};
 
-				s.ScopedStatement=NonDeclarationStatement();
+				s.ScopedStatement=Statement();
 
 				if (!(la.Kind == (Catch) || la.Kind == (Finally)))
 					SemErr(Catch, "At least one catch or a finally block expected!");
@@ -2920,7 +2942,7 @@ namespace D_Parser.Parser
 						c.CatchParameter = catchVar;
 					}
 
-					c.ScopedStatement = NonDeclarationStatement();
+					c.ScopedStatement = Statement();
 					c.EndLocation = t.EndLocation;
 
 					catches.Add(c);
@@ -2935,7 +2957,7 @@ namespace D_Parser.Parser
 
 					var f = new TryStatement.FinallyStatement() { StartLocation=t.Location};
 
-					f.ScopedStatement = NonDeclarationStatement();
+					f.ScopedStatement = Statement();
 					f.EndLocation = t.EndLocation;
 
 					s.FinallyStmt = f;
@@ -2968,22 +2990,11 @@ namespace D_Parser.Parser
 				{
 					Expect(OpenParenthesis);
 					Expect(Identifier); // exit, failure, success
-					switch (t.Value)
-					{
-						case "exit":
-							s.GuardedScope = ScopeGuardStatement.ScopeGuard.Exit;
-							break;
-						case "failure":
-							s.GuardedScope = ScopeGuardStatement.ScopeGuard.Failure;
-							break;
-						case "success":
-							s.GuardedScope = ScopeGuardStatement.ScopeGuard.Success;
-							break;
-					}
+					s.GuardedScope = t.Value.ToLower();
 					Expect(CloseParenthesis);
 				}
 
-				s.ScopedStatement = NonDeclarationStatement();
+				s.ScopedStatement = Statement();
 
 				s.EndLocation = t.EndLocation;
 				return s;
@@ -3019,77 +3030,118 @@ namespace D_Parser.Parser
 			}
 			#endregion
 
-			// PragmaStatement
+			#region PragmaStatement
 			else if (la.Kind == (Pragma))
 			{
-				_Pragma();
-				Statement(par, true, true);
-			}
+				var s=_Pragma();
 
-			return null;
-		}
-
-		void Statement(IBlockNode par, bool CanBeEmpty, bool BlocksAllowed)
-		{
-			if (CanBeEmpty && la.Kind == (Semicolon))
-			{
-				Step();
-				return;
-			}
-
-			// MixinStatement
-			//TODO: Handle this one in terms of adding it to the node structure
-			else if (la.Kind == (Mixin))
-			{
-				MixinDeclaration();
-			}
-
-			// (Static) AssertExpression
-			else if (la.Kind == Assert || (la.Kind == Static && PK(Assert)))
-			{
-				if (LA(Static))
-					Step();
-
-				AssignExpression();
-				Expect(Semicolon);
-			}
-
-			#region VersionStatement | DebugCondition
-			else if (la.Kind == Version || la.Kind == Debug)
-			{
-				Step();
-
-				// a debug attribute doesn't require a '('!
-				if (t.Kind == Version || la.Kind == OpenParenthesis)
-				{
-					Expect(OpenParenthesis);
-					while (!IsEOF && !LA(CloseParenthesis))
-						Step();
-					Expect(CloseParenthesis);
-				}
-
-				if (LA(Colon))
-					Step();
-				else
-					Statement(par, false, true);
-
-				if (la.Kind == Else)
-				{
-					Step();
-					Statement(par, false, true);
-				}
+				s.ScopedStatement = Statement();
 			}
 			#endregion
 
-			// Blockstatement
-			else if (la.Kind == (OpenCurlyBrace))
-				BlockStatement(par);
+			#region MixinStatement
+			//TODO: Handle this one in terms of adding it to the node structure
+			else if (la.Kind == (Mixin))
+			{
+				Step();
+				var s = new MixinStatement() { StartLocation = t.Location };
+				Expect(OpenParenthesis);
 
-			// D1: VolatileStatement
+				s.MixinExpression = AssignExpression();
+
+				Expect(CloseParenthesis);
+				Expect(Semicolon);
+
+				s.EndLocation = t.EndLocation;
+				return s;
+			}
+			#endregion
+
+			#region Conditions
+			if (la.Kind == Debug)
+			{
+				Step();
+				var s = new ConditionStatement.DebugStatement() { StartLocation = t.Location };
+
+				if (la.Kind == OpenParenthesis)
+				{
+					Step();
+					if (la.Kind == Identifier || la.Kind == Literal)
+					{
+						Step();
+						s.DebugIdentifierOrLiteral = t.LiteralValue;
+					}
+					else 
+						SynErr(t.Kind, "Identifier or Literal expected, "+DTokens.GetTokenString(t.Kind)+" found");
+
+					Expect(CloseParenthesis);
+				}
+
+				s.ScopedStatement = Statement();
+
+				if (la.Kind == Else)
+					s.ElseStatement = Statement();
+
+				s.EndLocation = t.EndLocation;
+				return s;
+			}
+
+			if (la.Kind == Version)
+			{
+				Step();
+				var s = new ConditionStatement.VersionStatement() { StartLocation = t.Location };
+
+				if (la.Kind == OpenParenthesis)
+				{
+					Step();
+					if (la.Kind == Identifier || la.Kind == Literal || la.Kind==Unittest)
+					{
+						Step();
+						s.VersionIdentifierOrLiteral = t.Kind==Unittest?"unittest": t.LiteralValue;
+					}
+					else
+						SynErr(t.Kind, "Identifier or Literal expected, " + DTokens.GetTokenString(t.Kind) + " found");
+
+					Expect(CloseParenthesis);
+				}
+
+				s.ScopedStatement = Statement();
+
+				if (la.Kind == Else)
+					s.ElseStatement = Statement();
+
+				s.EndLocation = t.EndLocation;
+				return s;
+			}
+			#endregion
+
+			#region (Static) AssertExpression
+			else if (la.Kind == Assert || (la.Kind == Static && PK(Assert)))
+			{
+				var s = new AssertStatement() { StartLocation = la.Location, IsStatic = la.Kind == Static };
+
+				if (s.IsStatic)
+					Step();
+
+				s.AssertExpression = AssignExpression();
+				Expect(Semicolon);
+				s.EndLocation = t.EndLocation;
+
+				return s;
+			}
+			#endregion
+
+			#region D1: VolatileStatement
 			else if (la.Kind == Volatile)
 			{
 				Step();
+				var s = new VolatileStatement() { StartLocation = t.Location };
+				s.ScopedStatement = Statement();
+				s.EndLocation = t.EndLocation;
+
+				return s;
 			}
+			#endregion
 
 			// ImportDeclaration
 			else if (la.Kind == Import)
@@ -3097,38 +3149,47 @@ namespace D_Parser.Parser
 
 			else if (!(ClassLike[la.Kind] || la.Kind == Enum || Modifiers[la.Kind] || Attributes[la.Kind] || la.Kind == Alias || la.Kind == Typedef) && IsAssignExpression())
 			{
+				var s = new ExpressionStatement() { StartLocation = la.Location };
 				// a==b, a=9; is possible -> Expressions can be there, not only single AssignExpressions!
-				var ex = Expression();
+				s.Expression = Expression();
 				Expect(Semicolon);
+				s.EndLocation = t.EndLocation;
+				return s;
 			}
 			else
-				Declaration(par);
-		}
-
-		void BlockStatement(IBlockNode par)
-		{
-			if (String.IsNullOrEmpty(par.Description)) par.Description = GetComments();
-			var OldPreviousCommentString = PreviousComment;
-			PreviousComment = "";
-
-			if (Expect(OpenCurlyBrace))
 			{
-				par.BlockStartLocation = t.Location;
-				if (la.Kind != CloseCurlyBrace)
-				{
-					if (ParseStructureOnly)
-						Lexer.SkipCurrentBlock();
-					else
-						while (!IsEOF && la.Kind != (CloseCurlyBrace))
-						{
-							Statement(par, true, true);
-						}
-				}
-				Expect(CloseCurlyBrace);
-				par.EndLocation = t.EndLocation;
+				var s = new DeclarationStatement() { StartLocation = la.Location };
+				s.Declaration = Declaration();
+				s.EndLocation = t.EndLocation;
+				return s;
 			}
 
-			PreviousComment = OldPreviousCommentString;
+			return null;
+		}
+
+		BlockStatement BlockStatement()
+		{
+			//if (String.IsNullOrEmpty(par.Description)) par.Description = GetComments();
+			//var OldPreviousCommentString = PreviousComment;
+			//PreviousComment = "";
+
+			var bs = new BlockStatement() { StartLocation= la.Location};
+			if (Expect(OpenCurlyBrace))
+			{
+				if (ParseStructureOnly && la.Kind != CloseCurlyBrace)
+					Lexer.SkipCurrentBlock();
+				else
+					while (!IsEOF && la.Kind != (CloseCurlyBrace))
+					{
+						var s = Statement();
+						bs.Add(s);
+					}
+				Expect(CloseCurlyBrace);
+			}
+			bs.EndLocation = t.EndLocation;
+
+			//PreviousComment = OldPreviousCommentString;
+			return bs;
 		}
 		#endregion
 
@@ -3369,7 +3430,7 @@ namespace D_Parser.Parser
 		#endregion
 
 		#region Enums
-		private void EnumDeclaration(ref IBlockNode par)
+		private IEnumerable<INode> EnumDeclaration()
 		{
 			Expect(Enum);
 
@@ -3431,7 +3492,7 @@ namespace D_Parser.Parser
 					enumVar.Initializer = AssignExpression();
 				}
 				enumVar.EndLocation = t.Location;
-				par.Add(enumVar);
+				yield return enumVar;
 
 				if (la.Kind == (Comma))
 					goto another_enumvalue;
@@ -3472,22 +3533,23 @@ namespace D_Parser.Parser
 					}
 
 					ev.EndLocation = t.EndLocation;
-
+					/*
+					//HACK: If it's an anonymous enum, directly add the enum values to the parent block
 					if (String.IsNullOrEmpty(mye.Name))
-						par.Add(ev);
-					else
+						yield return ev;
+					else*/
 						mye.Add(ev);
 				}
 				Expect(CloseCurlyBrace);
 				mye.EndLocation = t.EndLocation;
 				if (!String.IsNullOrEmpty(mye.Name))
-					par.Add(mye);
+					yield return mye;
 			}
 		}
 		#endregion
 
 		#region Functions
-		void FunctionBody(IBlockNode par)
+		void FunctionBody(DMethod par)
 		{
 			bool HadIn = false, HadOut = false;
 
@@ -3496,7 +3558,7 @@ namespace D_Parser.Parser
 			{
 				HadIn = true;
 				Step();
-				BlockStatement(par);
+				par.In=BlockStatement();
 
 				if (!HadOut && la.Kind == (Out))
 					goto check_again;
@@ -3514,7 +3576,7 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				BlockStatement(par);
+				par.Out=BlockStatement();
 
 				if (!HadIn && la.Kind == (In))
 					goto check_again;
@@ -3531,7 +3593,7 @@ namespace D_Parser.Parser
 				par.Description += CheckForPostSemicolonComment();
 			}
 			else
-				BlockStatement(par);
+				par.Body=BlockStatement();
 
 		}
 		#endregion

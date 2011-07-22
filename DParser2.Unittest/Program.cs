@@ -16,16 +16,23 @@ namespace ParserTests
         public static void Main(string[] args)
         {
 			string input = 
-@"2+2";
+@"import std.stdio;
+
+alias int X;
+
+void main(){
+	int x=5;
+	X y=56;
+}";
 			
-			ParseTests.TestMathExpression(input);
+			ParseTests.TestCode(input);
 			
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);
 
 			Console.ReadKey();
 
-			//return;
+			return;
 			while (true)
 			{
 				input = Console.ReadLine();

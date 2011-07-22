@@ -91,7 +91,7 @@ namespace D_IDE.D
 			// Enum all nodes that can be accessed in the current scope
 			else if(string.IsNullOrEmpty(EnteredText) || IsIdentifierChar(EnteredText[0]))
 			{
-				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock, codeCache);
+				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock,caretLocation,codeCache);
 
 				foreach (var kv in DTokens.Keywords)
 					l.Add(new TokenCompletionData(kv.Key));
@@ -724,9 +724,7 @@ namespace D_IDE.D
 						if (n.ContainsAttribute(DTokens.Const))
 							return DCodeCompletionSupport.Instance.GetNodeImage("literal");
 
-						var realParent = n.Parent as DBlockNode;
-						while (realParent is DStatementBlock)
-							realParent = realParent.Parent as DBlockNode;
+						var realParent = n.Parent as DNode;
 
 						if (realParent == null)
 							return null;

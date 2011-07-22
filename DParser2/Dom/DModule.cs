@@ -123,8 +123,16 @@ namespace D_Parser.Dom
 
 		public void AddRange(IEnumerable<INode> Nodes)
 		{
-			foreach (var Node in Nodes)
-				Add(Node);
+			if(Nodes!=null)
+				foreach (var Node in Nodes)
+					Add(Node);
+		}
+
+		public void AddStatements(IEnumerable<IStatement> Statements)
+		{
+			if(Statements!=null)
+				foreach (var Stmt in Statements)
+					Add(Stmt);
 		}
 
 		public int Count
@@ -210,10 +218,14 @@ namespace D_Parser.Dom
         }
     }
 
-    public class DMethod : DBlockNode
+    public class DMethod : DNode
     {
         public List<INode> Parameters=new List<INode>();
         public MethodType SpecialType = MethodType.Normal;
+
+		public BlockStatement In;
+		public BlockStatement Out;
+		public BlockStatement Body;
 
         public enum MethodType
         {
