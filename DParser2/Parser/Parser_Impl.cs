@@ -4,6 +4,8 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using D_Parser.Dom;
+using D_Parser.Dom.Statements;
+using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Parser
 {
@@ -1297,18 +1299,24 @@ namespace D_Parser.Parser
 			return inv;
 		}
 
-		void _Pragma()
+		PragmaStatement _Pragma()
 		{
 			Expect(Pragma);
+			var s = new PragmaStatement() { StartLocation=t.Location};
 			Expect(OpenParenthesis);
 			Expect(Identifier);
+			s.PragmaIdentifier = t.Value;
 
+			var l = new List<IExpression>();
 			if (la.Kind == (Comma))
 			{
 				Step();
-				ArgumentList();
+				l.Add(AssignExpression());
 			}
 			Expect(CloseParenthesis);
+			s.EndLocation = t.EndLocation;
+
+			return s;
 		}
 
 		bool IsAttributeSpecifier()
@@ -2416,21 +2424,10 @@ namespace D_Parser.Parser
 		#endregion
 
 		#region Statements
-		void IfCondition(ref IBlockNode par)
+		void IfCondition(IfStatement par)
 		{
-			IfCondition(ref par, false);
-		}
-		void IfCondition(ref IBlockNode par, bool IsFor)
-		{
-			var stmtBlock = par as DStatementBlock;
-
-			if ((!IsFor && Lexer.CurrentPeekToken.Kind == Times) || IsAssignExpression())
-			{
-				if (stmtBlock != null)
-					stmtBlock.Expression = Expression();
-				else
-					Expression();
-			}
+			if (Lexer.CurrentPeekToken.Kind == Times || IsAssignExpression())
+				par.IfCondition = Expression();
 			else
 			{
 				var sl = la.Location;
@@ -2444,7 +2441,7 @@ namespace D_Parser.Parser
 				else
 					tp = BasicType();
 
-				INode n = null;
+				DNode n = null;
 			repeated_decl:
 				n = Declarator(false);
 
@@ -2461,7 +2458,7 @@ namespace D_Parser.Parser
 					(n as DVariable).Initializer = Expression();
 				}
 				n.EndLocation = t.EndLocation;
-				par.Add(n);
+				par.IfVariable=n as DVariable;
 				if (la.Kind == Comma)
 				{
 					Step();
@@ -2470,26 +2467,46 @@ namespace D_Parser.Parser
 			}
 		}
 
-		void Statement(IBlockNode par, bool CanBeEmpty, bool BlocksAllowed)
+		public bool IsStatement
 		{
-			if (CanBeEmpty && la.Kind == (Semicolon))
-			{
-				Step();
-				return;
+			get {
+				return la.Kind == OpenCurlyBrace ||
+					(la.Kind == Identifier && Peek(1).Kind == Colon) ||
+					la.Kind == If || (la.Kind == Static && Lexer.CurrentPeekToken.Kind == If) ||
+					la.Kind == While || la.Kind == Do ||
+					la.Kind == For ||
+					la.Kind == Foreach || la.Kind == Foreach_Reverse ||
+					(la.Kind == Final && Lexer.CurrentPeekToken.Kind == Switch) || la.Kind == Switch ||
+					la.Kind == Case || la.Kind == Default ||
+					la.Kind == Continue || la.Kind == Break||
+					la.Kind==Return ||
+					la.Kind==Goto
+					;
 			}
+		}
 
-			else if (BlocksAllowed && la.Kind == (OpenCurlyBrace))
+		IStatement NonDeclarationStatement(bool BlocksAllowed=true)
+		{
+			IStatement ret = null;
+
+			if (BlocksAllowed && la.Kind == OpenCurlyBrace)
 			{
-				BlockStatement(par);
-				return;
+				var bs = new BlockStatement();
+
+				BlockStatement(bs);
+
+				return bs;
 			}
 
 			#region LabeledStatement (loc:... goto loc;)
-			else if (la.Kind == (Identifier) && Lexer.CurrentPeekToken.Kind == (Colon))
+			if (la.Kind == Identifier && Lexer.CurrentPeekToken.Kind == Colon)
 			{
 				Step();
+
+				ret=(new LabeledStatement() { Identifier = t.Value });
+
 				Step();
-				return;
+				return ret;
 			}
 			#endregion
 
@@ -2499,50 +2516,44 @@ namespace D_Parser.Parser
 				if (la.Kind == Static)
 					Step();
 				Step();
-				var dbs = new DStatementBlock(If);
-				var bs = dbs as IBlockNode;
-				dbs.StartLocation = t.Location;
+				var dbs = new IfStatement() { StartLocation = t.Location };
 				Expect(OpenParenthesis);
 
 				// IfCondition
-				IfCondition(ref bs);
+				IfCondition(dbs);
 
 				Expect(CloseParenthesis);
 				// ThenStatement
 
-				Statement(bs, false, true);
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+				dbs.ThenStatement = NonDeclarationStatement();
 
 				// ElseStatement
 				if (la.Kind == (Else))
 				{
 					Step();
-					dbs = new DStatementBlock(Else);
-					dbs.StartLocation = t.Location;
-					bs = dbs as IBlockNode;
-					Statement(bs, false, true);
-					dbs.EndLocation = t.EndLocation;
-					if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+					dbs.ElseStatement = NonDeclarationStatement();
 				}
+
+				dbs.EndLocation = t.EndLocation;
+
+				return dbs;
 			}
 			#endregion
 
 			#region WhileStatement
-			else if (la.Kind == (While))
+			else if (la.Kind == While)
 			{
 				Step();
 
-				var dbs = new DStatementBlock(While);
-				var bs = dbs as IBlockNode;
-				dbs.StartLocation = t.Location;
+				var dbs = new WhileStatement() { StartLocation = t.Location };
 
 				Expect(OpenParenthesis);
-				IfCondition(ref bs);
+				dbs.Condition = Expression();
 				Expect(CloseParenthesis);
 
-				Statement(bs, false, true);
-				dbs.EndLocation = t.EndLocation;
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+				dbs.ScopedStatement = NonDeclarationStatement();
+
+				return dbs;
 			}
 			#endregion
 
@@ -2551,17 +2562,18 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				var dbs = new DStatementBlock(Do) as IBlockNode;
-				dbs.StartLocation = t.Location;
-				Statement(dbs, false, true);
+				var dbs = new WhileStatement() { StartLocation=t.Location };
+
+				dbs.ScopedStatement = NonDeclarationStatement();
 
 				Expect(While);
 				Expect(OpenParenthesis);
-				IfCondition(ref dbs);
+				dbs.Condition = Expression();
 				Expect(CloseParenthesis);
 
 				dbs.EndLocation = t.EndLocation;
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+
+				return dbs;
 			}
 			#endregion
 
@@ -2570,31 +2582,31 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				var dbs = new DStatementBlock(For) as IBlockNode;
-				dbs.StartLocation = t.Location;
+				var dbs = new ForStatement { StartLocation = t.Location };
 
 				Expect(OpenParenthesis);
 
 				// Initialize
 				if (la.Kind != Semicolon)
-					IfCondition(ref dbs, true);
+					dbs.Initialize=NonDeclarationStatement(false); // Against the D language theory, blocks aren't allowed here!
 				Expect(Semicolon);
 
 				// Test
 				if (la.Kind != (Semicolon))
-					(dbs as DStatementBlock).Expression = Expression();
+					dbs.Test = Expression();
 
 				Expect(Semicolon);
 
 				// Increment
 				if (la.Kind != (CloseParenthesis))
-					Expression();
+					dbs.Increment= Expression();
 
 				Expect(CloseParenthesis);
 
-				Statement(dbs, false, true);
+				dbs.ScopedStatement = NonDeclarationStatement();
 				dbs.EndLocation = t.EndLocation;
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+
+				return dbs;
 			}
 			#endregion
 
@@ -2603,10 +2615,11 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				var dbs = new DStatementBlock(t.Kind) as IBlockNode;
-				dbs.StartLocation = t.Location;
+				var dbs = new ForeachStatement() { StartLocation = t.Location, IsReverse = t.Kind == Foreach_Reverse };
 
 				Expect(OpenParenthesis);
+
+				var tl = new List<DVariable>();
 
 				bool init = true;
 				while (init || la.Kind == (Comma))
@@ -2637,11 +2650,13 @@ namespace D_Parser.Parser
 						}
 					}
 					forEachVar.EndLocation = t.EndLocation;
-					if (!String.IsNullOrEmpty(forEachVar.Name)) dbs.Add(forEachVar);
+
+					tl.Add(forEachVar);
 				}
+				dbs.ForeachTypeList = tl.ToArray();
 
 				Expect(Semicolon);
-				(dbs as DStatementBlock).Expression = Expression();
+				dbs.Aggregate = Expression();
 
 				// ForeachRangeStatement
 				if (la.Kind == DoubleDot)
@@ -2653,32 +2668,30 @@ namespace D_Parser.Parser
 
 				Expect(CloseParenthesis);
 
-				Statement(dbs, false, true);
+				dbs.ScopedStatement = NonDeclarationStatement();
 
-				dbs.EndLocation = t.EndLocation;
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+				return dbs;
 			}
 			#endregion
 
 			#region [Final] SwitchStatement
 			else if ((la.Kind == (Final) && Lexer.CurrentPeekToken.Kind == (Switch)) || la.Kind == (Switch))
 			{
-				var dbs = new DStatementBlock(Switch) as IBlockNode;
-				dbs.StartLocation = la.Location;
+				var dbs = new SwitchStatement { StartLocation = la.Location };
 
 				if (la.Kind == (Final))
 				{
-					(dbs as DNode).Attributes.Add(new DAttribute(Final));
+					dbs.IsFinal = true;
 					Step();
 				}
 				Step();
 				Expect(OpenParenthesis);
-				(dbs as DStatementBlock).Expression = Expression();
+				dbs.SwitchExpression = Expression();
 				Expect(CloseParenthesis);
-				Statement(dbs, false, true);
-				dbs.EndLocation = t.EndLocation;
 
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+				dbs.ScopedStatement = NonDeclarationStatement();
+
+				return dbs;
 			}
 			#endregion
 
@@ -2687,17 +2700,10 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				var dbs = new DStatementBlock(Case) as IBlockNode;
-				dbs.StartLocation = la.Location;
+				var dbs = new SwitchStatement.CaseStatement() { StartLocation = la.Location };
 
-				(dbs as DStatementBlock).Expression = AssignExpression();
+				dbs.ArgumentList = Expression();
 
-				if (!(la.Kind == (Colon) && Lexer.CurrentPeekToken.Kind == (Dot) && Peek().Kind == Dot))
-					while (la.Kind == (Comma))
-					{
-						Step();
-						AssignExpression();
-					}
 				Expect(Colon);
 
 				// CaseRangeStatement
@@ -2705,15 +2711,24 @@ namespace D_Parser.Parser
 				{
 					Step();
 					Expect(Case);
-					AssignExpression();
+					dbs.LastExpression = AssignExpression();
 					Expect(Colon);
 				}
 
-				if (la.Kind != CloseCurlyBrace) // {case 1:} is allowed
-					Statement(dbs, true, true);
+				var sl = new List<IStatement>();
+
+				while (la.Kind != Case && la.Kind != Default && la.Kind != CloseCurlyBrace && !IsEOF)
+				{
+					var stmt = NonDeclarationStatement();
+
+					if (stmt != null)
+						sl.Add(stmt);
+				}
+
+				dbs.ScopeStatementList = sl.ToArray();
 				dbs.EndLocation = t.EndLocation;
 
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+				return dbs;
 			}
 			#endregion
 
@@ -2722,25 +2737,59 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				IBlockNode dbs = new DStatementBlock(Default);
-				dbs.StartLocation = la.Location;
+				var dbs = new SwitchStatement.DefaultStatement()
+				{
+					StartLocation = la.Location
+				};
 
 				Expect(Colon);
-				if (la.Kind != CloseCurlyBrace) // switch(...) { default: }  is allowed!
-					Statement(dbs, true, true);
+
+				var sl = new List<IStatement>();
+
+				while (la.Kind != Case && la.Kind != Default && la.Kind != CloseCurlyBrace && !IsEOF)
+				{
+					var stmt = NonDeclarationStatement();
+
+					if (stmt != null)
+						sl.Add(stmt);
+				}
+
+				dbs.ScopeStatementList = sl.ToArray();
 				dbs.EndLocation = t.EndLocation;
 
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+				return dbs;
 			}
 			#endregion
 
 			#region Continue | Break
-			else if (la.Kind == (Continue) || la.Kind == (Break))
+			else if (la.Kind == (Continue))
 			{
 				Step();
+				var s = new ContinueStatement() { StartLocation = t.Location };
 				if (la.Kind == (Identifier))
+				{
 					Step();
+					s.Identifier = t.Value;
+				}
 				Expect(Semicolon);
+				s.EndLocation = t.EndLocation;
+
+				return s;
+			}
+
+			else if (la.Kind == (Break))
+			{
+				Step();
+				var s = new BreakStatement() { StartLocation = t.Location };
+				if (la.Kind == (Identifier))
+				{
+					Step();
+					s.Identifier = t.Value;
+				}
+				Expect(Semicolon);
+				s.EndLocation = t.EndLocation;
+
+				return s;
 			}
 			#endregion
 
@@ -2748,9 +2797,13 @@ namespace D_Parser.Parser
 			else if (la.Kind == (Return))
 			{
 				Step();
+				var s = new ReturnStatement() { StartLocation = t.Location };
 				if (la.Kind != (Semicolon))
-					Expression();
+					s.ReturnExpression = Expression();
 				Expect(Semicolon);
+				s.EndLocation = t.EndLocation;
+
+				return s;
 			}
 			#endregion
 
@@ -2758,18 +2811,32 @@ namespace D_Parser.Parser
 			else if (la.Kind == (Goto))
 			{
 				Step();
-				if (la.Kind == (Identifier) || la.Kind == (Default))
+				var s = new GotoStatement() { StartLocation = t.Location };
+
+				if (la.Kind == (Identifier))
 				{
 					Step();
+					s.StmtType = GotoStatement.GotoStmtType.Identifier;
+					s.LabelIdentifier = t.Value;
+				}
+				else if (la.Kind == Default)
+				{
+					Step();
+					s.StmtType = GotoStatement.GotoStmtType.Default;
 				}
 				else if (la.Kind == (Case))
 				{
 					Step();
+					s.StmtType = GotoStatement.GotoStmtType.Case;
+
 					if (la.Kind != (Semicolon))
-						Expression();
+						s.CaseExpression = Expression();
 				}
 
 				Expect(Semicolon);
+				s.EndLocation = t.EndLocation;
+
+				return s;
 			}
 			#endregion
 
@@ -2778,19 +2845,19 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				IBlockNode dbs = new DStatementBlock(With);
-				dbs.StartLocation = t.Location;
+				var dbs = new WithStatement() { StartLocation = t.Location };
 
 				Expect(OpenParenthesis);
 
 				// Symbol
-				(dbs as DStatementBlock).Expression = Expression();
+				dbs.WithExpression = Expression();
 
 				Expect(CloseParenthesis);
-				Statement(dbs, false, true);
-				dbs.EndLocation = t.EndLocation;
 
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+				dbs.ScopedStatement = NonDeclarationStatement();
+
+				dbs.EndLocation = t.EndLocation;
+				return dbs;
 			}
 			#endregion
 
@@ -2798,19 +2865,19 @@ namespace D_Parser.Parser
 			else if (la.Kind == (Synchronized))
 			{
 				Step();
-				IBlockNode dbs = new DStatementBlock(Synchronized);
-				dbs.StartLocation = t.Location;
+				var dbs = new SynchronizedStatement() { StartLocation = t.Location };
 
 				if (la.Kind == (OpenParenthesis))
 				{
 					Step();
-					(dbs as DStatementBlock).Expression = Expression();
+					dbs.SyncExpression = Expression();
 					Expect(CloseParenthesis);
 				}
-				Statement(dbs, false, true);
+
+				dbs.ScopedStatement = NonDeclarationStatement();
 
 				dbs.EndLocation = t.EndLocation;
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+				return dbs;
 			}
 			#endregion
 
@@ -2819,22 +2886,20 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				IBlockNode dbs = new DStatementBlock(Try);
-				dbs.StartLocation = t.Location;
-				Statement(dbs, false, true);
-				dbs.EndLocation = t.EndLocation;
-				if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+				var s=new TryStatement(){StartLocation=t.Location};
+
+				s.ScopedStatement=NonDeclarationStatement();
 
 				if (!(la.Kind == (Catch) || la.Kind == (Finally)))
-					SynErr(Catch, "catch or finally expected");
+					SemErr(Catch, "At least one catch or a finally block expected!");
 
+				var catches = new List<TryStatement.CatchStatement>();
 				// Catches
-			do_catch:
-				if (la.Kind == (Catch))
+				while (la.Kind == (Catch))
 				{
 					Step();
-					dbs = new DStatementBlock(Catch);
-					dbs.StartLocation = t.Location;
+
+					var c = new TryStatement.CatchStatement() { StartLocation=t.Location};
 
 					// CatchParameter
 					if (la.Kind == (OpenParenthesis))
@@ -2851,27 +2916,33 @@ namespace D_Parser.Parser
 						Expect(Identifier);
 						catchVar.Name = t.Value;
 						Expect(CloseParenthesis);
-						dbs.Add(catchVar);
+
+						c.CatchParameter = catchVar;
 					}
 
-					Statement(dbs, false, true);
-					dbs.EndLocation = t.EndLocation;
-					if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+					c.ScopedStatement = NonDeclarationStatement();
+					c.EndLocation = t.EndLocation;
 
-					if (la.Kind == (Catch))
-						goto do_catch;
+					catches.Add(c);
 				}
+
+				if(catches.Count>0)
+					s.Catches = catches.ToArray();
 
 				if (la.Kind == (Finally))
 				{
 					Step();
 
-					dbs = new DStatementBlock(Finally);
-					dbs.StartLocation = t.Location;
-					Statement(dbs, false, true);
-					dbs.EndLocation = t.EndLocation;
-					if ((dbs as IBlockNode).Count > 0) par.Add(dbs);
+					var f = new TryStatement.FinallyStatement() { StartLocation=t.Location};
+
+					f.ScopedStatement = NonDeclarationStatement();
+					f.EndLocation = t.EndLocation;
+
+					s.FinallyStmt = f;
 				}
+
+				s.EndLocation = t.EndLocation;
+				return s;
 			}
 			#endregion
 
@@ -2879,43 +2950,91 @@ namespace D_Parser.Parser
 			else if (la.Kind == (Throw))
 			{
 				Step();
-				Expression();
+				var s = new ThrowStatement() { StartLocation = t.Location };
+				s.ThrowExpression = Expression();
 				Expect(Semicolon);
+				s.EndLocation = t.EndLocation;
+
+				return s;
 			}
 			#endregion
 
-			// ScopeGuardStatement
+			#region ScopeGuardStatement
 			else if (la.Kind == (Scope))
 			{
 				Step();
+				var s = new ScopeGuardStatement() { StartLocation=t.Location };
 				if (la.Kind == OpenParenthesis)
 				{
 					Expect(OpenParenthesis);
 					Expect(Identifier); // exit, failure, success
+					switch (t.Value)
+					{
+						case "exit":
+							s.GuardedScope = ScopeGuardStatement.ScopeGuard.Exit;
+							break;
+						case "failure":
+							s.GuardedScope = ScopeGuardStatement.ScopeGuard.Failure;
+							break;
+						case "success":
+							s.GuardedScope = ScopeGuardStatement.ScopeGuard.Success;
+							break;
+					}
 					Expect(CloseParenthesis);
 				}
-				Statement(par, false, true);
-			}
 
-			// AsmStatement
+				s.ScopedStatement = NonDeclarationStatement();
+
+				s.EndLocation = t.EndLocation;
+				return s;
+			}
+			#endregion
+
+			#region AsmStmt
 			else if (la.Kind == (Asm))
 			{
 				Step();
+				var s = new AsmStatement() { StartLocation=t.Location};
+
 				Expect(OpenCurlyBrace);
 
+				var l=new List<string>();
+				var curInstr = "";
 				while (!IsEOF && la.Kind != (CloseCurlyBrace))
 				{
+					if (la.Kind == Semicolon)
+					{
+						l.Add(curInstr.Trim());
+						curInstr = "";
+					}
+					else
+						curInstr += la.Kind==Identifier? la.Value: DTokens.GetTokenString(la.Kind);
+
 					Step();
 				}
 
 				Expect(CloseCurlyBrace);
+				s.EndLocation = t.EndLocation;
+				return s;
 			}
+			#endregion
 
 			// PragmaStatement
 			else if (la.Kind == (Pragma))
 			{
 				_Pragma();
 				Statement(par, true, true);
+			}
+
+			return null;
+		}
+
+		void Statement(IBlockNode par, bool CanBeEmpty, bool BlocksAllowed)
+		{
+			if (CanBeEmpty && la.Kind == (Semicolon))
+			{
+				Step();
+				return;
 			}
 
 			// MixinStatement

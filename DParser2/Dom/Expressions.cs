@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using D_Parser.Parser;
 
-namespace D_Parser.Dom
+namespace D_Parser.Dom.Expressions
 {
 	public class DExpressionDecl : AbstractTypeDeclaration
 	{
@@ -1341,12 +1341,18 @@ namespace D_Parser.Dom
 
 		public override string ToString()
 		{
-			return
-				(IsIdentifier ?
-					Value as string :
-					((Value == null) ?
-						string.Empty :
-						Value.ToString()));
+			if(LiteralFormat!=Parser.LiteralFormat.None)
+				switch (LiteralFormat)
+				{
+					case Parser.LiteralFormat.CharLiteral:
+						return "'"+Value+"'";
+					case Parser.LiteralFormat.StringLiteral:
+						return "\"" + Value + "\"";
+					case Parser.LiteralFormat.VerbatimStringLiteral:
+						return "r\"" + Value + "\"";
+				}
+
+			return Value.ToString();
 		}
 
 

@@ -74,6 +74,7 @@
     <Compile Include="Dom\CodeLocation.cs" />
     <Compile Include="Dom\ImportStatement.cs" />
     <Compile Include="Dom\NodeInterfaces.cs" />
+    <Compile Include="Dom\Statements.cs" />
     <Compile Include="Parser\TokenTracker.cs" />
     <Compile Include="Resolver\DCodeResolver.cs" />
     <Compile Include="Dom\DAttribute.cs" />

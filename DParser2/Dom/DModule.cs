@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 using D_Parser.Parser;
+using D_Parser.Dom.Statements;
+using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Dom
 {
     /// <summary>
     /// Encapsules an entire document and represents the root node
     /// </summary>
-    public class DModule : DBlockStatement, IAbstractSyntaxTree
+    public class DModule : DBlockNode, IAbstractSyntaxTree
     {
         /// <summary>
         /// Applies file name, children and imports from an other module instance
@@ -89,10 +91,11 @@ namespace D_Parser.Dom
         }
     }
 
-	public class DBlockStatement : DNode, IBlockNode
+	public class DBlockNode : DNode, IBlockNode
 	{
 		CodeLocation _BlockStart;
-		List<INode> _Children = new List<INode>();
+		protected List<INode> _Children = new List<INode>();
+		protected List<IStatement> _Statements = new List<IStatement>();
 
 		public CodeLocation BlockStartLocation
 		{
@@ -178,6 +181,22 @@ namespace D_Parser.Dom
 
 			base.Assign(other);
 		}
+
+
+		public IEnumerable<IStatement> Statements
+		{
+			get { return _Statements; }
+		}
+
+		public void Add(IStatement Statement)
+		{
+			_Statements.Add(Statement);
+		}
+
+		public void Add(IEnumerable<IStatement> Statements)
+		{
+			_Statements.AddRange(Statements);
+		}
 	}
 
     public class DVariable : DNode
@@ -191,7 +210,7 @@ namespace D_Parser.Dom
         }
     }
 
-    public class DMethod : DBlockStatement
+    public class DMethod : DBlockNode
     {
         public List<INode> Parameters=new List<INode>();
         public MethodType SpecialType = MethodType.Normal;
@@ -218,8 +237,8 @@ namespace D_Parser.Dom
             return s.Trim(',')+")";
         }
     }
-
-    public class DStatementBlock : DBlockStatement
+	/*
+    public class DStatementBlock : DBlockNode
     {
         public int Token;
         public IExpression Expression;
@@ -235,9 +254,9 @@ namespace D_Parser.Dom
         {
             return DTokens.GetTokenString(Token)+(Expression!=null?("("+Expression.ToString()+")"):"");
         }
-    }
+    }*/
 
-    public class DClassLike : DBlockStatement
+    public class DClassLike : DBlockNode
     {
         public List<ITypeDeclaration> BaseClasses=new List<ITypeDeclaration>();
         public int ClassType=DTokens.Class;
@@ -279,7 +298,7 @@ namespace D_Parser.Dom
         }
     }
 
-    public class DEnum : DBlockStatement
+    public class DEnum : DBlockNode
     {
 		public override string ToString(bool Attributes, bool IncludePath)
         {

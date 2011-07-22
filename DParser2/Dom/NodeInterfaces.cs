@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Collections.ObjectModel;
+using D_Parser.Dom.Statements;
 
 namespace D_Parser.Dom
 {
@@ -36,6 +37,10 @@ namespace D_Parser.Dom
 		CodeLocation BlockStartLocation { get; set; }
 		INode[] Children { get; }
 
+		IEnumerable<IStatement> Statements { get; }
+
+		void Add(IStatement Statement);
+		void Add(IEnumerable<IStatement> Statements);
 		void Add(INode Node);
 		void AddRange(IEnumerable<INode> Nodes);
 		int Count { get; }

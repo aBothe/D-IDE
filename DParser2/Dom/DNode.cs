@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using D_Parser.Parser;
+using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Dom
 {

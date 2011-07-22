@@ -6,6 +6,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.ObjectModel;
 using D_Parser.Parser;
+using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Resolver
 {

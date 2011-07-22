@@ -724,9 +724,9 @@ namespace D_IDE.D
 						if (n.ContainsAttribute(DTokens.Const))
 							return DCodeCompletionSupport.Instance.GetNodeImage("literal");
 
-						var realParent = n.Parent as DBlockStatement;
+						var realParent = n.Parent as DBlockNode;
 						while (realParent is DStatementBlock)
-							realParent = realParent.Parent as DBlockStatement;
+							realParent = realParent.Parent as DBlockNode;
 
 						if (realParent == null)
 							return null;
