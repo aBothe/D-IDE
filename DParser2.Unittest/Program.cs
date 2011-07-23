@@ -15,17 +15,12 @@ namespace ParserTests
         public static string curFile = "";
         public static void Main(string[] args)
         {
-			string input = 
-@"import std.stdio;
-
-alias int X;
-
-void main(){
-	int x=5;
-	X y=56;
-}";
+			string input =
+@"toUpper!S(s)";
 			
-			ParseTests.TestCode(input);
+			var mod=ParseTests.TestExpression(input);
+
+			//ParseTests.TestSourcePackages();
 			
 			//ParseTests.TestExpression(code);
 			//ParseTests.TestExpressionStartFinder(code);

@@ -1306,13 +1306,22 @@ namespace D_Parser.Dom.Expressions
 
 		public override string ToString(bool IncludesBase)
 		{
-			var ret = (IncludesBase && InnerDeclaration != null ? (InnerDeclaration.ToString() + ".") : "") + TemplateIdentifier + "!(";
+			var ret = (IncludesBase && InnerDeclaration != null ? (InnerDeclaration.ToString() + ".") : "") + TemplateIdentifier + '!';
 
-			if(Arguments!=null)
-				foreach (var e in Arguments)
-					ret += e.ToString() + ",";
+			if (Arguments != null)
+			{
+				if (Arguments.Length > 1)
+				{
+					ret += '(';
+					foreach (var e in Arguments)
+						ret += e.ToString() + ",";
+					ret = ret.TrimEnd(',') + ")";
+				}
+				else
+					ret += Arguments[0].ToString();
+			}
 
-			return ret.TrimEnd(',') + ")";
+			return ret;
 		}
 
 		public bool IsConstant
@@ -1352,7 +1361,7 @@ namespace D_Parser.Dom.Expressions
 						return "r\"" + Value + "\"";
 				}
 
-			return Value.ToString();
+			return Value==null?null: Value.ToString();
 		}
 
 

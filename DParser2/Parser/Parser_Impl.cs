@@ -209,7 +209,10 @@ namespace D_Parser.Parser
 				Expect(CloseParenthesis);
 				Expect(Semicolon);
 			}
+
 			//TemplateMixin
+			else if (la.Kind == Mixin && Peek(1).Kind == Identifier)
+				TemplateMixin();
 
 			//MixinDeclaration
 			else if (la.Kind == (Mixin))
@@ -229,7 +232,7 @@ namespace D_Parser.Parser
 				while (DeclarationAttributes.Count > 0)
 					BlockAttributes.Push(DeclarationAttributes.Pop());
 
-				ClassBody(module,true);
+				ClassBody(module, true);
 
 				// After the block ended, restore the previous block attributes
 				BlockAttributes = AttrBackup;
@@ -266,7 +269,7 @@ namespace D_Parser.Parser
 
 			// else:
 			else
-				module.AddRange( Declaration());
+				module.AddRange(Declaration());
 		}
 
 		string ModuleDeclaration()
@@ -474,7 +477,7 @@ namespace D_Parser.Parser
 			return ret;
 		}
 
-		IEnumerable<INode> Declaration()
+		INode[] Declaration()
 		{
 			// Skip ref token
 			if (la.Kind == (Ref))
@@ -529,7 +532,7 @@ namespace D_Parser.Parser
 				return EnumDeclaration();
 			else if (la.Kind == (Class))
 				return new[]{ ClassDeclaration()};
-			else if (la.Kind == (Template))
+			else if (la.Kind == (Template) || (la.Kind==Mixin && Peek(1).Kind==Template))
 				return new[]{ TemplateDeclaration()};
 			else if (la.Kind == (Interface))
 				return new[]{ InterfaceDeclaration()};
@@ -543,7 +546,7 @@ namespace D_Parser.Parser
 			return null;
 		}
 
-		IEnumerable<INode> Decl(bool HasStorageClassModifiers)
+		INode[] Decl(bool HasStorageClassModifiers)
 		{
 			var startLocation = la.Location;
 			ITypeDeclaration ttd = null;
@@ -591,7 +594,8 @@ namespace D_Parser.Parser
 				if (la.Kind == (Assign))
 					(firstNode as DVariable).Initializer = Initializer();
 				firstNode.EndLocation = t.EndLocation;
-				yield return firstNode;
+				var ret = new List<INode>();
+				ret.Add(firstNode);
 
 				// DeclaratorIdentifierList
 				while (la.Kind == (Comma))
@@ -607,24 +611,27 @@ namespace D_Parser.Parser
 					if (la.Kind == (Assign))
 						otherNode.Initializer = Initializer();
 					otherNode.EndLocation = t.EndLocation;
-					yield return otherNode;
+					ret.Add(otherNode);
 				}
 
 				Expect(Semicolon);/* TODO: DDoc
 				var pb = (par as IBlockNode);
 				if (pb.Count > 0)
 					pb[pb.Count - 1].Description += CheckForPostSemicolonComment();*/
+				return ret.ToArray();
 			}
 
 			// BasicType Declarator FunctionBody
-			else if (firstNode is IBlockNode && (la.Kind == In || la.Kind == Out || la.Kind == Body || la.Kind == OpenCurlyBrace))
+			else if (firstNode is DMethod && (la.Kind == In || la.Kind == Out || la.Kind == Body || la.Kind == OpenCurlyBrace))
 			{
 				FunctionBody(firstNode as DMethod);
 
-				yield return firstNode;
+				return new[]{ firstNode};
 			}
 			else
 				SynErr(OpenCurlyBrace, "; or function body expected after declaration stub.");
+
+			return null;
 		}
 
 		bool IsBasicType()
@@ -1317,6 +1324,8 @@ namespace D_Parser.Parser
 				Step();
 				l.Add(AssignExpression());
 			}
+			if(l.Count>0)
+				s.ArgumentList = l.ToArray();
 			Expect(CloseParenthesis);
 			s.EndLocation = t.EndLocation;
 
@@ -2041,7 +2050,9 @@ namespace D_Parser.Parser
 			}
 
 			// TemplateInstance
-			if (la.Kind == (Identifier) && Lexer.CurrentPeekToken.Kind == (Not) && (Peek().Kind != Is && Lexer.CurrentPeekToken.Kind != In) /* Very important: The 'template' could be a '!is' expression - With two tokens! */)
+			if (la.Kind == (Identifier) && Lexer.CurrentPeekToken.Kind == (Not) 
+				&& (Peek().Kind != Is && Lexer.CurrentPeekToken.Kind != In) 
+				/* Very important: The 'template' could be a '!is'/'!in' expression - With two tokens each! */)
 				return TemplateInstance();
 
 			// Identifier
@@ -2610,8 +2621,11 @@ namespace D_Parser.Parser
 
 				// Initialize
 				if (la.Kind != Semicolon)
-					dbs.Initialize=Statement(false); // Against the D language theory, blocks aren't allowed here!
-				Expect(Semicolon);
+					dbs.Initialize = Statement(false); // Against the D language theory, blocks aren't allowed here!
+				else 
+					Step();
+				// Enforce a trailing semi-colon only if there hasn't been an expression (the ; gets already skipped in there)
+				//	Expect(Semicolon);
 
 				// Test
 				if (la.Kind != (Semicolon))
@@ -2822,6 +2836,7 @@ namespace D_Parser.Parser
 				var s = new ReturnStatement() { StartLocation = t.Location };
 				if (la.Kind != (Semicolon))
 					s.ReturnExpression = Expression();
+
 				Expect(Semicolon);
 				s.EndLocation = t.EndLocation;
 
@@ -3036,6 +3051,7 @@ namespace D_Parser.Parser
 				var s=_Pragma();
 
 				s.ScopedStatement = Statement();
+				return s;
 			}
 			#endregion
 
@@ -3043,17 +3059,23 @@ namespace D_Parser.Parser
 			//TODO: Handle this one in terms of adding it to the node structure
 			else if (la.Kind == (Mixin))
 			{
-				Step();
-				var s = new MixinStatement() { StartLocation = t.Location };
-				Expect(OpenParenthesis);
+				// TemplateMixin
+				if (Peek(1).Kind != OpenParenthesis)
+					return TemplateMixin();
+				else
+				{
+					Step();
+					var s = new MixinStatement() { StartLocation = t.Location };
+					Expect(OpenParenthesis);
 
-				s.MixinExpression = AssignExpression();
+					s.MixinExpression = AssignExpression();
 
-				Expect(CloseParenthesis);
-				Expect(Semicolon);
+					Expect(CloseParenthesis);
+					Expect(Semicolon);
 
-				s.EndLocation = t.EndLocation;
-				return s;
+					s.EndLocation = t.EndLocation;
+					return s;
+				}
 			}
 			#endregion
 
@@ -3069,7 +3091,10 @@ namespace D_Parser.Parser
 					if (la.Kind == Identifier || la.Kind == Literal)
 					{
 						Step();
-						s.DebugIdentifierOrLiteral = t.LiteralValue;
+						if (la.Kind == Literal)
+							s.DebugIdentifierOrLiteral = t.LiteralValue;
+						else 
+							s.DebugIdentifierOrLiteral = t.Value;
 					}
 					else 
 						SynErr(t.Kind, "Identifier or Literal expected, "+DTokens.GetTokenString(t.Kind)+" found");
@@ -3080,7 +3105,10 @@ namespace D_Parser.Parser
 				s.ScopedStatement = Statement();
 
 				if (la.Kind == Else)
+				{
+					Step();
 					s.ElseStatement = Statement();
+				}
 
 				s.EndLocation = t.EndLocation;
 				return s;
@@ -3097,7 +3125,12 @@ namespace D_Parser.Parser
 					if (la.Kind == Identifier || la.Kind == Literal || la.Kind==Unittest)
 					{
 						Step();
-						s.VersionIdentifierOrLiteral = t.Kind==Unittest?"unittest": t.LiteralValue;
+						if(la.Kind==Unittest)
+							s.VersionIdentifierOrLiteral = "unittest";
+						else if(la.Kind==Literal)
+							s.VersionIdentifierOrLiteral=t.LiteralValue;
+						else 
+							s.VersionIdentifierOrLiteral=t.Value;
 					}
 					else
 						SynErr(t.Kind, "Identifier or Literal expected, " + DTokens.GetTokenString(t.Kind) + " found");
@@ -3108,7 +3141,10 @@ namespace D_Parser.Parser
 				s.ScopedStatement = Statement();
 
 				if (la.Kind == Else)
+				{
+					Step();
 					s.ElseStatement = Statement();
+				}
 
 				s.EndLocation = t.EndLocation;
 				return s;
@@ -3430,9 +3466,10 @@ namespace D_Parser.Parser
 		#endregion
 
 		#region Enums
-		private IEnumerable<INode> EnumDeclaration()
+		private INode[] EnumDeclaration()
 		{
 			Expect(Enum);
+			var ret = new List<INode>();
 
 			var mye = new DEnum();
 			mye.StartLocation = t.Location;
@@ -3492,7 +3529,7 @@ namespace D_Parser.Parser
 					enumVar.Initializer = AssignExpression();
 				}
 				enumVar.EndLocation = t.Location;
-				yield return enumVar;
+				ret.Add(enumVar);
 
 				if (la.Kind == (Comma))
 					goto another_enumvalue;
@@ -3543,8 +3580,10 @@ namespace D_Parser.Parser
 				Expect(CloseCurlyBrace);
 				mye.EndLocation = t.EndLocation;
 				if (!String.IsNullOrEmpty(mye.Name))
-					yield return mye;
+					ret.Add(mye);
 			}
+
+			return ret.ToArray();
 		}
 		#endregion
 
@@ -3605,9 +3644,17 @@ namespace D_Parser.Parser
 
 		private INode TemplateDeclaration()
 		{
+			// TemplateMixinDeclaration
+			bool isTemplateMixinDecl = la.Kind == Mixin;
+			if (isTemplateMixinDecl)
+				Step();
 			Expect(Template);
 			var dc = new DClassLike(Template);
 			ApplyAttributes(dc);
+
+			if (isTemplateMixinDecl)
+				dc.Attributes.Add(new DAttribute(Mixin));
+
 			dc.StartLocation = t.Location;
 
 			Expect(Identifier);
@@ -3625,6 +3672,56 @@ namespace D_Parser.Parser
 
 			dc.EndLocation = t.EndLocation;
 			return dc;
+		}
+
+		TemplateMixin TemplateMixin()
+		{
+			// mixin TemplateIdentifier !( TemplateArgumentList ) MixinIdentifier ;
+			//							|<--			optional			 -->|
+			var r = new TemplateMixin();
+
+			Expect(Mixin);
+			r.StartLocation = t.Location;
+
+			if (Expect(Identifier))
+			{
+				r.TemplateId = t.Value;
+
+				if (la.Kind==Not)
+				{
+					Step();
+					if(Expect(OpenParenthesis) && la.Kind!=CloseParenthesis)
+					{
+						var args = new List<IExpression>();
+				
+						bool init = true;
+						while (init || la.Kind == (Comma))
+						{
+							if (!init) Step();
+							init = false;
+
+							if (IsAssignExpression())
+								args.Add(AssignExpression());
+							else
+								args.Add(new TypeDeclarationExpression(Type()));
+
+							r.Arguments = args.ToArray();
+						}
+					}
+					Expect(CloseParenthesis);
+				}
+			}
+
+			// MixinIdentifier
+			if (la.Kind == Identifier)
+			{
+				Step();
+				r.MixinId = t.Value;
+			}
+
+			Expect(Semicolon);
+
+			return r;
 		}
 
 		/// <summary>
@@ -3801,7 +3898,7 @@ namespace D_Parser.Parser
 			}
 		}
 
-		private TemplateInstanceExpression TemplateInstance()
+		public TemplateInstanceExpression TemplateInstance()
 		{
 			if (!Expect(Identifier))
 				return null;
@@ -3832,8 +3929,10 @@ namespace D_Parser.Parser
 			else
 			{
 				Step();
-				if (t.Kind == (Identifier) || t.Kind == (Literal))
-					args.Add(new IdentifierExpression(t.LiteralValue));
+				if (t.Kind == Literal)
+					args.Add(new IdentifierExpression(t.LiteralValue) { LiteralFormat=LiteralFormat.Scalar});
+				else if (t.Kind == Identifier)
+					args.Add(new IdentifierExpression(t.Value) { LiteralFormat=LiteralFormat.None});
 				else
 					args.Add(new TokenExpression(t.Kind));
 			}

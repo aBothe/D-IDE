@@ -14,7 +14,7 @@ namespace ParserTests
 {
 	public class ParseTests
 	{
-		public const string dmdDir = "D:\\dmd2";
+		public const string dmdDir = "A:\\D\\dmd2";
 
 		public static void TestSingleFile(string file)
 		{
@@ -23,7 +23,7 @@ namespace ParserTests
 			hp.Start();
 			var n = DParser.ParseFile(file);
 			hp.Stop();
-			Console.WriteLine(hp.Duration + "s");
+			Console.WriteLine((int)(hp.Duration * 1000) + " ms");
 
 			printErrors(n);
 			Dump(n, "");
@@ -36,7 +36,7 @@ namespace ParserTests
 			hp.Start();
 			var n = DParser.ParseString(code);
 			hp.Stop();
-			Console.WriteLine(hp.Duration + "s");
+			Console.WriteLine((int)( hp.Duration*1000) + " ms");
 
 			printErrors(n);
 			Dump(n, "");
@@ -70,7 +70,7 @@ namespace ParserTests
 			}
 			hp.Stop();
 			Console.WriteLine(hp.Duration + "s");
-			Console.WriteLine("~" + (hp.Duration / Files.Count).ToString() + "s per file");
+			Console.WriteLine("~" + (Math.Round(hp.Duration*1000,1) / Files.Count).ToString() + "ms per file");
 		}
 
 		public static IExpression TestExpression(string e)
@@ -150,6 +150,9 @@ namespace ParserTests
 
 		static void printErrors(IAbstractSyntaxTree mod)
 		{
+			if(mod.ParseErrors.Count>0)
+				Console.WriteLine(mod.ModuleName);
+
 			foreach (var e in mod.ParseErrors)
 				Console.WriteLine("Line " + e.Location.Line.ToString() + " Col " + e.Location.Column.ToString() + ": " + e.Message);
 		}
