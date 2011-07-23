@@ -1148,13 +1148,13 @@ namespace D_Parser.Dom.Expressions
 			return PostfixForeExpression.ToString() + "++";
 		}
 
-		public override CodeLocation EndLocation
+		public sealed override CodeLocation EndLocation
 		{
 			get;
 			set;
 		}
 
-		public override ITypeDeclaration ExpressionTypeRepresentation
+		public sealed override ITypeDeclaration ExpressionTypeRepresentation
 		{
 			get { return PostfixForeExpression.ExpressionTypeRepresentation; }
 		}
@@ -1167,13 +1167,13 @@ namespace D_Parser.Dom.Expressions
 			return PostfixForeExpression.ToString() + "--";
 		}
 
-		public override CodeLocation EndLocation
+		public sealed override CodeLocation EndLocation
 		{
 			get;
 			set;
 		}
 
-		public override ITypeDeclaration ExpressionTypeRepresentation
+		public sealed override ITypeDeclaration ExpressionTypeRepresentation
 		{
 			get { return PostfixForeExpression.ExpressionTypeRepresentation; }
 		}
@@ -1198,13 +1198,13 @@ namespace D_Parser.Dom.Expressions
 			return ret.TrimEnd(',') + ")";
 		}
 
-		public override CodeLocation EndLocation
+		public sealed override CodeLocation EndLocation
 		{
 			get;
 			set;
 		}
 
-		public override ITypeDeclaration ExpressionTypeRepresentation
+		public sealed override ITypeDeclaration ExpressionTypeRepresentation
 		{
 			get { return PostfixForeExpression.ExpressionTypeRepresentation; }
 		}
@@ -1229,13 +1229,13 @@ namespace D_Parser.Dom.Expressions
 			return ret.TrimEnd(',') + "]";
 		}
 
-		public override CodeLocation EndLocation
+		public sealed override CodeLocation EndLocation
 		{
 			get;
 			set;
 		}
 
-		public override ITypeDeclaration ExpressionTypeRepresentation
+		public sealed override ITypeDeclaration ExpressionTypeRepresentation
 		{
 			get { return new DExpressionDecl(this) { InnerDeclaration=PostfixForeExpression.ExpressionTypeRepresentation}; }
 		}
@@ -1973,12 +1973,12 @@ namespace D_Parser.Dom.Expressions
 			Name = param.Name;
 		}
 
-		public override string ToString()
+		public sealed override string ToString()
 		{
 			return TemplateParameter.ToString();
 		}
 
-		public override string ToString(bool Attributes, bool IncludePath)
+		public sealed override string ToString(bool Attributes, bool IncludePath)
 		{
 			return (GetNodePath(this, false) + "." + ToString()).TrimEnd('.');
 		}
@@ -1991,7 +1991,7 @@ namespace D_Parser.Dom.Expressions
 		public ITypeDeclaration Specialization;
 		public ITypeDeclaration Default;
 
-		public override string ToString()
+		public sealed override string ToString()
 		{
 			var ret = Name;
 
@@ -2011,7 +2011,7 @@ namespace D_Parser.Dom.Expressions
 
 		public ITemplateParameter FollowParameter;
 
-		public override string ToString()
+		public sealed override string ToString()
 		{
 			return "this" + (FollowParameter != null ? (" " + FollowParameter.ToString()) : "");
 		}
@@ -2037,7 +2037,7 @@ namespace D_Parser.Dom.Expressions
 		public ITypeDeclaration SpecializationType;
 		public ITypeDeclaration DefaultType;
 
-		public override string ToString()
+		public sealed override string ToString()
 		{
 			return "alias " + base.ToString();
 		}
@@ -2047,7 +2047,7 @@ namespace D_Parser.Dom.Expressions
 	{
 		public string Name { get; set; }
 
-		public override string ToString()
+		public sealed override string ToString()
 		{
 			return Name + " ...";
 		}
@@ -2068,7 +2068,7 @@ namespace D_Parser.Dom.Expressions
 	{
 		public ArrayMemberInitializer[] ArrayMemberInitializations;
 
-		public override IEnumerable<IExpression> Expressions
+		public sealed override IEnumerable<IExpression> Expressions
 		{
 			get
 			{
@@ -2078,7 +2078,7 @@ namespace D_Parser.Dom.Expressions
 			set { }
 		}
 
-		public override string ToString()
+		public sealed override string ToString()
 		{
 			var ret = "[";
 
@@ -2095,7 +2095,7 @@ namespace D_Parser.Dom.Expressions
 		public IExpression Left;
 		public IExpression Specialization;
 
-		public override string ToString()
+		public sealed override string ToString()
 		{
 			return Left.ToString() + (Specialization != null ? (":" + Specialization.ToString()) : "");
 		}
@@ -2105,7 +2105,7 @@ namespace D_Parser.Dom.Expressions
 	{
 		public StructMemberInitializer[] StructMemberInitializers;
 
-		public override string ToString()
+		public sealed override string ToString()
 		{
 			var ret = "{";
 
@@ -2150,7 +2150,7 @@ namespace D_Parser.Dom.Expressions
 		public string MemberName = string.Empty;
 		public IExpression Specialization;
 
-		public override string ToString()
+		public sealed override string ToString()
 		{
 			return (!string.IsNullOrEmpty(MemberName) ? (MemberName + ":") : "") + Specialization.ToString();
 		}

@@ -43,7 +43,7 @@ namespace ParserTests
 			return n;
 		}
 
-		public static void TestSourcePackages()
+		public static void TestSourcePackages(bool parseOuterStructureOnly=false)
 		{
 			var Files = new Dictionary<string, string>();
 
@@ -57,20 +57,22 @@ namespace ParserTests
 				Files.Add(fn, File.ReadAllText(fn));
 			}
 
-			var hp = new HighPrecTimer();
-
-			hp.Start();
-			int i = 0;
-			foreach (string file in Files.Keys)
+			for (int j = 10; j >= 1; j--)
 			{
-				i++;
-				var n = DParser.ParseString(Files[file], false);
+				var hp = new HighPrecTimer();
 
-				printErrors(n);
+				hp.Start();
+				int i = 0;
+				foreach (string file in Files.Keys)
+				{
+					i++;
+					var n = DParser.ParseString(Files[file], parseOuterStructureOnly);
+
+					printErrors(n);
+				}
+				hp.Stop();
+				Console.WriteLine(Math.Round(hp.Duration,3) + "s | ~" + Math.Round(hp.Duration * 1000 / Files.Count, 1).ToString() + "ms per file");
 			}
-			hp.Stop();
-			Console.WriteLine(hp.Duration + "s");
-			Console.WriteLine("~" + (Math.Round(hp.Duration*1000,1) / Files.Count).ToString() + "ms per file");
 		}
 
 		public static IExpression TestExpression(string e)

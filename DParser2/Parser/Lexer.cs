@@ -1187,9 +1187,9 @@ namespace D_Parser.Parser
 					}
 
 					//TODO: Performance improvement
-					var ret=System.Web.HttpUtility.HtmlDecode("&"+charEntity+";");
+					//var ret=System.Web.HttpUtility.HtmlDecode("&"+charEntity+";");
 
-					ch = ret[0];
+					ch = '#';//ret[0];
 
 					return "&"+charEntity+";";
                 default:

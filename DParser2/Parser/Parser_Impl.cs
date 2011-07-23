@@ -1319,7 +1319,7 @@ namespace D_Parser.Parser
 			s.PragmaIdentifier = t.Value;
 
 			var l = new List<IExpression>();
-			if (la.Kind == (Comma))
+			while (la.Kind == (Comma))
 			{
 				Step();
 				l.Add(AssignExpression());
