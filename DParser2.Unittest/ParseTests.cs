@@ -16,17 +16,17 @@ namespace ParserTests
 	{
 		public const string dmdDir = "A:\\D\\dmd2";
 
-		public static void TestSingleFile(string file)
+		public static void TestSingleFile(string file, bool skipFunctionBodies=false,bool dump=true)
 		{
 			var hp = new HighPrecTimer();
 
 			hp.Start();
-			var n = DParser.ParseFile(file);
+			var n = DParser.ParseFile(file,skipFunctionBodies);
 			hp.Stop();
 			Console.WriteLine((int)(hp.Duration * 1000) + " ms");
 
 			printErrors(n);
-			Dump(n, "");
+			if(dump)Dump(n, "");
 		}
 
 		public static IAbstractSyntaxTree TestCode(string code)
@@ -43,7 +43,7 @@ namespace ParserTests
 			return n;
 		}
 
-		public static void TestSourcePackages(bool parseOuterStructureOnly=false)
+		public static void TestSourcePackages(bool parseOuterStructureOnly=false, int repetitions=1)
 		{
 			var Files = new Dictionary<string, string>();
 
@@ -57,22 +57,45 @@ namespace ParserTests
 				Files.Add(fn, File.ReadAllText(fn));
 			}
 
-			for (int j = 10; j >= 1; j--)
+			if (repetitions <= 1)
 			{
 				var hp = new HighPrecTimer();
 
-				hp.Start();
 				int i = 0;
+				bool errorsFound = false;
+
+				hp.Start();
+
 				foreach (string file in Files.Keys)
 				{
 					i++;
 					var n = DParser.ParseString(Files[file], parseOuterStructureOnly);
 
-					printErrors(n);
+					if (printErrors(n))
+						errorsFound = true;
 				}
 				hp.Stop();
-				Console.WriteLine(Math.Round(hp.Duration,3) + "s | ~" + Math.Round(hp.Duration * 1000 / Files.Count, 1).ToString() + "ms per file");
+
+				if (!errorsFound)
+					Console.WriteLine("--- No errors found ---");
+				Console.WriteLine(Math.Round(hp.Duration, 3) + "s / " + Math.Round(hp.Duration * 1000 / Files.Count, 1).ToString() + "ms per file");
 			}
+			else
+				for (int j = repetitions; j >= 1; j--)
+				{
+					var hp = new HighPrecTimer();
+					Console.Write("{0}/{1} ",repetitions-j+1,repetitions);
+					hp.Start();
+					int i = 0;
+					foreach (string file in Files.Keys)
+					{
+						i++;
+						var n = DParser.ParseString(Files[file], parseOuterStructureOnly);
+					}
+					hp.Stop();
+					Console.WriteLine(Math.Round(hp.Duration, 3) + "s | ~" + Math.Round(hp.Duration * 1000 / Files.Count, 1).ToString() + "ms per file");
+
+				}
 		}
 
 		public static IExpression TestExpression(string e)
@@ -149,14 +172,21 @@ namespace ParserTests
 		}
 
 
-
-		static void printErrors(IAbstractSyntaxTree mod)
+		/// <summary>
+		/// </summary>
+		/// <returns>true if errors were found</returns>
+		static bool printErrors(IAbstractSyntaxTree mod)
 		{
-			if(mod.ParseErrors.Count>0)
+			if (mod.ParseErrors.Count > 0)
+			{
 				Console.WriteLine(mod.ModuleName);
 
-			foreach (var e in mod.ParseErrors)
-				Console.WriteLine("Line " + e.Location.Line.ToString() + " Col " + e.Location.Column.ToString() + ": " + e.Message);
+				foreach (var e in mod.ParseErrors)
+					Console.WriteLine("Line " + e.Location.Line.ToString() + " Col " + e.Location.Column.ToString() + ": " + e.Message);
+
+				return true;
+			}
+			return false;
 		}
 
 		static void Dump(INode n, string lev)

@@ -679,11 +679,13 @@ namespace D_Parser.Resolver
 
 			// Check parameters
 			if (curScope is DMethod)
+			{
 				foreach (var ch in (curScope as DMethod).Parameters)
 				{
 					if (name == ch.Name)
 						matches.Add(ch);
 				}
+			}
 
 			// and template parameters
 			if (curScope is DNode && (curScope as DNode).TemplateParameters != null)

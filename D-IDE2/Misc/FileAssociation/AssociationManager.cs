@@ -79,7 +79,7 @@ namespace BrendanGrant.Helpers.FileAssociation
 			if (!pai.Exists)
 				pai.Create();
 
-			pai.AddVerb(new ProgramVerb("open", executablePath));
+			pai.AddVerb(new ProgramVerb("open", executablePath+" %1")); // Note: the %1 ensures that the opened file will be passed to the program's command line
 		}
 
 		/// <summary>

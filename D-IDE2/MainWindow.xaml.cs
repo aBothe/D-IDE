@@ -240,21 +240,23 @@ namespace D_IDE
 			encoding_DropDown.Dispatcher.Invoke(new Action(() =>
 			encoding_DropDown.ItemsSource = new[] { Encoding.ASCII, Encoding.UTF8, Encoding.Unicode, Encoding.UTF32 }));
 
-			if (args.Length > 0)
-				Dispatcher.Invoke(new Action(() =>
-				{
-					foreach (var a in args)
-						IDEManager.EditingManagement.OpenFile(a);
-				}));
-			else
+			// Load last solution
+			if ((GlobalProperties.Instance.OpenLastPrj && 
+				GlobalProperties.Instance.LastProjects.Count > 0 &&
+				File.Exists(GlobalProperties.Instance.LastProjects[0])) ||
+				args.Length>0)
+			{
+				Dispatcher.Invoke(new Action(() =>{
+					// Load last project
+					if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
+						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 
-				// Load last solution
-				if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
-				{
-					if (File.Exists(GlobalProperties.Instance.LastProjects[0]))
-						Dispatcher.Invoke(new Action(() =>
-						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0])));
-				}
+					// If given, iterate over all cmd line arguments
+					if (args.Length > 0)
+						foreach (var a in args)
+							IDEManager.EditingManagement.OpenFile(a);
+				}));
+			}
 
 			RefreshGUI();
 

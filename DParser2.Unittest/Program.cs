@@ -13,10 +13,10 @@ namespace ParserTests
 {
 	class Program
 	{
-		public static string curFile = @"A:\D\dmd2\src\phobos\std\datetime.d";
+		public static string curFile = @"A:\D\dmd2\src\phobos\std\range.d";
 		public static void Main(string[] args)
 		{
-			a();
+			b();
 			Console.ReadKey();
 		}
 
@@ -44,17 +44,12 @@ namespace ParserTests
 		static void b()
 		{
 			string input =
-@"void main(){pragma(msg, asdf, 23, ""ho"");}";
+@"is(T[0] == This[]) && is(T==class) && is(T[0] T)";
 
-			if (false)
-			{
-				var mod = ParseTests.TestCode(input);
-			}
-			else
-				ParseTests.TestSourcePackages(true);
-
-			//ParseTests.TestExpression(code);
-			//ParseTests.TestExpressionStartFinder(code);
+			//var mod = ParseTests.TestCode(input);
+			ParseTests.TestSourcePackages(false);
+			//ParseTests.TestExpression(input);
+			//ParseTests.TestExpressionStartFinder(input);
 		}
 
 		static void c()
@@ -71,6 +66,11 @@ namespace ParserTests
 
 				ParseTests.TestMathExpression(code);
 			}
+		}
+
+		static void d()
+		{
+			ParseTests.TestSingleFile(curFile,true, false);
 		}
 	}
 }

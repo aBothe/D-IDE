@@ -232,7 +232,7 @@ namespace D_Parser.Dom.Expressions
 
 		public override string ToString()
 		{
-			return this.OrOrExpression.ToString() + "?" + TrueCaseExpression.ToString() + FalseCaseExpression.ToString();
+			return this.OrOrExpression.ToString() + "?" + TrueCaseExpression.ToString() +':' + FalseCaseExpression.ToString();
 		}
 
 		public CodeLocation Location
@@ -1783,8 +1783,9 @@ namespace D_Parser.Dom.Expressions
 
 	public class IsExpression : PrimaryExpression
 	{
-		public ITypeDeclaration Type;
-		public string Identifier;
+		public IExpression TestedExpression;
+		public ITypeDeclaration TestedType;
+		public string TypeAliasIdentifier;
 
 		/// <summary>
 		/// True if Type == TypeSpecialization instead of Type : TypeSpecialization
@@ -1798,11 +1799,20 @@ namespace D_Parser.Dom.Expressions
 
 		public override string ToString()
 		{
-			var ret = "is(" + Type.ToString();
+			var ret = "is(";
 
-			ret += Identifier + (EqualityTest ? "==" : ":");
+			if (TestedType != null)
+				ret += TestedType.ToString();
+			else if (TestedExpression != null)
+				ret += TestedExpression.ToString();
 
-			ret += TypeSpecialization != null ? TypeSpecialization.ToString() : DTokens.GetTokenString(TypeSpecializationToken);
+			if (TypeAliasIdentifier != null)
+				ret += ' ' + TypeAliasIdentifier;
+
+			if (TypeSpecialization != null || TypeSpecializationToken!=0)
+				ret +=(EqualityTest ? "==" : ":")+ (TypeSpecialization != null ? 
+					TypeSpecialization.ToString() : // Either the specialization declaration
+					DTokens.GetTokenString(TypeSpecializationToken)); // or the spec token
 
 			if (TemplateParameterList != null)
 			{

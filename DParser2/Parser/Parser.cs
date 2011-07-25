@@ -55,7 +55,7 @@ namespace D_Parser.Parser
                 OptionalToken = p.t;
 
                 // Only if a dot follows a 'this' or 'super' token we go on parsing; Return otherwise
-                if (!((p.t.Kind == This || p.t.Kind == Super) && p.la.Kind == Dot))
+                if (!((p.t.Kind == This || p.t.Kind == Super) && p.laKind == Dot))
                     return null;
             }
             
@@ -257,8 +257,14 @@ namespace D_Parser.Parser
             [System.Diagnostics.DebuggerStepThrough]
             get
             {
-                return (DToken)Lexer.LookAhead;
+                return Lexer.LookAhead;
             }
+
+			set
+			{
+				Lexer.LookAhead = value;
+				laKind = value.Kind;
+			}
         }
 
         string CheckForDocComments()
@@ -277,7 +283,7 @@ namespace D_Parser.Parser
         /// <returns></returns>
         protected bool Expect(int n, string reason)
         {
-            if (la.Kind == n)
+            if (laKind == n)
             {
                 Lexer.NextToken();
                 return true;
@@ -294,7 +300,7 @@ namespace D_Parser.Parser
         /// </summary>
         bool LA(int n)
         {
-            return la.Kind == n;
+            return laKind == n;
         }
         /// <summary>
         /// Currenttoken check
@@ -315,11 +321,14 @@ namespace D_Parser.Parser
 
         private bool Expect(int n)
         {
-			if (la.Kind == n)
-			{ Step(); return true; }
+			if (laKind == n)
+			{ 
+				Step(); 
+				return true; 
+			}
 			else
 			{
-				SynErr(n, DTokens.GetTokenString(n) + " expected, "+DTokens.GetTokenString(la.Kind)+" found!");
+				SynErr(n, DTokens.GetTokenString(n) + " expected, "+DTokens.GetTokenString(laKind)+" found!");
 			}
             return false;
         }
@@ -362,10 +371,12 @@ namespace D_Parser.Parser
 
         bool IsEOF
         {
-            get { return la == null || la.Kind == EOF || la.Kind == __EOF__; }
+            get { return la == null || laKind == EOF || laKind == __EOF__; }
         }
 
-        DToken Step() { Lexer.NextToken(); Peek(1); return t; }
+		int laKind = 0;
+
+		DToken Step() { Lexer.NextToken(); Peek(1); laKind = la.Kind; return t; }
 
         [DebuggerStepThrough()]
         public DModule Parse()
