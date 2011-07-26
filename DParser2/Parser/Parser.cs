@@ -376,7 +376,7 @@ namespace D_Parser.Parser
 
 		int laKind = 0;
 
-		DToken Step() { Lexer.NextToken(); Peek(1); laKind = la.Kind; return t; }
+		public DToken Step() { Lexer.NextToken(); Peek(1); laKind = la.Kind; return t; }
 
         [DebuggerStepThrough()]
         public DModule Parse()

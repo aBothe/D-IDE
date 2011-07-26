@@ -85,6 +85,7 @@ namespace D_Parser.Resolver
 					if (dm.TemplateParameters != null)
 						ret.AddRange(dm.TemplateParameterNodes as IEnumerable<INode>);
 
+
 					if (dm.Body != null)
 					{
 						// First search the deepest statement under the caret
@@ -461,7 +462,7 @@ namespace D_Parser.Resolver
 			var expressionCode = code.Substring(start, alsoParseBeyondCaret ? code.Length - start : caret - start);
 
 			var parser = DParser.Create(new StringReader(expressionCode));
-			parser.Lexer.NextToken();
+			parser.Step();
 
 			if (onlyAssumeIdentifierList)
 				return ResolveType(parser.IdentifierList(),currentlyScopedNode, parseCache);
@@ -514,7 +515,10 @@ namespace D_Parser.Resolver
 						var curScope = currentlyScopedNode;
 						while (curScope != null)
 						{
-							matches.AddRange(ScanNodeForIdentifier(curScope, searchIdentifier, parseCache));
+							var m=ScanNodeForIdentifier(curScope, searchIdentifier, parseCache);
+
+							if (m != null)
+								matches.AddRange(m);
 
 							if (curScope is IAbstractSyntaxTree && (curScope as IAbstractSyntaxTree).ModuleName.StartsWith(searchIdentifier))
 								matches.Add(curScope);
@@ -534,7 +538,9 @@ namespace D_Parser.Resolver
 							if (modNameParts[0]==searchIdentifier)
 								matches.Add(mod);
 
-							matches.AddRange(ScanNodeForIdentifier(mod, searchIdentifier, null));
+							var m = ScanNodeForIdentifier(mod, searchIdentifier, null);
+							if(m!=null)
+								matches.AddRange(m);
 						}
 
 						var results = HandleNodeMatches(matches, currentlyScopedNode, parseCache, searchIdentifier);
@@ -652,7 +658,7 @@ namespace D_Parser.Resolver
 		/// <param name="name"></param>
 		/// <param name="parseCache">Needed when trying to search base classes</param>
 		/// <returns></returns>
-		public static IEnumerable<INode> ScanNodeForIdentifier(IBlockNode curScope, string name, IEnumerable<IAbstractSyntaxTree> parseCache)
+		public static INode[] ScanNodeForIdentifier(IBlockNode curScope, string name, IEnumerable<IAbstractSyntaxTree> parseCache)
 		{
 			var matches = new List<INode>();
 			foreach (var n in curScope)
@@ -697,15 +703,16 @@ namespace D_Parser.Resolver
 						matches.Add(new TemplateParameterNode(ch));
 				}
 
-			return matches;
+			return matches.Count>0? matches.ToArray():null;
 		}
 
-		static IEnumerable<ResolveResult> HandleNodeMatches(IEnumerable<INode> matches, 
+		static ResolveResult[] HandleNodeMatches(IEnumerable<INode> matches, 
 			IBlockNode currentlyScopedNode, 
 			IEnumerable<IAbstractSyntaxTree> parseCache, 
 			string searchIdentifier="",
 			ResolveResult resultBase = null)
 		{
+			var rl = new List<ResolveResult>();
 			foreach (var m in matches)
 			{
 				bool resType = true;
@@ -718,54 +725,55 @@ namespace D_Parser.Resolver
 					var v = m as DVariable;
 
 					if (v.IsAlias)
-						yield return new AliasResult()
+						rl.Add( new AliasResult()
 						{
 							AliasDefinition = resType?ResolveType(v.Type, currentlyScopedNode, parseCache):null,
 							ResultBase=resultBase
-						};
+						});
 					else
-						yield return new MemberResult()
+						rl.Add( new MemberResult()
 						{
 							ResolvedMember = m,
 							MemberBaseTypes = resType? ResolveType(v.Type, currentlyScopedNode, parseCache):null,
 							ResultBase = resultBase
-						};
+						});
 				}
 				else if (m is DMethod)
 				{
 					var method = m as DMethod;
 
-					yield return new MemberResult()
+					rl.Add( new MemberResult()
 					{
 						ResolvedMember = m,
 						MemberBaseTypes = resType? ResolveType(method.Type, currentlyScopedNode, parseCache):null,
 						ResultBase = resultBase
-					};
+					});
 				}
 				else if (m is DClassLike)
 				{
 					var Class = m as DClassLike;
 
-					yield return new TypeResult()
+					rl.Add( new TypeResult()
 					{
 						ResolvedTypeDefinition = Class,
 						BaseClass = ResolveBaseClass(Class, parseCache),
 						ResultBase = resultBase
-					};
+					});
 				}
 				else if (m is IAbstractSyntaxTree)
-					yield return new ModuleResult()
+					rl.Add( new ModuleResult()
 					{
 						ResolvedModule = m as IAbstractSyntaxTree,
 						AlreadyTypedModuleNameParts=1,
 						ResultBase = resultBase
-					};
+					});
 				else if (m is DEnum)
-					yield return new TypeResult() { 
+					rl.Add( new TypeResult() { 
 						ResolvedTypeDefinition=m as IBlockNode,
 						ResultBase=resultBase
-					};
+					});
 			}
+			return rl.ToArray();
 		}
 
 		static readonly BitArray sigTokens = DTokens.NewSet(
