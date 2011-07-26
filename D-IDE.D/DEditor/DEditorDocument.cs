@@ -248,8 +248,9 @@ namespace D_IDE.D
 					fn.IsFolded = true;
 			}
 
-			foreach (var n in block)
-				updateFoldingsInternal(n as IBlockNode);
+			if(block.Count>0)
+				foreach (var n in block)
+					updateFoldingsInternal(n as IBlockNode);
 		}
 
 		void lookup_Types_SelectionChanged(object sender, SelectionChangedEventArgs e)

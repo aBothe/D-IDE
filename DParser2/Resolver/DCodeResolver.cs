@@ -135,28 +135,30 @@ namespace D_Parser.Resolver
 
 		public static IBlockNode SearchBlockAt(IBlockNode Parent, CodeLocation Where)
 		{
-			foreach (var n in Parent)
-			{
-				if (!(n is IBlockNode)) continue;
+			if(Parent!=null && Parent.Count>0)
+				foreach (var n in Parent)
+				{
+					if (!(n is IBlockNode)) continue;
 
-				var b = n as IBlockNode;
-				if (Where > b.StartLocation && Where < b.EndLocation)
-					return SearchBlockAt(b, Where);
-			}
+					var b = n as IBlockNode;
+					if (Where >= b.StartLocation && Where <= b.EndLocation)
+						return SearchBlockAt(b, Where);
+				}
 
 			return Parent;
 		}
 
 		public static IBlockNode SearchClassLikeAt(IBlockNode Parent, CodeLocation Where)
 		{
-			foreach (var n in Parent)
-			{
-				if (!(n is DClassLike)) continue;
+			if (Parent != null && Parent.Count > 0)
+				foreach (var n in Parent)
+				{
+					if (!(n is DClassLike)) continue;
 
-				var b = n as IBlockNode;
-				if (Where > b.BlockStartLocation && Where < b.EndLocation)
-					return SearchClassLikeAt(b, Where);
-			}
+					var b = n as IBlockNode;
+					if (Where >= b.BlockStartLocation && Where <= b.EndLocation)
+						return SearchClassLikeAt(b, Where);
+				}
 
 			return Parent;
 		}

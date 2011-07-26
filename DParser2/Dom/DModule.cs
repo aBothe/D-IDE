@@ -218,14 +218,36 @@ namespace D_Parser.Dom
         }
     }
 
-    public class DMethod : DNode
+    public class DMethod : DNode,IBlockNode
     {
         public List<INode> Parameters=new List<INode>();
         public MethodType SpecialType = MethodType.Normal;
 
-		public BlockStatement In;
-		public BlockStatement Out;
-		public BlockStatement Body;
+		BlockStatement _In;
+		BlockStatement _Out;
+		BlockStatement _Body;
+
+		public BlockStatement In { get { return _In; } set { _In = value; UpdateChildrenArray(); } }
+		public BlockStatement Out { get { return _Out; } set { _Out = value; UpdateChildrenArray(); } }
+		public BlockStatement Body { get { return _Body; } set { _Body = value; UpdateChildrenArray(); } }
+
+		INode[] children;
+
+		void UpdateChildrenArray()
+		{
+			var l = new List<INode>();
+
+			if (_In != null)
+				l.AddRange(_In.Declarations);
+
+			if (_Body != null)
+				l.AddRange(_Body.Declarations);
+
+			if (_Out != null)
+				l.AddRange(_Out.Declarations);
+
+			children = l.ToArray();
+		}
 
         public enum MethodType
         {
@@ -248,7 +270,106 @@ namespace D_Parser.Dom
                 s += (p is AbstractNode? (p as AbstractNode).ToString(false):p.ToString())+",";
             return s.Trim(',')+")";
         }
-    }
+
+		public CodeLocation BlockStartLocation
+		{
+			get
+			{
+				if (_In != null && _Out != null)
+					return _In.StartLocation < _Out.StartLocation ? _In.StartLocation : _Out.StartLocation;
+				else if (_In != null)
+					return _In.StartLocation;
+				else if (_Out != null)
+					return _Out.StartLocation;
+				else if (_Body != null)
+					return _Body.StartLocation;
+
+				return CodeLocation.Empty;
+			}
+			set{}
+		}
+
+		public INode[] Children
+		{
+			get { return children; }
+		}
+
+		public void Add(INode Node)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void AddRange(IEnumerable<INode> Nodes)
+		{
+			throw new NotImplementedException();
+		}
+
+		public int Count
+		{
+			get { 
+				if (children == null) 
+					return 0;
+				return children.Length; 
+			}
+		}
+
+		public void Clear()
+		{
+			
+		}
+
+		public INode this[int i]
+		{
+			get
+			{
+				if (children != null)
+					return children[i];
+				return null;
+			}
+			set
+			{
+				if (children != null)
+					children[i]=value;
+			}
+		}
+
+		public INode this[string Name]
+		{
+			get
+			{
+				if(children!=null)
+					foreach (var c in children)
+						if (c.Name == Name)
+							return c;
+
+				return null;
+			}
+			set
+			{
+				if (children != null)
+					for(int i=0;i<children.Length;i++)
+						if (children[i].Name == Name)
+						{
+							children[i] = value;
+							return;
+						}
+			}
+		}
+
+		public IEnumerator<INode> GetEnumerator()
+		{
+			if (children == null)
+				return null;
+			return (children as IEnumerable<INode>).GetEnumerator();
+		}
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+		{
+			if (children == null)
+				return null;
+			return children.GetEnumerator();
+		}
+	}
 	/*
     public class DStatementBlock : DBlockNode
     {

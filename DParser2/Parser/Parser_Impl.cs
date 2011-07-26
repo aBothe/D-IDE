@@ -3650,6 +3650,7 @@ namespace D_Parser.Parser
 			else
 				par.Body=BlockStatement();
 
+			par.EndLocation = t.EndLocation;
 		}
 		#endregion
 
