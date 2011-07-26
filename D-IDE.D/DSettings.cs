@@ -35,6 +35,13 @@ namespace D_IDE.D
 		public bool UseMethodInsight = true;
 		public bool EnableMatchingBracketHighlighting = true;
 
+		/// <summary>
+		/// If non-letter has been typed, the popup will close down and insert the selected item's completion text.
+		/// If this value is false, the completion text will _not_ be inserted.
+		/// In developing process, this flag will remain 'false' by default - because the completion still not brings 100%-suitable results.
+		/// </summary>
+		public bool ForceCodeCompetionPopupCommit = false;
+
 		#region Saving&Loading
 		public void Save(XmlWriter x)
 		{
@@ -56,6 +63,10 @@ namespace D_IDE.D
 
 			x.WriteStartElement("UseMethodInsight");
 			x.WriteAttributeString("value", UseMethodInsight.ToString().ToLower());
+			x.WriteEndElement();
+
+			x.WriteStartElement("ForceCodeCompetionPopupCommit");
+			x.WriteAttributeString("value", ForceCodeCompetionPopupCommit. ToString().ToLower());
 			x.WriteEndElement();
 
 			dmd1.Save(x);
@@ -83,6 +94,11 @@ namespace D_IDE.D
 					case "UseCodeCompletion":
 						if (x.MoveToAttribute("value"))
 							UseCodeCompletion = x.ReadContentAsBoolean();
+						break;
+
+					case "ForceCodeCompetionPopupCommit":
+						if (x.MoveToAttribute("value"))
+							ForceCodeCompetionPopupCommit = x.ReadContentAsBoolean();
 						break;
 
 					case "cv2pdb":

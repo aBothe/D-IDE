@@ -780,8 +780,10 @@ namespace D_IDE.D
 			{
 				// If entered key isn't part of the identifier anymore, close the completion window and insert the item text.
 				if (!DCodeCompletionSupport.Instance.IsIdentifierChar(e.Text[0]))
-					//completionWindow.Close(); //TODO: Rather close than insert if non-identifier-char has been detected?
-					completionWindow.CompletionList.RequestInsertion(e);
+					if (DSettings.Instance.ForceCodeCompetionPopupCommit)
+						completionWindow.CompletionList.RequestInsertion(e);
+					else
+						completionWindow.Close();
 			}
 
 			// Return if there are parser errors - just to prevent crashes

@@ -11,5 +11,6 @@
 		<CheckBox Content="Use Code Completion" Height="16" HorizontalAlignment="Left" Margin="12,12,0,0" Name="checkBox_UseCC" VerticalAlignment="Top" ToolTip="Enable the editor's completion feature" />
 		<CheckBox Content="Enable Bracket Pair Highlighting" Height="16" HorizontalAlignment="Left" Margin="12,34,0,0" Name="checkBox_EnableBracketHighlighting" VerticalAlignment="Top" />
 		<CheckBox Content="Use Method Insight Popup" Height="16" HorizontalAlignment="Left" Margin="12,56,0,0" Name="checkBox_MethodInsight" VerticalAlignment="Top" ToolTip="Enable function parameter completion" />
+		<CheckBox Height="16" Margin="12,78,12,0" Name="checkBox_CodeInsertionOnNonLetter" VerticalAlignment="Top" ToolTip="Enable this to automatically insert the completion text when the editor popup closes down." Content="Code insertion when completion popup closed down" />
 	</Grid>
 </core:AbstractSettingsPage>
