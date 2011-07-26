@@ -85,14 +85,13 @@ namespace D_Parser.Resolver
 					if (dm.TemplateParameters != null)
 						ret.AddRange(dm.TemplateParameterNodes as IEnumerable<INode>);
 
-
 					if (dm.Body != null)
 					{
 						// First search the deepest statement under the caret
 						var stmt = dm.Body.SearchStatementDeeply(Caret);
 
 						// Then go back in hierarchy and add all the declarations made within these scope levels.
-						ret.AddRange(BlockStatement.GetItemHierarchy(stmt,Caret));
+						ret.AddRange(BlockStatement.GetItemHierarchy(dm,stmt,Caret));
 					}
 				}
 				else foreach (var n in curScope)

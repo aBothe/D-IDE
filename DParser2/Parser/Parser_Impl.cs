@@ -3216,13 +3216,13 @@ namespace D_Parser.Parser
 			return null;
 		}
 
-		BlockStatement BlockStatement()
+		BlockStatement BlockStatement(INode ParentNode=null)
 		{
 			//if (String.IsNullOrEmpty(par.Description)) par.Description = GetComments();
 			//var OldPreviousCommentString = PreviousComment;
 			//PreviousComment = "";
 
-			var bs = new BlockStatement() { StartLocation=la.Location};
+			var bs = new BlockStatement() { StartLocation=la.Location, ParentNode=ParentNode};
 			if (Expect(OpenCurlyBrace))
 			{
 				if (ParseStructureOnly && laKind != CloseCurlyBrace)
@@ -3613,7 +3613,7 @@ namespace D_Parser.Parser
 			{
 				HadIn = true;
 				Step();
-				par.In=BlockStatement();
+				par.In=BlockStatement(par);
 
 				if (!HadOut && laKind == (Out))
 					goto check_again;
@@ -3631,7 +3631,7 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				par.Out=BlockStatement();
+				par.Out=BlockStatement(par);
 
 				if (!HadIn && laKind == (In))
 					goto check_again;
@@ -3648,7 +3648,7 @@ namespace D_Parser.Parser
 				par.Description += CheckForPostSemicolonComment();
 			}
 			else
-				par.Body=BlockStatement();
+				par.Body=BlockStatement(par);
 
 			par.EndLocation = t.EndLocation;
 		}
