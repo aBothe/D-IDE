@@ -32,6 +32,15 @@ namespace D_IDE.D
 		DIndentationStrategy indentationStrategy;
 		FoldingManager foldingManager;
 
+		/// <summary>
+		/// Parse duration (in seconds) of the last code analysis
+		/// </summary>
+		public double ParseTime
+		{
+			get;
+			protected set;
+		}
+
 		DModule _unboundTree;
 		public DModule SyntaxTree { 
 			get {
@@ -535,6 +544,7 @@ namespace D_IDE.D
 		}
 
 		#region Code Completion
+		readonly HighPrecisionTimer.HighPrecTimer hp = new HighPrecisionTimer.HighPrecTimer();
 		/// <summary>
 		/// Parses the current document content
 		/// </summary>
@@ -545,9 +555,16 @@ namespace D_IDE.D
 
 			parseOperation= Dispatcher.BeginInvoke(new Action(()=>{
 				try{
+
+					hp.Start();
 					var parser=DParser.Create(new StringReader(Editor.Text));
 
 					var newAst = parser.Parse();
+
+					hp.Stop();
+
+					ParseTime = hp.Duration;
+					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration*1000).ToString()+"ms";
 
 					if (SyntaxTree != null)
 						lock (SyntaxTree)

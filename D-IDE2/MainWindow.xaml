@@ -183,6 +183,7 @@
 		
 		<StatusBar Grid.Row="1" Name="statusBar1" VerticalAlignment="Bottom">
 			<TextBlock HorizontalAlignment="Stretch" Name="StatusLabel1" />
+			<TextBlock HorizontalAlignment="Stretch" Name="StatusLabel2" Padding="10,0,0,0" />
 		</StatusBar>
 		<my:DockingManager Grid.Row="1" Name="DockMgr" Margin="0,0,0,22" ActiveDocumentChanged="DockMgr_ActiveDocumentChanged" DocumentClosed="DockMgr_DocumentClosed" DocumentClosing="DockMgr_DocumentClosing" />
 	</Grid>

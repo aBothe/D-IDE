@@ -41,6 +41,23 @@ namespace D_IDE
 		/// </summary>
 		static int _prevSelectedMainTab = -1;
 
+		public string LeftStatusText
+		{
+			get { return StatusLabel1.Text; }
+			set { StatusLabel1.Text = value; }
+		}
+
+		public string SecondLeftStatusText
+		{
+			get
+			{
+				return StatusLabel2.Text;
+			}
+			set
+			{
+				StatusLabel2.Text = value;
+			}
+		}
 		#endregion
 
 		#region GUI Interactions
@@ -693,13 +710,6 @@ namespace D_IDE
 				ed.Editor.TextArea.Caret.Line = dlg.EnteredNumber;
 				ed.Editor.TextArea.Caret.BringCaretToView();
 			}
-		}
-
-
-		public string LeftStatusText
-		{
-			get { return StatusLabel1.Text; }
-			set { StatusLabel1.Text = value; }
 		}
 
 		private void CommandBinding_CanExecute_SaveAs(object sender, CanExecuteRoutedEventArgs e)

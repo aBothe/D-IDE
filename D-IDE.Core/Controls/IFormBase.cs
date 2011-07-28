@@ -20,6 +20,7 @@ namespace D_IDE.Core.Controls
 		void RefreshProjectExplorer();
 
 		string LeftStatusText { get; set; }
+		string SecondLeftStatusText { get; set; }
 	}
 
 	public static class IDEUICommands
