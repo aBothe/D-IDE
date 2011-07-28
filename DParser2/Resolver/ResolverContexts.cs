@@ -80,21 +80,6 @@ namespace D_Parser.Resolver
 		}
 	}
 
-	public class AliasResult : ResolveResult
-	{
-		public ResolveResult[] AliasDefinition;
-
-		public override string ToString()
-		{
-			string ret = "";
-
-			foreach (var def in AliasDefinition)
-				ret += def.ToString()+"\r\n";
-
-			return ret.Trim();
-		}
-	}
-
 	public class SpecialTypeResult : ResolveResult
 	{
 		/// <summary>

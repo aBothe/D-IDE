@@ -147,16 +147,11 @@ namespace D_IDE.D
 				var mrr = rr as MemberResult;
 				if (mrr.MemberBaseTypes != null)
 					foreach (var i in mrr.MemberBaseTypes)
-						BuildCompletionData(i,currentlyScopedBlock, l,true);
+						BuildCompletionData(i,currentlyScopedBlock, l,
+							(mrr.ResolvedMember is DVariable&&(mrr.ResolvedMember as DVariable).IsAlias)?
+								isVariableInstance:true); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
 			}
 
-			else if (rr is AliasResult)
-			{
-				var arr=(rr as AliasResult).AliasDefinition;
-				if(arr!=null)
-					foreach (var rr2 in arr)
-						BuildCompletionData(rr2, currentlyScopedBlock, l, isVariableInstance);
-			}
 			else if (!isVariableInstance && rr is ModuleResult)
 				BuildModuleCompletionData(rr as ModuleResult, 0, l, alreadyAddedModuleNameParts);
 

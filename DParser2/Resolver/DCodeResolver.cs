@@ -587,11 +587,6 @@ namespace D_Parser.Resolver
 									var _m = (scanResult as MemberResult).MemberBaseTypes;
 									if(_m!=null)nextResults.AddRange(_m);
 								}
-								else if (scanResult is AliasResult)
-								{
-									var _m = (scanResult as AliasResult).AliasDefinition;
-									if(_m!=null)nextResults.AddRange(_m);
-								}
 
 								else if (scanResult is TypeResult)
 								{
@@ -731,28 +726,22 @@ namespace D_Parser.Resolver
 			var rl = new List<ResolveResult>();
 			foreach (var m in matches)
 			{
-				bool resType = true;
+				bool DoResolveBaseType = true;
 				// Prevent infinite recursion if the type accidently equals the node's name
 				if (m.Type != null && m.Type.ToString(false) == m.Name)
-					resType = false;
+					DoResolveBaseType = false;
 
 				if (m is DVariable)
 				{
 					var v = m as DVariable;
 
-					if (v.IsAlias)
-						rl.Add( new AliasResult()
-						{
-							AliasDefinition = resType?ResolveType(v.Type, currentlyScopedNode, parseCache):null,
-							ResultBase=resultBase
-						});
-					else
-						rl.Add( new MemberResult()
-						{
-							ResolvedMember = m,
-							MemberBaseTypes = resType? ResolveType(v.Type, currentlyScopedNode, parseCache):null,
-							ResultBase = resultBase
-						});
+					// Note: Also works for aliases! In this case, we simply try to resolve the aliased type, otherwise the variable's base type
+					rl.Add( new MemberResult()
+					{
+						ResolvedMember = m,
+						MemberBaseTypes = DoResolveBaseType? ResolveType(v.Type, currentlyScopedNode, parseCache):null,
+						ResultBase = resultBase
+					});
 				}
 				else if (m is DMethod)
 				{
@@ -761,7 +750,7 @@ namespace D_Parser.Resolver
 					rl.Add( new MemberResult()
 					{
 						ResolvedMember = m,
-						MemberBaseTypes = resType? ResolveType(method.Type, currentlyScopedNode, parseCache):null,
+						MemberBaseTypes = DoResolveBaseType? ResolveType(method.Type, currentlyScopedNode, parseCache):null,
 						ResultBase = resultBase
 					});
 				}
