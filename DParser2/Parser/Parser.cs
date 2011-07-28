@@ -5,6 +5,7 @@ using System.IO;
 using System.Diagnostics;
 using D_Parser.Dom;
 using D_Parser.Dom.Expressions;
+using D_Parser.Dom.Statements;
 
 namespace D_Parser.Parser
 {
@@ -32,6 +33,20 @@ namespace D_Parser.Parser
 				p.ImportDeclaration();
 
 			return p.t.EndLocation;
+		}
+
+		public static BlockStatement ParseBlockStatement(string Code, INode ParentNode = null)
+		{
+			return ParseBlockStatement(Code, CodeLocation.Empty, ParentNode);
+		}
+
+		public static BlockStatement ParseBlockStatement(string Code, CodeLocation initialLocation, INode ParentNode = null)
+		{
+			var p = Create(new StringReader(Code));
+			p.Lexer.SetInitialLocation(initialLocation);
+			p.Step();
+
+			return p.BlockStatement(ParentNode);
 		}
 
         public static IExpression ParseExpression(string Code)
