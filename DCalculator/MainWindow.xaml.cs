@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using D_Parser.Parser;
 using D_Parser.Dom;
+using D_Parser.Dom.Expressions;
 
 namespace DCalculator
 {

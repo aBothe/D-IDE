@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows;
 using D_Parser.Resolver;
 using D_Parser.Parser;
+using D_Parser.Dom.Statements;
 
 namespace D_IDE.D
 {
@@ -63,7 +64,8 @@ namespace D_IDE.D
 			var caretOffset = EditorDocument.Editor.CaretOffset;
 			var caretLocation = new CodeLocation(EditorDocument.Editor.TextArea.Caret.Column,EditorDocument.Editor.TextArea.Caret.Line);
 
-			var curBlock = DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLocation);
+			IStatement curStmt = null;
+			var curBlock = DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLocation,out curStmt);
 
 			if (curBlock == null)
 				return;
@@ -91,7 +93,7 @@ namespace D_IDE.D
 			// Enum all nodes that can be accessed in the current scope
 			else if(string.IsNullOrEmpty(EnteredText) || IsIdentifierChar(EnteredText[0]))
 			{
-				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock,caretLocation,codeCache);
+				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock, curStmt,caretLocation,codeCache);
 
 				foreach (var kv in DTokens.Keywords)
 					l.Add(new TokenCompletionData(kv.Key));
@@ -325,8 +327,9 @@ namespace D_IDE.D
 			try
 			{
 				var caretLoc = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
+				IStatement curStmt = null;
 				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
-					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLoc),DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument)),true,true);
+					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLoc,out curStmt),DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument)),true,true);
 				
 				string tt = "";
 
@@ -727,7 +730,7 @@ namespace D_IDE.D
 						var realParent = n.Parent as DNode;
 
 						if (realParent == null)
-							return null;
+							return DCodeCompletionSupport.Instance.GetNodeImage("local");
 
 						if (realParent is DClassLike)
 						{

@@ -7,6 +7,7 @@ using D_Parser.Resolver;
 using D_Parser;
 using System.Runtime.InteropServices;
 using D_Parser.Parser;
+using D_Parser.Dom.Statements;
 
 namespace D_IDE.D
 {
@@ -128,7 +129,8 @@ namespace D_IDE.D
 				// If syntax tree built, search the variable location
 				if (module != null)
 				{
-					var block = DCodeResolver.SearchBlockAt(module, new CodeLocation(0, codeLine));
+					IStatement stmt = null;
+					var block = DCodeResolver.SearchBlockAt(module, new CodeLocation(0, codeLine),out stmt);
 
 					var res = DResolver.ResolveType(new IdentifierDeclaration(Symbol.Name),block, null);
 

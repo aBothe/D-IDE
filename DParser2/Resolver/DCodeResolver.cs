@@ -22,7 +22,7 @@ namespace D_Parser.Resolver
 		/// <param name="ScopedBlock"></param>
 		/// <param name="ImportCache"></param>
 		/// <returns></returns>
-		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock, CodeLocation Caret, IEnumerable<IAbstractSyntaxTree> CodeCache)
+		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock, IStatement ScopedStatement, CodeLocation Caret, IEnumerable<IAbstractSyntaxTree> CodeCache)
 		{
 			/* First walk through the current scope.
 			 * Walk up the node hierarchy and add all their items (private as well as public members).
@@ -34,6 +34,13 @@ namespace D_Parser.Resolver
 			var ImportCache = ResolveImports(ScopedBlock.NodeRoot as DModule, CodeCache);
 
 			#region Current module/scope related members
+
+			if (ScopedStatement != null)
+			{
+				ret.AddRange(BlockStatement.GetItemHierarchy(ScopedStatement, Caret));
+			}
+
+
 			var curScope = ScopedBlock;
 
 			while (curScope != null)
@@ -85,14 +92,7 @@ namespace D_Parser.Resolver
 					if (dm.TemplateParameters != null)
 						ret.AddRange(dm.TemplateParameterNodes as IEnumerable<INode>);
 
-					if (dm.Body != null)
-					{
-						// First search the deepest statement under the caret
-						var stmt = dm.Body.SearchStatementDeeply(Caret);
-
-						// Then go back in hierarchy and add all the declarations made within these scope levels.
-						ret.AddRange(BlockStatement.GetItemHierarchy(dm,stmt,Caret));
-					}
+					// The method's declaration children are handled above already.
 				}
 				else foreach (var n in curScope)
 						{
@@ -133,8 +133,10 @@ namespace D_Parser.Resolver
 			return ret;
 		}
 
-		public static IBlockNode SearchBlockAt(IBlockNode Parent, CodeLocation Where)
+		public static IBlockNode SearchBlockAt(IBlockNode Parent, CodeLocation Where, out IStatement ScopedStatement)
 		{
+			ScopedStatement = null;
+
 			if(Parent!=null && Parent.Count>0)
 				foreach (var n in Parent)
 				{
@@ -142,8 +144,23 @@ namespace D_Parser.Resolver
 
 					var b = n as IBlockNode;
 					if (Where >= b.StartLocation && Where <= b.EndLocation)
-						return SearchBlockAt(b, Where);
+						return SearchBlockAt(b, Where, out ScopedStatement);
 				}
+
+			if (Parent is DMethod)
+			{
+				var dm = Parent as DMethod;
+
+				// First search the deepest statement under the caret
+				if (dm.In != null)
+					ScopedStatement = dm.In.SearchStatementDeeply(Where);
+
+				if (dm.Out != null && ScopedStatement == null)
+					ScopedStatement = dm.Out.SearchStatementDeeply(Where);
+
+				if(dm.Body!=null && ScopedStatement==null)
+					ScopedStatement = dm.Body.SearchStatementDeeply(Where);
+			}
 
 			return Parent;
 		}

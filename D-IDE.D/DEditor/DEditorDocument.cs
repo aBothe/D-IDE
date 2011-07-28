@@ -19,6 +19,7 @@ using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.AddIn;
 using D_IDE.D.DEditor;
 using D_Parser.Parser;
+using D_Parser.Dom.Statements;
 
 namespace D_IDE.D
 {
@@ -605,7 +606,8 @@ namespace D_IDE.D
 					return;
 				}
 
-				var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation);
+				IStatement curStmt = null;
+				var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation,out curStmt);
 				if (curBlock != lastSelectedBlock)
 				{
 					if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
