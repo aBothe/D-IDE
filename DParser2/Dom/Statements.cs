@@ -131,10 +131,10 @@ namespace D_Parser.Dom.Statements
 				foreach (var i in curScope)
 				{
 					// if i doesn't contain a Declaration OR is located after the caret's location, disregard it
-					if (!(i is DeclarationStatement) || Caret!=CodeLocation.Empty?(i.StartLocation > Caret):false)
+					if (Caret!=CodeLocation.Empty?(i.StartLocation > Caret):false)
 						continue;
 
-					if((i as DeclarationStatement).Declaration!=null)
+					if(i is DeclarationStatement && (i as DeclarationStatement).Declaration!=null)
 						l.AddRange((i as DeclarationStatement).Declaration);
 				}
 
@@ -178,8 +178,10 @@ namespace D_Parser.Dom.Statements
 				{
 					var s2 = (s as ScopingStatement).ScopedStatement;
 
-					if (s2!=null&& Where >= s2.StartLocation && Where <= s2.EndLocation)
+					if (s2 != null && Where >= s2.StartLocation && Where <= s2.EndLocation)
 						s = s2;
+					else 
+						break;
 				}
 				else break;
 			}

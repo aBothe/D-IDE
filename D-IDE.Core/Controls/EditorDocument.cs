@@ -105,7 +105,7 @@ namespace D_IDE.Core
 
 		public void DoOutsideModificationCheck()
 		{
-			if (HasBeenModifiedOutside)
+			if (HasBeenModifiedOutside && lastWriteTime!=DateTime.MinValue)
 			{
 				var mbr = MessageBox.Show(CoreManager.Instance.MainWindow as Window,"Reload file?", "File has been modified", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
 				if (mbr == MessageBoxResult.Yes)
