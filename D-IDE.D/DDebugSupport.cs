@@ -134,7 +134,7 @@ namespace D_IDE.D
 
 					var res = DResolver.ResolveType(new IdentifierDeclaration(Symbol.Name),block, null);
 
-					if (res.Length > 0 && res[0] is MemberResult)
+					if (res!=null && res.Length > 0 && res[0] is MemberResult)
 					{
 						variableNode = (res[0] as MemberResult).ResolvedMember;
 						//moduleCache = DCodeCompletionSupport.Instance.EnumAvailableModules(ownerPrj);

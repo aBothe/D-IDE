@@ -246,7 +246,7 @@ namespace D_IDE.D
 			if (block == null)
 				return;
 
-			if (!(block is IAbstractSyntaxTree) && !block.BlockStartLocation.IsEmpty)
+			if (!(block is IAbstractSyntaxTree) && !block.BlockStartLocation.IsEmpty && block.EndLocation>block.BlockStartLocation)
 			{
 				var fn=foldingManager.CreateFolding(
 					Editor.Document.GetOffset(block.BlockStartLocation.Line, block.BlockStartLocation.Column),

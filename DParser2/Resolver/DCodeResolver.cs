@@ -544,6 +544,7 @@ namespace D_Parser.Resolver
 
 						// Then go on searching in the global scope
 						var ThisModule = currentlyScopedNode is IAbstractSyntaxTree ? currentlyScopedNode as IAbstractSyntaxTree : currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
+						if(parseCache!=null)
 						foreach (var mod in parseCache)
 						{
 							if (mod == ThisModule)
