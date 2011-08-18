@@ -642,7 +642,7 @@ namespace D_Parser.Resolver
 
 		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, IEnumerable<IAbstractSyntaxTree> ModuleCache)
 		{
-			if (ActualClass == null || ((ActualClass.BaseClasses==null ||ActualClass.BaseClasses.Count < 1) && ActualClass.Name.ToLower() == "object"))
+			if (ActualClass == null || ((ActualClass.BaseClasses==null ||ActualClass.BaseClasses.Count < 1) && ActualClass.Name!=null && ActualClass.Name.ToLower() == "object"))
 				return null;
 
 			var ret = new List<TypeResult>();
@@ -650,7 +650,7 @@ namespace D_Parser.Resolver
 			var type = (ActualClass.BaseClasses == null || ActualClass.BaseClasses.Count < 1) ? new IdentifierDeclaration("Object") : ActualClass.BaseClasses[0];
 
 			// A class cannot inherit itself
-			if (type.ToString(false) == ActualClass.Name)
+			if (type==null||type.ToString(false) == ActualClass.Name)
 				return null;
 
 			var results=ResolveType(type, ActualClass.NodeRoot as IBlockNode, ModuleCache);
