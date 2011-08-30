@@ -40,7 +40,7 @@ namespace D_Parser.Dom
 		void Add(INode Node);
 		void AddRange(IEnumerable<INode> Nodes);
 		int Count { get; }
-		void Clear();
+		//void Clear();
 
 		INode this[int i] { get; set; }
 		INode this[string Name] { get; set; }
@@ -59,7 +59,7 @@ namespace D_Parser.Dom
 		/// Assigns a node's properties
 		/// </summary>
 		/// <param name="Other"></param>
-		void Assign(INode Other);
+		void AssignFrom(INode Other);
 
 		INode Parent { get; set; }
 		INode NodeRoot { get; set; }

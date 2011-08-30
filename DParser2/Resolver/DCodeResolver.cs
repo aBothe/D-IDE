@@ -483,9 +483,17 @@ namespace D_Parser.Resolver
 			if (onlyAssumeIdentifierList)
 				return ResolveType(parser.IdentifierList(),currentlyScopedNode, parseCache);
 			else if (parser.IsAssignExpression())
-				return ResolveType(parser.AssignExpression().ExpressionTypeRepresentation, currentlyScopedNode, parseCache);
+			{
+				var expr=parser.AssignExpression();
+				var ret= ResolveType(expr.ExpressionTypeRepresentation, currentlyScopedNode, parseCache);
+
+				if (ret == null && expr!=null)
+					ret=new[]{ new ExpressionResult() { Expression = expr }};
+				
+				return ret;
+			}
 			else
-				return ResolveType(parser.Type(),currentlyScopedNode, parseCache);
+				return ResolveType(parser.Type(), currentlyScopedNode, parseCache);
 		}
 
 		public static ResolveResult[] ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache)
@@ -512,17 +520,28 @@ namespace D_Parser.Resolver
 				{
 					string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
 
-					if (searchIdentifier == "this")
+					// Try to convert the identifier into a token
+					int searchToken = string.IsNullOrEmpty(searchIdentifier)?0: DTokens.GetTokenID(searchIdentifier);
+
+					// References current class scope
+					if (searchToken==DTokens.This)
 					{
 						returnedResults.Add(new TypeResult() { ResolvedTypeDefinition=currentlyScopedNode});
 					}
-					else if (searchIdentifier == "super")
+					// References super type of currently scoped class declaration
+					else if (searchToken==DTokens.Super)
 					{
 						var baseClassDefs = ResolveBaseClass(currentlyScopedNode as DClassLike, parseCache);
 
 						if (baseClassDefs != null)
 							returnedResults.AddRange(baseClassDefs);
 					}
+					// If we found a base type, return a static-type-result
+					else if (searchToken>0 && DTokens.BasicTypes[searchToken])
+					{
+						returnedResults.Add(new StaticTypeResult() { BaseTypeToken=searchToken, Type=new DTokenDeclaration(searchToken)});
+					}
+					// (As usual) Go on searching in the local&global scope(s)
 					else
 					{
 						var matches = new List<INode>();
@@ -531,7 +550,7 @@ namespace D_Parser.Resolver
 						var curScope = currentlyScopedNode;
 						while (curScope != null)
 						{
-							var m=ScanNodeForIdentifier(curScope, searchIdentifier, parseCache);
+							var m = ScanNodeForIdentifier(curScope, searchIdentifier, parseCache);
 
 							if (m != null)
 								matches.AddRange(m);
@@ -544,21 +563,21 @@ namespace D_Parser.Resolver
 
 						// Then go on searching in the global scope
 						var ThisModule = currentlyScopedNode is IAbstractSyntaxTree ? currentlyScopedNode as IAbstractSyntaxTree : currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
-						if(parseCache!=null)
-						foreach (var mod in parseCache)
-						{
-							if (mod == ThisModule)
-								continue;
+						if (parseCache != null)
+							foreach (var mod in parseCache)
+							{
+								if (mod == ThisModule)
+									continue;
 
-							var modNameParts = mod.ModuleName.Split('.');
+								var modNameParts = mod.ModuleName.Split('.');
 
-							if (modNameParts[0]==searchIdentifier)
-								matches.Add(mod);
+								if (modNameParts[0] == searchIdentifier)
+									matches.Add(mod);
 
-							var m = ScanNodeForIdentifier(mod, searchIdentifier, null);
-							if(m!=null)
-								matches.AddRange(m);
-						}
+								var m = ScanNodeForIdentifier(mod, searchIdentifier, null);
+								if (m != null)
+									matches.AddRange(m);
+							}
 
 						var results = HandleNodeMatches(matches, currentlyScopedNode, parseCache, searchIdentifier);
 						if (results != null)
@@ -574,6 +593,8 @@ namespace D_Parser.Resolver
 					{
 						string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
 
+						//TODO: Scan for static properties
+						
 						var scanResults = new List<ResolveResult>();
 						scanResults.Add(rbase);
 						var nextResults=new List<ResolveResult>();
@@ -725,6 +746,7 @@ namespace D_Parser.Resolver
 			ResolveResult resultBase = null)
 		{
 			var rl = new List<ResolveResult>();
+			if(matches!=null)
 			foreach (var m in matches)
 			{
 				bool DoResolveBaseType = true;

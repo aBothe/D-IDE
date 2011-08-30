@@ -16,7 +16,7 @@ namespace D_Parser.Dom
         /// Applies file name, children and imports from an other module instance
          /// </summary>
         /// <param name="Other"></param>
-        public override void Assign(INode Other)
+        public override void AssignFrom(INode Other)
         {
 			if (Other is IAbstractSyntaxTree)
 			{
@@ -31,7 +31,7 @@ namespace D_Parser.Dom
 				Imports = dm.Imports;
 			}
 
-			base.Assign(Other);
+			base.AssignFrom(Other);
         }
 
 		string _FileName;
@@ -178,7 +178,7 @@ namespace D_Parser.Dom
 			return _Children.GetEnumerator();
 		}
 
-		public override void Assign(INode other)
+		public override void AssignFrom(INode other)
 		{
 			if (other is IBlockNode)
 			{
@@ -187,7 +187,7 @@ namespace D_Parser.Dom
 				AddRange(other as IBlockNode);
 			}
 
-			base.Assign(other);
+			base.AssignFrom(other);
 		}
 
 
@@ -216,6 +216,18 @@ namespace D_Parser.Dom
         {
             return (IsAlias?"alias ":"")+base.ToString(Attributes,IncludePath)+(Initializer!=null?(" = "+Initializer.ToString()):"");
         }
+
+		public override void AssignFrom(INode other)
+		{
+			if (other is DVariable)
+			{
+				var dv = other as DVariable;
+				Initializer = dv.Initializer;
+				IsAlias = dv.IsAlias;
+			}
+
+			base.AssignFrom(other);
+		}
     }
 
     public class DMethod : DNode,IBlockNode
@@ -226,6 +238,23 @@ namespace D_Parser.Dom
 		BlockStatement _In;
 		BlockStatement _Out;
 		BlockStatement _Body;
+
+		public override void AssignFrom(INode other)
+		{
+			if (other is DMethod)
+			{
+				var dm = other as DMethod;
+
+				Parameters = dm.Parameters;
+				SpecialType = dm.SpecialType;
+				_In = dm._In;
+				_Out = dm._Out;
+				_Body = dm._Body;
+				UpdateChildrenArray();
+			}
+
+			base.AssignFrom(other);
+		}
 
 		public BlockStatement In { get { return _In; } set { _In = value; UpdateChildrenArray(); } }
 		public BlockStatement Out { get { return _Out; } set { _Out = value; UpdateChildrenArray(); } }
@@ -311,11 +340,6 @@ namespace D_Parser.Dom
 					return 0;
 				return children.Length; 
 			}
-		}
-
-		public void Clear()
-		{
-			
 		}
 
 		public INode this[int i]

@@ -570,7 +570,7 @@ namespace D_IDE.D
 						lock (SyntaxTree)
 						{
 							SyntaxTree.ParseErrors = newAst.ParseErrors;
-							SyntaxTree.Assign(newAst);
+							SyntaxTree.AssignFrom(newAst);
 						}
 					else
 						SyntaxTree =newAst;

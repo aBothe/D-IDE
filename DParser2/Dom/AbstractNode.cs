@@ -92,7 +92,7 @@ namespace D_Parser.Dom
 			return s.Trim();
 		}
 
-		public virtual void Assign(INode other)
+		public virtual void AssignFrom(INode other)
 		{
 			Type = other.Type;
 			Name = other.Name;

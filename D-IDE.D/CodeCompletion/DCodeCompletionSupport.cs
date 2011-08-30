@@ -10,6 +10,7 @@ using System.Windows;
 using D_Parser.Resolver;
 using D_Parser.Parser;
 using D_Parser.Dom.Statements;
+using D_Parser.Dom.Expressions;
 
 namespace D_IDE.D
 {
@@ -159,7 +160,7 @@ namespace D_IDE.D
 
 		readonly List<string> alreadyAddedModuleNameParts = new List<string>(); 
 
-		public void BuildCompletionData(ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l,bool isVariableInstance=false)
+		public void BuildCompletionData(ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l,bool isVariableInstance=false,ResolveResult resultParent=null)
 		{
 			if (rr is MemberResult)
 			{
@@ -168,7 +169,10 @@ namespace D_IDE.D
 					foreach (var i in mrr.MemberBaseTypes)
 						BuildCompletionData(i,currentlyScopedBlock, l,
 							(mrr.ResolvedMember is DVariable&&(mrr.ResolvedMember as DVariable).IsAlias)?
-								isVariableInstance:true); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
+								isVariableInstance:true,rr); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
+
+				if(resultParent==null)
+					AddGenericProperties(rr, l, mrr.ResolvedMember);
 			}
 
 			else if (!isVariableInstance && rr is ModuleResult)
@@ -176,9 +180,10 @@ namespace D_IDE.D
 
 			else if (rr is TypeResult)
 			{
+				var tr = rr as TypeResult;
 				var vis = ItemVisibility.All;
 
-				if (!HaveSameAncestors(currentlyScopedBlock, (rr as TypeResult).ResolvedTypeDefinition))
+				if (!HaveSameAncestors(currentlyScopedBlock, tr.ResolvedTypeDefinition))
 				{
 					if (isVariableInstance)
 						vis = ItemVisibility.PublicOrStatic;
@@ -186,7 +191,9 @@ namespace D_IDE.D
 						vis = ItemVisibility.PublicAndStatic;
 				}
 
-				BuildTypeCompletionData(rr as TypeResult, vis, l);
+				BuildTypeCompletionData(tr, vis, l);
+				if (resultParent == null)
+					AddGenericProperties(rr, l, tr.ResolvedTypeDefinition);
 			}
 
 			else if (rr is SpecialTypeResult)
@@ -199,8 +206,42 @@ namespace D_IDE.D
 
 						break;
 				}
+
+				if (resultParent == null)
+					AddGenericProperties(rr, l);
+			}
+			else if (rr is StaticTypeResult)
+			{
+				if (resultParent == null)
+					AddGenericProperties(rr, l, null);
 			}
 		}
+
+		#region Static properties
+
+		void AddGenericProperties(ResolveResult rr, IList<ICompletionData> l,INode relatedNode=null)
+		{
+			var prop_Init = new DVariable() { Name = "init", Type=new DTokenDeclaration(DTokens.Int), Initializer = new IdentifierExpression(0) { LiteralFormat=LiteralFormat.Scalar} };
+
+			if (relatedNode != null)
+			{
+				if (relatedNode is DVariable)
+				{
+					prop_Init.AssignFrom(relatedNode);
+					prop_Init.Name = "init";
+					/*
+					var dv = relatedNode as DVariable;
+					if(dv.Initializer!=null)
+						prop_Init.Initializer = dv.Initializer;
+					if (dv.Type != null)
+						prop_Init.Type = dv.Type;*/
+				}
+			}
+
+			l.Add(new DCompletionData(prop_Init));
+		}
+
+		#endregion
 
 		public static void BuildModuleCompletionData(ModuleResult tr, ItemVisibility visMod, IList<ICompletionData> l,
 			List<string> alreadyAddedModuleNames)

@@ -44,14 +44,14 @@ namespace D_Parser.Dom
         {
         }
 		
-        public override void Assign(INode other)
+        public override void AssignFrom(INode other)
         {
 			if (other is DNode)
 			{
 				TemplateParameters = (other as DNode).TemplateParameters;
 				Attributes = (other as DNode).Attributes;
 			}
-			base.Assign(other);
+			base.AssignFrom(other);
         }
 
         public string AttributeString

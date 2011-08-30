@@ -605,7 +605,7 @@ namespace D_Parser.Parser
 					Expect(Identifier);
 
 					var otherNode = new DVariable();
-					otherNode.Assign(firstNode);
+					otherNode.AssignFrom(firstNode);
 					otherNode.StartLocation = t.Location;
 					otherNode.Name = t.Value;
 
@@ -881,7 +881,7 @@ namespace D_Parser.Parser
 				if (_Parameters != null)
 				{
 					var dm = new DMethod();
-					dm.Assign(ret);
+					dm.AssignFrom(ret);
 					dm.Parameters = _Parameters;
 					foreach (var pp in dm.Parameters)
 						pp.Parent = dm;
@@ -3525,7 +3525,7 @@ namespace D_Parser.Parser
 			{
 			another_enumvalue:
 				var enumVar = new DVariable();
-				enumVar.Assign(mye);
+				enumVar.AssignFrom(mye);
 				enumVar.Attributes.Add(new DAttribute(Enum));
 				if (mye.Type != null)
 					enumVar.Type = mye.Type;

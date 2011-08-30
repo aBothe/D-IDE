@@ -109,14 +109,14 @@ namespace D_Parser.Parser
         {
             var m = DParser.ParseFile(Module.FileName);
 			Module.ParseErrors = m.ParseErrors;
-            Module.Assign(m);
+            Module.AssignFrom(m);
         }
 
         public static void UpdateModuleFromText(IAbstractSyntaxTree Module, string Code)
         {
             var m = DParser.ParseString(Code);
 			Module.ParseErrors = m.ParseErrors;
-            Module.Assign(m);
+            Module.AssignFrom(m);
         }
 
         public static DParser Create(TextReader tr, params TokenTracker[] trackers)

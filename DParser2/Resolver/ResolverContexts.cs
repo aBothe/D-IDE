@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using D_Parser.Dom;
 using System.ComponentModel;
+using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Resolver
 {
@@ -100,11 +101,25 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class StaticTypeResult : ResolveResult
 	{
+		public int BaseTypeToken;
 		public ITypeDeclaration Type;
 
 		public override string ToString()
 		{
 			return Type.ToString();
+		}
+	}
+
+	/// <summary>
+	/// Holds raw expressions like (1+2)
+	/// </summary>
+	public class ExpressionResult : ResolveResult
+	{
+		public IExpression Expression;
+
+		public override string ToString()
+		{
+			return Expression.ToString();
 		}
 	}
 
