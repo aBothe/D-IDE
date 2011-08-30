@@ -736,11 +736,20 @@ namespace D_Parser.Resolver
 				{
 					var v = m as DVariable;
 
+					var memberbaseTypes = DoResolveBaseType ? ResolveType(v.Type, currentlyScopedNode, parseCache) : null;
+
+					// For auto variables, use the initializer to get its type
+					if (memberbaseTypes == null && DoResolveBaseType && v.ContainsAttribute(DTokens.Auto) && v.Initializer!=null)
+					{
+						var init = v.Initializer;
+						memberbaseTypes = ResolveType(init.ExpressionTypeRepresentation, currentlyScopedNode, parseCache);
+					}
+
 					// Note: Also works for aliases! In this case, we simply try to resolve the aliased type, otherwise the variable's base type
 					rl.Add( new MemberResult()
 					{
 						ResolvedMember = m,
-						MemberBaseTypes = DoResolveBaseType? ResolveType(v.Type, currentlyScopedNode, parseCache):null,
+						MemberBaseTypes =memberbaseTypes,
 						ResultBase = resultBase
 					});
 				}

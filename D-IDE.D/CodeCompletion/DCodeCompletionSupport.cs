@@ -70,7 +70,7 @@ namespace D_IDE.D
 			#region Parse the code between the last block opener and the caret
 
 			var blockOpenerLocation = curBlock != null ? curBlock.BlockStartLocation : CodeLocation.Empty;
-			var blockOpenerOffset = blockOpenerLocation.Line==0? blockOpenerLocation.Column:
+			var blockOpenerOffset = blockOpenerLocation.Line<=0? blockOpenerLocation.Column:
 				EditorDocument.Editor.Document.GetOffset(blockOpenerLocation.Line, blockOpenerLocation.Column);
 
 			if (caretOffset - blockOpenerOffset > 0)
