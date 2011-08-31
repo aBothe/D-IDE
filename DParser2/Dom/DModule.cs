@@ -239,6 +239,20 @@ namespace D_Parser.Dom
 		BlockStatement _Out;
 		BlockStatement _Body;
 
+		public BlockStatement GetSubBlockAt(CodeLocation Where)
+		{
+			if (_In != null && _In.StartLocation <= Where && _In.EndLocation <= Where)
+				return _In;
+
+			if (_Out != null && _Out.StartLocation <= Where && _Out.EndLocation <= Where)
+				return _Out;
+
+			if (_Body != null && _Body.StartLocation <= Where && _Body.EndLocation <= Where)
+				return _Body;
+
+			return null;
+		}
+
 		public override void AssignFrom(INode other)
 		{
 			if (other is DMethod)

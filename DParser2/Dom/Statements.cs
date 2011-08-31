@@ -725,6 +725,9 @@ namespace D_Parser.Dom.Statements
 
 	public class DeclarationStatement : AbstractStatement
 	{
+		/// <summary>
+		/// Declarations done by this statement. Contains more than one item e.g. on int a,b,c;
+		/// </summary>
 		public INode[] Declaration;
 
 		public override string ToCode()

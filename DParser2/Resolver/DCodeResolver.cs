@@ -92,7 +92,7 @@ namespace D_Parser.Resolver
 					if (dm.TemplateParameters != null)
 						ret.AddRange(dm.TemplateParameterNodes as IEnumerable<INode>);
 
-					// The method's declaration children are handled above already.
+					// The method's declaration children are handled above already via BlockStatement.GetItemHierarchy().
 				}
 				else foreach (var n in curScope)
 						{

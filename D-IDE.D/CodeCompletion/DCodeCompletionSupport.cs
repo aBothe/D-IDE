@@ -83,6 +83,10 @@ namespace D_IDE.D
 					var newStmt = DParser.ParseBlockStatement(codeToParse, blockOpenerLocation, curBlock);
 
 					curStmt = newStmt.SearchStatementDeeply(caretLocation);
+
+					// For adding method members to the return list anyway, make the method's statment block (either 'In', 'Out' or 'Body') scoped.
+					if (curStmt == null)
+						curStmt = newStmt;
 				}
 			}
 			#endregion
@@ -221,7 +225,38 @@ namespace D_IDE.D
 
 		void AddGenericProperties(ResolveResult rr, IList<ICompletionData> l,INode relatedNode=null)
 		{
-			var prop_Init = new DVariable() { Name = "init", Type=new DTokenDeclaration(DTokens.Int), Initializer = new IdentifierExpression(0) { LiteralFormat=LiteralFormat.Scalar} };
+			var prop_Init = new DVariable() { 
+				Name = "init", 
+				Type=new DTokenDeclaration(DTokens.Int), 
+				Initializer = new IdentifierExpression(0) { LiteralFormat=LiteralFormat.Scalar}
+			};
+
+			var prop_SizeOf = new DVariable(){
+				Name = "sizeof",
+				Type = new DTokenDeclaration(DTokens.Int),
+				Initializer = new IdentifierExpression(4) { LiteralFormat = LiteralFormat.Scalar },
+				Description="Size of a type or variable in bytes"
+			};
+
+			var prop_AlignOf = new DVariable(){
+				Name = "alignof",
+				Type = new DTokenDeclaration(DTokens.Int),
+				Description="Variable offset"
+			};
+
+			var prop_MangleOf = new DVariable()
+			{
+				Name = "mangleof",
+				Type = new IdentifierDeclaration("immutable(char)[]"),
+				Description = "string representing the ‘mangled’ representation of the type"
+			};
+
+			var prop_StringOf = new DVariable()
+			{
+				Name = "stringof",
+				Type = new IdentifierDeclaration("immutable(char)[]"),
+				Description = "string representing the ‘mangled’ representation of the type"
+			};
 
 			if (relatedNode != null)
 			{
@@ -238,7 +273,14 @@ namespace D_IDE.D
 				}
 			}
 
+			// Override the initializer variable's description
+			prop_Init.Description = "Returns a type's or variable's static initializer expression";
+
 			l.Add(new DCompletionData(prop_Init));
+			l.Add(new DCompletionData(prop_SizeOf));
+			l.Add(new DCompletionData(prop_AlignOf));
+			l.Add(new DCompletionData(prop_MangleOf));
+			l.Add(new DCompletionData(prop_StringOf));
 		}
 
 		#endregion
