@@ -78,6 +78,10 @@ namespace D_IDE.D
 			{
 				var codeToParse = EditorDocument.Editor.Document.GetText(blockOpenerOffset, caretOffset - blockOpenerOffset);
 
+				/*
+				 * So, if we're inside of a method, we parse all its 'contents' (statements, expressions, declarations etc.)
+				 * to achieve a fully updated insight.
+				 */
 				if (curBlock is DMethod)
 				{
 					var newStmt = DParser.ParseBlockStatement(codeToParse, blockOpenerLocation, curBlock);
