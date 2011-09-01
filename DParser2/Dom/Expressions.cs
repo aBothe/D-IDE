@@ -1581,7 +1581,7 @@ namespace D_Parser.Dom.Expressions
 
 		public override string ToString()
 		{
-			return DTokens.GetTokenString(LiteralToken) + " " + AnonymousMethod.ToString();
+			return DTokens.GetTokenString(LiteralToken) + (string.IsNullOrEmpty (AnonymousMethod.Name)?"": " ") + AnonymousMethod.ToString();
 		}
 
 		public CodeLocation Location

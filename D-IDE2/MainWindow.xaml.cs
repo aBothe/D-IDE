@@ -264,14 +264,15 @@ namespace D_IDE
 				args.Length>0)
 			{
 				Dispatcher.Invoke(new Action(() =>{
-					// Load last project
-					if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
-						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 
 					// If given, iterate over all cmd line arguments
 					if (args.Length > 0)
 						foreach (var a in args)
 							IDEManager.EditingManagement.OpenFile(a);
+					else
+					// ... or load last project otherwise
+					if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
+						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
 				}));
 			}
 

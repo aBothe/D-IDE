@@ -156,9 +156,19 @@ namespace D_Parser.Parser
 
 				if (t.Kind == (If))
 				{
-					Expect(OpenParenthesis);
-					AssignExpression();
-					Expect(CloseParenthesis);
+					if (DAttribute.ContainsAttribute(DeclarationAttributes, Static))
+					{
+						//HACK: Assume that there's only our 'static' attribute applied to the 'if'-statement
+						DeclarationAttributes.Clear();
+					}
+					else
+						SynErr(Static, "Conditional declarations must be static");
+
+					if (Expect(OpenParenthesis))
+					{
+						var condition = AssignExpression();
+						Expect(CloseParenthesis);
+					}
 				}
 				else if (laKind == (Assign))
 				{
@@ -199,15 +209,26 @@ namespace D_Parser.Parser
 			else if (laKind == (Assert))
 			{
 				Step();
-				Expect(OpenParenthesis);
-				AssignExpression();
-				if (laKind == (Comma))
+
+				if (DAttribute.ContainsAttribute(DeclarationAttributes, Static))
 				{
-					Step();
-					AssignExpression();
+					//HACK: Assume that there's only our 'static' attribute applied to the 'if'-statement
+					DeclarationAttributes.Clear();
 				}
-				Expect(CloseParenthesis);
-				Expect(Semicolon);
+				else 
+					SynErr(Static, "Static assert statements must be explicitly marked as static");
+
+				if (Expect(OpenParenthesis))
+				{
+					AssignExpression();
+					if (laKind == (Comma))
+					{
+						Step();
+						AssignExpression();
+					}
+					Expect(CloseParenthesis);
+				}
+					Expect(Semicolon);
 			}
 
 			//TemplateMixin

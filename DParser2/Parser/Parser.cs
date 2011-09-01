@@ -422,7 +422,7 @@ namespace D_Parser.Parser
         }
         void SynErr(int n)
 		{
-			ParseErrors.Add(new ParserError(false, DTokens.GetTokenString(n) + " expected", n, t == null ? la.Location : t.EndLocation));
+			ParseErrors.Add(new ParserError(false, DTokens.GetTokenString(n) + " expected" + (t!=null?(", "+DTokens.GetTokenString(t.Kind)+" found"):""), n, t == null ? la.Location : t.EndLocation));
         }
 
         void SemErr(int n, string msg)
@@ -431,7 +431,7 @@ namespace D_Parser.Parser
         }
         void SemErr(int n)
         {
-			ParseErrors.Add(new ParserError(true, DTokens.GetTokenString(n) + " expected", n, t == null ? la.Location : t.EndLocation));
+			ParseErrors.Add(new ParserError(true, DTokens.GetTokenString(n) + " expected" + (t != null ? (", " + DTokens.GetTokenString(t.Kind) + " found") : ""), n, t == null ? la.Location : t.EndLocation));
         }
         #endregion
     }
