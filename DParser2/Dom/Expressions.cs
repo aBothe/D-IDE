@@ -1342,11 +1342,12 @@ namespace D_Parser.Dom.Expressions
 	{
 		public bool IsIdentifier { get { return Value is string && LiteralFormat==LiteralFormat.None; } }
 
-		public object Value = "";
-		public LiteralFormat LiteralFormat=LiteralFormat.None;
+		public readonly object Value;
+		public readonly LiteralFormat LiteralFormat;
 
-		public IdentifierExpression() { }
-		public IdentifierExpression(object Val) { Value = Val; }
+		//public IdentifierExpression() { }
+		public IdentifierExpression(object Val) { Value = Val; LiteralFormat = LiteralFormat.None; }
+		public IdentifierExpression(object Val, LiteralFormat LiteralFormat) { Value = Val; this.LiteralFormat = LiteralFormat; }
 
 		public override string ToString()
 		{
@@ -1728,7 +1729,7 @@ namespace D_Parser.Dom.Expressions
 
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return new DExpressionDecl(new IdentifierExpression(""){LiteralFormat=LiteralFormat.StringLiteral}); }
+			get { return new DExpressionDecl(new IdentifierExpression("", LiteralFormat.StringLiteral)); }
 		}
 
 		public bool IsConstant

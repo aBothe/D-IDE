@@ -180,7 +180,7 @@ namespace D_IDE.D
 								isVariableInstance:true,rr); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
 
 				if(resultParent==null)
-					AddGenericProperties(rr, l, mrr.ResolvedMember);
+					StaticPropertyAddition.AddGenericProperties(rr, l, mrr.ResolvedMember);
 			}
 
 			else if (!isVariableInstance && rr is ModuleResult)
@@ -201,7 +201,7 @@ namespace D_IDE.D
 
 				BuildTypeCompletionData(tr, vis, l);
 				if (resultParent == null)
-					AddGenericProperties(rr, l, tr.ResolvedTypeDefinition);
+					StaticPropertyAddition.AddGenericProperties(rr, l, tr.ResolvedTypeDefinition);
 			}
 
 			else if (rr is SpecialTypeResult)
@@ -216,75 +216,176 @@ namespace D_IDE.D
 				}
 
 				if (resultParent == null)
-					AddGenericProperties(rr, l);
+					StaticPropertyAddition.AddGenericProperties(rr, l);
 			}
 			else if (rr is StaticTypeResult)
 			{
+				var srr = rr as StaticTypeResult;
 				if (resultParent == null)
-					AddGenericProperties(rr, l, null);
+					StaticPropertyAddition.AddGenericProperties(rr, l, null,true);
+
+				bool isFloat = DTokens.BasicTypes_FloatingPoint[srr.BaseTypeToken];
+
+				if (DTokens.BasicTypes_Integral[srr.BaseTypeToken] || isFloat)
+					StaticPropertyAddition.AddIntegralTypeProperties(srr.BaseTypeToken,rr, l, null, isFloat);
+
+				//if (isFloat)StaticPropertyAddition.AddFloatingTypeProperties(srr.BaseTypeToken, rr, l, null);
+			}
+			else if (rr is ExpressionResult)
+			{
+				StaticPropertyAddition.AddGenericProperties(rr, l, null);
+
+				var err = rr as ExpressionResult;
+				var expr = err.Expression;
 			}
 		}
 
 		#region Static properties
 
-		void AddGenericProperties(ResolveResult rr, IList<ICompletionData> l,INode relatedNode=null)
+		class StaticPropertyAddition
 		{
-			var prop_Init = new DVariable() { 
-				Name = "init", 
-				Type=new DTokenDeclaration(DTokens.Int), 
-				Initializer = new IdentifierExpression(0) { LiteralFormat=LiteralFormat.Scalar}
-			};
-
-			var prop_SizeOf = new DVariable(){
-				Name = "sizeof",
-				Type = new DTokenDeclaration(DTokens.Int),
-				Initializer = new IdentifierExpression(4) { LiteralFormat = LiteralFormat.Scalar },
-				Description="Size of a type or variable in bytes"
-			};
-
-			var prop_AlignOf = new DVariable(){
-				Name = "alignof",
-				Type = new DTokenDeclaration(DTokens.Int),
-				Description="Variable offset"
-			};
-
-			var prop_MangleOf = new DVariable()
+			public class StaticProperty
 			{
-				Name = "mangleof",
-				Type = new IdentifierDeclaration("immutable(char)[]"),
-				Description = "string representing the ‘mangled’ representation of the type"
+				public readonly string Name;
+				public readonly string Description;
+				public readonly ITypeDeclaration OverrideType;
+
+				public StaticProperty(string name, string desc, ITypeDeclaration overrideType = null)
+				{ Name = name; Description = desc; OverrideType = overrideType; }
+			}
+
+			public static StaticProperty[] GenericProps=new[]{
+				new StaticProperty("sizeof","Size of a type or variable in bytes",new IdentifierDeclaration("size_t")),
+				new StaticProperty("alignof","Variable offset",new DTokenDeclaration(DTokens.Int)),
+				new StaticProperty("mangleof","String representing the ‘mangled’ representation of the type",new IdentifierDeclaration("string")),
+				new StaticProperty("stringof","String representing the source representation of the type",new IdentifierDeclaration("string")),
 			};
 
-			var prop_StringOf = new DVariable()
-			{
-				Name = "stringof",
-				Type = new IdentifierDeclaration("immutable(char)[]"),
-				Description = "string representing the ‘mangled’ representation of the type"
+			public static StaticProperty[] IntegralProps = new[] { 
+				new StaticProperty("max","Maximum value"),
+				new StaticProperty("min","Minimum value")
 			};
 
-			if (relatedNode != null)
+			public static StaticProperty[] FloatingTypeProps = new[] { 
+				new StaticProperty("infinity","Infinity value"),
+				new StaticProperty("nan","Not-a-Number value"),
+				new StaticProperty("dig","Number of decimal digits of precision",new DTokenDeclaration(DTokens.Int)),
+				new StaticProperty("epsilon", "Smallest increment to the value 1"),
+				new StaticProperty("mant_dig","Number of bits in mantissa",new DTokenDeclaration(DTokens.Int)),
+				new StaticProperty("max_10_exp","Maximum int value such that 10^max_10_exp is representable",new DTokenDeclaration(DTokens.Int)),
+				new StaticProperty("max_exp","Maximum int value such that 2^max_exp-1 is representable",new DTokenDeclaration(DTokens.Int)),
+				new StaticProperty("min_10_exp","Minimum int value such that 10^max_10_exp is representable",new DTokenDeclaration(DTokens.Int)),
+				new StaticProperty("min_exp","Minimum int value such that 2^max_exp-1 is representable",new DTokenDeclaration(DTokens.Int)),
+				new StaticProperty("min_normal","Number of decimal digits of precision",new DTokenDeclaration(DTokens.Int)),
+				new StaticProperty("re","Real part"),
+				new StaticProperty("in","Imaginary part")
+			};
+
+			public static StaticProperty[] ClassTypeProps = new[]{
+				new StaticProperty("classinfo","Information about the dynamic type of the class", new IdentifierDeclaration("TypeInfo_Class") { InnerDeclaration = new IdentifierDeclaration("object") })
+			};
+
+			public static StaticProperty[] ArrayProps = new[] { 
+				new StaticProperty("init","Returns an array literal with each element of the literal being the .init property of the array element type. null on dynamic arrays."),
+				new StaticProperty("length","Array length",new IdentifierDeclaration("size_t")),
+				new StaticProperty("ptr","Returns pointer to the array",new PointerDecl(){InnerDeclaration=new DTokenDeclaration(DTokens.Void)}),
+				new StaticProperty("dup","Create a dynamic array of the same size and copy the contents of the array into it."),
+				new StaticProperty("idup","D2.0 only! Creates immutable copy of the array"),
+				new StaticProperty("reverse","Reverses in place the order of the elements in the array. Returns the array."),
+				new StaticProperty("sort","Sorts in place the order of the elements in the array. Returns the array.")
+			};
+
+			// Associative Arrays' properties have to be inserted manually
+
+			static void CreateArtificialProperties(StaticProperty[] Properties, IList<ICompletionData> l, ITypeDeclaration DefaultPropType = null)
 			{
-				if (relatedNode is DVariable)
+				foreach (var prop in Properties)
 				{
-					prop_Init.AssignFrom(relatedNode);
-					prop_Init.Name = "init";
-					/*
-					var dv = relatedNode as DVariable;
-					if(dv.Initializer!=null)
-						prop_Init.Initializer = dv.Initializer;
-					if (dv.Type != null)
-						prop_Init.Type = dv.Type;*/
+					var p = new DVariable() {
+						Name=prop.Name,
+						Description=prop.Description,
+						Type=prop.OverrideType!=null?prop.OverrideType:DefaultPropType
+					};
+
+					l.Add(new DCompletionData(p));
 				}
 			}
 
-			// Override the initializer variable's description
-			prop_Init.Description = "Returns a type's or variable's static initializer expression";
+			/// <summary>
+			/// Adds init, sizeof, alignof, mangleof, stringof to the completion list
+			/// </summary>
+			public static void AddGenericProperties(ResolveResult rr, IList<ICompletionData> l, INode relatedNode = null, bool DontAddInitProperty=false)
+			{
+				if (!DontAddInitProperty)
+				{
+					var prop_Init = new DVariable();
 
-			l.Add(new DCompletionData(prop_Init));
-			l.Add(new DCompletionData(prop_SizeOf));
-			l.Add(new DCompletionData(prop_AlignOf));
-			l.Add(new DCompletionData(prop_MangleOf));
-			l.Add(new DCompletionData(prop_StringOf));
+					if (relatedNode!=null)
+						prop_Init.AssignFrom(relatedNode);
+
+					// Override the initializer variable's name and description
+					prop_Init.Name = "init";
+					prop_Init.Description = "A type's or variable's static initializer expression";
+
+					l.Add(new DCompletionData(prop_Init));
+				}
+
+				CreateArtificialProperties(GenericProps, l);
+			}
+
+			/// <summary>
+			/// Adds init, max, min to the completion list
+			/// </summary>
+			public static void AddIntegralTypeProperties(int TypeToken, ResolveResult rr, IList<ICompletionData> l, INode relatedNode = null, bool DontAddInitProperty = false)
+			{
+				var intType = new DTokenDeclaration(TypeToken);
+
+				if (!DontAddInitProperty)
+				{
+					var prop_Init = new DVariable() { Type=intType, Initializer=new IdentifierExpression(0,LiteralFormat.Scalar)};
+
+					if (relatedNode != null)
+						prop_Init.AssignFrom(relatedNode);
+
+					// Override the initializer variable's name and description
+					prop_Init.Name = "init";
+					prop_Init.Description = "A type's or variable's static initializer expression";
+
+					l.Add(new DCompletionData(prop_Init));
+				}
+
+				CreateArtificialProperties(IntegralProps, l, intType);
+			}
+
+			public static void AddFloatingTypeProperties(int TypeToken, ResolveResult rr, IList<ICompletionData> l, INode relatedNode = null, bool DontAddInitProperty = false)
+			{
+				var intType = new DTokenDeclaration(TypeToken);
+
+				if (!DontAddInitProperty)
+				{
+					var prop_Init = new DVariable() { Type = intType, Initializer = new PostfixExpression_Access() { PostfixForeExpression=new TokenExpression(TypeToken), TemplateOrIdentifier=new IdentifierDeclaration("nan")} };
+
+					if (relatedNode != null)
+						prop_Init.AssignFrom(relatedNode);
+
+					// Override the initializer variable's name and description
+					prop_Init.Name = "init";
+					prop_Init.Description = "A type's or variable's static initializer expression";
+
+					l.Add(new DCompletionData(prop_Init));
+				}
+
+				CreateArtificialProperties(FloatingTypeProps, l, intType);
+			}
+
+			public static void AddClassTypeProperties(IList<ICompletionData> l, INode relatedNode = null)
+			{
+				CreateArtificialProperties(ClassTypeProps, l);
+			}
+
+			public static void AddArrayProperties(ResolveResult rr, IList<ICompletionData> l, INode relatedNode = null, bool DontAddInitProperty = false)
+			{
+			}
 		}
 
 		#endregion

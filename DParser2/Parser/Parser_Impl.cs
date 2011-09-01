@@ -2114,11 +2114,10 @@ namespace D_Parser.Parser
 						Step();
 						a += t.LiteralValue as string;
 					}
-					return new IdentifierExpression(a) {LiteralFormat=t.LiteralFormat, Location=startLoc,EndLocation=t.EndLocation};
+					return new IdentifierExpression(a, t.LiteralFormat) { Location = startLoc, EndLocation = t.EndLocation };
 				}
-				else if (t.LiteralFormat == LiteralFormat.CharLiteral)
-					return new IdentifierExpression(t.LiteralValue) { LiteralFormat=t.LiteralFormat,Location = startLoc, EndLocation = t.EndLocation };
-				return new IdentifierExpression(t.LiteralValue) { LiteralFormat=t.LiteralFormat,Location = startLoc, EndLocation = t.EndLocation };
+				//else if (t.LiteralFormat == LiteralFormat.CharLiteral)return new IdentifierExpression(t.LiteralValue) { LiteralFormat=t.LiteralFormat,Location = startLoc, EndLocation = t.EndLocation };
+				return new IdentifierExpression(t.LiteralValue, t.LiteralFormat) { Location = startLoc, EndLocation = t.EndLocation };
 			}
 			#endregion
 
@@ -3968,9 +3967,9 @@ namespace D_Parser.Parser
 			{
 				Step();
 				if (t.Kind == Literal)
-					args.Add(new IdentifierExpression(t.LiteralValue) { LiteralFormat=LiteralFormat.Scalar});
+					args.Add(new IdentifierExpression(t.LiteralValue, LiteralFormat.Scalar));
 				else if (t.Kind == Identifier)
-					args.Add(new IdentifierExpression(t.Value) { LiteralFormat=LiteralFormat.None});
+					args.Add(new IdentifierExpression(t.Value));
 				else
 					args.Add(new TokenExpression(t.Kind));
 			}

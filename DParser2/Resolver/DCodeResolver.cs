@@ -994,6 +994,7 @@ namespace D_Parser.Resolver
 
 			int isComment = 0;
 			bool isString = false, expectDot = false, hadDot = true;
+			bool hadString = false;
 			var bracketStack = new Stack<char>();
 
 			var identBuffer = "";
@@ -1019,8 +1020,14 @@ namespace D_Parser.Resolver
 
 				// Primitive string check
 				//TODO: "blah">.<
+				hadString = false;
 				if (isComment < 1 && c == '"' && p != '\\')
+				{
 					isString = !isString;
+					
+					if(!isString)
+						hadString = true;
+				}
 
 				// If string or comment, just continue
 				if (isString || isComment > 0)
@@ -1112,7 +1119,10 @@ namespace D_Parser.Resolver
 					}
 				}
 
-				IdentListStart++;
+				// Only re-increase our caret offset if we did not break because of a string..
+				// otherwise, we'd return the offset after the initial string quote
+				if(!hadString)
+					IdentListStart++;
 				stopSeeking = true;
 			}
 
