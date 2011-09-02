@@ -7,10 +7,12 @@ using D_Parser.Dom;
 
 namespace D_Parser.Parser
 {
+	[Flags]
     public enum LiteralFormat : byte
     {
         None,
         Scalar,
+		FloatingPoint,
         StringLiteral,
         VerbatimStringLiteral,
         CharLiteral,

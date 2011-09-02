@@ -229,14 +229,31 @@ namespace D_IDE.D
 				if (DTokens.BasicTypes_Integral[srr.BaseTypeToken] || isFloat)
 					StaticPropertyAddition.AddIntegralTypeProperties(srr.BaseTypeToken,rr, l, null, isFloat);
 
-				//if (isFloat)StaticPropertyAddition.AddFloatingTypeProperties(srr.BaseTypeToken, rr, l, null);
+				if (isFloat)
+					StaticPropertyAddition.AddFloatingTypeProperties(srr.BaseTypeToken, rr, l, null);
 			}
 			else if (rr is ExpressionResult)
 			{
-				StaticPropertyAddition.AddGenericProperties(rr, l, null);
-
 				var err = rr as ExpressionResult;
 				var expr = err.Expression;
+
+				// 'Skip' surrounding parentheses
+				while (expr is SurroundingParenthesesExpression)
+					expr = (expr as SurroundingParenthesesExpression).Expression;
+
+				var idExpr = expr as IdentifierExpression;
+				if (idExpr!=null)
+				{
+					if (idExpr.LiteralFormat.HasFlag(LiteralFormat.Scalar))
+					{
+						StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
+						bool isFloat=idExpr.LiteralFormat.HasFlag(LiteralFormat.FloatingPoint);
+						StaticPropertyAddition.AddIntegralTypeProperties(DTokens.Int, rr, l, null, isFloat);
+
+						if (isFloat)
+							StaticPropertyAddition.AddFloatingTypeProperties(DTokens.Float, rr, l);
+					}
+				}
 			}
 		}
 
@@ -385,6 +402,7 @@ namespace D_IDE.D
 
 			public static void AddArrayProperties(ResolveResult rr, IList<ICompletionData> l, INode relatedNode = null, bool DontAddInitProperty = false)
 			{
+				CreateArtificialProperties(ArrayProps, l);
 			}
 		}
 

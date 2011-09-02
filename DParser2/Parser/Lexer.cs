@@ -712,10 +712,7 @@ namespace D_Parser.Parser
 
                 bool HasDot = false;
                 bool isunsigned = false;
-                /*bool islong = false;
-                bool isfloat = false;
-                bool isreal = false;
-                bool isimaginary = false;*/
+				bool isfloat = false;
                 int NumBase = 0; // Set it to 0 initially - it'll be set to another value later for sure
 
                 char peek = (char)ReaderPeek();
@@ -863,6 +860,7 @@ namespace D_Parser.Parser
 
                     if (peek == 'L')
                     {
+						isfloat = true;
                         ReaderRead();
                         suffix += "L";
                         //islong = true;
@@ -877,7 +875,7 @@ namespace D_Parser.Parser
                 { // float value
                     ReaderRead();
                     suffix += "f";
-                    //isfloat = true;
+                    isfloat = true;
                     peek = (char)ReaderPeek();
                 }
                 else if (peek == 'L')
@@ -885,6 +883,7 @@ namespace D_Parser.Parser
                     ReaderRead();
                     suffix += 'L';
                     //isreal = true;
+					isfloat = true;
                     peek = (char)ReaderPeek();
                 }
 
@@ -892,6 +891,7 @@ namespace D_Parser.Parser
                 { // imaginary value
                     ReaderRead();
                     suffix += "i";
+					isfloat = true;
                     //isimaginary = true;
                 }
                 #endregion
@@ -908,7 +908,7 @@ namespace D_Parser.Parser
                     num = Math.Pow(num, exponent);
                 #endregion
 
-                token = new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + stringValue.Length, y), stringValue, num, LiteralFormat.Scalar);
+                token = new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + stringValue.Length, y), stringValue, num, isfloat||HasDot ? (LiteralFormat.FloatingPoint | LiteralFormat.Scalar): LiteralFormat.Scalar);
 
                 if (token != null) token.next = nextToken;
                 return token;
