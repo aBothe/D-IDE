@@ -253,13 +253,18 @@ namespace D_IDE.D
 						if (isFloat)
 							StaticPropertyAddition.AddFloatingTypeProperties(DTokens.Float, rr, l);
 					}
+					else if (idExpr.LiteralFormat == LiteralFormat.StringLiteral || idExpr.LiteralFormat == LiteralFormat.VerbatimStringLiteral)
+					{
+						StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
+						StaticPropertyAddition.AddArrayProperties(rr, l);
+					}
 				}
 			}
 		}
 
 		#region Static properties
 
-		class StaticPropertyAddition
+		public class StaticPropertyAddition
 		{
 			public class StaticProperty
 			{
