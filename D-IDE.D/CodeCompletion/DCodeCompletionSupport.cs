@@ -218,20 +218,25 @@ namespace D_IDE.D
 				if (resultParent == null)
 					StaticPropertyAddition.AddGenericProperties(rr, l);
 			}
+
+			// Things like int. or char.
 			else if (rr is StaticTypeResult)
 			{
 				var srr = rr as StaticTypeResult;
 				if (resultParent == null)
 					StaticPropertyAddition.AddGenericProperties(rr, l, null,true);
 
+				// Determine whether float by the var's base type
 				bool isFloat = DTokens.BasicTypes_FloatingPoint[srr.BaseTypeToken];
 
+				// Float implies integral props
 				if (DTokens.BasicTypes_Integral[srr.BaseTypeToken] || isFloat)
 					StaticPropertyAddition.AddIntegralTypeProperties(srr.BaseTypeToken,rr, l, null, isFloat);
 
 				if (isFloat)
 					StaticPropertyAddition.AddFloatingTypeProperties(srr.BaseTypeToken, rr, l, null);
 			}
+			// "abcd" , (200), (0.123), [1,2,3,4], [1:"asdf", 2:"hey", 3:"yeah"]
 			else if (rr is ExpressionResult)
 			{
 				var err = rr as ExpressionResult;
@@ -244,20 +249,40 @@ namespace D_IDE.D
 				var idExpr = expr as IdentifierExpression;
 				if (idExpr!=null)
 				{
-					if (idExpr.LiteralFormat.HasFlag(LiteralFormat.Scalar))
+					// Char literals, Integrals types & Floats
+					if (idExpr.LiteralFormat.HasFlag(LiteralFormat.Scalar) || idExpr.LiteralFormat==LiteralFormat.CharLiteral)
 					{
 						StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
 						bool isFloat=idExpr.LiteralFormat.HasFlag(LiteralFormat.FloatingPoint);
+						// Floats also imply integral properties
 						StaticPropertyAddition.AddIntegralTypeProperties(DTokens.Int, rr, l, null, isFloat);
 
+						// Float-exclusive props
 						if (isFloat)
 							StaticPropertyAddition.AddFloatingTypeProperties(DTokens.Float, rr, l);
 					}
+					// String literals
 					else if (idExpr.LiteralFormat == LiteralFormat.StringLiteral || idExpr.LiteralFormat == LiteralFormat.VerbatimStringLiteral)
 					{
 						StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
 						StaticPropertyAddition.AddArrayProperties(rr, l);
 					}
+				}
+				// Normal array literals
+				else if (expr is ArrayLiteralExpression)
+				{
+					var arr = expr as ArrayLiteralExpression;
+
+					StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
+					StaticPropertyAddition.AddArrayProperties(rr, l);
+				}
+				// Associative array literals
+				else if (expr is AssocArrayExpression)
+				{
+					var arr = expr as AssocArrayExpression;
+					
+					StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
+					// TODO: AddAssocArrayProperties
 				}
 			}
 		}
