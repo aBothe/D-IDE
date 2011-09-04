@@ -181,7 +181,7 @@ namespace D_IDE.D
 								isVariableInstance:true,rr); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
 
 				if(resultParent==null)
-					StaticPropertyAddition.AddGenericProperties(rr, l, mrr.ResolvedMember);
+					StaticPropertyAddition.AddGenericProperties(rr, l, DontAddInitProperty:mrr.MemberBaseTypes!=null);
 			}
 			#endregion
 
@@ -216,9 +216,15 @@ namespace D_IDE.D
 				if (resultParent == null)
 					StaticPropertyAddition.AddGenericProperties(rr, l, null,true);
 
-				if (srr.Type is ArrayDecl)
+				var type = srr.Type;
+
+				// on things like immutable(char), pass by the surrounding attribute..
+				while (type is MemberFunctionAttributeDecl)
+					type = (type as MemberFunctionAttributeDecl).InnerType;
+
+				if (type is ArrayDecl)
 				{
-					var ad = srr.Type as ArrayDecl;
+					var ad = type as ArrayDecl;
 
 					// Normal array
 					if (ad.KeyType is DTokenDeclaration && DTokens.BasicTypes_Integral[(ad.KeyType as DTokenDeclaration).Token])
@@ -231,17 +237,30 @@ namespace D_IDE.D
 
 					}
 				}
+				// Direct pointer accessing - only generic props are available
+				else if (type is PointerDecl)
+				{
+					// Do nothing
+				}
 				else
 				{
-					// Determine whether float by the var's base type
-					bool isFloat = DTokens.BasicTypes_FloatingPoint[srr.BaseTypeToken];
+					int TypeToken = srr.BaseTypeToken;
 
-					// Float implies integral props
-					if (DTokens.BasicTypes_Integral[srr.BaseTypeToken] || isFloat)
-						StaticPropertyAddition.AddIntegralTypeProperties(srr.BaseTypeToken, rr, l, null, isFloat);
+					if (TypeToken <= 0 && type is DTokenDeclaration)
+						TypeToken = (type as DTokenDeclaration).Token;
 
-					if (isFloat)
-						StaticPropertyAddition.AddFloatingTypeProperties(srr.BaseTypeToken, rr, l, null);
+					if (TypeToken > 0)
+					{
+						// Determine whether float by the var's base type
+						bool isFloat = DTokens.BasicTypes_FloatingPoint[srr.BaseTypeToken];
+
+						// Float implies integral props
+						if (DTokens.BasicTypes_Integral[srr.BaseTypeToken] || isFloat)
+							StaticPropertyAddition.AddIntegralTypeProperties(srr.BaseTypeToken, rr, l, null, isFloat);
+
+						if (isFloat)
+							StaticPropertyAddition.AddFloatingTypeProperties(srr.BaseTypeToken, rr, l, null);
+					}
 				}
 			}
 			#endregion
@@ -260,10 +279,10 @@ namespace D_IDE.D
 				if (idExpr!=null)
 				{
 					// Char literals, Integrals types & Floats
-					if (idExpr.LiteralFormat.HasFlag(LiteralFormat.Scalar) || idExpr.LiteralFormat==LiteralFormat.CharLiteral)
+					if (idExpr.Format.HasFlag(LiteralFormat.Scalar) || idExpr.Format==LiteralFormat.CharLiteral)
 					{
 						StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
-						bool isFloat=idExpr.LiteralFormat.HasFlag(LiteralFormat.FloatingPoint);
+						bool isFloat=idExpr.Format.HasFlag(LiteralFormat.FloatingPoint);
 						// Floats also imply integral properties
 						StaticPropertyAddition.AddIntegralTypeProperties(DTokens.Int, rr, l, null, isFloat);
 
@@ -272,7 +291,7 @@ namespace D_IDE.D
 							StaticPropertyAddition.AddFloatingTypeProperties(DTokens.Float, rr, l);
 					}
 					// String literals
-					else if (idExpr.LiteralFormat == LiteralFormat.StringLiteral || idExpr.LiteralFormat == LiteralFormat.VerbatimStringLiteral)
+					else if (idExpr.Format == LiteralFormat.StringLiteral || idExpr.Format == LiteralFormat.VerbatimStringLiteral)
 					{
 						StaticPropertyAddition.AddGenericProperties(rr, l, DontAddInitProperty: true);
 						StaticPropertyAddition.AddArrayProperties(rr, l,new IdentifierDeclaration("string"));

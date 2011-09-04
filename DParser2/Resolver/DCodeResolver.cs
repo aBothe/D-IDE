@@ -522,6 +522,9 @@ namespace D_Parser.Resolver
 				{
 					string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
 
+					if (string.IsNullOrEmpty(searchIdentifier))
+						return null;
+
 					// Try to convert the identifier into a token
 					int searchToken = string.IsNullOrEmpty(searchIdentifier) ? 0 : DTokens.GetTokenID(searchIdentifier);
 
@@ -557,7 +560,8 @@ namespace D_Parser.Resolver
 							if (m != null)
 								matches.AddRange(m);
 
-							if (curScope is IAbstractSyntaxTree && (curScope as IAbstractSyntaxTree).ModuleName.StartsWith(searchIdentifier))
+							var mod=curScope as IAbstractSyntaxTree;
+							if (mod!=null && !string.IsNullOrEmpty(mod.ModuleName) && mod.ModuleName.StartsWith(searchIdentifier))
 								matches.Add(curScope);
 
 							curScope = curScope.Parent as IBlockNode;
@@ -665,9 +669,9 @@ namespace D_Parser.Resolver
 					}
 					#endregion
 
-					else if (declaration is ArrayDecl)
+					else if (declaration is ArrayDecl || declaration is PointerDecl)
 					{
-						returnedResults.Add(new StaticTypeResult() { Type=declaration, ResultBase=rbase});
+						returnedResults.Add(new StaticTypeResult() { Type = declaration, ResultBase = rbase });
 					}
 
 					else if (declaration is DExpressionDecl)
@@ -676,16 +680,8 @@ namespace D_Parser.Resolver
 
 						/* 
 						 * Note: Assume e.g. foo.bar.myArray in foo.bar.myArray[0] has been resolved!
-						 * So, we just have to reverse the postfixexpression-hierarchy - whereas our postfixStack will hold it
+						 * So, we just have to take the last postfix expression
 						 */
-						var postfixStack = new Stack<PostfixExpression>();
-
-						var curExpr = expr as PostfixExpression;
-						while (curExpr != null)
-						{
-							postfixStack.Push(curExpr);
-							curExpr = curExpr.PostfixForeExpression as PostfixExpression;
-						}
 
 						/*
 						 * After we've done this, we reduce the stack..
@@ -697,44 +693,40 @@ namespace D_Parser.Resolver
 						 * 
 						 * auto myElement=mySubArray["abcd"]; // returns the most basic value type: 'int'
 						 */
+						if (rbase is StaticTypeResult)
+						{
+							var str = rbase as StaticTypeResult;
 
-						if (rbase is MemberResult)
+							if (str.Type is ArrayDecl && expr is PostfixExpression_Index)
+							{
+								returnedResults.Add(new StaticTypeResult() { Type = (str.Type as ArrayDecl).ValueType });
+							}
+						}
+						else if (rbase is MemberResult)
 						{
 							var mr = rbase as MemberResult;
-							if (mr.MemberBaseTypes!=null && mr.MemberBaseTypes.Length>0)
+							if (mr.MemberBaseTypes != null && mr.MemberBaseTypes.Length > 0)
 								foreach (var memberType in mr.MemberBaseTypes)
 								{
 									var curRes = TryRemoveAliasesFromResult(memberType);
 
-									foreach(var pfExpr in postfixStack)
+									if (expr is PostfixExpression_Index)
 									{
-										if (pfExpr is PostfixExpression_Index)
-										{
-											var idx = pfExpr as PostfixExpression_Index;
-
-											if (curRes is StaticTypeResult)
-											{
-												var str = (curRes as StaticTypeResult);
-
-												/*
-												 * If the member's type is an array, and if our expression contains an index-expression (e.g. myArray[0]),
-												 * take the value type of the 
-												 */
-												if (str.Type is ArrayDecl)
-												{
-													// For array declarations, the StaticTypeResult object contains the array's value type.
-
-													curRes = TryRemoveAliasesFromResult( str.ResultBase);
-												}
-											}
-										}
+										var str = (curRes as StaticTypeResult);
+										/*
+										 * If the member's type is an array, and if our expression contains an index-expression (e.g. myArray[0]),
+										 * take the value type of the 
+										 */
+										// For array and pointer declarations, the StaticTypeResult object contains the array's value type / pointer base type.
+										if (str != null && (str.Type is ArrayDecl || str.Type is PointerDecl))
+											curRes = TryRemoveAliasesFromResult(str.ResultBase);
 									}
 
-									if(curRes!=null)
+									if (curRes != null)
 										returnedResults.Add(curRes);
-									}
 								}
 						}
+					}
 					}
 			#endregion
 

@@ -7,7 +7,7 @@ using D_Parser.Dom;
 
 namespace D_Parser.Parser
 {
-	[Flags]
+	[FlagsAttribute]
 	public enum LiteralFormat
 	{
 		None = 0,

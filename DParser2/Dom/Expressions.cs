@@ -644,6 +644,9 @@ namespace D_Parser.Dom.Expressions
 		}
 	}
 
+	/// <summary>
+	/// Creates a pointer from the trailing type
+	/// </summary>
 	public class UnaryExpression_And : SimpleUnaryExpression
 	{
 		public override int ForeToken
@@ -653,7 +656,7 @@ namespace D_Parser.Dom.Expressions
 
 		public override ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return new DExpressionDecl(this) { InnerDeclaration = UnaryExpression.ExpressionTypeRepresentation }; }
+			get { return new PointerDecl(UnaryExpression.ExpressionTypeRepresentation); }
 		}
 	}
 
@@ -683,6 +686,9 @@ namespace D_Parser.Dom.Expressions
 		}
 	}
 
+	/// <summary>
+	/// Gets the pointer base type
+	/// </summary>
 	public class UnaryExpression_Mul : SimpleUnaryExpression
 	{
 		public override int ForeToken
@@ -1084,9 +1090,9 @@ namespace D_Parser.Dom.Expressions
 		public abstract CodeLocation EndLocation { get; set; }
 
 
-		public abstract ITypeDeclaration ExpressionTypeRepresentation
+		public virtual ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get;
+			get { return new DExpressionDecl(this) { InnerDeclaration = PostfixForeExpression.ExpressionTypeRepresentation }; }
 		}
 
 
@@ -1234,11 +1240,6 @@ namespace D_Parser.Dom.Expressions
 			get;
 			set;
 		}
-
-		public sealed override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DExpressionDecl(this) { InnerDeclaration=PostfixForeExpression.ExpressionTypeRepresentation}; }
-		}
 	}
 
 
@@ -1272,11 +1273,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DExpressionDecl(this) { InnerDeclaration = PostfixForeExpression.ExpressionTypeRepresentation }; }
 		}
 	}
 
@@ -1340,19 +1336,19 @@ namespace D_Parser.Dom.Expressions
 	/// </summary>
 	public class IdentifierExpression : PrimaryExpression
 	{
-		public bool IsIdentifier { get { return Value is string && LiteralFormat==LiteralFormat.None; } }
+		public bool IsIdentifier { get { return Value is string && Format==LiteralFormat.None; } }
 
 		public readonly object Value;
-		public readonly LiteralFormat LiteralFormat;
+		public readonly LiteralFormat Format;
 
 		//public IdentifierExpression() { }
-		public IdentifierExpression(object Val) { Value = Val; LiteralFormat = LiteralFormat.None; }
-		public IdentifierExpression(object Val, LiteralFormat LiteralFormat) { Value = Val; this.LiteralFormat = LiteralFormat; }
+		public IdentifierExpression(object Val) { Value = Val; Format = LiteralFormat.None; }
+		public IdentifierExpression(object Val, LiteralFormat LiteralFormat) { Value = Val; this.Format = LiteralFormat; }
 
 		public override string ToString()
 		{
-			if(LiteralFormat!=Parser.LiteralFormat.None)
-				switch (LiteralFormat)
+			if(Format!=Parser.LiteralFormat.None)
+				switch (Format)
 				{
 					case Parser.LiteralFormat.CharLiteral:
 						return "'"+Value+"'";
@@ -1382,16 +1378,17 @@ namespace D_Parser.Dom.Expressions
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
 			get { 
-				if(LiteralFormat==LiteralFormat.CharLiteral) 
+				if(Format==LiteralFormat.CharLiteral) 
 					return new DTokenDeclaration(DTokens.Char);
 
-				if (LiteralFormat == LiteralFormat.FloatingPoint)
+				if ((Format & LiteralFormat.FloatingPoint) == LiteralFormat.FloatingPoint)
 					return new DTokenDeclaration(DTokens.Float);
 
-				if (LiteralFormat == LiteralFormat.Scalar)
+				if (Format == LiteralFormat.Scalar)
 					return new DTokenDeclaration(DTokens.Int);
 
-				if (LiteralFormat == LiteralFormat.StringLiteral || LiteralFormat == LiteralFormat.VerbatimStringLiteral)
+				//ISSUE: For easification, only work with strings, not wstrings or dstrings
+				if (Format == LiteralFormat.StringLiteral || Format == LiteralFormat.VerbatimStringLiteral)
 					return new IdentifierDeclaration("string");
 
 				return new IdentifierDeclaration(Value);
@@ -1400,7 +1397,7 @@ namespace D_Parser.Dom.Expressions
 
 		public bool IsConstant
 		{
-			get { return LiteralFormat==LiteralFormat.Scalar; }
+			get { return Format==LiteralFormat.Scalar; }
 		}
 
 		public decimal DecValue
