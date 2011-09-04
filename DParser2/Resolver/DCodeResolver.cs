@@ -523,15 +523,15 @@ namespace D_Parser.Resolver
 					string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
 
 					// Try to convert the identifier into a token
-					int searchToken = string.IsNullOrEmpty(searchIdentifier)?0: DTokens.GetTokenID(searchIdentifier);
+					int searchToken = string.IsNullOrEmpty(searchIdentifier) ? 0 : DTokens.GetTokenID(searchIdentifier);
 
 					// References current class scope
-					if (searchToken==DTokens.This)
+					if (searchToken == DTokens.This)
 					{
-						returnedResults.Add(new TypeResult() { ResolvedTypeDefinition=currentlyScopedNode});
+						returnedResults.Add(new TypeResult() { ResolvedTypeDefinition = currentlyScopedNode });
 					}
 					// References super type of currently scoped class declaration
-					else if (searchToken==DTokens.Super)
+					else if (searchToken == DTokens.Super)
 					{
 						var baseClassDefs = ResolveBaseClass(currentlyScopedNode as DClassLike, parseCache);
 
@@ -539,9 +539,9 @@ namespace D_Parser.Resolver
 							returnedResults.AddRange(baseClassDefs);
 					}
 					// If we found a base type, return a static-type-result
-					else if (searchToken>0 && DTokens.BasicTypes[searchToken])
+					else if (searchToken > 0 && DTokens.BasicTypes[searchToken])
 					{
-						returnedResults.Add(new StaticTypeResult() { BaseTypeToken=searchToken, Type=new DTokenDeclaration(searchToken)});
+						returnedResults.Add(new StaticTypeResult() { BaseTypeToken = searchToken, Type = new DTokenDeclaration(searchToken) });
 					}
 					// (As usual) Go on searching in the local&global scope(s)
 					else
@@ -587,6 +587,9 @@ namespace D_Parser.Resolver
 					}
 				}
 				#endregion
+
+				else
+					returnedResults.Add(new StaticTypeResult() { Type=declaration});
 			}
 			#endregion
 
@@ -690,58 +693,82 @@ namespace D_Parser.Resolver
 						 * 
 						 * int[string][] myArray; // Is an array that holds an associative array, whereas the value type is 'int', and key type is 'string'
 						 * 
-						 * int[string] mySubArray=myArray[0]; // returns a reference to an int[string] array
+						 * auto mySubArray=myArray[0]; // returns a reference to an int[string] array
 						 * 
-						 * int myElement=mySubArray["abcd"]; // returns the most basic value type: 'int'
+						 * auto myElement=mySubArray["abcd"]; // returns the most basic value type: 'int'
 						 */
 
 						if (rbase is MemberResult)
 						{
-							// Get the resolved member's base type
-							var resolvedMember_new = HandleNodeMatch(
-								(rbase as MemberResult).ResolvedMember,
-								currentlyScopedNode,
-								parseCache,
-								ResolveAliases: true)
-								as MemberResult;
-							//ISSUE: theoretically, resolvedMember_new and rbase are equal except the member base type which got resolved now
-
-							/*
-							 * Huge advantage: Since HandleNodeMatch() already resolves alias defintions, 
-							 * we (mostly) can assume that MemberBaseTypes will always contain values!
-							 */
-
-							if (resolvedMember_new != null &&
-								resolvedMember_new.MemberBaseTypes!=null &&
-								resolvedMember_new.MemberBaseTypes.Length>0)
-							{
-								foreach (var memberType in resolvedMember_new.MemberBaseTypes)
+							var mr = rbase as MemberResult;
+							if (mr.MemberBaseTypes!=null && mr.MemberBaseTypes.Length>0)
+								foreach (var memberType in mr.MemberBaseTypes)
 								{
+									var curRes = TryRemoveAliasesFromResult(memberType);
+
 									foreach(var pfExpr in postfixStack)
 									{
 										if (pfExpr is PostfixExpression_Index)
 										{
 											var idx = pfExpr as PostfixExpression_Index;
 
-											if (memberType is StaticTypeResult)
+											if (curRes is StaticTypeResult)
 											{
-												var str = (memberType as StaticTypeResult);
+												var str = (curRes as StaticTypeResult);
 
+												/*
+												 * If the member's type is an array, and if our expression contains an index-expression (e.g. myArray[0]),
+												 * take the value type of the 
+												 */
 												if (str.Type is ArrayDecl)
 												{
-													returnedResults.Add(str.ResultBase);
+													// For array declarations, the StaticTypeResult object contains the array's value type.
+
+													curRes = TryRemoveAliasesFromResult( str.ResultBase);
 												}
 											}
 										}
 									}
+
+									if(curRes!=null)
+										returnedResults.Add(curRes);
 									}
 								}
-							}
 						}
 					}
 			#endregion
 
 			return returnedResults.Count > 0 ? returnedResults.ToArray() : null;
+		}
+
+		/// <summary>
+		/// If an aliased type result has been passed to this method, it'll return the resolved type.
+		/// If aliases were done multiple times, it also tries to skip through these.
+		/// 
+		/// alias char[] A;
+		/// alias A B;
+		/// 
+		/// var resolvedType=TryRemoveAliasesFromResult(% the member result from B %);
+		/// --> resolvedType will be StaticTypeResult from char[]
+		/// 
+		/// </summary>
+		/// <param name="rr"></param>
+		/// <returns></returns>
+		public static ResolveResult TryRemoveAliasesFromResult(ResolveResult rr)
+		{
+			ResolveResult ret = rr;
+			while (ret is MemberResult && (ret as MemberResult).ResolvedMember is DVariable && ((ret as MemberResult).ResolvedMember as DVariable).IsAlias)
+			{
+				var mr2 = ret as MemberResult;
+				/*
+				 * Although it's theoretically possible to ignore multiple definitions, 
+				 * only take the first aliased type for performance reasons
+				 */
+				if (mr2.MemberBaseTypes != null && mr2.MemberBaseTypes.Length > 0)
+					ret = mr2.MemberBaseTypes[0];
+				else break;
+			}
+			return ret;
 		}
 
 		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, IEnumerable<IAbstractSyntaxTree> ModuleCache)

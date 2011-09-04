@@ -216,15 +216,33 @@ namespace D_IDE.D
 				if (resultParent == null)
 					StaticPropertyAddition.AddGenericProperties(rr, l, null,true);
 
-				// Determine whether float by the var's base type
-				bool isFloat = DTokens.BasicTypes_FloatingPoint[srr.BaseTypeToken];
+				if (srr.Type is ArrayDecl)
+				{
+					var ad = srr.Type as ArrayDecl;
 
-				// Float implies integral props
-				if (DTokens.BasicTypes_Integral[srr.BaseTypeToken] || isFloat)
-					StaticPropertyAddition.AddIntegralTypeProperties(srr.BaseTypeToken,rr, l, null, isFloat);
+					// Normal array
+					if (ad.KeyType is DTokenDeclaration && DTokens.BasicTypes_Integral[(ad.KeyType as DTokenDeclaration).Token])
+					{
+						StaticPropertyAddition.AddArrayProperties(rr, l, ad);
+					}
+					// Associative array
+					else
+					{
 
-				if (isFloat)
-					StaticPropertyAddition.AddFloatingTypeProperties(srr.BaseTypeToken, rr, l, null);
+					}
+				}
+				else
+				{
+					// Determine whether float by the var's base type
+					bool isFloat = DTokens.BasicTypes_FloatingPoint[srr.BaseTypeToken];
+
+					// Float implies integral props
+					if (DTokens.BasicTypes_Integral[srr.BaseTypeToken] || isFloat)
+						StaticPropertyAddition.AddIntegralTypeProperties(srr.BaseTypeToken, rr, l, null, isFloat);
+
+					if (isFloat)
+						StaticPropertyAddition.AddFloatingTypeProperties(srr.BaseTypeToken, rr, l, null);
+				}
 			}
 			#endregion
 
@@ -256,8 +274,8 @@ namespace D_IDE.D
 					// String literals
 					else if (idExpr.LiteralFormat == LiteralFormat.StringLiteral || idExpr.LiteralFormat == LiteralFormat.VerbatimStringLiteral)
 					{
-						StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
-						StaticPropertyAddition.AddArrayProperties(rr, l);
+						StaticPropertyAddition.AddGenericProperties(rr, l, DontAddInitProperty: true);
+						StaticPropertyAddition.AddArrayProperties(rr, l,new IdentifierDeclaration("string"));
 					}
 				}
 				// Normal array literals
@@ -430,9 +448,9 @@ namespace D_IDE.D
 				CreateArtificialProperties(ClassTypeProps, l);
 			}
 
-			public static void AddArrayProperties(ResolveResult rr, IList<ICompletionData> l, INode relatedNode = null, bool DontAddInitProperty = false)
+			public static void AddArrayProperties(ResolveResult rr, IList<ICompletionData> l, ITypeDeclaration ArrayDecl=null)
 			{
-				CreateArtificialProperties(ArrayProps, l);
+				CreateArtificialProperties(ArrayProps, l,ArrayDecl);
 			}
 		}
 

@@ -176,16 +176,12 @@ namespace D_Parser.Dom
     /// <summary>
     /// const(char)
     /// </summary>
-    public class MemberFunctionAttributeDecl : DTokenDeclaration
+    public class MemberFunctionAttributeDecl : AbstractTypeDeclaration
     {
         /// <summary>
         /// Equals <see cref="Token"/>
         /// </summary>
-        public int Modifier
-        {
-            get { return Token; }
-            set { Token = value; }
-        }
+		public int Modifier=DTokens.Const;
 
         public ITypeDeclaration InnerType;
 
@@ -194,7 +190,7 @@ namespace D_Parser.Dom
 
 		public override string ToString(bool IncludesBase)
         {
-            return (IncludesBase&& InnerDeclaration != null ? (InnerDeclaration.ToString()+" ") : "") +Value + "(" + (InnerType != null ? InnerType.ToString() : "") + ")";
+            return (IncludesBase&& InnerDeclaration != null ? (InnerDeclaration.ToString()+" ") : "") + DTokens.GetTokenString(Modifier) + "(" + (InnerType != null ? InnerType.ToString() : "") + ")";
         }
     }
 
