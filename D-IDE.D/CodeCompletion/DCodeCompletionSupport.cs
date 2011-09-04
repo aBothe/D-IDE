@@ -170,6 +170,7 @@ namespace D_IDE.D
 
 		public void BuildCompletionData(ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l,bool isVariableInstance=false,ResolveResult resultParent=null)
 		{
+			#region MemberResult
 			if (rr is MemberResult)
 			{
 				var mrr = rr as MemberResult;
@@ -182,10 +183,13 @@ namespace D_IDE.D
 				if(resultParent==null)
 					StaticPropertyAddition.AddGenericProperties(rr, l, mrr.ResolvedMember);
 			}
+			#endregion
 
+			// A module path has been typed
 			else if (!isVariableInstance && rr is ModuleResult)
 				BuildModuleCompletionData(rr as ModuleResult, 0, l, alreadyAddedModuleNameParts);
 
+			#region A type was referenced directly
 			else if (rr is TypeResult)
 			{
 				var tr = rr as TypeResult;
@@ -203,23 +207,9 @@ namespace D_IDE.D
 				if (resultParent == null)
 					StaticPropertyAddition.AddGenericProperties(rr, l, tr.ResolvedTypeDefinition);
 			}
+			#endregion
 
-			else if (rr is SpecialTypeResult)
-			{
-				var str = rr as SpecialTypeResult;
-
-				switch (str.SpecialType)
-				{
-					case SpecialType.Array:
-
-						break;
-				}
-
-				if (resultParent == null)
-					StaticPropertyAddition.AddGenericProperties(rr, l);
-			}
-
-			// Things like int. or char.
+			#region Things like int. or char.
 			else if (rr is StaticTypeResult)
 			{
 				var srr = rr as StaticTypeResult;
@@ -236,7 +226,9 @@ namespace D_IDE.D
 				if (isFloat)
 					StaticPropertyAddition.AddFloatingTypeProperties(srr.BaseTypeToken, rr, l, null);
 			}
-			// "abcd" , (200), (0.123), [1,2,3,4], [1:"asdf", 2:"hey", 3:"yeah"]
+			#endregion
+
+			#region "abcd" , (200), (0.123), [1,2,3,4], [1:"asdf", 2:"hey", 3:"yeah"]
 			else if (rr is ExpressionResult)
 			{
 				var err = rr as ExpressionResult;
@@ -284,7 +276,15 @@ namespace D_IDE.D
 					StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
 					// TODO: AddAssocArrayProperties
 				}
+				// Array element accessors (e.g. myArray[0] )
+				else if (expr is PostfixExpression_Index)
+				{
+
+				}
+				// Pointer conversions (e.g. (myInt*).sizeof)
+				
 			}
+#endregion
 		}
 
 		#region Static properties

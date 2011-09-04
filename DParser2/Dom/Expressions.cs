@@ -18,7 +18,7 @@ namespace D_Parser.Dom.Expressions
 
 		public override string ToString(bool IncludeBase)
 		{
-			return (IncludeBase&& InnerDeclaration != null ? InnerDeclaration.ToString() : "") + Expression.ToString();
+			return (IncludeBase&& InnerDeclaration != null ? (InnerDeclaration.ToString()+'.') : "") + Expression.ToString();
 		}
 	}
 
@@ -1381,7 +1381,21 @@ namespace D_Parser.Dom.Expressions
 
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return IsIdentifier? (ITypeDeclaration)new IdentifierDeclaration(Value): new DExpressionDecl(this); }
+			get { 
+				if(LiteralFormat==LiteralFormat.CharLiteral) 
+					return new DTokenDeclaration(DTokens.Char);
+
+				if (LiteralFormat == LiteralFormat.FloatingPoint)
+					return new DTokenDeclaration(DTokens.Float);
+
+				if (LiteralFormat == LiteralFormat.Scalar)
+					return new DTokenDeclaration(DTokens.Int);
+
+				if (LiteralFormat == LiteralFormat.StringLiteral || LiteralFormat == LiteralFormat.VerbatimStringLiteral)
+					return new IdentifierDeclaration("string");
+
+				return new IdentifierDeclaration(Value);
+			}
 		}
 
 		public bool IsConstant
@@ -1490,7 +1504,7 @@ namespace D_Parser.Dom.Expressions
 			Expressions = new List<IExpression>();
 		}
 
-		public virtual IEnumerable<IExpression> Expressions { get; set; }
+		public virtual IList<IExpression> Expressions { get; set; }
 
 		public override string ToString()
 		{
@@ -1516,7 +1530,15 @@ namespace D_Parser.Dom.Expressions
 
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return new DExpressionDecl(this); }
+			get {
+
+				var ret = new ArrayDecl();
+
+				var exprs = Expressions;
+				if (exprs.Count > 0)
+					ret.ValueType = exprs[0].ExpressionTypeRepresentation;
+
+				return ret; }
 		}
 
 		public bool IsConstant
@@ -1557,7 +1579,25 @@ namespace D_Parser.Dom.Expressions
 
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return new ArrayDecl(); }
+			get {
+				var ret = new ArrayDecl();
+
+				if (KeyValuePairs.Count > 0)
+					foreach(var kv in KeyValuePairs)
+					{
+						if(kv.Value!=null)
+							ret.ValueType = kv.Value.ExpressionTypeRepresentation;
+
+						if (kv.Key != null)
+							ret.KeyType = kv.Key.ExpressionTypeRepresentation;
+
+						// Break if we resolved both key and value types
+						if (ret.ValueType!=null && ret.KeyType!=null)
+							break;
+					}
+
+				return ret;
+			}
 		}
 
 		public bool IsConstant
@@ -2079,12 +2119,17 @@ namespace D_Parser.Dom.Expressions
 	{
 		public ArrayMemberInitializer[] ArrayMemberInitializations;
 
-		public sealed override IEnumerable<IExpression> Expressions
+		public sealed override IList<IExpression> Expressions
 		{
 			get
 			{
+				if (ArrayMemberInitializations == null)
+					return new List<IExpression>();
+				var l = new List<IExpression>(ArrayMemberInitializations.Length);
 				foreach (var ami in ArrayMemberInitializations)
-					yield return ami.Left;
+					l.Add( ami.Left);
+
+				return l;
 			}
 			set { }
 		}

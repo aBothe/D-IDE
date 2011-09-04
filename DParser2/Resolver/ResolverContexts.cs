@@ -8,36 +8,6 @@ using D_Parser.Dom.Expressions;
 namespace D_Parser.Resolver
 {
 	/// <summary>
-	/// Used on code completion:
-	/// e.g. if the resolved declaration is a dynamic array (so the elements themselves were NOT accessed)
-	/// like in:
-	/// void[] buf=...;
-	/// int len=buf.length; // Here we only access the array itself but not its elements.
-	/// 
-	/// For code completion purposes, the comletion list after "buf." would contain D-specific items like .sizeof, .length, .init, .dup, .idup and so on - what makes this enum so important
-	/// </summary>
-	public enum SpecialType
-	{
-		None,
-		/// <summary>
-		/// Outer type is an array
-		/// </summary>
-		Array,
-		/// <summary>
-		/// Outer type is an associative array
-		/// </summary>
-		AssociativeArray,
-		/// <summary>
-		/// Outer type is a pointer
-		/// </summary>
-		Pointer,
-		/// <summary>
-		/// Outer type is a string - so a special kind of array
-		/// </summary>
-		String
-	}
-
-	/// <summary>
 	/// To enable resolving the element sizes parse-time, this enum represents the 3 different string types
 	/// </summary>
 	public enum StringType
@@ -79,21 +49,6 @@ namespace D_Parser.Resolver
 		{
 			return ResolvedMember.ToString();
 		}
-	}
-
-	public class SpecialTypeResult : ResolveResult
-	{
-		/// <summary>
-		/// In the case our base expression is a string literal, this field represented its char size - useful e.g. when wanting to show the string's element size
-		/// </summary>
-		[DefaultValue(StringType.None)]
-		public StringType StringLiteralType { get; set; }
-
-		/// <summary>
-		/// The resolved type might be a special kind of variable. So, a variable type or return type e.g. can be an array, associative array, pointer or 'accessed' expression may even be a string
-		/// </summary>
-		[DefaultValue(SpecialType.None)]
-		public SpecialType SpecialType { get; set; }
 	}
 
 	/// <summary>

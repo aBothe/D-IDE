@@ -101,13 +101,25 @@ namespace D_Parser.Dom
     /// </summary>
     public class ArrayDecl : AbstractTypeDeclaration
     {
-        public ITypeDeclaration KeyType;
+		/// <summary>
+		/// Used for associative arrays; Contains all declaration parts that are located inside the square brackets.
+		/// Integer by default.
+		/// </summary>
+        public ITypeDeclaration KeyType=new DTokenDeclaration(DTokens.Int);
+		/// <summary>
+		/// Alias for InnerDeclaration; contains all declaration parts that are located in front of the square brackets.
+		/// </summary>
+		public ITypeDeclaration ValueType
+		{
+			get { return InnerDeclaration; }
+			set { InnerDeclaration = value; }
+		}
 
         public ArrayDecl() { }
 
 		public override string ToString(bool IncludesBase)
         {
-            return (IncludesBase&& InnerDeclaration != null ? InnerDeclaration.ToString() : "")+ "["+(KeyType != null ? KeyType.ToString() : "")+"]";
+            return (IncludesBase&& ValueType != null ? ValueType.ToString() : "")+ "["+(KeyType != null ? KeyType.ToString() : "")+"]";
         }
     }
 
