@@ -619,7 +619,7 @@ namespace D_Parser.Resolver
 								{
 									var results = HandleNodeMatches(
 										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, parseCache),
-										currentlyScopedNode, parseCache, searchIdentifier, rbase);
+										currentlyScopedNode, parseCache, rbase);
 									if (results != null)
 										returnedResults.AddRange(results);
 								}
@@ -645,7 +645,7 @@ namespace D_Parser.Resolver
 									{
 										var results = HandleNodeMatches(
 										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, parseCache),
-										currentlyScopedNode, parseCache, searchIdentifier, rbase);
+										currentlyScopedNode, parseCache, rbase);
 										if (results != null)
 											returnedResults.AddRange(results);
 									}
@@ -661,6 +661,11 @@ namespace D_Parser.Resolver
 						}
 					}
 					#endregion
+
+					else if (declaration is ArrayDecl)
+					{
+						returnedResults.Add(new StaticTypeResult() { Type=declaration, ResultBase=rbase});
+					}
 
 					else if (declaration is DExpressionDecl)
 					{
@@ -694,32 +699,46 @@ namespace D_Parser.Resolver
 						{
 							// Get the resolved member's base type
 							var resolvedMember_new = HandleNodeMatch(
-								(rbase as MemberResult).ResolvedMember, 
-								currentlyScopedNode, 
-								parseCache) 
+								(rbase as MemberResult).ResolvedMember,
+								currentlyScopedNode,
+								parseCache,
+								ResolveAliases: true)
 								as MemberResult;
 							//ISSUE: theoretically, resolvedMember_new and rbase are equal except the member base type which got resolved now
 
-							if (resolvedMember_new != null)
+							/*
+							 * Huge advantage: Since HandleNodeMatch() already resolves alias defintions, 
+							 * we (mostly) can assume that MemberBaseTypes will always contain values!
+							 */
+
+							if (resolvedMember_new != null &&
+								resolvedMember_new.MemberBaseTypes!=null &&
+								resolvedMember_new.MemberBaseTypes.Length>0)
+							{
 								foreach (var memberType in resolvedMember_new.MemberBaseTypes)
 								{
-									ITypeDeclaration curType = null;
+									foreach(var pfExpr in postfixStack)
+									{
+										if (pfExpr is PostfixExpression_Index)
+										{
+											var idx = pfExpr as PostfixExpression_Index;
+
+											if (memberType is StaticTypeResult)
+											{
+												var str = (memberType as StaticTypeResult);
+
+												if (str.Type is ArrayDecl)
+												{
+													returnedResults.Add(str.ResultBase);
+												}
+											}
+										}
+									}
+									}
 								}
-						}
-
-						while (curType!=null && postfixStack.Count > 0)
-						{
-							curExpr = postfixStack.Pop();
-
-							if (curExpr is PostfixExpression_Index)
-							{
-								var idx = curExpr as PostfixExpression_Index;
-
-
 							}
 						}
 					}
-				}
 			#endregion
 
 			return returnedResults.Count > 0 ? returnedResults.ToArray() : null;
@@ -835,30 +854,40 @@ namespace D_Parser.Resolver
 				// Resolve aliases if wished
 				if (ResolveAliases && memberbaseTypes != null)
 				{
-					bool hadAliasResolution = false;
-					var memberBaseTypes_Override = new List<ResolveResult>();
-
-					foreach (var type in memberbaseTypes)
+					/*
+					 * To ensure that absolutely all kinds of alias definitions became resolved (includes aliased alias definitions!), 
+					 * loop through the resolution process again, after at least one aliased type has been found.
+					 */
+					while (memberbaseTypes.Length > 0)
 					{
-						var mr = type as MemberResult;
-						if (mr != null && mr.ResolvedMember is DVariable)
+						bool hadAliasResolution = false;
+						var memberBaseTypes_Override = new List<ResolveResult>();
+
+						foreach (var type in memberbaseTypes)
 						{
-							var dv = mr.ResolvedMember as DVariable;
-							// Note: Normally, a variable's base type mustn't be an other variable but an alias defintion...
-							if (dv.IsAlias)
+							var mr = type as MemberResult;
+							if (mr != null && mr.ResolvedMember is DVariable)
 							{
-								var newRes = ResolveType(dv.Type, currentlyScopedNode, parseCache);
-								if (newRes != null)
-									memberBaseTypes_Override.AddRange(newRes);
-								hadAliasResolution = true;
-								continue;
+								var dv = mr.ResolvedMember as DVariable;
+								// Note: Normally, a variable's base type mustn't be an other variable but an alias defintion...
+								if (dv.IsAlias)
+								{
+									var newRes = ResolveType(dv.Type, currentlyScopedNode, parseCache);
+									if (newRes != null)
+										memberBaseTypes_Override.AddRange(newRes);
+									hadAliasResolution = true;
+									continue;
+								}
 							}
+
+							// If no alias found, re-add it to our override list again
+							memberBaseTypes_Override.Add(type);
 						}
-						
-						// If no alias found, re-add it to our override list again
-						memberBaseTypes_Override.Add(type);
+						memberbaseTypes = memberBaseTypes_Override.ToArray();
+
+						if (!hadAliasResolution)
+							break;
 					}
-					memberbaseTypes = memberBaseTypes_Override.ToArray();
 				}
 
 				// Note: Also works for aliases! In this case, we simply try to resolve the aliased type, otherwise the variable's base type
@@ -912,13 +941,13 @@ namespace D_Parser.Resolver
 		static ResolveResult[] HandleNodeMatches(IEnumerable<INode> matches, 
 			IBlockNode currentlyScopedNode, 
 			IEnumerable<IAbstractSyntaxTree> parseCache,
-			ResolveResult resultBase = null)
+			ResolveResult resultBase = null, bool ResolveAliasDefs=false)
 		{
 			var rl = new List<ResolveResult>();
 			if(matches!=null)
 			foreach (var m in matches)
 			{
-				var res = HandleNodeMatch(m, currentlyScopedNode, parseCache, resultBase);
+				var res = HandleNodeMatch(m, currentlyScopedNode, parseCache, resultBase,ResolveAliasDefs);
 				if (res != null)
 					rl.Add(res);
 			}

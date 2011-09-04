@@ -52,7 +52,7 @@ namespace D_Parser.Resolver
 	}
 
 	/// <summary>
-	/// Encapsules basic types like int, bool, void etc.
+	/// Encapsules basic type declarations like int, bool, void[], byte*, immutable(char)[] etc.
 	/// </summary>
 	public class StaticTypeResult : ResolveResult
 	{
