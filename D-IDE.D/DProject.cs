@@ -92,6 +92,13 @@ namespace D_IDE.D
 			while(xr.Read())
 				switch (xr.LocalName)
 				{
+					case "type":
+						try
+						{
+							OutputType = (OutputTypes)Convert.ToInt32(xr.ReadString());
+						}
+						catch { }
+						break;
 					case "isrelease":
 						IsRelease = xr.ReadString()=="true";
 						break;
@@ -112,6 +119,7 @@ namespace D_IDE.D
 
 		protected override void SaveLanguageSpecificSettings(XmlWriter xw)
 		{
+			xw.WriteElementString("type", ((int)OutputType).ToString());
 			xw.WriteElementString("isrelease", IsRelease.ToString());
 			xw.WriteElementString("dversion",((int)DMDVersion).ToString());
 			xw.WriteStartElement("libs");

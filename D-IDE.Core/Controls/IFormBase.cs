@@ -51,5 +51,7 @@ namespace D_IDE.Core.Controls
 
 		public static readonly RoutedUICommand LaunchWithoutDebugger = new RoutedUICommand("", "LaunchWithoutDebugger", typeof(Window),
 			new InputGestureCollection(new[] { new KeyGesture(Key.F5, ModifierKeys.Shift) }));
+
+		public static readonly RoutedUICommand ShowProjectSettings = new RoutedUICommand("","ShowProjectSettings",typeof(Window));
 	}
 }

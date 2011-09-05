@@ -27,6 +27,8 @@
 		
 		<CommandBinding Command="Search" Executed="SearchAndReplace_Executed" />
 		<CommandBinding Command="Find" Executed="FindNext_Executed" />
+
+		<CommandBinding Command="d:IDEUICommands.ShowProjectSettings" Executed="PrjSettings_Click" />
 	</r:RibbonWindow.CommandBindings>
 	
 	<r:RibbonWindow.InputBindings>
@@ -66,6 +68,7 @@
 					<r:RibbonApplicationMenuItem Header="Save All" Command="d:IDEUICommands.SaveAll" ImageSource="Resources/SaveAllHH.png" />
 					<r:RibbonApplicationMenuItem Header="Save as" Command="SaveAs" ImageSource="Resources/SaveAsHH.png" />
 					<r:RibbonSeparator />
+					<r:RibbonApplicationMenuItem Header="Project Settings" Command="d:IDEUICommands.ShowProjectSettings" />
 					<r:RibbonApplicationMenuItem Header="Settings" Command="Properties" ImageSource="Resources/settings_32.png" />
 					<r:RibbonSeparator />
 					<r:RibbonApplicationMenuItem Header="Exit" Command="Close" ImageSource="Resources/application-exit-3.ico" ToolTipTitle="Exit D-IDE (Alt+X)" />
@@ -136,7 +139,7 @@
 
 			<r:RibbonTab Header="Project" Name="Tab_Project">
 				<r:RibbonGroup Header="Project">
-					<r:RibbonButton Label="Project Settings" Click="PrjSettings_Click" LargeImageSource="Resources/settings_32.png" />
+					<r:RibbonButton Label="Project Settings" Command="d:IDEUICommands.ShowProjectSettings" LargeImageSource="Resources/settings_32.png" />
 					<r:RibbonButton Label="Open directory in Explorer" Click="Button_OpenPrjDir_Click" LargeImageSource="Resources/Computer.png" />
 				</r:RibbonGroup>
 			</r:RibbonTab>
