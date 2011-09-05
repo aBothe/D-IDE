@@ -32,7 +32,14 @@ namespace D_Parser.Dom.Expressions
 		ITypeDeclaration ExpressionTypeRepresentation{get;}
 		bool IsConstant { get; }
 		decimal DecValue { get; }
-		//bool EvaluateExpressionValue(out ParserError[] semanticErrors);
+	}
+
+	/// <summary>
+	/// Expressions that contain other sub-expressions somewhere share this interface
+	/// </summary>
+	public interface ContainerExpression:IExpression
+	{
+		IExpression[] SubExpressions { get; }
 	}
 
 	public class ExpressionHelper
@@ -75,9 +82,38 @@ namespace D_Parser.Dom.Expressions
 
 			return d;
 		}
+
+		/// <summary>
+		/// Scans through all container expressions recursively and returns the one that's nearest to 'Where'.
+		/// Will return 'e' if nothing found or if there wasn't anything to scan
+		/// </summary>
+		public static IExpression SearchExpressionDeeply(IExpression e,CodeLocation Where)
+		{
+			while (e is ContainerExpression)
+			{
+				var currentContainer = e as ContainerExpression;
+
+				if (!(e.Location <= Where || e.EndLocation >= Where))
+					break;
+
+				var subExpressions = currentContainer.SubExpressions;
+
+				if (subExpressions == null || subExpressions.Length < 1)
+					break;
+
+				foreach (var se in subExpressions)
+					if (se != null && Where >= se.Location && Where <= se.EndLocation)
+					{
+						e = se;
+						break;
+					}
+			}
+
+			return e;
+		}
 	}
 
-	public abstract class OperatorBasedExpression : IExpression
+	public abstract class OperatorBasedExpression : IExpression, ContainerExpression
 	{
 		public virtual IExpression LeftOperand { get; set; }
 		public virtual IExpression RightOperand { get; set; }
@@ -112,11 +148,16 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{LeftOperand, RightOperand}; }
+		}
 	}
 
-	public class Expression : IExpression, IEnumerable<IExpression>
+	public class Expression : IExpression, IEnumerable<IExpression>, ContainerExpression
 	{
-		public IList<IExpression> Expressions = new List<IExpression>();
+		public List<IExpression> Expressions = new List<IExpression>();
 
 		public void Add(IExpression ex)
 		{
@@ -195,6 +236,11 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { return Expressions[0].DecValue; }
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return Expressions.ToArray(); }
+		}
 	}
 
 	public class AssignExpression : OperatorBasedExpression
@@ -223,7 +269,7 @@ namespace D_Parser.Dom.Expressions
 		}
 	}
 
-	public class ConditionalExpression : IExpression
+	public class ConditionalExpression : IExpression, ContainerExpression
 	{
 		public IExpression OrOrExpression { get; set; }
 
@@ -263,6 +309,11 @@ namespace D_Parser.Dom.Expressions
 		public decimal DecValue
 		{
 			get { return OrOrExpression.DecValue==1 ? TrueCaseExpression.DecValue : FalseCaseExpression.DecValue; }
+		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[] {OrOrExpression, TrueCaseExpression, FalseCaseExpression}; }
 		}
 	}
 
@@ -602,7 +653,7 @@ namespace D_Parser.Dom.Expressions
 		}
 	}
 
-	public abstract class SimpleUnaryExpression : UnaryExpression
+	public abstract class SimpleUnaryExpression : UnaryExpression, ContainerExpression
 	{
 		public abstract int ForeToken { get; }
 		public IExpression UnaryExpression { get; set; }
@@ -641,6 +692,11 @@ namespace D_Parser.Dom.Expressions
 			{
 				return UnaryExpression.DecValue;
 			}
+		}
+
+		public virtual IExpression[] SubExpressions
+		{
+			get { return new[]{UnaryExpression}; }
 		}
 	}
 
@@ -842,7 +898,7 @@ namespace D_Parser.Dom.Expressions
 	///		NewArguments Type ( ArgumentList )
 	///		NewArguments Type
 	/// </summary>
-	public class NewExpression : UnaryExpression
+	public class NewExpression : UnaryExpression, ContainerExpression
 	{
 		public ITypeDeclaration Type { get; set; }
 		public IExpression[] NewArguments { get; set; }
@@ -903,13 +959,31 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { throw new NotImplementedException(); }
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get {
+				var l = new List<IExpression>();
+
+				if (NewArguments != null)
+					l.AddRange(NewArguments);
+
+				if (Arguments != null)
+					l.AddRange(Arguments);
+
+				if (l.Count > 0)
+					return l.ToArray();
+
+				return null;
+			}
+		}
 	}
 
 	/// <summary>
 	/// NewArguments ClassArguments BaseClasslist { DeclDefs } 
 	/// new ParenArgumentList_opt class ParenArgumentList_opt SuperClass_opt InterfaceClasses_opt ClassBody
 	/// </summary>
-	public class AnonymousClassExpression : UnaryExpression
+	public class AnonymousClassExpression : UnaryExpression, ContainerExpression
 	{
 		public IExpression[] NewArguments { get; set; }
 		public DClassLike AnonymousClass { get; set; }
@@ -971,7 +1045,6 @@ namespace D_Parser.Dom.Expressions
 			get { return new DExpressionDecl(this); }
 		}
 
-
 		public bool IsConstant
 		{
 			get { return false; }
@@ -980,6 +1053,27 @@ namespace D_Parser.Dom.Expressions
 		public decimal DecValue
 		{
 			get { throw new NotImplementedException(); }
+		}
+
+		public IExpression[] SubExpressions
+		{
+			get
+			{
+				var l = new List<IExpression>();
+
+				if (NewArguments != null)
+					l.AddRange(NewArguments);
+
+				if (ClassArguments != null)
+					l.AddRange(ClassArguments);
+
+				//ISSUE: Add the Anonymous class object to the return list somehow?
+
+				if (l.Count > 0)
+					return l.ToArray();
+
+				return null;
+			}
 		}
 	}
 
@@ -1011,7 +1105,7 @@ namespace D_Parser.Dom.Expressions
 	///		cast ( Type ) UnaryExpression
 	///		cast ( CastParam ) UnaryExpression
 	/// </summary>
-	public class CastExpression : UnaryExpression
+	public class CastExpression : UnaryExpression, ContainerExpression
 	{
 		public bool IsTypeCast
 		{
@@ -1076,9 +1170,14 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { return UnaryExpression.DecValue; }
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{UnaryExpression}; }
+		}
 	}
 
-	public abstract class PostfixExpression : IExpression
+	public abstract class PostfixExpression : IExpression, ContainerExpression
 	{
 		public IExpression PostfixForeExpression { get; set; }
 
@@ -1104,6 +1203,11 @@ namespace D_Parser.Dom.Expressions
 		public virtual decimal DecValue
 		{
 			get { throw new NotImplementedException(); }
+		}
+
+		public virtual IExpression[] SubExpressions
+		{
+			get { return new[]{PostfixForeExpression}; }
 		}
 	}
 
@@ -1143,6 +1247,14 @@ namespace D_Parser.Dom.Expressions
 
 				t.InnerDeclaration = PostfixForeExpression.ExpressionTypeRepresentation;
 				return t;
+			}
+		}
+
+		public override IExpression[] SubExpressions
+		{
+			get
+			{
+				return new[]{NewExpression, PostfixForeExpression};
 			}
 		}
 	}
@@ -1214,6 +1326,22 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { return PostfixForeExpression.ExpressionTypeRepresentation; }
 		}
+
+		public override IExpression[] SubExpressions
+		{
+			get
+			{
+				var l = new List<IExpression>();
+
+				if (Arguments != null)
+					l.AddRange(Arguments);
+
+				if (PostfixForeExpression != null)
+					l.Add(PostfixForeExpression);
+
+				return l.Count>0? l.ToArray():null;
+			}
+		}
 	}
 
 	/// <summary>
@@ -1239,6 +1367,22 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
+		}
+
+		public override IExpression[] SubExpressions
+		{
+			get
+			{
+				var l = new List<IExpression>();
+
+				if (Arguments != null)
+					l.AddRange(Arguments);
+
+				if (PostfixForeExpression != null)
+					l.Add(PostfixForeExpression);
+
+				return l.Count > 0 ? l.ToArray() : null;
+			}
 		}
 	}
 
@@ -1274,11 +1418,19 @@ namespace D_Parser.Dom.Expressions
 			get;
 			set;
 		}
+
+		public override IExpression[] SubExpressions
+		{
+			get
+			{
+				return new[] { FromExpression, ToExpression};
+			}
+		}
 	}
 
 	public interface PrimaryExpression : IExpression { }
 
-	public class TemplateInstanceExpression : AbstractTypeDeclaration,PrimaryExpression
+	public class TemplateInstanceExpression : AbstractTypeDeclaration,PrimaryExpression,ContainerExpression
 	{
 		public string TemplateIdentifier;
 		public IExpression[] Arguments;
@@ -1328,6 +1480,11 @@ namespace D_Parser.Dom.Expressions
 		public decimal DecValue
 		{
 			get { throw new NotImplementedException(); }
+		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return Arguments; }
 		}
 	}
 
@@ -1494,14 +1651,14 @@ namespace D_Parser.Dom.Expressions
 	/// <summary>
 	/// auto arr= [1,2,3,4,5,6];
 	/// </summary>
-	public class ArrayLiteralExpression : PrimaryExpression
+	public class ArrayLiteralExpression : PrimaryExpression,ContainerExpression
 	{
 		public ArrayLiteralExpression()
 		{
 			Expressions = new List<IExpression>();
 		}
 
-		public virtual IList<IExpression> Expressions { get; set; }
+		public virtual List<IExpression> Expressions { get; set; }
 
 		public override string ToString()
 		{
@@ -1547,9 +1704,14 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { throw new NotImplementedException(); }
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return Expressions!=null && Expressions.Count>0? Expressions.ToArray() : null; }
+		}
 	}
 
-	public class AssocArrayExpression : PrimaryExpression
+	public class AssocArrayExpression : PrimaryExpression,ContainerExpression
 	{
 		public IDictionary<IExpression, IExpression> KeyValuePairs = new Dictionary<IExpression, IExpression>();
 
@@ -1606,6 +1768,23 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { throw new NotImplementedException(); }
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get {
+				var l = new List<IExpression>();
+
+				foreach (var kv in KeyValuePairs)
+				{
+					if(kv.Key!=null)
+						l.Add(kv.Key);
+					if(kv.Value!=null)
+						l.Add(kv.Value);
+				}
+
+				return l.Count > 0 ? l.ToArray() : null;
+			}
+		}
 	}
 
 	public class FunctionLiteral : PrimaryExpression
@@ -1650,7 +1829,7 @@ namespace D_Parser.Dom.Expressions
 		}
 	}
 
-	public class AssertExpression : PrimaryExpression
+	public class AssertExpression : PrimaryExpression,ContainerExpression
 	{
 		public IExpression[] AssignExpressions;
 
@@ -1702,9 +1881,14 @@ namespace D_Parser.Dom.Expressions
 				return 1;
 			}
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return AssignExpressions; }
+		}
 	}
 
-	public class MixinExpression : PrimaryExpression
+	public class MixinExpression : PrimaryExpression,ContainerExpression
 	{
 		public IExpression AssignExpression;
 
@@ -1740,9 +1924,14 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { return AssignExpression.DecValue; }
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{AssignExpression}; }
+		}
 	}
 
-	public class ImportExpression : PrimaryExpression
+	public class ImportExpression : PrimaryExpression,ContainerExpression
 	{
 		public IExpression AssignExpression;
 
@@ -1778,9 +1967,14 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { throw new NotImplementedException(); }
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{AssignExpression}; }
+		}
 	}
 
-	public class TypeidExpression : PrimaryExpression
+	public class TypeidExpression : PrimaryExpression,ContainerExpression
 	{
 		public ITypeDeclaration Type;
 		public IExpression Expression;
@@ -1817,9 +2011,20 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { throw new NotImplementedException(); }
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { 
+				if(Expression!=null)
+					return new[]{Expression};
+				if (Type != null)
+					return new[] { new TypeDeclarationExpression(Type)};
+				return null;
+			}
+		}
 	}
 
-	public class IsExpression : PrimaryExpression
+	public class IsExpression : PrimaryExpression,ContainerExpression
 	{
 		public IExpression TestedExpression;
 		public ITypeDeclaration TestedType;
@@ -1888,6 +2093,19 @@ namespace D_Parser.Dom.Expressions
 		public decimal DecValue
 		{
 			get { throw new NotImplementedException(); }
+		}
+
+		public IExpression[] SubExpressions
+		{
+			get { 
+				if(TestedExpression!=null)
+				return new[]{TestedExpression};
+
+				if (TestedType != null)
+					return new[] { new TypeDeclarationExpression(TestedType)};
+
+				return null;
+			}
 		}
 	}
 
@@ -1963,7 +2181,7 @@ namespace D_Parser.Dom.Expressions
 	/// <summary>
 	/// ( Expression )
 	/// </summary>
-	public class SurroundingParenthesesExpression : PrimaryExpression
+	public class SurroundingParenthesesExpression : PrimaryExpression,ContainerExpression
 	{
 		public IExpression Expression;
 
@@ -1998,6 +2216,11 @@ namespace D_Parser.Dom.Expressions
 		public decimal DecValue
 		{
 			get { return Expression.DecValue; }
+		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{Expression}; }
 		}
 	}
 
@@ -2116,7 +2339,7 @@ namespace D_Parser.Dom.Expressions
 	{
 		public ArrayMemberInitializer[] ArrayMemberInitializations;
 
-		public sealed override IList<IExpression> Expressions
+		public sealed override List<IExpression> Expressions
 		{
 			get
 			{

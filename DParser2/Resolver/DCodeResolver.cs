@@ -486,15 +486,24 @@ namespace D_Parser.Resolver
 			else if (parser.IsAssignExpression())
 			{
 				var expr=parser.AssignExpression();
-				var ret= ResolveType(expr.ExpressionTypeRepresentation, currentlyScopedNode, parseCache);
 
-				if (ret == null && expr != null)
-					ret = new[] { new ExpressionResult() { Expression = expr } };
-				
-				return ret;
+				if (expr != null)
+				{
+					var relativeCaretLocation=DocumentHelper.OffsetToLocation(expressionCode, caret - start);
+					expr = ExpressionHelper.SearchExpressionDeeply(expr, relativeCaretLocation);
+
+					var ret = ResolveType(expr.ExpressionTypeRepresentation, currentlyScopedNode, parseCache);
+
+					if (ret == null && expr != null)
+						ret = new[] { new ExpressionResult() { Expression = expr } };
+
+					return ret;
+				}
 			}
 			else
 				return ResolveType(parser.Type(), currentlyScopedNode, parseCache);
+
+			return null;
 		}
 
 		public static ResolveResult[] ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache)
@@ -1287,6 +1296,31 @@ namespace D_Parser.Resolver
 			}
 
 			return IdentListStart;
+		}
+	}
+
+	public class DocumentHelper
+	{
+		public static CodeLocation OffsetToLocation(string Text, int Offset)
+		{
+			int line = 1;
+			int col = 1;
+
+			char c='\0';
+			for (int i = 0; i < Offset;i++ )
+			{
+				c = Text[i];
+
+				col++;
+
+				if (c == '\n')
+				{
+					line++;
+					col = 1;
+				}
+			}
+
+			return new CodeLocation(col, line);
 		}
 	}
 }
