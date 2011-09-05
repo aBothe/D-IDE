@@ -5,7 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" Background="White"
-             d:DesignHeight="255" d:DesignWidth="638">
+             d:DesignHeight="404" d:DesignWidth="638">
     <Grid>
 		<TextBox Height="23" Margin="115,12,42,0" Name="textBox_BaseDirectory" VerticalAlignment="Top" />
 		<Label Content="bin Directory" Height="23" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Padding="0,2" Width="97" />
@@ -28,5 +28,11 @@
 		
 		<Button Content="Debug Arguments" Height="23" HorizontalAlignment="Left" Margin="115,196,0,0" Name="button_DbgArgs" VerticalAlignment="Top" Width="127" Click="button_DbgArgs_Click" />
 		<Button Content="Release Arguments" Height="23" HorizontalAlignment="Left" Margin="248,196,0,0" Name="button_ResArgs" VerticalAlignment="Top" Width="127" Click="button_ResArgs_Click" />
+		<ListView Margin="115,268,42,12" Name="List_DefaultLibs" SelectionChanged="List_DefaultLibs_SelectionChanged" />
+		<TextBox Height="23" Margin="115,239,252,0" Name="text_CurLib" VerticalAlignment="Top" />
+		<Label Content="Default Libraries" Height="17" HorizontalAlignment="Left" Margin="11,242,0,0" Name="label7" Padding="0" VerticalAlignment="Top" Width="98" />
+		<Button Content="Add" Height="23" HorizontalAlignment="Right" Margin="0,239,182,0" Name="button_AddLib" VerticalAlignment="Top" Width="64" Click="button_AddLib_Click" />
+		<Button Content="Apply" Height="23" HorizontalAlignment="Right" Margin="0,239,112,0" Name="button_ApplyLib" VerticalAlignment="Top" Width="64" Click="button_ApplyLib_Click" />
+		<Button Content="Delete" Height="23" HorizontalAlignment="Right" Margin="0,239,42,0" Name="button_DeleteLib" VerticalAlignment="Top" Width="64" Click="button_DeleteLib_Click" />
 	</Grid>
 </core:AbstractSettingsPage>

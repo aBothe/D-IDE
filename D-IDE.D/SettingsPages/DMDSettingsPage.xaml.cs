@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using System.IO;
 using Microsoft.Win32;
 using D_IDE.Core;
+using System.Collections.ObjectModel;
 
 namespace D_IDE.D
 {
@@ -28,6 +29,7 @@ namespace D_IDE.D
 		{
 			InitializeComponent();
 			this.Config = Configuration;
+			List_DefaultLibs.ItemsSource = Libs;
 
 			LoadCurrent();
 		}
@@ -45,6 +47,9 @@ namespace D_IDE.D
 			Config.DllLinker = textBox_DllLinker.Text;
 			Config.LibLinker = textBox_LibLinker.Text;
 
+			Config.DefaultLinkedLibraries.Clear();
+			Config.DefaultLinkedLibraries.AddRange(Libs);
+
 			return true;
 		}
 
@@ -57,6 +62,13 @@ namespace D_IDE.D
 			textBox_ConsoleLinker.Text = Config.ExeLinker;
 			textBox_DllLinker.Text = Config.DllLinker;
 			textBox_LibLinker.Text = Config.LibLinker;
+
+			Libs.Clear();
+			foreach (var l in Config.DefaultLinkedLibraries)
+				Libs.Add(l);
+
+			if (Libs.Count > 0)
+				List_DefaultLibs.SelectedIndex = 0;
 		}
 
 		public override string SettingCategoryName
@@ -96,6 +108,32 @@ namespace D_IDE.D
 		{
 			ShowBuildArgConfig(false);
 		}
+
+		#region Def Libs
+		ObservableCollection<string> Libs = new ObservableCollection<string>();
+		private void List_DefaultLibs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			text_CurLib.Text = List_DefaultLibs.SelectedValue as string;
+		}
+
+		private void button_AddLib_Click(object sender, RoutedEventArgs e)
+		{
+			if (!string.IsNullOrWhiteSpace(text_CurLib.Text))
+				Libs.Add(text_CurLib.Text);
+			text_CurLib.Text = "";
+		}
+
+		private void button_ApplyLib_Click(object sender, RoutedEventArgs e)
+		{
+			if (!string.IsNullOrWhiteSpace(text_CurLib.Text))
+				Libs[List_DefaultLibs.SelectedIndex] = text_CurLib.Text;
+		}
+
+		private void button_DeleteLib_Click(object sender, RoutedEventArgs e)
+		{
+			Libs.RemoveAt(List_DefaultLibs.SelectedIndex);
+		}
+		#endregion
 
 		#region Browse buttons
 		private void buttonBaseDirBrowse_Click(object sender, RoutedEventArgs e)

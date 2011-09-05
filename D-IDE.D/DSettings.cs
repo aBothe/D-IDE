@@ -225,6 +225,8 @@ namespace D_IDE.D
 		public string DllLinker = "dmd.exe";
 		public string LibLinker = "lib.exe";
 
+		public List<string> DefaultLinkedLibraries = new List<string>();
+
 		public DBuildArguments BuildArguments(bool IsDebug)
 		{
 			if (IsDebug)
@@ -307,6 +309,15 @@ namespace D_IDE.D
 								}
 							}
 						break;
+
+					case "DefaultLibs":
+						var xr2 = x2.ReadSubtree();
+						while (xr2.Read())
+						{
+							if (xr2.LocalName == "lib")
+								DefaultLinkedLibraries.Add(xr2.ReadString());
+						}
+						break;
 				}
 			}
 
@@ -379,6 +390,15 @@ namespace D_IDE.D
 			{
 				x.WriteStartElement("dir");
 				x.WriteCData(pdir.BaseDirectory);
+				x.WriteEndElement();
+			}
+			x.WriteEndElement();
+
+			x.WriteStartElement("DefaultLibs");
+			foreach (var lib in DefaultLinkedLibraries)
+			{
+				x.WriteStartElement("lib");
+				x.WriteCData(lib);
 				x.WriteEndElement();
 			}
 			x.WriteEndElement();

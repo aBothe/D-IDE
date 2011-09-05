@@ -82,7 +82,8 @@ namespace D_IDE.D
 				return;
 			}
 
-			// Add import libraries
+			// Add default & project specific import libraries
+			objs.AddRange(CurrentDMDConfig.DefaultLinkedLibraries);
 			objs.AddRange(dprj.LinkedLibraries);
 
 			// Link files to console-based application by default
