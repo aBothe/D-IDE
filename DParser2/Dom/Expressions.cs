@@ -107,6 +107,8 @@ namespace D_Parser.Dom.Expressions
 						e = se;
 						break;
 					}
+
+				break;
 			}
 
 			return e;

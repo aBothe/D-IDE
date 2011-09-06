@@ -11,6 +11,7 @@ using D_Parser.Resolver;
 using D_Parser.Parser;
 using D_Parser.Dom.Statements;
 using D_Parser.Dom.Expressions;
+using System.Windows.Controls;
 
 namespace D_IDE.D
 {
@@ -44,15 +45,15 @@ namespace D_IDE.D
 
 		public static bool CanItemBeShownGenerally(DNode dn)
 		{
-			if (dn==null || string.IsNullOrWhiteSpace(dn.Name))
+			if (dn == null || string.IsNullOrWhiteSpace(dn.Name))
 				return false;
 
 			if (dn is DMethod)
 			{
 				var dm = dn as DMethod;
 
-				if (dm.SpecialType == DMethod.MethodType.Unittest || 
-					dm.SpecialType == DMethod.MethodType.Destructor || 
+				if (dm.SpecialType == DMethod.MethodType.Unittest ||
+					dm.SpecialType == DMethod.MethodType.Destructor ||
 					dm.SpecialType == DMethod.MethodType.Constructor)
 					return false;
 			}
@@ -63,18 +64,18 @@ namespace D_IDE.D
 		public void BuildCompletionData(DEditorDocument EditorDocument, IList<ICompletionData> l, string EnteredText)
 		{
 			var caretOffset = EditorDocument.Editor.CaretOffset;
-			var caretLocation = new CodeLocation(EditorDocument.Editor.TextArea.Caret.Column,EditorDocument.Editor.TextArea.Caret.Line);
+			var caretLocation = new CodeLocation(EditorDocument.Editor.TextArea.Caret.Column, EditorDocument.Editor.TextArea.Caret.Line);
 
 			IStatement curStmt = null;
-			var curBlock = DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLocation,out curStmt);
+			var curBlock = DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLocation, out curStmt);
 
 			#region Parse the code between the last block opener and the caret
 
 			var blockOpenerLocation = curBlock != null ? curBlock.BlockStartLocation : CodeLocation.Empty;
-			var blockOpenerOffset = blockOpenerLocation.Line<=0? blockOpenerLocation.Column:
+			var blockOpenerOffset = blockOpenerLocation.Line <= 0 ? blockOpenerLocation.Column :
 				EditorDocument.Editor.Document.GetOffset(blockOpenerLocation.Line, blockOpenerLocation.Column);
 
-			if (caretOffset - blockOpenerOffset > 0)
+			if (blockOpenerOffset >= 0 && caretOffset - blockOpenerOffset > 0)
 			{
 				var codeToParse = EditorDocument.Editor.Document.GetText(blockOpenerOffset, caretOffset - blockOpenerOffset);
 
@@ -106,7 +107,7 @@ namespace D_IDE.D
 			{
 				alreadyAddedModuleNameParts.Clear();
 
-				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset-1, caretLocation, curBlock, codeCache);
+				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset - 1, caretLocation, curBlock, codeCache);
 
 				if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
@@ -115,19 +116,19 @@ namespace D_IDE.D
 				 */
 
 				foreach (var rr in resolveResults)
-					BuildCompletionData(rr,curBlock, l);
+					BuildCompletionData(rr, curBlock, l);
 			}
 
 			// Enum all nodes that can be accessed in the current scope
-			else if(string.IsNullOrEmpty(EnteredText) || IsIdentifierChar(EnteredText[0]))
+			else if (string.IsNullOrEmpty(EnteredText) || IsIdentifierChar(EnteredText[0]))
 			{
-				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock, curStmt,caretLocation,codeCache);
+				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock, curStmt, caretLocation, codeCache);
 
 				foreach (var kv in DTokens.Keywords)
 					l.Add(new TokenCompletionData(kv.Key));
 
 				// Add module name stubs of importable modules
-				var nameStubs=new Dictionary<string,string>();
+				var nameStubs = new Dictionary<string, string>();
 				foreach (var mod in codeCache)
 				{
 					if (string.IsNullOrEmpty(mod.ModuleName))
@@ -140,14 +141,14 @@ namespace D_IDE.D
 				}
 
 				foreach (var kv in nameStubs)
-					l.Add(new NamespaceCompletionData(kv.Key,kv.Value));
+					l.Add(new NamespaceCompletionData(kv.Key, kv.Value));
 			}
 
 			// Add all found items to the referenced list
-			if(listedItems!=null)
+			if (listedItems != null)
 				foreach (var i in listedItems)
 				{
-					if(CanItemBeShownGenerally(i as DNode)/* && dm.IsStatic*/)
+					if (CanItemBeShownGenerally(i as DNode)/* && dm.IsStatic*/)
 						l.Add(new DCompletionData(i));
 				}
 		}
@@ -166,9 +167,9 @@ namespace D_IDE.D
 			return false;
 		}
 
-		readonly List<string> alreadyAddedModuleNameParts = new List<string>(); 
+		readonly List<string> alreadyAddedModuleNameParts = new List<string>();
 
-		public void BuildCompletionData(ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l,bool isVariableInstance=false,ResolveResult resultParent=null)
+		public void BuildCompletionData(ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l, bool isVariableInstance = false, ResolveResult resultParent = null)
 		{
 			#region MemberResult
 			if (rr is MemberResult)
@@ -176,12 +177,12 @@ namespace D_IDE.D
 				var mrr = rr as MemberResult;
 				if (mrr.MemberBaseTypes != null)
 					foreach (var i in mrr.MemberBaseTypes)
-						BuildCompletionData(i,currentlyScopedBlock, l,
-							(mrr.ResolvedMember is DVariable&&(mrr.ResolvedMember as DVariable).IsAlias)?
-								isVariableInstance:true,rr); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
+						BuildCompletionData(i, currentlyScopedBlock, l,
+							(mrr.ResolvedMember is DVariable && (mrr.ResolvedMember as DVariable).IsAlias) ?
+								isVariableInstance : true, rr); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
 
-				if(resultParent==null)
-					StaticPropertyAddition.AddGenericProperties(rr, l, DontAddInitProperty:mrr.MemberBaseTypes!=null);
+				if (resultParent == null)
+					StaticPropertyAddition.AddGenericProperties(rr, l, DontAddInitProperty: mrr.MemberBaseTypes != null);
 			}
 			#endregion
 
@@ -214,7 +215,7 @@ namespace D_IDE.D
 			{
 				var srr = rr as StaticTypeResult;
 				if (resultParent == null)
-					StaticPropertyAddition.AddGenericProperties(rr, l, null,true);
+					StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
 
 				var type = srr.Type;
 
@@ -234,7 +235,7 @@ namespace D_IDE.D
 					// Associative array
 					else
 					{
-
+						StaticPropertyAddition.AddAssocArrayProperties(rr, l, ad);
 					}
 				}
 				// Direct pointer accessing - only generic props are available
@@ -265,7 +266,7 @@ namespace D_IDE.D
 			}
 			#endregion
 
-			#region "abcd" , (200), (0.123), [1,2,3,4], [1:"asdf", 2:"hey", 3:"yeah"]
+			#region "abcd" , (200), (0.123) //, [1,2,3,4], [1:"asdf", 2:"hey", 3:"yeah"]
 			else if (rr is ExpressionResult)
 			{
 				var err = rr as ExpressionResult;
@@ -276,13 +277,13 @@ namespace D_IDE.D
 					expr = (expr as SurroundingParenthesesExpression).Expression;
 
 				var idExpr = expr as IdentifierExpression;
-				if (idExpr!=null)
+				if (idExpr != null)
 				{
 					// Char literals, Integrals types & Floats
-					if (idExpr.Format.HasFlag(LiteralFormat.Scalar) || idExpr.Format==LiteralFormat.CharLiteral)
+					if (idExpr.Format.HasFlag(LiteralFormat.Scalar) || idExpr.Format == LiteralFormat.CharLiteral)
 					{
 						StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
-						bool isFloat=idExpr.Format.HasFlag(LiteralFormat.FloatingPoint);
+						bool isFloat = idExpr.Format.HasFlag(LiteralFormat.FloatingPoint);
 						// Floats also imply integral properties
 						StaticPropertyAddition.AddIntegralTypeProperties(DTokens.Int, rr, l, null, isFloat);
 
@@ -294,11 +295,19 @@ namespace D_IDE.D
 					else if (idExpr.Format == LiteralFormat.StringLiteral || idExpr.Format == LiteralFormat.VerbatimStringLiteral)
 					{
 						StaticPropertyAddition.AddGenericProperties(rr, l, DontAddInitProperty: true);
-						StaticPropertyAddition.AddArrayProperties(rr, l,new IdentifierDeclaration("string"));
+						StaticPropertyAddition.AddArrayProperties(rr, l, new ArrayDecl()
+						{
+							ValueType =
+								new MemberFunctionAttributeDecl(DTokens.Immutable)
+								{
+									InnerType =
+										new DTokenDeclaration(DTokens.Char)
+								}
+						});
 					}
 				}
 				// Normal array literals
-				else if (expr is ArrayLiteralExpression)
+				/*else if (expr is ArrayLiteralExpression)
 				{
 					var arr = expr as ArrayLiteralExpression;
 
@@ -317,11 +326,11 @@ namespace D_IDE.D
 				else if (expr is PostfixExpression_Index)
 				{
 
-				}
+				}*/
 				// Pointer conversions (e.g. (myInt*).sizeof)
-				
+
 			}
-#endregion
+			#endregion
 		}
 
 		#region Static properties
@@ -338,7 +347,7 @@ namespace D_IDE.D
 				{ Name = name; Description = desc; OverrideType = overrideType; }
 			}
 
-			public static StaticProperty[] GenericProps=new[]{
+			public static StaticProperty[] GenericProps = new[]{
 				new StaticProperty("sizeof","Size of a type or variable in bytes",new IdentifierDeclaration("size_t")),
 				new StaticProperty("alignof","Variable offset",new DTokenDeclaration(DTokens.Int)),
 				new StaticProperty("mangleof","String representing the ‘mangled’ representation of the type",new IdentifierDeclaration("string")),
@@ -372,7 +381,7 @@ namespace D_IDE.D
 			public static StaticProperty[] ArrayProps = new[] { 
 				new StaticProperty("init","Returns an array literal with each element of the literal being the .init property of the array element type. null on dynamic arrays."),
 				new StaticProperty("length","Array length",new IdentifierDeclaration("size_t")),
-				new StaticProperty("ptr","Returns pointer to the array",new PointerDecl(){InnerDeclaration=new DTokenDeclaration(DTokens.Void)}),
+				//new StaticProperty("ptr","Returns pointer to the array",new PointerDecl(){InnerDeclaration=new DTokenDeclaration(DTokens.Void)}),
 				new StaticProperty("dup","Create a dynamic array of the same size and copy the contents of the array into it."),
 				new StaticProperty("idup","D2.0 only! Creates immutable copy of the array"),
 				new StaticProperty("reverse","Reverses in place the order of the elements in the array. Returns the array."),
@@ -385,10 +394,11 @@ namespace D_IDE.D
 			{
 				foreach (var prop in Properties)
 				{
-					var p = new DVariable() {
-						Name=prop.Name,
-						Description=prop.Description,
-						Type=prop.OverrideType!=null?prop.OverrideType:DefaultPropType
+					var p = new DVariable()
+					{
+						Name = prop.Name,
+						Description = prop.Description,
+						Type = prop.OverrideType != null ? prop.OverrideType : DefaultPropType
 					};
 
 					l.Add(new DCompletionData(p));
@@ -398,13 +408,13 @@ namespace D_IDE.D
 			/// <summary>
 			/// Adds init, sizeof, alignof, mangleof, stringof to the completion list
 			/// </summary>
-			public static void AddGenericProperties(ResolveResult rr, IList<ICompletionData> l, INode relatedNode = null, bool DontAddInitProperty=false)
+			public static void AddGenericProperties(ResolveResult rr, IList<ICompletionData> l, INode relatedNode = null, bool DontAddInitProperty = false)
 			{
 				if (!DontAddInitProperty)
 				{
 					var prop_Init = new DVariable();
 
-					if (relatedNode!=null)
+					if (relatedNode != null)
 						prop_Init.AssignFrom(relatedNode);
 
 					// Override the initializer variable's name and description
@@ -426,7 +436,7 @@ namespace D_IDE.D
 
 				if (!DontAddInitProperty)
 				{
-					var prop_Init = new DVariable() { Type=intType, Initializer=new IdentifierExpression(0,LiteralFormat.Scalar)};
+					var prop_Init = new DVariable() { Type = intType, Initializer = new IdentifierExpression(0, LiteralFormat.Scalar) };
 
 					if (relatedNode != null)
 						prop_Init.AssignFrom(relatedNode);
@@ -447,7 +457,7 @@ namespace D_IDE.D
 
 				if (!DontAddInitProperty)
 				{
-					var prop_Init = new DVariable() { Type = intType, Initializer = new PostfixExpression_Access() { PostfixForeExpression=new TokenExpression(TypeToken), TemplateOrIdentifier=new IdentifierDeclaration("nan")} };
+					var prop_Init = new DVariable() { Type = intType, Initializer = new PostfixExpression_Access() { PostfixForeExpression = new TokenExpression(TypeToken), TemplateOrIdentifier = new IdentifierDeclaration("nan") } };
 
 					if (relatedNode != null)
 						prop_Init.AssignFrom(relatedNode);
@@ -467,9 +477,94 @@ namespace D_IDE.D
 				CreateArtificialProperties(ClassTypeProps, l);
 			}
 
-			public static void AddArrayProperties(ResolveResult rr, IList<ICompletionData> l, ITypeDeclaration ArrayDecl=null)
+			public static void AddArrayProperties(ResolveResult rr, IList<ICompletionData> l, ArrayDecl ArrayDecl = null)
 			{
-				CreateArtificialProperties(ArrayProps, l,ArrayDecl);
+				CreateArtificialProperties(ArrayProps, l, ArrayDecl);
+
+				l.Add(new DCompletionData(new DVariable()
+				{
+					Name = "ptr",
+					Description = "Returns pointer to the array",
+					Type = new PointerDecl(ArrayDecl == null ? new DTokenDeclaration(DTokens.Void) : ArrayDecl.ValueType)
+				}));
+			}
+
+			public static void AddAssocArrayProperties(ResolveResult rr, IList<ICompletionData> l, ArrayDecl ad)
+			{
+				var ll = new List<INode>();
+
+				ll.Add(new DVariable()
+				{
+					Name = "sizeof",
+					Description = "Returns the size of the reference to the associative array; it is typically 8.",
+					Type = new IdentifierDeclaration("size_t"),
+					Initializer = new IdentifierExpression(8, LiteralFormat.Scalar)
+				});
+
+				/*ll.Add(new DVariable() { 
+					Name="length",
+					Description="Returns number of values in the associative array. Unlike for dynamic arrays, it is read-only.",
+					Type=new IdentifierDeclaration("size_t")
+				});*/
+
+				if (ad != null)
+				{
+					ll.Add(new DVariable()
+					{
+						Name = "keys",
+						Description = "Returns dynamic array, the elements of which are the keys in the associative array.",
+						Type = new ArrayDecl() { ValueType = ad.KeyType }
+					});
+
+					ll.Add(new DVariable()
+					{
+						Name = "values",
+						Description = "Returns dynamic array, the elements of which are the values in the associative array.",
+						Type = new ArrayDecl() { ValueType = ad.ValueType }
+					});
+
+					ll.Add(new DVariable()
+					{
+						Name = "rehash",
+						Description = "Reorganizes the associative array in place so that lookups are more efficient. rehash is effective when, for example, the program is done loading up a symbol table and now needs fast lookups in it. Returns a reference to the reorganized array.",
+						Type = ad
+					});
+
+					ll.Add(new DVariable()
+					{
+						Name = "byKey",
+						Description = "Returns a delegate suitable for use as an Aggregate to a ForeachStatement which will iterate over the keys of the associative array.",
+						Type = new DelegateDeclaration() { ReturnType = new ArrayDecl() { ValueType = ad.KeyType } }
+					});
+
+					ll.Add(new DVariable()
+					{
+						Name = "byValue",
+						Description = "Returns a delegate suitable for use as an Aggregate to a ForeachStatement which will iterate over the values of the associative array.",
+						Type = new DelegateDeclaration() { ReturnType = new ArrayDecl() { ValueType = ad.ValueType } }
+					});
+
+					ll.Add(new DMethod()
+					{
+						Name = "get",
+						Description = "Looks up key; if it exists returns corresponding value else evaluates and returns defaultValue.",
+						Type = ad.ValueType,
+						Parameters = new List<INode> {
+						new DVariable(){
+							Name="key",
+							Type=ad.KeyType
+						},
+						new DVariable(){
+							Name="defaultValue",
+							Type=ad.ValueType,
+							Attributes=new List<DAttribute>{ new DAttribute(DTokens.Lazy)}
+						}
+					}
+					});
+				}
+
+				foreach (var prop in ll)
+					l.Add(new DCompletionData(prop));
 			}
 		}
 
@@ -509,7 +604,7 @@ namespace D_IDE.D
 
 					l.Add(new NamespaceCompletionData(modNameParts[tr.AlreadyTypedModuleNameParts], packageDir));
 				}
-				else 
+				else
 					l.Add(new NamespaceCompletionData(modNameParts[modNameParts.Length - 1], tr.ResolvedModule));
 			}
 		}
@@ -519,7 +614,7 @@ namespace D_IDE.D
 			var n = tr.ResolvedTypeDefinition;
 			if (n is DClassLike) // Add public static members of the class and including all base classes
 			{
-				var curlevel=tr;
+				var curlevel = tr;
 				var tvisMod = visMod;
 				while (curlevel != null)
 				{
@@ -528,7 +623,7 @@ namespace D_IDE.D
 						var dn = i as DNode;
 
 						if (dn == null)
-							l.Add( new DCompletionData(i));
+							l.Add(new DCompletionData(i));
 
 						// If "this." and if watching the current inheritance level only , add all items
 						// if "super." , add public items
@@ -559,9 +654,9 @@ namespace D_IDE.D
 						}
 
 						if (add && CanItemBeShownGenerally(dn))
-							l.Add( new DCompletionData(dn));
+							l.Add(new DCompletionData(dn));
 					}
-					curlevel = curlevel.BaseClass!=null?curlevel.BaseClass[0]:null;
+					curlevel = curlevel.BaseClass != null ? curlevel.BaseClass[0] : null;
 
 					// After having shown all items on the current node level,
 					// allow showing public (static) and/or protected items in the more basic levels then
@@ -589,7 +684,7 @@ namespace D_IDE.D
 		/// </summary>
 		public static string GetModulePath(string PhysicalFileName, string ModuleName, string WantedDirectory)
 		{
-			return GetModulePath(PhysicalFileName,ModuleName.Split('.').Length,WantedDirectory.Split('.').Length);
+			return GetModulePath(PhysicalFileName, ModuleName.Split('.').Length, WantedDirectory.Split('.').Length);
 		}
 
 		public static string GetModulePath(string PhysicalFileName, int ModuleNamePartAmount, int WantedDirectoryNamePartAmount)
@@ -607,8 +702,8 @@ namespace D_IDE.D
 		{
 			int offset = EditorDocument.Editor.Document.GetOffset(ToolTipRequest.Line, ToolTipRequest.Column);
 
-			if (!ToolTipRequest.InDocument||
-					DCodeResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text,offset)) 
+			if (!ToolTipRequest.InDocument ||
+					DCodeResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text, offset))
 				return;
 
 			try
@@ -616,25 +711,30 @@ namespace D_IDE.D
 				var caretLoc = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
 				IStatement curStmt = null;
 				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
-					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree,caretLoc,out curStmt),DCodeResolver.ResolveImports(EditorDocument.SyntaxTree,EnumAvailableModules(EditorDocument)),true,true);
-				
-				string tt = "";
+					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLoc, out curStmt), DCodeResolver.ResolveImports(EditorDocument.SyntaxTree, EnumAvailableModules(EditorDocument)), true, true);
 
 				//TODO: Build well-formatted tool tip string / Do a better tool tip layout
-				foreach (var res in rr)
+				if (rr.Length < 1)
+					return;
+				if (rr.Length == 1)
+					ToolTipRequest.ToolTipContent = CompletionDataHelper.CreateToolTipContent((rr[0] is ModuleResult ? (rr[0] as ModuleResult).ResolvedModule.FileName : rr[0].ToString()));
+				else
 				{
-					tt += (res is ModuleResult?(res as ModuleResult).ResolvedModule.FileName: res.ToString()) + "\r\n";
-				}
+					var vertStack = new StackPanel() { Orientation = Orientation.Vertical };
+					foreach (var res in rr)
+					{
+						vertStack.Children.Add(CompletionDataHelper.CreateToolTipContent((rr[0] is ModuleResult ? (rr[0] as ModuleResult).ResolvedModule.FileName : rr[0].ToString())) as UIElement);
+					}
 
-				tt = tt.Trim();
-				if(!string.IsNullOrEmpty(tt))
-					ToolTipRequest.ToolTipContent = tt;
-			}catch{}
+					ToolTipRequest.ToolTipContent = vertStack;
+				}
+			}
+			catch { }
 		}
 
 		public bool IsInsightWindowTrigger(char key)
 		{
-			return key == '(' || key==',';
+			return key == '(' || key == ',';
 		}
 
 		#region Module enumeration helper
@@ -645,7 +745,7 @@ namespace D_IDE.D
 
 		public static IEnumerable<IAbstractSyntaxTree> EnumAvailableModules(DProject Project)
 		{
-			var ret =new List<IAbstractSyntaxTree>();
+			var ret = new List<IAbstractSyntaxTree>();
 
 			if (Project != null)
 			{
@@ -684,7 +784,7 @@ namespace D_IDE.D
 			try
 			{
 				var bi = new BitmapImage();
-				
+
 				images["keyword"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Keyword);
 				images["namespace"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_NameSpace);
 
@@ -697,7 +797,7 @@ namespace D_IDE.D
 				images["struct_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalStruct);
 				images["struct_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateStruct);
 				images["struct_protected"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_ProtectedStruct);
-				
+
 				images["interface"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_Interface);
 				images["interface_internal"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_InternalInterface);
 				images["interface_private"] = ConvertWFToWPFBitmap(DIcons.Icons_16x16_PrivateInterface);
@@ -758,7 +858,7 @@ namespace D_IDE.D
 			{
 				this.Token = Token;
 				Text = DTokens.GetTokenString(Token);
-				Description = DTokens.GetDescription(Token);
+				Description = CompletionDataHelper.CreateToolTipContent(Text, DTokens.GetDescription(Token));
 				Image = DCodeCompletionSupport.Instance.GetNodeImage("keyword");
 			}
 			catch (Exception ex)
@@ -803,20 +903,31 @@ namespace D_IDE.D
 
 	public class NamespaceCompletionData : ICompletionData
 	{
-		public string ModuleName{get;set;}
-		public IAbstractSyntaxTree AssociatedModule { get; set; }
+		public string ModuleName { get; private set; }
+		public IAbstractSyntaxTree AssociatedModule { get; private set; }
 		public string _desc;
 
 		public NamespaceCompletionData(string ModuleName, IAbstractSyntaxTree AssocModule)
 		{
-			this.ModuleName=ModuleName;
+			this.ModuleName = ModuleName;
 			AssociatedModule = AssocModule;
+
+			Init();
 		}
 
 		public NamespaceCompletionData(string ModuleName, string Description)
 		{
 			this.ModuleName = ModuleName;
 			_desc = Description;
+
+			Init();
+		}
+
+		void Init()
+		{
+			bool IsPackage = AssociatedModule == null;
+
+			Description = CompletionDataHelper.CreateToolTipContent(IsPackage ? ModuleName : AssociatedModule.ModuleName, (IsPackage ? "(Package)" : "(Module)") + " " + (!string.IsNullOrEmpty(_desc) ? _desc : (AssociatedModule != null ? AssociatedModule.FileName : null)));
 		}
 
 		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
@@ -831,7 +942,8 @@ namespace D_IDE.D
 
 		public object Description
 		{
-			get { return !string.IsNullOrEmpty(_desc)?_desc: (AssociatedModule!=null?AssociatedModule.FileName:null); }
+			get;
+			private set;
 		}
 
 		public System.Windows.Media.ImageSource Image
@@ -888,7 +1000,7 @@ namespace D_IDE.D
 				}
 				catch (Exception ex)
 				{
-					ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Parser);
+					ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser);
 					return "";
 				}
 			}
@@ -909,10 +1021,11 @@ namespace D_IDE.D
 		public object Description
 		{
 			// If an empty description was given, do not show an empty decription tool tip
-			get {
+			get
+			{
 				try
 				{
-					return NodeString;
+					return CompletionDataHelper.CreateToolTipContent(NodeString, Node.Description);
 				}
 				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
 				return null;
@@ -922,7 +1035,8 @@ namespace D_IDE.D
 
 		public System.Windows.Media.ImageSource Image
 		{
-			get {
+			get
+			{
 				try
 				{
 					var n = Node as DNode;
@@ -1041,7 +1155,7 @@ namespace D_IDE.D
 							return DCodeCompletionSupport.Instance.GetNodeImage("parameter");
 					}
 				}
-				catch (Exception ex) { ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Parser); }
+				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
 				return null;
 			}
 		}
@@ -1055,6 +1169,27 @@ namespace D_IDE.D
 		{
 			get { return Node.Name; }
 			protected set { }
+		}
+	}
+
+	public class CompletionDataHelper
+	{
+		public static object CreateToolTipContent(string Head, string Description = null)
+		{
+			var nodeLabel = new Label() { Content = Head, FontWeight = FontWeights.DemiBold, Padding = new Thickness(0) };
+
+			if (string.IsNullOrWhiteSpace(Description))
+				return nodeLabel;
+			else
+			{
+				var descLabel = new Label() { Content = Description, Padding = new Thickness(0) };
+
+				var vertSplitter = new StackPanel() { Orientation = Orientation.Vertical };
+				vertSplitter.Children.Add(nodeLabel);
+				vertSplitter.Children.Add(descLabel);
+
+				return vertSplitter;
+			}
 		}
 	}
 }

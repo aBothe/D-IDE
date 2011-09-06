@@ -88,7 +88,7 @@ namespace D_IDE
 
 	public class IDELogger : ErrorLogger
 	{
-		const string ReportContributionUrl = "http://d-ide.sf.net/contrib_error.php";
+		const string ReportContributionUrl = "http://d-ide.sourceforge.net/contrib_error.php";
 
 		readonly MainWindow Owner;
 		public IDELogger(MainWindow Owner)
@@ -103,13 +103,14 @@ namespace D_IDE
 				var versionString = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString(3);
 
 				var wc = new WebClient();
-
+				
 				var nvc = new NameValueCollection();
 				nvc.Add("report_data", message);
 				nvc.Add("comment", userComment);
 				nvc.Add("ide_version", versionString);
 
 				wc.UploadValues(new Uri(ReportContributionUrl), "POST", nvc);
+
 				MessageBox.Show("Report uploaded!");
 			}
 			catch(Exception ex)
