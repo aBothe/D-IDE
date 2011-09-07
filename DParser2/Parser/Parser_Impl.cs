@@ -64,7 +64,7 @@ namespace D_Parser.Parser
 				return ""; 
 
 			// Overwrite only if comment is not 'ditto'
-			if (ret != "ditto" && ret!="DITTO")
+			if (ret.ToLowerInvariant() != "ditto")
 				PreviousComment = ret;
 
 			return PreviousComment;
@@ -104,7 +104,7 @@ namespace D_Parser.Parser
 			ret = ret.Trim();
 			
 			// Add post-declaration string if comment text is 'ditto'
-			if (ret == "ditto" || ret=="DITTO")
+			if (ret.ToLowerInvariant() == "ditto")
 				return PreviousComment;
 
 			// Append post-semicolon comment string to previously read comments
