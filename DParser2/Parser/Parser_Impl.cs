@@ -27,7 +27,8 @@ namespace D_Parser.Parser
 			var module = new DModule();
 			module.StartLocation = la.Location;
 			doc = module;
-			// Only one module declaration possible possible!
+
+			// Only one module declaration possible!
 			if (laKind == (Module))
 			{
 				module.Description = GetComments();
@@ -52,21 +53,18 @@ namespace D_Parser.Parser
 		{
 			string ret = "";
 
-			while (Lexer.Comments.Count > 0)
-			{
-				var c = Lexer.Comments.Pop();
+			foreach(var c in Lexer.Comments)
+				ret += c.CommentText+ ' ';
 
-				foreach (var line in c.CommentText.Split('\n'))
-					ret += line.Trim().TrimStart('*') + "\r\n";
-				ret += "\r\n";
-			}
+			Lexer.Comments.Clear();
 
-			ret = ret.Trim().Trim('*', '+');
+			ret = ret.Trim();
 
-			if (String.IsNullOrEmpty(ret)) return "";
+			if (String.IsNullOrEmpty(ret)) 
+				return ""; 
 
 			// Overwrite only if comment is not 'ditto'
-			if (ret.ToLower() != "ditto")
+			if (ret != "ditto" && ret!="DITTO")
 				PreviousComment = ret;
 
 			return PreviousComment;
@@ -82,31 +80,36 @@ namespace D_Parser.Parser
 
 			string ret = "";
 
-			while (Lexer.Comments.Count > 0 && Lexer.Comments.Peek().StartPosition.Line == ExpectedLine)
+			int i=0;
+			foreach (var c in Lexer.Comments)
 			{
-				var c = Lexer.Comments.Pop();
-
-				foreach (var line in c.CommentText.Split('\n'))
-					ret += line.Trim().TrimStart('*') + "\n";
-				ret += "\n";
-			}
-
-			ret = ret.Trim().Trim('*', '+');
-
-			// Add post-declaration string only if comment is not 'ditto'
-			if (ret.ToLower() != "ditto")
-			{
-				if (!String.IsNullOrEmpty(ret))
+				// Ignore ddoc comments made e.g. in int a /** ignored comment */, b,c; 
+				// , whereas this method is called as t is the final semicolon
+				if (c.EndPosition <= t.Location)
 				{
-					PreviousComment += "\n" + ret;
-					PreviousComment = PreviousComment.Trim();
-					return ret;
+					i++;
+					continue;
 				}
+				else if(c.StartPosition.Line > ExpectedLine)
+					break;
+
+				ret += c.CommentText+' ';
+				i++;
 			}
-			else
+			Lexer.Comments.RemoveRange(0, i);
+
+			if (string.IsNullOrEmpty(ret))
+				return "";
+
+			ret = ret.Trim();
+			
+			// Add post-declaration string if comment text is 'ditto'
+			if (ret == "ditto" || ret=="DITTO")
 				return PreviousComment;
 
-			return "";
+			// Append post-semicolon comment string to previously read comments
+			PreviousComment += " " + ret;
+			return ' '+ret;
 		}
 
 		void ClearCommentCache()
@@ -571,6 +574,7 @@ namespace D_Parser.Parser
 		INode[] Decl(bool HasStorageClassModifiers)
 		{
 			var startLocation = la.Location;
+			var initialComment = GetComments();
 			ITypeDeclaration ttd = null;
 
 			CheckForStorageClasses();
@@ -595,7 +599,7 @@ namespace D_Parser.Parser
 
 			// Declarators
 			var firstNode = Declarator(false);
-			firstNode.Description = GetComments();
+			firstNode.Description = initialComment;
 			firstNode.StartLocation = startLocation;
 
 			if (firstNode.Type == null)
@@ -626,27 +630,38 @@ namespace D_Parser.Parser
 					Expect(Identifier);
 
 					var otherNode = new DVariable();
+
+					/// Note: In DDoc, all declarations that are made at once (e.g. int a,b,c;) get the same pre-declaration-description!
+					otherNode.Description = initialComment;
+
 					otherNode.AssignFrom(firstNode);
 					otherNode.StartLocation = t.Location;
 					otherNode.Name = t.Value;
 
 					if (laKind == (Assign))
 						otherNode.Initializer = Initializer();
+
 					otherNode.EndLocation = t.EndLocation;
 					ret.Add(otherNode);
 				}
 
-				Expect(Semicolon);/* TODO: DDoc
-				var pb = (par as IBlockNode);
-				if (pb.Count > 0)
-					pb[pb.Count - 1].Description += CheckForPostSemicolonComment();*/
+				Expect(Semicolon);
+
+				// Note: In DDoc, only the really last declaration will get the post semicolon comment appended
+				if (ret.Count > 0)
+					ret[ret.Count - 1].Description += CheckForPostSemicolonComment();
+
 				return ret.ToArray();
 			}
 
 			// BasicType Declarator FunctionBody
 			else if (firstNode is DMethod && (laKind == In || laKind == Out || laKind == Body || laKind == OpenCurlyBrace))
 			{
+				firstNode.Description += CheckForPostSemicolonComment();
+
 				FunctionBody(firstNode as DMethod);
+
+				firstNode.Description += CheckForPostSemicolonComment();
 
 				return new[]{ firstNode};
 			}
@@ -3238,9 +3253,8 @@ namespace D_Parser.Parser
 
 		BlockStatement BlockStatement(INode ParentNode=null)
 		{
-			//if (String.IsNullOrEmpty(par.Description)) par.Description = GetComments();
-			//var OldPreviousCommentString = PreviousComment;
-			//PreviousComment = "";
+			var OldPreviousCommentString = PreviousComment;
+			PreviousComment = "";
 
 			var bs = new BlockStatement() { StartLocation=la.Location, ParentNode=ParentNode};
 			if (Expect(OpenCurlyBrace))
@@ -3260,7 +3274,7 @@ namespace D_Parser.Parser
 			}
 			bs.EndLocation = t.EndLocation;
 
-			//PreviousComment = OldPreviousCommentString;
+			PreviousComment = OldPreviousCommentString;
 			return bs;
 		}
 		#endregion
@@ -3272,7 +3286,7 @@ namespace D_Parser.Parser
 				SynErr(t.Kind, "union or struct required");
 			Step();
 
-			var ret = new DClassLike(t.Kind) { StartLocation=t.Location};
+			var ret = new DClassLike(t.Kind) { StartLocation = t.Location, Description = GetComments() };
 			ApplyAttributes(ret);
 
 			// Allow anonymous structs&unions
@@ -3309,7 +3323,7 @@ namespace D_Parser.Parser
 		{
 			Expect(Class);
 
-			var dc = new DClassLike(Class) { StartLocation = t.Location };
+			var dc = new DClassLike(Class) { StartLocation = t.Location, Description=GetComments() };
 			ApplyAttributes(dc);
 
 			Expect(Identifier);
@@ -3393,6 +3407,8 @@ namespace D_Parser.Parser
 			}
 
 			PreviousComment = OldPreviousCommentString;
+
+			ret.Description += CheckForPostSemicolonComment();
 		}
 
 		INode Constructor(bool IsStruct)
@@ -3466,8 +3482,8 @@ namespace D_Parser.Parser
 		private IBlockNode InterfaceDeclaration()
 		{
 			Expect(Interface);
-			var dc = new DClassLike();
-			dc.StartLocation = t.Location;
+			var dc = new DClassLike() { StartLocation = t.Location, Description = GetComments() };
+
 			ApplyAttributes(dc);
 
 			Expect(Identifier);
@@ -3507,8 +3523,8 @@ namespace D_Parser.Parser
 			Expect(Enum);
 			var ret = new List<INode>();
 
-			var mye = new DEnum();
-			mye.StartLocation = t.Location;
+			var mye = new DEnum() { StartLocation = t.Location, Description = GetComments() };
+
 			ApplyAttributes(mye);
 
 			if (IsBasicType() && laKind != Identifier)
@@ -3545,7 +3561,9 @@ namespace D_Parser.Parser
 			{
 			another_enumvalue:
 				var enumVar = new DVariable();
+
 				enumVar.AssignFrom(mye);
+
 				enumVar.Attributes.Add(new DAttribute(Enum));
 				if (mye.Type != null)
 					enumVar.Type = mye.Type;
@@ -3575,6 +3593,9 @@ namespace D_Parser.Parser
 			else
 			{
 				Expect(OpenCurlyBrace);
+
+				var OldPreviousComment = PreviousComment;
+				PreviousComment = "";
 				mye.BlockStartLocation = t.Location;
 
 				bool init = true;
@@ -3585,8 +3606,8 @@ namespace D_Parser.Parser
 
 					if (laKind == (CloseCurlyBrace)) break;
 
-					var ev = new DEnumValue();
-					ev.StartLocation = t.Location;
+					var ev = new DEnumValue() { StartLocation = t.Location, Description = GetComments() };
+
 					if (laKind == (Identifier) && (Lexer.CurrentPeekToken.Kind == (Assign) || Lexer.CurrentPeekToken.Kind == (Comma) || Lexer.CurrentPeekToken.Kind == (CloseCurlyBrace)))
 					{
 						Step();
@@ -3606,6 +3627,7 @@ namespace D_Parser.Parser
 					}
 
 					ev.EndLocation = t.EndLocation;
+					ev.Description += CheckForPostSemicolonComment();
 					/*
 					//HACK: If it's an anonymous enum, directly add the enum values to the parent block
 					if (String.IsNullOrEmpty(mye.Name))
@@ -3614,10 +3636,14 @@ namespace D_Parser.Parser
 						mye.Add(ev);
 				}
 				Expect(CloseCurlyBrace);
+				PreviousComment = OldPreviousComment;
+
 				mye.EndLocation = t.EndLocation;
 				if (!String.IsNullOrEmpty(mye.Name))
 					ret.Add(mye);
 			}
+
+			mye.Description += CheckForPostSemicolonComment();
 
 			return ret.ToArray();
 		}
@@ -3686,7 +3712,7 @@ namespace D_Parser.Parser
 			if (isTemplateMixinDecl)
 				Step();
 			Expect(Template);
-			var dc = new DClassLike(Template);
+			var dc = new DClassLike(Template) { Description=GetComments() };
 			ApplyAttributes(dc);
 
 			if (isTemplateMixinDecl)

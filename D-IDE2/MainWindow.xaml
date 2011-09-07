@@ -28,7 +28,7 @@
 		<CommandBinding Command="Search" Executed="SearchAndReplace_Executed" />
 		<CommandBinding Command="Find" Executed="FindNext_Executed" />
 
-		<CommandBinding Command="d:IDEUICommands.ShowProjectSettings" Executed="PrjSettings_Click" />
+		<CommandBinding Command="d:IDEUICommands.ShowProjectSettings" CanExecute="CanOpenProjectSettings" Executed="PrjSettings_Click" />
 	</r:RibbonWindow.CommandBindings>
 	
 	<r:RibbonWindow.InputBindings>

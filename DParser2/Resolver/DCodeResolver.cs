@@ -570,9 +570,13 @@ namespace D_Parser.Resolver
 								matches.AddRange(m);
 
 							var mod=curScope as IAbstractSyntaxTree;
-							if (mod!=null && !string.IsNullOrEmpty(mod.ModuleName) && mod.ModuleName.StartsWith(searchIdentifier))
-								matches.Add(curScope);
-
+							if (mod != null)
+							{
+								var modNameParts = mod.ModuleName.Split('.');
+								if (!string.IsNullOrEmpty(mod.ModuleName) && modNameParts[0] == searchIdentifier)
+									matches.Add(curScope);
+							}
+							
 							curScope = curScope.Parent as IBlockNode;
 						}
 

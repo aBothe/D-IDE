@@ -107,7 +107,9 @@ namespace D_IDE.D
 			{
 				alreadyAddedModuleNameParts.Clear();
 
-				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset - 1, caretLocation, curBlock, codeCache);
+				var imports = DCodeResolver.ResolveImports(curBlock.NodeRoot as DModule, codeCache);
+
+				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset - 1, caretLocation, curBlock, imports);
 
 				if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
@@ -129,6 +131,7 @@ namespace D_IDE.D
 
 				// Add module name stubs of importable modules
 				var nameStubs = new Dictionary<string, string>();
+				var availModules = new List<IAbstractSyntaxTree>();
 				foreach (var mod in codeCache)
 				{
 					if (string.IsNullOrEmpty(mod.ModuleName))
@@ -136,12 +139,20 @@ namespace D_IDE.D
 
 					var parts = mod.ModuleName.Split('.');
 
-					if (!nameStubs.ContainsKey(parts[0]))
-						nameStubs.Add(parts[0], GetModulePath(mod.FileName, parts.Length, 1));
+					if (!nameStubs.ContainsKey(parts[0]) && !availModules.Contains(mod))
+					{
+						if (parts[0] == mod.ModuleName)
+							availModules.Add(mod);
+						else
+							nameStubs.Add(parts[0], GetModulePath(mod.FileName, parts.Length, 1));
+					}
 				}
 
 				foreach (var kv in nameStubs)
-					l.Add(new NamespaceCompletionData(kv.Key, kv.Value));
+					l.Add(new NamespaceCompletionData(kv.Key) { ExplicitModulePath = kv.Value });
+
+				foreach (var mod in availModules)
+					l.Add(new NamespaceCompletionData(mod.ModuleName, mod));
 			}
 
 			// Add all found items to the referenced list
@@ -182,7 +193,7 @@ namespace D_IDE.D
 								isVariableInstance : true, rr); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
 
 				if (resultParent == null)
-					StaticPropertyAddition.AddGenericProperties(rr, l, DontAddInitProperty: mrr.MemberBaseTypes != null);
+					StaticPropertyAddition.AddGenericProperties(rr, l, mrr.ResolvedMember, DontAddInitProperty: mrr.MemberBaseTypes != null);
 			}
 			#endregion
 
@@ -602,7 +613,7 @@ namespace D_IDE.D
 
 					alreadyAddedModuleNames.Add(packageDir);
 
-					l.Add(new NamespaceCompletionData(modNameParts[tr.AlreadyTypedModuleNameParts], packageDir));
+					l.Add(new NamespaceCompletionData(modNameParts[tr.AlreadyTypedModuleNameParts]) { ExplicitModulePath = packageDir });
 				}
 				else
 					l.Add(new NamespaceCompletionData(modNameParts[modNameParts.Length - 1], tr.ResolvedModule));
@@ -716,18 +727,33 @@ namespace D_IDE.D
 				//TODO: Build well-formatted tool tip string / Do a better tool tip layout
 				if (rr.Length < 1)
 					return;
-				if (rr.Length == 1)
-					ToolTipRequest.ToolTipContent = CompletionDataHelper.CreateToolTipContent((rr[0] is ModuleResult ? (rr[0] as ModuleResult).ResolvedModule.FileName : rr[0].ToString()));
-				else
-				{
-					var vertStack = new StackPanel() { Orientation = Orientation.Vertical };
-					foreach (var res in rr)
-					{
-						vertStack.Children.Add(CompletionDataHelper.CreateToolTipContent((rr[0] is ModuleResult ? (rr[0] as ModuleResult).ResolvedModule.FileName : rr[0].ToString())) as UIElement);
-					}
 
-					ToolTipRequest.ToolTipContent = vertStack;
+				var vertStack = new StackPanel() { Orientation = Orientation.Vertical };
+				string lastDescription = "";
+				foreach (var res in rr)
+				{
+					var modRes = res as ModuleResult;
+					var memRes = res as MemberResult;
+					var typRes = res as TypeResult;
+
+					// Only show one description for items sharing descriptions
+					string description = "";
+
+					if (modRes != null)
+						description = modRes.ResolvedModule.Description;
+					else if (memRes != null)
+						description = memRes.ResolvedMember.Description;
+					else if (typRes != null)
+						description = typRes.ResolvedTypeDefinition.Description;
+
+					vertStack.Children.Add(
+						CompletionDataHelper.CreateToolTipContent(
+						(res is ModuleResult ? (res as ModuleResult).ResolvedModule.FileName : res.ToString()),
+						lastDescription== description?null:description )
+						as UIElement);
 				}
+
+				ToolTipRequest.ToolTipContent = vertStack;
 			}
 			catch { }
 		}
@@ -751,7 +777,8 @@ namespace D_IDE.D
 			{
 				// Add all parsed global modules that belong to the project's compiler configuration
 				foreach (var astColl in Project.CompilerConfiguration.ASTCache)
-					ret.AddRange(astColl);
+					if(astColl.Count>0)
+						ret.AddRange(astColl);
 
 				// Add all modules that exist in the current solution.
 				if (Project.Solution != null)
@@ -904,21 +931,13 @@ namespace D_IDE.D
 	public class NamespaceCompletionData : ICompletionData
 	{
 		public string ModuleName { get; private set; }
+		public string ExplicitModulePath { get; set; }
 		public IAbstractSyntaxTree AssociatedModule { get; private set; }
-		public string _desc;
 
-		public NamespaceCompletionData(string ModuleName, IAbstractSyntaxTree AssocModule)
+		public NamespaceCompletionData(string ModuleName, IAbstractSyntaxTree AssocModule=null)
 		{
 			this.ModuleName = ModuleName;
 			AssociatedModule = AssocModule;
-
-			Init();
-		}
-
-		public NamespaceCompletionData(string ModuleName, string Description)
-		{
-			this.ModuleName = ModuleName;
-			_desc = Description;
 
 			Init();
 		}
@@ -927,7 +946,20 @@ namespace D_IDE.D
 		{
 			bool IsPackage = AssociatedModule == null;
 
-			Description = CompletionDataHelper.CreateToolTipContent(IsPackage ? ModuleName : AssociatedModule.ModuleName, (IsPackage ? "(Package)" : "(Module)") + " " + (!string.IsNullOrEmpty(_desc) ? _desc : (AssociatedModule != null ? AssociatedModule.FileName : null)));
+			var descString=(IsPackage ? "(Package)" : "(Module)");
+
+			if (!string.IsNullOrWhiteSpace(ExplicitModulePath))
+				descString += ExplicitModulePath;
+			else if (AssociatedModule != null)
+			{
+				descString +=" "+ AssociatedModule.FileName;
+
+				if (AssociatedModule.Description != null)
+					descString += "\r\n" + AssociatedModule.Description;
+			}
+
+			Description = CompletionDataHelper.CreateToolTipContent(
+				IsPackage ? ModuleName : AssociatedModule.ModuleName, descString);
 		}
 
 		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
@@ -1129,6 +1161,9 @@ namespace D_IDE.D
 							return DCodeCompletionSupport.Instance.GetNodeImage("literal");
 
 						var realParent = n.Parent as DNode;
+
+						if (n.Parent is IAbstractSyntaxTree && !(n as DVariable).IsAlias)
+							return DCodeCompletionSupport.Instance.GetNodeImage("field");
 
 						if (realParent == null)
 							return DCodeCompletionSupport.Instance.GetNodeImage("local");

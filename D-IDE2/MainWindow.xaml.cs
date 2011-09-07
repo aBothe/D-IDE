@@ -218,19 +218,22 @@ namespace D_IDE
 
 			try
 			{
-				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
-				// Exclude this call in develop (debug) time
-				if (//!System.Diagnostics.Debugger.IsAttached&&
-					File.Exists(layoutFile))
+				Dispatcher.BeginInvoke(new Action(() =>
 				{
-					var fcontent = File.ReadAllText(layoutFile);
-					if (!string.IsNullOrWhiteSpace(fcontent))
+					var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
+					// Exclude this call in develop (debug) time
+					if (//!System.Diagnostics.Debugger.IsAttached&&
+						File.Exists(layoutFile))
 					{
-						var s = new StringReader(fcontent);
-						DockMgr.RestoreLayout(s);
-						s.Close();
+						var fcontent = File.ReadAllText(layoutFile);
+						if (!string.IsNullOrWhiteSpace(fcontent))
+						{
+							var s = new StringReader(fcontent);
+							DockMgr.RestoreLayout(s);
+							s.Close();
+						}
 					}
-				}
+				}));
 			}
 			catch { }
 
@@ -633,6 +636,11 @@ namespace D_IDE
 		{
 			if (IDEManager.Instance.CurrentEditor != null)
 				IDEManager.ProjectManagement.ShowProjectPropertiesDialog(IDEManager.Instance.CurrentEditor.Project);
+		}
+
+		private void CanOpenProjectSettings(object sender, CanExecuteRoutedEventArgs e)
+		{
+			e.CanExecute = IDEManager.Instance.CurrentEditor != null && IDEManager.Instance.CurrentEditor.HasProject;
 		}
 
 		private void RibbonWindow_Loaded(object sender, RoutedEventArgs e)
