@@ -1176,13 +1176,13 @@ namespace D_IDE.D
 	{
 		public static object CreateToolTipContent(string Head, string Description = null)
 		{
-			var nodeLabel = new Label() { Content = Head, FontWeight = FontWeights.DemiBold, Padding = new Thickness(0) };
+			var nodeLabel = new TextBlock() { Text = Head, Foreground=Brushes.Black, FontWeight = FontWeights.DemiBold, Padding = new Thickness(0) };
 
 			if (string.IsNullOrWhiteSpace(Description))
 				return nodeLabel;
 			else
 			{
-				var descLabel = new Label() { Content = Description, Padding = new Thickness(0) };
+				var descLabel = new TextBlock() { Text = Description, Padding = new Thickness(0) };
 
 				var vertSplitter = new StackPanel() { Orientation = Orientation.Vertical };
 				vertSplitter.Children.Add(nodeLabel);
