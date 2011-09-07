@@ -107,7 +107,7 @@ namespace D_IDE.D
 			{
 				alreadyAddedModuleNameParts.Clear();
 
-				var imports = DCodeResolver.ResolveImports(curBlock.NodeRoot as DModule, codeCache);
+				var imports = codeCache;
 
 				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset - 1, caretLocation, curBlock, imports);
 

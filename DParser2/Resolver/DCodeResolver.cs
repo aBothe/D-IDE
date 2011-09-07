@@ -506,17 +506,20 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		public static ResolveResult[] ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache)
+		public static ResolveResult[] ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache, IEnumerable<IAbstractSyntaxTree> importCache=null)
 		{
 			if (declaration == null)
 				return null;
+
+			if (importCache == null)
+				importCache = DCodeResolver.ResolveImports(currentlyScopedNode.NodeRoot as DModule, parseCache);
 
 			var returnedResults = new List<ResolveResult>();
 
 			// Walk down recursively to resolve everything from the very first to declaration's base type declaration.
 			ResolveResult[] rbases = null;
 			if (declaration.InnerDeclaration != null)
-				rbases = ResolveType(declaration.InnerDeclaration, currentlyScopedNode, parseCache);
+				rbases = ResolveType(declaration.InnerDeclaration, currentlyScopedNode, parseCache, importCache);
 
 			/* 
 			 * If there is no parent resolve context (what usually means we are searching the type named like the first identifier in the entire declaration),
@@ -545,7 +548,7 @@ namespace D_Parser.Resolver
 					// References super type of currently scoped class declaration
 					else if (searchToken == DTokens.Super)
 					{
-						var baseClassDefs = ResolveBaseClass(currentlyScopedNode as DClassLike, parseCache);
+						var baseClassDefs = ResolveBaseClass(currentlyScopedNode as DClassLike, importCache);
 
 						if (baseClassDefs != null)
 							returnedResults.AddRange(baseClassDefs);
@@ -564,7 +567,7 @@ namespace D_Parser.Resolver
 						var curScope = currentlyScopedNode;
 						while (curScope != null)
 						{
-							var m = ScanNodeForIdentifier(curScope, searchIdentifier, parseCache);
+							var m = ScanNodeForIdentifier(curScope, searchIdentifier, importCache);
 
 							if (m != null)
 								matches.AddRange(m);
@@ -592,7 +595,11 @@ namespace D_Parser.Resolver
 
 								if (modNameParts[0] == searchIdentifier)
 									matches.Add(mod);
+							}
 
+						if (importCache != null)
+							foreach(var mod in importCache)
+							{
 								var m = ScanNodeForIdentifier(mod, searchIdentifier, null);
 								if (m != null)
 									matches.AddRange(m);
@@ -638,8 +645,8 @@ namespace D_Parser.Resolver
 								else if (scanResult is TypeResult)
 								{
 									var results = HandleNodeMatches(
-										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, parseCache),
-										currentlyScopedNode, parseCache, rbase);
+										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, importCache),
+										currentlyScopedNode, importCache, rbase);
 									if (results != null)
 										returnedResults.AddRange(results);
 								}
@@ -664,8 +671,8 @@ namespace D_Parser.Resolver
 									else
 									{
 										var results = HandleNodeMatches(
-										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, parseCache),
-										currentlyScopedNode, parseCache, rbase);
+										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, importCache),
+										currentlyScopedNode, importCache, rbase);
 										if (results != null)
 											returnedResults.AddRange(results);
 									}
