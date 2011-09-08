@@ -40,6 +40,14 @@ namespace D_Parser.Dom
             return DAttribute.ContainsAttribute(Attributes, Token);
         }
 
+		public bool ContainsPropertyAttribute(string prop="property")
+		{
+			foreach (var attr in Attributes)
+				if (attr.IsProperty && attr.LiteralContent is string && attr.LiteralContent.ToString() == prop)
+					return true;
+			return false;
+		}
+
         public DNode()
         {
         }

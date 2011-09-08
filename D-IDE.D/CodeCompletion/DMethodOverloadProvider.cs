@@ -12,11 +12,15 @@ namespace D_IDE.D.CodeCompletion
 	{
 		public static DMethodOverloadProvider Create(DEditorDocument doc)
 		{
+			if (!(doc.lastSelectedBlock is D_Parser.Dom.DMethod))
+				return null;
+
 			try
 			{
+				
 				var imports = DCodeResolver.ResolveImports(doc.SyntaxTree, DCodeCompletionSupport.EnumAvailableModules(doc));
 
-				var argsResult = DResolver.ResolveArgumentContext(doc.Editor.Text, doc.Editor.CaretOffset, doc.CaretLocation, doc.lastSelectedBlock, imports);
+				var argsResult = DResolver.ResolveArgumentContext(doc.Editor.Text, doc.Editor.CaretOffset, doc.CaretLocation, doc.lastSelectedBlock as D_Parser.Dom.DMethod, imports);
 
 				if (argsResult == null || argsResult.ResolvedTypesOrMethods == null || argsResult.ResolvedTypesOrMethods.Length < 1)
 					return null;

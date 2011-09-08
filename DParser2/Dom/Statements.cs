@@ -17,6 +17,11 @@ namespace D_Parser.Dom.Statements
 		string ToCode();
 	}
 
+	public interface IExpressionContainingStatement : IStatement
+	{
+		IExpression[] SubExpressions { get; }
+	}
+
 	public abstract class AbstractStatement:IStatement
 	{
 		public virtual CodeLocation StartLocation { get; set; }
@@ -54,6 +59,8 @@ namespace D_Parser.Dom.Statements
 	public abstract class ScopingStatement : AbstractStatement
 	{
 		public virtual IStatement ScopedStatement { get; set; }
+
+		public virtual IStatement[] SubStatements { get { return new[] { ScopedStatement }; } }
 	}
 	#endregion
 
@@ -176,14 +183,20 @@ namespace D_Parser.Dom.Statements
 				}
 				else if (s is ScopingStatement)
 				{
-					var s2 = (s as ScopingStatement).ScopedStatement;
+					bool foundMatch = false;
+					foreach(var s2 in (s as ScopingStatement).SubStatements)
+						if (s2 != null && Where >= s2.StartLocation && Where <= s2.EndLocation)
+						{
+							s = s2;
+							foundMatch = true;
+							break;
+						}
 
-					if (s2 != null && Where >= s2.StartLocation && Where <= s2.EndLocation)
-						s = s2;
-					else 
+					if (!foundMatch)
 						break;
 				}
-				else break;
+				else 
+					break;
 			}
 
 			return s;
@@ -228,6 +241,16 @@ namespace D_Parser.Dom.Statements
 		}
 		public IStatement ElseStatement;
 
+		public override IStatement[] SubStatements
+		{
+			get
+			{
+				if (ThenStatement != null && ElseStatement != null)
+					return new[] { ThenStatement, ElseStatement };
+				return new[] { ThenStatement };
+			}
+		}
+
 		public override CodeLocation EndLocation
 		{
 			get
@@ -260,9 +283,16 @@ namespace D_Parser.Dom.Statements
 
 			return ret;
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get {
+				return new[] { IfCondition };
+			}
+		}
 	}
 
-	public class WhileStatement : ScopingStatement
+	public class WhileStatement : ScopingStatement, IExpressionContainingStatement
 	{
 		public IExpression Condition;
 
@@ -295,13 +325,31 @@ namespace D_Parser.Dom.Statements
 
 			return ret;
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{Condition}; }
+		}
 	}
 
-	public class ForStatement : ScopingStatement
+	public class ForStatement : ScopingStatement, IExpressionContainingStatement
 	{
 		public IStatement Initialize;
 		public IExpression Test;
 		public IExpression Increment;
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[] { Test,Increment }; }
+		}
+
+		public override IStatement[] SubStatements
+		{
+			get
+			{
+				return new[]{Initialize, ScopedStatement};
+			}
+		}
 
 		public override string ToCode()
 		{
@@ -329,7 +377,7 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class ForeachStatement : ScopingStatement
+	public class ForeachStatement : ScopingStatement, IExpressionContainingStatement
 	{
 		public bool IsRangeStatement
 		{
@@ -343,6 +391,11 @@ namespace D_Parser.Dom.Statements
 		/// Used in ForeachRangeStatements. The Aggregate field will be the lower expression then.
 		/// </summary>
 		public IExpression UpperAggregate;
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{ Aggregate, UpperAggregate }; }
+		}
 
 		public override string ToCode()
 		{
@@ -651,7 +704,15 @@ namespace D_Parser.Dom.Statements
 	{
 		public IStatement ElseStatement;
 
-		
+		public override IStatement[] SubStatements
+		{
+			get
+			{
+				if (ScopedStatement != null && ElseStatement != null)
+					return new[] { ScopedStatement, ElseStatement };
+				return new[] { ScopedStatement };
+			}
+		}
 
 		public class DebugStatement : ConditionStatement
 		{

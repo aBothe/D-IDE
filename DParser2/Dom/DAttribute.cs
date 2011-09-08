@@ -28,10 +28,11 @@ namespace D_Parser.Dom
 
         public new string ToString()
         {
+			if (Token == DTokens.PropertyAttribute)
+				return "@" + LiteralContent.ToString();
             if (LiteralContent != null)
                 return DTokens.GetTokenString(Token) + "(" + LiteralContent.ToString() + ")";
-            else
-                return DTokens.GetTokenString(Token);
+			return DTokens.GetTokenString(Token);
         }
 
 		/// <summary>
@@ -121,5 +122,10 @@ namespace D_Parser.Dom
                 return DTokens.StorageClass[Token];
             }
         }
+
+		public bool IsProperty
+		{
+			get { return Token == DTokens.PropertyAttribute; }
+		}
     }
 }

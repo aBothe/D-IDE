@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using D_Parser.Parser;
+using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Dom
 {
@@ -106,6 +107,9 @@ namespace D_Parser.Dom
 		/// Integer by default.
 		/// </summary>
         public ITypeDeclaration KeyType=new DTokenDeclaration(DTokens.Int);
+
+		public IExpression KeyExpression;
+
 		/// <summary>
 		/// Alias for InnerDeclaration; contains all declaration parts that are located in front of the square brackets.
 		/// </summary>
@@ -119,7 +123,10 @@ namespace D_Parser.Dom
 
 		public override string ToString(bool IncludesBase)
         {
-            return (IncludesBase&& ValueType != null ? ValueType.ToString() : "")+ "["+(KeyType != null ? KeyType.ToString() : "")+"]";
+            return (IncludesBase&& ValueType != null ? ValueType.ToString() : "")+ "["+(
+				KeyExpression!=null? KeyExpression.ToString(): 
+					(KeyType != null ? KeyType.ToString() : ""))+
+				"]";
         }
     }
 

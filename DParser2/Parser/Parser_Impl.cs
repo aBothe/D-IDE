@@ -468,15 +468,16 @@ namespace D_Parser.Parser
 		bool CheckForStorageClasses()
 		{
 			bool ret = false;
-			while (IsStorageClass || Attributes[laKind])
+			while (IsStorageClass || laKind==PropertyAttribute)
 			{
 				if (IsAttributeSpecifier()) // extern, align
 					AttributeSpecifier();
 				else
 				{
 					Step();
-					if (!DAttribute.ContainsAttribute(DeclarationAttributes.ToArray(), t.Kind))
-						PushAttribute(new DAttribute(t.Kind), false);
+					// Always allow more than only one property attribute
+					if (t.Kind==PropertyAttribute || !DAttribute.ContainsAttribute(DeclarationAttributes.ToArray(), t.Kind))
+						PushAttribute(new DAttribute(t.Kind,t.Value), false);
 				}
 				ret = true;
 			}
@@ -486,7 +487,7 @@ namespace D_Parser.Parser
 		bool CheckForModifiers()
 		{
 			bool ret = false;
-			while (Modifiers[laKind] || Attributes[laKind])
+			while (Modifiers[laKind] || laKind==PropertyAttribute)
 			{
 				if (IsAttributeSpecifier()) // extern, align
 					AttributeSpecifier();
@@ -763,9 +764,19 @@ namespace D_Parser.Parser
 				// [ Type ]
 				if (!IsAssignExpression())
 				{
-					cd = new ArrayDecl() { KeyType=Type()};
+					var la_backup = la;
+					bool weaktype = AllowWeakTypeParsing;
+					AllowWeakTypeParsing = true;
+					var keyType = Type();
+					AllowWeakTypeParsing = weaktype;
+
+					if (keyType != null && laKind == CloseSquareBracket)
+						cd = new ArrayDecl() { KeyType = keyType };
+					else
+						la = la_backup;
 				}
-				else
+				
+				if(cd==null)
 				{
 					var fromExpression = AssignExpression();
 
@@ -773,10 +784,10 @@ namespace D_Parser.Parser
 					if (laKind == DoubleDot)
 					{
 						Step();
-						cd = new DExpressionDecl(new PostfixExpression_Slice() { FromExpression=fromExpression, ToExpression=AssignExpression()});
+						cd = new ArrayDecl() {KeyExpression= new PostfixExpression_Slice() { FromExpression=fromExpression, ToExpression=AssignExpression()} };
 					}
 					else
-						cd = new DExpressionDecl(new PostfixExpression_Index() { Arguments=new[]{fromExpression}});
+						cd = new ArrayDecl() { KeyExpression=fromExpression };
 				}
 
 				if (AllowWeakTypeParsing && laKind != CloseSquareBracket)
@@ -880,7 +891,8 @@ namespace D_Parser.Parser
 						{
 							ITemplateParameter[] _unused2 = null;
 							List<INode> _unused = null;
-							ttd = DeclaratorSuffixes(out _unused2, out _unused);
+							List<DAttribute> _unused3 = new List<DAttribute>();
+							ttd = DeclaratorSuffixes(out _unused2, out _unused, _unused3);
 
 							if (ttd != null)
 							{
@@ -903,11 +915,12 @@ namespace D_Parser.Parser
 					ret.Name = t.Value;
 			}
 
-			if (IsDeclaratorSuffix)
+			if (IsDeclaratorSuffix || MemberFunctionAttribute[laKind])
 			{
 				// DeclaratorSuffixes
 				List<INode> _Parameters;
-				ttd = DeclaratorSuffixes(out (ret as DNode).TemplateParameters, out _Parameters);
+				List<DAttribute> attrs;
+				ttd = DeclaratorSuffixes(out (ret as DNode).TemplateParameters, out _Parameters, ret.Attributes);
 				if (ttd != null)
 				{
 					ttd.InnerDeclaration = ret.Type;
@@ -941,11 +954,17 @@ namespace D_Parser.Parser
 		/// 
 		/// TemplateParameterList[opt] Parameters MemberFunctionAttributes[opt]
 		/// </summary>
-		ITypeDeclaration DeclaratorSuffixes(out ITemplateParameter[] TemplateParameters, out List<INode> _Parameters)
+		ITypeDeclaration DeclaratorSuffixes(out ITemplateParameter[] TemplateParameters, out List<INode> _Parameters, List<DAttribute> _Attributes)
 		{
 			ITypeDeclaration td = null;
 			TemplateParameters = null;
 			_Parameters = null;
+
+			while (MemberFunctionAttribute[laKind])
+			{
+				_Attributes.Add(new DAttribute(laKind, la.Value));
+				Step();
+			}
 
 			while (laKind == (OpenSquareBracket))
 			{
@@ -954,14 +973,15 @@ namespace D_Parser.Parser
 				ad.InnerDeclaration = td;
 				if (laKind != (CloseSquareBracket))
 				{
+					ITypeDeclaration keyType=null;
 					if (!IsAssignExpression())
 					{
 						AllowWeakTypeParsing = true;
-						ad.KeyType = Type();
+						keyType= ad.KeyType = Type();
 						AllowWeakTypeParsing = false;
 					}
-					if (ad.KeyType==null)
-						ad.KeyType = new DExpressionDecl(AssignExpression());
+					if (keyType==null)
+						ad.KeyExpression = AssignExpression();
 				}
 				Expect(CloseSquareBracket);
 				td = ad;
@@ -976,10 +996,16 @@ namespace D_Parser.Parser
 				_Parameters = Parameters(null);
 
 				//TODO: MemberFunctionAttributes -- add them to the declaration
-				while (StorageClass[laKind] || Attributes[laKind])
+				while (StorageClass[laKind] || laKind==PropertyAttribute)
 				{
 					Step();
 				}
+			}
+
+			while (MemberFunctionAttribute[laKind])
+			{
+				_Attributes.Add(new DAttribute(laKind,la.Value));
+				Step();
 			}
 			return td;
 		}
@@ -1075,7 +1101,8 @@ namespace D_Parser.Parser
 				{
 					List<INode> _unused = null;
 					ITemplateParameter[] _unused2 = null;
-					DeclaratorSuffixes(out _unused2, out _unused);
+					List<DAttribute> _unused3 = new List<DAttribute>();
+					DeclaratorSuffixes(out _unused2, out _unused,_unused3);
 				}
 				return td;
 			}
@@ -1374,7 +1401,7 @@ namespace D_Parser.Parser
 			return (laKind == (Extern) || laKind == (Export) || laKind == (Align) || laKind == Pragma || laKind == (Deprecated) || IsProtectionAttribute()
 				|| laKind == (Static) || laKind == (Final) || laKind == (Override) || laKind == (Abstract) || laKind == (Scope) || laKind == (__gshared)
 				|| ((laKind == (Auto) || MemberFunctionAttribute[laKind]) && (Lexer.CurrentPeekToken.Kind != (OpenParenthesis) && Lexer.CurrentPeekToken.Kind != (Identifier)))
-				|| Attributes[laKind]);
+				|| laKind==PropertyAttribute);
 		}
 
 		bool IsProtectionAttribute()
@@ -1384,7 +1411,7 @@ namespace D_Parser.Parser
 
 		private void AttributeSpecifier()
 		{
-			var attr = new DAttribute(laKind);
+			var attr = new DAttribute(laKind,la.Value);
 			if (laKind == (Extern) && Lexer.CurrentPeekToken.Kind == (OpenParenthesis))
 			{
 				Step(); // Skip extern
@@ -3231,7 +3258,7 @@ namespace D_Parser.Parser
 			else if (laKind == Import)
 				ImportDeclaration();
 
-			else if (!(ClassLike[laKind] || laKind == Enum || Modifiers[laKind] || Attributes[laKind] || laKind == Alias || laKind == Typedef) && IsAssignExpression())
+			else if (!(ClassLike[laKind] || laKind == Enum || Modifiers[laKind] || laKind==PropertyAttribute || laKind == Alias || laKind == Typedef) && IsAssignExpression())
 			{
 				var s = new ExpressionStatement() { StartLocation = la.Location };
 				// a==b, a=9; is possible -> Expressions can be there, not only single AssignExpressions!
@@ -3272,7 +3299,8 @@ namespace D_Parser.Parser
 					}
 				Expect(CloseCurlyBrace);
 			}
-			bs.EndLocation = t.EndLocation;
+			if(t!=null)
+				bs.EndLocation = t.EndLocation;
 
 			PreviousComment = OldPreviousCommentString;
 			return bs;

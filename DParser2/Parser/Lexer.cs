@@ -460,12 +460,8 @@ namespace D_Parser.Parser
 							{
 								bool canBeKeyword;
 								string ident = ReadIdent(ch, out canBeKeyword);
-								int tkind = DTokens.GetTokenID("@" + ident);
-								/* 
-								 * Simply skip all so-called attributes here - there are way to much to enumerate all of them - so just leave them out
-								*/
-								//continue;
-								token = new DToken(tkind < 0 ? DTokens.Identifier : tkind, x - 1, y, (tkind < 0 ? "" : "@") + ident);
+
+								token = new DToken(DTokens.PropertyAttribute, x - 1, y, ident);
 							}
 							else
 							{

@@ -169,9 +169,9 @@ namespace D_Parser.Parser
         public const int Abstract = 153;
         public const int Alias = 154;
         public const int PropertyAttribute = 155;
-        public const int DisabledAttribute = 156;
-        public const int SafeAttribute = 157;
-        public const int SystemAttribute = 158;
+        public const int empty2 = 156;
+        public const int empty3 = 157;
+        public const int empty4 = 158;
 
         // Additional operators
         public const int PowAssign = 159; // ^^=
@@ -189,7 +189,7 @@ namespace D_Parser.Parser
 
         public const int TripleDot = 171; // ...
 
-        public const int TrustedAttribute = 172; // @trusted
+        public const int empty5 = 172; // @trusted
         public const int __FILE__ = 173;
         public const int __LINE__ = 174;
         public const int __EOF__ = 175;
@@ -211,11 +211,11 @@ namespace D_Parser.Parser
             {__thread,	    "__thread"},
             {__traits,	    "__traits"},
 
-            {PropertyAttribute,"@property"},
+            /*{PropertyAttribute,"@property"},
             {DisabledAttribute,	        "@disabled"},
             {SafeAttribute,            "@safe"},
             {SystemAttribute,            "@system"},
-            {TrustedAttribute,            "@trusted"},
+            {TrustedAttribute,            "@trusted"},*/
             {__LINE__,"__LINE__"},
             {__FILE__,"__FILE__"},
             {__EOF__,"__EOF__"},
@@ -340,8 +340,8 @@ namespace D_Parser.Parser
     {With,	"with"}
         };
 
-        public static BitArray FunctionAttribute = NewSet(Pure, Nothrow, PropertyAttribute, DisabledAttribute, SafeAttribute, SystemAttribute, TrustedAttribute);
-        public static BitArray MemberFunctionAttribute = NewSet(Const, Immutable, Shared, InOut, Pure, Nothrow);
+        public static BitArray FunctionAttribute = NewSet(Pure, Nothrow, PropertyAttribute/*, DisabledAttribute, SafeAttribute, SystemAttribute, TrustedAttribute*/);
+        public static BitArray MemberFunctionAttribute = NewSet(Const, Immutable, Shared, InOut, Pure, Nothrow, PropertyAttribute);
         public static BitArray ParamModifiers = NewSet(In, Out, InOut, Ref, Lazy, Scope);
         public static BitArray ClassLike = NewSet(Class, Template, Interface, Struct, Union);
         public static BitArray BasicTypes = NewSet(Bool, Byte, Ubyte, Short, Ushort, Int, Uint, Long, Ulong, Char, Wchar, Dchar, Float, Double, Real, Ifloat, Idouble, Ireal, Cfloat, Cdouble, Creal, Void);
@@ -413,13 +413,6 @@ namespace D_Parser.Parser
             Lazy,
             Nothrow
             );
-        public static BitArray Attributes = NewSet(
-            PropertyAttribute,
-            DisabledAttribute,
-            SafeAttribute,
-            SystemAttribute,
-            TrustedAttribute
-            );
         public static BitArray StorageClass = NewSet(
             Abstract
             ,Auto
@@ -448,7 +441,7 @@ namespace D_Parser.Parser
             var r=DAttribute.Empty;
             foreach (var attr in mods)
             {
-                if (attr.IsStorageClass && !Attributes[attr.Token])
+                if (attr.IsStorageClass || attr.IsProperty)
                     r = attr;
             }
             return r;

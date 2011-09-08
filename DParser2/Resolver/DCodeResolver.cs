@@ -1082,20 +1082,48 @@ namespace D_Parser.Resolver
 			public int CurrentlyTypedArgument;
 		}
 
-		public static ArgumentsResolutionResult ResolveArgumentContext(string code, int caret, CodeLocation caretLocation, IBlockNode currentlyScopedBlock, IEnumerable<IAbstractSyntaxTree> parseCache)
+		public static ArgumentsResolutionResult ResolveArgumentContext(
+			string code, 
+			int caretOffset, 
+			CodeLocation caretLocation, 
+			DMethod MethodScope, 
+			IEnumerable<IAbstractSyntaxTree> parseCache)
 		{
 			// First step: Search the method's call start offset
 
-			int startOffset = ReverseParsing.SearchExpressionStart(code,caret-1);
+			int startOffset = ReverseParsing.SearchExpressionStart(code,caretOffset-1);
 
 			if (startOffset < 0)
 				return null;
+
+			IStatement curStmt = null;
+			
+			#region Parse the code between the last block opener and the caret
+
+			var curMethodBody = MethodScope.GetSubBlockAt(caretLocation);
+
+			var blockOpenerLocation = curMethodBody.StartLocation;
+			var blockOpenerOffset = blockOpenerLocation.Line <= 0 ? blockOpenerLocation.Column :
+				DocumentHelper.LocationToOffset(code, blockOpenerLocation);
+
+			if (blockOpenerOffset >= 0 && caretOffset - blockOpenerOffset > 0)
+			{
+				var codeToParse = code.Substring(blockOpenerOffset, caretOffset - blockOpenerOffset);
+
+				curMethodBody = DParser.ParseBlockStatement(codeToParse, blockOpenerLocation, MethodScope);
+
+				curStmt = curMethodBody.SearchStatementDeeply(caretLocation);
+			}
+
+			if (curStmt == null)
+				return null;
+			#endregion
 
 			// Check if it's a method declaration - return null if so
 			//if (IsTypeIdentifier(code, startOffset-1))	return null;
 
 			// Parse the expression
-			var e = DParser.ParseExpression(code.Substring(startOffset,caret-startOffset));
+			var e = DParser.ParseExpression(code.Substring(startOffset,caretOffset-startOffset));
 
 			/*
 			 * There are at least 3 possibilities here:
@@ -1144,9 +1172,14 @@ namespace D_Parser.Resolver
 				return null;
 
 			// Resolve all types, methods etc. which belong to the methodIdentifier
-			res.ResolvedTypesOrMethods = ResolveType(methodIdentifier, currentlyScopedBlock, parseCache);
+			res.ResolvedTypesOrMethods = ResolveType(methodIdentifier, MethodScope, parseCache);
 
 			return res;
+		}
+
+		public static IExpression SearchForMethodCallsOrTemplateInstances(IStatement stmt, CodeLocation Caret)
+		{
+			return null;
 		}
 	}
 
@@ -1332,6 +1365,26 @@ namespace D_Parser.Resolver
 			}
 
 			return new CodeLocation(col, line);
+		}
+
+		public static int LocationToOffset(string Text, CodeLocation Location)
+		{
+			int line = 1;
+			int col = 1;
+
+			int i = 0;
+			for (; i<Text.Length && !(line>Location.Line && col>Location.Column); i++)
+			{
+				col++;
+
+				if (Text[i] == '\n')
+				{
+					line++;
+					col = 1;
+				}
+			}
+
+			return i;
 		}
 	}
 }

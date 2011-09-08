@@ -176,7 +176,7 @@ namespace D_Parser.Parser
 				if (DTokens.VisModifiers[attr.Token])
 					DAttribute.CleanupAccessorAttributes(n.Attributes);
 
-                if (!DAttribute.ContainsAttribute(n.Attributes.ToArray(),attr.Token))
+                if (attr.IsProperty || !DAttribute.ContainsAttribute(n.Attributes.ToArray(),attr.Token))
                     n.Attributes.Add(attr);
             }
         }

@@ -1123,7 +1123,7 @@ namespace D_IDE.D
 					else if (n is DMethod)
 					{
 						//TODO: Getter or setter functions should be declared as a >single< property only
-						if (n.ContainsAttribute(DTokens.PropertyAttribute))
+						if (n.ContainsPropertyAttribute())
 						{
 							if (n.ContainsAttribute(DTokens.Package))
 								return DCodeCompletionSupport.Instance.GetNodeImage("property_internal");
@@ -1146,6 +1146,17 @@ namespace D_IDE.D
 						return DCodeCompletionSupport.Instance.GetNodeImage("literal");
 					else if (n is DVariable)
 					{
+						if (n.ContainsPropertyAttribute())
+						{
+							if (n.ContainsAttribute(DTokens.Package))
+								return DCodeCompletionSupport.Instance.GetNodeImage("property_internal");
+							else if (n.ContainsAttribute(DTokens.Protected))
+								return DCodeCompletionSupport.Instance.GetNodeImage("property_protected");
+							else if (n.ContainsAttribute(DTokens.Private))
+								return DCodeCompletionSupport.Instance.GetNodeImage("property_private");
+							return DCodeCompletionSupport.Instance.GetNodeImage("property");
+						}
+
 						if (n.Type is DelegateDeclaration)
 						{
 							if (n.ContainsAttribute(DTokens.Package))
