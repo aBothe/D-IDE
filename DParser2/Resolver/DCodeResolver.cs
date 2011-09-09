@@ -1079,7 +1079,8 @@ namespace D_Parser.Resolver
 			///	Identifies the currently called method overload. Is an index related to <see cref="ResolvedTypesOrMethods"/>
 			/// </summary>
 			public int CurrentlyCalledMethod;
-			public int CurrentlyTypedArgument;
+			public IExpression CurrentlyTypedArgument;
+			public int CurrentlyTypedArgumentIndex;
 		}
 
 		public static ArgumentsResolutionResult ResolveArgumentContext(
@@ -1089,13 +1090,6 @@ namespace D_Parser.Resolver
 			DMethod MethodScope, 
 			IEnumerable<IAbstractSyntaxTree> parseCache)
 		{
-			// First step: Search the method's call start offset
-
-			int startOffset = ReverseParsing.SearchExpressionStart(code,caretOffset-1);
-
-			if (startOffset < 0)
-				return null;
-
 			IStatement curStmt = null;
 			
 			#region Parse the code between the last block opener and the caret
@@ -1112,18 +1106,16 @@ namespace D_Parser.Resolver
 
 				curMethodBody = DParser.ParseBlockStatement(codeToParse, blockOpenerLocation, MethodScope);
 
-				curStmt = curMethodBody.SearchStatementDeeply(caretLocation);
+				if(curMethodBody!=null)
+					curStmt = curMethodBody.SearchStatementDeeply(caretLocation);
 			}
 
-			if (curStmt == null)
+			if (curMethodBody==null || curStmt == null)
 				return null;
 			#endregion
 
-			// Check if it's a method declaration - return null if so
-			//if (IsTypeIdentifier(code, startOffset-1))	return null;
-
-			// Parse the expression
-			var e = DParser.ParseExpression(code.Substring(startOffset,caretOffset-startOffset));
+			// Scan statement for method calls or template instantiations
+			var e = DResolver.SearchForMethodCallsOrTemplateInstances(curStmt, caretLocation);
 
 			/*
 			 * There are at least 3 possibilities here:
@@ -1143,16 +1135,20 @@ namespace D_Parser.Resolver
 				var call = e as PostfixExpression_MethodCall;
 
 				if(call.Arguments!=null)
-					res.CurrentlyTypedArgument = call.Arguments.Length;
-
-				if (call.PostfixForeExpression is TemplateInstanceExpression)
 				{
-					var templ = call.PostfixForeExpression as TemplateInstanceExpression;
-
-					methodIdentifier = templ.ExpressionTypeRepresentation;
+					int i=0;
+					foreach (var arg in call.Arguments)
+					{
+						if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
+						{
+							res.CurrentlyTypedArgument = arg;
+							res.CurrentlyTypedArgumentIndex = i;
+							break;
+						}
+					}
 				}
-				else
-					methodIdentifier = call.PostfixForeExpression.ExpressionTypeRepresentation;
+
+				methodIdentifier = call.PostfixForeExpression.ExpressionTypeRepresentation;
 
 			}
 			// 3)
@@ -1163,7 +1159,18 @@ namespace D_Parser.Resolver
 				res.IsTemplateInstanceArguments = true;
 
 				if (templ.Arguments != null)
-					res.CurrentlyTypedArgument = templ.Arguments.Length;
+				{
+					int i = 0;
+					foreach (var arg in templ.Arguments)
+					{
+						if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
+						{
+							res.CurrentlyTypedArgument = arg;
+							res.CurrentlyTypedArgumentIndex = i;
+							break;
+						}
+					}
+				}
 
 				methodIdentifier = templ.ExpressionTypeRepresentation;
 			}
@@ -1177,8 +1184,124 @@ namespace D_Parser.Resolver
 			return res;
 		}
 
-		public static IExpression SearchForMethodCallsOrTemplateInstances(IStatement stmt, CodeLocation Caret)
+		public static IExpression SearchForMethodCallsOrTemplateInstances(IStatement Statement, CodeLocation Caret)
 		{
+			IExpression curExpression=null;
+			INode curDeclaration=null;
+
+			/*
+			 * Step 1: Step down the statement hierarchy to find the stmt that's most next to Caret
+			 * Note: As long we haven't found any fitting elements, go on searching
+			 */
+			while (Statement != null && curExpression==null && curDeclaration==null)
+			{
+				if (Statement is IExpressionContainingStatement)
+				{
+					var exprs = (Statement as IExpressionContainingStatement).SubExpressions;
+
+					if(exprs!=null && exprs.Length>0)
+						foreach(var expr in exprs)
+							if (expr != null && Caret>=expr.Location && Caret<=expr.EndLocation)
+							{
+								curExpression = expr;
+								break;
+							}
+				}
+
+				if (Statement is IDeclarationContainingStatement)
+				{
+					var decls = (Statement as IDeclarationContainingStatement).Declarations;
+
+					if(decls!=null && decls.Length>0)
+						foreach(var decl in decls)
+							if (decl != null && Caret >= decl.StartLocation && Caret <= decl.EndLocation)
+							{
+								curDeclaration = decl;
+								break;
+							}
+				}
+
+				if (Statement is StatementContainingStatement)
+				{
+					var stmts = (Statement as StatementContainingStatement).SubStatements;
+
+					bool foundDeeperStmt = false;
+
+					if (stmts != null && stmts.Length > 0)
+						foreach (var stmt in stmts)
+							if (stmt != null && Caret >= stmt.StartLocation && Caret <= stmt.EndLocation)
+							{
+								foundDeeperStmt = true;
+								Statement = stmt;
+								break;
+							}
+
+					if (foundDeeperStmt)
+						continue;
+				}
+
+				break;
+			}
+
+			if (curDeclaration == null && curExpression == null)
+				return null;
+
+
+			/*
+			 * Step 2: If a declaration was found, check for its inner elements
+			 */
+			if (curDeclaration != null)
+			{
+				if (curDeclaration is DVariable)
+				{
+					var dv = curDeclaration as DVariable;
+
+					if (dv.Initializer != null && Caret >= dv.Initializer.Location && Caret <= dv.Initializer.EndLocation)
+						curExpression = dv.Initializer;
+				}
+
+				//TODO: Watch the node's type! Over there, there also can be template instances..
+			}
+
+			if (curExpression != null)
+			{
+				IExpression curMethodOrTemplateInstance = null;
+
+				while (curExpression!=null)
+				{
+					if (!(curExpression.Location <= Caret || curExpression.EndLocation >= Caret))
+						break;
+
+					if (curExpression is PostfixExpression_MethodCall)
+						curMethodOrTemplateInstance = curExpression;
+					else if (curExpression is TemplateInstanceExpression)
+						curMethodOrTemplateInstance = curExpression;
+
+					if (curExpression is ContainerExpression)
+					{
+						var currentContainer = curExpression as ContainerExpression;
+
+						var subExpressions = currentContainer.SubExpressions;
+						bool foundMatch = false;
+						if (subExpressions != null && subExpressions.Length > 0)
+							foreach (var se in subExpressions)
+								if (se != null && Caret >= se.Location && Caret <= se.EndLocation)
+								{
+									curExpression = se;
+									foundMatch = true;
+									break;
+								}
+
+						if (foundMatch)
+							continue;
+					}
+					break;
+				}
+
+				return curMethodOrTemplateInstance;
+			}
+
+
 			return null;
 		}
 	}
@@ -1373,7 +1496,7 @@ namespace D_Parser.Resolver
 			int col = 1;
 
 			int i = 0;
-			for (; i<Text.Length && !(line>Location.Line && col>Location.Column); i++)
+			for (; i<Text.Length && !(line>=Location.Line && col>=Location.Column); i++)
 			{
 				col++;
 

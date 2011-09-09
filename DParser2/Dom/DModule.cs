@@ -241,13 +241,13 @@ namespace D_Parser.Dom
 
 		public BlockStatement GetSubBlockAt(CodeLocation Where)
 		{
-			if (_In != null && _In.StartLocation <= Where && _In.EndLocation <= Where)
+			if (_In != null && _In.StartLocation <= Where && _In.EndLocation >= Where)
 				return _In;
 
-			if (_Out != null && _Out.StartLocation <= Where && _Out.EndLocation <= Where)
+			if (_Out != null && _Out.StartLocation <= Where && _Out.EndLocation >= Where)
 				return _Out;
 
-			if (_Body != null && _Body.StartLocation <= Where && _Body.EndLocation <= Where)
+			if (_Body != null && _Body.StartLocation <= Where && _Body.EndLocation >= Where)
 				return _Body;
 
 			return null;

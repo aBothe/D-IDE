@@ -22,6 +22,11 @@ namespace D_Parser.Dom.Statements
 		IExpression[] SubExpressions { get; }
 	}
 
+	public interface IDeclarationContainingStatement : IStatement
+	{
+		INode[] Declarations { get; }
+	}
+
 	public abstract class AbstractStatement:IStatement
 	{
 		public virtual CodeLocation StartLocation { get; set; }
@@ -53,10 +58,9 @@ namespace D_Parser.Dom.Statements
 	}
 
 	/// <summary>
-	/// Represents a statement that can contain other statements, which become scoped under that containing statement.
-	/// So, most statements with a ScopeStatement-appendix are inherit this abstract class.
+	/// Represents a statement that can contain other statements, which may become scoped.
 	/// </summary>
-	public abstract class ScopingStatement : AbstractStatement
+	public abstract class StatementContainingStatement : AbstractStatement
 	{
 		public virtual IStatement ScopedStatement { get; set; }
 
@@ -64,7 +68,7 @@ namespace D_Parser.Dom.Statements
 	}
 	#endregion
 
-	public class BlockStatement : AbstractStatement, IEnumerable<IStatement>
+	public class BlockStatement : StatementContainingStatement, IEnumerable<IStatement>
 	{
 		readonly List<IStatement> _Statements = new List<IStatement>();
 
@@ -96,9 +100,12 @@ namespace D_Parser.Dom.Statements
 			_Statements.Add(s);
 		}
 
-		public List<IStatement> Statements
+		public override IStatement[] SubStatements
 		{
-			get { return _Statements; }
+			get
+			{
+				return _Statements.ToArray(); ;
+			}
 		}
 
 		public INode[] Declarations
@@ -108,8 +115,12 @@ namespace D_Parser.Dom.Statements
 				var l = new List<INode>();
 
 				foreach (var s in _Statements)
-					if (s is DeclarationStatement && (s as DeclarationStatement).Declaration != null)
-							l.AddRange((s as DeclarationStatement).Declaration);
+					if (s is IDeclarationContainingStatement)
+					{
+						var decls = (s as IDeclarationContainingStatement).Declarations;
+						if(decls!=null && decls.Length>0)
+							l.AddRange(decls);
+					}
 
 				return l.ToArray();
 			}
@@ -123,33 +134,37 @@ namespace D_Parser.Dom.Statements
 		{
 			var l = new List<INode>();
 
-			var curScope=Statement as BlockStatement;
+			var curScope=Statement as StatementContainingStatement;
 
-			if (curScope == null && Statement is ScopingStatement)
+			if (curScope == null && Statement is StatementContainingStatement)
 			{
 				var curPar = Statement;
-				while (curPar is ScopingStatement)
-					curPar = (curPar as ScopingStatement).Parent;
-				curScope = curPar as BlockStatement;
+				while (curPar is StatementContainingStatement)
+					curPar = (curPar as StatementContainingStatement).Parent;
+				curScope = curPar as StatementContainingStatement;
 			}
 
 			while (curScope != null)
 			{
-				foreach (var i in curScope)
+				foreach (var i in curScope.SubStatements)
 				{
 					// if i doesn't contain a Declaration OR is located after the caret's location, disregard it
 					if (Caret!=CodeLocation.Empty?(i.StartLocation > Caret):false)
 						continue;
 
-					if(i is DeclarationStatement && (i as DeclarationStatement).Declaration!=null)
-						l.AddRange((i as DeclarationStatement).Declaration);
+					if (i is IDeclarationContainingStatement)
+					{
+						var decls = (i as IDeclarationContainingStatement).Declarations;
+						if (decls != null && decls.Length > 0)
+							l.AddRange(decls);
+					}
 				}
 
 				var curPar=curScope.Parent;
-				while (curPar is ScopingStatement)
-					curPar = (curPar as ScopingStatement).Parent;
+				while (curPar is StatementContainingStatement)
+					curPar = (curPar as StatementContainingStatement).Parent;
 
-				curScope = curPar as BlockStatement;
+				curScope = curPar as StatementContainingStatement;
 			}
 
 			return l.ToArray();
@@ -181,10 +196,10 @@ namespace D_Parser.Dom.Statements
 					if (s2 != null)
 						s = s2;
 				}
-				else if (s is ScopingStatement)
+				else if (s is StatementContainingStatement)
 				{
 					bool foundMatch = false;
-					foreach(var s2 in (s as ScopingStatement).SubStatements)
+					foreach(var s2 in (s as StatementContainingStatement).SubStatements)
 						if (s2 != null && Where >= s2.StartLocation && Where <= s2.EndLocation)
 						{
 							s = s2;
@@ -228,7 +243,7 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class IfStatement : ScopingStatement
+	public class IfStatement : StatementContainingStatement,IDeclarationContainingStatement
 	{
 		public bool IsStatic = false;
 		public IExpression IfCondition;
@@ -290,9 +305,18 @@ namespace D_Parser.Dom.Statements
 				return new[] { IfCondition };
 			}
 		}
+
+		public INode[] Declarations
+		{
+			get { 
+				if(IfVariable!=null)
+					return new[]{IfVariable};
+				return null;
+			}
+		}
 	}
 
-	public class WhileStatement : ScopingStatement, IExpressionContainingStatement
+	public class WhileStatement : StatementContainingStatement, IExpressionContainingStatement
 	{
 		public IExpression Condition;
 
@@ -332,7 +356,7 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class ForStatement : ScopingStatement, IExpressionContainingStatement
+	public class ForStatement : StatementContainingStatement, IExpressionContainingStatement
 	{
 		public IStatement Initialize;
 		public IExpression Test;
@@ -377,7 +401,9 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class ForeachStatement : ScopingStatement, IExpressionContainingStatement
+	public class ForeachStatement : StatementContainingStatement, 
+		IExpressionContainingStatement,
+		IDeclarationContainingStatement
 	{
 		public bool IsRangeStatement
 		{
@@ -385,6 +411,12 @@ namespace D_Parser.Dom.Statements
 		}
 		public bool IsReverse = false;
 		public DVariable[] ForeachTypeList;
+
+		public INode[] Declarations
+		{
+			get { return ForeachTypeList; }
+		}
+
 		public IExpression Aggregate;
 
 		/// <summary>
@@ -421,10 +453,15 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class SwitchStatement : ScopingStatement
+	public class SwitchStatement : StatementContainingStatement, IExpressionContainingStatement
 	{
 		public bool IsFinal;
 		public IExpression SwitchExpression;
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[] { SwitchExpression }; }
+		}
 
 		public override string ToCode()
 		{
@@ -441,7 +478,7 @@ namespace D_Parser.Dom.Statements
 			return ret;
 		}
 
-		public class CaseStatement : AbstractStatement
+		public class CaseStatement : StatementContainingStatement, IExpressionContainingStatement
 		{
 			public bool IsCaseRange
 			{
@@ -466,11 +503,32 @@ namespace D_Parser.Dom.Statements
 
 				return ret;
 			}
+
+			public IExpression[] SubExpressions
+			{
+				get { return new[]{ArgumentList,LastExpression}; }
+			}
+
+			public override IStatement[] SubStatements
+			{
+				get
+				{
+					return ScopeStatementList;
+				}
+			}
 		}
 
-		public class DefaultStatement : AbstractStatement
+		public class DefaultStatement : StatementContainingStatement
 		{
 			public IStatement[] ScopeStatementList;
+
+			public override IStatement[] SubStatements
+			{
+				get
+				{
+					return ScopeStatementList;
+				}
+			}
 
 			public override string ToCode()
 			{
@@ -484,7 +542,7 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class ContinueStatement : AbstractStatement
+	public class ContinueStatement : AbstractStatement, IExpressionContainingStatement
 	{
 		public string Identifier;
 
@@ -492,9 +550,14 @@ namespace D_Parser.Dom.Statements
 		{
 			return "continue"+(string.IsNullOrEmpty(Identifier)?"":(' '+Identifier))+';';
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return string.IsNullOrEmpty(Identifier)?null:new[]{new IdentifierExpression(Identifier)}; }
+		}
 	}
 
-	public class BreakStatement : AbstractStatement
+	public class BreakStatement : AbstractStatement,IExpressionContainingStatement
 	{
 		public string Identifier;
 
@@ -502,9 +565,14 @@ namespace D_Parser.Dom.Statements
 		{
 			return "break" + (string.IsNullOrEmpty(Identifier) ? "" : (' ' + Identifier)) + ';';
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return string.IsNullOrEmpty(Identifier) ? null : new[] { new IdentifierExpression(Identifier) }; }
+		}
 	}
 
-	public class ReturnStatement : AbstractStatement
+	public class ReturnStatement : AbstractStatement,IExpressionContainingStatement
 	{
 		public IExpression ReturnExpression;
 
@@ -512,9 +580,14 @@ namespace D_Parser.Dom.Statements
 		{
 			return "return" + (ReturnExpression==null ? "" : (' ' + ReturnExpression.ToString())) + ';';
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{ReturnExpression}; }
+		}
 	}
 
-	public class GotoStatement : AbstractStatement
+	public class GotoStatement : AbstractStatement, IExpressionContainingStatement
 	{
 		public enum GotoStmtType
 		{
@@ -541,9 +614,14 @@ namespace D_Parser.Dom.Statements
 
 			return null;
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return CaseExpression != null ? new[] { CaseExpression } : null; }
+		}
 	}
 
-	public class WithStatement : ScopingStatement
+	public class WithStatement : StatementContainingStatement, IExpressionContainingStatement
 	{
 		public IExpression WithExpression;
 		public ITypeDeclaration WithSymbol;
@@ -564,9 +642,20 @@ namespace D_Parser.Dom.Statements
 
 			return ret;
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get {
+				if (WithExpression != null)
+					return new[] { WithExpression};
+				if (WithSymbol != null)
+					return new[] { new TypeDeclarationExpression(WithSymbol) };
+				return null;
+			}
+		}
 	}
 
-	public class SynchronizedStatement : ScopingStatement
+	public class SynchronizedStatement : StatementContainingStatement,IExpressionContainingStatement
 	{
 		public IExpression SyncExpression;
 
@@ -582,12 +671,38 @@ namespace D_Parser.Dom.Statements
 
 			return ret;
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{SyncExpression}; }
+		}
 	}
 
-	public class TryStatement : ScopingStatement
+	public class TryStatement : StatementContainingStatement
 	{
 		public CatchStatement[] Catches;
 		public FinallyStatement FinallyStmt;
+
+		public override IStatement[] SubStatements
+		{
+			get
+			{
+				var l = new List<IStatement>();
+
+				if (ScopedStatement != null)
+					l.Add(ScopedStatement);
+
+				if (Catches != null && Catches.Length > 0)
+					l.AddRange(Catches);
+
+				if (FinallyStmt != null)
+					l.Add(FinallyStmt);
+
+				if (l.Count > 0)
+					return l.ToArray();
+				return null;
+			}
+		}
 
 		public override string ToCode()
 		{
@@ -603,7 +718,7 @@ namespace D_Parser.Dom.Statements
 			return ret;
 		}
 
-		public class CatchStatement : ScopingStatement
+		public class CatchStatement : StatementContainingStatement,IDeclarationContainingStatement
 		{
 			public DVariable CatchParameter;
 
@@ -612,9 +727,18 @@ namespace D_Parser.Dom.Statements
 				return "catch" + (CatchParameter != null ? ('(' + CatchParameter.ToString() + ')') : "")
 					+ (ScopedStatement != null ? (' ' + ScopedStatement.ToCode()) : "");
 			}
+
+			public INode[] Declarations
+			{
+				get {
+					if (CatchParameter == null)
+						return null;
+					return new[]{CatchParameter}; 
+				}
+			}
 		}
 
-		public class FinallyStatement : ScopingStatement
+		public class FinallyStatement : StatementContainingStatement
 		{
 			public override string ToCode()
 			{
@@ -623,7 +747,7 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class ThrowStatement : AbstractStatement
+	public class ThrowStatement : AbstractStatement,IExpressionContainingStatement
 	{
 		public IExpression ThrowExpression;
 
@@ -631,9 +755,14 @@ namespace D_Parser.Dom.Statements
 		{
 			return "throw" + (ThrowExpression==null ? "" : (' ' + ThrowExpression.ToString())) + ';';
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{ThrowExpression}; }
+		}
 	}
 
-	public class ScopeGuardStatement : ScopingStatement
+	public class ScopeGuardStatement : StatementContainingStatement
 	{
 		public const string ExitScope = "exit";
 		public const string SuccessScope = "success";
@@ -666,7 +795,7 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class PragmaStatement : ScopingStatement
+	public class PragmaStatement : StatementContainingStatement,IExpressionContainingStatement
 	{
 		public string PragmaIdentifier;
 		public IExpression[] ArgumentList;
@@ -688,9 +817,14 @@ namespace D_Parser.Dom.Statements
 
 			return ret;
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return ArgumentList; }
+		}
 	}
 
-	public class MixinStatement : AbstractStatement
+	public class MixinStatement : AbstractStatement,IExpressionContainingStatement
 	{
 		public IExpression MixinExpression;
 
@@ -698,9 +832,14 @@ namespace D_Parser.Dom.Statements
 		{
 			return "mixin("+(MixinExpression==null?"":MixinExpression.ToString())+");";
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{MixinExpression}; }
+		}
 	}
 
-	public abstract class ConditionStatement : ScopingStatement
+	public abstract class ConditionStatement : StatementContainingStatement
 	{
 		public IStatement ElseStatement;
 
@@ -766,7 +905,7 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class VolatileStatement : ScopingStatement
+	public class VolatileStatement : StatementContainingStatement
 	{
 		public override string ToCode()
 		{
@@ -774,7 +913,7 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class ExpressionStatement : AbstractStatement
+	public class ExpressionStatement : AbstractStatement,IExpressionContainingStatement
 	{
 		public IExpression Expression;
 
@@ -782,25 +921,30 @@ namespace D_Parser.Dom.Statements
 		{
 			return Expression.ToString()+';';
 		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{Expression}; }
+		}
 	}
 
-	public class DeclarationStatement : AbstractStatement
+	public class DeclarationStatement : AbstractStatement,IDeclarationContainingStatement
 	{
 		/// <summary>
 		/// Declarations done by this statement. Contains more than one item e.g. on int a,b,c;
 		/// </summary>
-		public INode[] Declaration;
+		//public INode[] Declaration;
 
 		public override string ToCode()
 		{
-			if (Declaration == null || Declaration.Length < 0)
+			if (Declarations == null || Declarations.Length < 0)
 				return ";";
 
-			var r = Declaration[0].ToString();
+			var r = Declarations[0].ToString();
 
-			for (int i = 1; i < Declaration.Length; i++)
+			for (int i = 1; i < Declarations.Length; i++)
 			{
-				var d = Declaration[i];
+				var d = Declarations[i];
 				r += ',' + d.Name;
 
 				var dv=d as DVariable;
@@ -810,9 +954,15 @@ namespace D_Parser.Dom.Statements
 
 			return r+';';
 		}
+
+		public INode[] Declarations
+		{
+			get;
+			set;
+		}
 	}
 
-	public class TemplateMixin : AbstractStatement
+	public class TemplateMixin : AbstractStatement,IExpressionContainingStatement
 	{
 		public string TemplateId;
 		public IExpression[] Arguments;
@@ -834,6 +984,11 @@ namespace D_Parser.Dom.Statements
 				r+=' '+MixinId;
 
 			return r+';';
+		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return Arguments; }
 		}
 	}
 }

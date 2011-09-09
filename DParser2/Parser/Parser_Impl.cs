@@ -3270,7 +3270,7 @@ namespace D_Parser.Parser
 			else
 			{
 				var s = new DeclarationStatement() { StartLocation = la.Location };
-				s.Declaration = Declaration();
+				s.Declarations = Declaration();
 				s.EndLocation = t.EndLocation;
 				return s;
 			}
