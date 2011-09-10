@@ -629,52 +629,48 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 				{
 					lookup_Members.ItemsSource = lookup_Types.ItemsSource = null;
-					//currentEnvCompletionData = null;
 					return;
 				}
 
 				IStatement curStmt = null;
 				var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation, out curStmt);
-				if (curBlock != lastSelectedBlock)
+
+				if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
+					blockCompletionDataOperation.Abort();
+
+				lastSelectedBlock = curBlock;
+
+				blockCompletionDataOperation = Dispatcher.BeginInvoke(new Action(() =>
 				{
-					if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
-						blockCompletionDataOperation.Abort();
-
-					lastSelectedBlock = curBlock;
-
-					blockCompletionDataOperation = Dispatcher.BeginInvoke(new Action(() =>
+					try
 					{
-						try
+						#region Update the type & member selectors
+						isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
+
+						// First fill the Types-Dropdown
+						var types = new List<DCompletionData>();
+						DCompletionData selectedItem = null;
+						// Show all members of the current module
+						if (SyntaxTree != null)
+							foreach (var n in SyntaxTree)
+							{
+								var completionData = new DCompletionData(n);
+								if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation <= n.EndLocation)
+									selectedItem = completionData;
+								types.Add(completionData);
+							}
+						lookup_Types.ItemsSource = types;
+						lookup_Types.SelectedItem = selectedItem;
+						
+						if (curBlock is IBlockNode)
 						{
-							/*
-							var l = new List<ICompletionData>();
-							DCodeCompletionSupport.Instance.BuildCompletionData(this, l, null);
-							currentEnvCompletionData = l;
-							*/
-							#region Update the type & member selectors
-							isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
-
-							// First fill the Types-Dropdown
-							var types = new List<DCompletionData>();
-							DCompletionData selectedItem = null;
-							// Show all members of the current module
-							if (SyntaxTree != null)
-								foreach (var n in SyntaxTree)
-								{
-									var completionData = new DCompletionData(n);
-									if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation < n.EndLocation)
-										selectedItem = completionData;
-									types.Add(completionData);
-								}
-							lookup_Types.ItemsSource = types;
-							lookup_Types.SelectedItem = selectedItem;
 							selectedItem = null;
-
 							// Fill the Members-Dropdown
 							var members = new List<DCompletionData>();
 
 							// Search a parent class to show all this one's members and to select that member where the caret currently is located
 							var watchedParent = curBlock as IBlockNode;
+
 							while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum))
 								watchedParent = watchedParent.Parent as IBlockNode;
 
@@ -688,23 +684,18 @@ namespace D_IDE.D
 								}
 							lookup_Members.ItemsSource = members;
 							lookup_Members.SelectedItem = selectedItem;
-
-							isUpdatingLookupDropdowns = false;
-							#endregion
 						}
-						catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
-					}));
-				}
-				else
-					// Update the member selection anyway
-					if (lookup_Members.ItemsSource != null)
-						foreach (DCompletionData cData in lookup_Members.ItemsSource)
-							if (CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
-							{
-								lookup_Members.SelectedItem = cData;
-								break;
-							}
+						else
+						{
+							lookup_Members.ItemsSource = null;
+							lookup_Members.SelectedItem = null;
+						}
 
+						isUpdatingLookupDropdowns = false;
+						#endregion
+					}
+					catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
+				}));
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
 		}
