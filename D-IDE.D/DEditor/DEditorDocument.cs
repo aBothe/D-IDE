@@ -20,6 +20,7 @@ using ICSharpCode.AvalonEdit.AddIn;
 using D_IDE.D.DEditor;
 using D_Parser.Parser;
 using D_Parser.Dom.Statements;
+using D_IDE.D.CodeCompletion;
 
 namespace D_IDE.D
 {
@@ -253,7 +254,7 @@ namespace D_IDE.D
 					Editor.Document.GetOffset(block.EndLocation.Line, block.EndLocation.Column));
 				//fn.Title = (block as AbstractNode).ToString(false,false);
 				var nn=fn.Tag = block.ToString();
-
+				
 				if (foldedNodeNames.Contains(nn))
 					fn.IsFolded = true;
 			}
@@ -777,6 +778,9 @@ namespace D_IDE.D
 				insightWindow = new OverloadInsightWindow(Editor.TextArea);
 				insightWindow.Provider = data;
 
+				var tt = new ToolTip();
+				(insightWindow as Control).Background = tt.Background;
+
 				insightWindow.Show();
 
 			}
@@ -827,7 +831,7 @@ namespace D_IDE.D
 			if (e.Text == "." && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
 
-			else if (/*e.Text == "," ||*/ e.Text == "(")
+			else if (e.Text == "," || e.Text == "(")
 				ShowInsightWindow(e.Text);
 
 			else if (e.Text == ")" && insightWindow!=null && insightWindow.IsLoaded)

@@ -5,6 +5,8 @@ using System.Text;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using D_Parser.Resolver;
 using D_IDE.Core;
+using System.Windows.Controls;
+using System.Windows;
 
 namespace D_IDE.D.CodeCompletion
 {
@@ -46,19 +48,21 @@ namespace D_IDE.D.CodeCompletion
 			get { return args.ResolvedTypesOrMethods.Length; }
 		}
 
-		public object CurrentContent
-		{
-			get { return args.ResolvedTypesOrMethods[selIndex]; }
-		}
+		public ResolveResult CurrentResult { get { return args.ResolvedTypesOrMethods[selIndex]; } }
 
 		public object CurrentHeader
 		{
+			get { return new TextBlock() { Text=CurrentResult.ToString(), FontWeight=FontWeights.DemiBold}; }
+		}
+
+		public object CurrentContent
+		{
 			get {
 
-				if (CurrentContent is MemberResult)
-					return (CurrentContent as MemberResult).ResolvedMember.Description;
-				if (CurrentContent is TypeResult)
-					return (CurrentContent as TypeResult).ResolvedTypeDefinition.Description;
+				if (CurrentResult is MemberResult)
+					return (CurrentResult as MemberResult).ResolvedMember.Description;
+				if (CurrentResult is TypeResult)
+					return (CurrentResult as TypeResult).ResolvedTypeDefinition.Description;
 
 				return null;
 			}
@@ -66,7 +70,7 @@ namespace D_IDE.D.CodeCompletion
 
 		public string CurrentIndexText
 		{
-			get { return (SelectedIndex+1).ToString()+" of "+args.ResolvedTypesOrMethods.Length.ToString(); }
+			get { return (SelectedIndex+1).ToString()+"/"+args.ResolvedTypesOrMethods.Length.ToString(); }
 		}
 
 		public int SelectedIndex

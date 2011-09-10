@@ -2607,9 +2607,11 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				ret=(new LabeledStatement() { Identifier = t.Value });
+				ret = (new LabeledStatement() { StartLocation = t.Location, Identifier = t.Value });
 
 				Step();
+				ret.EndLocation = t.EndLocation;
+
 				return ret;
 			}
 			#endregion
@@ -2660,6 +2662,7 @@ namespace D_Parser.Parser
 				Expect(CloseParenthesis);
 
 				dbs.ScopedStatement = Statement();
+				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
 			}
@@ -2780,6 +2783,7 @@ namespace D_Parser.Parser
 				Expect(CloseParenthesis);
 
 				dbs.ScopedStatement = Statement();
+				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
 			}
@@ -2801,6 +2805,7 @@ namespace D_Parser.Parser
 				Expect(CloseParenthesis);
 
 				dbs.ScopedStatement = Statement();
+				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
 			}
@@ -3126,6 +3131,7 @@ namespace D_Parser.Parser
 				var s=_Pragma();
 
 				s.ScopedStatement = Statement();
+				s.EndLocation = t.EndLocation;
 				return s;
 			}
 			#endregion
@@ -3811,6 +3817,7 @@ namespace D_Parser.Parser
 			}
 
 			Expect(Semicolon);
+			r.EndLocation = t.EndLocation;
 
 			return r;
 		}
