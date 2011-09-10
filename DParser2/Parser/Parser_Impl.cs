@@ -32,7 +32,7 @@ namespace D_Parser.Parser
 			if (laKind == (Module))
 			{
 				module.Description = GetComments();
-				module.ModuleName = ModuleDeclaration().ToString();
+				module.ModuleName = ModuleDeclaration();
 				module.Description += CheckForPostSemicolonComment();
 			}
 

@@ -317,27 +317,6 @@ namespace D_IDE.D
 						});
 					}
 				}
-				// Normal array literals
-				/*else if (expr is ArrayLiteralExpression)
-				{
-					var arr = expr as ArrayLiteralExpression;
-
-					StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
-					StaticPropertyAddition.AddArrayProperties(rr, l);
-				}
-				// Associative array literals
-				else if (expr is AssocArrayExpression)
-				{
-					var arr = expr as AssocArrayExpression;
-					
-					StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
-					// TODO: AddAssocArrayProperties
-				}
-				// Array element accessors (e.g. myArray[0] )
-				else if (expr is PostfixExpression_Index)
-				{
-
-				}*/
 				// Pointer conversions (e.g. (myInt*).sizeof)
 
 			}
@@ -724,7 +703,6 @@ namespace D_IDE.D
 				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
 					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLoc, out curStmt), DCodeResolver.ResolveImports(EditorDocument.SyntaxTree, EnumAvailableModules(EditorDocument)), true, true);
 
-				//TODO: Build well-formatted tool tip string / Do a better tool tip layout
 				if (rr.Length < 1)
 					return;
 
@@ -1062,7 +1040,6 @@ namespace D_IDE.D
 				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
 				return null;
 			}
-			//TODO: Make a more smarter tool tip
 		}
 
 		public System.Windows.Media.ImageSource Image

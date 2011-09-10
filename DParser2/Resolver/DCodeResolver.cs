@@ -496,7 +496,7 @@ namespace D_Parser.Resolver
 
 					var ret = ResolveType(expr.ExpressionTypeRepresentation, currentlyScopedNode, parseCache);
 
-					if (ret == null && expr != null)
+					if (ret == null && expr != null && !(expr is TokenExpression))
 						ret = new[] { new ExpressionResult() { Expression = expr } };
 
 					return ret;
@@ -562,9 +562,11 @@ namespace D_Parser.Resolver
 							returnedResults.AddRange(baseClassDefs);
 					}
 					// If we found a base type, return a static-type-result
-					else if (searchToken > 0 && DTokens.BasicTypes[searchToken])
+					else if (searchToken > 0)
 					{
-						returnedResults.Add(new StaticTypeResult() { BaseTypeToken = searchToken, Type = new DTokenDeclaration(searchToken) });
+						if (DTokens.BasicTypes[searchToken])
+							returnedResults.Add(new StaticTypeResult() { BaseTypeToken = searchToken, Type = new DTokenDeclaration(searchToken) });
+						// anything else is just a key word, not a type
 					}
 					// (As usual) Go on searching in the local&global scope(s)
 					else
