@@ -134,6 +134,9 @@ namespace D_Parser.Dom.Statements
 		{
 			var l = new List<INode>();
 
+			while (!(Statement is StatementContainingStatement) && Statement != null)
+				Statement = Statement.Parent;
+
 			var curScope=Statement as StatementContainingStatement;
 
 			if (curScope == null && Statement is StatementContainingStatement)

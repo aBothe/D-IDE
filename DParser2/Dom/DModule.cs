@@ -277,6 +277,15 @@ namespace D_Parser.Dom
 		INode[] children;
 		List<INode> additionalChildren = new List<INode>();
 
+		/// <summary>
+		/// Children which were added artifically via Add() or AddRange()
+		/// In most cases, these are anonymous delegate/class declarations.
+		/// </summary>
+		public INode[] AdditionalChildren
+		{
+			get { return additionalChildren.ToArray(); }
+		}
+
 		void UpdateChildrenArray()
 		{
 			var l = new List<INode>();
