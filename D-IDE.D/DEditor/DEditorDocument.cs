@@ -765,7 +765,8 @@ namespace D_IDE.D
 
 		void ShowInsightWindow(string EnteredText)
 		{
-			if (!DSettings.Instance.UseMethodInsight)
+			if (!DSettings.Instance.UseMethodInsight || 
+				(EnteredText=="," && insightWindow!=null && insightWindow.IsVisible))
 				return;
 
 			try
