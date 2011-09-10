@@ -867,7 +867,7 @@ namespace D_Parser.Resolver
 		/// etc..
 		/// </summary>
 		/// <returns></returns>
-		static ResolveResult HandleNodeMatch(INode m, 
+		public static ResolveResult HandleNodeMatch(INode m, 
 			IBlockNode currentlyScopedNode,
 			IEnumerable<IAbstractSyntaxTree> parseCache,
 			ResolveResult resultBase = null, bool ResolveAliases=false)
@@ -977,7 +977,7 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		static ResolveResult[] HandleNodeMatches(IEnumerable<INode> matches, 
+		public static ResolveResult[] HandleNodeMatches(IEnumerable<INode> matches, 
 			IBlockNode currentlyScopedNode, 
 			IEnumerable<IAbstractSyntaxTree> parseCache,
 			ResolveResult resultBase = null, bool ResolveAliasDefs=false)
@@ -1118,10 +1118,13 @@ namespace D_Parser.Resolver
 			var e = DResolver.SearchForMethodCallsOrTemplateInstances(curStmt, caretLocation);
 
 			/*
-			 * There are at least 3 possibilities here:
 			 * 1) foo(			-- normal arguments only
 			 * 2) foo!(...)(	-- normal arguments + template args
 			 * 3) foo!(		-- template args only
+			 * 4) new myclass(  -- ctor call
+			 * 5) new myclass!( -- ditto
+			 * 6) new myclass!(...)(
+			 * 7) mystruct(		-- opCall call
 			 */
 			var res = new ArgumentsResolutionResult()
 			{	ParsedExpression=e	};
@@ -1145,6 +1148,7 @@ namespace D_Parser.Resolver
 							res.CurrentlyTypedArgumentIndex = i;
 							break;
 						}
+						i++;
 					}
 				}
 
@@ -1169,10 +1173,32 @@ namespace D_Parser.Resolver
 							res.CurrentlyTypedArgumentIndex = i;
 							break;
 						}
+						i++;
 					}
 				}
 
 				methodIdentifier = templ.ExpressionTypeRepresentation;
+			}
+			else if (e is NewExpression)
+			{
+				var ne = e as NewExpression;
+
+				if (ne.Arguments != null)
+				{
+					int i = 0;
+					foreach (var arg in ne.Arguments)
+					{
+						if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
+						{
+							res.CurrentlyTypedArgument = arg;
+							res.CurrentlyTypedArgumentIndex = i;
+							break;
+						}
+						i++;
+					}
+				}
+
+				methodIdentifier = ne.ExpressionTypeRepresentation;
 			}
 			
  			if(methodIdentifier==null)
@@ -1180,6 +1206,53 @@ namespace D_Parser.Resolver
 
 			// Resolve all types, methods etc. which belong to the methodIdentifier
 			res.ResolvedTypesOrMethods = ResolveType(methodIdentifier, MethodScope, parseCache);
+
+			if (res.ResolvedTypesOrMethods == null)
+				return res;
+
+			// 4),5),6)
+			if (e is NewExpression)
+			{
+				var substitutionList = new List<ResolveResult>();
+				foreach (var rr in res.ResolvedTypesOrMethods)
+					if (rr is TypeResult)
+					{
+						var classDef = (rr as TypeResult).ResolvedTypeDefinition as DClassLike;
+
+						if (classDef == null)
+							continue;
+
+						//TODO: Regard protection attributes for ctor members
+						foreach (var i in classDef)
+							if (i is DMethod && (i as DMethod).SpecialType==DMethod.MethodType.Constructor)
+								substitutionList.Add(HandleNodeMatch(i, MethodScope, parseCache, rr));
+					}
+
+				if (substitutionList.Count > 0)
+					res.ResolvedTypesOrMethods = substitutionList.ToArray();
+			}
+
+			// 7)
+			else if (e is PostfixExpression_MethodCall)
+			{
+				var substitutionList = new List<ResolveResult>();
+				foreach (var rr in res.ResolvedTypesOrMethods)
+					if (rr is TypeResult)
+					{
+						var classDef = (rr as TypeResult).ResolvedTypeDefinition as DClassLike;
+
+						if (classDef == null)
+							continue;
+
+						//TODO: Regard protection attributes for opCall members
+						foreach(var i in classDef)
+							if (i is DMethod && i.Name == "opCall")
+								substitutionList.Add(HandleNodeMatch(i, MethodScope, parseCache, rr));
+					}
+
+				if (substitutionList.Count > 0)
+					res.ResolvedTypesOrMethods = substitutionList.ToArray();
+			}
 
 			return res;
 		}
@@ -1275,6 +1348,8 @@ namespace D_Parser.Resolver
 					if (curExpression is PostfixExpression_MethodCall)
 						curMethodOrTemplateInstance = curExpression;
 					else if (curExpression is TemplateInstanceExpression)
+						curMethodOrTemplateInstance = curExpression;
+					else if (curExpression is NewExpression)
 						curMethodOrTemplateInstance = curExpression;
 
 					if (curExpression is ContainerExpression)
