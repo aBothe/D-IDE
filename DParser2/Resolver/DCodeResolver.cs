@@ -44,7 +44,7 @@ namespace D_Parser.Resolver
 		/// <param name="ScopedBlock"></param>
 		/// <param name="ImportCache"></param>
 		/// <returns></returns>
-		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock, IStatement ScopedStatement, CodeLocation Caret, IEnumerable<IAbstractSyntaxTree> CodeCache)
+		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock/*, IStatement ScopedStatement*/, CodeLocation Caret, IEnumerable<IAbstractSyntaxTree> CodeCache)
 		{
 			/* First walk through the current scope.
 			 * Walk up the node hierarchy and add all their items (private as well as public members).
@@ -56,12 +56,12 @@ namespace D_Parser.Resolver
 			var ImportCache = ResolveImports(ScopedBlock.NodeRoot as DModule, CodeCache);
 
 			#region Current module/scope related members
-
+			/*
 			if (ScopedStatement != null)
 			{
 				ret.AddRange(BlockStatement.GetItemHierarchy(ScopedStatement, Caret));
 			}
-
+			 */
 
 			var curScope = ScopedBlock;
 
@@ -469,6 +469,38 @@ namespace D_Parser.Resolver
 
 	public class DResolver
 	{
+		/// <summary>
+		/// Parses the code between the start of the parent method's block and the given caret location.
+		/// </summary>
+		/// <returns>Returns the deepest Statement that exists in the statement hierarchy.</returns>
+		public static IStatement ParseBlockStatementUntilCaret(string code, DMethod MethodParent, int caretOffset, CodeLocation caretLocation)
+		{
+			//HACK: Clear anonymous decl array to ensure that no duplicates occur when calling DParser.ParseBlockStatement()
+			MethodParent.AdditionalChildren.Clear();
+
+			var oldBlock=MethodParent.GetSubBlockAt(caretLocation);
+			var blockOpenerLocation = oldBlock.StartLocation;
+			var blockOpenerOffset = blockOpenerLocation.Line <= 0 ? blockOpenerLocation.Column :
+				DocumentHelper.LocationToOffset(code,blockOpenerLocation);
+
+			if (blockOpenerOffset >= 0 && caretOffset - blockOpenerOffset > 0)
+			{
+				var codeToParse = code.Substring(blockOpenerOffset, caretOffset - blockOpenerOffset);
+
+				/*
+				 * So, if we're inside of a method, we parse all its 'contents' (statements, expressions, declarations etc.)
+				 * to achieve a fully updated insight.
+				 */
+				var newStmt = DParser.ParseBlockStatement(codeToParse, blockOpenerLocation, MethodParent);
+
+				var ret= newStmt.SearchStatementDeeply(caretLocation);
+
+				return ret == null ? newStmt : ret;
+			}
+
+			return null;
+		}
+
 		public static ResolveResult[] ResolveType(string code, int caret, CodeLocation caretLocation, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache,
 			bool alsoParseBeyondCaret = false,
 			bool onlyAssumeIdentifierList = false)

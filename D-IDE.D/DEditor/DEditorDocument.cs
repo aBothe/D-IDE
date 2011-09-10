@@ -24,7 +24,7 @@ using D_IDE.D.CodeCompletion;
 
 namespace D_IDE.D
 {
-	public class DEditorDocument:EditorDocument
+	public class DEditorDocument : EditorDocument
 	{
 		#region Properties
 		ComboBox lookup_Types;
@@ -43,27 +43,30 @@ namespace D_IDE.D
 		}
 
 		DModule _unboundTree;
-		public DModule SyntaxTree { 
-			get {
+		public DModule SyntaxTree
+		{
+			get
+			{
 				if (HasProject)
 				{
 					var prj = Project as DProject;
-					if(prj!=null)
+					if (prj != null)
 						return prj.ParsedModules[AbsoluteFilePath] as DModule;
 				}
 
 				return _unboundTree;
 			}
-			set {
-				if(value!=null)
-				value.FileName = AbsoluteFilePath;
+			set
+			{
+				if (value != null)
+					value.FileName = AbsoluteFilePath;
 				if (HasProject)
 				{
 					var prj = Project as DProject;
 					if (prj != null)
-						prj.ParsedModules[AbsoluteFilePath]=value;
+						prj.ParsedModules[AbsoluteFilePath] = value;
 				}
-				_unboundTree=value;
+				_unboundTree = value;
 			}
 		}
 
@@ -86,7 +89,7 @@ namespace D_IDE.D
 		}
 
 		public IBlockNode lastSelectedBlock { get; protected set; }
-		IEnumerable<ICompletionData> currentEnvCompletionData = null;
+		//IEnumerable<ICompletionData> currentEnvCompletionData = null;
 
 		DispatcherOperation blockCompletionDataOperation = null;
 		//DispatcherOperation showCompletionWindowOperation = null;
@@ -111,10 +114,11 @@ namespace D_IDE.D
 		{
 			#region Setup type lookup dropdowns
 			// Create a grid which is located at the very top of the editor document
-			var stk = new Grid() {
+			var stk = new Grid()
+			{
 				HorizontalAlignment = HorizontalAlignment.Stretch,
-				Height=24,
-				VerticalAlignment=VerticalAlignment.Top
+				Height = 24,
+				VerticalAlignment = VerticalAlignment.Top
 			};
 
 			// Give it two columns that have an equal width
@@ -123,39 +127,39 @@ namespace D_IDE.D
 
 			// Move the editor away from the upper boundary
 			Editor.Margin = new Thickness() { Top = stk.Height };
-			
+
 			MainEditorContainer.Children.Add(stk);
 
-			lookup_Types = new ComboBox() { HorizontalAlignment=HorizontalAlignment.Stretch	};
+			lookup_Types = new ComboBox() { HorizontalAlignment = HorizontalAlignment.Stretch };
 			lookup_Members = new ComboBox() { HorizontalAlignment = HorizontalAlignment.Stretch };
 
-			lookup_Types.SelectionChanged +=lookup_Types_SelectionChanged;
-			lookup_Members.SelectionChanged+=lookup_Types_SelectionChanged;
+			lookup_Types.SelectionChanged += lookup_Types_SelectionChanged;
+			lookup_Members.SelectionChanged += lookup_Types_SelectionChanged;
 
 			stk.Children.Add(lookup_Types);
 			stk.Children.Add(lookup_Members);
 
 			#region Setup dropdown item template
-			var lookupItemTemplate =lookup_Members.ItemTemplate=lookup_Types.ItemTemplate= new DataTemplate { DataType = typeof(DCompletionData) };
+			var lookupItemTemplate = lookup_Members.ItemTemplate = lookup_Types.ItemTemplate = new DataTemplate { DataType = typeof(DCompletionData) };
 
-			var sp = new FrameworkElementFactory(typeof( StackPanel));
-			sp.SetValue(StackPanel.OrientationProperty,Orientation.Horizontal);
-			sp.SetBinding(StackPanel.ToolTipProperty,new Binding("Description"));
+			var sp = new FrameworkElementFactory(typeof(StackPanel));
+			sp.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+			sp.SetBinding(StackPanel.ToolTipProperty, new Binding("Description"));
 
-			var iTemplate_Img = new FrameworkElementFactory( typeof(Image));
-			iTemplate_Img.SetBinding(Image.SourceProperty,new Binding("Image"));
-			iTemplate_Img.SetValue(Image.MarginProperty,new Thickness(1,1,4,1));
+			var iTemplate_Img = new FrameworkElementFactory(typeof(Image));
+			iTemplate_Img.SetBinding(Image.SourceProperty, new Binding("Image"));
+			iTemplate_Img.SetValue(Image.MarginProperty, new Thickness(1, 1, 4, 1));
 			sp.AppendChild(iTemplate_Img);
 
 			var iTemplate_Name = new FrameworkElementFactory(typeof(TextBlock));
-			iTemplate_Name.SetBinding(TextBlock.TextProperty,new Binding("PureNodeString"));
+			iTemplate_Name.SetBinding(TextBlock.TextProperty, new Binding("PureNodeString"));
 			sp.AppendChild(iTemplate_Name);
 
 			lookupItemTemplate.VisualTree = sp;
 			#endregion
 
 			// Important: Move the members-lookup to column 1
-			lookup_Members.SetValue(Grid.ColumnProperty,1);
+			lookup_Members.SetValue(Grid.ColumnProperty, 1);
 			#endregion
 
 			// Register CodeCompletion events
@@ -166,14 +170,14 @@ namespace D_IDE.D
 			Editor.MouseHover += new System.Windows.Input.MouseEventHandler(Editor_MouseHover);
 			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
 
-			Editor.TextArea.IndentationStrategy= indentationStrategy = new DIndentationStrategy(this);
-			foldingManager= ICSharpCode.AvalonEdit.Folding.FoldingManager.Install(Editor.TextArea);
+			Editor.TextArea.IndentationStrategy = indentationStrategy = new DIndentationStrategy(this);
+			foldingManager = ICSharpCode.AvalonEdit.Folding.FoldingManager.Install(Editor.TextArea);
 
 			#region Init context menu
 			var cm = new ContextMenu();
 			Editor.ContextMenu = cm;
 
-			var cmi = new MenuItem() { Header = "Add import directive", ToolTip="Add an import directive to the document if type cannot be resolved currently"};
+			var cmi = new MenuItem() { Header = "Add import directive", ToolTip = "Add an import directive to the document if type cannot be resolved currently" };
 			cmi.Click += ContextMenu_AddImportStatement_Click;
 			cm.Items.Add(cmi);
 
@@ -181,9 +185,11 @@ namespace D_IDE.D
 			cmi.Click += new System.Windows.RoutedEventHandler(ContextMenu_GotoDefinition_Click);
 			cm.Items.Add(cmi);
 
-			cmi = new MenuItem() { Header = "Toggle Breakpoint", 
+			cmi = new MenuItem()
+			{
+				Header = "Toggle Breakpoint",
 				ToolTip = "Toggle breakpoint on the currently selected line",
-				Command=D_IDE.Core.Controls.IDEUICommands.ToggleBreakpoint
+				Command = D_IDE.Core.Controls.IDEUICommands.ToggleBreakpoint
 			};
 			cm.Items.Add(cmi);
 
@@ -207,7 +213,7 @@ namespace D_IDE.D
 
 			cm.Items.Add(new Separator());
 
-			cmi = new MenuItem(){	Header = "Cut",	Command = System.Windows.Input.ApplicationCommands.Cut	};
+			cmi = new MenuItem() { Header = "Cut", Command = System.Windows.Input.ApplicationCommands.Cut };
 			cm.Items.Add(cmi);
 
 			cmi = new MenuItem() { Header = "Copy", Command = System.Windows.Input.ApplicationCommands.Copy };
@@ -218,8 +224,8 @@ namespace D_IDE.D
 			#endregion
 
 			//CommandBindings.Add(new CommandBinding(IDEUICommands.ReformatDoc,ReformatFileCmd));
-			CommandBindings.Add(new CommandBinding(IDEUICommands.CommentBlock,CommentBlock));
-			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock,UncommentBlock));
+			CommandBindings.Add(new CommandBinding(IDEUICommands.CommentBlock, CommentBlock));
+			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock, UncommentBlock));
 		}
 
 		public override void Reload()
@@ -247,26 +253,26 @@ namespace D_IDE.D
 			if (block == null)
 				return;
 
-			if (!(block is IAbstractSyntaxTree) && !block.BlockStartLocation.IsEmpty && block.EndLocation>block.BlockStartLocation)
+			if (!(block is IAbstractSyntaxTree) && !block.BlockStartLocation.IsEmpty && block.EndLocation > block.BlockStartLocation)
 			{
-				var fn=foldingManager.CreateFolding(
+				var fn = foldingManager.CreateFolding(
 					Editor.Document.GetOffset(block.BlockStartLocation.Line, block.BlockStartLocation.Column),
 					Editor.Document.GetOffset(block.EndLocation.Line, block.EndLocation.Column));
 				//fn.Title = (block as AbstractNode).ToString(false,false);
-				var nn=fn.Tag = block.ToString();
-				
+				var nn = fn.Tag = block.ToString();
+
 				if (foldedNodeNames.Contains(nn))
 					fn.IsFolded = true;
 			}
 
-			if(block.Count>0)
+			if (block.Count > 0)
 				foreach (var n in block)
 					updateFoldingsInternal(n as IBlockNode);
 		}
 
 		void lookup_Types_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (isUpdatingLookupDropdowns || e.AddedItems.Count<1)
+			if (isUpdatingLookupDropdowns || e.AddedItems.Count < 1)
 				return;
 
 			var completionData = e.AddedItems[0] as DCompletionData;
@@ -274,7 +280,7 @@ namespace D_IDE.D
 			if (completionData == null)
 				return;
 
-			Editor.TextArea.Caret.Position = new TextViewPosition(completionData.Node.StartLocation.Line,completionData.Node.StartLocation.Column);
+			Editor.TextArea.Caret.Position = new TextViewPosition(completionData.Node.StartLocation.Line, completionData.Node.StartLocation.Column);
 			Editor.TextArea.Caret.BringCaretToView();
 			Editor.Focus();
 		}
@@ -284,11 +290,11 @@ namespace D_IDE.D
 		{
 			if (false)
 			{
-				int cOff=Editor.CaretOffset;
-				Editor.Text=Commenting.comment(Editor.Text,Editor.SelectionStart,Editor.SelectionStart+Editor.SelectionLength);
-				Editor.CaretOffset=cOff;
-				var loc=Editor.Document.GetLocation(cOff);
-				Editor.ScrollTo(loc.Line,loc.Column);
+				int cOff = Editor.CaretOffset;
+				Editor.Text = Commenting.comment(Editor.Text, Editor.SelectionStart, Editor.SelectionStart + Editor.SelectionLength);
+				Editor.CaretOffset = cOff;
+				var loc = Editor.Document.GetLocation(cOff);
+				Editor.ScrollTo(loc.Line, loc.Column);
 			}
 			else
 			{
@@ -376,10 +382,10 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var rr = DResolver.ResolveType(Editor.Text,Editor.CaretOffset,
+				var rr = DResolver.ResolveType(Editor.Text, Editor.CaretOffset,
 					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
-					SyntaxTree,DCodeCompletionSupport.EnumAvailableModules(this),
-					true,true);
+					SyntaxTree, DCodeCompletionSupport.EnumAvailableModules(this),
+					true, true);
 
 				ResolveResult res = null;
 				// If there are multiple types, show a list of those items
@@ -444,7 +450,7 @@ namespace D_IDE.D
 
 				ResolveResult res = null;
 				// If there are multiple types, show a list of those items
-				if (rr != null && rr.Length>1)
+				if (rr != null && rr.Length > 1)
 				{
 					var dlg = new ListSelectionDialog();
 
@@ -493,13 +499,13 @@ namespace D_IDE.D
 
 				if (SyntaxTree.ContainsImport(mod.ModuleName))
 				{
-					MessageBox.Show("Module "+mod.ModuleName+" already imported!");
+					MessageBox.Show("Module " + mod.ModuleName + " already imported!");
 					return;
 				}
 
 				var loc = DParser.FindLastImportStatementEndLocation(Editor.Text);
 				Editor.Document.BeginUpdate();
-				Editor.Document.Insert(Editor.Document.GetOffset(loc.Line+1,0),"import "+mod.ModuleName+";\r\n");
+				Editor.Document.Insert(Editor.Document.GetOffset(loc.Line + 1, 0), "import " + mod.ModuleName + ";\r\n");
 				KeysTyped = true;
 				Editor.Document.EndUpdate();
 			}
@@ -554,18 +560,20 @@ namespace D_IDE.D
 			if (parseOperation != null && parseOperation.Status != DispatcherOperationStatus.Completed)
 				parseOperation.Abort();
 
-			parseOperation= Dispatcher.BeginInvoke(new Action(()=>{
-				try{
+			parseOperation = Dispatcher.BeginInvoke(new Action(() =>
+			{
+				try
+				{
 
 					hp.Start();
-					var parser=DParser.Create(new StringReader(Editor.Text));
+					var parser = DParser.Create(new StringReader(Editor.Text));
 
 					var newAst = parser.Parse();
 
 					hp.Stop();
 
 					ParseTime = hp.Duration;
-					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration*1000).ToString()+"ms";
+					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration * 1000).ToString() + "ms";
 
 					if (SyntaxTree != null)
 						lock (SyntaxTree)
@@ -574,7 +582,7 @@ namespace D_IDE.D
 							SyntaxTree.AssignFrom(newAst);
 						}
 					else
-						SyntaxTree =newAst;
+						SyntaxTree = newAst;
 
 					SyntaxTree.FileName = AbsoluteFilePath;
 					SyntaxTree.ModuleName = ProposedModuleName;
@@ -582,7 +590,8 @@ namespace D_IDE.D
 					lastSelectedBlock = null;
 					UpdateBlockCompletionData();
 					UpdateFoldings();
-				}catch(Exception ex){ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.System);}
+				}
+				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System); }
 				CoreManager.ErrorManagement.RefreshErrorList();
 			}));
 		}
@@ -593,13 +602,13 @@ namespace D_IDE.D
 			{
 				if (SyntaxTree != null)
 					foreach (var pe in SyntaxTree.ParseErrors)
-						yield return new DParseError(pe) { Project=HasProject?Project:null, FileName=AbsoluteFilePath};
+						yield return new DParseError(pe) { Project = HasProject ? Project : null, FileName = AbsoluteFilePath };
 			}
 		}
 
 		public CodeLocation CaretLocation
 		{
-			get { return new CodeLocation(Editor.TextArea.Caret.Column,Editor.TextArea.Caret.Line); }
+			get { return new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line); }
 		}
 
 		/// <summary>
@@ -620,12 +629,12 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 				{
 					lookup_Members.ItemsSource = lookup_Types.ItemsSource = null;
-					currentEnvCompletionData = null;
+					//currentEnvCompletionData = null;
 					return;
 				}
 
 				IStatement curStmt = null;
-				var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation,out curStmt);
+				var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation, out curStmt);
 				if (curBlock != lastSelectedBlock)
 				{
 					if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
@@ -637,10 +646,11 @@ namespace D_IDE.D
 					{
 						try
 						{
+							/*
 							var l = new List<ICompletionData>();
 							DCodeCompletionSupport.Instance.BuildCompletionData(this, l, null);
 							currentEnvCompletionData = l;
-
+							*/
 							#region Update the type & member selectors
 							isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
 
@@ -696,7 +706,7 @@ namespace D_IDE.D
 							}
 
 			}
-			catch (Exception ex){	ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser);	}
+			catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
 		}
 
 		void TextArea_SelectionChanged(object sender, EventArgs e)
@@ -706,8 +716,9 @@ namespace D_IDE.D
 
 		void ShowCodeCompletionWindow(string EnteredText)
 		{
-			try{
-				if (string.IsNullOrEmpty(EnteredText) || !(char.IsLetter(EnteredText[0]) || EnteredText[0]=='.') || !DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || Editor.IsReadOnly)
+			try
+			{
+				if (string.IsNullOrEmpty(EnteredText) || !(char.IsLetter(EnteredText[0]) || EnteredText[0] == '.') || !DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || Editor.IsReadOnly)
 					return;
 
 				/*
@@ -729,23 +740,24 @@ namespace D_IDE.D
 				completionWindow.CloseAutomatically = true;
 
 				//Dispatcher.Invoke(new Action(()=>{
-					if (string.IsNullOrEmpty(EnteredText))
-						foreach (var i in currentEnvCompletionData)
-							completionWindow.CompletionList.CompletionData.Add(i);
-					else
-						ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData, EnteredText);
+				/*if (string.IsNullOrEmpty(EnteredText))
+					foreach (var i in currentEnvCompletionData)
+						completionWindow.CompletionList.CompletionData.Add(i);
+				else*/
+				ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData, EnteredText);
 
-					// If no data present, return
-					if (completionWindow.CompletionList.CompletionData.Count < 1)
-					{
-						completionWindow = null;
-						return;
-					}
+				// If no data present, return
+				if (completionWindow.CompletionList.CompletionData.Count < 1)
+				{
+					completionWindow = null;
+					return;
+				}
 
-					completionWindow.Closed += (object o, EventArgs _e) => { completionWindow = null; }; // After the window closed, reset it to null
-					completionWindow.Show();
+				completionWindow.Closed += (object o, EventArgs _e) => { completionWindow = null; }; // After the window closed, reset it to null
+				completionWindow.Show();
 				//}));
-			}catch (Exception ex) { ErrorLogger.Log(ex); completionWindow = null; }
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); completionWindow = null; }
 		}
 
 		public void CloseCompletionPopups()
@@ -765,8 +777,8 @@ namespace D_IDE.D
 
 		void ShowInsightWindow(string EnteredText)
 		{
-			if (!DSettings.Instance.UseMethodInsight || 
-				(EnteredText=="," && insightWindow!=null && insightWindow.IsVisible))
+			if (!DSettings.Instance.UseMethodInsight ||
+				(EnteredText == "," && insightWindow != null && insightWindow.IsVisible))
 				return;
 
 			try
@@ -790,10 +802,11 @@ namespace D_IDE.D
 
 		public bool CanShowCodeCompletionPopup
 		{
-			get {
-				return 
+			get
+			{
+				return
 					DSettings.Instance.UseCodeCompletion &&
-					SyntaxTree!=null && //(SyntaxTree.ParseErrors!=null?SyntaxTree.ParseErrors.Count() <1 :true) &&
+					SyntaxTree != null && //(SyntaxTree.ParseErrors!=null?SyntaxTree.ParseErrors.Count() <1 :true) &&
 					!DCodeResolver.Commenting.IsInCommentAreaOrString(Editor.Text, Editor.CaretOffset);
 			}
 		}
@@ -818,7 +831,7 @@ namespace D_IDE.D
 				return;
 
 			// Note: Show completion window even before the first key has been processed by the editor!
-			else if(char.IsLetter(e.Text[0]) && !DResolver.IsTypeIdentifier(Editor.Text,Editor.CaretOffset))
+			else if (char.IsLetter(e.Text[0]) && !DResolver.IsTypeIdentifier(Editor.Text, Editor.CaretOffset))
 				ShowCodeCompletionWindow(e.Text);
 		}
 
@@ -826,7 +839,7 @@ namespace D_IDE.D
 		{
 			// If typed a block-related char, update line indentation
 			if (e.Text == "{" || e.Text == "}")
-				indentationStrategy.UpdateIndentation(e.Text);			
+				indentationStrategy.UpdateIndentation(e.Text);
 
 			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
 			if (e.Text == "." && CanShowCodeCompletionPopup)
@@ -835,7 +848,7 @@ namespace D_IDE.D
 			else if (e.Text == "," || e.Text == "(")
 				ShowInsightWindow(e.Text);
 
-			else if (e.Text == ")" && insightWindow!=null && insightWindow.IsLoaded)
+			else if (e.Text == ")" && insightWindow != null && insightWindow.IsLoaded)
 				insightWindow.Close();
 		}
 		#endregion
@@ -849,13 +862,13 @@ namespace D_IDE.D
 			foreach (var m in MarkerStrategy.TextMarkers)
 			{
 				var bem = m as ErrorMarker;
-				if(bem==null)
+				if (bem == null)
 					continue;
 
-				var nloc=bem.EditorDocument.Editor.Document.GetLocation(bem.StartOffset);
+				var nloc = bem.EditorDocument.Editor.Document.GetLocation(bem.StartOffset);
 				bem.Error.Line = nloc.Line;
 				bem.Error.Column = nloc.Column;
-			}			
+			}
 		}
 
 		void Document_LineCountChanged(object sender, EventArgs e)
@@ -886,7 +899,7 @@ namespace D_IDE.D
 				var pos = Editor.GetPositionFromPoint(edpos);
 				if (pos.HasValue)
 				{
-					int offset=Editor.Document.GetOffset(pos.Value.Line,pos.Value.Column);
+					int offset = Editor.Document.GetOffset(pos.Value.Line, pos.Value.Column);
 					// Avoid showing a tooltip if the cursor is located after a line-end
 					var vpos = Editor.TextArea.TextView.GetVisualPosition(new TextViewPosition(pos.Value.Line, Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength), ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineMiddle);
 					// Add TextView position to Editor-related point
@@ -898,7 +911,7 @@ namespace D_IDE.D
 						bool handled = false;
 						// Prefer showing error markers' error messages
 						foreach (var tm in MarkerStrategy.TextMarkers)
-							if (tm is ErrorMarker && tm.StartOffset<=offset && offset<=tm.EndOffset)
+							if (tm is ErrorMarker && tm.StartOffset <= offset && offset <= tm.EndOffset)
 							{
 								var em = tm as ErrorMarker;
 
@@ -908,7 +921,7 @@ namespace D_IDE.D
 								break;
 							}
 
-						if(!handled)
+						if (!handled)
 							DCodeCompletionSupport.Instance.BuildToolTip(this, ttArgs);
 					}
 					catch (Exception ex)

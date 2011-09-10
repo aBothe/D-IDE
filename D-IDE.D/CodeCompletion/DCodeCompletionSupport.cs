@@ -69,33 +69,6 @@ namespace D_IDE.D
 			IStatement curStmt = null;
 			var curBlock = DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLocation, out curStmt);
 
-			#region Parse the code between the last block opener and the caret
-
-			var blockOpenerLocation = curBlock != null ? curBlock.BlockStartLocation : CodeLocation.Empty;
-			var blockOpenerOffset = blockOpenerLocation.Line <= 0 ? blockOpenerLocation.Column :
-				EditorDocument.Editor.Document.GetOffset(blockOpenerLocation.Line, blockOpenerLocation.Column);
-
-			if (blockOpenerOffset >= 0 && caretOffset - blockOpenerOffset > 0)
-			{
-				var codeToParse = EditorDocument.Editor.Document.GetText(blockOpenerOffset, caretOffset - blockOpenerOffset);
-
-				/*
-				 * So, if we're inside of a method, we parse all its 'contents' (statements, expressions, declarations etc.)
-				 * to achieve a fully updated insight.
-				 */
-				if (curBlock is DMethod)
-				{
-					var newStmt = DParser.ParseBlockStatement(codeToParse, blockOpenerLocation, curBlock);
-
-					curStmt = newStmt.SearchStatementDeeply(caretLocation);
-
-					// For adding method members to the return list anyway, make the method's statment block (either 'In', 'Out' or 'Body') scoped.
-					if (curStmt == null)
-						curStmt = newStmt;
-				}
-			}
-			#endregion
-
 			if (curBlock == null)
 				return;
 
@@ -124,7 +97,24 @@ namespace D_IDE.D
 			// Enum all nodes that can be accessed in the current scope
 			else if (string.IsNullOrEmpty(EnteredText) || IsIdentifierChar(EnteredText[0]))
 			{
-				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock, curStmt, caretLocation, codeCache);
+				if (curBlock is DMethod)
+				{
+					var ScopedStatement = DResolver.ParseBlockStatementUntilCaret(
+						EditorDocument.Editor.Document.Text,
+						curBlock as DMethod,
+						EditorDocument.Editor.CaretOffset,
+						EditorDocument.CaretLocation);
+
+					if (ScopedStatement != null)
+					{
+						var decls = BlockStatement.GetItemHierarchy(ScopedStatement, EditorDocument.CaretLocation);
+
+						foreach (var n in decls)
+							l.Add(new DCompletionData(n));
+					}
+				}
+
+				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, caretLocation, codeCache);
 
 				foreach (var kv in DTokens.Keywords)
 					l.Add(new TokenCompletionData(kv.Key));

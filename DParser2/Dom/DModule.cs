@@ -281,9 +281,9 @@ namespace D_Parser.Dom
 		/// Children which were added artifically via Add() or AddRange()
 		/// In most cases, these are anonymous delegate/class declarations.
 		/// </summary>
-		public INode[] AdditionalChildren
+		public List<INode> AdditionalChildren
 		{
-			get { return additionalChildren.ToArray(); }
+			get { return additionalChildren; }
 		}
 
 		void UpdateChildrenArray()
