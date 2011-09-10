@@ -1793,7 +1793,7 @@ namespace D_Parser.Dom.Expressions
 	{
 		public int LiteralToken = DTokens.Delegate;
 
-		public DMethod AnonymousMethod = new DMethod();
+		public DMethod AnonymousMethod = new DMethod(DMethod.MethodType.AnonymousDelegate);
 
 		public FunctionLiteral() { }
 		public FunctionLiteral(int InitialLiteral) { LiteralToken = InitialLiteral; }

@@ -275,10 +275,13 @@ namespace D_Parser.Dom
 		public BlockStatement Body { get { return _Body; } set { _Body = value; UpdateChildrenArray(); } }
 
 		INode[] children;
+		List<INode> additionalChildren = new List<INode>();
 
 		void UpdateChildrenArray()
 		{
 			var l = new List<INode>();
+
+			l.AddRange(additionalChildren);
 
 			if (_In != null)
 				l.AddRange(_In.Declarations);
@@ -295,7 +298,8 @@ namespace D_Parser.Dom
         public enum MethodType
         {
             Normal=0,
-            Delegate,
+			Delegate,
+            AnonymousDelegate,
             Constructor,
 			Allocator,
             Destructor,
@@ -339,12 +343,51 @@ namespace D_Parser.Dom
 
 		public void Add(INode Node)
 		{
-			throw new NotImplementedException();
+			Node.Parent = this;
+			additionalChildren.Add(Node);
+			/*
+			var block = GetSubBlockAt(Node.StartLocation);
+
+			if (block == null)
+				return;
+
+			var ds = new DeclarationStatement() { 
+				Declarations=new[]{Node},
+				StartLocation=Node.StartLocation,
+				EndLocation=Node.EndLocation
+			};
+
+			block.Add(ds);*/
+
+			UpdateChildrenArray();
 		}
 
 		public void AddRange(IEnumerable<INode> Nodes)
 		{
-			throw new NotImplementedException();
+			foreach (var n in Nodes)
+			{
+				n.Parent = this;
+				additionalChildren.Add(n);
+			}
+			/*
+			foreach (var Node in Nodes)
+			{
+				var block = GetSubBlockAt(Node.StartLocation);
+
+				if (block == null)
+					continue;
+
+				var ds = new DeclarationStatement()
+				{
+					Declarations = new[] { Node },
+					StartLocation = Node.StartLocation,
+					EndLocation = Node.EndLocation
+				};
+
+				block.Add(ds);
+			}*/
+
+			UpdateChildrenArray();
 		}
 
 		public int Count
@@ -429,6 +472,8 @@ namespace D_Parser.Dom
 
     public class DClassLike : DBlockNode
     {
+		public bool IsAnonymous = false;
+
         public List<ITypeDeclaration> BaseClasses=new List<ITypeDeclaration>();
         public int ClassType=DTokens.Class;
 

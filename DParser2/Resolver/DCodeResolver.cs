@@ -481,7 +481,7 @@ namespace D_Parser.Resolver
 			var parser = DParser.Create(new StringReader(expressionCode));
 			parser.Step();
 
-			if (onlyAssumeIdentifierList)
+			if (onlyAssumeIdentifierList && parser.Lexer.LookAhead.Kind==DTokens.Identifier)
 				return ResolveType(parser.IdentifierList(),currentlyScopedNode, parseCache);
 			else if (parser.IsAssignExpression())
 			{
@@ -543,7 +543,13 @@ namespace D_Parser.Resolver
 					// References current class scope
 					if (searchToken == DTokens.This)
 					{
-						returnedResults.Add(new TypeResult() { ResolvedTypeDefinition = currentlyScopedNode });
+						var classDef = currentlyScopedNode;
+
+						while (!(classDef is DClassLike) && classDef != null)
+							classDef = classDef.Parent as IBlockNode;
+
+						if(classDef is DClassLike)
+							returnedResults.Add(new TypeResult() { ResolvedTypeDefinition = classDef });
 					}
 					// References super type of currently scoped class declaration
 					else if (searchToken == DTokens.Super)

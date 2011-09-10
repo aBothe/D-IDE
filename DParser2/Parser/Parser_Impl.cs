@@ -1137,14 +1137,14 @@ namespace D_Parser.Parser
 			}
 
 			if (laKind != TripleDot)
-				ret.Add(Parameter());
+				ret.Add(Parameter(Parent));
 
 			while (laKind == (Comma))
 			{
 				Step();
 				if (laKind == TripleDot)
 					break;
-				var p = Parameter();
+				var p = Parameter(Parent);
 				p.Parent = Parent;
 				ret.Add(p);
 			}
@@ -1176,7 +1176,7 @@ namespace D_Parser.Parser
 			return ret;
 		}
 
-		private INode Parameter()
+		private INode Parameter(IBlockNode Scope = null)
 		{
 			var attr = new List<DAttribute>();
 			var startLocation = la.Location;
@@ -1210,7 +1210,7 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				var defInit = AssignExpression();
+				var defInit = AssignExpression(Scope);
 
 				if (ret is DVariable)
 					(ret as DVariable).Initializer = defInit;
@@ -1220,7 +1220,7 @@ namespace D_Parser.Parser
 			return ret;
 		}
 
-		private IExpression Initializer()
+		private IExpression Initializer(IBlockNode Scope = null)
 		{
 			Expect(Assign);
 
@@ -1231,10 +1231,10 @@ namespace D_Parser.Parser
 				return new VoidInitializer() { Location=t.Location,EndLocation=t.EndLocation};
 			}
 
-			return NonVoidInitializer();
+			return NonVoidInitializer(Scope);
 		}
 
-		IExpression NonVoidInitializer()
+		IExpression NonVoidInitializer(IBlockNode Scope = null)
 		{
 			#region ArrayInitializer
 			if (laKind == OpenSquareBracket)
@@ -1259,7 +1259,7 @@ namespace D_Parser.Parser
 					// ArrayMemberInitialization
 					var ami = new ArrayMemberInitializer()
 					{
-						Left = NonVoidInitializer()
+						Left = NonVoidInitializer(Scope)
 					};
 					bool HasBeenAssExpr = !(t.Kind == (CloseSquareBracket) || t.Kind == (CloseCurlyBrace));
 
@@ -1267,7 +1267,7 @@ namespace D_Parser.Parser
 					if (HasBeenAssExpr && laKind == (Colon))
 					{
 						Step();
-						ami.Specialization = NonVoidInitializer();
+						ami.Specialization = NonVoidInitializer(Scope);
 					}
 					inits.Add(ami);
 				}
@@ -1321,7 +1321,7 @@ namespace D_Parser.Parser
 						Step();
 					}
 					
-					sinit.Specialization = NonVoidInitializer();
+					sinit.Specialization = NonVoidInitializer(Scope);
 
 					inits.Add(sinit);
 				}
@@ -1444,10 +1444,10 @@ namespace D_Parser.Parser
 		#endregion
 
 		#region Expressions
-		public IExpression Expression()
+		public IExpression Expression(IBlockNode Scope = null)
 		{
 			// AssignExpression
-			var ass = AssignExpression();
+			var ass = AssignExpression(Scope);
 			if (laKind != (Comma))
 				return ass;
 
@@ -1460,7 +1460,7 @@ namespace D_Parser.Parser
 			while (laKind == (Comma))
 			{
 				Step();
-				ae.Add(AssignExpression());
+				ae.Add(AssignExpression(Scope));
 			}
 			return ae;
 		}
@@ -1556,105 +1556,105 @@ namespace D_Parser.Parser
 			return true;
 		}
 
-		public IExpression AssignExpression()
+		public IExpression AssignExpression(IBlockNode Scope = null)
 		{
-			var left = ConditionalExpression();
+			var left = ConditionalExpression(Scope);
 			if (!AssignOps[laKind])
 				return left;
 
 			Step();
 			var ate = new AssignExpression(t.Kind);
 			ate.LeftOperand = left;
-			ate.RightOperand = AssignExpression();
+			ate.RightOperand = AssignExpression(Scope);
 			return ate;
 		}
 
-		IExpression ConditionalExpression()
+		IExpression ConditionalExpression(IBlockNode Scope = null)
 		{
-			var trigger = OrOrExpression();
+			var trigger = OrOrExpression(Scope);
 			if (laKind != (Question))
 				return trigger;
 
 			Expect(Question);
 			var se = new ConditionalExpression() { OrOrExpression = trigger };
-			se.TrueCaseExpression = AssignExpression();
+			se.TrueCaseExpression = AssignExpression(Scope);
 			Expect(Colon);
-			se.FalseCaseExpression = ConditionalExpression();
+			se.FalseCaseExpression = ConditionalExpression(Scope);
 			return se;
 		}
 
-		IExpression OrOrExpression()
+		IExpression OrOrExpression(IBlockNode Scope = null)
 		{
-			var left = AndAndExpression();
+			var left = AndAndExpression(Scope);
 			if (laKind != LogicalOr)
 				return left;
 
 			Step();
 			var ae = new OrOrExpression();
 			ae.LeftOperand = left;
-			ae.RightOperand = OrOrExpression();
+			ae.RightOperand = OrOrExpression(Scope);
 			return ae;
 		}
 
-		IExpression AndAndExpression()
+		IExpression AndAndExpression(IBlockNode Scope = null)
 		{
 			// Note: Due to making it easier to parse, we ignore the OrExpression-CmpExpression rule
 			// -> So we only assume that there's a OrExpression
 
-			var left = OrExpression();
+			var left = OrExpression(Scope);
 			if (laKind != LogicalAnd)
 				return left;
 
 			Step();
 			var ae = new AndAndExpression();
 			ae.LeftOperand = left;
-			ae.RightOperand = AndAndExpression();
+			ae.RightOperand = AndAndExpression(Scope);
 			return ae;
 		}
 
-		IExpression OrExpression()
+		IExpression OrExpression(IBlockNode Scope = null)
 		{
-			var left = XorExpression();
+			var left = XorExpression(Scope);
 			if (laKind != BitwiseOr)
 				return left;
 
 			Step();
 			var ae = new OrExpression();
 			ae.LeftOperand = left;
-			ae.RightOperand = OrExpression();
+			ae.RightOperand = OrExpression(Scope);
 			return ae;
 		}
 
-		IExpression XorExpression()
+		IExpression XorExpression(IBlockNode Scope = null)
 		{
-			var left = AndExpression();
+			var left = AndExpression(Scope);
 			if (laKind != Xor)
 				return left;
 
 			Step();
 			var ae = new XorExpression();
 			ae.LeftOperand = left;
-			ae.RightOperand = XorExpression();
+			ae.RightOperand = XorExpression(Scope);
 			return ae;
 		}
 
-		IExpression AndExpression()
+		IExpression AndExpression(IBlockNode Scope = null)
 		{
 			// Note: Since we ignored all kinds of CmpExpressions in AndAndExpression(), we have to take CmpExpression instead of ShiftExpression here!
-			var left = CmpExpression();
+			var left = CmpExpression(Scope);
 			if (laKind != BitwiseAnd)
 				return left;
 
 			Step();
 			var ae = new AndExpression();
 			ae.LeftOperand = left;
-			ae.RightOperand = AndExpression();
+			ae.RightOperand = AndExpression(Scope);
 			return ae;
 		}
 
-		IExpression CmpExpression()
+		IExpression CmpExpression(IBlockNode Scope = null)
 		{
-			var left = ShiftExpression();
+			var left = ShiftExpression(Scope);
 
 			OperatorBasedExpression ae = null;
 
@@ -1684,29 +1684,29 @@ namespace D_Parser.Parser
 			Step();
 
 			ae.LeftOperand = left;
-			ae.RightOperand = ShiftExpression();
+			ae.RightOperand = ShiftExpression(Scope);
 			return ae;
 		}
 
-		IExpression ShiftExpression()
+		IExpression ShiftExpression(IBlockNode Scope = null)
 		{
-			var left = AddExpression();
+			var left = AddExpression(Scope);
 			if (!(laKind == ShiftLeft || laKind == ShiftRight || laKind == ShiftRightUnsigned))
 				return left;
 
 			Step();
 			var ae = new ShiftExpression(t.Kind);
 			ae.LeftOperand = left;
-			ae.RightOperand = ShiftExpression();
+			ae.RightOperand = ShiftExpression(Scope);
 			return ae;
 		}
 
 		/// <summary>
 		/// Note: Add, Multiply as well as Cat Expressions are parsed in this method.
 		/// </summary>
-		IExpression AddExpression()
+		IExpression AddExpression(IBlockNode Scope = null)
 		{
-			var left = UnaryExpression();
+			var left = UnaryExpression(Scope);
 
 			OperatorBasedExpression ae = null;
 
@@ -1731,11 +1731,11 @@ namespace D_Parser.Parser
 			Step();
 
 			ae.LeftOperand = left;
-			ae.RightOperand = AddExpression();
+			ae.RightOperand = AddExpression(Scope);
 			return ae;
 		}
 
-		IExpression UnaryExpression()
+		IExpression UnaryExpression(IBlockNode Scope = null)
 		{
 			// Note: PowExpressions are handled in PowExpression()
 
@@ -1778,7 +1778,7 @@ namespace D_Parser.Parser
 
 				ae.Location = t.Location;
 
-				ae.UnaryExpression = UnaryExpression();
+				ae.UnaryExpression = UnaryExpression(Scope);
 
 				return ae;
 			}
@@ -1828,7 +1828,7 @@ namespace D_Parser.Parser
 
 				var ae = new CastExpression();
 				ae.Type = castType;
-				ae.UnaryExpression = UnaryExpression();
+				ae.UnaryExpression = UnaryExpression(Scope);
 
 				ae.Location = startLoc;
 				ae.EndLocation = t.EndLocation;
@@ -1844,12 +1844,12 @@ namespace D_Parser.Parser
 			if (laKind == (Delete))
 			{
 				Step();
-				return new DeleteExpression() { UnaryExpression = UnaryExpression() };
+				return new DeleteExpression() { UnaryExpression = UnaryExpression(Scope) };
 			}
 
 
 			// PowExpression
-			var left = PostfixExpression();
+			var left = PostfixExpression(Scope);
 
 			if (laKind != Pow)
 				return left;
@@ -1857,11 +1857,12 @@ namespace D_Parser.Parser
 			Step();
 			var pe = new PowExpression();
 			pe.LeftOperand = left;
-			pe.RightOperand = UnaryExpression();
+			pe.RightOperand = UnaryExpression(Scope);
+
 			return pe;
 		}
 
-		IExpression NewExpression()
+		IExpression NewExpression(IBlockNode Scope = null)
 		{
 			Expect(New);
 			var startLoc = t.Location;
@@ -1872,7 +1873,7 @@ namespace D_Parser.Parser
 			{
 				Step();
 				if (laKind != (CloseParenthesis))
-					newArgs = ArgumentList().ToArray();
+					newArgs = ArgumentList(Scope).ToArray();
 				Expect(CloseParenthesis);
 			}
 
@@ -1904,10 +1905,10 @@ namespace D_Parser.Parser
 					if (laKind == (CloseParenthesis))
 						Step();
 					else
-						ac.ClassArguments = ArgumentList().ToArray();
+						ac.ClassArguments = ArgumentList(Scope).ToArray();
 				}
 
-				var anclass = new DClassLike(Class);
+				var anclass = new DClassLike(Class) { IsAnonymous=true };
 
 				anclass.Name = "(Anonymous Class)";
 
@@ -1926,6 +1927,9 @@ namespace D_Parser.Parser
 
 				ac.Location = startLoc;
 				ac.EndLocation = t.EndLocation;
+
+				if (Scope != null)
+					Scope.Add(ac.AnonymousClass);
 
 				return ac;
 			}
@@ -1946,7 +1950,7 @@ namespace D_Parser.Parser
 				{
 					Step();
 					if(laKind!=CloseSquareBracket)
-						args.Add(AssignExpression());
+						args.Add(AssignExpression(Scope));
 					Expect(CloseSquareBracket);
 				}
 
@@ -1954,7 +1958,7 @@ namespace D_Parser.Parser
 				{
 					Step();
 					if (laKind != CloseParenthesis)
-						args = ArgumentList();
+						args = ArgumentList(Scope);
 					Expect(CloseParenthesis);
 				}
 
@@ -1965,25 +1969,25 @@ namespace D_Parser.Parser
 			}
 		}
 
-		List<IExpression> ArgumentList()
+		List<IExpression> ArgumentList(IBlockNode Scope = null)
 		{
 			var ret = new List<IExpression>();
 
-			ret.Add(AssignExpression());
+			ret.Add(AssignExpression(Scope));
 
 			while (laKind == (Comma))
 			{
 				Step();
-				ret.Add(AssignExpression());
+				ret.Add(AssignExpression(Scope));
 			}
 
 			return ret;
 		}
 
-		IExpression PostfixExpression()
+		IExpression PostfixExpression(IBlockNode Scope = null)
 		{
 			// PostfixExpression
-			IExpression leftExpr = PrimaryExpression();
+			IExpression leftExpr = PrimaryExpression(Scope);
 
 			while (!IsEOF)
 			{
@@ -2085,7 +2089,7 @@ namespace D_Parser.Parser
 			return leftExpr;
 		}
 
-		IExpression PrimaryExpression()
+		IExpression PrimaryExpression(IBlockNode Scope=null)
 		{
 			bool isModuleScoped = false;
 			// For minimizing possible overhead, skip 'useless' tokens like an initial dot <<< TODO
@@ -2230,6 +2234,7 @@ namespace D_Parser.Parser
 			if (laKind == Delegate || laKind == Function || laKind == OpenCurlyBrace || (laKind == OpenParenthesis && IsFunctionLiteral()))
 			{
 				var fl = new FunctionLiteral() { Location=la.Location};
+				fl.AnonymousMethod.StartLocation = la.Location;
 
 				if (laKind == Delegate || laKind == Function)
 				{
@@ -2263,6 +2268,10 @@ namespace D_Parser.Parser
 				FunctionBody(fl.AnonymousMethod);
 
 				fl.EndLocation = t.EndLocation;
+
+				if (Scope != null)
+					Scope.Add(fl.AnonymousMethod);
+
 				return fl;
 			}
 			#endregion
@@ -2589,7 +2598,7 @@ namespace D_Parser.Parser
 			}
 		}
 
-		IStatement Statement(bool BlocksAllowed=true,bool EmptyAllowed=true)
+		IStatement Statement(bool BlocksAllowed = true, bool EmptyAllowed = true, IBlockNode Scope = null)
 		{
 			IStatement ret = null;
 
@@ -2600,7 +2609,7 @@ namespace D_Parser.Parser
 			}
 
 			if (BlocksAllowed && laKind == OpenCurlyBrace)
-				return BlockStatement();
+				return BlockStatement(Scope);
 
 			#region LabeledStatement (loc:... goto loc;)
 			if (laKind == Identifier && Lexer.CurrentPeekToken.Kind == Colon)
@@ -2635,13 +2644,13 @@ namespace D_Parser.Parser
 				Expect(CloseParenthesis);
 				// ThenStatement
 
-				dbs.ThenStatement = Statement();
+				dbs.ThenStatement = Statement(Scope:Scope);
 
 				// ElseStatement
 				if (laKind == (Else))
 				{
 					Step();
-					dbs.ElseStatement = Statement();
+					dbs.ElseStatement = Statement(Scope: Scope);
 				}
 
 				dbs.EndLocation = t.EndLocation;
@@ -2658,10 +2667,10 @@ namespace D_Parser.Parser
 				var dbs = new WhileStatement() { StartLocation = t.Location };
 
 				Expect(OpenParenthesis);
-				dbs.Condition = Expression();
+				dbs.Condition = Expression(Scope);
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement();
+				dbs.ScopedStatement = Statement(Scope: Scope);
 				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
@@ -2675,11 +2684,11 @@ namespace D_Parser.Parser
 
 				var dbs = new WhileStatement() { StartLocation=t.Location };
 
-				dbs.ScopedStatement = Statement();
+				dbs.ScopedStatement = Statement(Scope: Scope);
 
 				Expect(While);
 				Expect(OpenParenthesis);
-				dbs.Condition = Expression();
+				dbs.Condition = Expression(Scope);
 				Expect(CloseParenthesis);
 
 				dbs.EndLocation = t.EndLocation;
@@ -2699,7 +2708,7 @@ namespace D_Parser.Parser
 
 				// Initialize
 				if (laKind != Semicolon)
-					dbs.Initialize = Statement(false); // Against the D language theory, blocks aren't allowed here!
+					dbs.Initialize = Statement(false, Scope: Scope); // Against the D language theory, blocks aren't allowed here!
 				else 
 					Step();
 				// Enforce a trailing semi-colon only if there hasn't been an expression (the ; gets already skipped in there)
@@ -2707,17 +2716,17 @@ namespace D_Parser.Parser
 
 				// Test
 				if (laKind != (Semicolon))
-					dbs.Test = Expression();
+					dbs.Test = Expression(Scope);
 
 				Expect(Semicolon);
 
 				// Increment
 				if (laKind != (CloseParenthesis))
-					dbs.Increment= Expression();
+					dbs.Increment= Expression(Scope);
 
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement();
+				dbs.ScopedStatement = Statement(Scope: Scope);
 				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
@@ -2770,7 +2779,7 @@ namespace D_Parser.Parser
 				dbs.ForeachTypeList = tl.ToArray();
 
 				Expect(Semicolon);
-				dbs.Aggregate = Expression();
+				dbs.Aggregate = Expression(Scope);
 
 				// ForeachRangeStatement
 				if (laKind == DoubleDot)
@@ -2782,7 +2791,7 @@ namespace D_Parser.Parser
 
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement();
+				dbs.ScopedStatement = Statement(Scope: Scope);
 				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
@@ -2801,10 +2810,10 @@ namespace D_Parser.Parser
 				}
 				Step();
 				Expect(OpenParenthesis);
-				dbs.SwitchExpression = Expression();
+				dbs.SwitchExpression = Expression(Scope);
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement();
+				dbs.ScopedStatement = Statement(Scope: Scope);
 				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
@@ -2818,7 +2827,7 @@ namespace D_Parser.Parser
 
 				var dbs = new SwitchStatement.CaseStatement() { StartLocation = la.Location };
 
-				dbs.ArgumentList = Expression();
+				dbs.ArgumentList = Expression(Scope);
 
 				Expect(Colon);
 
@@ -2835,7 +2844,7 @@ namespace D_Parser.Parser
 
 				while (laKind != Case && laKind != Default && laKind != CloseCurlyBrace && !IsEOF)
 				{
-					var stmt = Statement();
+					var stmt = Statement(Scope: Scope);
 
 					if (stmt != null)
 						sl.Add(stmt);
@@ -2864,7 +2873,7 @@ namespace D_Parser.Parser
 
 				while (laKind != Case && laKind != Default && laKind != CloseCurlyBrace && !IsEOF)
 				{
-					var stmt = Statement();
+					var stmt = Statement(Scope: Scope);
 
 					if (stmt != null)
 						sl.Add(stmt);
@@ -2915,7 +2924,7 @@ namespace D_Parser.Parser
 				Step();
 				var s = new ReturnStatement() { StartLocation = t.Location };
 				if (laKind != (Semicolon))
-					s.ReturnExpression = Expression();
+					s.ReturnExpression = Expression(Scope);
 
 				Expect(Semicolon);
 				s.EndLocation = t.EndLocation;
@@ -2947,7 +2956,7 @@ namespace D_Parser.Parser
 					s.StmtType = GotoStatement.GotoStmtType.Case;
 
 					if (laKind != (Semicolon))
-						s.CaseExpression = Expression();
+						s.CaseExpression = Expression(Scope);
 				}
 
 				Expect(Semicolon);
@@ -2967,11 +2976,11 @@ namespace D_Parser.Parser
 				Expect(OpenParenthesis);
 
 				// Symbol
-				dbs.WithExpression = Expression();
+				dbs.WithExpression = Expression(Scope);
 
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement();
+				dbs.ScopedStatement = Statement(Scope: Scope);
 
 				dbs.EndLocation = t.EndLocation;
 				return dbs;
@@ -2987,11 +2996,11 @@ namespace D_Parser.Parser
 				if (laKind == (OpenParenthesis))
 				{
 					Step();
-					dbs.SyncExpression = Expression();
+					dbs.SyncExpression = Expression(Scope);
 					Expect(CloseParenthesis);
 				}
 
-				dbs.ScopedStatement = Statement();
+				dbs.ScopedStatement = Statement(Scope: Scope);
 
 				dbs.EndLocation = t.EndLocation;
 				return dbs;
@@ -3005,7 +3014,7 @@ namespace D_Parser.Parser
 
 				var s=new TryStatement(){StartLocation=t.Location};
 
-				s.ScopedStatement=Statement();
+				s.ScopedStatement = Statement(Scope: Scope);
 
 				if (!(laKind == (Catch) || laKind == (Finally)))
 					SemErr(Catch, "At least one catch or a finally block expected!");
@@ -3037,7 +3046,7 @@ namespace D_Parser.Parser
 						c.CatchParameter = catchVar;
 					}
 
-					c.ScopedStatement = Statement();
+					c.ScopedStatement = Statement(Scope: Scope);
 					c.EndLocation = t.EndLocation;
 
 					catches.Add(c);
@@ -3068,7 +3077,7 @@ namespace D_Parser.Parser
 			{
 				Step();
 				var s = new ThrowStatement() { StartLocation = t.Location };
-				s.ThrowExpression = Expression();
+				s.ThrowExpression = Expression(Scope);
 				Expect(Semicolon);
 				s.EndLocation = t.EndLocation;
 
@@ -3077,7 +3086,7 @@ namespace D_Parser.Parser
 			#endregion
 
 			#region ScopeGuardStatement
-			else if (laKind == (Scope))
+			else if (laKind == (DTokens.Scope))
 			{
 				Step();
 				var s = new ScopeGuardStatement() { StartLocation=t.Location };
@@ -3089,7 +3098,7 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				s.ScopedStatement = Statement();
+				s.ScopedStatement = Statement(Scope: Scope);
 
 				s.EndLocation = t.EndLocation;
 				return s;
@@ -3130,7 +3139,7 @@ namespace D_Parser.Parser
 			{
 				var s=_Pragma();
 
-				s.ScopedStatement = Statement();
+				s.ScopedStatement = Statement(Scope: Scope);
 				s.EndLocation = t.EndLocation;
 				return s;
 			}
@@ -3149,7 +3158,7 @@ namespace D_Parser.Parser
 					var s = new MixinStatement() { StartLocation = t.Location };
 					Expect(OpenParenthesis);
 
-					s.MixinExpression = AssignExpression();
+					s.MixinExpression = AssignExpression(Scope);
 
 					Expect(CloseParenthesis);
 					Expect(Semicolon);
@@ -3183,12 +3192,12 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				s.ScopedStatement = Statement();
+				s.ScopedStatement = Statement(Scope: Scope);
 
 				if (laKind == Else)
 				{
 					Step();
-					s.ElseStatement = Statement();
+					s.ElseStatement = Statement(Scope: Scope);
 				}
 
 				s.EndLocation = t.EndLocation;
@@ -3240,7 +3249,7 @@ namespace D_Parser.Parser
 				if (s.IsStatic)
 					Step();
 
-				s.AssertExpression = AssignExpression();
+				s.AssertExpression = AssignExpression(Scope);
 				Expect(Semicolon);
 				s.EndLocation = t.EndLocation;
 
@@ -3253,7 +3262,7 @@ namespace D_Parser.Parser
 			{
 				Step();
 				var s = new VolatileStatement() { StartLocation = t.Location };
-				s.ScopedStatement = Statement();
+				s.ScopedStatement = Statement(Scope: Scope);
 				s.EndLocation = t.EndLocation;
 
 				return s;
@@ -3268,7 +3277,7 @@ namespace D_Parser.Parser
 			{
 				var s = new ExpressionStatement() { StartLocation = la.Location };
 				// a==b, a=9; is possible -> Expressions can be there, not only single AssignExpressions!
-				s.Expression = Expression();
+				s.Expression = Expression(Scope);
 				Expect(Semicolon);
 				s.EndLocation = t.EndLocation;
 				return s;
@@ -3300,7 +3309,7 @@ namespace D_Parser.Parser
 				else
 					while (!IsEOF && laKind != (CloseCurlyBrace))
 					{
-						var s = Statement();
+						var s = Statement(Scope:ParentNode as IBlockNode);
 						bs.Add(s);
 					}
 				Expect(CloseCurlyBrace);
@@ -3693,7 +3702,19 @@ namespace D_Parser.Parser
 			{
 				HadIn = true;
 				Step();
-				par.In=BlockStatement(par);
+
+				par.In = BlockStatement(par);
+
+				/*var tbn = new DBlockNode();
+
+				par.In=BlockStatement(tbn);
+
+				foreach (var decl in tbn)
+					par.In.Add(new DeclarationStatement() { 
+						StartLocation=decl.StartLocation,
+						EndLocation=decl.EndLocation,
+						Declarations=new[]{decl}
+					});*/
 
 				if (!HadOut && laKind == (Out))
 					goto check_again;
@@ -3711,7 +3732,19 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				par.Out=BlockStatement(par);
+				par.Out = BlockStatement(par);
+				/*
+				var tbn = new DBlockNode();
+
+				par.Out = BlockStatement(tbn);
+
+				foreach (var decl in tbn)
+					par.Out.Add(new DeclarationStatement()
+					{
+						StartLocation = decl.StartLocation,
+						EndLocation = decl.EndLocation,
+						Declarations = new[] { decl }
+					});*/
 
 				if (!HadIn && laKind == (In))
 					goto check_again;
@@ -3728,7 +3761,21 @@ namespace D_Parser.Parser
 				par.Description += CheckForPostSemicolonComment();
 			}
 			else
-				par.Body=BlockStatement(par);
+			{
+				par.Body = BlockStatement(par);
+				/*
+				var tbn = new DBlockNode();
+
+				par.Body = BlockStatement(tbn);
+
+				foreach (var decl in tbn)
+					par.Body.Add(new DeclarationStatement()
+					{
+						StartLocation = decl.StartLocation,
+						EndLocation = decl.EndLocation,
+						Declarations = new[] { decl }
+					});*/
+			}
 
 			par.EndLocation = t.EndLocation;
 		}
