@@ -2099,7 +2099,15 @@ namespace D_Parser.Parser
 			if (laKind == __FILE__ || laKind == __LINE__)
 			{
 				Step();
-				return new IdentifierExpression(t.Kind == __FILE__ ? doc.FileName : (object)t.line)
+
+				object id = null;
+
+				if (t.Kind == __FILE__ && doc != null)
+					id = doc.FileName;
+				else if(t.Kind==__LINE__)
+					id = t.line;
+
+				return new IdentifierExpression(id)
 				{
 					Location=t.Location,
 					EndLocation=t.EndLocation
