@@ -66,7 +66,7 @@ namespace D_Parser.Resolver
 	}
 
 	/// <summary>
-	/// Holds raw expressions like (1+2)
+	/// Keeps raw expressions like (1+2)
 	/// </summary>
 	public class ExpressionResult : ResolveResult
 	{
@@ -95,6 +95,9 @@ namespace D_Parser.Resolver
 		}
 	}
 
+	/// <summary>
+	/// Keeps class-like definitions
+	/// </summary>
 	public class TypeResult : ResolveResult
 	{
 		public IBlockNode ResolvedTypeDefinition;

@@ -36,7 +36,7 @@ namespace D_Parser.Resolver
 	/// <summary>
 	/// Generic class for resolve module relations and/or declarations
 	/// </summary>
-	public class DCodeResolver
+	public class DResolver
 	{
 		/// <summary>
 		/// Returns a list of all items that can be accessed in the current scope.
@@ -465,10 +465,7 @@ namespace D_Parser.Resolver
 				return a || b || c || d;
 			}
 		}
-	}
 
-	public class DResolver
-	{
 		/// <summary>
 		/// Parses the code between the start of the parent method's block and the given caret location.
 		/// </summary>
@@ -546,7 +543,7 @@ namespace D_Parser.Resolver
 				return null;
 
 			if (importCache == null)
-				importCache = DCodeResolver.ResolveImports(currentlyScopedNode.NodeRoot as DModule, parseCache);
+				importCache = DResolver.ResolveImports(currentlyScopedNode.NodeRoot as DModule, parseCache);
 
 			var returnedResults = new List<ResolveResult>();
 

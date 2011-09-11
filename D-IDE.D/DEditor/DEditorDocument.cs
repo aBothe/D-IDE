@@ -307,7 +307,7 @@ namespace D_IDE.D
 					Editor.Document.UndoStack.StartUndoGroup();
 
 					bool a, b, IsInBlock, IsInNested;
-					DCodeResolver.Commenting.IsInCommentAreaOrString(Editor.Text, Editor.SelectionStart, out a, out b, out IsInBlock, out IsInNested);
+					DResolver.Commenting.IsInCommentAreaOrString(Editor.Text, Editor.SelectionStart, out a, out b, out IsInBlock, out IsInNested);
 
 					if (!IsInBlock && !IsInNested)
 					{
@@ -348,14 +348,14 @@ namespace D_IDE.D
 			int off = CaretOffset - 2;
 
 			// Seek the comment block opener
-			commStart = DCodeResolver.Commenting.LastIndexOf(Editor.Text, false, off);
-			int nestedCommStart = DCodeResolver.Commenting.LastIndexOf(Editor.Text, true, off);
+			commStart = DResolver.Commenting.LastIndexOf(Editor.Text, false, off);
+			int nestedCommStart = DResolver.Commenting.LastIndexOf(Editor.Text, true, off);
 			if (commStart < 0 && nestedCommStart < 0) return;
 
 			// Seek the fitting comment block closer
 			int off2 = off + (Math.Max(nestedCommStart, commStart) == off ? 2 : 0);
-			int commEnd = DCodeResolver.Commenting.IndexOf(Editor.Text, false, off2);
-			int commEnd2 = DCodeResolver.Commenting.IndexOf(Editor.Text, true, off2);
+			int commEnd = DResolver.Commenting.IndexOf(Editor.Text, false, off2);
+			int commEnd2 = DResolver.Commenting.IndexOf(Editor.Text, true, off2);
 
 			if (nestedCommStart > commStart && commEnd2 > nestedCommStart)
 			{
@@ -633,7 +633,7 @@ namespace D_IDE.D
 				}
 
 				IStatement curStmt = null;
-				var curBlock = DCodeResolver.SearchBlockAt(SyntaxTree, CaretLocation, out curStmt);
+				var curBlock = DResolver.SearchBlockAt(SyntaxTree, CaretLocation, out curStmt);
 
 				if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
 					blockCompletionDataOperation.Abort();
@@ -798,7 +798,7 @@ namespace D_IDE.D
 				return
 					DSettings.Instance.UseCodeCompletion &&
 					SyntaxTree != null && //(SyntaxTree.ParseErrors!=null?SyntaxTree.ParseErrors.Count() <1 :true) &&
-					!DCodeResolver.Commenting.IsInCommentAreaOrString(Editor.Text, Editor.CaretOffset);
+					!DResolver.Commenting.IsInCommentAreaOrString(Editor.Text, Editor.CaretOffset);
 			}
 		}
 

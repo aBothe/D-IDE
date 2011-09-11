@@ -31,7 +31,7 @@ namespace D_IDE.D
 
 		public bool CanShowCompletionWindow(DEditorDocument EditorDocument)
 		{
-			return !DCodeResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text, EditorDocument.Editor.CaretOffset);
+			return !DResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text, EditorDocument.Editor.CaretOffset);
 		}
 
 		public enum ItemVisibility
@@ -67,7 +67,7 @@ namespace D_IDE.D
 			var caretLocation = new CodeLocation(EditorDocument.Editor.TextArea.Caret.Column, EditorDocument.Editor.TextArea.Caret.Line);
 
 			IStatement curStmt = null;
-			var curBlock = DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLocation, out curStmt);
+			var curBlock = DResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLocation, out curStmt);
 
 			if (curBlock == null)
 				return;
@@ -114,7 +114,7 @@ namespace D_IDE.D
 					}
 				}
 
-				listedItems = DCodeResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, caretLocation, codeCache);
+				listedItems = DResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, caretLocation, codeCache);
 
 				foreach (var kv in DTokens.Keywords)
 					l.Add(new TokenCompletionData(kv.Key));
@@ -683,7 +683,7 @@ namespace D_IDE.D
 			int offset = EditorDocument.Editor.Document.GetOffset(ToolTipRequest.Line, ToolTipRequest.Column);
 
 			if (!ToolTipRequest.InDocument ||
-					DCodeResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text, offset))
+					DResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text, offset))
 				return;
 
 			try
@@ -691,7 +691,7 @@ namespace D_IDE.D
 				var caretLoc = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
 				IStatement curStmt = null;
 				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
-					DCodeResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLoc, out curStmt), DCodeResolver.ResolveImports(EditorDocument.SyntaxTree, EnumAvailableModules(EditorDocument)), true, true);
+					DResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLoc, out curStmt), DResolver.ResolveImports(EditorDocument.SyntaxTree, EnumAvailableModules(EditorDocument)), true, true);
 
 				if (rr.Length < 1)
 					return;

@@ -130,7 +130,7 @@ namespace D_IDE.D
 				if (module != null)
 				{
 					IStatement stmt = null;
-					var block = DCodeResolver.SearchBlockAt(module, new CodeLocation(0, codeLine),out stmt);
+					var block = DResolver.SearchBlockAt(module, new CodeLocation(0, codeLine),out stmt);
 
 					var res = DResolver.ResolveType(new IdentifierDeclaration(Symbol.Name),block, null);
 
