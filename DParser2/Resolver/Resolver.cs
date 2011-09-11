@@ -304,7 +304,7 @@ namespace D_Parser.Resolver
 		/// <summary>
 		/// Trivial class which cares about locating Comments and other non-code blocks within a code file
 		/// </summary>
-		public class Commenting
+		public class CommentSearching
 		{
 			public static int IndexOf(string HayStack, bool Nested, int Start)
 			{
@@ -476,6 +476,8 @@ namespace D_Parser.Resolver
 			MethodParent.AdditionalChildren.Clear();
 
 			var oldBlock=MethodParent.GetSubBlockAt(caretLocation);
+			if (oldBlock == null)
+				return null;
 			var blockOpenerLocation = oldBlock.StartLocation;
 			var blockOpenerOffset = blockOpenerLocation.Line <= 0 ? blockOpenerLocation.Column :
 				DocumentHelper.LocationToOffset(code,blockOpenerLocation);
@@ -980,10 +982,49 @@ namespace D_Parser.Resolver
 			{
 				var method = m as DMethod;
 
+				var methodType = method.Type;
+
+				/*
+				 * If a method's type equals null, assume that it's an 'auto' function..
+				 * 1) Search for a return statement
+				 * 2) Resolve the returned expression
+				 * 3) Use that one as the method's type
+				 */
+				//TODO: What about handling 'null'-returns?
+				if (methodType == null && method.Body!=null)
+				{
+					ReturnStatement returnStmt=null;
+					var list = new List<IStatement> { method.Body };
+					var list2 = new List<IStatement>();
+
+					while (returnStmt==null && list.Count > 0)
+					{
+						foreach (var stmt in list)
+						{
+							if (stmt is ReturnStatement)
+							{
+								returnStmt = stmt as ReturnStatement;
+								break;
+							}
+
+							if (stmt is StatementContainingStatement)
+								list2.AddRange((stmt as StatementContainingStatement).SubStatements);
+						}
+
+						list = list2;
+						list2 = new List<IStatement>();
+					}
+
+					if (returnStmt != null && returnStmt.ReturnExpression!=null)
+					{
+						methodType = returnStmt.ReturnExpression.ExpressionTypeRepresentation;
+					}
+				}
+
 				return new MemberResult()
 				{
 					ResolvedMember = m,
-					MemberBaseTypes = DoResolveBaseType ? ResolveType(method.Type, currentlyScopedNode, parseCache) : null,
+					MemberBaseTypes = DoResolveBaseType ? ResolveType(methodType, currentlyScopedNode, parseCache) : null,
 					ResultBase = resultBase
 				};
 			}

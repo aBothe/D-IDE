@@ -31,7 +31,7 @@ namespace D_IDE.D
 
 		public bool CanShowCompletionWindow(DEditorDocument EditorDocument)
 		{
-			return !DResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text, EditorDocument.Editor.CaretOffset);
+			return !DResolver.CommentSearching.IsInCommentAreaOrString(EditorDocument.Editor.Text, EditorDocument.Editor.CaretOffset);
 		}
 
 		public enum ItemVisibility
@@ -683,7 +683,7 @@ namespace D_IDE.D
 			int offset = EditorDocument.Editor.Document.GetOffset(ToolTipRequest.Line, ToolTipRequest.Column);
 
 			if (!ToolTipRequest.InDocument ||
-					DResolver.Commenting.IsInCommentAreaOrString(EditorDocument.Editor.Text, offset))
+					DResolver.CommentSearching.IsInCommentAreaOrString(EditorDocument.Editor.Text, offset))
 				return;
 
 			try
