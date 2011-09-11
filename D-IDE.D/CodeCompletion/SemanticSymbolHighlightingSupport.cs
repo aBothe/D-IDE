@@ -5,9 +5,19 @@ using System.Text;
 using ICSharpCode.AvalonEdit.Rendering;
 using D_Parser.Parser;
 using D_IDE.D.CodeCompletion;
+using D_Parser.Dom;
 
 namespace D_IDE.D
 {
+	public class CodeWideSymbolEnlister
+	{
+		public class CodeSymbol
+		{
+			public string Identifier;
+			public CodeLocation[] Locations;
+		}
+	}
+
 	public class SemanticSymbolHighlightingSupport:IVisualLineTransformer,IBackgroundRenderer
 	{
 		public void Transform(ITextRunConstructionContext context, IList<VisualLineElement> elements)
