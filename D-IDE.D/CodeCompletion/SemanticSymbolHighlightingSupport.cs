@@ -11,10 +11,25 @@ namespace D_IDE.D
 {
 	public class CodeWideSymbolEnlister
 	{
+		/// <summary>
+		/// The following identifiers will be highlighted:
+		/// </summary>
 		public class CodeSymbol
 		{
 			public string Identifier;
 			public CodeLocation[] Locations;
+		}
+
+		public List<CodeSymbol> ScanForTypeIdentifiers(IAbstractSyntaxTree Module)
+		{
+			var l = new List<CodeSymbol>();
+
+			foreach (var n in Module)
+			{
+
+			}
+
+			return l;
 		}
 	}
 

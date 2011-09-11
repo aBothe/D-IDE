@@ -460,24 +460,6 @@ namespace D_Parser.Dom
 			return children.GetEnumerator();
 		}
 	}
-	/*
-    public class DStatementBlock : DBlockNode
-    {
-        public int Token;
-        public IExpression Expression;
-
-        public DStatementBlock(int Token)
-        {
-            this.Token = Token;
-        }
-
-        public DStatementBlock() { }
-
-		public override string ToString(bool Attributes, bool IncludePath)
-        {
-            return DTokens.GetTokenString(Token)+(Expression!=null?("("+Expression.ToString()+")"):"");
-        }
-    }*/
 
     public class DClassLike : DBlockNode
     {

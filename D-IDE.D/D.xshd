@@ -1,299 +1,263 @@
-<?xml version = "1.0"?>
-<!-- D mode VS.NET style -->
-<!-- Alexander Bothe edit -->
-<SyntaxDefinition name = "D" extensions = ".d">
+<?xml version="1.0"?>
+<!-- Taken from CSharp-Mode.xshd -->
+<SyntaxDefinition name="D" extensions=".d" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+	<Color name="Comment" foreground="Green" exampleText="// comment" />
+	<Color name="String" foreground="Red" exampleText="string text = &quot;Hello, World!&quot;"/>
+	<Color name="Char" foreground="Red" exampleText="char linefeed = '\n';"/>
+	<Color name="Punctuation" exampleText="a(b.c);" />
+	<Color name="ValueTypes" foreground="Blue" exampleText="bool b = true;" />
+	<Color name="ReferenceTypes" foreground="Blue" exampleText="object o;" />
+	<Color name="NumberLiteral" exampleText="3.1415f"/>
+	<Color name="ThisOrSuperReference" fontWeight="bold" exampleText="this.Do(); base.Do();"/>
+	<Color name="NullKeywords" fontWeight="bold" exampleText="if (value == null)"/>
+	<Color name="Keywords" foreground="Blue" exampleText="if (a) {} else {}"/>
+	<Color name="GotoKeywords" foreground="Navy" exampleText="continue; return null;"/>
+	<Color name="ExceptionKeywords" fontWeight="bold" foreground="Blue" exampleText="try {} catch {} finally {}"/>
+	<Color name="ParameterModifiers" foreground="DeepPink" exampleText="(ref int a, params int[] b)"/>
+	<Color name="Modifiers" foreground="Blue" exampleText="static readonly int a;"/>
+	<Color name="Visibility" foreground="Blue" exampleText="public override void ToString();"/>
+	<Color name="NamespaceKeywords" foreground="Blue" exampleText="namespace A.B { using System; }"/>
+	<Color name="TrueFalse" foreground="Blue" exampleText="b = false; a = true;" />
+	<Color name="TypeKeywords" foreground="DarkCyan" exampleText="if (x is int) { a = x as int; type = typeof(int); size = sizeof(int); c = new object(); }"/>
 
-  <Environment>
-    <Default      color = "SystemColors.WindowText" bgcolor="SystemColors.Window"/>
-    <Selection    color = "SystemColors.HighlightText" bgcolor = "SystemColors.Highlight"/>
-    <!--		<Selection    bgcolor = "LightBlue"/> -->
-    <VRuler       color = "SystemColors.ControlLight"/>
-    <InvalidLines color = "Red"/>
-    <CaretMarker  color = "Yellow"/>
+	<RuleSet name="CommentMarkerSet">
+		<Keywords fontWeight="bold" foreground="Red">
+			<Word>TODO</Word>
+			<Word>FIXME</Word>
+		</Keywords>
+		<Keywords fontWeight="bold" foreground="#E0E000">
+			<Word>HACK</Word>
+			<Word>UNDONE</Word>
+		</Keywords>
+	</RuleSet>
 
-    <LineNumbers  color = "SystemColors.ControlDark" bgcolor = "SystemColors.Window"/>
+	<!-- This is the main ruleset. -->
+	<RuleSet>
 
-    <FoldLine     color = "#808080" bgcolor="Black"/>
-    <FoldMarker   color = "#808080" bgcolor="White"/>
-    <SelectedFoldLine color = "Black" bgcolor="Black"/>
+		<Span color="Comment" ruleSet="CommentMarkerSet">
+			<Begin>//</Begin>
+		</Span>
 
-    <EOLMarkers   color = "#E0E0E5"/>
-    <SpaceMarkers color = "#E0E0E5"/>
-    <TabMarkers   color = "#E0E0E5"/>
-  </Environment>
+		<Span color="Comment" ruleSet="CommentMarkerSet" multiline="true">
+			<Begin>/\*</Begin>
+			<End>\*/</End>
+		</Span>
 
-  <Properties>
-    <Property name="LineComment" value="//"/>
-  </Properties>
+			<Span color="Comment" ruleSet="CommentMarkerSet" multiline="true">
+				<Begin>/\+</Begin>
+				<End>\+/</End>
+			</Span>
 
-  <Digits name = "Digits" bold = "false" italic = "false" color = "DarkBlue"/>
+		<Span color="String">
+			<Begin>"</Begin>
+			<End>"</End>
+			<RuleSet>
+				<!-- span for escape sequences -->
+				<Span begin="\\" end="."/>
+			</RuleSet>
+		</Span>
 
-  <RuleSets>
-    <RuleSet ignorecase="false">
-      <Delimiters>&amp;&lt;&gt;~!@%^*()-+=|\#/{}[]:;"' ,	.?</Delimiters>
-      <Span name = "PreprocessorDirectives" bold="false" italic="false" color="DarkViolet" stopateol = "true">
-        <Begin>#</Begin>
-      </Span>
+		<Span color="Char">
+			<Begin>'</Begin>
+			<End>'</End>
+			<RuleSet>
+				<!-- span for escape sequences -->
+				<Span begin="\\" end="."/>
+			</RuleSet>
+		</Span>
 
-      <Span name = "LINE_COMMENT"  bold = "false" italic = "false" color = "Green" stopateol = "true">
-        <Begin bold = "false" italic = "false" color = "Gray">///</Begin>
-      </Span>
+		<Span color="String" multiline="true">
+			<Begin color="String">r"</Begin>
+			<End>"</End>
+			<RuleSet>
+				<!-- span for escape sequences -->
+				<Span begin='""' end=""/>
+			</RuleSet>
+		</Span>
 
-      <Span name = "LINE_COMMENT" bold = "false" italic = "false" color = "Green" stopateol = "true">
-        <Begin>//</Begin>
-      </Span>
+		<Keywords color="ThisOrSuperReference">
+			<Word>this</Word>
+			<Word>super</Word>
+		</Keywords>
 
-      <Span name = "BLOCK_COMMENT"  bold = "false" italic = "false" color = "Green" stopateol = "false">
-        <Begin>/*</Begin>
-        <End>*/</End>
-      </Span>
+		<Keywords color="TrueFalse">
+			<Word>true</Word>
+			<Word>false</Word>
+		</Keywords>
 
-      <Span name = "NESTED_COMMENT" rule = "NEST_D1" bold = "false" italic = "false" color = "Green" stopateol = "false">
-        <Begin>/+</Begin>
-        <End>+/</End>
-      </Span>
+		<Keywords color="Keywords">
+			<Word>alias</Word>
+			<Word>align</Word>
+			<Word>asm</Word>
+			<Word>assert</Word>
 
+			<Word>case</Word>
+			<Word>cast</Word>
 
+			<Word>debug</Word>
+			<Word>default</Word>
+			<Word>delete</Word>
+			<Word>do</Word>
 
-      <Span name = "STRING" bold = "false" italic = "false" color = "Red" stopateol = "false" noescapesequences="true">
-        <Begin bold = "false" italic = "false" color = "Brown">"</Begin>
-        <End bold = "false" italic = "false" color = "Brown">"</End>
-      </Span>
+			<Word>else</Word>
+			<Word>export</Word>
 
-      <Span name = "WYS_STRING" bold = "false" italic = "false" color = "Brown" stopateol = "false" noescapesequences="true">
-        <Begin bold = "false" italic = "false" color = "Brown">r"</Begin>
-        <End bold = "false" italic = "false" color = "Brown">"</End>
-      </Span>
+			<Word>for</Word>
+			<Word>foreach</Word>
+			<Word>foreach_reverse</Word>
 
-      <Span name = "ALT_STRING" bold = "false" italic = "false" color = "Brown" stopateol = "false" noescapesequences="true">
-        <Begin bold = "false" italic = "false" color = "Brown">`</Begin>
-        <End bold = "false" italic = "false" color = "Brown">`</End>
-      </Span>
+			<Word>if</Word>
+			<Word>is</Word>
 
-      <Span name = "CHAR" bold = "false" italic = "false" color = "SystemColors.WindowText" stopateol = "true">
-        <Begin bold = "false" italic = "false" color = "SystemColors.WindowText">&apos;</Begin>
-        <End bold = "false" italic = "false" color = "SystemColors.WindowText">&apos;</End>
-      </Span>
+			<Word>macro</Word>
+			<Word>mixin</Word>
 
-      <KeyWords name = "Punctuation" bold = "false" italic = "false" color = "DarkBlue">
-        <Key word = "/" />
-        <Key word = "/=" />
-        <Key word = "." />
-        <Key word = ".." />
-        <Key word = "..." />
-        <Key word = "&amp;" />
-        <Key word = "" />
-        <Key word = "&amp;=" />
-        <Key word = "&amp;&amp;" />
-        <Key word = "|" />
-        <Key word = "|=" />
-        <Key word = "||" />
-        <Key word = "-" />
-        <Key word = "-=" />
-        <Key word = "--" />
-        <Key word = "+" />
-        <Key word = "+=" />
-        <Key word = "++" />
-        <Key word = "&lt;" />
-        <Key word = "&lt;=" />
-        <Key word = "&lt;&lt;" />
-        <Key word = "&lt;&lt;=" />
-        <Key word = "&lt;>" />
-        <Key word = "&lt;>=" />
-        <Key word = "&gt;" />
-        <Key word = "&gt;=" />
-        <Key word = "&gt;&gt;=" />
-        <Key word = "&gt;&gt;&gt;=" />
-        <Key word = "&gt;&gt;" />
-        <Key word = "&gt;&gt;&gt;" />
-        <Key word = "!" />
-        <Key word = "!=" />
-        <Key word = "!&lt;&gt;" />
-        <Key word = "!&lt;&gt;=" />
-        <Key word = "!&lt;" />
-        <Key word = "!&lt;=" />
-        <Key word = "!>" />
-        <Key word = "!>=" />
-        <Key word = "!~" />
-        <Key word = "(" />
-        <Key word = ")" />
-        <Key word = "[" />
-        <Key word = "]" />
-        <Key word = "{" />
-        <Key word = "}" />
-        <Key word = "?" />
-        <Key word = "," />
-        <Key word = ";" />
-        <Key word = ":" />
-        <Key word = "$" />
-        <Key word = "=" />
-        <Key word = "==" />
-        <Key word = "*" />
-        <Key word = "*=" />
-        <Key word = "%" />
-        <Key word = "%=" />
-        <Key word = "^" />
-        <Key word = "^=" />
-        <Key word = "~" />
-        <Key word = "~=" />
-      </KeyWords>
+			<Word>new</Word>
 
+			<Word>pragma</Word>
 
-      <KeyWords name = "Keyword" bold="false" italic="false" color="Blue">
-        <Key word = "abstract" />
-        <Key word = "alias" />
-        <Key word = "align" />
-        <Key word = "asm" />
-        <Key word = "assert" />
-        <Key word = "auto" />
+			<Word>switch</Word>
 
-        <Key word = "body" />
-        <Key word = "bool" />
-        <Key word = "break" />
-        <Key word = "byte" />
+			<Word>typedef</Word>
+			<Word>typeid</Word>
+			<Word>typeof</Word>
 
-        <Key word = "case" />
-        <Key word = "cast" />
-        <Key word = "catch" />
-        <Key word = "cdouble" />
-        <Key word = "cent" />
-        <Key word = "cfloat" />
-        <Key word = "char" />
-        <Key word = "class" />
-        <Key word = "const" />
-        <Key word = "continue" />
-        <Key word = "creal" />
+			<Word>unittest</Word>
 
-        <Key word = "dchar" />
-        <Key word = "debug" />
-        <Key word = "default" />
-        <Key word = "delegate" />
-        <Key word = "delete" />
-        <Key word = "deprecated" />
-        <Key word = "do" />
-        <Key word = "double" />
+			<Word>version</Word>
+			
+			<Word>while</Word>
+			<Word>with</Word>
+			
+			<Word>__FILE__</Word>
+			<Word>__LINE__</Word>
+			<Word>__gshared</Word>
+			<Word>__thread</Word>
+			<Word>__traits</Word>
+		</Keywords>
 
-        <Key word = "else" />
-        <Key word = "enum" />
-        <Key word = "export" />
-        <Key word = "extern" />
+		<Keywords color="GotoKeywords">
+			<Word>break</Word>
+			<Word>continue</Word>
+			<Word>goto</Word>
+			<Word>return</Word>
+		</Keywords>
 
-        <Key word = "false" />
-        <Key word = "final" />
-        <Key word = "finally" />
-        <Key word = "float" />
-        <Key word = "for" />
-        <Key word = "foreach" />
-        <Key word = "function" />
-        <Key word = "foreach_reverse" />
+		<Keywords color="ValueTypes">
+			<Word>bool</Word>
+			<Word>byte</Word>
+			<Word>cdouble</Word>
+			<Word>char</Word>
+			<Word>cfloat</Word>
+			<Word>cent</Word>
+			<Word>creal</Word>
+			<Word>dchar</Word>
+			<Word>decimal</Word>
+			<Word>double</Word>
+			<Word>enum</Word>
+			<Word>float</Word>
+			<Word>int</Word>
+			<Word>idouble</Word>
+			<Word>ifloat</Word>
+			<Word>ireal</Word>
+			<Word>long</Word>
+			<Word>sbyte</Word>
+			<Word>short</Word>
+			<Word>ubyte</Word>
+			<Word>ucent</Word>
+			<Word>uint</Word>
+			<Word>ushort</Word>
+			<Word>ulong</Word>
+			<Word>real</Word>
+			<Word>wchar</Word>
+		</Keywords>
 
-        <Key word = "goto" />
+		<Keywords color="ReferenceTypes">
+			<Word>struct</Word>
+			<Word>union</Word>
+			<Word>class</Word>
+			<Word>template</Word>
+			<Word>interface</Word>
+			
+			<Word>delegate</Word>
+			<Word>function</Word>
+			
+			<Word>object</Word>
+			<Word>string</Word>
+			<Word>wstring</Word>
+			<Word>dstring</Word>
+			<Word>void</Word>
+			
+			<Word>auto</Word>
+		</Keywords>
 
-        <Key word = "idouble" />
-        <Key word = "if" />
-        <Key word = "ifloat" />
-        <Key word = "import" />
+		<Keywords color="ParameterModifiers">
+			<Word>body</Word>
+			<Word>in</Word>
+			<Word>inout</Word>
+			<Word>ref</Word>
+			<Word>out</Word>
+		</Keywords>
 
-        <Key word = "int" />
-        <Key word = "interface" />
-        <Key word = "invariant" />
-        <Key word = "ireal" />
-        <Key word = "is" />
-				<Key word = "immutable" />
+		<Keywords color="Modifiers">
+			<Word>abstract</Word>
+			<Word>const</Word>
+			<Word>deprecated</Word>
+			<Word>event</Word>
+			<Word>extern</Word>
+			<Word>final</Word>
+			<Word>lazy</Word>
+			<Word>immutable</Word>
+			<Word>invariant</Word>
+			<Word>nothrow</Word>
+			<Word>override</Word>
+			<Word>pure</Word>
+			<Word>scope</Word>
+			<Word>shared</Word>
+			<Word>static</Word>
+			<Word>synchronized</Word>
+			<Word>virtual</Word>
+			<Word>volatile</Word>
+		</Keywords>
 
-        <Key word = "lazy" />
-        <Key word = "long" />
+		<!-- Property attributes -->
+		<Rule color="Modifiers">@[a-zA-Z]+</Rule>
 
-        <Key word = "mixin" />
-        <Key word = "module" />
+		<Keywords color="Visibility">
+			<Word>public</Word>
+			<Word>protected</Word>
+			<Word>private</Word>
+			<Word>package</Word>
+		</Keywords>
 
-        <Key word = "new" />
+		<Keywords color="ExceptionKeywords">
+			<Word>try</Word>
+			<Word>throw</Word>
+			<Word>catch</Word>
+			<Word>finally</Word>
+		</Keywords>
 
-        <Key word = "override" />
+		<Keywords color="NamespaceKeywords">
+			<Word>module</Word>
+			<Word>import</Word>
+		</Keywords>
 
-        <Key word = "package" />
-        <Key word = "pragma" />
-        <Key word = "private" />
-        <Key word = "protected" />
-        <Key word = "public" />
+		<Keywords color="NullKeywords">
+			<Word>null</Word>
+		</Keywords>
 
-        <Key word = "real" />
-        <Key word = "return" />
+		<!-- Digits -->
+		<Rule color="NumberLiteral">
+			\b0[xX][0-9a-fA-F]+  # hex number
+			|
+			(	\b\d+(\.[0-9]+)?   #number with optional floating point
+			|	\.[0-9]+           #or just starting with floating point
+			)
+			([eE][+-]?[0-9]+)? # optional exponent
+		</Rule>
 
-        <Key word = "scope" />
-        <Key word="shared" />
-        <Key word = "short" />
-        <Key word = "static" />
-        <Key word = "struct" />
-        <Key word = "string" />
-        <Key word = "switch" />
-        <Key word = "synchronized" />
-
-        <Key word = "template" />
-
-        <Key word = "throw" />
-        <Key word = "true" />
-        <Key word = "try" />
-        <Key word = "typedef" />
-        <Key word = "typeid" />
-        <Key word = "typeof" />
-
-        <Key word = "ubyte" />
-        <Key word = "ucent" />
-        <Key word = "uint" />
-        <Key word = "ulong" />
-        <Key word = "union" />
-        <Key word = "unittest" />
-        <Key word = "ushort" />
-
-        <Key word = "version" />
-        <Key word = "void" />
-        <Key word = "volatile" />
-
-        <Key word = "wchar" />
-        <Key word = "while" />
-        <Key word = "with" />
-
-        <Key word = "pure" />
-        <Key word = "nothrow" />
-      </KeyWords>
-
-      <KeyWords name = "Keyword" bold="true" italic="false" color="Black">
-        <Key word = "this" />
-        <Key word = "super" />
-        <Key word = "null" />
-      </KeyWords>
-
-      <KeyWords name = "Keyword" bold="true" italic="false" color="Red">
-        <Key word = "ref" />
-        <Key word = "out" />
-        <Key word = "in" />
-        <Key word = "inout" />
-      </KeyWords>
-
-      <KeyWords name = "PreprocessorDirectives" bold="false" italic="false" color="DarkViolet">
-        <Key word = "#line" />
-      </KeyWords>
-
-    </RuleSet>
-
-
-    <RuleSet name = "NEST_D1">
-      <Span name = "NESTED_COMMENT_D1" rule = "NEST_D2" bold = "false" italic = "false" color = "Green" stopateol = "false">
-        <Begin>/+</Begin>
-        <End>+/</End>
-      </Span>
-    </RuleSet>
-
-    <RuleSet name = "NEST_D2">
-      <Span name = "NESTED_COMMENT_D2" bold = "false" italic = "false" color = "Green" stopateol = "false">
-        <Begin>/+</Begin>
-        <End>+/</End>
-      </Span>
-    </RuleSet>
-
-
-
-  </RuleSets>
+		<Rule color="Punctuation">
+			[?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
+		</Rule>
+	</RuleSet>
 </SyntaxDefinition>
-

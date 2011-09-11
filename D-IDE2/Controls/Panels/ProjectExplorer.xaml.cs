@@ -914,6 +914,8 @@ namespace D_IDE.Controls.Panels
 				get {
 					if (IsExternalFile) 
 						return Tag as string;
+					if (Project == null)
+						return string.Empty;
 					return Project.FileName; 
 				}
 			}
