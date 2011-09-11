@@ -95,7 +95,6 @@ namespace D_Parser.Dom
 	{
 		CodeLocation _BlockStart;
 		protected List<INode> _Children = new List<INode>();
-		protected List<IStatement> _Statements = new List<IStatement>();
 
 		public CodeLocation BlockStartLocation
 		{
@@ -126,13 +125,6 @@ namespace D_Parser.Dom
 			if(Nodes!=null)
 				foreach (var Node in Nodes)
 					Add(Node);
-		}
-
-		public void AddStatements(IEnumerable<IStatement> Statements)
-		{
-			if(Statements!=null)
-				foreach (var Stmt in Statements)
-					Add(Stmt);
 		}
 
 		public int Count
@@ -188,22 +180,6 @@ namespace D_Parser.Dom
 			}
 
 			base.AssignFrom(other);
-		}
-
-
-		public IEnumerable<IStatement> Statements
-		{
-			get { return _Statements; }
-		}
-
-		public void Add(IStatement Statement)
-		{
-			_Statements.Add(Statement);
-		}
-
-		public void Add(IEnumerable<IStatement> Statements)
-		{
-			_Statements.AddRange(Statements);
 		}
 	}
 
