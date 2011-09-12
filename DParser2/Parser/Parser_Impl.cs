@@ -688,13 +688,13 @@ namespace D_Parser.Parser
 			if (BasicTypes[laKind])
 			{
 				Step();
-				return new DTokenDeclaration(t.Kind);
+				return new DTokenDeclaration(t.Kind) { Location=t.Location, EndLocation=t.EndLocation };
 			}
 
 			if (MemberFunctionAttribute[laKind])
 			{
 				Step();
-				var md = new MemberFunctionAttributeDecl(t.Kind);
+				var md = new MemberFunctionAttributeDecl(t.Kind) { Location=t.Location };
 				bool p = false;
 
 				if (laKind == OpenParenthesis)
@@ -709,6 +709,7 @@ namespace D_Parser.Parser
 
 				if (p)
 					Expect(CloseParenthesis);
+				md.EndLocation = t.EndLocation;
 				return md;
 			}
 
@@ -747,16 +748,19 @@ namespace D_Parser.Parser
 			if (laKind == (Times))
 			{
 				Step();
-				return new PointerDecl();
+				return new PointerDecl() { Location=t.Location, EndLocation=t.EndLocation };
 			}
 
 			// [ ... ]
 			else if (laKind == (OpenSquareBracket))
 			{
+				var startLoc = la.Location;
 				Step();
 				// [ ]
-				if (laKind == (CloseSquareBracket)) { Step();
-				return new ArrayDecl(); 
+				if (laKind == (CloseSquareBracket)) 
+				{ 
+					Step();
+					return new ArrayDecl() { Location=startLoc, EndLocation=t.EndLocation }; 
 				}
 
 				ITypeDeclaration cd = null;
@@ -771,7 +775,7 @@ namespace D_Parser.Parser
 					AllowWeakTypeParsing = weaktype;
 
 					if (keyType != null && laKind == CloseSquareBracket)
-						cd = new ArrayDecl() { KeyType = keyType };
+						cd = new ArrayDecl() { KeyType = keyType, Location=startLoc };
 					else
 						la = la_backup;
 				}
@@ -784,16 +788,22 @@ namespace D_Parser.Parser
 					if (laKind == DoubleDot)
 					{
 						Step();
-						cd = new ArrayDecl() {KeyExpression= new PostfixExpression_Slice() { FromExpression=fromExpression, ToExpression=AssignExpression()} };
+						cd = new ArrayDecl() {
+							Location=startLoc
+							,KeyExpression= new PostfixExpression_Slice() { 
+								FromExpression=fromExpression, 
+								ToExpression=AssignExpression()}};
 					}
 					else
-						cd = new ArrayDecl() { KeyExpression=fromExpression };
+						cd = new ArrayDecl() { KeyExpression=fromExpression,Location=startLoc };
 				}
 
 				if (AllowWeakTypeParsing && laKind != CloseSquareBracket)
 					return null;
 
 				Expect(CloseSquareBracket);
+				if(cd!=null)
+					cd.EndLocation = t.EndLocation;
 				return cd;
 			}
 
@@ -802,7 +812,7 @@ namespace D_Parser.Parser
 			{
 				Step();
 				ITypeDeclaration td = null;
-				var dd = new DelegateDeclaration();
+				var dd = new DelegateDeclaration() { Location=t.Location};
 				dd.IsFunction = t.Kind == Function;
 
 				dd.Parameters = Parameters(null);
@@ -811,8 +821,9 @@ namespace D_Parser.Parser
 				while (FunctionAttribute[laKind])
 				{
 					Step();
-					td = new DTokenDeclaration(t.Kind, td);
+					td = new DTokenDeclaration(t.Kind, td) { Location=t.Location, EndLocation=t.EndLocation };
 				}
+				td.EndLocation = t.EndLocation;
 				return td;
 			}
 			else
@@ -969,7 +980,7 @@ namespace D_Parser.Parser
 			while (laKind == (OpenSquareBracket))
 			{
 				Step();
-				var ad = new ArrayDecl();
+				var ad = new ArrayDecl() { Location=t.Location };
 				ad.InnerDeclaration = td;
 				if (laKind != (CloseSquareBracket))
 				{
@@ -984,6 +995,7 @@ namespace D_Parser.Parser
 						ad.KeyExpression = AssignExpression();
 				}
 				Expect(CloseSquareBracket);
+				ad.EndLocation = t.EndLocation;
 				td = ad;
 			}
 
@@ -1026,7 +1038,7 @@ namespace D_Parser.Parser
 				if (IsTemplateInstance)
 					ttd = TemplateInstance();
 				else if (Expect(Identifier))
-					ttd = new IdentifierDeclaration(t.Value);
+					ttd = new IdentifierDeclaration(t.Value) { Location=t.Location, EndLocation=t.EndLocation };
 
 				if (ttd != null)
 					ttd.InnerDeclaration = td;
@@ -1339,17 +1351,22 @@ namespace D_Parser.Parser
 
 		ITypeDeclaration TypeOf()
 		{
+			var startLoc = t.Location;
 			Expect(Typeof);
 			Expect(OpenParenthesis);
-			var md = new MemberFunctionAttributeDecl(Typeof);
+			var md = new MemberFunctionAttributeDecl(Typeof) { Location=startLoc };
 			if (laKind == (Return))
 			{
 				Step();
-				md.InnerType = new DTokenDeclaration(Return);
+				md.InnerType = new DTokenDeclaration(Return) { Location = t.Location, EndLocation = t.EndLocation };
 			}
 			else
-				md.InnerType = new DExpressionDecl(Expression());
+			{
+				startLoc = la.Location;
+				md.InnerType = new DExpressionDecl(Expression()) { Location=startLoc, EndLocation=t.EndLocation };
+			}
 			Expect(CloseParenthesis);
+			md.EndLocation = t.EndLocation;
 			return md;
 		}
 

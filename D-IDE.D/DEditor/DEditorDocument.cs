@@ -21,6 +21,8 @@ using D_IDE.D.DEditor;
 using D_Parser.Parser;
 using D_Parser.Dom.Statements;
 using D_IDE.D.CodeCompletion;
+using D_IDE.Core.Controls.Editor;
+using System.Windows.Media;
 
 namespace D_IDE.D
 {
@@ -562,20 +564,30 @@ namespace D_IDE.D
 
 			parseOperation = Dispatcher.BeginInvoke(new Action(() =>
 			{
+				DModule newAst = null;
 				try
 				{
-
 					hp.Start();
 					var parser = DParser.Create(new StringReader(Editor.Text));
 
-					var newAst = parser.Parse();
+					newAst = parser.Parse();
 
 					hp.Stop();
 
 					ParseTime = hp.Duration;
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.Parser);
+				}
+
+				try
+				{
 					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration * 1000).ToString() + "ms";
 
-					if (SyntaxTree != null)
+					lastSelectedBlock = null;
+					
+					if (SyntaxTree != null && newAst!=null)
 						lock (SyntaxTree)
 						{
 							SyntaxTree.ParseErrors = newAst.ParseErrors;
@@ -587,13 +599,48 @@ namespace D_IDE.D
 					SyntaxTree.FileName = AbsoluteFilePath;
 					SyntaxTree.ModuleName = ProposedModuleName;
 
-					lastSelectedBlock = null;
-					UpdateBlockCompletionData();
 					UpdateFoldings();
+					UpdateBlockCompletionData();
+					UpdateSemanticHightlighting();
 				}
 				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System); }
 				CoreManager.ErrorManagement.RefreshErrorList();
 			}));
+		}
+
+		public void UpdateSemanticHightlighting(List<IdentifierDeclaration> typeIds=null)
+		{
+			if(typeIds==null)
+				typeIds = CodeWideSymbolEnlister.ScanForTypeIdentifiers(SyntaxTree);
+
+			// Clear old markers
+			foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
+				if (marker is CodeSymbolMarker)
+					marker.Delete();
+
+			foreach (var typeId in typeIds)
+			{
+				var m = new CodeSymbolMarker(this, typeId);
+				MarkerStrategy.Add(m);
+
+				m.Redraw();
+			}
+		}
+
+		public class CodeSymbolMarker : TextMarker
+		{
+			public readonly EditorDocument EditorDocument;
+			public readonly IdentifierDeclaration Id;
+
+			public CodeSymbolMarker(EditorDocument EditorDoc, IdentifierDeclaration Id)
+				: base(EditorDoc.MarkerStrategy, EditorDoc.Editor.Document.GetOffset(Id.Location.Line,Id.Location.Column), Id.ToString(false).Length)
+			{
+				this.MarkerType = TextMarkerType.None;
+				ForegroundColor = Color.FromRgb(0x2b, 0x91, 0xaf);
+
+				this.EditorDocument = EditorDoc;
+				this.Id = Id;
+			}
 		}
 
 		public override System.Collections.Generic.IEnumerable<GenericError> ParserErrors
@@ -601,8 +648,13 @@ namespace D_IDE.D
 			get
 			{
 				if (SyntaxTree != null)
+				{
+					var l = new List<GenericError>(SyntaxTree.ParseErrors.Count);
 					foreach (var pe in SyntaxTree.ParseErrors)
-						yield return new DParseError(pe) { Project = HasProject ? Project : null, FileName = AbsoluteFilePath };
+						l.Add( new DParseError(pe) { Project = HasProject ? Project : null, FileName = AbsoluteFilePath });
+					return l;
+				}
+				return null;
 			}
 		}
 

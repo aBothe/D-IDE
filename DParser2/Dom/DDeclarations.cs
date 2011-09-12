@@ -8,6 +8,9 @@ namespace D_Parser.Dom
 {
 	public interface ITypeDeclaration
 	{
+		CodeLocation Location { get; set; }
+		CodeLocation EndLocation { get; set; }
+
 		ITypeDeclaration InnerDeclaration { get; set; }
 		ITypeDeclaration InnerMost { get; set; }
 
@@ -52,6 +55,24 @@ namespace D_Parser.Dom
 		{
 			return d.ToString(false);
 		}
+
+		CodeLocation _loc=CodeLocation.Empty;
+		public CodeLocation Location
+		{
+			get {
+				if (_loc != CodeLocation.Empty || InnerDeclaration==null)
+					return _loc;
+
+				return InnerMost.Location;
+				}
+			set { _loc = value; }
+		}
+
+		public CodeLocation EndLocation
+		{
+			get;
+			set;
+		}
 	}
 
     /// <summary>
@@ -71,6 +92,9 @@ namespace D_Parser.Dom
 		}
 	}
 
+	/// <summary>
+	/// int, void, float
+	/// </summary>
     public class DTokenDeclaration : IdentifierDeclaration
     {
         public int Token;
@@ -201,6 +225,9 @@ namespace D_Parser.Dom
         }
     }
 
+	/// <summary>
+	/// template myTemplate(T...)
+	/// </summary>
     public class VarArgDecl : AbstractTypeDeclaration
     {
         public VarArgDecl() { }

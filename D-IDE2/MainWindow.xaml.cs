@@ -266,7 +266,7 @@ namespace D_IDE
 				File.Exists(GlobalProperties.Instance.LastProjects[0])) ||
 				args.Length>0)
 			{
-				Dispatcher.Invoke(new Action(() =>{
+				Dispatcher.BeginInvoke(new Action(() =>{
 
 					// If given, iterate over all cmd line arguments
 					if (args.Length > 0)
@@ -274,12 +274,20 @@ namespace D_IDE
 							IDEManager.EditingManagement.OpenFile(a);
 					else
 					// ... or load last project otherwise
-					if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
-						IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
+						try
+						{
+							if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
+								IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
+						}
+						catch (Exception ex)
+						{
+							ErrorLogger.Log(ex);
+						}
+					RefreshGUI();
 				}));
 			}
-
-			RefreshGUI();
+			else
+				RefreshGUI();
 
 			splashScreen.Close(TimeSpan.FromSeconds(0.5));
 		}

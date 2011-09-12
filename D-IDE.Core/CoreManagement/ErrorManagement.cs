@@ -32,10 +32,11 @@ namespace D_IDE.Core
 				get
 				{
 					var ed = Instance.CurrentEditor as EditorDocument;
-					if (ed == null || ed.ParserErrors == null)
+					IEnumerable<GenericError> errs = null;
+					if (ed == null || (errs= ed.ParserErrors) == null)
 						return new GenericError[] { };
 
-					return ed.ParserErrors.ToArray();
+					return errs.ToArray();
 				}
 			}
 
@@ -68,12 +69,13 @@ namespace D_IDE.Core
 				if (curEd!=null)
 				{
 					// If current module is unbound, show its errors exclusively
-					if (!curEd.HasProject && curEd.ParserErrors != null)
-						el.AddRange(curEd.ParserErrors);
+					var errs = curEd.ParserErrors;
+					if (!curEd.HasProject && errs != null)
+						el.AddRange(errs);
 					else
 						foreach (var ed in CoreManager.Instance.Editors)
-							if (ed is IEditorDocument && ed.HasProject && (ed as IEditorDocument).ParserErrors != null)
-								el.AddRange((ed as IEditorDocument).ParserErrors);
+							if (ed is IEditorDocument && ed.HasProject && (errs= (ed as IEditorDocument).ParserErrors) != null)
+								el.AddRange(errs);
 				}
 
 				Errors = el.ToArray();
