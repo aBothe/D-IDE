@@ -144,8 +144,11 @@ namespace D_IDE
 		public MainWindow(string[] args)
 		{
 			this.args = args;
-			splashScreen = new SplashScreen("Resources/d-ide_256.png");
-			splashScreen.Show(false, true);
+			if (!Debugger.IsAttached)
+			{
+				splashScreen = new SplashScreen("Resources/d-ide_256.png");
+				splashScreen.Show(false, true);
+			}
 
 			// Init Manager
 			IDEManager.Instance = new IDEManager(this);
@@ -206,7 +209,8 @@ namespace D_IDE
 
 			if (GlobalProperties.Instance.IsFirstTimeStart)
 			{
-				splashScreen.Close(TimeSpan.FromSeconds( 0));
+				if(splashScreen!=null)
+					splashScreen.Close(TimeSpan.FromSeconds( 0));
 				if (MessageBox.Show("D-IDE seems to be launched for the first time. Start configuration now?", "First time startup", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
 					new GlobalSettingsDlg() { Owner = this }.ShowDialog();
 			}
@@ -289,7 +293,8 @@ namespace D_IDE
 			else
 				RefreshGUI();
 
-			splashScreen.Close(TimeSpan.FromSeconds(0.5));
+			if(splashScreen!=null)
+				splashScreen.Close(TimeSpan.FromSeconds(0.5));
 		}
 		#endregion
 

@@ -325,14 +325,8 @@ namespace D_IDE.D
 			new Thread(() =>
 			{
 				Thread.CurrentThread.IsBackground = true;
-				try
-				{
-					ASTCache.UpdateCache();
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.Parser);
-				}
+				
+				ASTCache.UpdateCache();
 
 				// For debugging purposes dump all parse results (errors etc.) to a log file.
 				try
@@ -341,7 +335,7 @@ namespace D_IDE.D
 				}
 				catch (Exception ex)
 				{
-					ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.Parser);
+					ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.System);
 				}
 			}).Start();
 		}

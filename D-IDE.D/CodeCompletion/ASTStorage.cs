@@ -22,6 +22,7 @@ namespace D_IDE.D.CodeCompletion
 	public class ASTStorage:IEnumerable<ASTCollection>
 	{
 		public readonly List<ASTCollection> ParsedGlobalDictionaries = new List<ASTCollection>();
+		public bool IsParsing { get; protected set; }
 
 		/// <summary>
 		/// List of all paths of all added directories
@@ -70,20 +71,23 @@ namespace D_IDE.D.CodeCompletion
 		}
 
 		/// <summary>
-		/// Adds and parses a dictionary to the collection
+		/// Adds a dictionary to the collection. Does NOT parse the dictionary.
 		/// </summary>
 		/// <param name="Dictionary"></param>
-		public void Add(string Dictionary,bool ParseFunctionBodies=false)
+		public void Add(string Dictionary, bool ParseFunctionBodies=true)
 		{
 			foreach (var c in ParsedGlobalDictionaries)
 				if (c.BaseDirectory == Dictionary)
 				{
-					c.UpdateFromBaseDirectory();
+					//c.UpdateFromBaseDirectory();
 					return;
 				}
 
 			if (!System.IO.Directory.Exists(Dictionary))
-				throw new Exception("Cannot parse \""+Dictionary+"\". Directory does not exist!");
+			{
+				ErrorLogger.Log("Cannot parse \"" + Dictionary + "\". Directory does not exist!",ErrorType.Error,ErrorOrigin.Parser);
+				return;
+			}
 
 			var nc = new ASTCollection(Dictionary) { ParseFunctionBodies=ParseFunctionBodies};
 			ParsedGlobalDictionaries.Add(nc);
@@ -94,8 +98,17 @@ namespace D_IDE.D.CodeCompletion
 		/// </summary>
 		public void UpdateCache()
 		{
-			foreach (var pdir in this)
-				pdir.UpdateFromBaseDirectory();
+			IsParsing = true;
+			try
+			{
+				foreach (var pdir in this)
+					pdir.UpdateFromBaseDirectory();
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser);
+			}
+			IsParsing = false;
 		}
 
 		public void WriteParseLog(string outputLog)
@@ -226,8 +239,9 @@ namespace D_IDE.D.CodeCompletion
 		{
 			get{
 				foreach (var ast in this)
-					if (ByModuleName ? ast.ModuleName == AbsoluteFileName : ast.FileName == AbsoluteFileName)
-						return ast;
+					if(ast!=null)
+						if (ByModuleName ? ast.ModuleName == AbsoluteFileName : ast.FileName == AbsoluteFileName)
+							return ast;
 				return null;
 			}
 			set

@@ -1537,20 +1537,20 @@ namespace D_Parser.Dom.Expressions
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
 			get { 
-				if(Format==LiteralFormat.CharLiteral) 
-					return new DTokenDeclaration(DTokens.Char);
+				if(Format==LiteralFormat.CharLiteral)
+					return new DTokenDeclaration(DTokens.Char) { Location = this.Location, EndLocation = this.EndLocation };
 
 				if ((Format & LiteralFormat.FloatingPoint) == LiteralFormat.FloatingPoint)
-					return new DTokenDeclaration(DTokens.Float);
+					return new DTokenDeclaration(DTokens.Float) { Location = this.Location, EndLocation = this.EndLocation };
 
 				if (Format == LiteralFormat.Scalar)
-					return new DTokenDeclaration(DTokens.Int);
+					return new DTokenDeclaration(DTokens.Int) { Location = this.Location, EndLocation = this.EndLocation };
 
 				//ISSUE: For easification, only work with strings, not wstrings or dstrings
 				if (Format == LiteralFormat.StringLiteral || Format == LiteralFormat.VerbatimStringLiteral)
-					return new IdentifierDeclaration("string");
+					return new IdentifierDeclaration("string") { Location=this.Location,EndLocation=this.EndLocation };
 
-				return new IdentifierDeclaration(Value);
+				return new IdentifierDeclaration(Value) { Location = this.Location, EndLocation = this.EndLocation };
 			}
 		}
 
@@ -1592,7 +1592,7 @@ namespace D_Parser.Dom.Expressions
 
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return new DTokenDeclaration(Token); }
+			get { return new DTokenDeclaration(Token) { Location = this.Location, EndLocation = this.EndLocation }; }
 		}
 
 		public bool IsConstant

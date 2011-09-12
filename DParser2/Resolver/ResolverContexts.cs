@@ -33,6 +33,11 @@ namespace D_Parser.Resolver
 		/// If the entire resolution took more than one level of type searching, this field represents the resolution base that was used to find the current items.
 		/// </summary>
 		public ResolveResult ResultBase;
+
+		/// <summary>
+		/// The type declaration that has been used as the base for our type resolution.
+		/// </summary>
+		public ITypeDeclaration TypeDeclarationBase;
 	}
 
 	public class MemberResult : ResolveResult
@@ -57,11 +62,10 @@ namespace D_Parser.Resolver
 	public class StaticTypeResult : ResolveResult
 	{
 		public int BaseTypeToken;
-		public ITypeDeclaration Type;
 
 		public override string ToString()
 		{
-			return Type.ToString();
+			return TypeDeclarationBase.ToString();
 		}
 	}
 

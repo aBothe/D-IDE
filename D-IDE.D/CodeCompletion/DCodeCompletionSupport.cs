@@ -218,7 +218,7 @@ namespace D_IDE.D
 				if (resultParent == null)
 					StaticPropertyAddition.AddGenericProperties(rr, l, null, true);
 
-				var type = srr.Type;
+				var type = srr.TypeDeclarationBase;
 
 				// on things like immutable(char), pass by the surrounding attribute..
 				while (type is MemberFunctionAttributeDecl)
@@ -732,6 +732,7 @@ namespace D_IDE.D
 		}
 
 		#region Module enumeration helper
+
 		public static IEnumerable<IAbstractSyntaxTree> EnumAvailableModules(DEditorDocument Editor)
 		{
 			return EnumAvailableModules(Editor.HasProject ? Editor.Project as DProject : null);

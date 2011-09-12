@@ -72,8 +72,10 @@ namespace D_IDE.D
 			}
 		}
 
+		public bool IsParsing { get; protected set; }
 		bool KeysTyped = false;
 		Thread parseThread = null;
+		readonly HighPrecisionTimer.HighPrecTimer hp = new HighPrecisionTimer.HighPrecTimer();
 
 		bool isUpdatingLookupDropdowns = false;
 
@@ -96,6 +98,16 @@ namespace D_IDE.D
 		DispatcherOperation blockCompletionDataOperation = null;
 		//DispatcherOperation showCompletionWindowOperation = null;
 		DispatcherOperation parseOperation = null;
+
+		public DMDConfig CompilerConfiguration
+		{
+			get
+			{
+				if (HasProject && Project is DProject)
+					return (Project as DProject).CompilerConfiguration;
+				return DSettings.Instance.DMDConfig();
+			}
+		}
 
 		CompletionWindow completionWindow;
 		OverloadInsightWindow insightWindow;
@@ -228,13 +240,16 @@ namespace D_IDE.D
 			//CommandBindings.Add(new CommandBinding(IDEUICommands.ReformatDoc,ReformatFileCmd));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CommentBlock, CommentBlock));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock, UncommentBlock));
+
+			Document_TextChanged(this, EventArgs.Empty);
 		}
 
+		/*
 		public override void Reload()
 		{
 			base.Reload();
 			Parse();
-		}
+		}*/
 
 		public void UpdateFoldings()
 		{
@@ -524,6 +539,10 @@ namespace D_IDE.D
 				parseThread = new Thread(() =>
 				{
 					Thread.CurrentThread.IsBackground = true;
+
+					// Initially parse the document
+					Parse();
+
 					while (true)
 					{
 						// While no keys were typed, do nothing
@@ -553,93 +572,281 @@ namespace D_IDE.D
 		}
 
 		#region Code Completion
-		readonly HighPrecisionTimer.HighPrecTimer hp = new HighPrecisionTimer.HighPrecTimer();
 		/// <summary>
 		/// Parses the current document content
 		/// </summary>
 		public void Parse()
 		{
+			IsParsing = true;
+			string code = "";
+
+			Dispatcher.Invoke(new Action(() => code = Editor.Text));
+
+			DModule newAst = null;
+			try
+			{
+				hp.Start();
+				var parser = DParser.Create(new StringReader(code));
+				code = null;
+
+				newAst = parser.Parse();
+
+				hp.Stop();
+
+				ParseTime = hp.Duration;
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.Parser);
+			}
+
+			if (SyntaxTree != null && newAst != null)
+				lock (SyntaxTree)
+				{
+					SyntaxTree.ParseErrors = newAst.ParseErrors;
+					SyntaxTree.AssignFrom(newAst);
+				}
+			else
+				SyntaxTree = newAst;
+
+			lastSelectedBlock = null;
+
+			SyntaxTree.FileName = AbsoluteFilePath;
+			SyntaxTree.ModuleName = ProposedModuleName;
+
+			UpdateSemanticHightlighting();
+			UpdateBlockCompletionData();
+
 			if (parseOperation != null && parseOperation.Status != DispatcherOperationStatus.Completed)
 				parseOperation.Abort();
 
 			parseOperation = Dispatcher.BeginInvoke(new Action(() =>
 			{
-				DModule newAst = null;
 				try
 				{
-					hp.Start();
-					var parser = DParser.Create(new StringReader(Editor.Text));
-
-					newAst = parser.Parse();
-
-					hp.Stop();
-
-					ParseTime = hp.Duration;
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.Parser);
-				}
-
-				try
-				{
-					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration * 1000).ToString() + "ms";
-
-					lastSelectedBlock = null;
-					
-					if (SyntaxTree != null && newAst!=null)
-						lock (SyntaxTree)
-						{
-							SyntaxTree.ParseErrors = newAst.ParseErrors;
-							SyntaxTree.AssignFrom(newAst);
-						}
-					else
-						SyntaxTree = newAst;
-
-					SyntaxTree.FileName = AbsoluteFilePath;
-					SyntaxTree.ModuleName = ProposedModuleName;
-
+					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration * 1000, 3).ToString() + "ms";
 					UpdateFoldings();
-					UpdateBlockCompletionData();
-					UpdateSemanticHightlighting();
+					CoreManager.ErrorManagement.RefreshErrorList();
 				}
 				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System); }
-				CoreManager.ErrorManagement.RefreshErrorList();
 			}));
+
+			IsParsing = false;
 		}
 
-		public void UpdateSemanticHightlighting(List<IdentifierDeclaration> typeIds=null)
+		public void UpdateSemanticHightlighting()
 		{
-			if(typeIds==null)
-				typeIds = CodeWideSymbolEnlister.ScanForTypeIdentifiers(SyntaxTree);
+			var hp2 = new HighPrecisionTimer.HighPrecTimer();
+			hp2.Start();
 
-			// Clear old markers
-			foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
-				if (marker is CodeSymbolMarker)
-					marker.Delete();
+			var compDict = new Dictionary<string, ResolveResult>();
+			var finalDict = new Dictionary<IdentifierDeclaration, ResolveResult>();
+			var notFoundList = new List<IdentifierDeclaration>();
 
-			foreach (var typeId in typeIds)
+			try
 			{
-				var m = new CodeSymbolMarker(this, typeId);
-				MarkerStrategy.Add(m);
+				// Step 0: Prerequisits
+				var parseCache = DCodeCompletionSupport.EnumAvailableModules(this);
+				var importCache = DResolver.ResolveImports(SyntaxTree, parseCache);
 
-				m.Redraw();
+				// Step 1: Enum all existing type id's that shall become resolved'n displayed
+				var typeIds = CodeSymbolResolver.ScanForTypeIdentifiers(SyntaxTree);
+
+				#region Step 2: Loop through all of them, try to resolve them, write the results in a dictionary
+				foreach (var typeId in typeIds)
+				{
+					var typeString = typeId.ToString();
+
+					/*
+					 * string,wstring,dstring are highlighted by the editor's syntax definition automatically..
+					 * Anyway, allow to resolve e.g. "object.string"
+					 */
+					if (typeString == "string" || typeString == "wstring" || typeString == "dstring")
+						continue;
+
+					ResolveResult rr = null;
+					bool WasFoundAlready = false;
+					if (WasFoundAlready = compDict.TryGetValue(typeString, out rr))
+					{
+						if (typeId is IdentifierDeclaration)
+							finalDict.Add(typeId as IdentifierDeclaration, rr);
+					}
+					else
+					{
+						IStatement _unused = null;
+						var res = DResolver.ResolveType(typeId,
+							DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused)
+							, parseCache, importCache);
+
+						if (res != null && res.Length > 0)
+						{
+							rr = res[0];
+
+							/*
+							 * For performance reasons, add our type declaration 
+							 * including the result to the comparison dictionary
+							 */
+							compDict.Add(typeId.ToString(), rr);
+						}
+					}
+
+					if (rr == null)
+					{
+						if (typeId is IdentifierDeclaration)
+							notFoundList.Add(typeId as IdentifierDeclaration);
+					}
+					else
+					{
+						/*
+						 * Note: It is of course possible to highlight more than one type in one type declaration!
+						 * So, we scan down the result hierarchy for TypeResults and highlight all of them later.
+						 */
+						var curRes = rr;
+
+						/*
+						 * Note: Since we want to use results multiple times,
+						 * we at least have to 'update' their type declarations
+						 * to ensure that the second, third, fourth etc. occurence of this result
+						 * are also highlit (and won't(!) cause an Already-Added-Exception of our finalDict-Array)
+						 */
+						var curTypeDeclBase = typeId;
+
+						while (curRes != null)
+						{
+							// If curRes is an alias, try scan down the alias(es), and then check whether it's been an aliased type or not
+							if (curRes is MemberResult)
+							{
+								var btype = DResolver.TryRemoveAliasesFromResult(curRes as MemberResult);
+
+								if (btype is TypeResult &&
+									curTypeDeclBase is IdentifierDeclaration &&
+									!(curTypeDeclBase is DTokenDeclaration))
+								{
+									finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
+
+									// See performance reasons
+									if (curRes != rr && !WasFoundAlready)
+										compDict.Add(curTypeDeclBase.ToString(), curRes);
+								}
+							}
+
+							if (curRes is TypeResult)
+							{
+								// Yeah, in quite all cases we do identify a class via its name ;-)
+								if (curTypeDeclBase is IdentifierDeclaration &&
+									!(curTypeDeclBase is DTokenDeclaration))
+								{
+									finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
+
+									// See performance reasons
+									if (curRes != rr && !WasFoundAlready)
+										compDict.Add(curTypeDeclBase.ToString(), curRes);
+								}
+							}
+
+							curRes = curRes.ResultBase;
+							curTypeDeclBase = curTypeDeclBase.InnerDeclaration;
+						}
+					}
+				}
+				#endregion
 			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.Parser);
+			}
+			hp2.Stop();
+
+			#region Step 3: Create/Update markers
+			try
+			{
+				Dispatcher.BeginInvoke(new Action(() =>
+			{
+				// Clear old markers
+				foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
+					if (marker is CodeSymbolMarker || marker is SymbolNotFoundMarker)
+						marker.Delete();
+
+				if (finalDict.Count > 0)
+					foreach (var kv in finalDict)
+					{
+						var m = new CodeSymbolMarker(this, kv.Key) { ResolveResult = kv.Value };
+						MarkerStrategy.Add(m);
+
+						m.Redraw();
+					}
+
+				if (notFoundList.Count > 0)
+					foreach (var id in notFoundList)
+					{
+						var m = new SymbolNotFoundMarker(this, id);
+						MarkerStrategy.Add(m);
+
+						m.Redraw();
+					}
+
+				CoreManager.Instance.MainWindow.LeftStatusText =
+					Math.Round(hp2.Duration * 1000, 2).ToString() +
+					"ms (Semantic Highlighting)";
+			}));
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System);
+			}
+			#endregion
 		}
 
 		public class CodeSymbolMarker : TextMarker
 		{
 			public readonly EditorDocument EditorDocument;
 			public readonly IdentifierDeclaration Id;
+			public ResolveResult ResolveResult;
 
+			public CodeSymbolMarker(EditorDocument EditorDoc, IdentifierDeclaration Id, int StartOffset, int Length)
+				: base(EditorDoc.MarkerStrategy, StartOffset, Length)
+			{
+				this.EditorDocument = EditorDoc;
+				this.Id = Id;
+				Init();
+			}
 			public CodeSymbolMarker(EditorDocument EditorDoc, IdentifierDeclaration Id)
-				: base(EditorDoc.MarkerStrategy, EditorDoc.Editor.Document.GetOffset(Id.Location.Line,Id.Location.Column), Id.ToString(false).Length)
+				: base(EditorDoc.MarkerStrategy, EditorDoc.Editor.Document.GetOffset(Id.Location.Line, Id.Location.Column), Id.ToString(false).Length)
+			{
+				this.EditorDocument = EditorDoc;
+				this.Id = Id;
+				Init();
+			}
+
+			void Init()
 			{
 				this.MarkerType = TextMarkerType.None;
 				ForegroundColor = Color.FromRgb(0x2b, 0x91, 0xaf);
+			}
+		}
 
+		public class SymbolNotFoundMarker : TextMarker
+		{
+			public readonly EditorDocument EditorDocument;
+			public readonly IdentifierDeclaration Id;
+
+			public SymbolNotFoundMarker(EditorDocument EditorDoc, IdentifierDeclaration Id, int StartOffset, int Length)
+				: base(EditorDoc.MarkerStrategy, StartOffset, Length)
+			{
 				this.EditorDocument = EditorDoc;
 				this.Id = Id;
+				Init();
+			}
+			public SymbolNotFoundMarker(EditorDocument EditorDoc, IdentifierDeclaration Id)
+				: base(EditorDoc.MarkerStrategy, EditorDoc.Editor.Document.GetOffset(Id.Location.Line, Id.Location.Column), Id.ToString(false).Length)
+			{
+				this.EditorDocument = EditorDoc;
+				this.Id = Id;
+			}
+
+			void Init()
+			{
+				this.MarkerColor = Colors.Blue;
 			}
 		}
 
@@ -651,7 +858,7 @@ namespace D_IDE.D
 				{
 					var l = new List<GenericError>(SyntaxTree.ParseErrors.Count);
 					foreach (var pe in SyntaxTree.ParseErrors)
-						l.Add( new DParseError(pe) { Project = HasProject ? Project : null, FileName = AbsoluteFilePath });
+						l.Add(new DParseError(pe) { Project = HasProject ? Project : null, FileName = AbsoluteFilePath });
 					return l;
 				}
 				return null;
@@ -713,7 +920,7 @@ namespace D_IDE.D
 							}
 						lookup_Types.ItemsSource = types;
 						lookup_Types.SelectedItem = selectedItem;
-						
+
 						if (curBlock is IBlockNode)
 						{
 							selectedItem = null;

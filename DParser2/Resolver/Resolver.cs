@@ -582,7 +582,11 @@ namespace D_Parser.Resolver
 							classDef = classDef.Parent as IBlockNode;
 
 						if(classDef is DClassLike)
-							returnedResults.Add(new TypeResult() { ResolvedTypeDefinition = classDef });
+							returnedResults.Add(new TypeResult() 
+							{ 
+								ResolvedTypeDefinition = classDef, 
+								TypeDeclarationBase=declaration 
+							});
 					}
 					// References super type of currently scoped class declaration
 					else if (searchToken == DTokens.Super)
@@ -596,7 +600,9 @@ namespace D_Parser.Resolver
 					else if (searchToken > 0)
 					{
 						if (DTokens.BasicTypes[searchToken])
-							returnedResults.Add(new StaticTypeResult() { BaseTypeToken = searchToken, Type = new DTokenDeclaration(searchToken) });
+							returnedResults.Add(new StaticTypeResult() { 
+								BaseTypeToken = searchToken, 
+								TypeDeclarationBase = declaration });
 						// anything else is just a key word, not a type
 					}
 					// (As usual) Go on searching in the local&global scope(s)
@@ -625,7 +631,10 @@ namespace D_Parser.Resolver
 						}
 
 						// Then go on searching in the global scope
-						var ThisModule = currentlyScopedNode is IAbstractSyntaxTree ? currentlyScopedNode as IAbstractSyntaxTree : currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
+						var ThisModule = 
+							currentlyScopedNode is IAbstractSyntaxTree ? 
+								currentlyScopedNode as IAbstractSyntaxTree : 
+								currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
 						if (parseCache != null)
 							foreach (var mod in parseCache)
 							{
@@ -646,7 +655,7 @@ namespace D_Parser.Resolver
 									matches.AddRange(m);
 							}
 
-						var results = HandleNodeMatches(matches, currentlyScopedNode, parseCache/*, searchIdentifier*/);
+						var results = HandleNodeMatches(matches, currentlyScopedNode, parseCache, TypeDeclaration:declaration);
 						if (results != null)
 							returnedResults.AddRange(results);
 					}
@@ -654,7 +663,7 @@ namespace D_Parser.Resolver
 				#endregion
 
 				else
-					returnedResults.Add(new StaticTypeResult() { Type=declaration});
+					returnedResults.Add(new StaticTypeResult() { TypeDeclarationBase=declaration});
 			}
 			#endregion
 
@@ -687,7 +696,7 @@ namespace D_Parser.Resolver
 								{
 									var results = HandleNodeMatches(
 										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, importCache),
-										currentlyScopedNode, importCache, rbase);
+										currentlyScopedNode, importCache, rbase,TypeDeclaration:declaration);
 									if (results != null)
 										returnedResults.AddRange(results);
 								}
@@ -705,7 +714,8 @@ namespace D_Parser.Resolver
 											{
 												ResolvedModule = modRes.ResolvedModule,
 												AlreadyTypedModuleNameParts = modRes.AlreadyTypedModuleNameParts + 1,
-												ResultBase = modRes
+												ResultBase = modRes,
+												TypeDeclarationBase=declaration
 											});
 										}
 									}
@@ -713,7 +723,7 @@ namespace D_Parser.Resolver
 									{
 										var results = HandleNodeMatches(
 										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, importCache),
-										currentlyScopedNode, importCache, rbase);
+										currentlyScopedNode, importCache, rbase, TypeDeclaration:declaration);
 										if (results != null)
 											returnedResults.AddRange(results);
 									}
@@ -732,7 +742,7 @@ namespace D_Parser.Resolver
 
 					else if (declaration is ArrayDecl || declaration is PointerDecl)
 					{
-						returnedResults.Add(new StaticTypeResult() { Type = declaration, ResultBase = rbase });
+						returnedResults.Add(new StaticTypeResult() { TypeDeclarationBase = declaration, ResultBase = rbase });
 					}
 
 					else if (declaration is DExpressionDecl)
@@ -758,9 +768,9 @@ namespace D_Parser.Resolver
 						{
 							var str = rbase as StaticTypeResult;
 
-							if (str.Type is ArrayDecl && expr is PostfixExpression_Index)
+							if (str.TypeDeclarationBase is ArrayDecl && expr is PostfixExpression_Index)
 							{
-								returnedResults.Add(new StaticTypeResult() { Type = (str.Type as ArrayDecl).ValueType });
+								returnedResults.Add(new StaticTypeResult() { TypeDeclarationBase = (str.TypeDeclarationBase as ArrayDecl).ValueType });
 							}
 						}
 						else if (rbase is MemberResult)
@@ -779,7 +789,7 @@ namespace D_Parser.Resolver
 										 * take the value type of the 
 										 */
 										// For array and pointer declarations, the StaticTypeResult object contains the array's value type / pointer base type.
-										if (str != null && (str.Type is ArrayDecl || str.Type is PointerDecl))
+										if (str != null && (str.TypeDeclarationBase is ArrayDecl || str.TypeDeclarationBase is PointerDecl))
 											curRes = TryRemoveAliasesFromResult(str.ResultBase);
 									}
 
@@ -908,10 +918,11 @@ namespace D_Parser.Resolver
 		/// etc..
 		/// </summary>
 		/// <returns></returns>
-		public static ResolveResult HandleNodeMatch(INode m, 
+		public static ResolveResult HandleNodeMatch(
+			INode m, 
 			IBlockNode currentlyScopedNode,
 			IEnumerable<IAbstractSyntaxTree> parseCache,
-			ResolveResult resultBase = null, bool ResolveAliases=false)
+			ResolveResult resultBase = null, bool ResolveAliases = false, ITypeDeclaration typeBase=null)
 		{
 			bool DoResolveBaseType = true;
 			// Prevent infinite recursion if the type accidently equals the node's name
@@ -975,7 +986,8 @@ namespace D_Parser.Resolver
 				{
 					ResolvedMember = m,
 					MemberBaseTypes = memberbaseTypes,
-					ResultBase = resultBase
+					ResultBase = resultBase,
+					TypeDeclarationBase=typeBase
 				};
 			}
 			else if (m is DMethod)
@@ -1025,7 +1037,8 @@ namespace D_Parser.Resolver
 				{
 					ResolvedMember = m,
 					MemberBaseTypes = DoResolveBaseType ? ResolveType(methodType, currentlyScopedNode, parseCache) : null,
-					ResultBase = resultBase
+					ResultBase = resultBase,
+					TypeDeclarationBase=typeBase
 				};
 			}
 			else if (m is DClassLike)
@@ -1036,7 +1049,8 @@ namespace D_Parser.Resolver
 				{
 					ResolvedTypeDefinition = Class,
 					BaseClass = ResolveBaseClass(Class, parseCache),
-					ResultBase = resultBase
+					ResultBase = resultBase,
+					TypeDeclarationBase=typeBase
 				};
 			}
 			else if (m is IAbstractSyntaxTree)
@@ -1044,13 +1058,15 @@ namespace D_Parser.Resolver
 				{
 					ResolvedModule = m as IAbstractSyntaxTree,
 					AlreadyTypedModuleNameParts = 1,
-					ResultBase = resultBase
+					ResultBase = resultBase,
+					TypeDeclarationBase=typeBase
 				};
 			else if (m is DEnum)
 				return new TypeResult()
 				{
 					ResolvedTypeDefinition = m as IBlockNode,
-					ResultBase = resultBase
+					ResultBase = resultBase,
+					TypeDeclarationBase=typeBase
 				};
 
 			// This never should happen..
@@ -1060,13 +1076,13 @@ namespace D_Parser.Resolver
 		public static ResolveResult[] HandleNodeMatches(IEnumerable<INode> matches, 
 			IBlockNode currentlyScopedNode, 
 			IEnumerable<IAbstractSyntaxTree> parseCache,
-			ResolveResult resultBase = null, bool ResolveAliasDefs=false)
+			ResolveResult resultBase = null, bool ResolveAliasDefs=false, ITypeDeclaration TypeDeclaration=null)
 		{
 			var rl = new List<ResolveResult>();
 			if(matches!=null)
 			foreach (var m in matches)
 			{
-				var res = HandleNodeMatch(m, currentlyScopedNode, parseCache, resultBase,ResolveAliasDefs);
+				var res = HandleNodeMatch(m, currentlyScopedNode, parseCache, resultBase,ResolveAliasDefs,typeBase:TypeDeclaration);
 				if (res != null)
 					rl.Add(res);
 			}
