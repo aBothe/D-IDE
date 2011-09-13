@@ -68,8 +68,30 @@ namespace D_IDE.D
 					if (prj != null)
 						prj.ParsedModules[AbsoluteFilePath] = value;
 				}
+
 				_unboundTree = value;
+
+				UpdateImportCache();
 			}
+		}
+		public IEnumerable<IAbstractSyntaxTree> ParseCache
+		{
+			get;
+			protected set;
+		}
+		public IEnumerable<IAbstractSyntaxTree> ImportCache
+		{
+			get;
+			protected set;
+		}
+
+		public void UpdateImportCache()
+		{
+			Dispatcher.Invoke(new Action(() =>
+				ParseCache = DCodeCompletionSupport.EnumAvailableModules(this)
+			));
+
+			ImportCache = DResolver.ResolveImports(SyntaxTree, ParseCache);
 		}
 
 		public bool IsParsing { get; protected set; }
@@ -542,12 +564,26 @@ namespace D_IDE.D
 
 					// Initially parse the document
 					Parse();
+					bool HasBeenUpdatingParseCache = false;
 
 					while (true)
 					{
+						var cc = CompilerConfiguration;
+
 						// While no keys were typed, do nothing
 						while (!KeysTyped)
+						{
+							if (HasBeenUpdatingParseCache && !cc.ASTCache.IsParsing)
+							{
+								UpdateImportCache();
+								UpdateSemanticHightlighting();
+								HasBeenUpdatingParseCache = false;
+							}
+							else if (cc.ASTCache.IsParsing)
+								HasBeenUpdatingParseCache = true;
+
 							Thread.Sleep(50);
+						}
 
 						// Reset keystyped state for waiting again
 						KeysTyped = false;
@@ -605,6 +641,7 @@ namespace D_IDE.D
 				{
 					SyntaxTree.ParseErrors = newAst.ParseErrors;
 					SyntaxTree.AssignFrom(newAst);
+					UpdateImportCache();
 				}
 			else
 				SyntaxTree = newAst;
@@ -624,7 +661,7 @@ namespace D_IDE.D
 			{
 				try
 				{
-					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration * 1000, 3).ToString() + "ms";
+					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration * 1000, 3).ToString() + "ms (Parsing duration)";
 					UpdateFoldings();
 					CoreManager.ErrorManagement.RefreshErrorList();
 				}
@@ -636,165 +673,173 @@ namespace D_IDE.D
 
 		public void UpdateSemanticHightlighting()
 		{
-			var hp2 = new HighPrecisionTimer.HighPrecTimer();
-			hp2.Start();
+			if (SyntaxTree==null || CompilerConfiguration.ASTCache.IsParsing)
+				return;
 
-			var compDict = new Dictionary<string, ResolveResult>();
-			var finalDict = new Dictionary<IdentifierDeclaration, ResolveResult>();
-			var notFoundList = new List<IdentifierDeclaration>();
+				var hp2 = new HighPrecisionTimer.HighPrecTimer();
+				hp2.Start();
 
-			try
-			{
-				// Step 0: Prerequisits
-				var parseCache = DCodeCompletionSupport.EnumAvailableModules(this);
-				var importCache = DResolver.ResolveImports(SyntaxTree, parseCache);
+				var compDict = new Dictionary<string, ResolveResult>();
+				var finalDict = new Dictionary<IdentifierDeclaration, ResolveResult>();
+				var notFoundList = new List<IdentifierDeclaration>();
 
-				// Step 1: Enum all existing type id's that shall become resolved'n displayed
-				var typeIds = CodeSymbolResolver.ScanForTypeIdentifiers(SyntaxTree);
-
-				#region Step 2: Loop through all of them, try to resolve them, write the results in a dictionary
-				foreach (var typeId in typeIds)
+				try
 				{
-					var typeString = typeId.ToString();
-
-					/*
-					 * string,wstring,dstring are highlighted by the editor's syntax definition automatically..
-					 * Anyway, allow to resolve e.g. "object.string"
-					 */
-					if (typeString == "string" || typeString == "wstring" || typeString == "dstring")
-						continue;
-
-					ResolveResult rr = null;
-					bool WasFoundAlready = false;
-					if (WasFoundAlready = compDict.TryGetValue(typeString, out rr))
+					// Step 1: Enum all existing type id's that shall become resolved'n displayed
+					var typeIds = CodeSymbolResolver.ScanForTypeIdentifiers(SyntaxTree);
+					
+					#region Step 2: Loop through all of them, try to resolve them, write the results in a dictionary
+					foreach (var typeId in typeIds)
 					{
-						if (typeId is IdentifierDeclaration)
-							finalDict.Add(typeId as IdentifierDeclaration, rr);
-					}
-					else
-					{
-						IStatement _unused = null;
-						var res = DResolver.ResolveType(typeId,
-							DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused)
-							, parseCache, importCache);
+						var typeString = typeId.ToString();
+						
+						/*
+						 * string,wstring,dstring are highlighted by the editor's syntax definition automatically..
+						 * Anyway, allow to resolve e.g. "object.string"
+						 */
+						if (typeString == "string" || typeString == "wstring" || typeString == "dstring")
+							continue;
 
-						if (res != null && res.Length > 0)
+						ResolveResult rr = null;
+						bool WasFoundAlready = false;
+						if (WasFoundAlready = compDict.TryGetValue(typeString, out rr))
 						{
-							rr = res[0];
+							if (typeId is IdentifierDeclaration)
+								finalDict.Add(typeId as IdentifierDeclaration, rr);
+						}
+						else
+						{
+							IStatement _unused = null;
+							var res = DResolver.ResolveType(typeId,
+								DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused)
+								, ParseCache, ImportCache);
+
+							if (res != null && res.Length > 0)
+							{
+								rr = res[0];
+
+								/*
+								 * For performance reasons, add our type declaration 
+								 * including the result to the comparison dictionary
+								 */
+								compDict.Add(typeId.ToString(), rr);
+							}
+						}
+
+						if (rr == null)
+						{
+							if (typeId is IdentifierDeclaration)
+								notFoundList.Add(typeId as IdentifierDeclaration);
+						}
+						else
+						{
+							/*
+							 * Note: It is of course possible to highlight more than one type in one type declaration!
+							 * So, we scan down the result hierarchy for TypeResults and highlight all of them later.
+							 */
+							var curRes = rr;
 
 							/*
-							 * For performance reasons, add our type declaration 
-							 * including the result to the comparison dictionary
+							 * Note: Since we want to use results multiple times,
+							 * we at least have to 'update' their type declarations
+							 * to ensure that the second, third, fourth etc. occurence of this result
+							 * are also highlit (and won't(!) cause an Already-Added-Exception of our finalDict-Array)
 							 */
-							compDict.Add(typeId.ToString(), rr);
+							var curTypeDeclBase = typeId;
+
+							while (curRes != null)
+							{
+								// If curRes is an alias, try scan down the alias(es), and then check whether it's been an aliased type or not
+								if (curRes is MemberResult)
+								{
+									var btype = DResolver.TryRemoveAliasesFromResult(curRes as MemberResult);
+
+									if (btype is TypeResult &&
+										curTypeDeclBase is IdentifierDeclaration &&
+										!(curTypeDeclBase is DTokenDeclaration) &&
+										!finalDict.ContainsKey(curTypeDeclBase as IdentifierDeclaration))
+									{
+										finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
+
+										// See performance reasons
+										if (curRes != rr && !WasFoundAlready)
+											compDict.Add(curTypeDeclBase.ToString(), curRes);
+									}
+								}
+
+								if (curRes is TypeResult)
+								{
+									// Yeah, in quite all cases we do identify a class via its name ;-)
+									if (curTypeDeclBase is IdentifierDeclaration &&
+										!(curTypeDeclBase is DTokenDeclaration) &&
+										!finalDict.ContainsKey(curTypeDeclBase as IdentifierDeclaration))
+									{
+										finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
+
+										// See performance reasons
+										if (curRes != rr && !WasFoundAlready)
+											compDict.Add(curTypeDeclBase.ToString(), curRes);
+									}
+								}
+
+								curRes = curRes.ResultBase;
+								curTypeDeclBase = curTypeDeclBase.InnerDeclaration;
+							}
 						}
 					}
+					#endregion
+				}
+				catch (Exception ex)
+				{
+					//ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.Parser);
+				}
+				hp2.Stop();
 
-					if (rr == null)
-					{
-						if (typeId is IdentifierDeclaration)
-							notFoundList.Add(typeId as IdentifierDeclaration);
-					}
-					else
-					{
-						/*
-						 * Note: It is of course possible to highlight more than one type in one type declaration!
-						 * So, we scan down the result hierarchy for TypeResults and highlight all of them later.
-						 */
-						var curRes = rr;
+				#region Step 3: Create/Update markers
+				try
+				{
+					Dispatcher.BeginInvoke(new Action<
+						Dictionary<IdentifierDeclaration, ResolveResult>,
+						List<IdentifierDeclaration>,
+						HighPrecisionTimer.HighPrecTimer>
+						((Dictionary<IdentifierDeclaration, ResolveResult> resolvedItems,
+							List<IdentifierDeclaration> unresolvedItems,
+							HighPrecisionTimer.HighPrecTimer highPrecTimer) =>
+				{
+					// Clear old markers
+					foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
+						if (marker is CodeSymbolMarker || marker is SymbolNotFoundMarker)
+							marker.Delete();
 
-						/*
-						 * Note: Since we want to use results multiple times,
-						 * we at least have to 'update' their type declarations
-						 * to ensure that the second, third, fourth etc. occurence of this result
-						 * are also highlit (and won't(!) cause an Already-Added-Exception of our finalDict-Array)
-						 */
-						var curTypeDeclBase = typeId;
-
-						while (curRes != null)
+					if (resolvedItems.Count > 0)
+						foreach (var kv in resolvedItems)
 						{
-							// If curRes is an alias, try scan down the alias(es), and then check whether it's been an aliased type or not
-							if (curRes is MemberResult)
-							{
-								var btype = DResolver.TryRemoveAliasesFromResult(curRes as MemberResult);
+							var m = new CodeSymbolMarker(this, kv.Key) { ResolveResult = kv.Value };
+							MarkerStrategy.Add(m);
 
-								if (btype is TypeResult &&
-									curTypeDeclBase is IdentifierDeclaration &&
-									!(curTypeDeclBase is DTokenDeclaration))
-								{
-									finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
-
-									// See performance reasons
-									if (curRes != rr && !WasFoundAlready)
-										compDict.Add(curTypeDeclBase.ToString(), curRes);
-								}
-							}
-
-							if (curRes is TypeResult)
-							{
-								// Yeah, in quite all cases we do identify a class via its name ;-)
-								if (curTypeDeclBase is IdentifierDeclaration &&
-									!(curTypeDeclBase is DTokenDeclaration))
-								{
-									finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
-
-									// See performance reasons
-									if (curRes != rr && !WasFoundAlready)
-										compDict.Add(curTypeDeclBase.ToString(), curRes);
-								}
-							}
-
-							curRes = curRes.ResultBase;
-							curTypeDeclBase = curTypeDeclBase.InnerDeclaration;
+							m.Redraw();
 						}
-					}
+
+					if (unresolvedItems.Count > 0)
+						foreach (var id in unresolvedItems)
+						{
+							var m = new SymbolNotFoundMarker(this, id);
+							MarkerStrategy.Add(m);
+
+							m.Redraw();
+						}
+
+					CoreManager.Instance.MainWindow.LeftStatusText =
+						Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
+						"ms (Semantic Highlighting)";
+				}), DispatcherPriority.Background,
+					finalDict, notFoundList, hp2);
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System);
 				}
 				#endregion
-			}
-			catch (Exception ex)
-			{
-				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.Parser);
-			}
-			hp2.Stop();
-
-			#region Step 3: Create/Update markers
-			try
-			{
-				Dispatcher.BeginInvoke(new Action(() =>
-			{
-				// Clear old markers
-				foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
-					if (marker is CodeSymbolMarker || marker is SymbolNotFoundMarker)
-						marker.Delete();
-
-				if (finalDict.Count > 0)
-					foreach (var kv in finalDict)
-					{
-						var m = new CodeSymbolMarker(this, kv.Key) { ResolveResult = kv.Value };
-						MarkerStrategy.Add(m);
-
-						m.Redraw();
-					}
-
-				if (notFoundList.Count > 0)
-					foreach (var id in notFoundList)
-					{
-						var m = new SymbolNotFoundMarker(this, id);
-						MarkerStrategy.Add(m);
-
-						m.Redraw();
-					}
-
-				CoreManager.Instance.MainWindow.LeftStatusText =
-					Math.Round(hp2.Duration * 1000, 2).ToString() +
-					"ms (Semantic Highlighting)";
-			}));
-			}
-			catch (Exception ex)
-			{
-				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System);
-			}
-			#endregion
 		}
 
 		public class CodeSymbolMarker : TextMarker
@@ -954,7 +999,7 @@ namespace D_IDE.D
 						#endregion
 					}
 					catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
-				}));
+				}), DispatcherPriority.Background);
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
 		}

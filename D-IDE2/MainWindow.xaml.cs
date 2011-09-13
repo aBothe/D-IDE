@@ -14,6 +14,7 @@ using AvalonDock;
 using D_IDE.Core.Controls;
 using System.Diagnostics;
 using System.Text;
+using System.Windows.Threading;
 
 namespace D_IDE
 {
@@ -237,7 +238,7 @@ namespace D_IDE
 							s.Close();
 						}
 					}
-				}));
+				}),DispatcherPriority.Background);
 			}
 			catch { }
 
@@ -288,7 +289,7 @@ namespace D_IDE
 							ErrorLogger.Log(ex);
 						}
 					RefreshGUI();
-				}));
+				}),System.Windows.Threading.DispatcherPriority.Background);
 			}
 			else
 				RefreshGUI();

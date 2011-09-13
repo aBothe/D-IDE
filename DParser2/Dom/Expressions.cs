@@ -923,11 +923,13 @@ namespace D_Parser.Dom.Expressions
 				ret = ret.TrimEnd(',') + ")";
 			}
 
-			ret += " " + Type.ToString();
+			if(Type!=null)
+				ret += " " + Type.ToString();
 
 			ret += IsArrayArgument ? '[' : '(';
-			foreach (var e in Arguments)
-				ret += e.ToString() + ",";
+			if(Arguments!=null)
+				foreach (var e in Arguments)
+					ret += e.ToString() + ",";
 
 			ret = ret.TrimEnd(',') + (IsArrayArgument ? ']' : ')');
 

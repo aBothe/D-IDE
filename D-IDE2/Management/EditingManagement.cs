@@ -5,6 +5,7 @@ using System.Text;
 using D_IDE.Core;
 using System.IO;
 using System.Windows.Threading;
+using System.Threading;
 
 namespace D_IDE
 {
@@ -175,7 +176,20 @@ namespace D_IDE
 				// Set read only state if e.g. debugging currently
 				newEd.Editor.IsReadOnly = AllDocumentsReadOnly;
 				newEd.Show(Instance.MainWindow.DockManager);
-				newEd.Activate();
+
+				//HACK: 'Enforce' activation by trying it several times,
+				for (int k = 0; k < 10; k++)
+				{
+					try
+					{
+						newEd.Activate();
+						break;
+					}
+					catch
+					{
+						Thread.Sleep(100);
+					}
+				}
 				Instance.UpdateGUI();
 				newEd.Editor.Focus();
 				return newEd;

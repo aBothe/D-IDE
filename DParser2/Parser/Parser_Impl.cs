@@ -3311,6 +3311,11 @@ namespace D_Parser.Parser
 			{
 				var s = new DeclarationStatement() { StartLocation = la.Location };
 				s.Declarations = Declaration();
+
+				if (Scope != null && s.Declarations != null && s.Declarations.Length > 0)
+					foreach (var decl in s.Declarations)
+						decl.Parent = Scope;
+
 				s.EndLocation = t.EndLocation;
 				return s;
 			}

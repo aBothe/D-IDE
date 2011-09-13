@@ -73,16 +73,13 @@ namespace D_IDE.D
 				return;
 
 			IEnumerable<INode> listedItems = null;
-			var codeCache = EnumAvailableModules(EditorDocument);
 
 			// Usually shows variable members
 			if (EnteredText == ".")
 			{
 				alreadyAddedModuleNameParts.Clear();
 
-				var imports = codeCache;
-
-				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset - 1, caretLocation, curBlock, imports);
+				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset - 1, caretLocation, curBlock,EditorDocument.ParseCache,importCache:EditorDocument.ImportCache);
 
 				if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
@@ -114,7 +111,7 @@ namespace D_IDE.D
 					}
 				}
 
-				listedItems = DResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, caretLocation, codeCache);
+				listedItems = DResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, caretLocation, EditorDocument.ImportCache);
 
 				foreach (var kv in DTokens.Keywords)
 					l.Add(new TokenCompletionData(kv.Key));
@@ -122,7 +119,7 @@ namespace D_IDE.D
 				// Add module name stubs of importable modules
 				var nameStubs = new Dictionary<string, string>();
 				var availModules = new List<IAbstractSyntaxTree>();
-				foreach (var mod in codeCache)
+				foreach (var mod in EditorDocument.ParseCache)
 				{
 					if (string.IsNullOrEmpty(mod.ModuleName))
 						continue;
@@ -691,7 +688,7 @@ namespace D_IDE.D
 				var caretLoc = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
 				IStatement curStmt = null;
 				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
-					DResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLoc, out curStmt), DResolver.ResolveImports(EditorDocument.SyntaxTree, EnumAvailableModules(EditorDocument)), true, true);
+					DResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLoc, out curStmt), EditorDocument.ParseCache, true, true);
 
 				if (rr.Length < 1)
 					return;
