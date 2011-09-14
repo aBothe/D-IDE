@@ -77,7 +77,7 @@ namespace D_IDE.D
 		public IEnumerable<IAbstractSyntaxTree> ParseCache
 		{
 			get;
-			protected set;
+			set;
 		}
 		public IEnumerable<IAbstractSyntaxTree> ImportCache
 		{
@@ -87,10 +87,7 @@ namespace D_IDE.D
 
 		public void UpdateImportCache()
 		{
-			Dispatcher.Invoke(new Action(() =>
-				ParseCache = DCodeCompletionSupport.EnumAvailableModules(this)
-			));
-
+			Dispatcher.Invoke(new Action(()=>ParseCache=DCodeCompletionSupport.EnumAvailableModules(this)));
 			ImportCache = DResolver.ResolveImports(SyntaxTree, ParseCache);
 		}
 
@@ -915,6 +912,18 @@ namespace D_IDE.D
 			get { return new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line); }
 		}
 
+		void _insertTypeDataInternal(IBlockNode Parent,ref DCompletionData selectedItem, List<DCompletionData> types)
+		{
+			if (Parent != null)
+				foreach (var n in Parent)
+				{
+					var completionData = new DCompletionData(n);
+					if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation <= n.EndLocation)
+						selectedItem = completionData;
+					types.Add(completionData);
+				}
+		}
+
 		/// <summary>
 		/// If different code block was selected, 
 		/// update the list of items that are available in the current scope
@@ -954,7 +963,10 @@ namespace D_IDE.D
 						// First fill the Types-Dropdown
 						var types = new List<DCompletionData>();
 						DCompletionData selectedItem = null;
-						// Show all members of the current module
+						var l1 = new List<INode> { SyntaxTree };
+						var l2 = new List<INode>();
+
+						// Show all type declarations of the current module
 						if (SyntaxTree != null)
 							foreach (var n in SyntaxTree)
 							{

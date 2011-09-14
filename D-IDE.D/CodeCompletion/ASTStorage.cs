@@ -21,6 +21,11 @@ namespace D_IDE.D.CodeCompletion
 	/// </summary>
 	public class ASTStorage:IEnumerable<ASTCollection>
 	{
+		public IEnumerable<IAbstractSyntaxTree> ParseCache
+		{
+			get;
+			protected set;
+		}
 		public readonly List<ASTCollection> ParsedGlobalDictionaries = new List<ASTCollection>();
 		public bool IsParsing { get; protected set; }
 
@@ -108,6 +113,14 @@ namespace D_IDE.D.CodeCompletion
 			{
 				ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser);
 			}
+
+			var cache = new List<IAbstractSyntaxTree>();
+
+			foreach (var pdir in ParsedGlobalDictionaries)
+				cache.AddRange(pdir);
+
+			ParseCache = cache;
+
 			IsParsing = false;
 		}
 

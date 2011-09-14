@@ -742,9 +742,9 @@ namespace D_IDE.D
 			if (Project != null)
 			{
 				// Add all parsed global modules that belong to the project's compiler configuration
-				foreach (var astColl in Project.CompilerConfiguration.ASTCache)
-					if(astColl.Count>0)
-						ret.AddRange(astColl);
+				var cch = Project.CompilerConfiguration.ASTCache.ParseCache;
+				if (cch != null)
+					ret.AddRange(cch);
 
 				// Add all modules that exist in the current solution.
 				if (Project.Solution != null)
@@ -757,8 +757,11 @@ namespace D_IDE.D
 					ret.AddRange(Project.ParsedModules);
 			}
 			else // If no project present, only add the modules of the default compiler configuration
-				foreach (var astColl in DSettings.Instance.DMDConfig().ASTCache)
-					ret.AddRange(astColl);
+			{
+				var cch = DSettings.Instance.DMDConfig().ASTCache.ParseCache;
+				if(cch!=null)
+					ret.AddRange(cch);
+			}
 
 			return ret;
 		}
