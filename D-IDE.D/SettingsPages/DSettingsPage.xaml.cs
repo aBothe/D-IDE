@@ -34,6 +34,7 @@ namespace D_IDE.D
 			sett.EnableMatchingBracketHighlighting = checkBox_EnableBracketHighlighting.IsChecked.Value;
 			sett.UseMethodInsight = checkBox_MethodInsight.IsChecked.Value;
 			sett.ForceCodeCompetionPopupCommit = checkBox_CodeInsertionOnNonLetter.IsChecked.Value;
+			sett.UseSemanticHighlighting = checkBox_UseSemanticHighlighting.IsChecked.Value;
 
 			return true;
 		}
@@ -46,6 +47,7 @@ namespace D_IDE.D
 			checkBox_EnableBracketHighlighting.IsChecked = sett.EnableMatchingBracketHighlighting;
 			checkBox_MethodInsight.IsChecked = sett.UseMethodInsight;
 			checkBox_CodeInsertionOnNonLetter.IsChecked = sett.ForceCodeCompetionPopupCommit;
+			checkBox_UseSemanticHighlighting.IsChecked = sett.UseSemanticHighlighting;
 		}
 
 		public override string SettingCategoryName

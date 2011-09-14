@@ -33,6 +33,50 @@ using D_Parser.Dom.Statements;
 
 namespace D_Parser.Resolver
 {
+	public class ResolverContext
+	{
+		public IBlockNode ScopedBlock;
+		public IEnumerable<IAbstractSyntaxTree> ParseCache;
+		public IEnumerable<IAbstractSyntaxTree> ImportCache;
+		public bool ResolveBaseTypes = true;
+		public bool ResolveAliases = true;
+
+		/// <summary>
+		/// Stores scoped-block dependent type dictionaries, which store all types that were already resolved once
+		/// </summary>
+		public readonly Dictionary<IBlockNode, Dictionary<string, ResolveResult[]>> ResolvedTypes = new Dictionary<IBlockNode, Dictionary<string, ResolveResult[]>>();
+
+		public void TryAddResults(string TypeDeclarationString, ResolveResult[] NodeMatches, IBlockNode ScopedType = null)
+		{
+			if (ScopedType == null)
+				ScopedType = ScopedBlock;
+
+			Dictionary<string, ResolveResult[]> subDict = null;
+
+			if (!ResolvedTypes.TryGetValue(ScopedType, out subDict))
+				ResolvedTypes.Add(ScopedType, subDict = new Dictionary<string, ResolveResult[]>());
+
+			if (!subDict.ContainsKey(TypeDeclarationString))
+				subDict.Add(TypeDeclarationString, NodeMatches);
+		}
+		
+		public bool TryGetAlreadyResolvedType(string TypeDeclarationString, out ResolveResult[] NodeMatches,IBlockNode ScopedType=null)
+		{
+			if(ScopedType==null)
+				ScopedType=ScopedBlock;
+
+			Dictionary<string, ResolveResult[]> subDict = null;
+
+			if (!ResolvedTypes.TryGetValue(ScopedType, out subDict))
+			{
+				NodeMatches = null;
+				return false;
+			}
+
+			return subDict.TryGetValue(TypeDeclarationString, out NodeMatches);
+		}
+	}
+
 	/// <summary>
 	/// Generic class for resolve module relations and/or declarations
 	/// </summary>
@@ -97,7 +141,7 @@ namespace D_Parser.Resolver
 
 
 
-						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, ImportCache);
+						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, new ResolverContext { ParseCache=ImportCache });
 
 						if (baseclassDefs == null)
 							break;
@@ -500,10 +544,11 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		public static ResolveResult[] ResolveType(string code, int caret, CodeLocation caretLocation, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache,
+		public static ResolveResult[] ResolveType(string code, int caret, 
+			CodeLocation caretLocation, 
+			ResolverContext ctxt,
 			bool alsoParseBeyondCaret = false,
-			bool onlyAssumeIdentifierList = false,
-			IEnumerable<IAbstractSyntaxTree> importCache=null)
+			bool onlyAssumeIdentifierList = false)
 		{
 			var start = ReverseParsing.SearchExpressionStart(code, caret);
 
@@ -516,7 +561,7 @@ namespace D_Parser.Resolver
 			parser.Step();
 
 			if (onlyAssumeIdentifierList && parser.Lexer.LookAhead.Kind==DTokens.Identifier)
-				return ResolveType(parser.IdentifierList(),currentlyScopedNode, parseCache,importCache);
+				return ResolveType(parser.IdentifierList(),ctxt);
 			else if (parser.IsAssignExpression())
 			{
 				var expr=parser.AssignExpression();
@@ -526,7 +571,7 @@ namespace D_Parser.Resolver
 					var relativeCaretLocation=DocumentHelper.OffsetToLocation(expressionCode, caret - start);
 					expr = ExpressionHelper.SearchExpressionDeeply(expr, relativeCaretLocation);
 
-					var ret = ResolveType(expr.ExpressionTypeRepresentation, currentlyScopedNode, parseCache,importCache);
+					var ret = ResolveType(expr.ExpressionTypeRepresentation, ctxt);
 
 					if (ret == null && expr != null && !(expr is TokenExpression))
 						ret = new[] { new ExpressionResult() { Expression = expr } };
@@ -535,25 +580,34 @@ namespace D_Parser.Resolver
 				}
 			}
 			else
-				return ResolveType(parser.Type(), currentlyScopedNode, parseCache,importCache);
+				return ResolveType(parser.Type(), ctxt);
 
 			return null;
 		}
 
-		public static ResolveResult[] ResolveType(ITypeDeclaration declaration, IBlockNode currentlyScopedNode, IEnumerable<IAbstractSyntaxTree> parseCache, IEnumerable<IAbstractSyntaxTree> importCache=null)
+		public static ResolveResult[] ResolveType(ITypeDeclaration declaration,
+			ResolverContext ctxt,
+			IBlockNode currentScopeOverride=null)
 		{
-			if (declaration == null)
+			if (currentScopeOverride == null)
+				currentScopeOverride = ctxt.ScopedBlock;
+
+			if (ctxt == null || declaration==null)
 				return null;
 
-			if (importCache == null)
-				importCache = DResolver.ResolveImports(currentlyScopedNode.NodeRoot as DModule, parseCache);
+			ResolveResult[] preRes = null;
+			if (ctxt.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, currentScopeOverride))
+				return preRes;
+
+			if (ctxt.ImportCache == null && ctxt.ScopedBlock!=null)
+				ctxt.ImportCache = DResolver.ResolveImports(ctxt.ScopedBlock.NodeRoot as DModule, ctxt.ParseCache);
 
 			var returnedResults = new List<ResolveResult>();
 
 			// Walk down recursively to resolve everything from the very first to declaration's base type declaration.
 			ResolveResult[] rbases = null;
 			if (declaration.InnerDeclaration != null)
-				rbases = ResolveType(declaration.InnerDeclaration, currentlyScopedNode, parseCache, importCache);
+				rbases = ResolveType(declaration.InnerDeclaration, ctxt,currentScopeOverride);
 
 			/* 
 			 * If there is no parent resolve context (what usually means we are searching the type named like the first identifier in the entire declaration),
@@ -577,14 +631,14 @@ namespace D_Parser.Resolver
 					// References current class scope
 					if (searchToken == DTokens.This)
 					{
-						var classDef = currentlyScopedNode;
+						var classDef = ctxt.ScopedBlock;
 
 						while (!(classDef is DClassLike) && classDef != null)
 							classDef = classDef.Parent as IBlockNode;
 
 						if (classDef is DClassLike)
 						{
-							var res=HandleNodeMatch(classDef, currentlyScopedNode, parseCache, typeBase: declaration);
+							var res=HandleNodeMatch(classDef, ctxt, currentScopeOverride, typeBase: declaration);
 
 							if (res != null)
 								returnedResults.Add(res);
@@ -593,14 +647,14 @@ namespace D_Parser.Resolver
 					// References super type of currently scoped class declaration
 					else if (searchToken == DTokens.Super)
 					{
-						var classDef = currentlyScopedNode;
+						var classDef = currentScopeOverride;
 
 						while (!(classDef is DClassLike) && classDef != null)
 							classDef = classDef.Parent as IBlockNode;
 
 						if (classDef != null)
 						{
-							var baseClassDefs = ResolveBaseClass(classDef as DClassLike, importCache);
+							var baseClassDefs = ResolveBaseClass(classDef as DClassLike, ctxt);
 
 							if (baseClassDefs != null)
 							{
@@ -627,10 +681,10 @@ namespace D_Parser.Resolver
 						var matches = new List<INode>();
 
 						// First search along the hierarchy in the current module
-						var curScope = currentlyScopedNode;
+						var curScope = currentScopeOverride;
 						while (curScope != null)
 						{
-							var m = ScanNodeForIdentifier(curScope, searchIdentifier, importCache);
+							var m = ScanNodeForIdentifier(curScope, searchIdentifier, ctxt);
 
 							if (m != null)
 								matches.AddRange(m);
@@ -648,11 +702,11 @@ namespace D_Parser.Resolver
 
 						// Then go on searching in the global scope
 						var ThisModule = 
-							currentlyScopedNode is IAbstractSyntaxTree ? 
-								currentlyScopedNode as IAbstractSyntaxTree : 
-								currentlyScopedNode.NodeRoot as IAbstractSyntaxTree;
-						if (parseCache != null)
-							foreach (var mod in parseCache)
+							currentScopeOverride is IAbstractSyntaxTree ? 
+								currentScopeOverride as IAbstractSyntaxTree : 
+								currentScopeOverride.NodeRoot as IAbstractSyntaxTree;
+						if (ctxt.ParseCache != null)
+							foreach (var mod in ctxt.ParseCache)
 							{
 								if (mod == ThisModule)
 									continue;
@@ -663,15 +717,15 @@ namespace D_Parser.Resolver
 									matches.Add(mod);
 							}
 
-						if (importCache != null)
-							foreach(var mod in importCache)
+						if (ctxt.ImportCache != null)
+							foreach(var mod in ctxt.ImportCache)
 							{
 								var m = ScanNodeForIdentifier(mod, searchIdentifier, null);
 								if (m != null)
 									matches.AddRange(m);
 							}
 
-						var results = HandleNodeMatches(matches, currentlyScopedNode, parseCache, TypeDeclaration:declaration);
+						var results = HandleNodeMatches(matches, ctxt, currentScopeOverride, TypeDeclaration:declaration);
 						if (results != null)
 							returnedResults.AddRange(results);
 					}
@@ -711,8 +765,8 @@ namespace D_Parser.Resolver
 								else if (scanResult is TypeResult)
 								{
 									var results = HandleNodeMatches(
-										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, importCache),
-										currentlyScopedNode, importCache, rbase,TypeDeclaration:declaration);
+										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, ctxt),
+										ctxt, currentScopeOverride, resultBase:rbase,TypeDeclaration:declaration);
 									if (results != null)
 										returnedResults.AddRange(results);
 								}
@@ -738,8 +792,8 @@ namespace D_Parser.Resolver
 									else
 									{
 										var results = HandleNodeMatches(
-										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, importCache),
-										currentlyScopedNode, importCache, rbase, TypeDeclaration:declaration);
+										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, ctxt),
+										ctxt,currentScopeOverride, rbase, TypeDeclaration:declaration);
 										if (results != null)
 											returnedResults.AddRange(results);
 									}
@@ -817,7 +871,14 @@ namespace D_Parser.Resolver
 					}
 			#endregion
 
-			return returnedResults.Count > 0 ? returnedResults.ToArray() : null;
+			if(returnedResults.Count > 0)
+			{
+				ctxt.TryAddResults(declaration.ToString(), returnedResults.ToArray(), currentScopeOverride);
+
+				return returnedResults.ToArray();
+			}
+
+			return null;
 		}
 
 		/// <summary>
@@ -850,8 +911,12 @@ namespace D_Parser.Resolver
 			return ret;
 		}
 
-		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, IEnumerable<IAbstractSyntaxTree> ModuleCache)
+		static int bcStack = 0;
+		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, ResolverContext ctxt)
 		{
+			if (bcStack > 4)
+			{ }
+
 			if (ActualClass == null || ((ActualClass.BaseClasses==null ||ActualClass.BaseClasses.Count < 1) && ActualClass.Name!=null && ActualClass.Name.ToLower() == "object"))
 				return null;
 
@@ -863,12 +928,14 @@ namespace D_Parser.Resolver
 			if (type==null||type.ToString(false) == ActualClass.Name || ActualClass.NodeRoot==ActualClass)
 				return null;
 
-			var results=ResolveType(type, ActualClass.NodeRoot as IBlockNode, ModuleCache);
+			bcStack++;
+			var results=ResolveType(type, ctxt, ActualClass.Parent as IBlockNode);
 
 			if(results!=null)
 				foreach (var i in results)
 					if (i is TypeResult)
 						ret.Add(i as TypeResult);
+			bcStack--;
 
 			return ret.Count > 0 ? ret.ToArray() : null;
 		}
@@ -880,7 +947,7 @@ namespace D_Parser.Resolver
 		/// <param name="name"></param>
 		/// <param name="parseCache">Needed when trying to search base classes</param>
 		/// <returns></returns>
-		public static INode[] ScanNodeForIdentifier(IBlockNode curScope, string name, IEnumerable<IAbstractSyntaxTree> parseCache)
+		public static INode[] ScanNodeForIdentifier(IBlockNode curScope, string name, ResolverContext ctxt)
 		{
 			var matches = new List<INode>();
 			foreach (var n in curScope)
@@ -892,7 +959,7 @@ namespace D_Parser.Resolver
 			// If our current Level node is a class-like, also attempt to search in its baseclass!
 			if (curScope is DClassLike)
 			{
-				var baseClasses = ResolveBaseClass(curScope as DClassLike, parseCache);
+				var baseClasses = ResolveBaseClass(curScope as DClassLike, ctxt);
 				if (baseClasses != null)
 					foreach (var i in baseClasses)
 					{
@@ -900,7 +967,7 @@ namespace D_Parser.Resolver
 						if (baseClass == null)
 							continue;
 						// Search for items called name in the base class(es)
-						var r = ScanNodeForIdentifier(baseClass.ResolvedTypeDefinition, name, parseCache);
+						var r = ScanNodeForIdentifier(baseClass.ResolvedTypeDefinition, name, ctxt);
 
 						if (r != null)
 							matches.AddRange(r);
@@ -937,11 +1004,17 @@ namespace D_Parser.Resolver
 		/// <returns></returns>
 		public static ResolveResult HandleNodeMatch(
 			INode m, 
-			IBlockNode currentlyScopedNode,
-			IEnumerable<IAbstractSyntaxTree> parseCache,
-			ResolveResult resultBase = null, bool ResolveAliases = false, ITypeDeclaration typeBase=null)
+			ResolverContext ctxt,
+			IBlockNode currentlyScopedNode = null,
+			ResolveResult resultBase = null, ITypeDeclaration typeBase = null)
 		{
-			bool DoResolveBaseType = true;
+			if (currentlyScopedNode == null)
+				currentlyScopedNode = ctxt.ScopedBlock;
+
+			stackNum++;
+
+			//HACK: Really dirty stack overflow prevention via manually counting call depth
+			var DoResolveBaseType = stackNum>5? false : ctxt.ResolveBaseTypes;
 			// Prevent infinite recursion if the type accidently equals the node's name
 			if (m.Type != null && m.Type.ToString(false) == m.Name)
 				DoResolveBaseType = false;
@@ -950,17 +1023,17 @@ namespace D_Parser.Resolver
 			{
 				var v = m as DVariable;
 
-				var memberbaseTypes = DoResolveBaseType ? ResolveType(v.Type, currentlyScopedNode, parseCache) : null;
+				var memberbaseTypes = DoResolveBaseType ? ResolveType(v.Type, ctxt, currentlyScopedNode) : null;
 
 				// For auto variables, use the initializer to get its type
 				if (memberbaseTypes == null && DoResolveBaseType && v.ContainsAttribute(DTokens.Auto) && v.Initializer != null)
 				{
 					var init = v.Initializer;
-					memberbaseTypes = ResolveType(init.ExpressionTypeRepresentation, currentlyScopedNode, parseCache);
+					memberbaseTypes = ResolveType(init.ExpressionTypeRepresentation, ctxt, currentlyScopedNode);
 				}
 
 				// Resolve aliases if wished
-				if (ResolveAliases && memberbaseTypes != null)
+				if (ctxt.ResolveAliases && memberbaseTypes != null)
 				{
 					/*
 					 * To ensure that absolutely all kinds of alias definitions became resolved (includes aliased alias definitions!), 
@@ -980,7 +1053,7 @@ namespace D_Parser.Resolver
 								// Note: Normally, a variable's base type mustn't be an other variable but an alias defintion...
 								if (dv.IsAlias)
 								{
-									var newRes = ResolveType(dv.Type, currentlyScopedNode, parseCache);
+									var newRes = ResolveType(dv.Type, ctxt, currentlyScopedNode);
 									if (newRes != null)
 										memberBaseTypes_Override.AddRange(newRes);
 									hadAliasResolution = true;
@@ -999,6 +1072,7 @@ namespace D_Parser.Resolver
 				}
 
 				// Note: Also works for aliases! In this case, we simply try to resolve the aliased type, otherwise the variable's base type
+				stackNum--;
 				return new MemberResult()
 				{
 					ResolvedMember = m,
@@ -1051,69 +1125,85 @@ namespace D_Parser.Resolver
 					}
 				}
 
-				return new MemberResult()
+				var ret= new MemberResult()
 				{
 					ResolvedMember = m,
-					MemberBaseTypes = DoResolveBaseType ? ResolveType(methodType, currentlyScopedNode, parseCache) : null,
+					MemberBaseTypes = DoResolveBaseType ? ResolveType(methodType, ctxt, currentlyScopedNode) : null,
 					ResultBase = resultBase,
 					TypeDeclarationBase=typeBase
 				};
+				stackNum--;
+				return ret;
 			}
 			else if (m is DClassLike)
 			{
 				var Class = m as DClassLike;
 
+				var bc=DoResolveBaseType?ResolveBaseClass(Class, ctxt):null;
+
+				stackNum--;
 				return new TypeResult()
 				{
 					ResolvedTypeDefinition = Class,
-					BaseClass = ResolveBaseClass(Class, parseCache),
+					BaseClass = bc,
 					ResultBase = resultBase,
 					TypeDeclarationBase=typeBase
 				};
 			}
 			else if (m is IAbstractSyntaxTree)
+			{
+				stackNum--;
 				return new ModuleResult()
 				{
 					ResolvedModule = m as IAbstractSyntaxTree,
 					AlreadyTypedModuleNameParts = 1,
 					ResultBase = resultBase,
-					TypeDeclarationBase=typeBase
+					TypeDeclarationBase = typeBase
 				};
+			}
 			else if (m is DEnum)
+			{
+				stackNum--;
 				return new TypeResult()
 				{
 					ResolvedTypeDefinition = m as IBlockNode,
 					ResultBase = resultBase,
-					TypeDeclarationBase=typeBase
+					TypeDeclarationBase = typeBase
 				};
+			}
+			else if (m is TemplateParameterNode)
+			{
+				stackNum--;
+				return new MemberResult()
+				{
+					ResolvedMember = m,
+					TypeDeclarationBase = typeBase,
+					ResultBase = resultBase
+				};
+			}
 
+			stackNum--;
 			// This never should happen..
 			return null;
 		}
 
 		public static int stackNum = 0;
 		public static ResolveResult[] HandleNodeMatches(IEnumerable<INode> matches, 
-			IBlockNode currentlyScopedNode, 
-			IEnumerable<IAbstractSyntaxTree> parseCache,
-			ResolveResult resultBase = null, bool ResolveAliasDefs=false, ITypeDeclaration TypeDeclaration=null)
+			ResolverContext ctxt,
+			IBlockNode currentlyScopedNode=null, 
+			ResolveResult resultBase = null, 
+			ITypeDeclaration TypeDeclaration=null)
 		{
-			if (stackNum > 4)
-			{
-
-			}
-
-			stackNum++;
 			var rl = new List<ResolveResult>();
 			if(matches!=null)
 			foreach (var m in matches)
 			{
 				if(m==null)
 					continue;
-				var res = HandleNodeMatch(m, currentlyScopedNode, parseCache, resultBase,ResolveAliasDefs,typeBase:TypeDeclaration);
+				var res = HandleNodeMatch(m,ctxt, currentlyScopedNode, resultBase, typeBase:TypeDeclaration);
 				if (res != null)
 					rl.Add(res);
 			}
-			stackNum--;
 			return rl.ToArray();
 		}
 
@@ -1215,6 +1305,7 @@ namespace D_Parser.Resolver
 			IEnumerable<IAbstractSyntaxTree> parseCache)
 		{
 			IStatement curStmt = null;
+			var ctxt = new ResolverContext { ScopedBlock=MethodScope, ParseCache=parseCache };
 			
 			#region Parse the code between the last block opener and the caret
 
@@ -1329,7 +1420,7 @@ namespace D_Parser.Resolver
 				return null;
 
 			// Resolve all types, methods etc. which belong to the methodIdentifier
-			res.ResolvedTypesOrMethods = ResolveType(methodIdentifier, MethodScope, parseCache);
+			res.ResolvedTypesOrMethods = ResolveType(methodIdentifier, ctxt);
 
 			if (res.ResolvedTypesOrMethods == null)
 				return res;
@@ -1349,7 +1440,7 @@ namespace D_Parser.Resolver
 						//TODO: Regard protection attributes for ctor members
 						foreach (var i in classDef)
 							if (i is DMethod && (i as DMethod).SpecialType==DMethod.MethodType.Constructor)
-								substitutionList.Add(HandleNodeMatch(i, MethodScope, parseCache, rr));
+								substitutionList.Add(HandleNodeMatch(i, ctxt,resultBase:rr));
 					}
 
 				if (substitutionList.Count > 0)
@@ -1371,7 +1462,7 @@ namespace D_Parser.Resolver
 						//TODO: Regard protection attributes for opCall members
 						foreach(var i in classDef)
 							if (i is DMethod && i.Name == "opCall")
-								substitutionList.Add(HandleNodeMatch(i, MethodScope, parseCache, rr));
+								substitutionList.Add(HandleNodeMatch(i, ctxt, resultBase: rr));
 					}
 
 				if (substitutionList.Count > 0)

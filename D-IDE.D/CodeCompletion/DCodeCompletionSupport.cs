@@ -79,7 +79,15 @@ namespace D_IDE.D
 			{
 				alreadyAddedModuleNameParts.Clear();
 
-				var resolveResults = DResolver.ResolveType(EditorDocument.Editor.Document.Text, caretOffset - 1, caretLocation, curBlock,EditorDocument.ParseCache,importCache:EditorDocument.ImportCache);
+				var resolveResults = DResolver.ResolveType(
+					EditorDocument.Editor.Document.Text, 
+					caretOffset - 1, 
+					caretLocation,
+					new ResolverContext{
+						ScopedBlock=curBlock, 
+						ParseCache=EditorDocument.ParseCache, 
+						ImportCache=EditorDocument.ImportCache}
+					);
 
 				if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 					return;
@@ -690,7 +698,12 @@ namespace D_IDE.D
 				var caretLoc = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
 				IStatement curStmt = null;
 				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
-					DResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLoc, out curStmt), EditorDocument.ParseCache, true, true);
+					new ResolverContext
+					{
+						ScopedBlock = DResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLoc, out curStmt),
+						ParseCache=EditorDocument.ParseCache,
+						ImportCache=EditorDocument.ImportCache
+					}, true, true);
 
 				if (rr.Length < 1)
 					return;

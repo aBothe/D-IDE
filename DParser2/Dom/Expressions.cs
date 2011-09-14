@@ -2235,6 +2235,8 @@ namespace D_Parser.Dom.Expressions
 	public interface ITemplateParameter
 	{
 		string Name { get; }
+		CodeLocation Location { get; }
+		CodeLocation EndLocation { get; }
 	}
 
 	public class TemplateParameterNode : AbstractNode
@@ -2246,6 +2248,9 @@ namespace D_Parser.Dom.Expressions
 			TemplateParameter = param;
 
 			Name = param.Name;
+
+			StartLocation = param.Location;
+			EndLocation = param.EndLocation;
 		}
 
 		public sealed override string ToString()
@@ -2278,6 +2283,9 @@ namespace D_Parser.Dom.Expressions
 
 			return ret;
 		}
+
+		public CodeLocation Location { get; set; }
+		public CodeLocation EndLocation { get; set; }
 	}
 
 	public class TemplateThisParameter : ITemplateParameter
@@ -2290,6 +2298,9 @@ namespace D_Parser.Dom.Expressions
 		{
 			return "this" + (FollowParameter != null ? (" " + FollowParameter.ToString()) : "");
 		}
+
+		public CodeLocation Location { get; set; }
+		public CodeLocation EndLocation { get; set; }
 	}
 
 	public class TemplateValueParameter : ITemplateParameter
@@ -2305,6 +2316,9 @@ namespace D_Parser.Dom.Expressions
 			return (Type!=null?(Type.ToString() + " "):"") + Name/*+ (SpecializationExpression!=null?(":"+SpecializationExpression.ToString()):"")+
 				(DefaultExpression!=null?("="+DefaultExpression.ToString()):"")*/;
 		}
+
+		public CodeLocation Location { get; set; }
+		public CodeLocation EndLocation { get; set; }
 	}
 
 	public class TemplateAliasParameter : TemplateValueParameter
@@ -2316,6 +2330,9 @@ namespace D_Parser.Dom.Expressions
 		{
 			return "alias " + base.ToString();
 		}
+
+		public CodeLocation Location { get; set; }
+		public CodeLocation EndLocation { get; set; }
 	}
 
 	public class TemplateTupleParameter : ITemplateParameter
@@ -2326,6 +2343,9 @@ namespace D_Parser.Dom.Expressions
 		{
 			return Name + " ...";
 		}
+
+		public CodeLocation Location { get; set; }
+		public CodeLocation EndLocation { get; set; }
 	}
 
 	#endregion

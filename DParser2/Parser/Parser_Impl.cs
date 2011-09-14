@@ -3962,7 +3962,9 @@ namespace D_Parser.Parser
 
 				return new TemplateThisParameter()
 				{
-					FollowParameter=TemplateParameter()
+					Location=t.Location,
+					FollowParameter=TemplateParameter(),
+					EndLocation=t.EndLocation
 				};
 			}
 
@@ -3970,17 +3972,18 @@ namespace D_Parser.Parser
 			if (laKind == (Identifier) && Lexer.CurrentPeekToken.Kind == TripleDot)
 			{
 				Step();
+				var startLoc = t.Location;
 				var id = t.Value;
 				Step();
 
-				return new TemplateTupleParameter() { Name=id};
+				return new TemplateTupleParameter() { Name=id, Location=startLoc, EndLocation=t.EndLocation};
 			}
 
 			// TemplateAliasParameter
 			if (laKind == (Alias))
 			{
 				Step();
-				var al = new TemplateAliasParameter();
+				var al = new TemplateAliasParameter() { Location=t.Location };
 				Expect(Identifier);
 
 				al.Name = t.Value;
@@ -4013,14 +4016,15 @@ namespace D_Parser.Parser
 					if (al.DefaultType==null)
 						al.DefaultExpression = ConditionalExpression();
 				}
+				al.EndLocation = t.EndLocation;
 				return al;
 			}
 
 			// TemplateTypeParameter
 			if (laKind == (Identifier) && (Lexer.CurrentPeekToken.Kind == (Colon) || Lexer.CurrentPeekToken.Kind == (Assign) || Lexer.CurrentPeekToken.Kind == (Comma) || Lexer.CurrentPeekToken.Kind == (CloseParenthesis)))
 			{
-				var tt = new TemplateTypeParameter();
 				Expect(Identifier);
+				var tt = new TemplateTypeParameter() { Location=t.Location };
 
 				tt.Name = t.Value;
 
@@ -4035,11 +4039,12 @@ namespace D_Parser.Parser
 					Step();
 					tt.Default = Type();
 				}
+				tt.EndLocation = t.EndLocation;
 				return tt;
 			}
 
 			// TemplateValueParameter
-			var tv = new TemplateValueParameter();
+			var tv = new TemplateValueParameter() { Location=la.Location };
 				
 			var bt = BasicType();
 			var dv = Declarator(false);
@@ -4063,6 +4068,7 @@ namespace D_Parser.Parser
 				Step();
 				tv.DefaultExpression = AssignExpression();
 			}
+			tv.EndLocation = t.EndLocation;
 			return tv;
 		}
 

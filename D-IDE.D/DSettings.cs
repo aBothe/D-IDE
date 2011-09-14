@@ -34,6 +34,7 @@ namespace D_IDE.D
 		public bool UseCodeCompletion = true;
 		public bool UseMethodInsight = true;
 		public bool EnableMatchingBracketHighlighting = true;
+		public bool UseSemanticHighlighting = true;
 
 		/// <summary>
 		/// If non-letter has been typed, the popup will close down and insert the selected item's completion text.

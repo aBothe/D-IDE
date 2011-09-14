@@ -23,6 +23,7 @@ using D_Parser.Dom.Statements;
 using D_IDE.D.CodeCompletion;
 using D_IDE.Core.Controls.Editor;
 using System.Windows.Media;
+using D_Parser.Dom.Expressions;
 
 namespace D_IDE.D
 {
@@ -420,7 +421,7 @@ namespace D_IDE.D
 
 				var rr = DResolver.ResolveType(Editor.Text, Editor.CaretOffset,
 					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
-					SyntaxTree, DCodeCompletionSupport.EnumAvailableModules(this),
+					new ResolverContext{ ParseCache=ParseCache,ImportCache=ImportCache,ScopedBlock=lastSelectedBlock },
 					true, true);
 
 				ResolveResult res = null;
@@ -481,7 +482,7 @@ namespace D_IDE.D
 
 				var rr = DResolver.ResolveType(Editor.Text, Editor.CaretOffset,
 					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
-					SyntaxTree, DCodeCompletionSupport.EnumAvailableModules(this),
+					new ResolverContext { ParseCache = ParseCache, ImportCache = ImportCache, ScopedBlock = lastSelectedBlock },
 					true, true);
 
 				ResolveResult res = null;
@@ -517,7 +518,8 @@ namespace D_IDE.D
 					n = (res as MemberResult).ResolvedMember;
 				else if (res is TypeResult)
 					n = (res as TypeResult).ResolvedTypeDefinition;
-				else
+
+				if (n == null)
 				{
 					MessageBox.Show("Select valid symbol!");
 					return;
@@ -670,15 +672,19 @@ namespace D_IDE.D
 
 		public void UpdateSemanticHightlighting()
 		{
-			if (SyntaxTree==null || CompilerConfiguration.ASTCache.IsParsing)
+			if (!DSettings.Instance.UseSemanticHighlighting || SyntaxTree==null || CompilerConfiguration.ASTCache.IsParsing)
 				return;
 
 				var hp2 = new HighPrecisionTimer.HighPrecTimer();
 				hp2.Start();
 
-				var compDict = new Dictionary<string, ResolveResult>();
 				var finalDict = new Dictionary<IdentifierDeclaration, ResolveResult>();
 				var notFoundList = new List<IdentifierDeclaration>();
+				ResolverContext lastResCtxt = new ResolverContext
+				{
+					ParseCache = ParseCache,
+					ImportCache = ImportCache
+				};
 
 				try
 				{
@@ -698,30 +704,13 @@ namespace D_IDE.D
 							continue;
 
 						ResolveResult rr = null;
-						bool WasFoundAlready = false;
-						if (WasFoundAlready = compDict.TryGetValue(typeString, out rr))
-						{
-							if (typeId is IdentifierDeclaration)
-								finalDict.Add(typeId as IdentifierDeclaration, rr);
-						}
-						else
-						{
-							IStatement _unused = null;
-							var res = DResolver.ResolveType(typeId,
-								DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused)
-								, ParseCache, ImportCache);
 
-							if (res != null && res.Length > 0)
-							{
-								rr = res[0];
+						IStatement _unused = null;
+						lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused);
+						var res = DResolver.ResolveType(typeId,lastResCtxt);
 
-								/*
-								 * For performance reasons, add our type declaration 
-								 * including the result to the comparison dictionary
-								 */
-								compDict.Add(typeId.ToString(), rr);
-							}
-						}
+						if (res != null && res.Length > 0)
+							rr = res[0];
 
 						if (rr == null)
 						{
@@ -746,21 +735,19 @@ namespace D_IDE.D
 
 							while (curRes != null)
 							{
-								// If curRes is an alias, try scan down the alias(es), and then check whether it's been an aliased type or not
+								// If curRes is an alias or a template parameter, highlight it
 								if (curRes is MemberResult)
 								{
-									var btype = DResolver.TryRemoveAliasesFromResult(curRes as MemberResult);
+									var mr = curRes as MemberResult;
 
-									if (btype is TypeResult &&
-										curTypeDeclBase is IdentifierDeclaration &&
-										!(curTypeDeclBase is DTokenDeclaration) &&
-										!finalDict.ContainsKey(curTypeDeclBase as IdentifierDeclaration))
+									if (mr.ResolvedMember is TemplateParameterNode || 
+										(mr.ResolvedMember is DVariable &&
+										(mr.ResolvedMember as DVariable).IsAlias))
 									{
 										finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
 
 										// See performance reasons
-										if (curRes != rr && !WasFoundAlready)
-											compDict.Add(curTypeDeclBase.ToString(), curRes);
+										//if (curRes != rr && !WasFoundAlready)compDict.Add(curTypeDeclBase.ToString(), curRes);
 									}
 								}
 
@@ -774,8 +761,7 @@ namespace D_IDE.D
 										finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
 
 										// See performance reasons
-										if (curRes != rr && !WasFoundAlready)
-											compDict.Add(curTypeDeclBase.ToString(), curRes);
+										//if (curRes != rr && !WasFoundAlready)compDict.Add(curTypeDeclBase.ToString(), curRes);
 									}
 								}
 
@@ -810,21 +796,23 @@ namespace D_IDE.D
 
 					if (resolvedItems.Count > 0)
 						foreach (var kv in resolvedItems)
-						{
-							var m = new CodeSymbolMarker(this, kv.Key) { ResolveResult = kv.Value };
-							MarkerStrategy.Add(m);
+							if(kv.Key.Location.Line>0)
+							{
+								var m = new CodeSymbolMarker(this, kv.Key) { ResolveResult = kv.Value };
+								MarkerStrategy.Add(m);
 
-							m.Redraw();
-						}
+								m.Redraw();
+							}
 
 					if (unresolvedItems.Count > 0)
 						foreach (var id in unresolvedItems)
-						{
-							var m = new SymbolNotFoundMarker(this, id);
-							MarkerStrategy.Add(m);
+							if(id.Location.Line>0)
+							{
+								var m = new SymbolNotFoundMarker(this, id);
+								MarkerStrategy.Add(m);
 
-							m.Redraw();
-						}
+								m.Redraw();
+							}
 
 					CoreManager.Instance.MainWindow.LeftStatusText =
 						Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
@@ -980,7 +968,11 @@ namespace D_IDE.D
 								}
 
 								if (n is IBlockNode)
-									l2.AddRange((n as IBlockNode).Children);
+								{
+									var ch = (n as IBlockNode).Children;
+									if(ch!=null)
+										l2.AddRange(ch);
+								}
 							}
 
 							l1.Clear();
