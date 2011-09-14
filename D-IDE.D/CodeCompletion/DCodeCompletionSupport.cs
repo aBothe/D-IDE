@@ -196,7 +196,9 @@ namespace D_IDE.D
 
 				if (!HaveSameAncestors(currentlyScopedBlock, tr.ResolvedTypeDefinition))
 				{
-					if (isVariableInstance)
+					if (isVariableInstance || 
+						(tr.TypeDeclarationBase is DTokenDeclaration && 
+						(tr.TypeDeclarationBase as DTokenDeclaration).Token==DTokens.Super))
 						vis = ItemVisibility.PublicOrStatic;
 					else
 						vis = ItemVisibility.PublicAndStatic;
@@ -602,7 +604,7 @@ namespace D_IDE.D
 						if (dn == null)
 							l.Add(new DCompletionData(i));
 
-						// If "this." and if watching the current inheritance level only , add all items
+						// If "this." ,add all items, also those of superior classes
 						// if "super." , add public items
 						// if neither nor, add public static items
 
@@ -963,7 +965,7 @@ namespace D_IDE.D
 		}
 	}
 
-	public class DCompletionData : ICompletionData
+	public class DCompletionData : ICompletionData, IComparable<ICompletionData>
 	{
 		public DCompletionData(INode n)
 		{
@@ -1183,6 +1185,11 @@ namespace D_IDE.D
 		{
 			get { return Node.Name; }
 			protected set { }
+		}
+
+		public int CompareTo(ICompletionData other)
+		{
+			return Text.CompareTo(other.Text);
 		}
 	}
 

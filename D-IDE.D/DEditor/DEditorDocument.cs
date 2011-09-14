@@ -965,16 +965,35 @@ namespace D_IDE.D
 						DCompletionData selectedItem = null;
 						var l1 = new List<INode> { SyntaxTree };
 						var l2 = new List<INode>();
-
-						// Show all type declarations of the current module
-						if (SyntaxTree != null)
-							foreach (var n in SyntaxTree)
+						
+						while (l1.Count > 0)
+						{
+							foreach (var n in l1)
 							{
-								var completionData = new DCompletionData(n);
-								if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation <= n.EndLocation)
-									selectedItem = completionData;
-								types.Add(completionData);
+								// Show all type declarations of the current module
+								if (n is DClassLike)
+								{
+									var completionData = new DCompletionData(n);
+									if (CaretLocation >= n.StartLocation && CaretLocation <= n.EndLocation)
+										selectedItem = completionData;
+									types.Add(completionData);
+								}
+
+								if (n is IBlockNode)
+									l2.AddRange((n as IBlockNode).Children);
 							}
+
+							l1.Clear();
+							l1.AddRange(l2);
+							l2.Clear();
+						}
+
+						if (selectedItem != null && selectedItem.Node is IBlockNode)
+							curBlock = selectedItem.Node as IBlockNode;
+
+						// For better usability, pre-sort items
+						types.Sort();
+
 						lookup_Types.ItemsSource = types;
 						lookup_Types.SelectedItem = selectedItem;
 
@@ -998,6 +1017,9 @@ namespace D_IDE.D
 										selectedItem = cData;
 									members.Add(cData);
 								}
+
+							members.Sort();
+
 							lookup_Members.ItemsSource = members;
 							lookup_Members.SelectedItem = selectedItem;
 						}

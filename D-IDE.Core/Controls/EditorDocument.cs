@@ -100,7 +100,7 @@ namespace D_IDE.Core
 
 		public bool HasBeenModifiedOutside
 		{
-			get { return lastWriteTime != File.GetLastWriteTimeUtc(AbsoluteFilePath); }
+			get { return File.Exists(AbsoluteFilePath)? lastWriteTime != File.GetLastWriteTimeUtc(AbsoluteFilePath):true; }
 		}
 
 		public void DoOutsideModificationCheck()

@@ -582,20 +582,35 @@ namespace D_Parser.Resolver
 						while (!(classDef is DClassLike) && classDef != null)
 							classDef = classDef.Parent as IBlockNode;
 
-						if(classDef is DClassLike)
-							returnedResults.Add(new TypeResult() 
-							{ 
-								ResolvedTypeDefinition = classDef, 
-								TypeDeclarationBase=declaration 
-							});
+						if (classDef is DClassLike)
+						{
+							var res=HandleNodeMatch(classDef, currentlyScopedNode, parseCache, typeBase: declaration);
+
+							if (res != null)
+								returnedResults.Add(res);
+						}
 					}
 					// References super type of currently scoped class declaration
 					else if (searchToken == DTokens.Super)
 					{
-						var baseClassDefs = ResolveBaseClass(currentlyScopedNode as DClassLike, importCache);
+						var classDef = currentlyScopedNode;
 
-						if (baseClassDefs != null)
-							returnedResults.AddRange(baseClassDefs);
+						while (!(classDef is DClassLike) && classDef != null)
+							classDef = classDef.Parent as IBlockNode;
+
+						if (classDef != null)
+						{
+							var baseClassDefs = ResolveBaseClass(classDef as DClassLike, importCache);
+
+							if (baseClassDefs != null)
+							{
+								// Important: Overwrite type decl base with 'super' token
+								foreach (var bc in baseClassDefs)
+									bc.TypeDeclarationBase = declaration;
+
+								returnedResults.AddRange(baseClassDefs);
+							}
+						}
 					}
 					// If we found a base type, return a static-type-result
 					else if (searchToken > 0)
