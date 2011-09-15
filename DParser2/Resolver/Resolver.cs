@@ -914,8 +914,11 @@ namespace D_Parser.Resolver
 		static int bcStack = 0;
 		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, ResolverContext ctxt)
 		{
-			if (bcStack > 4)
-			{ }
+			if (bcStack > 8)
+			{
+				bcStack--;
+				return null;
+			}
 
 			if (ActualClass == null || ((ActualClass.BaseClasses==null ||ActualClass.BaseClasses.Count < 1) && ActualClass.Name!=null && ActualClass.Name.ToLower() == "object"))
 				return null;
@@ -1011,10 +1014,12 @@ namespace D_Parser.Resolver
 			if (currentlyScopedNode == null)
 				currentlyScopedNode = ctxt.ScopedBlock;
 
-			stackNum++;
+			stackNum_HandleNodeMatch++;
 
 			//HACK: Really dirty stack overflow prevention via manually counting call depth
-			var DoResolveBaseType = stackNum>5? false : ctxt.ResolveBaseTypes;
+			var DoResolveBaseType = 
+				stackNum_HandleNodeMatch>5? 
+				false : ctxt.ResolveBaseTypes;
 			// Prevent infinite recursion if the type accidently equals the node's name
 			if (m.Type != null && m.Type.ToString(false) == m.Name)
 				DoResolveBaseType = false;
@@ -1072,7 +1077,7 @@ namespace D_Parser.Resolver
 				}
 
 				// Note: Also works for aliases! In this case, we simply try to resolve the aliased type, otherwise the variable's base type
-				stackNum--;
+				stackNum_HandleNodeMatch--;
 				return new MemberResult()
 				{
 					ResolvedMember = m,
@@ -1132,7 +1137,7 @@ namespace D_Parser.Resolver
 					ResultBase = resultBase,
 					TypeDeclarationBase=typeBase
 				};
-				stackNum--;
+				stackNum_HandleNodeMatch--;
 				return ret;
 			}
 			else if (m is DClassLike)
@@ -1141,7 +1146,7 @@ namespace D_Parser.Resolver
 
 				var bc=DoResolveBaseType?ResolveBaseClass(Class, ctxt):null;
 
-				stackNum--;
+				stackNum_HandleNodeMatch--;
 				return new TypeResult()
 				{
 					ResolvedTypeDefinition = Class,
@@ -1152,7 +1157,7 @@ namespace D_Parser.Resolver
 			}
 			else if (m is IAbstractSyntaxTree)
 			{
-				stackNum--;
+				stackNum_HandleNodeMatch--;
 				return new ModuleResult()
 				{
 					ResolvedModule = m as IAbstractSyntaxTree,
@@ -1163,7 +1168,7 @@ namespace D_Parser.Resolver
 			}
 			else if (m is DEnum)
 			{
-				stackNum--;
+				stackNum_HandleNodeMatch--;
 				return new TypeResult()
 				{
 					ResolvedTypeDefinition = m as IBlockNode,
@@ -1173,7 +1178,7 @@ namespace D_Parser.Resolver
 			}
 			else if (m is TemplateParameterNode)
 			{
-				stackNum--;
+				stackNum_HandleNodeMatch--;
 				return new MemberResult()
 				{
 					ResolvedMember = m,
@@ -1182,12 +1187,12 @@ namespace D_Parser.Resolver
 				};
 			}
 
-			stackNum--;
+			stackNum_HandleNodeMatch--;
 			// This never should happen..
 			return null;
 		}
 
-		public static int stackNum = 0;
+		static int stackNum_HandleNodeMatch = 0;
 		public static ResolveResult[] HandleNodeMatches(IEnumerable<INode> matches, 
 			ResolverContext ctxt,
 			IBlockNode currentlyScopedNode=null, 

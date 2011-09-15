@@ -679,6 +679,7 @@ namespace D_IDE.D
 				hp2.Start();
 
 				var finalDict = new Dictionary<IdentifierDeclaration, ResolveResult>();
+				var compDict = new Dictionary<string, ResolveResult>();
 				var notFoundList = new List<IdentifierDeclaration>();
 				ResolverContext lastResCtxt = new ResolverContext
 				{
@@ -689,14 +690,17 @@ namespace D_IDE.D
 					 * 1) increases the performance dramatically and 
 					 * 2) is not needed later on
 					 */
-					ResolveAliases=false,
-					//ResolveBaseTypes=false
+					ResolveAliases=false
 				};
 
 				try
 				{
 					// Step 1: Enum all existing type id's that shall become resolved'n displayed
 					var typeIds = CodeSymbolResolver.ScanForTypeIdentifiers(SyntaxTree);
+
+					bool WasAlreadyResolved = false;
+					ResolveResult rr = null;
+					IStatement _unused = null;
 					
 					#region Step 2: Loop through all of them, try to resolve them, write the results in a dictionary
 					foreach (var typeId in typeIds)
@@ -710,14 +714,15 @@ namespace D_IDE.D
 						if (typeString == "string" || typeString == "wstring" || typeString == "dstring")
 							continue;
 
-						ResolveResult rr = null;
-
-						IStatement _unused = null;
 						lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused);
-						var res = DResolver.ResolveType(typeId,lastResCtxt);
 
-						if (res != null && res.Length > 0)
-							rr = res[0];
+						if (!(WasAlreadyResolved=compDict.TryGetValue(typeString, out rr)))
+						{
+							var res = DResolver.ResolveType(typeId, lastResCtxt);
+
+							if (res != null && res.Length > 0)
+								rr = res[0];
+						}
 
 						if (rr == null)
 						{
@@ -754,7 +759,7 @@ namespace D_IDE.D
 										finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
 
 										// See performance reasons
-										//if (curRes != rr && !WasFoundAlready)compDict.Add(curTypeDeclBase.ToString(), curRes);
+										//if (curRes != rr && !WasAlreadyResolved && !) compDict.Add(curTypeDeclBase.ToString(), curRes);
 									}
 								}
 
@@ -768,7 +773,7 @@ namespace D_IDE.D
 										finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
 
 										// See performance reasons
-										//if (curRes != rr && !WasFoundAlready)compDict.Add(curTypeDeclBase.ToString(), curRes);
+										//if (curRes != rr && !WasAlreadyResolved) compDict.Add(curTypeDeclBase.ToString(), curRes);
 									}
 								}
 
