@@ -683,7 +683,14 @@ namespace D_IDE.D
 				ResolverContext lastResCtxt = new ResolverContext
 				{
 					ParseCache = ParseCache,
-					ImportCache = ImportCache
+					ImportCache = ImportCache,
+
+					/* Important: Disable deeper resolving, because this 
+					 * 1) increases the performance dramatically and 
+					 * 2) is not needed later on
+					 */
+					ResolveAliases=false,
+					//ResolveBaseTypes=false
 				};
 
 				try
@@ -714,7 +721,7 @@ namespace D_IDE.D
 
 						if (rr == null)
 						{
-							if (typeId is IdentifierDeclaration)
+							if (DSettings.Instance.ShowSemanticErrors && typeId is IdentifierDeclaration)
 								notFoundList.Add(typeId as IdentifierDeclaration);
 						}
 						else

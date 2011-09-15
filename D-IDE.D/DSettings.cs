@@ -35,6 +35,7 @@ namespace D_IDE.D
 		public bool UseMethodInsight = true;
 		public bool EnableMatchingBracketHighlighting = true;
 		public bool UseSemanticHighlighting = true;
+		public bool ShowSemanticErrors = true;
 
 		/// <summary>
 		/// If non-letter has been typed, the popup will close down and insert the selected item's completion text.
@@ -70,6 +71,14 @@ namespace D_IDE.D
 			x.WriteAttributeString("value", ForceCodeCompetionPopupCommit. ToString().ToLower());
 			x.WriteEndElement();
 
+			x.WriteStartElement("UseSemanticHighlighting");
+			x.WriteAttributeString("value", UseSemanticHighlighting.ToString().ToLower());
+			x.WriteEndElement();
+
+			x.WriteStartElement("ShowSemanticErrors");
+			x.WriteAttributeString("value", ShowSemanticErrors.ToString().ToLower());
+			x.WriteEndElement();
+
 			dmd1.Save(x);
 			dmd2.Save(x);
 
@@ -100,6 +109,16 @@ namespace D_IDE.D
 					case "ForceCodeCompetionPopupCommit":
 						if (x.MoveToAttribute("value"))
 							ForceCodeCompetionPopupCommit = x.ReadContentAsBoolean();
+						break;
+
+					case "UseSemanticHighlighting":
+						if (x.MoveToAttribute("value"))
+							UseSemanticHighlighting = x.ReadContentAsBoolean();
+						break;
+
+					case "ShowSemanticErrors":
+						if (x.MoveToAttribute("value"))
+							ShowSemanticErrors = x.ReadContentAsBoolean();
 						break;
 
 					case "cv2pdb":
