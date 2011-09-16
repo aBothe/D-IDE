@@ -86,7 +86,7 @@ namespace D_IDE.D
 			{
 				if (_subCats.Count < 1)
 				{
-					_subCats.Add(new GlobalParseCachePage(Config));
+					_subCats.Add(new GlobalParseCachePage(this,Config));
 				}
 
 				return _subCats;

@@ -6,6 +6,7 @@ using D_IDE.Core;
 using System.Xml;
 using D_IDE.D.CodeCompletion;
 using System.Threading;
+using System.IO;
 
 namespace D_IDE.D
 {
@@ -235,9 +236,69 @@ namespace D_IDE.D
 		public readonly ASTStorage ASTCache = new ASTStorage();
 
 		/// <summary>
+		/// If the dmd bin directory contains a 'dmd' or 'dmd2', 
+		/// check if phobos and/or core paths are existing, 
+		/// and add them to the ASTCache
+		/// OR empirically update the directorie paths
+		/// </summary>
+		public void TryAddImportPaths(bool UpdateOldPaths=true)
+		{
+			var defaultDmdDirname=Version==DVersion.D2? "dmd2":"dmd";
+
+			int k = BaseDirectory.IndexOf(defaultDmdDirname+'\\');
+			if (k>0)
+			{
+				var dmdPath=BaseDirectory.Substring(k+defaultDmdDirname.Length);
+
+				var dirs=new[]{@"src\phobos",@"src\druntime\import"};
+
+				bool DirAdded = false;
+				// Check for phobos on both D1 and D2
+
+				foreach (var subPath in dirs)
+				{
+					var dir = Path.Combine(dmdPath, subPath);
+
+					var wasUpdated=false;
+					if (UpdateOldPaths)
+						foreach (var pdir in ASTCache.ParsedGlobalDictionaries)
+							if (wasUpdated = pdir.BaseDirectory.Contains(Path.Combine(defaultDmdDirname, subPath)))
+								pdir.BaseDirectory = dir;
+
+					if (!wasUpdated && !ASTCache.ContainsDictionary(dir) && Directory.Exists(dir))
+					{
+						DirAdded = true;
+						ASTCache.Add(dir);
+					}
+				}
+
+				if (DirAdded)
+					ASTCache.UpdateCache();
+			}
+		}
+
+		public bool BaseDirectoryChanged
+		{
+			get;
+			set;
+		}
+
+		string baseDir = @"C:\dmd2\windows\bin";
+
+		/// <summary>
 		/// The "bin" directory of the dmd installation
 		/// </summary>
-		public string BaseDirectory = @"C:\dmd2\windows\bin";
+		public string BaseDirectory
+		{
+			get { return baseDir; }
+			set {
+				if (baseDir != value)
+				{
+					BaseDirectoryChanged = true;
+					baseDir = value;
+				}
+			}
+		}
 
 		public string SoureCompiler = "dmd.exe";
 		public string ExeLinker = "dmd.exe";
@@ -286,7 +347,7 @@ namespace D_IDE.D
 				switch (x2.LocalName)
 				{
 					case "basedirectory":
-						BaseDirectory = x2.ReadString();
+						baseDir = x2.ReadString();
 						break;
 					case "sourcecompiler":
 						SoureCompiler = x2.ReadString();

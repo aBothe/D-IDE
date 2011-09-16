@@ -88,7 +88,7 @@ namespace D_IDE.D
 
 		public void UpdateImportCache()
 		{
-			Dispatcher.Invoke(new Action(()=>ParseCache=DCodeCompletionSupport.EnumAvailableModules(this)));
+			Dispatcher.Invoke(new Action(() => ParseCache = DCodeCompletionSupport.EnumAvailableModules(this)));
 			ImportCache = DResolver.ResolveImports(SyntaxTree, ParseCache);
 		}
 
@@ -421,7 +421,7 @@ namespace D_IDE.D
 
 				var rr = DResolver.ResolveType(Editor.Text, Editor.CaretOffset,
 					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
-					new ResolverContext{ ParseCache=ParseCache,ImportCache=ImportCache,ScopedBlock=lastSelectedBlock },
+					new ResolverContext { ParseCache = ParseCache, ImportCache = ImportCache, ScopedBlock = lastSelectedBlock },
 					true, true);
 
 				ResolveResult res = null;
@@ -672,171 +672,67 @@ namespace D_IDE.D
 
 		public void UpdateSemanticHightlighting()
 		{
-			if (!DSettings.Instance.UseSemanticHighlighting || SyntaxTree==null || CompilerConfiguration.ASTCache.IsParsing)
+			if (!DSettings.Instance.UseSemanticHighlighting || SyntaxTree == null || CompilerConfiguration.ASTCache.IsParsing)
 				return;
 
-				var hp2 = new HighPrecisionTimer.HighPrecTimer();
-				hp2.Start();
+			var hp2 = new HighPrecisionTimer.HighPrecTimer();
+			hp2.Start();
 
-				var finalDict = new Dictionary<IdentifierDeclaration, ResolveResult>();
-				var compDict = new Dictionary<string, ResolveResult>();
-				var notFoundList = new List<IdentifierDeclaration>();
-				ResolverContext lastResCtxt = new ResolverContext
-				{
-					ParseCache = ParseCache,
-					ImportCache = ImportCache,
+			var res = CodeScanner.ScanSymbols(new ResolverContext { 
+				ImportCache=ImportCache,
+				ParseCache=ParseCache,
+				ResolveAliases=false
+			}, SyntaxTree);
 
-					/* Important: Disable deeper resolving, because this 
-					 * 1) increases the performance dramatically and 
-					 * 2) is not needed later on
-					 */
-					ResolveAliases=false
-				};
+			hp2.Stop();
 
-				try
-				{
-					// Step 1: Enum all existing type id's that shall become resolved'n displayed
-					var typeIds = CodeSymbolResolver.ScanForTypeIdentifiers(SyntaxTree);
+			#region Step 3: Create/Update markers
+			try
+			{
+				Dispatcher.BeginInvoke(new Action<
+					Dictionary<IdentifierDeclaration, ResolveResult>,
+					List<IdentifierDeclaration>,
+					HighPrecisionTimer.HighPrecTimer>
+					((Dictionary<IdentifierDeclaration, ResolveResult> resolvedItems,
+						List<IdentifierDeclaration> unresolvedItems,
+						HighPrecisionTimer.HighPrecTimer highPrecTimer) =>
+			{
+				// Clear old markers
+				foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
+					if (marker is CodeSymbolMarker || marker is SymbolNotFoundMarker)
+						marker.Delete();
 
-					bool WasAlreadyResolved = false;
-					ResolveResult rr = null;
-					IStatement _unused = null;
-					
-					#region Step 2: Loop through all of them, try to resolve them, write the results in a dictionary
-					foreach (var typeId in typeIds)
-					{
-						var typeString = typeId.ToString();
-						
-						/*
-						 * string,wstring,dstring are highlighted by the editor's syntax definition automatically..
-						 * Anyway, allow to resolve e.g. "object.string"
-						 */
-						if (typeString == "string" || typeString == "wstring" || typeString == "dstring")
-							continue;
-
-						lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused);
-
-						if (!(WasAlreadyResolved=compDict.TryGetValue(typeString, out rr)))
+				if (resolvedItems.Count > 0)
+					foreach (var kv in resolvedItems)
+						if (kv.Key.Location.Line > 0)
 						{
-							var res = DResolver.ResolveType(typeId, lastResCtxt);
+							var m = new CodeSymbolMarker(this, kv.Key) { ResolveResult = kv.Value };
+							MarkerStrategy.Add(m);
 
-							if (res != null && res.Length > 0)
-								rr = res[0];
+							m.Redraw();
 						}
 
-						if (rr == null)
+				if (unresolvedItems.Count > 0)
+					foreach (var id in unresolvedItems)
+						if (id.Location.Line > 0)
 						{
-							if (DSettings.Instance.ShowSemanticErrors && typeId is IdentifierDeclaration)
-								notFoundList.Add(typeId as IdentifierDeclaration);
+							var m = new SymbolNotFoundMarker(this, id);
+							MarkerStrategy.Add(m);
+
+							m.Redraw();
 						}
-						else
-						{
-							/*
-							 * Note: It is of course possible to highlight more than one type in one type declaration!
-							 * So, we scan down the result hierarchy for TypeResults and highlight all of them later.
-							 */
-							var curRes = rr;
 
-							/*
-							 * Note: Since we want to use results multiple times,
-							 * we at least have to 'update' their type declarations
-							 * to ensure that the second, third, fourth etc. occurence of this result
-							 * are also highlit (and won't(!) cause an Already-Added-Exception of our finalDict-Array)
-							 */
-							var curTypeDeclBase = typeId;
-
-							while (curRes != null)
-							{
-								// If curRes is an alias or a template parameter, highlight it
-								if (curRes is MemberResult)
-								{
-									var mr = curRes as MemberResult;
-
-									if (mr.ResolvedMember is TemplateParameterNode || 
-										(mr.ResolvedMember is DVariable &&
-										(mr.ResolvedMember as DVariable).IsAlias))
-									{
-										finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
-
-										// See performance reasons
-										//if (curRes != rr && !WasAlreadyResolved && !) compDict.Add(curTypeDeclBase.ToString(), curRes);
-									}
-								}
-
-								if (curRes is TypeResult)
-								{
-									// Yeah, in quite all cases we do identify a class via its name ;-)
-									if (curTypeDeclBase is IdentifierDeclaration &&
-										!(curTypeDeclBase is DTokenDeclaration) &&
-										!finalDict.ContainsKey(curTypeDeclBase as IdentifierDeclaration))
-									{
-										finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
-
-										// See performance reasons
-										//if (curRes != rr && !WasAlreadyResolved) compDict.Add(curTypeDeclBase.ToString(), curRes);
-									}
-								}
-
-								curRes = curRes.ResultBase;
-								curTypeDeclBase = curTypeDeclBase.InnerDeclaration;
-							}
-						}
-					}
-					#endregion
-				}
-				catch (Exception ex)
-				{
-					//ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.Parser);
-				}
-				hp2.Stop();
-
-				#region Step 3: Create/Update markers
-				try
-				{
-					Dispatcher.BeginInvoke(new Action<
-						Dictionary<IdentifierDeclaration, ResolveResult>,
-						List<IdentifierDeclaration>,
-						HighPrecisionTimer.HighPrecTimer>
-						((Dictionary<IdentifierDeclaration, ResolveResult> resolvedItems,
-							List<IdentifierDeclaration> unresolvedItems,
-							HighPrecisionTimer.HighPrecTimer highPrecTimer) =>
-				{
-					// Clear old markers
-					foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
-						if (marker is CodeSymbolMarker || marker is SymbolNotFoundMarker)
-							marker.Delete();
-
-					if (resolvedItems.Count > 0)
-						foreach (var kv in resolvedItems)
-							if(kv.Key.Location.Line>0)
-							{
-								var m = new CodeSymbolMarker(this, kv.Key) { ResolveResult = kv.Value };
-								MarkerStrategy.Add(m);
-
-								m.Redraw();
-							}
-
-					if (unresolvedItems.Count > 0)
-						foreach (var id in unresolvedItems)
-							if(id.Location.Line>0)
-							{
-								var m = new SymbolNotFoundMarker(this, id);
-								MarkerStrategy.Add(m);
-
-								m.Redraw();
-							}
-
-					CoreManager.Instance.MainWindow.LeftStatusText =
-						Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
-						"ms (Semantic Highlighting)";
-				}), DispatcherPriority.Background,
-					finalDict, notFoundList, hp2);
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System);
-				}
-				#endregion
+				CoreManager.Instance.MainWindow.LeftStatusText =
+					Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
+					"ms (Semantic Highlighting)";
+			}), DispatcherPriority.Background,
+				res. finalDict, res. notFoundList, hp2);
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System);
+			}
+			#endregion
 		}
 
 		public class CodeSymbolMarker : TextMarker
@@ -912,7 +808,7 @@ namespace D_IDE.D
 			get { return new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line); }
 		}
 
-		void _insertTypeDataInternal(IBlockNode Parent,ref DCompletionData selectedItem, List<DCompletionData> types)
+		void _insertTypeDataInternal(IBlockNode Parent, ref DCompletionData selectedItem, List<DCompletionData> types)
 		{
 			if (Parent != null)
 				foreach (var n in Parent)
@@ -965,7 +861,7 @@ namespace D_IDE.D
 						DCompletionData selectedItem = null;
 						var l1 = new List<INode> { SyntaxTree };
 						var l2 = new List<INode>();
-						
+
 						while (l1.Count > 0)
 						{
 							foreach (var n in l1)
@@ -982,7 +878,7 @@ namespace D_IDE.D
 								if (n is IBlockNode)
 								{
 									var ch = (n as IBlockNode).Children;
-									if(ch!=null)
+									if (ch != null)
 										l2.AddRange(ch);
 								}
 							}

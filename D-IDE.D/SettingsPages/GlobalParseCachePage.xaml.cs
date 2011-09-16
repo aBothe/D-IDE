@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
-using System.Windows.Forms;
 using D_IDE.Core;
 using D_IDE.D.CodeCompletion;
 
@@ -11,13 +10,15 @@ namespace D_IDE.D
 	/// </summary>
 	public partial class GlobalParseCachePage : AbstractSettingsPage
 	{
-		public DMDConfig cfg { get; set; }
+		public DMDSettingsPage ParentPage { get; private set; }
+		public DMDConfig cfg { get; private set; }
 
 		readonly ObservableCollection<ASTCollection> Dirs = new ObservableCollection<ASTCollection>();
-		public GlobalParseCachePage(DMDConfig Config)
+		public GlobalParseCachePage(DMDSettingsPage DMDPage,DMDConfig Config)
 		{
 			InitializeComponent();
 
+			this.ParentPage = DMDPage;
 			this.cfg = Config;
 
 			list_Dirs.ItemsSource = Dirs;
@@ -34,6 +35,7 @@ namespace D_IDE.D
 
 		public override void LoadCurrent()
 		{
+			Dirs.Clear();
 			foreach (var pd in cfg.ASTCache)
 				Dirs.Add(pd);
 		}
@@ -49,7 +51,7 @@ namespace D_IDE.D
 		private void button_AddDir_Click(object sender, RoutedEventArgs e)
 		{
 			var dlg = new System.Windows.Forms.FolderBrowserDialog();
-			if (dlg.ShowDialog()==DialogResult.OK)
+			if (dlg.ShowDialog()==System.Windows.Forms.DialogResult.OK)
 			{
 				var ac = new ASTCollection(dlg.SelectedPath);
 
