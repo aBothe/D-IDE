@@ -47,13 +47,15 @@ namespace D_Parser.Resolver
 			#region Step 2: Loop through all of them, try to resolve them, write the results in a dictionary
 			foreach (var typeId in typeIds)
 			{
+				if (typeId == null)
+					continue;
 				var typeString = typeId.ToString();
 
 				/*
 				 * string,wstring,dstring are highlighted by the editor's syntax definition automatically..
 				 * Anyway, allow to resolve e.g. "object.string"
 				 */
-				if (typeString == "string" || typeString == "wstring" || typeString == "dstring")
+				if (typeString=="" || typeString == "string" || typeString == "wstring" || typeString == "dstring")
 					continue;
 
 				lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused);
