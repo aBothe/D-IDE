@@ -61,8 +61,10 @@ namespace D_IDE.D
 			return true;
 		}
 
-		public void BuildCompletionData(DEditorDocument EditorDocument, IList<ICompletionData> l, string EnteredText)
+		public void BuildCompletionData(DEditorDocument EditorDocument, IList<ICompletionData> l, string EnteredText,
+			out string lastResultPath)
 		{
+			lastResultPath = null;
 			var caretOffset = EditorDocument.Editor.CaretOffset;
 			var caretLocation = new CodeLocation(EditorDocument.Editor.TextArea.Caret.Column, EditorDocument.Editor.TextArea.Caret.Line);
 
@@ -95,8 +97,10 @@ namespace D_IDE.D
 				 * Note: When having entered a module name stub only (e.g. "std." or "core.") it's needed to show all packages that belong to that root namespace
 				 */
 
-				foreach (var rr in resolveResults)
+				foreach (var rr in resolveResults){
+					lastResultPath=ResolveResult.GetResolveResultString(rr);
 					BuildCompletionData(rr, curBlock, l);
+				}
 			}
 
 			// Enum all nodes that can be accessed in the current scope
@@ -115,7 +119,9 @@ namespace D_IDE.D
 						var decls = BlockStatement.GetItemHierarchy(ScopedStatement, EditorDocument.CaretLocation);
 
 						foreach (var n in decls)
+						{
 							l.Add(new DCompletionData(n));
+						}
 					}
 				}
 
@@ -175,7 +181,12 @@ namespace D_IDE.D
 
 		readonly List<string> alreadyAddedModuleNameParts = new List<string>();
 
-		public void BuildCompletionData(ResolveResult rr, IBlockNode currentlyScopedBlock, IList<ICompletionData> l, bool isVariableInstance = false, ResolveResult resultParent = null)
+		public void BuildCompletionData(
+			ResolveResult rr, 
+			IBlockNode currentlyScopedBlock, 
+			IList<ICompletionData> l, 
+			bool isVariableInstance = false, 
+			ResolveResult resultParent = null)
 		{
 			#region MemberResult
 			if (rr is MemberResult)

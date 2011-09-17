@@ -130,7 +130,7 @@ namespace D_IDE.D
 			}
 		}
 
-		CompletionWindow completionWindow;
+		internal CompletionWindow completionWindow;
 		OverloadInsightWindow insightWindow;
 		#endregion
 
@@ -268,11 +268,12 @@ namespace D_IDE.D
 			parseThread.Start();
 		}
 
+		/*
 		public override void Reload()
 		{
 			base.Reload();
 			CanRefreshSemanticHighlightings = true;
-		}
+		}*/
 
 		public void UpdateFoldings()
 		{
@@ -558,18 +559,6 @@ namespace D_IDE.D
 		{
 			KeysTyped = true;
 			Modified = true;
-
-			// Relocate/Update build errors
-			foreach (var m in MarkerStrategy.TextMarkers)
-			{
-				var bem = m as ErrorMarker;
-				if (bem == null)
-					continue;
-
-				var nloc = bem.EditorDocument.Editor.Document.GetLocation(bem.StartOffset);
-				bem.Error.Line = nloc.Line;
-				bem.Error.Column = nloc.Column;
-			}
 		}
 
 		#region Code Completion
@@ -621,7 +610,7 @@ namespace D_IDE.D
 			CanRefreshSemanticHighlightings = false;
 
 			UpdateBlockCompletionData();
-
+			
 			if (parseOperation != null && parseOperation.Status != DispatcherOperationStatus.Completed)
 				parseOperation.Abort();
 
@@ -958,13 +947,20 @@ namespace D_IDE.D
 			UpdateBlockCompletionData();
 		}
 
+		/// <summary>
+		/// Key: Path of the accessed item
+		/// </summary>
+		public readonly Dictionary<string, string> LastSelectedCCItems = new Dictionary<string, string>();
+		ICompletionData lastSelectedCompletionData = null;
+		string lastCompletionListResultPath = "";
+
 		void ShowCodeCompletionWindow(string EnteredText)
 		{
 			try
 			{
 				if (string.IsNullOrEmpty(EnteredText) || !(char.IsLetter(EnteredText[0]) || EnteredText[0] == '.') || !DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || Editor.IsReadOnly)
 					return;
-
+				
 				/*
 				 * Note: Once we opened the completion list, it's not needed to care about a later refill of that list.
 				 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.
@@ -981,14 +977,14 @@ namespace D_IDE.D
 				*/
 				// Init completion window here
 				completionWindow = new CompletionWindow(Editor.TextArea);
-				completionWindow.CloseAutomatically = true;
+				completionWindow.CompletionList.InsertionRequested += new EventHandler(CompletionList_InsertionRequested);
+				//completionWindow.CloseAutomatically = true;
 
-				//Dispatcher.Invoke(new Action(()=>{
-				/*if (string.IsNullOrEmpty(EnteredText))
-					foreach (var i in currentEnvCompletionData)
-						completionWindow.CompletionList.CompletionData.Add(i);
-				else*/
-				ccs.BuildCompletionData(this, completionWindow.CompletionList.CompletionData, EnteredText);
+				ccs.BuildCompletionData(
+					this, 
+					completionWindow.CompletionList.CompletionData, 
+					EnteredText, 
+					out lastCompletionListResultPath);
 
 				// If no data present, return
 				if (completionWindow.CompletionList.CompletionData.Count < 1)
@@ -997,11 +993,38 @@ namespace D_IDE.D
 					return;
 				}
 
-				completionWindow.Closed += (object o, EventArgs _e) => { completionWindow = null; }; // After the window closed, reset it to null
+				// Care about item pre-selection
+				var selectedString = "";
+
+				if (lastCompletionListResultPath != null &&
+					!LastSelectedCCItems.TryGetValue(lastCompletionListResultPath, out selectedString))
+						LastSelectedCCItems.Add(lastCompletionListResultPath, "");
+
+				if (!string.IsNullOrEmpty(selectedString))
+				{
+					// Prevent hiding all items that are not named as 'selectedString' .. after having selected our item, reset the filter property
+					completionWindow.CompletionList.IsFiltering = false;
+					completionWindow.CompletionList.SelectItem(selectedString);
+					completionWindow.CompletionList.IsFiltering = true;
+				}
+				else // Select first item by default
+					completionWindow.CompletionList.SelectedItem = completionWindow.CompletionList.CompletionData[0];
+
+				completionWindow.Closed += (object o, EventArgs _e) => { 
+					// 'Backup' the selected completion data
+					lastSelectedCompletionData = completionWindow.CompletionList.SelectedItem;
+					completionWindow = null; // After the window closed, reset it to null
+				}; 
 				completionWindow.Show();
-				//}));
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); completionWindow = null; }
+		}
+
+		void CompletionList_InsertionRequested(object sender, EventArgs e)
+		{
+			// After item got inserted, overwrite last-selected-item string
+			if (lastCompletionListResultPath != null && lastSelectedCompletionData!=null)
+				LastSelectedCCItems[lastCompletionListResultPath] = lastSelectedCompletionData.Text;
 		}
 
 		public void CloseCompletionPopups()
@@ -1098,19 +1121,6 @@ namespace D_IDE.D
 		#endregion
 
 		#region Editor events
-		void Document_LineCountChanged(object sender, EventArgs e)
-		{
-			// Relocate breakpoint positions - when not being in debug mode!
-			if (!CoreManager.DebugManagement.IsDebugging)
-				foreach (var mk in MarkerStrategy.TextMarkers)
-				{
-					var bpm = mk as BreakpointMarker;
-					if (bpm != null)
-					{
-						bpm.Breakpoint.Line = Editor.Document.GetLineByOffset(bpm.StartOffset).LineNumber;
-					}
-				}
-		}
 
 		#region Document ToolTips
 		void Editor_MouseHoverStopped(object sender, System.Windows.Input.MouseEventArgs e)

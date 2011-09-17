@@ -50,7 +50,7 @@ namespace D_Parser.Resolver
 				if (typeId == null)
 					continue;
 				var typeString = typeId.ToString();
-
+				
 				/*
 				 * string,wstring,dstring are highlighted by the editor's syntax definition automatically..
 				 * Anyway, allow to resolve e.g. "object.string"

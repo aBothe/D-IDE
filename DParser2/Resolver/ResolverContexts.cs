@@ -38,6 +38,29 @@ namespace D_Parser.Resolver
 		/// The type declaration that has been used as the base for our type resolution.
 		/// </summary>
 		public ITypeDeclaration TypeDeclarationBase;
+
+		public static string GetResolveResultString(ResolveResult rr)
+		{
+			if (rr is MemberResult)
+				return DNode.GetNodePath((rr as MemberResult).ResolvedMember, true);
+			if (rr is TypeResult)
+				return DNode.GetNodePath((rr as TypeResult).ResolvedTypeDefinition, true);
+			if (rr is StaticTypeResult)
+				return (rr as StaticTypeResult).TypeDeclarationBase.ToString();
+			if (rr is ModuleResult)
+			{
+				var mrr = rr as ModuleResult;
+
+				var parts = mrr.ResolvedModule.ModuleName.Split('.');
+				var ret = "";
+				for (int i = 0; i < mrr.AlreadyTypedModuleNameParts; i++)
+					ret += parts[i] + '.';
+
+				return ret.TrimEnd('.');
+			}
+
+			return null;
+		}
 	}
 
 	public class MemberResult : ResolveResult
