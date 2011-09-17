@@ -1202,7 +1202,7 @@ namespace D_IDE.D
 
 		public int CompareTo(ICompletionData other)
 		{
-			return Text.CompareTo(other.Text);
+			return Node.Name!=null?Node.Name.CompareTo(other.Text):-1;
 		}
 	}
 

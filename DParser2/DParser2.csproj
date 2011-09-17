@@ -75,6 +75,7 @@
     <Compile Include="Dom\NodeInterfaces.cs" />
     <Compile Include="Dom\Statements.cs" />
     <Compile Include="Parser\TokenTracker.cs" />
+    <Compile Include="Resolver\CodeScanner.cs" />
     <Compile Include="Resolver\Resolver.cs" />
     <Compile Include="Dom\DAttribute.cs" />
     <Compile Include="Dom\DModule.cs" />

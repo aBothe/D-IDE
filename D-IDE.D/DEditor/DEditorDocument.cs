@@ -96,6 +96,7 @@ namespace D_IDE.D
 		bool KeysTyped = false;
 		Thread parseThread = null;
 		readonly HighPrecisionTimer.HighPrecTimer hp = new HighPrecisionTimer.HighPrecTimer();
+		bool CanRefreshSemanticHighlightings = false;
 
 		bool isUpdatingLookupDropdowns = false;
 
@@ -199,7 +200,7 @@ namespace D_IDE.D
 			// Register CodeCompletion events
 			Editor.TextArea.TextEntering += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntering);
 			Editor.TextArea.TextEntered += new System.Windows.Input.TextCompositionEventHandler(TextArea_TextEntered);
-			Editor.Document.TextChanged += new EventHandler(Document_TextChanged);
+			Editor.Document.Changed += new EventHandler<ICSharpCode.AvalonEdit.Document.DocumentChangeEventArgs>(Document_Changed);
 			Editor.TextArea.Caret.PositionChanged += new EventHandler(TextArea_SelectionChanged);
 			Editor.MouseHover += new System.Windows.Input.MouseEventHandler(Editor_MouseHover);
 			Editor.MouseHoverStopped += new System.Windows.Input.MouseEventHandler(Editor_MouseHoverStopped);
@@ -261,15 +262,17 @@ namespace D_IDE.D
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CommentBlock, CommentBlock));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock, UncommentBlock));
 
-			Document_TextChanged(this, EventArgs.Empty);
+			// Init parser loop
+			parseThread = new Thread(ParserLoop);
+			parseThread.IsBackground = true;
+			parseThread.Start();
 		}
 
-		/*
 		public override void Reload()
 		{
 			base.Reload();
-			Parse();
-		}*/
+			CanRefreshSemanticHighlightings = true;
+		}
 
 		public void UpdateFoldings()
 		{
@@ -551,59 +554,22 @@ namespace D_IDE.D
 		}
 		#endregion
 
-		void Document_TextChanged(object sender, EventArgs e)
+		void Document_Changed(object sender, ICSharpCode.AvalonEdit.Document.DocumentChangeEventArgs e)
 		{
-			if (parseThread == null || !parseThread.IsAlive)
-			{
-				// This thread will continously check if the file was modified.
-				// If so, it'll reparse
-				parseThread = new Thread(() =>
-				{
-					Thread.CurrentThread.IsBackground = true;
-
-					// Initially parse the document
-					Parse();
-					bool HasBeenUpdatingParseCache = false;
-
-					while (true)
-					{
-						var cc = CompilerConfiguration;
-
-						// While no keys were typed, do nothing
-						while (!KeysTyped)
-						{
-							if (HasBeenUpdatingParseCache && !cc.ASTCache.IsParsing)
-							{
-								UpdateImportCache();
-								UpdateSemanticHightlighting();
-								HasBeenUpdatingParseCache = false;
-							}
-							else if (cc.ASTCache.IsParsing)
-								HasBeenUpdatingParseCache = true;
-
-							Thread.Sleep(50);
-						}
-
-						// Reset keystyped state for waiting again
-						KeysTyped = false;
-
-						// If a key was typed, wait.
-						Thread.Sleep(1500);
-
-						// If no other key was typed after waiting, parse the file
-						if (KeysTyped)
-							continue;
-
-						// Prevent parsing it again; Assign 'false' to it before parsing the document, so if something was typed while parsing, it'll simply parse again
-						KeysTyped = false;
-
-						Parse();
-					}
-				});
-				parseThread.Start();
-			}
-
 			KeysTyped = true;
+			Modified = true;
+
+			// Relocate/Update build errors
+			foreach (var m in MarkerStrategy.TextMarkers)
+			{
+				var bem = m as ErrorMarker;
+				if (bem == null)
+					continue;
+
+				var nloc = bem.EditorDocument.Editor.Document.GetLocation(bem.StartOffset);
+				bem.Error.Line = nloc.Line;
+				bem.Error.Column = nloc.Column;
+			}
 		}
 
 		#region Code Completion
@@ -650,7 +616,10 @@ namespace D_IDE.D
 			SyntaxTree.FileName = AbsoluteFilePath;
 			SyntaxTree.ModuleName = ProposedModuleName;
 
+			//TODO: Make semantic highlighting 1) faster and 2) redraw symbols immediately
 			UpdateSemanticHightlighting();
+			CanRefreshSemanticHighlightings = false;
+
 			UpdateBlockCompletionData();
 
 			if (parseOperation != null && parseOperation.Status != DispatcherOperationStatus.Completed)
@@ -670,6 +639,49 @@ namespace D_IDE.D
 			IsParsing = false;
 		}
 
+		public void ParserLoop()
+		{
+			// Initially parse the document
+			Parse();
+			bool HasBeenUpdatingParseCache = false;
+			KeysTyped = false;
+
+			while (true)
+			{
+				var cc = CompilerConfiguration;
+
+				// While no keys were typed, do nothing
+				while (!KeysTyped)
+				{
+					if (HasBeenUpdatingParseCache && !cc.ASTCache.IsParsing)
+					{
+						UpdateImportCache();
+						UpdateSemanticHightlighting();
+						HasBeenUpdatingParseCache = false;
+					}
+					else if (cc.ASTCache.IsParsing)
+						HasBeenUpdatingParseCache = true;
+
+					Thread.Sleep(50);
+				}
+
+				// Reset keystyped state for waiting again
+				KeysTyped = false;
+
+				// If a key was typed, wait.
+				Thread.Sleep(1500);
+
+				// If no other key was typed after waiting, parse the file
+				if (KeysTyped)
+					continue;
+
+				// Prevent parsing it again; Assign 'false' to it before parsing the document, so if something was typed while parsing, it'll simply parse again
+				KeysTyped = false;
+
+				Parse();
+			}
+		}
+
 		public void UpdateSemanticHightlighting()
 		{
 			if (!DSettings.Instance.UseSemanticHighlighting || SyntaxTree == null || CompilerConfiguration.ASTCache.IsParsing)
@@ -678,10 +690,13 @@ namespace D_IDE.D
 			var hp2 = new HighPrecisionTimer.HighPrecTimer();
 			hp2.Start();
 
-			var res = CodeScanner.ScanSymbols(new ResolverContext { 
-				ImportCache=ImportCache,
-				ParseCache=ParseCache,
-				ResolveAliases=false
+			var res = CodeScanner.ScanSymbols(new ResolverContext
+			{
+				ImportCache = ImportCache,
+				ParseCache = ParseCache,
+				// For performance reasons, do not scan down aliases
+				ResolveAliases = false
+				// Note: for correct results, base classes and variable types have to get resolved
 			}, SyntaxTree);
 
 			hp2.Stop();
@@ -726,7 +741,7 @@ namespace D_IDE.D
 					Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
 					"ms (Semantic Highlighting)";
 			}), DispatcherPriority.Background,
-				res. finalDict, res. notFoundList, hp2);
+				res.finalDict, res.notFoundList, hp2);
 			}
 			catch (Exception ex)
 			{
@@ -1083,23 +1098,6 @@ namespace D_IDE.D
 		#endregion
 
 		#region Editor events
-		void Editor_TextChanged(object sender, EventArgs e)
-		{
-			Modified = true;
-
-			// Relocate/Update build errors
-			foreach (var m in MarkerStrategy.TextMarkers)
-			{
-				var bem = m as ErrorMarker;
-				if (bem == null)
-					continue;
-
-				var nloc = bem.EditorDocument.Editor.Document.GetLocation(bem.StartOffset);
-				bem.Error.Line = nloc.Line;
-				bem.Error.Column = nloc.Column;
-			}
-		}
-
 		void Document_LineCountChanged(object sender, EventArgs e)
 		{
 			// Relocate breakpoint positions - when not being in debug mode!

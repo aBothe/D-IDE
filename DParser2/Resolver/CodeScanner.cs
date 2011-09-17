@@ -13,10 +13,11 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class CodeScanner
 	{
-		public struct CodeScanResult
+		public class CodeScanResult
 		{
 			public Dictionary<IdentifierDeclaration, ResolveResult> finalDict = new Dictionary<IdentifierDeclaration, ResolveResult>();
 			public List<IdentifierDeclaration> notFoundList = new List<IdentifierDeclaration>();
+			public List<ITypeDeclaration> typeIds = new List<ITypeDeclaration>();
 		}
 
 		/// <summary>
@@ -42,7 +43,7 @@ namespace D_Parser.Resolver
 			bool WasAlreadyResolved = false;
 			ResolveResult rr = null;
 			IStatement _unused = null;
-
+			
 			#region Step 2: Loop through all of them, try to resolve them, write the results in a dictionary
 			foreach (var typeId in typeIds)
 			{
@@ -125,7 +126,7 @@ namespace D_Parser.Resolver
 			}
 			#endregion
 
-			return new CodeScanResult() { finalDict=finalDict, notFoundList=notFoundList };
+			return new CodeScanResult() { finalDict=finalDict, notFoundList=notFoundList, typeIds=typeIds };
 		}
 
 		public static List<ITypeDeclaration> ScanForTypeIdentifiers(INode Node)
@@ -158,6 +159,18 @@ namespace D_Parser.Resolver
 						var dn = n as DNode;
 
 						//TODO: Template params still missing
+						if(dn.TemplateParameters!=null)
+							foreach (var tp in dn.TemplateParameters)
+							{
+								if (tp is TemplateValueParameter)
+								{
+									var tvp = tp as TemplateValueParameter;
+
+									SearchIn(tvp.Type, l);
+									SearchIn(tvp.DefaultExpression, l);
+									SearchIn(tvp.SpecializationExpression, l);
+								}
+							}
 					}
 
 					if (n is DMethod)
@@ -260,6 +273,18 @@ namespace D_Parser.Resolver
 						SearchIn(ad.KeyExpression, l);
 					if (ad.KeyType != null)
 						SearchIn(ad.KeyType, l);
+				}
+				else if (type is DExpressionDecl)
+				{
+					SearchIn((type as DExpressionDecl).Expression, l);
+				}
+				else if (type is TemplateInstanceExpression)
+				{
+					var args=(type as TemplateInstanceExpression).Arguments;
+
+					if(args!=null)
+						foreach(var arg in args)
+							SearchIn(arg, l);
 				}
 
 				if (type is IdentifierDeclaration && !(type is DTokenDeclaration))
