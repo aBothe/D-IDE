@@ -148,10 +148,10 @@ namespace D_IDE
 				return ret;
 			}
 
-			bool FindNext_Internal(out string file, out int offset)
+			bool FindNext_Internal(out string file, out int offset, bool ignoreCurrentSelection=false)
 			{
 				file = "";
-				offset = 0;
+				offset = -1;
 
 				/* 
 				 * 1) Build array of scannable files
@@ -209,18 +209,19 @@ namespace D_IDE
 						startFilesIndex = i;
 
 					// if searching backward, take the selection start (the caret position) only. If searching downward (as usual), begin to search right after the selected block 
-					startOffset = curEd.Editor.SelectionStart +( SearchOptions.HasFlag(SearchFlags.Upward)?0: curEd.Editor.SelectionLength);
+					if(!ignoreCurrentSelection)
+						startOffset = curEd.Editor.SelectionStart +( SearchOptions.HasFlag(SearchFlags.Upward)?0: curEd.Editor.SelectionLength);
 				}
 
 				// 3)
 				int deltaJ = SearchOptions.HasFlag(SearchFlags.Upward) ? -1 : 1; // If searching "upward", move backward in the file list - decrement j
 				for (var j = startFilesIndex; j>=0 && j < files.Count; j+=deltaJ)
 				{
-					var res=ScanFile(files[j], j == startFilesIndex ? startOffset : 0, CurrentSearchString, SearchOptions);
+					file = files[j];
+					var res=ScanFile(file, j == startFilesIndex ? startOffset : 0, CurrentSearchString, SearchOptions);
 
 					if (res >= 0)
 					{
-						file = files[j];
 						offset = res;
 						return true;
 					}
@@ -230,8 +231,7 @@ namespace D_IDE
 			}
 			#endregion
 
-
-			public void FindNext()
+			public bool FindNext()
 			{
 				string file = "";
 				int offset = 0;
@@ -241,12 +241,90 @@ namespace D_IDE
 					var ed=EditingManagement.OpenFile(file, offset) as EditorDocument;
 					
 					if (ed == null)
-						return;
+						return false;
 
 					// Select found match
 					ed.Editor.SelectionStart = offset;
 					ed.Editor.SelectionLength = CurrentSearchString.Length;
+
+					return true;
 				}
+
+				return false;
+			}
+
+			public bool ReplaceNext()
+			{
+				string file = "";
+				int offset = 0;
+
+				bool foundMatch=FindNext_Internal(out file, out offset);
+
+				if (string.IsNullOrEmpty(file))
+					return false;
+
+				var ed = EditingManagement.OpenFile(file, offset) as EditorDocument;
+
+				if (ed == null)
+					return false;
+
+				// Replace selected string
+				if (string.Compare(ed.Editor.SelectedText, CurrentSearchString, !SearchOptions.HasFlag(SearchFlags.CaseSensitive)) == 0)
+				{
+					ed.Editor.Document.Replace(ed.Editor.SelectionStart, ed.Editor.SelectionLength, CurrentReplaceString);
+
+					if(foundMatch)
+						offset += CurrentReplaceString.Length - CurrentSearchString.Length;
+				}
+
+				if (foundMatch)
+				{
+					ed.Editor.SelectionStart = offset;
+					ed.Editor.SelectionLength = CurrentSearchString.Length;
+				}
+
+				return false;
+			}
+
+			public bool ReplaceAll()
+			{
+				string file = "";
+				int offset = 0;
+				EditorDocument ed = null;
+
+				while (offset>=0)
+				{
+					bool foundMatch=FindNext_Internal(out file, out offset);
+
+					if (ed != null && ed.AbsoluteFilePath != file)
+						ed.Editor.Document.UndoStack.EndUndoGroup();
+
+					if (string.IsNullOrEmpty(file))
+						return false;
+
+					ed = EditingManagement.OpenFile(file, offset) as EditorDocument;
+
+					if (ed == null)
+						return false;
+
+					// Replace selected string
+					if (string.Compare(ed.Editor.SelectedText, CurrentSearchString, !SearchOptions.HasFlag(SearchFlags.CaseSensitive)) == 0)
+					{
+						ed.Editor.Document.UndoStack.StartContinuedUndoGroup(ed);
+
+						ed.Editor.Document.Replace(ed.Editor.SelectionStart, ed.Editor.SelectionLength, CurrentReplaceString);
+						if (foundMatch)
+							offset += CurrentReplaceString.Length - CurrentSearchString.Length;
+					}
+
+					if (foundMatch)
+					{
+						ed.Editor.SelectionStart = offset;
+						ed.Editor.SelectionLength = CurrentSearchString.Length;
+					}
+				}
+
+				return false;
 			}
 		}
 	}

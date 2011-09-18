@@ -745,6 +745,11 @@ namespace D_IDE
 			Process.Start("http://d-ide.sourceforge.net");
 		}
 
+		private void Visitdigitalmars_Click(object sender, RoutedEventArgs e)
+		{
+			Process.Start("http://digitalmars.com/d/2.0/");
+		}
+
 		private void SearchAndReplace_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
 			if (SearchAndReplaceDlg != null && SearchAndReplaceDlg.IsLoaded)

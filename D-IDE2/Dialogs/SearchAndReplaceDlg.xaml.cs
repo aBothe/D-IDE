@@ -31,6 +31,7 @@ namespace D_IDE.Dialogs
 		/// </summary>
 		public void SetWindowPositionNextToCurrentCaret()
 		{
+			return;
 			/* 
 			 * 1) Check if window is floating
 			 * 2) Get screen position of the caret
@@ -75,6 +76,12 @@ namespace D_IDE.Dialogs
 			checkBox_CaseSensitive.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.CaseSensitive);
 			checkBox_SearchUpward.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.Upward);
 			checkBox_WordOnly.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.FullWord);
+
+			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+			if (ed != null && ed.Editor.SelectionLength>0)
+			{
+				comboBox_InputString.Text = ed.Editor.SelectedText;
+			}
 		}
 
 		public void ApplySearchOptions()
@@ -101,13 +108,21 @@ namespace D_IDE.Dialogs
 				fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.FullWord;
 		}
 
-		public void DoFindNext()
+		bool PreCheck()
 		{
 			if (string.IsNullOrEmpty(comboBox_InputString.Text))
 			{
 				MessageBox.Show("Search string must not be empty!");
-				return;
+				return false;
 			}
+
+			return true;
+		}
+
+		public void DoFindNext()
+		{
+			if (!PreCheck())
+				return;
 
 			ApplySearchOptions();
 
@@ -116,10 +131,34 @@ namespace D_IDE.Dialogs
 			SetWindowPositionNextToCurrentCaret();
 		}
 
+		public void DoReplaceNext()
+		{
+			if (!PreCheck())
+				return;
+
+			ApplySearchOptions();
+
+			IDEManager.FileSearchManagement.Instance.ReplaceNext();
+
+			SetWindowPositionNextToCurrentCaret();
+		}
+
+		public void DoReplaceAll()
+		{
+			if (!PreCheck())
+				return;
+
+			ApplySearchOptions();
+
+			IDEManager.FileSearchManagement.Instance.ReplaceAll();
+
+			SetWindowPositionNextToCurrentCaret();
+		}
+
 		private void FindNext_Click(object sender, RoutedEventArgs e)
 		{
 			DoFindNext();
-			comboBox_InputString.Focus();
+			button_FindNext.Focus();
 		}
 
 		private void Grid_Loaded(object sender, RoutedEventArgs e)
@@ -130,7 +169,26 @@ namespace D_IDE.Dialogs
 		private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
 		{
 			if(IsVisible)
-			SetWindowPositionNextToCurrentCaret();
+				SetWindowPositionNextToCurrentCaret();
+		}
+
+		private void button_Replace_Click(object sender, RoutedEventArgs e)
+		{
+			DoReplaceNext();
+			button_Replace.Focus();
+		}
+
+		private void button_ReplaceAll_Click(object sender, RoutedEventArgs e)
+		{
+			DoReplaceAll();
+			button_ReplaceAll.Focus();
+		}
+
+		private void button_Swap1_Click(object sender, RoutedEventArgs e)
+		{
+			var s = comboBox_InputString.Text;
+			comboBox_InputString.Text = comboBox_ReplaceString.Text;
+			comboBox_ReplaceString.Text = s;
 		}
 	}
 }

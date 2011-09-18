@@ -221,9 +221,12 @@ namespace D_IDE
 				if (ed == null)
 					return ret;
 
-				ed.Editor.CaretOffset = Offset;
-				var loc = ed.Editor.Document.GetLocation(Offset);
-				ed.Editor.ScrollTo(loc.Line,loc.Column);
+				if (Offset >= 0)
+				{
+					ed.Editor.CaretOffset = Offset;
+					var loc = ed.Editor.Document.GetLocation(Offset);
+					ed.Editor.ScrollTo(loc.Line, loc.Column);
+				}
 				ed.Editor.Focus();
 
 				return ed;

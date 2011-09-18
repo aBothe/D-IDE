@@ -2,27 +2,29 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:a="clr-namespace:AvalonDock;assembly=AvalonDock"
-        Height="280" Width="500" Title="Search &amp; Replace (Not finished yet)" WindowStyle="ToolWindow" ShowInTaskbar="False" ResizeMode="NoResize" IsVisibleChanged="Window_IsVisibleChanged">
+        Height="286" Width="473" Title="Search &amp; Replace" WindowStyle="ToolWindow" ShowInTaskbar="False" ResizeMode="NoResize" IsVisibleChanged="Window_IsVisibleChanged">
 	<Grid Background="#FFF0F0F0" Loaded="Grid_Loaded">
 		<Label Content="Find..." Height="16" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" Padding="0" VerticalAlignment="Top" Width="76" />
-		<ComboBox Height="23" Margin="12,34,12,0" Name="comboBox_InputString" VerticalAlignment="Top" IsEditable="True" />
+		<ComboBox Height="23" Margin="12,34,43,0" Name="comboBox_InputString" VerticalAlignment="Top" IsEditable="True" TabIndex="0" />
 		<Label Content="in..." Height="16" HorizontalAlignment="Left" Margin="12,63,0,0" Name="label2" Padding="0" VerticalAlignment="Top" Width="76" />
-		<ComboBox Height="23" Margin="12,85,12,0" Name="comboBox_SearchLocation" VerticalAlignment="Top">
+		<ComboBox Height="23" Margin="12,85,12,0" Name="comboBox_SearchLocation" VerticalAlignment="Top" TabIndex="5">
 			<ComboBoxItem Content="Current Document" IsSelected="True" />
 			<ComboBoxItem Content="Open Documents" />
 			<ComboBoxItem Content="Current Project" />
 			<ComboBoxItem Content="Current Solution" />
 		</ComboBox>
 		<Label Content="Search options:" Height="16" HorizontalAlignment="Left" Margin="12,165,0,0" Name="label3" Padding="0" VerticalAlignment="Top" Width="86" />
-		<Button Height="23" HorizontalAlignment="Right" Margin="0,0,12,41" Name="button_Replace" VerticalAlignment="Bottom" Width="75" Content="Replace" />
-		<Button Content="Replace All" Height="23" HorizontalAlignment="Right" Margin="0,0,12,12" Name="button_ReplaceAll" VerticalAlignment="Bottom" Width="75" />
+		<Button Height="23" HorizontalAlignment="Right" Margin="0,0,12,41" Name="button_Replace" VerticalAlignment="Bottom" Width="75" Content="Replace" Click="button_Replace_Click" TabIndex="7" />
+		<Button Content="Replace All" Height="23" HorizontalAlignment="Right" Margin="0,0,12,12" Name="button_ReplaceAll" VerticalAlignment="Bottom" Width="75" Click="button_ReplaceAll_Click" TabIndex="8" />
 		<Label Content="Replace with..." Height="16" HorizontalAlignment="Left" Margin="12,114,0,0" Name="label4" Padding="0" VerticalAlignment="Top" Width="76" />
-		<ComboBox Height="23" Margin="12,136,12,0" Name="comboBox_ReplaceString" VerticalAlignment="Top" IsEditable="True" />
-		<Button Content="Find next" Height="23" HorizontalAlignment="Right" Margin="0,0,98,41" Name="button_FindNext" VerticalAlignment="Bottom" Width="80" Click="FindNext_Click" IsDefault="True" />
+		<ComboBox Height="23" Margin="12,136,43,0" Name="comboBox_ReplaceString" VerticalAlignment="Top" IsEditable="True" TabIndex="1" />
+		<Button Content="Find next" Height="23" HorizontalAlignment="Right" Margin="0,0,98,41" Name="button_FindNext" VerticalAlignment="Bottom" Width="80" Click="FindNext_Click" IsDefault="True" TabIndex="6" />
 		<StackPanel Height="63" Margin="12,180,0,0" Name="stackPanel1" VerticalAlignment="Top" Orientation="Vertical" HorizontalAlignment="Left" Width="104">
-			<CheckBox Content="Case sensitive" Height="16" Name="checkBox_CaseSensitive" Margin="2" />
-			<CheckBox Content="Word only" Height="16" Name="checkBox_WordOnly" Margin="2" />
-			<CheckBox Content="Search upward" Height="16" Name="checkBox_SearchUpward" Margin="2" />
+			<CheckBox Content="Case sensitive" Height="16" Name="checkBox_CaseSensitive" Margin="2" TabIndex="2" />
+			<CheckBox Content="Word only" Height="16" Name="checkBox_WordOnly" Margin="2" TabIndex="3" />
+			<CheckBox Content="Search upward" Height="16" Name="checkBox_SearchUpward" Margin="2" TabIndex="4" />
 		</StackPanel>
+		<Button Content="&#8645;" Height="23" HorizontalAlignment="Right" Margin="0,136,12,0" Name="button_Swap2" VerticalAlignment="Top" Width="25" Click="button_Swap1_Click" />
+		<Button Content="&#8645;" Height="23" HorizontalAlignment="Right" Margin="0,34,12,0" Name="button_Swap1" VerticalAlignment="Top" Width="25" Click="button_Swap1_Click" TabIndex="9" />
 	</Grid>
 </Window>
