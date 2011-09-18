@@ -2,6 +2,8 @@
 using System.Windows;
 using D_IDE.Core;
 using D_IDE.D.CodeCompletion;
+using System.Windows.Input;
+using System;
 
 namespace D_IDE.D
 {
@@ -29,6 +31,7 @@ namespace D_IDE.D
 		{
 			cfg.ASTCache.ParsedGlobalDictionaries.Clear();
 			cfg.ASTCache.ParsedGlobalDictionaries.AddRange(Dirs);
+			cfg.ASTCache.UpdateEditorParseCache();
 
 			return true;
 		}
@@ -69,10 +72,23 @@ namespace D_IDE.D
 
 		private void button_Reparse_Click(object sender, RoutedEventArgs e)
 		{
-			if (list_Dirs.SelectedIndex < 0)
-				return;
-
-			(list_Dirs.SelectedItem as ASTCollection).UpdateFromBaseDirectory();
+			Cursor=Cursors.Wait;
+			try
+			{
+				foreach (var i in list_Dirs.Items)
+				{
+					var astColl = (i as ASTCollection);
+					astColl.UpdateFromBaseDirectory();
+				}
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex);
+			}
+			finally
+			{
+				Cursor = Cursors.Arrow;
+			}
 		}
 	}
 }

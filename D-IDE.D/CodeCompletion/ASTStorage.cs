@@ -114,14 +114,19 @@ namespace D_IDE.D.CodeCompletion
 				ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser);
 			}
 
+			UpdateEditorParseCache();
+
+			IsParsing = false;
+		}
+
+		public void UpdateEditorParseCache()
+		{
 			var cache = new List<IAbstractSyntaxTree>();
 
 			foreach (var pdir in ParsedGlobalDictionaries)
 				cache.AddRange(pdir);
 
 			ParseCache = cache;
-
-			IsParsing = false;
 		}
 
 		public void WriteParseLog(string outputLog)
