@@ -77,7 +77,7 @@ namespace D_IDE
 		{
 			Dispatcher.Invoke(new Action(() =>
 			{
-				string appendix = "D-IDE " + System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString(3);
+				string appendix = "D-IDE"; //+ System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString(3);
 
 				if (IDEManager.CurrentSolution != null)
 					Title = IDEManager.CurrentSolution.Name + " - " + appendix;

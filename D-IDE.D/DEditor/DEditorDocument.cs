@@ -92,7 +92,15 @@ namespace D_IDE.D
 			ImportCache = DResolver.ResolveImports(SyntaxTree, ParseCache);
 		}
 
+		/// <summary>
+		/// Variable that indicates if document is parsed currently.
+		/// </summary>
 		public bool IsParsing { get; protected set; }
+
+		/// <summary>
+		/// Variable that is used for the parser loop to recognize user interaction.
+		/// So, if the user typed a character, this will be set to true, whereas it later, after the text has become parsed, will be reset
+		/// </summary>
 		bool KeysTyped = false;
 		Thread parseThread = null;
 		readonly HighPrecisionTimer.HighPrecTimer hp = new HighPrecisionTimer.HighPrecTimer();
@@ -114,7 +122,6 @@ namespace D_IDE.D
 		}
 
 		public IBlockNode lastSelectedBlock { get; protected set; }
-		//IEnumerable<ICompletionData> currentEnvCompletionData = null;
 
 		DispatcherOperation blockCompletionDataOperation = null;
 		//DispatcherOperation showCompletionWindowOperation = null;
@@ -379,7 +386,9 @@ namespace D_IDE.D
 				if (Editor.Document.GetCharAt(commStart) == '/' && commStart > 0 &&
 					Editor.Document.GetCharAt(commStart - 1) == '/')
 				{
-					Editor.Document.Remove(commStart - 1, 2);
+					// Check if DDoc comment
+					bool isDDoc=commStart>1 && Editor.Document.GetCharAt(commStart-2)=='/';
+					Editor.Document.Remove(commStart - (isDDoc?2:1), isDDoc?3:2);
 					return;
 				}
 			}
@@ -621,6 +630,7 @@ namespace D_IDE.D
 					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration * 1000, 3).ToString() + "ms (Parsing duration)";
 					UpdateFoldings();
 					CoreManager.ErrorManagement.RefreshErrorList();
+					RefreshErrorHighlightings();
 				}
 				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System); }
 			}));
@@ -645,7 +655,7 @@ namespace D_IDE.D
 					if (HasBeenUpdatingParseCache && !cc.ASTCache.IsParsing)
 					{
 						UpdateImportCache();
-						UpdateSemanticHightlighting();
+						UpdateSemanticHightlighting(true); // Perhaps new errors were detected
 						HasBeenUpdatingParseCache = false;
 					}
 					else if (cc.ASTCache.IsParsing)
@@ -671,7 +681,7 @@ namespace D_IDE.D
 			}
 		}
 
-		public void UpdateSemanticHightlighting()
+		public void UpdateSemanticHightlighting(bool RedrawErrors=false)
 		{
 			if (!DSettings.Instance.UseSemanticHighlighting || SyntaxTree == null || CompilerConfiguration.ASTCache.IsParsing)
 				return;
@@ -693,7 +703,7 @@ namespace D_IDE.D
 			#region Step 3: Create/Update markers
 			try
 			{
-				Dispatcher.BeginInvoke(new Action<
+				Dispatcher.Invoke(new Action<
 					Dictionary<IdentifierDeclaration, ResolveResult>,
 					List<IdentifierDeclaration>,
 					HighPrecisionTimer.HighPrecTimer>
@@ -703,7 +713,7 @@ namespace D_IDE.D
 			{
 				// Clear old markers
 				foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
-					if (marker is CodeSymbolMarker || marker is SymbolNotFoundMarker)
+					if (marker is CodeSymbolMarker)
 						marker.Delete();
 
 				if (resolvedItems.Count > 0)
@@ -716,15 +726,24 @@ namespace D_IDE.D
 							m.Redraw();
 						}
 
+				SemanticErrors.Clear();
+
 				if (unresolvedItems.Count > 0)
 					foreach (var id in unresolvedItems)
 						if (id.Location.Line > 0)
 						{
-							var m = new SymbolNotFoundMarker(this, id);
-							MarkerStrategy.Add(m);
-
-							m.Redraw();
+							SemanticErrors.Add(new DSemanticError
+							{
+								FileName=AbsoluteFilePath,
+								IsSemantic = true,
+								Message = id.ToString() + " couldn't get resolved",
+								Location = id.Location,
+								MarkerColor=Colors.Blue
+							});
 						}
+
+				if (RedrawErrors)
+					CoreManager.ErrorManagement.RefreshErrorList();
 
 				CoreManager.Instance.MainWindow.LeftStatusText =
 					Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
@@ -767,30 +786,7 @@ namespace D_IDE.D
 			}
 		}
 
-		public class SymbolNotFoundMarker : TextMarker
-		{
-			public readonly EditorDocument EditorDocument;
-			public readonly IdentifierDeclaration Id;
-
-			public SymbolNotFoundMarker(EditorDocument EditorDoc, IdentifierDeclaration Id, int StartOffset, int Length)
-				: base(EditorDoc.MarkerStrategy, StartOffset, Length)
-			{
-				this.EditorDocument = EditorDoc;
-				this.Id = Id;
-				Init();
-			}
-			public SymbolNotFoundMarker(EditorDocument EditorDoc, IdentifierDeclaration Id)
-				: base(EditorDoc.MarkerStrategy, EditorDoc.Editor.Document.GetOffset(Id.Location.Line, Id.Location.Column), Id.ToString(false).Length)
-			{
-				this.EditorDocument = EditorDoc;
-				this.Id = Id;
-			}
-
-			void Init()
-			{
-				this.MarkerColor = Colors.Blue;
-			}
-		}
+		readonly List<GenericError> SemanticErrors = new List<GenericError>();
 
 		public override System.Collections.Generic.IEnumerable<GenericError> ParserErrors
 		{
@@ -801,6 +797,7 @@ namespace D_IDE.D
 					var l = new List<GenericError>(SyntaxTree.ParseErrors.Count);
 					foreach (var pe in SyntaxTree.ParseErrors)
 						l.Add(new DParseError(pe) { Project = HasProject ? Project : null, FileName = AbsoluteFilePath });
+					l.AddRange(SemanticErrors);
 					return l;
 				}
 				return null;
@@ -1042,6 +1039,10 @@ namespace D_IDE.D
 			}
 		}
 
+		/// <summary>
+		/// Shows the popup that displays the currently accessed function and its parameters
+		/// </summary>
+		/// <param name="EnteredText"></param>
 		void ShowInsightWindow(string EnteredText)
 		{
 			if (!DSettings.Instance.UseMethodInsight ||

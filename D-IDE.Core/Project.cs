@@ -5,6 +5,7 @@ using System.Linq;
 using System.IO;
 using System.Xml;
 using System.ComponentModel;
+using System.Windows.Media;
 
 namespace D_IDE.Core
 {
@@ -517,6 +518,13 @@ namespace D_IDE.Core
 		public virtual string Message { get; set; }
 		public virtual int Line { get; set; }
 		public virtual int Column { get; set; }
+
+		[DefaultValue(-1)]
+		public virtual int Length { get; set; }
+
+		public virtual Color? ForegroundColor { get; set; }
+		public virtual Color? BackgroundColor { get; set; }
+		public virtual Color? MarkerColor { get; set; }
 
 		public override string ToString()
 		{

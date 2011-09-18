@@ -68,8 +68,8 @@
 					<r:RibbonApplicationMenuItem Header="Save All" Command="d:IDEUICommands.SaveAll" ImageSource="Resources/SaveAllHH.png" />
 					<r:RibbonApplicationMenuItem Header="Save as" Command="SaveAs" ImageSource="Resources/SaveAsHH.png" />
 					<r:RibbonSeparator />
-					<r:RibbonApplicationMenuItem Header="Project Settings" Command="d:IDEUICommands.ShowProjectSettings" />
-					<r:RibbonApplicationMenuItem Header="Settings" Command="Properties" ImageSource="Resources/settings_32.png" />
+					<r:RibbonApplicationMenuItem Header="Project Settings" ToolTip="Show the current project's settings" Command="d:IDEUICommands.ShowProjectSettings" />
+					<r:RibbonApplicationMenuItem Header="Settings" ToolTip="Show D-IDE Settings"  Command="Properties" ImageSource="Resources/settings_32.png" />
 					<r:RibbonSeparator />
 					<r:RibbonApplicationMenuItem Header="Exit" Command="Close" ImageSource="Resources/application-exit-3.ico" ToolTipTitle="Exit D-IDE (Alt+X)" />
 				</r:RibbonApplicationMenu>
@@ -100,20 +100,13 @@
 				</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Encoding">
-					<r:RibbonMenuButton Name="encoding_DropDown">
+					<r:RibbonMenuButton Name="encoding_DropDown" ToolTip="The current document's text encoding">
 						<r:RibbonMenuButton.ItemTemplate>
 							<DataTemplate>
 								<TextBlock MouseUp="encodingDropDown_MouseUp" Text="{Binding EncodingName}" />
 							</DataTemplate>
 						</r:RibbonMenuButton.ItemTemplate>
 					</r:RibbonMenuButton>
-					<!--<r:RibbonGallery Name="encoding_DropDownGallery">
-						<r:RibbonGallery.ItemTemplate>
-							<DataTemplate>
-								<TextBlock Text="{Binding EncodingName}" />
-							</DataTemplate>
-						</r:RibbonGallery.ItemTemplate>
-					</r:RibbonGallery>-->
 				</r:RibbonGroup>
 			</r:RibbonTab>
 
@@ -148,7 +141,7 @@
 				<r:RibbonGroup Header="Build">
 					<r:RibbonButton Click="BuildSolution_Click" Label="Build" ToolTipTitle="Build current solution or module" ToolTipDescription="Note: If the 'Current Module' Checkbox has been ticked, the current module will be built only" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
 					<r:RibbonButton Label="Stop Building" Click="Button_StopBuilding_Click" IsEnabled="False" Name="Button_StopBuilding" SmallImageSource="Resources/stop_build.png" />
-					<r:RibbonCheckBox Label="Current Module" ToolTipTitle="Build/Run current module" ToolTipDescription="Build and Run the currently opened source file instead of running the current project" Name="Check_RunCurModule" />
+					<r:RibbonCheckBox Label="Current Module" ToolTipTitle="Build and/or Run current module only." ToolTipDescription="Build and Run the currently opened source file instead of running the current project" Name="Check_RunCurModule" />
 				</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Run">

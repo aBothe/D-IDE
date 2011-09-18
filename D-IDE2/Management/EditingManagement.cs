@@ -58,12 +58,13 @@ namespace D_IDE
 			public static AbstractEditorDocument OpenFile(string FileName)
 			{
 				/*
-				 * 1. Solution check
-				 * 2. Project file check
-				 * 3. Normal file check
+				 * 1) Solution check
+				 * 2) Project file check
+				 * 3) Normal file check
 				 */
 				var ext = Path.GetExtension(FileName);
 
+				// 1)
 				if (ext == Solution.SolutionExtension)
 				{
 					if (!File.Exists(FileName))
@@ -99,6 +100,7 @@ namespace D_IDE
 					return null;
 				}
 
+				// 2)
 				var langs = LanguageLoader.Bindings.Where(l => l.CanHandleProject(FileName)).ToArray();
 				if (langs.Length > 0)
 				{
@@ -133,6 +135,8 @@ namespace D_IDE
 					else CurrentSolution = _oldSln;
 					return null;
 				}
+
+				//3)
 
 				// Try to resolve owner project
 				// - useful if relative path was given - enables
@@ -177,18 +181,14 @@ namespace D_IDE
 				newEd.Editor.IsReadOnly = AllDocumentsReadOnly;
 				newEd.Show(Instance.MainWindow.DockManager);
 
-				//HACK: 'Enforce' activation by trying it several times,
-				for (int k = 0; k < 10; k++)
+				try
 				{
-					try
-					{
-						newEd.Activate();
-						break;
-					}
-					catch
-					{
-						Thread.Sleep(100);
-					}
+					Instance.MainWindow.DockManager.ActiveDocument = newEd;
+					newEd.Activate();
+				}
+				catch
+				{
+					
 				}
 				Instance.UpdateGUI();
 				newEd.Editor.Focus();

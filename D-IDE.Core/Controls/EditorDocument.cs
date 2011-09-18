@@ -98,6 +98,9 @@ namespace D_IDE.Core
 			Modified = false;
 		}
 
+		/// <summary>
+		/// 'Outside' means that the file has been modified somewhere else but not in D-IDE ;-D
+		/// </summary>
 		public bool HasBeenModifiedOutside
 		{
 			get { return File.Exists(AbsoluteFilePath)? lastWriteTime != File.GetLastWriteTimeUtc(AbsoluteFilePath):true; }
@@ -117,6 +120,7 @@ namespace D_IDE.Core
 
 		void Init()
 		{
+			// Apply common editor settings to this instance
 			CommonEditorSettings.Instance.AssignToEditor(Editor);
 
 			// If Ctrl+MouseWheel was pressed/turned, increase/decrease font size
@@ -155,7 +159,7 @@ namespace D_IDE.Core
 
 			Editor.ShowLineNumbers = true;
 			Editor.TextChanged += new EventHandler(Editor_TextChanged);
-			Editor.Document.LineCountChanged += new EventHandler(Document_LineCountChanged);
+			Editor.Document.PropertyChanged+=new System.ComponentModel.PropertyChangedEventHandler(Document_PropertyChanged);
 
 			// Register Marker strategy
 			MarkerStrategy = new TextMarkerService(Editor);
@@ -172,6 +176,22 @@ namespace D_IDE.Core
 			RefreshErrorHighlightings();
 			RefreshBreakpointHighlightings();
 			RefreshDebugHighlightings();
+		}
+
+		void Document_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+			if (e.PropertyName == "LineCount" && !CoreManager.DebugManagement.IsDebugging)
+			{
+				// Relocate breakpoint positions - when not being in debug mode!
+				foreach (var mk in MarkerStrategy.TextMarkers)
+				{
+					var bpm = mk as BreakpointMarker;
+					if (bpm != null)
+					{
+						bpm.Breakpoint.Line = Editor.Document.GetLineByOffset(bpm.StartOffset).LineNumber;
+					}
+				}
+			}
 		}
 
 		void Save_event(object sender, RoutedEventArgs e)
@@ -221,10 +241,23 @@ namespace D_IDE.Core
 			public readonly GenericError Error;
 
 			public ErrorMarker(EditorDocument EditorDoc, GenericError Error)
-				:base(EditorDoc.MarkerStrategy,EditorDoc.Editor.Document.GetOffset(Error.Line,Error.Column),false)
+				:base(EditorDoc.MarkerStrategy)
 			{
 				this.EditorDocument = EditorDoc;
 				this.Error = Error;
+
+				ForegroundColor = Error.ForegroundColor;
+				BackgroundColor = Error.BackgroundColor;
+				if (Error.MarkerColor.HasValue)
+					MarkerColor = Error.MarkerColor.Value;
+
+				// Init offsets manually
+				StartOffset=EditorDoc.Editor.Document.GetOffset(Error.Line,Error.Column);
+
+				if (Error.Length > 0)
+					Length = Error.Length;
+				else
+					CalculateWordOffset(StartOffset, false);
 			}
 		}
 
@@ -325,20 +358,6 @@ namespace D_IDE.Core
 				bem.Error.Column = nloc.Column;
 			}
 			//CoreManager.Instance.MainWindow.RefreshErrorList();			
-		}
-
-		void Document_LineCountChanged(object sender, EventArgs e)
-		{
-			// Relocate breakpoint positions - when not being in debug mode!
-			if (!CoreManager.DebugManagement.IsDebugging)
-				foreach (var mk in MarkerStrategy.TextMarkers)
-				{
-					var bpm = mk as BreakpointMarker;
-					if (bpm != null)
-					{
-						bpm.Breakpoint.Line = Editor.Document.GetLineByOffset(bpm.StartOffset).LineNumber;
-					}
-				}
 		}
 
 		void TextArea_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
