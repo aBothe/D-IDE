@@ -118,6 +118,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\Panels\SearchResultPanel.xaml" />
     <Page Include="Controls\Panels\StartPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -189,6 +190,10 @@
     </Compile>
     <Compile Include="Controls\Panels\ProjectExplorer.xaml.cs">
       <DependentUpon>ProjectExplorer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Panels\SearchResultPanel.xaml.cs">
+      <DependentUpon>SearchResultPanel.xaml</DependentUpon>
+      <SubType>Code</SubType>
     </Compile>
     <Compile Include="Controls\Panels\StartPage.xaml.cs">
       <DependentUpon>StartPage.xaml</DependentUpon>

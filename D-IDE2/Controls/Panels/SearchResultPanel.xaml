@@ -1,0 +1,34 @@
+﻿<DockableContent x:Class="D_IDE.Controls.Panels.SearchResultPanel"
+	xmlns="clr-namespace:AvalonDock;assembly=AvalonDock"
+	xmlns:w="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Title="Search Results"
+	Height="225"
+	Width="852"
+	HideOnClose="True">
+    <w:ListView
+		Name="MainList"
+		SelectionMode="Single"
+		MouseDoubleClick="MainList_MouseDown">
+		<w:ListView.View>
+			<w:GridView>
+				<w:GridViewColumn
+					Width="150"
+					Header="File"
+					DisplayMemberBinding="{w:Binding File}" />
+				<w:GridViewColumn
+					Header="Line"
+					Width="50"
+					DisplayMemberBinding="{w:Binding Line}" />
+				<w:GridViewColumn
+					Header="Column"
+					Width="50"
+					DisplayMemberBinding="{w:Binding Column}" />
+				<w:GridViewColumn
+					Header="Code"
+					Width="150"
+					DisplayMemberBinding="{w:Binding CodeSnippet}" />
+			</w:GridView>
+		</w:ListView.View>
+	</w:ListView>
+</DockableContent>

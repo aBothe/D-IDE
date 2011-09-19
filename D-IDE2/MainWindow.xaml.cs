@@ -30,6 +30,7 @@ namespace D_IDE
 		public StartPage StartPage;
 		public DebugLocalsPanel Panel_Locals = new DebugLocalsPanel();
 		public SearchAndReplaceDlg SearchAndReplaceDlg;
+		public SearchResultPanel Panel_SearchResult=new SearchResultPanel();
 
 		public bool RunCurrentModuleOnly
 		{
@@ -307,6 +308,7 @@ namespace D_IDE
 			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
 			Panel_Log.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
 			Panel_ErrorList.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
+			Panel_SearchResult.Show(DockMgr,AnchorStyle.Bottom);
 		}
 
 		#region Ribbon buttons
