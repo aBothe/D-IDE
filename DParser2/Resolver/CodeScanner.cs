@@ -322,7 +322,8 @@ namespace D_Parser.Resolver
 					{
 						l.Add(e.ExpressionTypeRepresentation);
 					}
-					else if (e is ContainerExpression)
+					
+					if (e is ContainerExpression)
 					{
 						var ec = e as ContainerExpression;
 						var subex = ec.SubExpressions;
