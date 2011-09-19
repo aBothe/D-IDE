@@ -3605,11 +3605,12 @@ namespace D_Parser.Parser
 			else if (laKind == Auto)
 			{
 				Step();
-				mye.Type = new DTokenDeclaration(Auto);
+				mye.Attributes.Add(new DAttribute(Auto));
 			}
 
 			if (laKind == (Identifier))
 			{
+				// Normal enum identifier
 				if (Lexer.CurrentPeekToken.Kind == (Assign) || Lexer.CurrentPeekToken.Kind == (OpenCurlyBrace) || Lexer.CurrentPeekToken.Kind == (Semicolon) || Lexer.CurrentPeekToken.Kind == Colon)
 				{
 					Step();
@@ -3624,12 +3625,14 @@ namespace D_Parser.Parser
 				}
 			}
 
+			// Enum inhertance type
 			if (laKind == (Colon))
 			{
 				Step();
 				mye.Type = Type();
 			}
 
+			// Variables with 'enum' as base type
 			if (laKind == (Assign) || laKind == (Semicolon))
 			{
 			another_enumvalue:
@@ -3658,6 +3661,7 @@ namespace D_Parser.Parser
 				enumVar.EndLocation = t.Location;
 				ret.Add(enumVar);
 
+				// If there are more than one definitions, loop back
 				if (laKind == (Comma))
 					goto another_enumvalue;
 
@@ -3665,6 +3669,7 @@ namespace D_Parser.Parser
 			}
 			else
 			{
+				// Normal enum block
 				Expect(OpenCurlyBrace);
 
 				var OldPreviousComment = PreviousComment;
@@ -3672,6 +3677,7 @@ namespace D_Parser.Parser
 				mye.BlockStartLocation = t.Location;
 
 				bool init = true;
+				// While there are commas, loop through
 				while ((init && laKind != (Comma)) || laKind == (Comma))
 				{
 					if (!init) Step();
@@ -3701,19 +3707,16 @@ namespace D_Parser.Parser
 
 					ev.EndLocation = t.EndLocation;
 					ev.Description += CheckForPostSemicolonComment();
-					/*
-					//HACK: If it's an anonymous enum, directly add the enum values to the parent block
-					if (String.IsNullOrEmpty(mye.Name))
-						yield return ev;
-					else*/
-						mye.Add(ev);
+
+					mye.Add(ev);
 				}
 				Expect(CloseCurlyBrace);
 				PreviousComment = OldPreviousComment;
 
 				mye.EndLocation = t.EndLocation;
-				if (!String.IsNullOrEmpty(mye.Name))
-					ret.Add(mye);
+				
+				// Important: Add the enum block, whereas it CAN be unnamed, to the return array
+				ret.Add(mye);
 			}
 
 			mye.Description += CheckForPostSemicolonComment();

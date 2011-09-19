@@ -620,8 +620,11 @@ namespace D_IDE.D
 					{
 						var dn = i as DNode;
 
-						if (dn == null)
+						if (i != null && dn == null)
+						{
 							l.Add(new DCompletionData(i));
+							continue;
+						}
 
 						// If "this." ,add all items, also those of superior classes
 						// if "super." , add public items
@@ -651,8 +654,17 @@ namespace D_IDE.D
 								break;
 						}
 
-						if (add && CanItemBeShownGenerally(dn))
-							l.Add(new DCompletionData(dn));
+						if (add)
+						{
+							if (CanItemBeShownGenerally(dn))
+								l.Add(new DCompletionData(dn));
+							// Add members of anonymous enums
+							else if (dn is DEnum && dn.Name == "")
+							{
+								foreach (var k in dn as DEnum)
+									l.Add(new DCompletionData(k));
+							}
+						}
 					}
 					curlevel = curlevel.BaseClass != null ? curlevel.BaseClass[0] : null;
 

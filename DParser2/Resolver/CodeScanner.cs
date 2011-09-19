@@ -100,7 +100,11 @@ namespace D_Parser.Resolver
 								(mr.ResolvedMember is DVariable &&
 								(mr.ResolvedMember as DVariable).IsAlias))
 							{
-								finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
+								try
+								{
+									finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
+								}
+								catch { }
 
 								// See performance reasons
 								//if (curRes != rr && !WasAlreadyResolved && !) compDict.Add(curTypeDeclBase.ToString(), curRes);

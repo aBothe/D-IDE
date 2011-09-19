@@ -168,7 +168,6 @@ namespace D_Parser.Resolver
 							if ((dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate)))
 								continue;
 
-							//TODO: (More parser-related!) Add anonymous blocks (e.g. delegates) to the syntax tree
 							ret.Add(n);
 						}
 
@@ -684,6 +683,13 @@ namespace D_Parser.Resolver
 						var curScope = currentScopeOverride;
 						while (curScope != null)
 						{
+							/* 
+							 * If anonymous enum, skip that one, because in the following ScanForNodeIdentifier call, 
+							 * its children already become added to the match list
+							 */
+							if (curScope is DEnum && curScope.Name == "")
+								curScope = curScope.Parent as IBlockNode;
+
 							var m = ScanNodeForIdentifier(curScope, searchIdentifier, ctxt);
 
 							if (m != null)
@@ -955,6 +961,14 @@ namespace D_Parser.Resolver
 			var matches = new List<INode>();
 			foreach (var n in curScope)
 			{
+				// Scan anonymous enums
+				if (n is DEnum && n.Name == "")
+				{
+					foreach (var k in n as DEnum)
+						if (k.Name == name)
+							matches.Add(k);
+				}
+
 				if (n.Name == name)
 					matches.Add(n);
 			}
