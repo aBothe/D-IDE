@@ -178,8 +178,10 @@ namespace D_IDE.Dialogs
 
 		private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
 		{
-			if(IsVisible)
+			if (IsVisible)
 				SetWindowPositionNextToCurrentCaret();
+			else
+				ApplySearchOptions();
 		}
 
 		private void button_Replace_Click(object sender, RoutedEventArgs e)

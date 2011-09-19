@@ -24,6 +24,11 @@ namespace D_IDE.Controls.Panels
 			DataContext=this;
 			InitializeComponent();
 		}
+
+		public override bool Hide()
+		{
+			return base.Hide();
+		}
 		
 		private void MainList_MouseDown(object sender, MouseButtonEventArgs e)
 		{
