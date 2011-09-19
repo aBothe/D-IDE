@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using D_IDE.Core;
 using System.IO;
+using D_IDE.Core.Controls;
 
 namespace D_IDE
 {
@@ -102,8 +103,6 @@ namespace D_IDE
 				if (string.IsNullOrEmpty(fileContent))
 					return -1;
 
-
-
 				if (flags.HasFlag(SearchFlags.Upward))
 					while (true)
 					{
@@ -148,6 +147,50 @@ namespace D_IDE
 				return ret;
 			}
 
+			/// <summary>
+			/// Builds list containing all files, depending on CurrentSearchLocation
+			/// </summary>
+			List<string> BuildSearchFileList()
+			{
+				var files = new List<string>();
+
+				switch (CurrentSearchLocation)
+				{
+					case SearchLocations.CurrentDocument:
+						var ed = IDEManager.Instance.CurrentEditor;
+						if (ed == null)
+							return null;
+						files.Add(ed.AbsoluteFilePath);
+						break;
+					case SearchLocations.OpenDocuments:
+						foreach (var ed2 in IDEManager.Instance.Editors)
+							if (ed2 is EditorDocument)
+								files.Add(ed2.AbsoluteFilePath);
+						break;
+					case SearchLocations.CurrentProject:
+						if (IDEManager.Instance.CurrentEditor == null || !IDEManager.Instance.CurrentEditor.HasProject)
+							return null;
+
+						foreach (var pf in IDEManager.Instance.CurrentEditor.Project)
+							files.Add(pf.AbsoluteFileName);
+
+						files.Sort();
+						break;
+					case SearchLocations.CurrentSolution:
+						if (IDEManager.CurrentSolution == null)
+							return null;
+
+						foreach (var prj in IDEManager.CurrentSolution)
+							foreach (var pf2 in prj)
+								files.Add(pf2.AbsoluteFileName);
+
+						files.Sort();
+						break;
+				}
+
+				return files;
+			}
+
 			bool FindNext_Internal(out string file, out int offset, bool ignoreCurrentSelection=false)
 			{
 				file = "";
@@ -160,42 +203,10 @@ namespace D_IDE
 				 */
 
 				// 1)
-				var files = new List<string>();
+				var files = BuildSearchFileList();
 
-				switch (CurrentSearchLocation)
-				{
-					case SearchLocations.CurrentDocument:
-						var ed = IDEManager.Instance.CurrentEditor;
-						if (ed == null)
-							return false;
-						files.Add(ed.AbsoluteFilePath);
-						break;
-					case SearchLocations.OpenDocuments:
-						foreach (var ed2 in IDEManager.Instance.Editors)
-							if (ed2 is EditorDocument)
-								files.Add(ed2.AbsoluteFilePath);
-						break;
-					case SearchLocations.CurrentProject:
-						if (IDEManager.Instance.CurrentEditor == null || !IDEManager.Instance.CurrentEditor.HasProject)
-							return false;
-
-						foreach (var pf in IDEManager.Instance.CurrentEditor.Project)
-							files.Add(pf.AbsoluteFileName);
-
-						files.Sort();
-						break;
-					case SearchLocations.CurrentSolution:
-						if (IDEManager.CurrentSolution == null)
-							return false;
-
-						foreach (var prj in IDEManager.CurrentSolution)
-							foreach (var pf2 in prj)
-								files.Add(pf2.AbsoluteFileName);
-
-						files.Sort();
-						break;
-				}
-
+				if (files == null)
+					return false;
 
 				// 2)
 				var startFilesIndex = 0;
@@ -230,6 +241,114 @@ namespace D_IDE
 				return false;
 			}
 			#endregion
+
+			/// <summary>
+			/// Finds all matches and shows them in the search result panel of the main window
+			/// </summary>
+			public void FindAll()
+			{
+				var matches = FindAll_Raw();
+
+				var pan = IDEManager.Instance.MainWindow.SearchResultPanel;
+
+				pan.SearchString = CurrentSearchString;
+				pan.Results = matches;
+				pan.Show();
+			}
+
+			/// <summary>
+			/// Finds all matches and returns an array of them.
+			/// </summary>
+			/// <returns></returns>
+			public SearchResult[] FindAll_Raw()
+			{
+				var l = new List<SearchResult>();
+
+				var files = BuildSearchFileList();
+
+				if (files == null)
+					return null;
+
+				// Iterate through all files
+				foreach (var file in files)
+				{
+					string fileContent = "";
+
+					//Note: If file is already open, take the EditorDocument instance instead loading the physical file
+					foreach (var ed in IDEManager.Instance.Editors)
+					{
+						var ed_ = ed as EditorDocument;
+						if (ed_ == null || ed.AbsoluteFilePath != file)
+							continue;
+
+						fileContent = ed_.Editor.Text;
+					}
+
+					if (string.IsNullOrEmpty(fileContent))
+						if (File.Exists(file))
+							File.ReadAllText(file);
+
+					// Search matches until eof
+
+					// lastOffset, Line and Col are used for calculating correct match locations
+					int lastOffset = 0;
+					int Line = 1;
+					int Col = 1;
+
+					int offset = 0;
+
+					while (offset > -1)
+					{
+						offset = fileContent.IndexOf(currentSearchString,offset,
+							SearchOptions.HasFlag(SearchFlags.CaseSensitive) ?
+							StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase);
+
+						if (offset < 0)
+							break;
+
+						// (If full-word search activated,) Check if result isn't surrounded by letters. Otherwise continue search
+						if (SearchOptions. HasFlag(SearchFlags.FullWord) && (
+								(fileContent.Length > offset + currentSearchString. Length - 1 && 
+								char.IsLetter(fileContent[offset + currentSearchString. Length]))
+								|| (offset > 0 && char.IsLetter(fileContent[offset - 1]))
+							))
+						{
+							offset += currentSearchString.Length;
+							continue;
+						}
+
+						// Line and Col calculation
+						for (int k = lastOffset; k < offset; k++)
+						{
+							Col++;
+							if (fileContent[k] == '\n')
+							{
+								Line++;
+								Col = 1;
+							}
+						}
+						lastOffset = offset;
+
+						// Opt: Extract a code snippet with e.g. 10 surrounding chars on each side
+						const int padLen = 10;
+						int leftPad = offset > padLen ? (offset - padLen) : 0;
+						int rightPad = offset < fileContent.Length - padLen ? (offset + padLen) : fileContent.Length;
+
+						// Add one search result object per match
+						l.Add(new SearchResult { 
+							File=file, 
+							Offset=offset, 
+							Line=Line,
+							Column=Col,
+							CodeSnippet=fileContent.Substring(leftPad, rightPad-leftPad).Trim()
+						});
+
+						offset += currentSearchString.Length;
+					}
+				}
+
+				return l.ToArray();
+			}
 
 			public bool FindNext()
 			{

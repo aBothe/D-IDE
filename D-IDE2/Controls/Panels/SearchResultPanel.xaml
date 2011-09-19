@@ -15,7 +15,7 @@
 				<w:GridViewColumn
 					Width="150"
 					Header="File"
-					DisplayMemberBinding="{w:Binding File}" />
+					DisplayMemberBinding="{w:Binding FileName}" />
 				<w:GridViewColumn
 					Header="Line"
 					Width="50"
@@ -25,8 +25,7 @@
 					Width="50"
 					DisplayMemberBinding="{w:Binding Column}" />
 				<w:GridViewColumn
-					Header="Code"
-					Width="150"
+					Width="300"
 					DisplayMemberBinding="{w:Binding CodeSnippet}" />
 			</w:GridView>
 		</w:ListView.View>

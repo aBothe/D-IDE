@@ -12,6 +12,7 @@ namespace D_IDE.Core.Controls
 		AvalonDock.DockingManager DockManager { get; }
 		System.Windows.Threading.Dispatcher Dispatcher { get; }
 
+		ISearchResultPanel SearchResultPanel { get; }
 
 		void RefreshMenu();
 		void RefreshGUI();
@@ -21,6 +22,41 @@ namespace D_IDE.Core.Controls
 
 		string LeftStatusText { get; set; }
 		string SecondLeftStatusText { get; set; }
+	}
+
+	public interface ISearchResultPanel
+	{
+		string SearchString
+		{
+			get;
+			set;
+		}
+
+		SearchResult[] Results
+		{
+			get;
+			set;
+		}
+
+		void Show();
+	}
+
+	public class SearchResult
+	{
+		public string File { get; set; }
+		public string FileName
+		{
+			get
+			{
+				return System.IO.Path.GetFileName(File);
+			}
+		}
+
+		public int Offset { get; set; }
+		public int Line { get; set; }
+		public int Column { get; set; }
+
+		public string CodeSnippet { get; set; }
 	}
 
 	public static class IDEUICommands

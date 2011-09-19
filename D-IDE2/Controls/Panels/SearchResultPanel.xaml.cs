@@ -1,11 +1,4 @@
-﻿/*
- * Created by SharpDevelop.
- * User: Alexander
- * Date: 09/19/2011
- * Time: 13:34
- * 
- * To change this template use Tools | Options | Coding | Edit Standard Headers.
- */
+﻿
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,13 +9,15 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using AvalonDock;
+using D_IDE.Core.Controls;
+using D_IDE.Core;
 
 namespace D_IDE.Controls.Panels
 {
 	/// <summary>
 	/// Interaction logic for SearchResultPanel.xaml
 	/// </summary>
-	public partial class SearchResultPanel : DockableContent
+	public partial class SearchResultPanel : DockableContent, ISearchResultPanel
 	{
 		public SearchResultPanel()
 		{
@@ -38,10 +33,14 @@ namespace D_IDE.Controls.Panels
 			
 			var sr=item.DataContext as SearchResult;
 
-			if (sr == null || string.IsNullOrEmpty( sr.FileName))
+			if (sr == null || string.IsNullOrEmpty( sr.File))
 				return;
 
-			IDEManager.EditingManagement.OpenFile(sr.FileName,sr.Line,sr.Column);
+			var ed=IDEManager.EditingManagement.OpenFile(sr.File,sr.Offset);
+
+			// Select match
+			if (ed is EditorDocument)
+				(ed as EditorDocument).Editor.SelectionLength = searchString.Length;
 		}
 		
 		string searchString;
@@ -61,14 +60,5 @@ namespace D_IDE.Controls.Panels
 			get{return MainList.ItemsSource as SearchResult[];}
 			set{MainList.ItemsSource=value;}
 		}
-	}
-	
-	public class SearchResult
-	{
-		public string File;
-		public int Line;
-		public int Column;
-		
-		public string CodeSnippet;
 	}
 }

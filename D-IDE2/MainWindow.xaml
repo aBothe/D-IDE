@@ -116,6 +116,7 @@
 						<r:RibbonMenuItem Click="ShowPrjExplorerPanel_Click" Header="Project Explorer"/>
 						<r:RibbonMenuItem Header="Document Outline"/>
 						<r:RibbonMenuItem Click="ShowStartpage_Click" Header="Start Page"/>
+						<r:RibbonMenuItem Click="ShowSearchResults_Click" Header="Search Results"/>
 						<r:RibbonSeparator/>
 						<r:RibbonMenuItem Header="Errors" Click="ShowErrors_Click"/>
 						<r:RibbonMenuItem Click="ShowLogPanel_Click" Header="Log"/>

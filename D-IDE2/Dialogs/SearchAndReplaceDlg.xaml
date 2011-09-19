@@ -21,11 +21,12 @@
 		<Button Content="Find next" Height="23" HorizontalAlignment="Right" Margin="0,0,98,41" Name="button_FindNext" VerticalAlignment="Bottom" Width="80" Click="FindNext_Click" IsDefault="True" TabIndex="6" />
 		<StackPanel Height="63" Margin="12,180,0,0" Name="stackPanel1" VerticalAlignment="Top" Orientation="Vertical" HorizontalAlignment="Left" Width="112">
 			<CheckBox Content="Case sensitive" Height="16" Name="checkBox_CaseSensitive" Margin="2" TabIndex="2" />
-			<CheckBox Content="Word only" Height="16" Name="checkBox_WordOnly" Margin="2" TabIndex="3" />
+			<CheckBox Content="Full Word only" Height="16" Name="checkBox_WordOnly" Margin="2" TabIndex="3" />
 			<CheckBox Content="Search upward" Height="16" Name="checkBox_SearchUpward" Margin="2" TabIndex="4" />
 		</StackPanel>
 		<Button Content="&#8645;" Height="23" HorizontalAlignment="Right" Margin="0,136,12,0" Name="button_Swap2" VerticalAlignment="Top" Width="25" Click="button_Swap1_Click" />
 		<Button Content="&#8645;" Height="23" HorizontalAlignment="Right" Margin="0,34,12,0" Name="button_Swap1" VerticalAlignment="Top" Width="25" Click="button_Swap1_Click" TabIndex="9" />
 		<CheckBox Content="Code Symbols" Height="16" HorizontalAlignment="Left" Margin="56,12,0,0" Name="checkBox_SymbolSearch" VerticalAlignment="Top" ToolTip="If checked, not the entire text but variable names, class names etc. will be searched and/or replaced" IsEnabled="False" />
+		<Button Content="Find All" Height="23" HorizontalAlignment="Right" Margin="0,0,98,12" Name="button_FindAll" TabIndex="7" VerticalAlignment="Bottom" Width="80" Click="button_FindAll_Click" />
 	</Grid>
 </Window>

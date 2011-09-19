@@ -155,6 +155,16 @@ namespace D_IDE.Dialogs
 			SetWindowPositionNextToCurrentCaret();
 		}
 
+		public void DoFindAll()
+		{
+			if (!PreCheck())
+				return;
+
+			ApplySearchOptions();
+
+			IDEManager.FileSearchManagement.Instance.FindAll();
+		}
+
 		private void FindNext_Click(object sender, RoutedEventArgs e)
 		{
 			DoFindNext();
@@ -189,6 +199,12 @@ namespace D_IDE.Dialogs
 			var s = comboBox_InputString.Text;
 			comboBox_InputString.Text = comboBox_ReplaceString.Text;
 			comboBox_ReplaceString.Text = s;
+		}
+
+		private void button_FindAll_Click(object sender, RoutedEventArgs e)
+		{
+			DoFindAll();
+			button_FindAll.Focus();
 		}
 	}
 }

@@ -60,6 +60,11 @@ namespace D_IDE
 				StatusLabel2.Text = value;
 			}
 		}
+
+		public ISearchResultPanel SearchResultPanel
+		{
+			get { return Panel_SearchResult; }
+		}
 		#endregion
 
 		#region GUI Interactions
@@ -302,13 +307,15 @@ namespace D_IDE
 
 		public void RestoreDefaultPanelLayout()
 		{
-			//TODO: Make this restoring the layouts properly
-			Panel_Locals.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
+			// Note: The panels' order depends on the order of the initialization calls
 			StartPage.ShowAsDocument(DockManager);
+			
 			Panel_ProjectExplorer.Show(DockMgr, AvalonDock.AnchorStyle.Left);
+
+			Panel_Locals.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
+			Panel_SearchResult.Show(DockMgr,AnchorStyle.Bottom);
 			Panel_Log.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
 			Panel_ErrorList.Show(DockMgr, AvalonDock.AnchorStyle.Bottom);
-			Panel_SearchResult.Show(DockMgr,AnchorStyle.Bottom);
 		}
 
 		#region Ribbon buttons
@@ -715,6 +722,11 @@ namespace D_IDE
 		private void RestoreDefaultLayout_Click(object sender, RoutedEventArgs e)
 		{
 			RestoreDefaultPanelLayout();
+		}
+
+		private void ShowSearchResults_Click(object sender, RoutedEventArgs e)
+		{
+			Panel_SearchResult.Show();
 		}
 		#endregion
 
