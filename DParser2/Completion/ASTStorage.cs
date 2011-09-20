@@ -7,7 +7,7 @@ using D_Parser.Dom;
 using D_Parser.Misc;
 using D_Parser.Parser;
 
-namespace D_Parser.CodeCompletion
+namespace D_Parser.Completion
 {
 	/// <summary>
 	/// Class which is responsible for caching all parsed D source files.

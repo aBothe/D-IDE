@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using D_IDE.Core;
-using D_Parser.CodeCompletion;
+using D_Parser.Completion;
 
 namespace D_IDE.D
 {

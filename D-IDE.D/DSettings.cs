@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 using D_IDE.Core;
-using D_Parser.CodeCompletion;
+using D_Parser.Completion;
 
 namespace D_IDE.D
 {
