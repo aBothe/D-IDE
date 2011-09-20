@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using D_Parser.Dom;
+using D_Parser.Parser;
 using ICSharpCode.AvalonEdit.AddIn;
 using ICSharpCode.AvalonEdit.Document;
-using D_Parser.Dom;
-using D_Parser;
-using D_Parser.Parser;
 
 namespace D_IDE.D.DEditor
 {

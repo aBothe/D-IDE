@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using D_IDE.Core;
-using System.Xml;
-using D_IDE.D.CodeCompletion;
-using System.Threading;
 using System.IO;
+using System.Threading;
+using System.Xml;
+using D_IDE.Core;
+using D_Parser.CodeCompletion;
 
 namespace D_IDE.D
 {
@@ -406,8 +404,24 @@ namespace D_IDE.D
 			new Thread(() =>
 			{
 				Thread.CurrentThread.IsBackground = true;
-				
-				ASTCache.UpdateCache();
+
+				try
+				{
+					var ppds = ASTCache.UpdateCache();
+
+					// Output parse time stats
+					if (ppds != null)
+						foreach (var ppd in ppds)
+							ErrorLogger.Log("Parsed " + ppd.AmountFiles + " files in " +
+								ppd.BaseDirectory + " in " +
+								Math.Round(ppd.TotalDuration, 2).ToString() + "s (~" +
+								Math.Round(ppd.FileDuration, 3).ToString() + "s per file)",
+								ErrorType.Information, ErrorOrigin.Parser);
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Parser);
+				}
 
 				// For debugging purposes dump all parse results (errors etc.) to a log file.
 				try

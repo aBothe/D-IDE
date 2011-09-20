@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel;
+using System.IO;
 using System.Text;
 using D_Parser.Dom;
-using D_IDE.Core;
-using D_Parser;
-using System.IO;
-using System.Windows;
 using D_Parser.Parser;
-using System.ComponentModel;
+using D_Parser.Misc;
 
-namespace D_IDE.D.CodeCompletion
+namespace D_Parser.CodeCompletion
 {
 	/// <summary>
 	/// Class which is responsible for caching all parsed D source files.
@@ -44,16 +41,6 @@ namespace D_IDE.D.CodeCompletion
 			}
 		}
 
-		public void LoadFromDatabase(string file)
-		{
-			//TODO: Get all these BinaryStorage procedures working
-		}
-
-		public void SaveToFile(string file)
-		{
-
-		}
-
 		/* Notes:
 		 *  When a single, unbound module looks up files, it's allowed only to seek within the global files.
 		 *  
@@ -76,47 +63,53 @@ namespace D_IDE.D.CodeCompletion
 		}
 
 		/// <summary>
-		/// Adds a dictionary to the collection. Does NOT parse the dictionary.
+		/// Adds a dictionary to the collection. Does NOT parse the dictionary thereafter.
+		/// Returns false if directory hasn't been added.
 		/// </summary>
 		/// <param name="Dictionary"></param>
-		public void Add(string Dictionary, bool ParseFunctionBodies=true)
+		public bool Add(string Dictionary, bool ParseFunctionBodies=true)
 		{
 			foreach (var c in ParsedGlobalDictionaries)
 				if (c.BaseDirectory == Dictionary)
 				{
 					//c.UpdateFromBaseDirectory();
-					return;
+					return true;
 				}
 
 			if (!System.IO.Directory.Exists(Dictionary))
 			{
-				ErrorLogger.Log("Cannot parse \"" + Dictionary + "\". Directory does not exist!",ErrorType.Error,ErrorOrigin.Parser);
-				return;
+				//ErrorLogger.Log("Cannot parse \"" + Dictionary + "\". Directory does not exist!",ErrorType.Error,ErrorOrigin.Parser);
+				return false;
 			}
 
 			var nc = new ASTCollection(Dictionary) { ParseFunctionBodies=ParseFunctionBodies};
 			ParsedGlobalDictionaries.Add(nc);
+			return true;
 		}
 
 		/// <summary>
 		/// Updates (reparses) all sources in all directories of this storage
 		/// </summary>
-		public void UpdateCache()
+		public ParsePerformanceData[] UpdateCache(bool ReturnOnError=false)
 		{
+			var l = new List<ParsePerformanceData>(ParsedGlobalDictionaries.Count);
 			IsParsing = true;
 			try
 			{
 				foreach (var pdir in this)
-					pdir.UpdateFromBaseDirectory();
+				{
+					var ppd = pdir.UpdateFromBaseDirectory(ReturnOnError);
+					if (ppd != null)
+						l.Add(ppd);
+				}
+
+				UpdateEditorParseCache();
 			}
-			catch (Exception ex)
+			finally
 			{
-				ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser);
+				IsParsing = false;
 			}
-
-			UpdateEditorParseCache();
-
-			IsParsing = false;
+			return l.ToArray();
 		}
 
 		public void UpdateEditorParseCache()
@@ -272,45 +265,61 @@ namespace D_IDE.D.CodeCompletion
 		/// <summary>
 		/// Parse the base directory.
 		/// </summary>
-		public void UpdateFromBaseDirectory()
+		public ParsePerformanceData UpdateFromBaseDirectory(bool ReturnOnException=false)
 		{
 			Clear();
 
 			string[] files = Directory.GetFiles(BaseDirectory, "*.d?", SearchOption.AllDirectories);
 
-			var hpt = new HighPrecisionTimer.HighPrecTimer();
+			var hpt = new HighPrecisionTimer();
 
-			double duration = 0;
+			var ppd = new ParsePerformanceData { BaseDirectory=BaseDirectory };
 			
-
 			foreach (string tf in files)
 			{
 				if (tf.EndsWith("phobos"+Path.DirectorySeparatorChar+ "index.d") ||
 					tf.EndsWith("phobos" + Path.DirectorySeparatorChar + "phobos.d")) continue; // Skip index.d (D2) || phobos.d (D2|D1)
 
-				try
-				{
 					string tmodule = Path.ChangeExtension(tf, null).Remove(0, BaseDirectory.Length + 1).Replace('\\', '.');
 
 					hpt.Start();
+				try
+				{
 					var ast = DParser.ParseFile(tf,!ParseFunctionBodies);
 					hpt.Stop();
-					duration += hpt.Duration;
+					ppd.AmountFiles++;
+					ppd.TotalDuration += hpt.Duration;
 					ast.ModuleName = tmodule;
 					ast.FileName = tf;
-
 					Add(ast);
 				}
-				catch (Exception ex)
+				catch (Exception)
 				{
+					if (ReturnOnException)
+						return ppd;
+					/*
 					ErrorLogger.Log(ex);
 					if (MessageBox.Show("Continue Parsing?", "Parsing exception", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-						return;
+						return;*/
 				}
 			}
 
+			return ppd;
+			/*
 			ErrorLogger.Log("Parsed "+files.Length+" files in "+BaseDirectory+" in "+Math.Round(duration,2).ToString()+"s (~"+Math.Round(duration/files.Length,3).ToString()+"s per file)",
-				ErrorType.Information,ErrorOrigin.Parser);
+				ErrorType.Information,ErrorOrigin.Parser);*/
 		}
+	}
+
+	public class ParsePerformanceData
+	{
+		public string BaseDirectory;
+		public int AmountFiles = 0;
+		public double TotalDuration = 0.0;
+		public double FileDuration { get {
+			if (AmountFiles > 0)
+				return TotalDuration / AmountFiles;
+			return 0;
+		} }
 	}
 }

@@ -930,7 +930,7 @@ namespace D_Parser.Parser
 			{
 				// DeclaratorSuffixes
 				List<INode> _Parameters;
-				List<DAttribute> attrs;
+				//List<DAttribute> attrs;
 				ttd = DeclaratorSuffixes(out (ret as DNode).TemplateParameters, out _Parameters, ret.Attributes);
 				if (ttd != null)
 				{

@@ -67,12 +67,15 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Completion\AbstractCompletionSupport.cs" />
+    <Compile Include="Completion\ASTStorage.cs" />
     <Compile Include="Dom\BinaryNodeStorage.cs" />
     <Compile Include="Dom\AbstractNode.cs" />
     <Compile Include="Dom\CodeLocation.cs" />
     <Compile Include="Dom\ImportStatement.cs" />
     <Compile Include="Dom\NodeInterfaces.cs" />
     <Compile Include="Dom\Statements.cs" />
+    <Compile Include="Misc\HighPrecisionTimer.cs" />
     <Compile Include="Parser\TokenTracker.cs" />
     <Compile Include="Resolver\CodeScanner.cs" />
     <Compile Include="Resolver\Resolver.cs" />
@@ -89,9 +92,7 @@
     <Compile Include="Dom\DDeclarations.cs" />
     <Compile Include="Resolver\ResolverContexts.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

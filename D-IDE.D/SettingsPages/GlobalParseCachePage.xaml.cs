@@ -1,9 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Windows;
-using D_IDE.Core;
-using D_IDE.D.CodeCompletion;
 using System.Windows.Input;
-using System;
+using D_IDE.Core;
+using D_Parser.CodeCompletion;
 
 namespace D_IDE.D
 {

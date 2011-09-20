@@ -7,23 +7,19 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using D_IDE.Core;
 using D_IDE.Core.Controls;
-using D_Parser;
+using D_IDE.Core.Controls.Editor;
+using D_IDE.D.DEditor;
 using D_Parser.Dom;
+using D_Parser.Dom.Statements;
+using D_Parser.Parser;
 using D_Parser.Resolver;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
-using ICSharpCode.AvalonEdit.AddIn;
-using D_IDE.D.DEditor;
-using D_Parser.Parser;
-using D_Parser.Dom.Statements;
-using D_IDE.D.CodeCompletion;
-using D_IDE.Core.Controls.Editor;
-using System.Windows.Media;
-using D_Parser.Dom.Expressions;
 
 namespace D_IDE.D
 {
@@ -955,7 +951,7 @@ namespace D_IDE.D
 		{
 			try
 			{
-				if (string.IsNullOrEmpty(EnteredText) || !(char.IsLetter(EnteredText[0]) || EnteredText[0] == '.') || !DCodeCompletionSupport.Instance.CanShowCompletionWindow(this) || Editor.IsReadOnly)
+				if (string.IsNullOrEmpty(EnteredText) || !(char.IsLetter(EnteredText[0]) || EnteredText[0] == '.') || !DCodeCompletionSupport.CanShowCompletionWindow(this) || Editor.IsReadOnly)
 					return;
 				
 				/*
@@ -963,8 +959,6 @@ namespace D_IDE.D
 				 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.
 				 * - So there's just an initial filling required.
 				 */
-
-				var ccs = DCodeCompletionSupport.Instance;
 
 				if (completionWindow != null)
 					return;
@@ -977,7 +971,7 @@ namespace D_IDE.D
 				completionWindow.CompletionList.InsertionRequested += new EventHandler(CompletionList_InsertionRequested);
 				//completionWindow.CloseAutomatically = true;
 
-				ccs.BuildCompletionData(
+				DCodeCompletionSupport.BuildCompletionData(
 					this, 
 					completionWindow.CompletionList.CompletionData, 
 					EnteredText, 
@@ -1084,7 +1078,7 @@ namespace D_IDE.D
 			if (completionWindow != null)
 			{
 				// If entered key isn't part of the identifier anymore, close the completion window and insert the item text.
-				if (!DCodeCompletionSupport.Instance.IsIdentifierChar(e.Text[0]))
+				if (!DCodeCompletionSupport.IsIdentifierChar(e.Text[0]))
 					if (DSettings.Instance.ForceCodeCompetionPopupCommit)
 						completionWindow.CompletionList.RequestInsertion(e);
 					else
@@ -1160,7 +1154,7 @@ namespace D_IDE.D
 							}
 
 						if (!handled)
-							DCodeCompletionSupport.Instance.BuildToolTip(this, ttArgs);
+							DCodeCompletionSupport.BuildToolTip(this, ttArgs);
 					}
 					catch (Exception ex)
 					{

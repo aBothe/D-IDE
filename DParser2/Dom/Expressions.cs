@@ -1439,18 +1439,6 @@ namespace D_Parser.Dom.Expressions
 		public string TemplateIdentifier;
 		public IExpression[] Arguments;
 
-		public CodeLocation Location
-		{
-			get;
-			set;
-		}
-
-		public CodeLocation EndLocation
-		{
-			get;
-			set;
-		}
-
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
 			get { return new IdentifierDeclaration(TemplateIdentifier); }
@@ -2330,9 +2318,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			return "alias " + base.ToString();
 		}
-
-		public CodeLocation Location { get; set; }
-		public CodeLocation EndLocation { get; set; }
 	}
 
 	public class TemplateTupleParameter : ITemplateParameter
