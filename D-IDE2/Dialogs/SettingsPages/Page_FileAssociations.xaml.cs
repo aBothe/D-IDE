@@ -106,7 +106,7 @@ namespace D_IDE.Dialogs.SettingsPages
 					else
 						AssociationManager.RemoveAssociation(Extension);
 				}
-				catch (UnauthorizedAccessException uaex)
+				catch (UnauthorizedAccessException)
 				{
 					MessageBox.Show("Please restart D-IDE in admin mode!","Insufficient access rights");
 				}

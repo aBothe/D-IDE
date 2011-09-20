@@ -171,7 +171,7 @@
     <EmbeddedResource Include="Resources\cc\Icons.16x16.ProtectedProperty.png" />
     <EmbeddedResource Include="Resources\cc\Icons.16x16.ProtectedStruct.png" />
     <EmbeddedResource Include="Resources\cc\Icons.16x16.Struct.png" />
-    <Compile Include="DEditor\Commenting.cs" />
+    <None Include="DEditor\Commenting.cs" />
     <Content Include="Resources\cc\Icons.16x16.Literal.png" />
     <Content Include="Resources\cmd.png" />
     <Content Include="Resources\dfile16.png" />

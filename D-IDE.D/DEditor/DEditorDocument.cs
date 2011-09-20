@@ -100,7 +100,7 @@ namespace D_IDE.D
 		bool KeysTyped = false;
 		Thread parseThread = null;
 		readonly HighPrecisionTimer.HighPrecTimer hp = new HighPrecisionTimer.HighPrecTimer();
-		bool CanRefreshSemanticHighlightings = false;
+		//bool CanRefreshSemanticHighlightings = false;
 
 		bool isUpdatingLookupDropdowns = false;
 
@@ -334,11 +334,12 @@ namespace D_IDE.D
 		{
 			if (false)
 			{
+				/*
 				int cOff = Editor.CaretOffset;
 				Editor.Text = Commenting.comment(Editor.Text, Editor.SelectionStart, Editor.SelectionStart + Editor.SelectionLength);
 				Editor.CaretOffset = cOff;
 				var loc = Editor.Document.GetLocation(cOff);
-				Editor.ScrollTo(loc.Line, loc.Column);
+				Editor.ScrollTo(loc.Line, loc.Column);*/
 			}
 			else
 			{
@@ -612,7 +613,7 @@ namespace D_IDE.D
 
 			//TODO: Make semantic highlighting 1) faster and 2) redraw symbols immediately
 			UpdateSemanticHightlighting();
-			CanRefreshSemanticHighlightings = false;
+			//CanRefreshSemanticHighlightings = false;
 
 			UpdateBlockCompletionData();
 			
