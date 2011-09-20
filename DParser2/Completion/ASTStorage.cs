@@ -4,8 +4,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using D_Parser.Dom;
-using D_Parser.Parser;
 using D_Parser.Misc;
+using D_Parser.Parser;
 
 namespace D_Parser.CodeCompletion
 {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using D_Parser.Dom;
-using System.ComponentModel;
+﻿using D_Parser.Dom;
 using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Resolver

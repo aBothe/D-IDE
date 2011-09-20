@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using D_Parser.Parser;
 
 namespace D_Parser.Dom.Expressions

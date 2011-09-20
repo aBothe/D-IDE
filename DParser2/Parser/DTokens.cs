@@ -1,7 +1,5 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Collections;
 using D_Parser.Dom;
 
 namespace D_Parser.Parser

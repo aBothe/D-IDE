@@ -69,7 +69,7 @@
   <ItemGroup>
     <Compile Include="Completion\AbstractCompletionSupport.cs" />
     <Compile Include="Completion\ASTStorage.cs" />
-    <Compile Include="Dom\BinaryNodeStorage.cs" />
+    <None Include="Dom\BinaryNodeStorage.cs" />
     <Compile Include="Dom\AbstractNode.cs" />
     <Compile Include="Dom\CodeLocation.cs" />
     <Compile Include="Dom\ImportStatement.cs" />
