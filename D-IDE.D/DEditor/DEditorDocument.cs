@@ -946,6 +946,10 @@ namespace D_IDE.D
 		/// </summary>
 		public readonly Dictionary<string, string> LastSelectedCCItems = new Dictionary<string, string>();
 		ICompletionData lastSelectedCompletionData = null;
+
+		/// <summary>
+		/// Needed for pre-selection when completion list becomes opened next time
+		/// </summary>
 		string lastCompletionListResultPath = "";
 
 		void ShowCodeCompletionWindow(string EnteredText)

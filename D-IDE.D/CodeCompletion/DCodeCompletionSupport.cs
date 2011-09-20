@@ -217,6 +217,9 @@ namespace D_IDE.D
 		#endregion
 	}
 
+	/// <summary>
+	/// Mediation interface between low-level D_Parser and high-level DCodeCompletionSupport
+	/// </summary>
 	public class IDECompletionDataGenerator : ICompletionDataGenerator
 	{
 		public IList<ICompletionData> CompletionList;
