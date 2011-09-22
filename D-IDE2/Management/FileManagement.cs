@@ -30,7 +30,8 @@ namespace D_IDE
 
 					if (Project.Add(file))
 					{
-						File.WriteAllText(absFile, "");
+						// Set standard encoding to UTF8
+						File.WriteAllText(absFile, "",Encoding.UTF8);
 						Project.Save();
 						Instance.UpdateGUI();
 						return true;
