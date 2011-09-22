@@ -3116,7 +3116,9 @@ namespace D_Parser.Parser
 				{
 					Expect(OpenParenthesis);
 					Expect(Identifier); // exit, failure, success
-					s.GuardedScope = t.Value.ToLower();
+					if (!string.IsNullOrEmpty(t.Value)) {
+						s.GuardedScope = t.Value.ToLower();
+					}
 					Expect(CloseParenthesis);
 				}
 
