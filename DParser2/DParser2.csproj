@@ -70,6 +70,7 @@
     <Compile Include="Completion\AbstractCompletionSupport.cs" />
     <Compile Include="Completion\ASTStorage.cs" />
     <None Include="Dom\BinaryNodeStorage.cs" />
+    <Compile Include="Completion\IEditorData.cs" />
     <Compile Include="Dom\AbstractNode.cs" />
     <Compile Include="Dom\CodeLocation.cs" />
     <Compile Include="Dom\ImportStatement.cs" />

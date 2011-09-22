@@ -20,10 +20,11 @@ using D_Parser.Resolver;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
+using D_Parser.Completion;
 
 namespace D_IDE.D
 {
-	public class DEditorDocument : EditorDocument
+	public class DEditorDocument : EditorDocument, IEditorData
 	{
 		#region Properties
 		ComboBox lookup_Types;
@@ -1193,6 +1194,30 @@ namespace D_IDE.D
 		public void ReformatFileCmd(object sender, ExecutedRoutedEventArgs e)
 		{
 			indentationStrategy.IndentLines(Editor.Document, 1, Editor.Document.LineCount);
+		}
+
+		public string ModuleCode
+		{
+			get
+			{
+				return Editor.Document.Text;
+			}
+			set
+			{
+				Editor.Document.Text = value;
+			}
+		}
+
+		public int CaretOffset
+		{
+			get
+			{
+				return Editor.CaretOffset;
+			}
+			set
+			{
+				Editor.CaretOffset = value;
+			}
 		}
 	}
 

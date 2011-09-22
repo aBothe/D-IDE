@@ -25,14 +25,7 @@ namespace D_IDE.D
 		{
 			var ccs = new DCodeCompletionSupport(new IDECompletionDataGenerator(l));
 
-			ccs.BuildCompletionData(EditorDocument.Editor.CaretOffset,
-				new CodeLocation(EditorDocument.Editor.TextArea.Caret.Column, EditorDocument.Editor.TextArea.Caret.Line),
-				EditorDocument.SyntaxTree,
-				EditorDocument.Editor.Document.Text,
-				EditorDocument.ParseCache,
-				EditorDocument.ImportCache,
-				EnteredText,
-				out lastResultPath);
+			ccs.BuildCompletionData(EditorDocument,EnteredText,out lastResultPath);
 		}
 
 		public static bool CanShowCompletionWindow(DEditorDocument EditorDocument)
@@ -42,49 +35,26 @@ namespace D_IDE.D
 
 		public static void BuildToolTip(DEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
 		{
-			int offset = EditorDocument.Editor.Document.GetOffset(ToolTipRequest.Line, ToolTipRequest.Column);
-
-			if (!ToolTipRequest.InDocument ||
-					DResolver.CommentSearching.IsInCommentAreaOrString(EditorDocument.Editor.Text, offset))
+			if (!ToolTipRequest.InDocument)
 				return;
+
+			var ttContents = BuildToolTip(EditorDocument);
+
+			if (ttContents == null)
+				return;
+
+			int offset = EditorDocument.Editor.Document.GetOffset(ToolTipRequest.Line, ToolTipRequest.Column);
 
 			try
 			{
-				var caretLoc = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
-				IStatement curStmt = null;
-				var rr = DResolver.ResolveType(EditorDocument.Editor.Text, offset, caretLoc,
-					new ResolverContext
-					{
-						ScopedBlock = DResolver.SearchBlockAt(EditorDocument.SyntaxTree, caretLoc, out curStmt),
-						ParseCache = EditorDocument.ParseCache,
-						ImportCache = EditorDocument.ImportCache
-					}, true, true);
-
-				if (rr.Length < 1)
-					return;
-
 				var vertStack = new StackPanel() { Orientation = Orientation.Vertical };
 				string lastDescription = "";
-				foreach (var res in rr)
+				foreach (var tt in ttContents)
 				{
-					var modRes = res as ModuleResult;
-					var memRes = res as MemberResult;
-					var typRes = res as TypeResult;
-
-					// Only show one description for items sharing descriptions
-					string description = "";
-
-					if (modRes != null)
-						description = modRes.ResolvedModule.Description;
-					else if (memRes != null)
-						description = memRes.ResolvedMember.Description;
-					else if (typRes != null)
-						description = typRes.ResolvedTypeDefinition.Description;
-
 					vertStack.Children.Add(
 						ToolTipContentHelper.CreateToolTipContent(
-						(res is ModuleResult ? (res as ModuleResult).ResolvedModule.FileName : res.ToString()),
-						lastDescription == description ? null : description)
+						tt.Title,
+						lastDescription == tt.Description ? null : lastDescription= tt.Description)
 						as UIElement);
 				}
 

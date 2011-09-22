@@ -64,21 +64,14 @@ namespace D_Parser.Completion
 		}
 		#endregion
 
-		public void BuildCompletionData(
-			int caretOffset,
-			CodeLocation caretLocation,
-			IAbstractSyntaxTree Dom,
-			string ModuleCode,
-			IEnumerable<IAbstractSyntaxTree> ParseCache,
-			IEnumerable<IAbstractSyntaxTree> ImportCache,
-
+		public void BuildCompletionData(IEditorData Editor,
 			string EnteredText,
 			out string lastResultPath)
 		{
 			lastResultPath = null;
 
 			IStatement curStmt = null;
-			var curBlock = DResolver.SearchBlockAt(Dom, caretLocation, out curStmt);
+			var curBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt);
 
 			if (curBlock == null)
 				return;
@@ -91,14 +84,14 @@ namespace D_Parser.Completion
 				alreadyAddedModuleNameParts.Clear();
 
 				var resolveResults = DResolver.ResolveType(
-					ModuleCode,
-					caretOffset - 1,
-					caretLocation,
+					Editor.ModuleCode,
+					Editor.CaretOffset - 1,
+					Editor.CaretLocation,
 					new ResolverContext
 					{
 						ScopedBlock = curBlock,
-						ParseCache = ParseCache,
-						ImportCache = ImportCache
+						ParseCache = Editor.ParseCache,
+						ImportCache = Editor. ImportCache
 					}
 					);
 
@@ -121,21 +114,21 @@ namespace D_Parser.Completion
 				if (curBlock is DMethod)
 				{
 					var ScopedStatement = DResolver.ParseBlockStatementUntilCaret(
-						ModuleCode,
+						Editor.ModuleCode,
 						curBlock as DMethod,
-						caretOffset,
-						caretLocation);
+						Editor.CaretOffset,
+						Editor.CaretLocation);
 
 					if (ScopedStatement != null)
 					{
-						var decls = BlockStatement.GetItemHierarchy(ScopedStatement, caretLocation);
+						var decls = BlockStatement.GetItemHierarchy(ScopedStatement, Editor.CaretLocation);
 
 						foreach (var n in decls)
 							CompletionDataGenerator.Add(n);
 					}
 				}
 
-				listedItems = DResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, caretLocation, ImportCache);
+				listedItems = DResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, Editor.CaretLocation, Editor. ImportCache);
 
 				foreach (var kv in DTokens.Keywords)
 					CompletionDataGenerator.Add(kv.Key);
@@ -143,7 +136,7 @@ namespace D_Parser.Completion
 				// Add module name stubs of importable modules
 				var nameStubs = new Dictionary<string, string>();
 				var availModules = new List<IAbstractSyntaxTree>();
-				foreach (var mod in ParseCache)
+				foreach (var mod in Editor. ParseCache)
 				{
 					if (string.IsNullOrEmpty(mod.ModuleName))
 						continue;
@@ -706,6 +699,60 @@ namespace D_Parser.Completion
 		{
 			return key == '(' || key == ',';
 		}
+
+		#region Tooltip Creation
+
+		public static AbstractTooltipContent[] BuildToolTip(IEditorData Editor)
+		{
+			if (DResolver.CommentSearching.IsInCommentAreaOrString(Editor.ModuleCode, Editor.CaretOffset))
+				return null;
+
+			try
+			{
+				IStatement curStmt = null;
+				var rr = DResolver.ResolveType(Editor.ModuleCode, Editor.CaretOffset, Editor.CaretLocation,
+					new ResolverContext
+					{
+						ScopedBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt),
+						ParseCache = Editor.ParseCache,
+						ImportCache = Editor.ImportCache
+					}, true, true);
+
+				if (rr.Length < 1)
+					return null;
+
+				var l = new List<AbstractTooltipContent>(rr.Length);
+
+				foreach (var res in rr)
+				{
+					var modRes = res as ModuleResult;
+					var memRes = res as MemberResult;
+					var typRes = res as TypeResult;
+
+					// Only show one description for items sharing descriptions
+					string description = "";
+
+					if (modRes != null)
+						description = modRes.ResolvedModule.Description;
+					else if (memRes != null)
+						description = memRes.ResolvedMember.Description;
+					else if (typRes != null)
+						description = typRes.ResolvedTypeDefinition.Description;
+
+					l.Add(new AbstractTooltipContent{
+						ResolveResult=res,
+						Title=(res is ModuleResult ? (res as ModuleResult).ResolvedModule.FileName : res.ToString()),
+						Description=description
+					});
+				}
+
+				return l.ToArray();
+			}
+			catch { }
+			return null;
+		}
+
+		#endregion
 	}
 
 	public interface ICompletionDataGenerator
@@ -727,5 +774,16 @@ namespace D_Parser.Completion
 		/// <param name="ModuleName"></param>
 		/// <param name="AssocModule"></param>
 		void Add(string ModuleName, IAbstractSyntaxTree Module = null, string PathOverride=null);
+	}
+
+	/// <summary>
+	/// Encapsules tooltip content.
+	/// If there are more than one tooltip contents, there are more than one resolve results
+	/// </summary>
+	public class AbstractTooltipContent
+	{
+		public ResolveResult ResolveResult;
+		public string Title;
+		public string Description;
 	}
 }
