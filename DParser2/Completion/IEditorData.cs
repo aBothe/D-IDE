@@ -5,6 +5,9 @@ using D_Parser.Dom;
 
 namespace D_Parser.Completion
 {
+	/// <summary>
+	/// Generic interface between a high level editor object and the low level completion engine
+	/// </summary>
 	public interface IEditorData
 	{
 		string ModuleCode { get; }
