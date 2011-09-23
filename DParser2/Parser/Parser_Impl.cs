@@ -3115,8 +3115,8 @@ namespace D_Parser.Parser
 				if (laKind == OpenParenthesis)
 				{
 					Expect(OpenParenthesis);
-					Expect(Identifier); // exit, failure, success
-					if (!string.IsNullOrEmpty(t.Value)) {
+					if(Expect(Identifier) && t.Value!=null) // exit, failure, success
+					{
 						s.GuardedScope = t.Value.ToLower();
 					}
 					Expect(CloseParenthesis);
