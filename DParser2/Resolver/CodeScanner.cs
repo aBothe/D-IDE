@@ -283,7 +283,12 @@ namespace D_Parser.Resolver
 				}
 				else if (type is TemplateInstanceExpression)
 				{
-					var args=(type as TemplateInstanceExpression).Arguments;
+					var tie=type as TemplateInstanceExpression;
+
+					if (tie.TemplateIdentifier != null)
+						l.Add(tie.TemplateIdentifier);
+
+					var args=tie.Arguments;
 
 					if(args!=null)
 						foreach(var arg in args)
@@ -322,6 +327,13 @@ namespace D_Parser.Resolver
 						(e is IdentifierExpression && (e as IdentifierExpression).IsIdentifier))
 					{
 						l.Add(e.ExpressionTypeRepresentation);
+					}
+					else if (e is TemplateInstanceExpression)
+					{
+						var tie = e as TemplateInstanceExpression;
+
+						if (tie.TemplateIdentifier != null)
+							l.Add(tie.TemplateIdentifier);
 					}
 					
 					if (e is ContainerExpression)

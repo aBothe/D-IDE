@@ -38,7 +38,13 @@ namespace D_IDE.D
 			if (!ToolTipRequest.InDocument)
 				return;
 
-			var ttContents = BuildToolTip(EditorDocument);
+			var dataOverride = new EditorData();
+			dataOverride.ApplyFrom(EditorDocument);
+
+			dataOverride.CaretLocation = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
+			dataOverride.CaretOffset = EditorDocument.Editor.Document.GetOffset(ToolTipRequest.Position);
+
+			var ttContents = BuildToolTip(dataOverride);
 
 			if (ttContents == null)
 				return;

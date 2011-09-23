@@ -4086,10 +4086,20 @@ namespace D_Parser.Parser
 			if (!Expect(Identifier))
 				return null;
 
-			var td = new TemplateInstanceExpression() { TemplateIdentifier=t.Value, Location=t.Location};
+			var td = new TemplateInstanceExpression() { 
+				TemplateIdentifier = new IdentifierDeclaration(t.Value) 
+				{ 
+					Location=t.Location,
+					EndLocation=t.EndLocation 
+				}, 
+				Location = t.Location 
+			};
+
 			var args = new List<IExpression>();
+
 			if (!Expect(Not))
 				return td;
+
 			if (laKind == (OpenParenthesis))
 			{
 				Step();

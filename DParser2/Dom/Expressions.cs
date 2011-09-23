@@ -1435,7 +1435,7 @@ namespace D_Parser.Dom.Expressions
 
 	public class TemplateInstanceExpression : AbstractTypeDeclaration,PrimaryExpression,ContainerExpression
 	{
-		public string TemplateIdentifier;
+		public IdentifierDeclaration TemplateIdentifier;
 		public IExpression[] Arguments;
 
 		public ITypeDeclaration ExpressionTypeRepresentation

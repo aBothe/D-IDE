@@ -1158,7 +1158,7 @@ namespace D_IDE.D
 								handled = true;
 								break;
 							}
-
+						
 						if (!handled)
 							DCodeCompletionSupport.BuildToolTip(this, ttArgs);
 					}
