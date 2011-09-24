@@ -1306,11 +1306,33 @@ namespace D_Parser.Resolver
 
 			public ResolveResult[] ResolvedTypesOrMethods;
 
+			public readonly Dictionary<IExpression, ResolveResult[]> TemplateArguments = new Dictionary<IExpression, ResolveResult[]>();
+			/// <summary>
+			/// Stores the already typed arguments (Expressions) + their resolved types.
+			/// The value part will be null if nothing could get returned.
+			/// </summary>
+			public readonly Dictionary<IExpression, ResolveResult[]> Arguments = new Dictionary<IExpression, ResolveResult[]>();
+
 			/// <summary>
 			///	Identifies the currently called method overload. Is an index related to <see cref="ResolvedTypesOrMethods"/>
 			/// </summary>
 			public int CurrentlyCalledMethod;
-			public IExpression CurrentlyTypedArgument;
+			public IExpression CurrentlyTypedArgument
+			{
+				get {
+					if(Arguments!=null && Arguments.Count>CurrentlyTypedArgumentIndex)
+					{
+						int i=0;
+						foreach (var kv in Arguments)
+						{
+							if (i == CurrentlyTypedArgumentIndex)
+								return kv.Key;
+							i++;
+						}
+					}
+					return null;
+				}
+			}
 			public int CurrentlyTypedArgumentIndex;
 		}
 
@@ -1376,7 +1398,6 @@ namespace D_Parser.Resolver
 					{
 						if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
 						{
-							res.CurrentlyTypedArgument = arg;
 							res.CurrentlyTypedArgumentIndex = i;
 							break;
 						}
@@ -1401,7 +1422,6 @@ namespace D_Parser.Resolver
 					{
 						if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
 						{
-							res.CurrentlyTypedArgument = arg;
 							res.CurrentlyTypedArgumentIndex = i;
 							break;
 						}
@@ -1422,7 +1442,6 @@ namespace D_Parser.Resolver
 					{
 						if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
 						{
-							res.CurrentlyTypedArgument = arg;
 							res.CurrentlyTypedArgumentIndex = i;
 							break;
 						}

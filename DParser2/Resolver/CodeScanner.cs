@@ -12,9 +12,11 @@ namespace D_Parser.Resolver
 	{
 		public class CodeScanResult
 		{
-			public Dictionary<IdentifierDeclaration, ResolveResult> finalDict = new Dictionary<IdentifierDeclaration, ResolveResult>();
-			public List<IdentifierDeclaration> notFoundList = new List<IdentifierDeclaration>();
-			public List<ITypeDeclaration> typeIds = new List<ITypeDeclaration>();
+			public Dictionary<IdentifierDeclaration, ResolveResult> ResolvedIdentifiers = new Dictionary<IdentifierDeclaration, ResolveResult>();
+			public List<IdentifierDeclaration> UnresolvedIdentifiers = new List<IdentifierDeclaration>();
+			public List<ITypeDeclaration> RawIdentifiers = new List<ITypeDeclaration>();
+
+			//public Dictionary<IExpression,>;
 		}
 
 		/// <summary>
@@ -30,111 +32,139 @@ namespace D_Parser.Resolver
 		/// <returns></returns>
 		public static CodeScanResult ScanSymbols(ResolverContext lastResCtxt,IAbstractSyntaxTree SyntaxTree)
 		{
-			var finalDict = new Dictionary<IdentifierDeclaration, ResolveResult>();
+			var csr = new CodeScanResult();
+
 			var compDict = new Dictionary<string, ResolveResult>();
-			var notFoundList = new List<IdentifierDeclaration>();
 
 			// Step 1: Enum all existing type id's that shall become resolved'n displayed
-			var typeIds = CodeScanner.ScanForTypeIdentifiers(SyntaxTree);
+			var typeObjects = CodeScanner.ScanForTypeIdentifiers(SyntaxTree);
 
-			bool WasAlreadyResolved = false;
-			ResolveResult rr = null;
-			IStatement _unused = null;
+			
 			
 			#region Step 2: Loop through all of them, try to resolve them, write the results in a dictionary
-			foreach (var typeId in typeIds)
+			foreach (var o in typeObjects)
 			{
-				if (typeId == null)
-					continue;
-				var typeString = typeId.ToString();
-				
-				/*
-				 * string,wstring,dstring are highlighted by the editor's syntax definition automatically..
-				 * Anyway, allow to resolve e.g. "object.string"
-				 */
-				if (typeString=="" || typeString == "string" || typeString == "wstring" || typeString == "dstring")
+				if (o == null)
 					continue;
 
-				lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused);
-
-				if (!(WasAlreadyResolved = compDict.TryGetValue(typeString, out rr)))
+				#region Identifier Declarations
+				if (o is IdentifierDeclaration)
 				{
-					var res = DResolver.ResolveType(typeId, lastResCtxt);
-
-					if (res != null && res.Length > 0)
-						rr = res[0];
+					HandleIdDeclaration(o as IdentifierDeclaration,
+						lastResCtxt,
+						SyntaxTree,
+						csr,
+						compDict);
 				}
+				#endregion
 
-				if (rr == null)
+				else if (o is NewExpression)
 				{
-					if (typeId is IdentifierDeclaration)
-						notFoundList.Add(typeId as IdentifierDeclaration);
-				}
-				else
-				{
-					/*
-					 * Note: It is of course possible to highlight more than one type in one type declaration!
-					 * So, we scan down the result hierarchy for TypeResults and highlight all of them later.
-					 */
-					var curRes = rr;
-
-					/*
-					 * Note: Since we want to use results multiple times,
-					 * we at least have to 'update' their type declarations
-					 * to ensure that the second, third, fourth etc. occurence of this result
-					 * are also highlit (and won't(!) cause an Already-Added-Exception of our finalDict-Array)
-					 */
-					var curTypeDeclBase = typeId;
-
-					while (curRes != null)
-					{
-						// If curRes is an alias or a template parameter, highlight it
-						if (curRes is MemberResult)
-						{
-							var mr = curRes as MemberResult;
-
-							if (mr.ResolvedMember is TemplateParameterNode ||
-								(mr.ResolvedMember is DVariable &&
-								(mr.ResolvedMember as DVariable).IsAlias))
-							{
-								try
-								{
-									finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
-								}
-								catch { }
-
-								// See performance reasons
-								//if (curRes != rr && !WasAlreadyResolved && !) compDict.Add(curTypeDeclBase.ToString(), curRes);
-							}
-						}
-
-						if (curRes is TypeResult)
-						{
-							// Yeah, in quite all cases we do identify a class via its name ;-)
-							if (curTypeDeclBase is IdentifierDeclaration &&
-								!(curTypeDeclBase is DTokenDeclaration) &&
-								!finalDict.ContainsKey(curTypeDeclBase as IdentifierDeclaration))
-							{
-								finalDict.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
-
-								// See performance reasons
-								//if (curRes != rr && !WasAlreadyResolved) compDict.Add(curTypeDeclBase.ToString(), curRes);
-							}
-						}
-
-						curRes = curRes.ResultBase;
-						curTypeDeclBase = curTypeDeclBase.InnerDeclaration;
-					}
+					var ne = o as NewExpression;
 				}
 			}
 			#endregion
 
-			return new CodeScanResult() { finalDict=finalDict, notFoundList=notFoundList, typeIds=typeIds };
+			return csr;
 		}
 
-		public static List<ITypeDeclaration> ScanForTypeIdentifiers(INode Node)
+		static void HandleIdDeclaration(IdentifierDeclaration typeId,
+			ResolverContext lastResCtxt,
+			IAbstractSyntaxTree SyntaxTree,
+			CodeScanResult csr, 
+			Dictionary<string, ResolveResult> compDict)
 		{
-			var l = new List<ITypeDeclaration>();
+			var typeString = typeId.ToString();
+
+			bool WasAlreadyResolved = false;
+			ResolveResult[] allCurrentResults = null;
+			ResolveResult rr = null;
+			IStatement _unused = null;
+
+			/*
+			 * string,wstring,dstring are highlighted by the editor's syntax definition automatically..
+			 * Anyway, allow to resolve e.g. "object.string"
+			 */
+			if (typeString == "" || typeString == "string" || typeString == "wstring" || typeString == "dstring")
+				return;
+
+			lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused);
+
+			if (!(WasAlreadyResolved = compDict.TryGetValue(typeString, out rr)))
+			{
+				allCurrentResults = DResolver.ResolveType(typeId, lastResCtxt);
+
+				if (allCurrentResults != null && allCurrentResults.Length > 0)
+					rr = allCurrentResults[0];
+			}
+
+			if (rr == null)
+			{
+				if (typeId is IdentifierDeclaration)
+					csr.UnresolvedIdentifiers.Add(typeId as IdentifierDeclaration);
+			}
+			else
+			{
+				/*
+				 * Note: It is of course possible to highlight more than one type in one type declaration!
+				 * So, we scan down the result hierarchy for TypeResults and highlight all of them later.
+				 */
+				var curRes = rr;
+
+				/*
+				 * Note: Since we want to use results multiple times,
+				 * we at least have to 'update' their type declarations
+				 * to ensure that the second, third, fourth etc. occurence of this result
+				 * are also highlit (and won't(!) cause an Already-Added-Exception of our finalDict-Array)
+				 */
+				var curTypeDeclBase = typeId as ITypeDeclaration;
+
+				while (curRes != null)
+				{
+
+					if (curRes is MemberResult)
+					{
+						var mr = curRes as MemberResult;
+
+						// If curRes is an alias or a template parameter, highlight it
+						if (mr.ResolvedMember is TemplateParameterNode ||
+							(mr.ResolvedMember is DVariable &&
+							(mr.ResolvedMember as DVariable).IsAlias))
+						{
+							try
+							{
+								csr.ResolvedIdentifiers.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
+							}
+							catch { }
+
+							// See performance reasons
+							//if (curRes != rr && !WasAlreadyResolved && !) compDict.Add(curTypeDeclBase.ToString(), curRes);
+						}
+					}
+
+					if (curRes is TypeResult)
+					{
+						// Yeah, in quite all cases we do identify a class via its name ;-)
+						if (curTypeDeclBase is IdentifierDeclaration &&
+							!(curTypeDeclBase is DTokenDeclaration) &&
+							!csr.ResolvedIdentifiers.ContainsKey(curTypeDeclBase as IdentifierDeclaration))
+						{
+							csr.ResolvedIdentifiers.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
+
+							// See performance reasons
+							//if (curRes != rr && !WasAlreadyResolved) compDict.Add(curTypeDeclBase.ToString(), curRes);
+						}
+					}
+
+					curRes = curRes.ResultBase;
+					curTypeDeclBase = curTypeDeclBase.InnerDeclaration;
+				}
+			}
+		}
+
+		public static List<object> ScanForTypeIdentifiers(INode Node)
+		{
+			var l = new List<object>();
 
 			if (Node != null)
 				SearchIn(Node, l);
@@ -142,7 +172,7 @@ namespace D_Parser.Resolver
 			return l;
 		}
 
-		static void SearchIn(INode node, List<ITypeDeclaration> l)
+		static void SearchIn(INode node, List<object> l)
 		{
 			if (node == null)
 				return;
@@ -216,7 +246,7 @@ namespace D_Parser.Resolver
 			}
 		}
 
-		static void SearchIn(IStatement stmt, List<ITypeDeclaration> l)
+		static void SearchIn(IStatement stmt, List<object> l)
 		{
 			if (stmt == null)
 				return;
@@ -261,7 +291,7 @@ namespace D_Parser.Resolver
 			}
 		}
 
-		static void SearchIn(ITypeDeclaration type, List<ITypeDeclaration> l)
+		static void SearchIn(ITypeDeclaration type, List<object> l)
 		{
 			while (type != null)
 			{
@@ -285,6 +315,8 @@ namespace D_Parser.Resolver
 				{
 					var tie=type as TemplateInstanceExpression;
 
+					//l.Add(tie);
+					
 					if (tie.TemplateIdentifier != null)
 						l.Add(tie.TemplateIdentifier);
 
@@ -307,7 +339,7 @@ namespace D_Parser.Resolver
 			}
 		}
 
-		static void SearchIn(IExpression ex, List<ITypeDeclaration> l)
+		static void SearchIn(IExpression ex, List<object> l)
 		{
 			if (ex == null)
 				return;
@@ -322,18 +354,24 @@ namespace D_Parser.Resolver
 					if (e is UnaryExpression_Type)
 						SearchIn((e as UnaryExpression_Type).Type, l);
 
-					if (e is NewExpression ||
+					if (
+						e is NewExpression ||
+						
 						e is PostfixExpression_Access ||
 						(e is IdentifierExpression && (e as IdentifierExpression).IsIdentifier))
 					{
 						l.Add(e.ExpressionTypeRepresentation);
 					}
-					else if (e is TemplateInstanceExpression)
+					else if (/*e is PostfixExpression_MethodCall || */e is TemplateInstanceExpression)
 					{
+						//l.Add(e);
 						var tie = e as TemplateInstanceExpression;
-
+						
 						if (tie.TemplateIdentifier != null)
 							l.Add(tie.TemplateIdentifier);
+
+						// Do not add e's subexpressions anymore - it'll be done in the ScanSymbols method
+						//continue;
 					}
 					
 					if (e is ContainerExpression)

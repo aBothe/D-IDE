@@ -95,7 +95,9 @@ namespace D_IDE.Core
 			return false;
 		}
 
-		public virtual EditorDocument OpenFile(Project Project, string SourceFile) { return null; }
+		public virtual EditorDocument OpenFile(Project Project, string SourceFile) {
+			return new EditorDocument(SourceFile); 
+		}
 		#endregion
 
 		public static string CreateSettingsFileName(AbstractLanguageBinding Binding)

@@ -747,7 +747,7 @@ namespace D_IDE.D
 					Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
 					"ms (Semantic Highlighting)";
 			}), DispatcherPriority.Background,
-				res.finalDict, res.notFoundList, hp2);
+				res.ResolvedIdentifiers, res.UnresolvedIdentifiers, hp2);
 			}
 			catch (Exception ex)
 			{

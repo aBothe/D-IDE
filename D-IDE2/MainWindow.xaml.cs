@@ -332,6 +332,11 @@ namespace D_IDE
 					if (lang.CanHandleFile(sdlg.FileName))
 					{
 						var ed = lang.OpenFile(null, sdlg.FileName);
+
+						// If language won't handle file anyway, just put it inside a neutral document
+						if (ed == null)
+							ed = new EditorDocument(sdlg.FileName);
+
 						ed.Show(DockMgr);
 						ed.Activate();
 						return;
