@@ -57,6 +57,8 @@ namespace D_IDE
 			/// <returns>Editor instance (if a source file was opened)</returns>
 			public static AbstractEditorDocument OpenFile(string FileName)
 			{
+				if (string.IsNullOrWhiteSpace(FileName))
+					return null;
 				/*
 				 * 1) Solution check
 				 * 2) Project file check

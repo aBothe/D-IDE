@@ -548,6 +548,7 @@ namespace D_IDE
 			{
 				Button_Open.Items.Clear();
 
+				// Add default file open button
 				var mi = new RibbonApplicationMenuItem();
 				mi.Header = "File/Project";
 				mi.ToolTipTitle = "Open File (Ctrl+O)";
@@ -555,7 +556,7 @@ namespace D_IDE
 				mi.Click += Open;
 				Button_Open.Items.Add(mi);
 
-				// First add recent files
+				// Add recent files
 				if (GlobalProperties.Instance.LastFiles.Count > 0 || GlobalProperties.Instance.LastProjects.Count > 0)
 					Button_Open.Items.Add(new RibbonSeparator());
 

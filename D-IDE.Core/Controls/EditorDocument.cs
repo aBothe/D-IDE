@@ -62,12 +62,16 @@ namespace D_IDE.Core
 			if (IsUnboundNonExistingFile)
 			{
 				var sf = new Microsoft.Win32.SaveFileDialog();
+				sf.Filter = "All files (*.*)|*.*";
 				sf.FileName = AbsoluteFilePath;
 
 				if (!sf.ShowDialog().Value)
 					return false;
 				else
+				{
 					AbsoluteFilePath = sf.FileName;
+					Modified = true;
+				}
 			}
 			try
 			{
