@@ -666,7 +666,7 @@ namespace D_IDE.D
 				KeysTyped = false;
 
 				// If a key was typed, wait.
-				Thread.Sleep(1500);
+				Thread.Sleep(500);
 
 				// If no other key was typed after waiting, parse the file
 				if (KeysTyped)

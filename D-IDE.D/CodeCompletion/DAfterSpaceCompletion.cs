@@ -13,7 +13,7 @@ namespace D_IDE.D.CodeCompletion
 		 * 
 		 * Use cases:
 		 * 
-		 * import %; (Module (/Package) name stubs only)
+		 * import %; (Types,Module (/Package) name stubs)
 		 * % (Ctrl+Alt) (special case: show all types available in all modules; public only)
 		 * new %;
 		 * case %:
@@ -29,6 +29,16 @@ namespace D_IDE.D.CodeCompletion
 		 * 
 		 * class|struct|interface|template(%) % {}
 		 * int %;
+		 * 
+		 * 
+		 * Required steps:
+		 * 
+		 * 1) Evaluate current expression/statement/identifier/declaration context:
+		 *		- Get parent block
+		 *			a) On Statement blocks, scan until current expression.
+		 *			b) On class-/module-bodies, 
+		 *				- Check if the caret is located right after an import 
+		 *					- if so, show module name stubs.
 		 */
 		
 		public DAfterSpaceCompletion()

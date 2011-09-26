@@ -202,15 +202,10 @@ namespace D_Parser.Resolver
 		{
 			ScopedStatement = null;
 
-			if(Parent!=null && Parent.Count>0)
+			if (Parent != null && Parent.Count > 0)
 				foreach (var n in Parent)
-				{
-					if (!(n is IBlockNode)) continue;
-
-					var b = n as IBlockNode;
-					if (Where >= b.StartLocation && Where <= b.EndLocation)
-						return SearchBlockAt(b, Where, out ScopedStatement);
-				}
+					if (n is IBlockNode && Where >= n.StartLocation && Where <= n.EndLocation)
+						return SearchBlockAt(n as IBlockNode, Where, out ScopedStatement);
 
 			if (Parent is DMethod)
 			{
