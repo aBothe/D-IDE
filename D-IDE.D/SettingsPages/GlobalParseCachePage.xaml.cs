@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using D_IDE.Core;
 using D_Parser.Completion;
+using System.Threading;
 
 namespace D_IDE.D
 {
@@ -70,29 +71,43 @@ namespace D_IDE.D
 			Dirs.Remove(list_Dirs.SelectedItem as ASTCollection);
 		}
 
+		Thread parseThread;
+
 		private void button_Reparse_Click(object sender, RoutedEventArgs e)
 		{
-			Cursor=Cursors.Wait;
-			try
-			{
-				foreach (var i in list_Dirs.Items)
-				{
-					var astColl = (i as ASTCollection);
-					astColl.UpdateFromBaseDirectory();
-				}
-			}
-			catch (Exception ex)
-			{
-				ErrorLogger.Log(ex);
-			}
-			finally
-			{
-				Cursor = Cursors.Arrow;
-			}
+			if (parseThread != null && parseThread.IsAlive)
+				parseThread.Abort();
 
-			// Update dir view
-			list_Dirs.ItemsSource = null;
-			list_Dirs.ItemsSource = Dirs;
+			Cursor = Cursors.Wait;
+
+			parseThread = new Thread(() =>
+			{
+				
+				try
+				{
+					foreach (var i in Dirs)
+					{
+						var astColl = (i as ASTCollection);
+						astColl.UpdateFromBaseDirectory();
+					}
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex);
+				}
+
+				Dispatcher.Invoke(new Action(() =>
+				{
+					Cursor = Cursors.Arrow;
+
+					// Update dir view
+					list_Dirs.ItemsSource = null;
+					list_Dirs.ItemsSource = Dirs;
+				}));
+			});
+			parseThread.IsBackground = true;
+
+			parseThread.Start();
 		}
 	}
 }
