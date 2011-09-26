@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeCompletion\BinaryDataTypeStorage.cs" />
+    <Compile Include="CodeCompletion\DAfterSpaceCompletion.cs" />
     <Compile Include="CodeCompletion\DCodeCompletionSupport.cs" />
     <Compile Include="CodeCompletion\DMethodOverloadProvider.cs" />
     <Compile Include="DEditor\DBracketSearcher.cs" />
