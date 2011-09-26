@@ -613,7 +613,7 @@ namespace D_IDE.D
 			SyntaxTree.ModuleName = ProposedModuleName;
 
 			//TODO: Make semantic highlighting 1) faster and 2) redraw symbols immediately
-			UpdateSemanticHightlighting();
+			UpdateSemanticHighlighting();
 			//CanRefreshSemanticHighlightings = false;
 
 			UpdateBlockCompletionData();
@@ -653,7 +653,7 @@ namespace D_IDE.D
 					if (HasBeenUpdatingParseCache && !cc.ASTCache.IsParsing)
 					{
 						UpdateImportCache();
-						UpdateSemanticHightlighting(true); // Perhaps new errors were detected
+						UpdateSemanticHighlightings(true); // Perhaps new errors were detected
 						HasBeenUpdatingParseCache = false;
 					}
 					else if (cc.ASTCache.IsParsing)
@@ -679,7 +679,29 @@ namespace D_IDE.D
 			}
 		}
 
-		public void UpdateSemanticHightlighting(bool RedrawErrors=false)
+		/// <summary>
+		/// Updates all semantic code highlightings/errors in all open editors
+		/// </summary>
+		/// <param name="RefreshErrorList"></param>
+		public void UpdateSemanticHighlightings(bool RefreshErrorList = false)
+		{
+			IEnumerable<AbstractEditorDocument> editors = null;
+			Dispatcher.Invoke(new Action(()=>
+				editors=CoreManager.Instance.Editors
+			));
+
+			foreach (var ed in editors)
+				if (ed is DEditorDocument)
+					(ed as DEditorDocument).UpdateSemanticHighlighting(false);
+
+			// Only refresh it once
+			if(RefreshErrorList)
+				Dispatcher.Invoke(new Action(()=>
+					CoreManager.ErrorManagement.RefreshErrorList()
+					));
+		}
+
+		public void UpdateSemanticHighlighting(bool RefreshErrorList = false)
 		{
 			if (!DSettings.Instance.UseSemanticHighlighting || SyntaxTree == null || CompilerConfiguration.ASTCache.IsParsing)
 				return;
@@ -740,7 +762,7 @@ namespace D_IDE.D
 							});
 						}
 
-				if (RedrawErrors)
+				if (RefreshErrorList)
 					CoreManager.ErrorManagement.RefreshErrorList();
 
 				CoreManager.Instance.MainWindow.LeftStatusText =

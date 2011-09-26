@@ -89,6 +89,10 @@ namespace D_IDE.D
 			{
 				Cursor = Cursors.Arrow;
 			}
+
+			// Update dir view
+			list_Dirs.ItemsSource = null;
+			list_Dirs.ItemsSource = Dirs;
 		}
 	}
 }

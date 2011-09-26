@@ -28,7 +28,16 @@ namespace D_IDE.Core
 
 		public IEnumerable<AbstractEditorDocument> Editors
 		{
-			get { return from e in MainWindow.DockManager.Documents where e is AbstractEditorDocument select e as AbstractEditorDocument; }
+			get
+			{
+				var l = new List<AbstractEditorDocument>();
+
+				foreach (var ed in MainWindow.DockManager.Documents)
+					if (ed is AbstractEditorDocument)
+						l.Add(ed as AbstractEditorDocument);
+
+				return l;
+			}
 		}
 
 		public static Solution CurrentSolution { get; set; }

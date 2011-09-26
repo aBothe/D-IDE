@@ -1308,6 +1308,11 @@ namespace D_Parser.Dom.Expressions
 	{
 		public IExpression[] Arguments;
 
+		public int ArgumentCount
+		{
+			get { return Arguments == null ? 0 : Arguments.Length; }
+		}
+
 		public override string ToString()
 		{
 			var ret = PostfixForeExpression.ToString() + "(";

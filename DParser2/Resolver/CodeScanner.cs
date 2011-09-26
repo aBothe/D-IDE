@@ -14,9 +14,20 @@ namespace D_Parser.Resolver
 		{
 			public Dictionary<IdentifierDeclaration, ResolveResult> ResolvedIdentifiers = new Dictionary<IdentifierDeclaration, ResolveResult>();
 			public List<IdentifierDeclaration> UnresolvedIdentifiers = new List<IdentifierDeclaration>();
-			public List<ITypeDeclaration> RawIdentifiers = new List<ITypeDeclaration>();
+			//public List<ITypeDeclaration> RawIdentifiers = new List<ITypeDeclaration>();
 
-			//public Dictionary<IExpression,>;
+			//public List<IExpression> RawParameterActions = new List<IExpression>();
+			/// <summary>
+			/// Parameter actions ca be 1) method calls, 2) template instantiations and 3) ctor/ 4) opCall calls.
+			/// 1) foo(a,b);
+			/// 2) myTemplate!int
+			/// 3) new myClass("abc",23,true);
+			/// 4) auto p=Point(1,2);
+			/// 
+			/// Key: method call, template instance or 'new' expression.
+			/// Values: best matching methods/classes(!)/ctors
+			/// </summary>
+			public Dictionary<IExpression, INode[]> ParameterActions = new Dictionary<IExpression,INode[]>();
 		}
 
 		/// <summary>
@@ -38,15 +49,12 @@ namespace D_Parser.Resolver
 
 			// Step 1: Enum all existing type id's that shall become resolved'n displayed
 			var typeObjects = CodeScanner.ScanForTypeIdentifiers(SyntaxTree);
-
-			
-			
-			#region Step 2: Loop through all of them, try to resolve them, write the results in a dictionary
+	
 			foreach (var o in typeObjects)
 			{
 				if (o == null)
 					continue;
-
+				
 				#region Identifier Declarations
 				if (o is IdentifierDeclaration)
 				{
@@ -57,18 +65,101 @@ namespace D_Parser.Resolver
 						compDict);
 				}
 				#endregion
-
-				else if (o is NewExpression)
+					/*
+				#region Method call check
+				else if (o is PostfixExpression_MethodCall)
 				{
-					var ne = o as NewExpression;
+					var mc=o as PostfixExpression_MethodCall;
+
+					int argc = mc.ArgumentCount;
+
+					var methodOverloads=HandleIdDeclaration(mc.ExpressionTypeRepresentation as IdentifierDeclaration,
+						lastResCtxt,
+						SyntaxTree,
+						csr,
+						compDict);
+
+					// Important: Also check template parameters and arguments!
+					IExpression[] TemplateArguments=null;
+
+					if (mc.PostfixForeExpression is TemplateInstanceExpression)
+						TemplateArguments = (mc.PostfixForeExpression as TemplateInstanceExpression).Arguments;
+
+					int TemplateArgCount = TemplateArguments == null ? 0 : TemplateArguments.Length;
+
+					// Note: If no method members were found, we already show the semantic error as a generically missing symbol
+					if (methodOverloads != null)
+					{
+						var l1 = new List<DMethod>();
+						var l2 = new List<DMethod>();
+
+						#region First add all available method overloads
+						foreach (var rr_ in methodOverloads)
+						{
+							// Like every time, remove unnecessary aliasing
+							var rr = DResolver.TryRemoveAliasesFromResult(rr_);
+							
+							// Can be either 1) a normal method OR 2) a type related opCall
+
+							// 1)
+							if (rr is MemberResult)
+							{
+								var mr = rr as MemberResult;
+
+								//FIXME: What about delegate aliases'n stuff?
+								if (!(mr.ResolvedMember is DMethod))
+									continue;
+
+								var dm = mr.ResolvedMember as DMethod;
+
+								// Even before checking argument types etc, pre-select possibly chosen overloads 
+								// by comparing the method's parameter count with the call's argument count
+								if (dm.Parameters.Count == argc && (dm.TemplateParameters==null?true:
+									dm.TemplateParameters.Length==TemplateArgCount))
+									l1.Add(dm);
+							}
+
+							// 2)
+							else if (rr is TypeResult)
+							{
+								var tr = rr as TypeResult;
+
+								// Scan the type for opCall members
+								var opCalls=DResolver.ScanNodeForIdentifier(tr.ResolvedTypeDefinition, "opCall", lastResCtxt);
+
+								if (opCalls != null)
+									foreach (var n in opCalls)
+									{
+										var dm = n as DMethod;
+
+										// Also pre-filter opCall members by param count comparison 
+										if (dm!=null &&
+											dm.Parameters.Count == argc && (dm.TemplateParameters == null ? true : 
+											dm.TemplateParameters.Length == TemplateArgCount))
+											l1.Add(dm);
+									}
+							}
+						}
+						#endregion
+
+						// Must be a semantic error - no method fits in any way
+						if(l1.Count<1)
+						{
+							csr.ParameterActions.Add(o as IExpression, null);
+							continue;
+						}
+
+						// Compare template arguments first
+					}
 				}
+				#endregion
+				*/
 			}
-			#endregion
 
 			return csr;
 		}
 
-		static void HandleIdDeclaration(IdentifierDeclaration typeId,
+		static ResolveResult[] HandleIdDeclaration(IdentifierDeclaration typeId,
 			ResolverContext lastResCtxt,
 			IAbstractSyntaxTree SyntaxTree,
 			CodeScanResult csr, 
@@ -86,7 +177,7 @@ namespace D_Parser.Resolver
 			 * Anyway, allow to resolve e.g. "object.string"
 			 */
 			if (typeString == "" || typeString == "string" || typeString == "wstring" || typeString == "dstring")
-				return;
+				return null;
 
 			lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused);
 
@@ -121,7 +212,6 @@ namespace D_Parser.Resolver
 
 				while (curRes != null)
 				{
-
 					if (curRes is MemberResult)
 					{
 						var mr = curRes as MemberResult;
@@ -160,6 +250,7 @@ namespace D_Parser.Resolver
 					curTypeDeclBase = curTypeDeclBase.InnerDeclaration;
 				}
 			}
+			return allCurrentResults;
 		}
 
 		public static List<object> ScanForTypeIdentifiers(INode Node)
@@ -356,13 +447,12 @@ namespace D_Parser.Resolver
 
 					if (
 						e is NewExpression ||
-						
 						e is PostfixExpression_Access ||
 						(e is IdentifierExpression && (e as IdentifierExpression).IsIdentifier))
 					{
 						l.Add(e.ExpressionTypeRepresentation);
 					}
-					else if (/*e is PostfixExpression_MethodCall || */e is TemplateInstanceExpression)
+					else if (e is TemplateInstanceExpression)
 					{
 						//l.Add(e);
 						var tie = e as TemplateInstanceExpression;
@@ -373,6 +463,34 @@ namespace D_Parser.Resolver
 						// Do not add e's subexpressions anymore - it'll be done in the ScanSymbols method
 						//continue;
 					}
+
+					/*if (e is NewExpression || e is TemplateInstanceExpression)
+						l.Add(e);
+
+					if (e is PostfixExpression_MethodCall)
+					{
+						var mc = e as PostfixExpression_MethodCall;
+
+						l.Add(e);
+
+						if(mc.Arguments!=null)	
+							l2.AddRange(mc.Arguments);
+						
+						/* 
+						 * Do not add the method identifier twice.
+						 * Instead, and also just if an object has been accessed to reach the method (e.g. as in a.b.foo();),
+						 * skip the .foo() part
+						 * /
+						if (mc.PostfixForeExpression is PostfixExpression)
+						{
+							var acc = mc.PostfixForeExpression as PostfixExpression;
+
+							if(acc.PostfixForeExpression!=null)
+								l2.Add(acc.PostfixForeExpression);
+						}
+
+						continue;
+					}*/
 					
 					if (e is ContainerExpression)
 					{
