@@ -271,6 +271,18 @@ namespace D_Parser.Resolver
 			var l1 = new List<INode> { node };
 			var l2 = new List<INode>();
 
+			if (node is DModule)
+			{
+				var dm = node as DModule;
+
+				if (dm.OptionalModuleStatement != null)
+					SearchIn(dm.OptionalModuleStatement, l);
+
+				if (dm.Imports != null && dm.Imports.Length > 0)
+					foreach (var imp in dm.Imports)
+						SearchIn(imp, l);
+			}
+
 			while (l1.Count > 0)
 			{
 				foreach (var n in l1)

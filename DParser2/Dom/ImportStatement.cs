@@ -1,8 +1,19 @@
 ﻿using System.Collections.Generic;
+using D_Parser.Dom.Statements;
 
 namespace D_Parser.Dom
 {
-	public class ImportStatement
+	public class ModuleStatement:AbstractStatement
+	{
+		public string ModuleName;
+
+		public override string ToCode()
+		{
+			return "module "+ModuleName;
+		}
+	}
+
+	public class ImportStatement:AbstractStatement
 	{
 		public bool IsStatic;
 		public bool IsPublic;
@@ -21,6 +32,9 @@ namespace D_Parser.Dom
 		/// </summary>
 		public Dictionary<string, string> ExclusivelyImportedSymbols=null;
 
+		/// <summary>
+		/// True on things like import abc.def;
+		/// </summary>
 		public bool IsSimpleBinding
 		{
 			get
@@ -29,12 +43,12 @@ namespace D_Parser.Dom
 			}
 		}
 
-		public override string ToString()
+		public override string ToCode()
 		{
-			var ret= (IsPublic?"public ":"")+(IsStatic?"static ":"")+"import ";
+			var ret = (IsPublic ? "public " : "") + (IsStatic ? "static " : "") + "import ";
 
 			if (!string.IsNullOrEmpty(ModuleAlias))
-				ret += ModuleAlias+'=';
+				ret += ModuleAlias + '=';
 
 			ret += ModuleIdentifier;
 
@@ -47,7 +61,7 @@ namespace D_Parser.Dom
 					ret += kv.Key;
 
 					if (!string.IsNullOrEmpty(kv.Value))
-						ret += '='+kv.Value;
+						ret += '=' + kv.Value;
 
 					ret += ',';
 				}

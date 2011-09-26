@@ -29,8 +29,11 @@ namespace D_Parser.Parser
 			if (laKind == (Module))
 			{
 				module.Description = GetComments();
-				module.ModuleName = ModuleDeclaration();
+				module.OptionalModuleStatement= ModuleDeclaration();
 				module.Description += CheckForPostSemicolonComment();
+
+				module.ModuleName = module.OptionalModuleStatement.ModuleName;
+				module.OptionalModuleStatement.ParentNode = doc;
 			}
 
 			// Now only declarations or other statements are allowed!
@@ -293,11 +296,13 @@ namespace D_Parser.Parser
 				module.AddRange(Declaration());
 		}
 
-		string ModuleDeclaration()
+		ModuleStatement ModuleDeclaration()
 		{
 			Expect(Module);
-			var ret = ModuleFullyQualifiedName();
+			var ret = new ModuleStatement { StartLocation=t.Location };
+			ret.ModuleName = ModuleFullyQualifiedName();
 			Expect(Semicolon);
+			ret.EndLocation = t.Location;
 			return ret;
 		}
 
@@ -339,9 +344,11 @@ namespace D_Parser.Parser
 			DeclarationAttributes.Clear();
 			CheckForDocComments();
 			Expect(Import);
+			var startLoc = t.Location;
 
 			var imp = _Import();
 
+			imp.StartLocation = t.Location;
 			imp.IsPublic = IsPublic;
 			imp.IsStatic = IsStatic;
 
@@ -359,11 +366,16 @@ namespace D_Parser.Parser
 				}
 			}
 			else
+			{
 				while (laKind == (Comma))
 				{
+					imp.EndLocation = t.Location;
+					
 					Step();
+					startLoc = t.EndLocation;
 					imp = _Import();
 
+					imp.StartLocation = startLoc;
 					imp.IsPublic = IsPublic;
 					imp.IsStatic = IsStatic;
 
@@ -380,8 +392,10 @@ namespace D_Parser.Parser
 						}
 					}
 				}
+			}
 
 			Expect(Semicolon);
+			imp.EndLocation = t.Location;
 		}
 
 		ImportStatement _Import()

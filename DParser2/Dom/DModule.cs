@@ -61,10 +61,19 @@ namespace D_Parser.Dom
 			set;
 		}
 
+		public ModuleStatement OptionalModuleStatement;
+
+		ImportStatement[] imports = null;
 		public ImportStatement[] Imports
 		{
-			get;
-			set;
+			get { return imports; }
+			set {
+				imports = value;
+
+				if (imports != null)
+					foreach (var imp in value)
+						imp.ParentNode = this;
+			}
 		}
 
 		public override string ToString(bool Attributes, bool IncludePath)
@@ -87,7 +96,7 @@ namespace D_Parser.Dom
 
             return false;
         }
-    }
+	}
 
 	public class DBlockNode : DNode, IBlockNode
 	{
