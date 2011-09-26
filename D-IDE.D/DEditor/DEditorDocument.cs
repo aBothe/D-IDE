@@ -300,14 +300,18 @@ namespace D_IDE.D
 
 			if (!(block is IAbstractSyntaxTree) && !block.BlockStartLocation.IsEmpty && block.EndLocation > block.BlockStartLocation)
 			{
-				var fn = foldingManager.CreateFolding(
-					Editor.Document.GetOffset(block.BlockStartLocation.Line, block.BlockStartLocation.Column),
-					Editor.Document.GetOffset(block.EndLocation.Line, block.EndLocation.Column));
-				//fn.Title = (block as AbstractNode).ToString(false,false);
-				var nn = fn.Tag = block.ToString();
+				var startOff=Editor.Document.GetOffset(block.BlockStartLocation.Line, block.BlockStartLocation.Column);
+				var endOff=Editor.Document.GetOffset(block.EndLocation.Line, block.EndLocation.Column);
 
-				if (foldedNodeNames.Contains(nn))
-					fn.IsFolded = true;
+				if (startOff < endOff)
+				{
+					var fn = foldingManager.CreateFolding(startOff, endOff);
+					//fn.Title = (block as AbstractNode).ToString(false,false);
+					var nn = fn.Tag = block.ToString();
+
+					if (foldedNodeNames.Contains(nn))
+						fn.IsFolded = true;
+				}
 			}
 
 			if (block.Count > 0)
