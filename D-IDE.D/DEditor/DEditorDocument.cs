@@ -913,7 +913,11 @@ namespace D_IDE.D
 							curBlock = selectedItem.Node as IBlockNode;
 
 						// For better usability, pre-sort items
-						types.Sort();
+						try
+						{
+							types.Sort();
+						}
+						catch { }
 
 						lookup_Types.ItemsSource = types;
 						lookup_Types.SelectedItem = selectedItem;
