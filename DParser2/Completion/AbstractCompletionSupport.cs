@@ -79,6 +79,7 @@ namespace D_Parser.Completion
 			IEnumerable<INode> listedItems = null;
 
 			// Usually shows variable members
+			#region DotCompletion
 			if (EnteredText == ".")
 			{
 				alreadyAddedModuleNameParts.Clear();
@@ -107,56 +108,96 @@ namespace D_Parser.Completion
 					BuildCompletionData(rr, curBlock);
 				}
 			}
+			#endregion
 
-			// Enum all nodes that can be accessed in the current scope
-			else if (string.IsNullOrEmpty(EnteredText) || IsIdentifierChar(EnteredText[0]))
+			else if (EnteredText==" " || EnteredText.Length<1 || IsIdentifierChar(EnteredText[0]))
 			{
-				if (curBlock is DMethod)
-				{
-					var ScopedStatement = DResolver.ParseBlockStatementUntilCaret(
-						Editor.ModuleCode,
-						curBlock as DMethod,
-						Editor.CaretOffset,
-						Editor.CaretLocation);
+				// 1) Get current context the caret is at.
+				object lastObj = null;
+				object prevParsedObj = null;
+				bool ExpectedId = false;
 
-					if (ScopedStatement != null)
+				var parsedBlock = DResolver.FindCurrentCaretContext(
+					Editor.ModuleCode,
+					curBlock,
+					Editor.CaretOffset,
+					Editor.CaretLocation,
+					out lastObj,
+					out prevParsedObj,
+					out ExpectedId);
+
+				// 2) If in declaration and if node identifier is expected, do not show any data
+				if ((lastObj is INode && ExpectedId) || 
+					(lastObj is TokenExpression && DTokens.BasicTypes[(lastObj as TokenExpression).Token] &&
+					!string.IsNullOrEmpty(EnteredText) &&
+					IsIdentifierChar(EnteredText[0]))
+					)
+					return;
+
+				var visibleMembers = DResolver.MemberTypes.All;
+
+				if (lastObj is ImportStatement)
+				{
+					visibleMembers = DResolver.MemberTypes.Imports;
+				}
+				else if (lastObj is NewExpression)
+				{
+					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types;
+				}
+				else if (EnteredText == " ")
+					return;
+
+
+				if (!(parsedBlock is BlockStatement))
+					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
+
+				// In a method, parse from the method's start until the actual caret position to get an updated insight
+				if (DResolver.CanShowMemberType(visibleMembers,DResolver.MemberTypes.Variables) && curBlock is DMethod)
+				{
+					if (parsedBlock is BlockStatement)
 					{
-						var decls = BlockStatement.GetItemHierarchy(ScopedStatement, Editor.CaretLocation);
+						var decls = BlockStatement.GetItemHierarchy(parsedBlock as BlockStatement, Editor.CaretLocation);
 
 						foreach (var n in decls)
 							CompletionDataGenerator.Add(n);
 					}
 				}
 
-				listedItems = DResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, Editor.CaretLocation, Editor. ImportCache);
+				if (visibleMembers != DResolver.MemberTypes.Imports)
+					listedItems = DResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, Editor.CaretLocation, Editor.ImportCache, visibleMembers);
+				
+				if(DResolver.CanShowMemberType(visibleMembers, DResolver.MemberTypes.Keywords))
+					foreach (var kv in DTokens.Keywords)
+						CompletionDataGenerator.Add(kv.Key);
 
-				foreach (var kv in DTokens.Keywords)
-					CompletionDataGenerator.Add(kv.Key);
-
-				// Add module name stubs of importable modules
-				var nameStubs = new Dictionary<string, string>();
-				var availModules = new List<IAbstractSyntaxTree>();
-				foreach (var mod in Editor. ParseCache)
+				#region Add module name stubs of importable modules
+				if (DResolver.CanShowMemberType(visibleMembers, DResolver.MemberTypes.Imports))
 				{
-					if (string.IsNullOrEmpty(mod.ModuleName))
-						continue;
-
-					var parts = mod.ModuleName.Split('.');
-
-					if (!nameStubs.ContainsKey(parts[0]) && !availModules.Contains(mod))
+					var nameStubs = new Dictionary<string, string>();
+					var availModules = new List<IAbstractSyntaxTree>();
+					foreach (var mod in Editor.ParseCache)
 					{
-						if (parts[0] == mod.ModuleName)
-							availModules.Add(mod);
-						else
-							nameStubs.Add(parts[0], GetModulePath(mod.FileName, parts.Length, 1));
+						if (string.IsNullOrEmpty(mod.ModuleName))
+							continue;
+
+						var parts = mod.ModuleName.Split('.');
+
+						if (!nameStubs.ContainsKey(parts[0]) && !availModules.Contains(mod))
+						{
+							if (parts[0] == mod.ModuleName)
+								availModules.Add(mod);
+							else
+								nameStubs.Add(parts[0], GetModulePath(mod.FileName, parts.Length, 1));
+						}
 					}
+
+					foreach (var kv in nameStubs)
+						CompletionDataGenerator.Add(kv.Key, PathOverride: kv.Value);
+
+					foreach (var mod in availModules)
+						CompletionDataGenerator.Add(mod.ModuleName, mod);
 				}
-
-				foreach (var kv in nameStubs)
-					CompletionDataGenerator.Add(kv.Key,PathOverride:kv.Value);
-
-				foreach (var mod in availModules)
-					CompletionDataGenerator.Add(mod.ModuleName, mod);
+				#endregion
 			}
 
 			// Add all found items to the referenced list

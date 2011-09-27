@@ -127,9 +127,23 @@ namespace D_Parser.Parser
         }
 
         /// <summary>
-        /// Encapsules whole document structure
+        /// Holds document structure
         /// </summary>
         DModule doc;
+
+		public object PreviousParsedObject { get; protected set; }
+		/// <summary>
+		/// Used to track the expression/declaration/statement/whatever which is handled currently.
+		/// Required for code completion.
+		/// </summary>
+		public object LastParsedObject { get { return lastParsedObj; } set { PreviousParsedObject = lastParsedObj; lastParsedObj = value; } }
+		object lastParsedObj = null;
+
+		/// <summary>
+		/// Required for code completion.
+		/// True if a type/variable/method/etc. identifier is expected.
+		/// </summary>
+		public bool ExpectingIdentifier = false;
 
 		List<ImportStatement> imports = new List<ImportStatement>();
 
@@ -192,41 +206,6 @@ namespace D_Parser.Parser
 			Lexer.LexerErrors = ParseErrors;
         }
 
-        #region DDoc handling
-
-        public DNode LastElement = null;
-        string LastDescription = ""; // This is needed if some later comments are 'ditto'
-        string CurrentDescription = "";
-        bool HadEmptyCommentBefore = false;
-
-        void lexer_OnComment(Comment comment)
-        {
-            if (comment.CommentType == Comment.Type.Documentation)
-            {
-                if (comment.CommentText != "ditto")
-                {
-                    HadEmptyCommentBefore = (CurrentDescription == "" && comment.CommentText == "");
-                    CurrentDescription += (CurrentDescription == "" ? "" : "\r\n") + comment.CommentText;
-                }
-                else
-                    CurrentDescription = LastDescription;
-
-                /*
-                 * /// start description
-                 * void foo() /// description for foo()
-                 * {}
-                 */
-                if (LastElement != null && LastElement.StartLocation.Line == comment.StartPosition.Line && comment.StartPosition.Column > LastElement.StartLocation.Column)
-                {
-                    LastElement.Description += (LastElement.Description == "" ? "" : "\r\n") + CurrentDescription;
-                    LastDescription = CurrentDescription;
-                    CurrentDescription = "";
-                }
-            }
-        }
-
-        #endregion
-
         StringBuilder qualidentBuilder = new StringBuilder();
 
         DToken t
@@ -281,15 +260,6 @@ namespace D_Parser.Parser
 			}
         }
 
-        string CheckForDocComments()
-        {
-            string ret = CurrentDescription;
-            if (CurrentDescription != "" || HadEmptyCommentBefore)
-                LastDescription = CurrentDescription;
-            CurrentDescription = "";
-            return ret;
-        }
-
         /// <summary>
         /// Check if current Token equals to n and skip that token.
         /// </summary>
@@ -335,9 +305,13 @@ namespace D_Parser.Parser
 
         private bool Expect(int n)
         {
+			if(n == Identifier)
+				ExpectingIdentifier = true;
 			if (laKind == n)
-			{ 
-				Step(); 
+			{
+				Step();
+				if (n == Identifier)
+					ExpectingIdentifier = false;
 				return true; 
 			}
 			else

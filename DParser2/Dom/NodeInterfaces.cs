@@ -37,7 +37,7 @@ namespace D_Parser.Dom
 		void Add(INode Node);
 		void AddRange(IEnumerable<INode> Nodes);
 		int Count { get; }
-		//void Clear();
+		void Clear();
 
 		INode this[int i] { get; set; }
 		INode this[string Name] { get; set; }

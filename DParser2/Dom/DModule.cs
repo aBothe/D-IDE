@@ -442,6 +442,12 @@ namespace D_Parser.Dom
 				return null;
 			return children.GetEnumerator();
 		}
+
+
+		public void Clear()
+		{
+			additionalChildren.Clear();
+		}
 	}
 
     public class DClassLike : DBlockNode

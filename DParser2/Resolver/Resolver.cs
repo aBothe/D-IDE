@@ -80,13 +80,42 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class DResolver
 	{
+		[Flags]
+		public enum MemberTypes
+		{
+			Imports=1,
+			Variables=1<<1,
+			Methods=1<<2,
+			Types=1<<3,
+			Keywords=1<<4,
+
+			All=Imports|Variables|Methods|Types|Keywords
+		}
+
+		public static bool CanShowMemberType(MemberTypes visMembers, MemberTypes flag)
+		{
+			return (visMembers & flag) == flag;
+		}
+
+		public  static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)
+		{
+			return (n is DMethod && CanShowMemberType(VisibleMembers,MemberTypes.Methods) ||
+					(n is DVariable && !(n as DVariable).IsAlias && CanShowMemberType(VisibleMembers,MemberTypes.Variables)) ||
+					((n is DClassLike || n is DEnum) && CanShowMemberType(VisibleMembers,MemberTypes.Types)));
+		}
+
 		/// <summary>
 		/// Returns a list of all items that can be accessed in the current scope.
 		/// </summary>
 		/// <param name="ScopedBlock"></param>
 		/// <param name="ImportCache"></param>
 		/// <returns></returns>
-		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock/*, IStatement ScopedStatement*/, CodeLocation Caret, IEnumerable<IAbstractSyntaxTree> CodeCache)
+		public static IEnumerable<INode> EnumAllAvailableMembers(
+			IBlockNode ScopedBlock
+			/*, IStatement ScopedStatement*/, 
+			CodeLocation Caret, 
+			IEnumerable<IAbstractSyntaxTree> CodeCache,
+			MemberTypes VisibleMembers)
 		{
 			/* First walk through the current scope.
 			 * Walk up the node hierarchy and add all their items (private as well as public members).
@@ -123,12 +152,13 @@ namespace D_Parser.Resolver
 						{
 							var dm2 = m as DNode;
 							var dm3 = m as DMethod; // Only show normal & delegate methods
-							if (dm2 == null ||
+							if (!CanAddMemberOfType(VisibleMembers,m) || dm2 == null ||
 								(dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate))
 								)
 								continue;
 
-							// Add static and non-private members of all base classes; add everything if we're still handling the currently scoped class
+							// Add static and non-private members of all base classes; 
+							// Add everything if we're still handling the currently scoped class
 							if (curWatchedClass == curScope || dm2.IsStatic || !dm2.ContainsAttribute(DTokens.Private))
 								ret.Add(m);
 						}
@@ -136,8 +166,6 @@ namespace D_Parser.Resolver
 						// Stop adding if Object class level got reached
 						if (!string.IsNullOrEmpty(curWatchedClass.Name) && curWatchedClass.Name.ToLower() == "object")
 							break;
-
-
 
 						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, new ResolverContext { ParseCache=ImportCache });
 
@@ -151,19 +179,25 @@ namespace D_Parser.Resolver
 				else if (curScope is DMethod)
 				{
 					var dm = curScope as DMethod;
-					ret.AddRange(dm.Parameters);
+
+					if(CanShowMemberType(VisibleMembers,MemberTypes.Variables))
+						ret.AddRange(dm.Parameters);
 
 					if (dm.TemplateParameters != null)
 						ret.AddRange(dm.TemplateParameterNodes as IEnumerable<INode>);
 
 					// The method's declaration children are handled above already via BlockStatement.GetItemHierarchy().
 					// except AdditionalChildren:
-					ret.AddRange(dm.AdditionalChildren);
+					foreach (var ch in dm.AdditionalChildren)
+						if (CanAddMemberOfType(VisibleMembers, ch))
+							ret.Add(ch);
 				}
 				else foreach (var n in curScope)
 						{
 							var dm3 = n as DMethod; // Only show normal & delegate methods
-							if ((dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate)))
+							if (
+								!CanAddMemberOfType(VisibleMembers,n) ||
+								(dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate)))
 								continue;
 
 							ret.Add(n);
@@ -185,7 +219,8 @@ namespace D_Parser.Resolver
 					var dn = i as DNode;
 					if (dn != null)
 					{
-						if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package))
+						if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package) &&
+							CanAddMemberOfType(VisibleMembers,dn))
 							ret.Add(dn);
 					}
 					else ret.Add(i);
@@ -500,6 +535,94 @@ namespace D_Parser.Resolver
 
 				return a || b || c || d;
 			}
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="code"></param>
+		/// <param name="CurrentScope"></param>
+		/// <param name="caretOffset"></param>
+		/// <param name="caretLocation"></param>
+		/// <param name="LastParsedObject"></param>
+		/// <param name="PreviouslyParsedObject"></param>
+		/// <param name="ExpectedIdentifier"></param>
+		/// <returns>Either CurrentScope, a BlockStatement object that is associated with the parent method or a complete new DModule object</returns>
+		public static object FindCurrentCaretContext(string code, 
+			IBlockNode CurrentScope, 
+			int caretOffset,CodeLocation caretLocation,
+			out object LastParsedObject,
+			out object PreviouslyParsedObject,
+			out bool ExpectedIdentifier)
+		{
+			LastParsedObject = null;
+			PreviouslyParsedObject = null;
+			ExpectedIdentifier = false;
+
+			bool ParseDecl=false;
+
+			int blockStart = 0;
+			var blockStartLocation=CurrentScope.BlockStartLocation;
+
+			if (CurrentScope is DMethod)
+			{
+				var block = (CurrentScope as DMethod).GetSubBlockAt(caretLocation);
+
+				if (block != null)
+					blockStart = DocumentHelper.LocationToOffset(code, blockStartLocation= block.StartLocation);
+			}
+			else if (CurrentScope != null)
+			{
+				if (caretLocation < CurrentScope.BlockStartLocation && caretLocation > CurrentScope.StartLocation)
+				{
+					ParseDecl = true;
+					blockStart = DocumentHelper.LocationToOffset(code, CurrentScope.StartLocation);
+				}
+				else
+					blockStart = DocumentHelper.LocationToOffset(code, CurrentScope.BlockStartLocation);
+			}
+
+			if (blockStart>=0 && caretOffset-blockStart > 0)
+			{
+				var codeToParse = code.Substring(blockStart, caretOffset-blockStart);
+
+				var psr = DParser.Create(new StringReader(codeToParse));
+
+				object ret = null;
+
+				if (CurrentScope == null || CurrentScope is IAbstractSyntaxTree)
+					ret=psr.Parse();
+				else if (CurrentScope is DMethod)
+				{
+					psr.Step();
+					ret=psr.BlockStatement();
+				}
+				else
+				{
+					psr.Step();
+					if (ParseDecl)
+					{
+						var ret2 = psr.Declaration();
+
+						if (ret2 != null && ret2.Length > 0)
+							ret = ret2[0];
+					}
+					else
+					{
+						CurrentScope.Clear();
+						psr.ClassBody(CurrentScope);
+						ret = CurrentScope;
+					}
+				}
+
+				PreviouslyParsedObject=	psr.PreviousParsedObject;
+				ExpectedIdentifier = psr.ExpectingIdentifier;
+				LastParsedObject = psr.LastParsedObject;
+
+				return ret;
+			}
+
+			return null;
 		}
 
 		/// <summary>
@@ -952,19 +1075,21 @@ namespace D_Parser.Resolver
 		public static INode[] ScanNodeForIdentifier(IBlockNode curScope, string name, ResolverContext ctxt)
 		{
 			var matches = new List<INode>();
-			foreach (var n in curScope)
-			{
-				// Scan anonymous enums
-				if (n is DEnum && n.Name == "")
-				{
-					foreach (var k in n as DEnum)
-						if (k.Name == name)
-							matches.Add(k);
-				}
 
-				if (n.Name == name)
-					matches.Add(n);
-			}
+			if(curScope.Count>0)
+				foreach (var n in curScope)
+				{
+					// Scan anonymous enums
+					if (n is DEnum && n.Name == "")
+					{
+						foreach (var k in n as DEnum)
+							if (k.Name == name)
+								matches.Add(k);
+					}
+
+					if (n.Name == name)
+						matches.Add(n);
+				}
 
 			// If our current Level node is a class-like, also attempt to search in its baseclass!
 			if (curScope is DClassLike)
