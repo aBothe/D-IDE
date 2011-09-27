@@ -893,7 +893,7 @@ namespace D_IDE.D
 							foreach (var n in l1)
 							{
 								// Show all type declarations of the current module
-								if (n is DClassLike)
+								if (n is DClassLike || n is DEnum)
 								{
 									var completionData = new DCompletionData(n);
 									if (CaretLocation >= n.StartLocation && CaretLocation <= n.EndLocation)
