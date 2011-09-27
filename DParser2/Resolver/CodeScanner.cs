@@ -361,6 +361,13 @@ namespace D_Parser.Resolver
 			{
 				foreach (var s in l1)
 				{
+					if (s is ImportStatement)
+					{
+						var impStmt = s as ImportStatement;
+
+						SearchIn(impStmt.ModuleIdentifier,l);
+					}
+
 					if (s is StatementContainingStatement)
 					{
 						var sstmts = (s as StatementContainingStatement).SubStatements;

@@ -330,7 +330,10 @@ namespace D_Parser.Resolver
 			foreach (var kv in ActualModule.Imports)
 				if (kv.IsSimpleBinding && !kv.IsStatic)
 				{
-					var impMod = SearchModuleInCache(CodeCache, kv.ModuleIdentifier) as DModule;
+					if (kv.ModuleIdentifier == null)
+						continue;
+
+					var impMod = SearchModuleInCache(CodeCache, kv.ModuleIdentifier.ToString()) as DModule;
 
 					if (impMod != null && !ret.Contains(impMod))
 					{
@@ -350,7 +353,10 @@ namespace D_Parser.Resolver
                 foreach (var kv2 in currentlyWatchedImport.Imports)
                     if (kv2.IsSimpleBinding && !kv2.IsStatic && kv2.IsPublic)
                     {
-                        var impMod2 = SearchModuleInCache(CodeCache, kv2.ModuleIdentifier) as DModule;
+						if (kv2.ModuleIdentifier == null)
+							continue;
+
+                        var impMod2 = SearchModuleInCache(CodeCache, kv2.ModuleIdentifier.ToString()) as DModule;
 
                         if (impMod2 != null && !ret.Contains(impMod2))
                         {

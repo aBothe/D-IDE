@@ -91,7 +91,7 @@ namespace D_Parser.Dom
         {
             if (Imports != null)
                 foreach (var i in Imports)
-                    if (i.IsSimpleBinding && i.ModuleIdentifier == p)
+                    if (i.IsSimpleBinding && i.ModuleIdentifier!=null && i.ModuleIdentifier.ToString() == p)
                         return true;
 
             return false;

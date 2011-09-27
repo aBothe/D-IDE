@@ -687,20 +687,21 @@ namespace D_IDE.D
 		/// Updates all semantic code highlightings/errors in all open editors
 		/// </summary>
 		/// <param name="RefreshErrorList"></param>
-		public void UpdateSemanticHighlightings(bool RefreshErrorList = false)
+		public static void UpdateSemanticHighlightings(bool RefreshErrorList = false)
 		{
 			IEnumerable<AbstractEditorDocument> editors = null;
-			Dispatcher.Invoke(new Action(()=>
+			CoreManager.Instance.MainWindow.Dispatcher.Invoke(new Action(() =>
 				editors=CoreManager.Instance.Editors
 			));
 
-			foreach (var ed in editors)
-				if (ed is DEditorDocument)
-					(ed as DEditorDocument).UpdateSemanticHighlighting(false);
+			if(editors!=null)
+				foreach (var ed in editors)
+					if (ed is DEditorDocument)
+						(ed as DEditorDocument).UpdateSemanticHighlighting(false);
 
 			// Only refresh it once
 			if(RefreshErrorList)
-				Dispatcher.Invoke(new Action(()=>
+				CoreManager.Instance.MainWindow.Dispatcher.Invoke(new Action(() =>
 					CoreManager.ErrorManagement.RefreshErrorList()
 					));
 		}

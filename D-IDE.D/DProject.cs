@@ -59,6 +59,41 @@ namespace D_IDE.D
 		public void ParseDSources()
 		{
 			ParsedModules.Clear();
+
+			/*
+			 * Instead of parsing added files only, add all D sources that are situated in the project's base directory.
+			 * DMD allows importing local modules that are not referenced in the objects parameter.
+			 * 
+			 * ---
+			 * module A;
+			 * 
+			 * void foo();
+			 * 
+			 * ---
+			 * module B;
+			 * 
+			 * import A;
+			 * 
+			 * ... foo(); ... // Allowed!
+			 * 
+			 * --- whereas we compiled the program only via dmd.exe A.d
+			 */
+
+			var files = Directory.EnumerateFiles(BaseDirectory, "*.d", SearchOption.AllDirectories);
+
+			foreach (var file in files)
+			{
+				try
+				{
+					var ast = DParser.ParseFile(file);
+					ParsedModules.Add(ast);
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex);
+				}
+			}
+			/*
 			foreach (var mod in _Files)
 			{
 				if (DLanguageBinding.IsDSource(mod.FileName))
@@ -73,7 +108,7 @@ namespace D_IDE.D
 						ErrorLogger.Log(ex);
 					}
 				}
-			}
+			}*/
 		}
 
 		public DVersion DMDVersion = DVersion.D2;

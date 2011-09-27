@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="376" d:DesignWidth="624" Background="White">
+             d:DesignHeight="328" d:DesignWidth="612" Background="White">
 	<w:Grid Name="stackPanel1">
 		<w:Label Content="DMD Version" Height="17" HorizontalAlignment="Left" Padding="0" Margin="12,15,0,0" Name="label1" VerticalAlignment="Top" Width="98" />
 		<w:ComboBox Height="23" HorizontalAlignment="Left" Margin="121,12,0,0" Name="Combo_DVersion" VerticalAlignment="Top" Width="41">
@@ -12,7 +12,7 @@
 			<w:ComboBoxItem Content="D2" />
 		</w:ComboBox>
 		<w:CheckBox Content="Compile as release version" Height="16" HorizontalAlignment="Left" Margin="121,41,0,0" Name="Check_Release" VerticalAlignment="Top" Width="184" />
-		<w:ListView Margin="121,92,12,12" Name="List_Libs" SelectionChanged="List_Libs_SelectionChanged" />
+		<w:ListView Margin="121,92,12,41" Name="List_Libs" SelectionChanged="List_Libs_SelectionChanged" />
 		<w:TextBox Height="23" Margin="121,63,222,0" Name="text_CurLib" VerticalAlignment="Top" />
 		<w:Label Content="Imported Libraries" Height="17" HorizontalAlignment="Left" Margin="12,66,0,0" Name="label2" Padding="0" VerticalAlignment="Top" Width="98" />
 		<w:Button Content="Add" Height="23" HorizontalAlignment="Right" Margin="0,64,152,0" Name="button_AddLib" VerticalAlignment="Top" Width="64" Click="button_AddLib_Click" />
@@ -24,5 +24,7 @@
 			<w:ComboBoxItem Content="Dynamic Link Library" />
 			<w:ComboBoxItem Content="Static Library" />
 		</w:ComboBox>
+		<w:Label Content="Source files" Height="17" HorizontalAlignment="Left" Margin="12,0,0,15" Name="label3" Padding="0" VerticalAlignment="Bottom" Width="98" />
+		<w:Button Content="Reparse project directory's D sources" Height="23" Margin="121,0,0,13" Name="button_ReparsePrjDirectory" VerticalAlignment="Bottom" Click="button_ReparseProjSources_Click" HorizontalAlignment="Left" Width="240" />
 	</w:Grid>
 </AbstractProjectSettingsPage>

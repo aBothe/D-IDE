@@ -5,11 +5,11 @@ namespace D_Parser.Dom
 {
 	public class ModuleStatement:AbstractStatement
 	{
-		public string ModuleName;
+		public ITypeDeclaration ModuleName;
 
 		public override string ToCode()
 		{
-			return "module "+ModuleName;
+			return "module "+ModuleName==null?"": ModuleName.ToString();
 		}
 	}
 
@@ -22,7 +22,7 @@ namespace D_Parser.Dom
 		/// import io=std.stdio;
 		/// </summary>
 		public string ModuleAlias;
-		public string ModuleIdentifier;
+		public ITypeDeclaration ModuleIdentifier;
 
 		/// <summary>
 		/// import std.stdio:writeln,foo=writeln;

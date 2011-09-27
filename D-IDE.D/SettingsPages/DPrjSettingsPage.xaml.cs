@@ -50,9 +50,11 @@ namespace D_IDE.D
 			get { return "D Settings"; }
 		}
 
+		DProject ManagedProject = null;
+
 		public override void LoadCurrent(Project prj)
 		{
-			var p = prj as DProject;
+			var p = ManagedProject = prj as DProject;
 
 			if (p == null)
 				return;
@@ -95,6 +97,27 @@ namespace D_IDE.D
 		private void button_DeleteLib_Click(object sender, RoutedEventArgs e)
 		{
 			Libs.RemoveAt(List_Libs.SelectedIndex);
+		}
+
+		private void button_ReparseProjSources_Click(object sender, RoutedEventArgs e)
+		{
+			if (ManagedProject != null)
+				Dispatcher.BeginInvoke(new Action(() => {
+					button_ReparsePrjDirectory.IsEnabled = false;
+					try
+					{
+						ManagedProject.ParseDSources();
+
+						foreach (var ed in CoreManager.Instance.Editors)
+							if (ed is DEditorDocument && ManagedProject.ContainsFile(ed.AbsoluteFilePath))
+								(ed as DEditorDocument).UpdateImportCache();
+
+						DEditorDocument.UpdateSemanticHighlightings(true);
+					}
+					catch (Exception ex)
+					{ ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
+					button_ReparsePrjDirectory.IsEnabled = true;				
+				}),System.Windows.Threading.DispatcherPriority.Background);
 		}
 	}
 }

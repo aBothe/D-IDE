@@ -33,7 +33,8 @@ namespace D_Parser.Parser
 				module.OptionalModuleStatement= ModuleDeclaration();
 				module.Description += CheckForPostSemicolonComment();
 
-				module.ModuleName = module.OptionalModuleStatement.ModuleName;
+				if (module.OptionalModuleStatement.ModuleName!=null)
+					module.ModuleName = module.OptionalModuleStatement.ModuleName.ToString();
 				module.OptionalModuleStatement.ParentNode = doc;
 			}
 
@@ -312,18 +313,21 @@ namespace D_Parser.Parser
 			return ret;
 		}
 
-		string ModuleFullyQualifiedName()
+		ITypeDeclaration ModuleFullyQualifiedName()
 		{
 			Expect(Identifier);
-			
-			var td=t.Value;
+
+			var td = new IdentifierDeclaration(t.Value) { Location=t.Location,EndLocation=t.EndLocation };
 
 			while (laKind == Dot)
 			{
 				Step();
 				Expect(Identifier);
 
-				td += "."+t.Value;
+				var td2 = new IdentifierDeclaration(t.Value) { Location=t.Location, EndLocation=t.EndLocation };
+
+				td2.InnerDeclaration = td;
+				td = td2;
 			}
 
 			return td;
@@ -415,8 +419,8 @@ namespace D_Parser.Parser
 			// ModuleAliasIdentifier
 			if (Lexer.CurrentPeekToken.Kind == (Assign))
 			{
-				Expect(Identifier);
-				import.ModuleAlias = t.Value;
+				if(Expect(Identifier))
+					import.ModuleAlias = t.Value;
 				Step();
 			}
 

@@ -150,7 +150,7 @@ namespace D_Parser.Parser
 		bool ContainsImport(string ModuleId)
 		{
 			foreach (var i in imports)
-				if (string.IsNullOrEmpty(i.ModuleAlias) && i.ExclusivelyImportedSymbols.Count < 1 && i.ModuleIdentifier == ModuleId)
+				if (string.IsNullOrEmpty(i.ModuleAlias) && i.ExclusivelyImportedSymbols.Count < 1 && i.ModuleIdentifier!=null && i.ModuleIdentifier.ToString() == ModuleId)
 					return true;
 
 			return false;
