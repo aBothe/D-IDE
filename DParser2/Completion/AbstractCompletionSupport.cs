@@ -127,7 +127,8 @@ namespace D_Parser.Completion
 					out ExpectedId);
 
 				// 2) If in declaration and if node identifier is expected, do not show any data
-				if ((lastObj is INode && ExpectedId) || 
+				if (
+					(lastObj is INode && ExpectedId) || 
 					(lastObj is TokenExpression && DTokens.BasicTypes[(lastObj as TokenExpression).Token] &&
 					!string.IsNullOrEmpty(EnteredText) &&
 					IsIdentifierChar(EnteredText[0]))
@@ -147,8 +148,7 @@ namespace D_Parser.Completion
 				else if (EnteredText == " ")
 					return;
 
-
-				if (!(parsedBlock is BlockStatement))
+				if (lastObj==null && !(parsedBlock is BlockStatement))
 					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
 
 				// In a method, parse from the method's start until the actual caret position to get an updated insight
@@ -166,6 +166,7 @@ namespace D_Parser.Completion
 				if (visibleMembers != DResolver.MemberTypes.Imports)
 					listedItems = DResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, Editor.CaretLocation, Editor.ImportCache, visibleMembers);
 				
+				//TODO: Split the keywords into such that are allowed within block statements and non-block statements
 				if(DResolver.CanShowMemberType(visibleMembers, DResolver.MemberTypes.Keywords))
 					foreach (var kv in DTokens.Keywords)
 						CompletionDataGenerator.Add(kv.Key);

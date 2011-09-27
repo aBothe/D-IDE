@@ -609,9 +609,24 @@ namespace D_Parser.Resolver
 					}
 					else
 					{
-						CurrentScope.Clear();
-						psr.ClassBody(CurrentScope);
-						ret = CurrentScope;
+						IBlockNode bn = null;
+						if (CurrentScope is DClassLike)
+						{
+							var t = new DClassLike((CurrentScope as DClassLike).ClassType);
+							t.AssignFrom(CurrentScope);
+							bn = t;
+						}
+						else if (CurrentScope is DEnum)
+						{
+							var t = new DEnum();
+							t.AssignFrom(CurrentScope);
+							bn = t;
+						}
+
+						bn.Clear();
+						
+						psr.ClassBody(bn);
+						ret = bn;
 					}
 				}
 
