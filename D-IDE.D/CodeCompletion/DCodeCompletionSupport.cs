@@ -221,7 +221,7 @@ namespace D_IDE.D
 		}
 	}
 
-	public class TokenCompletionData : ICompletionData
+	public class TokenCompletionData : ICompletionData, IComparable<ICompletionData>
 	{
 		public int Token { get; set; }
 
@@ -272,9 +272,14 @@ namespace D_IDE.D
 			get;
 			private set;
 		}
+
+		public int CompareTo(ICompletionData other)
+		{
+			return Text.CompareTo(other.Text);
+		}
 	}
 
-	public class NamespaceCompletionData : ICompletionData
+	public class NamespaceCompletionData : ICompletionData, IComparable<ICompletionData>
 	{
 		public string ModuleName { get; private set; }
 		public string ExplicitModulePath { get; set; }
@@ -337,6 +342,11 @@ namespace D_IDE.D
 		public string Text
 		{
 			get { return ModuleName; }
+		}
+
+		public int CompareTo(ICompletionData other)
+		{
+			return Text.CompareTo(other.Text);
 		}
 	}
 

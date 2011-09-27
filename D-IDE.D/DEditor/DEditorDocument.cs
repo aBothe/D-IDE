@@ -947,7 +947,11 @@ namespace D_IDE.D
 									members.Add(cData);
 								}
 
-							members.Sort();
+							try
+							{
+								members.Sort();
+							}
+							catch { }
 
 							lookup_Members.ItemsSource = members;
 							lookup_Members.SelectedItem = selectedItem;
