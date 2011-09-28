@@ -265,6 +265,7 @@ namespace D_IDE.D
 			//CommandBindings.Add(new CommandBinding(IDEUICommands.ReformatDoc,ReformatFileCmd));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CommentBlock, CommentBlock));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock, UncommentBlock));
+			CommandBindings.Add(new CommandBinding(IDEUICommands.CtrlSpaceCompletion, CtrlSpaceCompletion));
 
 			// Init parser loop
 			parseThread = new Thread(ParserLoop);
@@ -335,6 +336,11 @@ namespace D_IDE.D
 		}
 
 		#region Code operations
+		void CtrlSpaceCompletion(object s, ExecutedRoutedEventArgs e)
+		{
+			ShowCodeCompletionWindow(null);
+		}
+
 		void CommentBlock(object s, ExecutedRoutedEventArgs e)
 		{
 			if (false)
@@ -992,7 +998,7 @@ namespace D_IDE.D
 		{
 			try
 			{
-				if (!(EnteredText==" " || char.IsLetter(EnteredText[0]) || EnteredText[0] == '.') || 
+				if ((EnteredText!=null && EnteredText.Length>0 && !(EnteredText==" " || char.IsLetter(EnteredText[0]) || EnteredText[0] == '.')) || 
 					!DCodeCompletionSupport.CanShowCompletionWindow(this) || 
 					Editor.IsReadOnly)
 					return;
@@ -1009,22 +1015,32 @@ namespace D_IDE.D
 				if (showCompletionWindowOperation != null &&showCompletionWindowOperation.Status != DispatcherOperationStatus.Completed)
 					showCompletionWindowOperation.Abort();
 				*/
-				// Init completion window here
-				completionWindow = new CompletionWindow(Editor.TextArea);
-				completionWindow.CompletionList.InsertionRequested += new EventHandler(CompletionList_InsertionRequested);
-				//completionWindow.CloseAutomatically = true;
+
+				var cData = new List<ICompletionData>();
 
 				DCodeCompletionSupport.BuildCompletionData(
-					this, 
-					completionWindow.CompletionList.CompletionData, 
-					EnteredText, 
+					this,
+					cData,
+					EnteredText,
 					out lastCompletionListResultPath);
 
 				// If no data present, return
-				if (completionWindow.CompletionList.CompletionData.Count < 1)
+				if (cData.Count < 1)
 				{
 					completionWindow = null;
 					return;
+				}
+				else
+				{
+					// Init completion window
+
+					completionWindow = new CompletionWindow(Editor.TextArea);
+					completionWindow.CompletionList.InsertionRequested += new EventHandler(CompletionList_InsertionRequested);
+					//completionWindow.CloseAutomatically = true;
+
+					//HACK: Fill in data
+					foreach (var e in cData)
+						completionWindow.CompletionList.CompletionData.Add(e);
 				}
 
 				// Care about item pre-selection
@@ -1095,14 +1111,21 @@ namespace D_IDE.D
 
 				insightWindow = new OverloadInsightWindow(Editor.TextArea);
 				insightWindow.Provider = data;
+				insightWindow.Closed += new EventHandler(insightWindow_Closed);
 
 				var tt = new ToolTip();
 				(insightWindow as Control).Background = tt.Background;
+
 
 				insightWindow.Show();
 
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
+		}
+
+		void insightWindow_Closed(object sender, EventArgs e)
+		{
+			insightWindow = null;
 		}
 
 		public bool CanShowCodeCompletionPopup

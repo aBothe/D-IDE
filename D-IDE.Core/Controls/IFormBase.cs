@@ -89,5 +89,8 @@ namespace D_IDE.Core.Controls
 			new InputGestureCollection(new[] { new KeyGesture(Key.F5, ModifierKeys.Shift) }));
 
 		public static readonly RoutedUICommand ShowProjectSettings = new RoutedUICommand("","ShowProjectSettings",typeof(Window));
+
+		public static readonly RoutedUICommand CtrlSpaceCompletion = new RoutedUICommand("", "CtrlSpaceCompletion", typeof(Window),
+			new InputGestureCollection(new[] { new KeyGesture(Key.Space, ModifierKeys.Control) }));
 	}
 }

@@ -110,7 +110,7 @@ namespace D_Parser.Completion
 			}
 			#endregion
 
-			else if (EnteredText==" " || EnteredText.Length<1 || IsIdentifierChar(EnteredText[0]))
+			else if (EnteredText==null || EnteredText==" " || EnteredText.Length<1 || IsIdentifierChar(EnteredText[0]))
 			{
 				// 1) Get current context the caret is at.
 				ParserTrackerVariables trackVars = null;
@@ -144,7 +144,7 @@ namespace D_Parser.Completion
 				else if (EnteredText == " ")
 					return;
 
-				if (trackVars.LastParsedObject == null && !(parsedBlock is BlockStatement))
+				if (!(parsedBlock is BlockStatement) && !trackVars.IsParsingInitializer)
 					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
 
 				// In a method, parse from the method's start until the actual caret position to get an updated insight
