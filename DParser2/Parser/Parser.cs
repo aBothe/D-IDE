@@ -131,19 +131,18 @@ namespace D_Parser.Parser
         /// </summary>
         DModule doc;
 
-		public object PreviousParsedObject { get; protected set; }
 		/// <summary>
 		/// Used to track the expression/declaration/statement/whatever which is handled currently.
 		/// Required for code completion.
 		/// </summary>
-		public object LastParsedObject { get { return lastParsedObj; } set { PreviousParsedObject = lastParsedObj; lastParsedObj = value; } }
-		object lastParsedObj = null;
+		public object LastParsedObject 
+		{ get { return TrackerVariables.LastParsedObject; } set { TrackerVariables.LastParsedObject = value; } }
 
 		/// <summary>
 		/// Required for code completion.
 		/// True if a type/variable/method/etc. identifier is expected.
 		/// </summary>
-		public bool ExpectingIdentifier = false;
+		public bool ExpectingIdentifier {set{TrackerVariables.ExpectingIdentifier=value;}}
 
 		List<ImportStatement> imports = new List<ImportStatement>();
 
@@ -155,6 +154,8 @@ namespace D_Parser.Parser
 
 			return false;
 		}
+
+		public readonly ParserTrackerVariables TrackerVariables = new ParserTrackerVariables();
 
         /// <summary>
         /// Modifiers for entire block
@@ -408,4 +409,24 @@ namespace D_Parser.Parser
         }
         #endregion
     }
+
+	public class ParserTrackerVariables
+	{
+		public object PreviousParsedObject { get; protected set; }
+		/// <summary>
+		/// Used to track the expression/declaration/statement/whatever which is handled currently.
+		/// Required for code completion.
+		/// </summary>
+		public object LastParsedObject { get { return lastParsedObj; } set { PreviousParsedObject = lastParsedObj; lastParsedObj = value; } }
+		object lastParsedObj = null;
+
+		/// <summary>
+		/// Required for code completion.
+		/// True if a type/variable/method/etc. identifier is expected.
+		/// </summary>
+		public bool ExpectingIdentifier = false;
+
+		public INode InitializedNode=null;
+		public bool IsParsingInitializer=false;
+	}
 }

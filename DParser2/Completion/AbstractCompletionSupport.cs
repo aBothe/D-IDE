@@ -113,23 +113,19 @@ namespace D_Parser.Completion
 			else if (EnteredText==" " || EnteredText.Length<1 || IsIdentifierChar(EnteredText[0]))
 			{
 				// 1) Get current context the caret is at.
-				object lastObj = null;
-				object prevParsedObj = null;
-				bool ExpectedId = false;
+				ParserTrackerVariables trackVars = null;
 
 				var parsedBlock = DResolver.FindCurrentCaretContext(
 					Editor.ModuleCode,
 					curBlock,
 					Editor.CaretOffset,
 					Editor.CaretLocation,
-					out lastObj,
-					out prevParsedObj,
-					out ExpectedId);
+					out trackVars);
 
 				// 2) If in declaration and if node identifier is expected, do not show any data
 				if (
-					(lastObj is INode && ExpectedId) || 
-					(lastObj is TokenExpression && DTokens.BasicTypes[(lastObj as TokenExpression).Token] &&
+					(trackVars.LastParsedObject is INode && trackVars.ExpectingIdentifier) ||
+					(trackVars.LastParsedObject is TokenExpression && DTokens.BasicTypes[(trackVars.LastParsedObject as TokenExpression).Token] &&
 					!string.IsNullOrEmpty(EnteredText) &&
 					IsIdentifierChar(EnteredText[0]))
 					)
@@ -137,18 +133,18 @@ namespace D_Parser.Completion
 
 				var visibleMembers = DResolver.MemberTypes.All;
 
-				if (lastObj is ImportStatement)
+				if (trackVars.LastParsedObject is ImportStatement)
 				{
 					visibleMembers = DResolver.MemberTypes.Imports;
 				}
-				else if (lastObj is NewExpression)
+				else if (trackVars.LastParsedObject is NewExpression)
 				{
 					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types;
 				}
 				else if (EnteredText == " ")
 					return;
 
-				if (lastObj==null && !(parsedBlock is BlockStatement))
+				if (trackVars.LastParsedObject == null && !(parsedBlock is BlockStatement))
 					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
 
 				// In a method, parse from the method's start until the actual caret position to get an updated insight

@@ -641,7 +641,10 @@ namespace D_Parser.Parser
 			{
 				// DeclaratorInitializer
 				if (laKind == (Assign))
+				{
+					TrackerVariables.InitializedNode = firstNode;
 					(firstNode as DVariable).Initializer = Initializer();
+				}
 				firstNode.EndLocation = t.EndLocation;
 				var ret = new List<INode>();
 				ret.Add(firstNode);
@@ -663,7 +666,10 @@ namespace D_Parser.Parser
 					otherNode.Name = t.Value;
 
 					if (laKind == (Assign))
+					{
+						TrackerVariables.InitializedNode = otherNode;
 						otherNode.Initializer = Initializer();
+					}
 
 					otherNode.EndLocation = t.EndLocation;
 					ret.Add(otherNode);
@@ -1273,10 +1279,16 @@ namespace D_Parser.Parser
 			{
 				Step();
 
+				TrackerVariables.InitializedNode = ret;
+				TrackerVariables.IsParsingInitializer = true;
+
 				var defInit = AssignExpression(Scope);
 
 				if (ret is DVariable)
 					(ret as DVariable).Initializer = defInit;
+
+				if (!IsEOF)
+					TrackerVariables.IsParsingInitializer = false;
 			}
 			ret.EndLocation = t.EndLocation;
 
@@ -1302,6 +1314,8 @@ namespace D_Parser.Parser
 
 		IExpression NonVoidInitializer(IBlockNode Scope = null)
 		{
+			TrackerVariables.IsParsingInitializer = true;
+
 			#region ArrayInitializer
 			if (laKind == OpenSquareBracket)
 			{
@@ -1356,20 +1370,26 @@ namespace D_Parser.Parser
 					ae2.TemplateOrIdentifier = Type(); //TODO: Is it really a type!?
 					ae2.EndLocation = t.EndLocation;
 
+					if (!IsEOF)
+						TrackerVariables.IsParsingInitializer = false;
+
 					return ae2;
 				}
+
+				if (!IsEOF)
+					TrackerVariables.IsParsingInitializer = false;
 
 				return ae;
 			}
 			#endregion
 
 			// StructInitializer
-			if(laKind==OpenCurlyBrace)
+			if (laKind == OpenCurlyBrace)
 			{
 				// StructMemberInitializations
-				var ae = new StructInitializer() { Location=la.Location};
+				var ae = new StructInitializer() { Location = la.Location };
 				LastParsedObject = ae;
-				var inits=new List<StructMemberInitializer>();
+				var inits = new List<StructMemberInitializer>();
 
 				bool IsInit = true;
 				while (IsInit || laKind == (Comma))
@@ -1391,7 +1411,7 @@ namespace D_Parser.Parser
 						sinit.MemberName = t.Value;
 						Step();
 					}
-					
+
 					sinit.Specialization = NonVoidInitializer(Scope);
 
 					inits.Add(sinit);
@@ -1401,11 +1421,22 @@ namespace D_Parser.Parser
 
 				Expect(CloseCurlyBrace);
 				ae.EndLocation = t.EndLocation;
+
+				if (!IsEOF)
+					TrackerVariables.IsParsingInitializer = false;
+
 				return ae;
 			}
 
 			else
-				return AssignExpression();
+			{
+				var expr= AssignExpression();
+
+				if (!IsEOF)
+					TrackerVariables.IsParsingInitializer = false;
+
+				return expr;
+			}
 		}
 
 		ITypeDeclaration TypeOf()

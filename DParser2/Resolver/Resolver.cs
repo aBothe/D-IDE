@@ -167,7 +167,7 @@ namespace D_Parser.Resolver
 						if (!string.IsNullOrEmpty(curWatchedClass.Name) && curWatchedClass.Name.ToLower() == "object")
 							break;
 
-						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, new ResolverContext { ParseCache=ImportCache });
+						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, new ResolverContext { ParseCache=CodeCache, ImportCache=ImportCache });
 
 						if (baseclassDefs == null)
 							break;
@@ -557,14 +557,8 @@ namespace D_Parser.Resolver
 		public static object FindCurrentCaretContext(string code, 
 			IBlockNode CurrentScope, 
 			int caretOffset,CodeLocation caretLocation,
-			out object LastParsedObject,
-			out object PreviouslyParsedObject,
-			out bool ExpectedIdentifier)
+			out ParserTrackerVariables TrackerVariables)
 		{
-			LastParsedObject = null;
-			PreviouslyParsedObject = null;
-			ExpectedIdentifier = false;
-
 			bool ParseDecl=false;
 
 			int blockStart = 0;
@@ -636,12 +630,12 @@ namespace D_Parser.Resolver
 					}
 				}
 
-				PreviouslyParsedObject=	psr.PreviousParsedObject;
-				ExpectedIdentifier = psr.ExpectingIdentifier;
-				LastParsedObject = psr.LastParsedObject;
+				TrackerVariables = psr.TrackerVariables;
 
 				return ret;
 			}
+
+			TrackerVariables = null;
 
 			return null;
 		}
