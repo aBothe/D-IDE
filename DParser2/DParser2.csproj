@@ -76,6 +76,7 @@
     <Compile Include="Dom\ImportStatement.cs" />
     <Compile Include="Dom\NodeInterfaces.cs" />
     <Compile Include="Dom\Statements.cs" />
+    <Compile Include="Formatting\DFormatter.cs" />
     <Compile Include="Misc\HighPrecisionTimer.cs" />
     <Compile Include="Parser\TokenTracker.cs" />
     <Compile Include="Resolver\CodeScanner.cs" />
