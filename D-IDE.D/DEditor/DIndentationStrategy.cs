@@ -231,8 +231,17 @@ namespace D_IDE.D
 
 		public void IndentLine(TextDocument document, DocumentLine line, bool TakeCaret)
 		{
-			if (!DSettings.Instance.EnableSmartIndentation ||line.PreviousLine == null)
+			if (line.PreviousLine == null)
 				return;
+
+			if (!DSettings.Instance.EnableSmartIndentation)
+			{
+				var prevIndent = GetLineTabIndentation(document.GetText(line.PreviousLine));
+
+				RawlyIndentLine(prevIndent, document, line);
+
+				return;
+			}
 
 			bool hasPostCaretCurlyCloser = false;
 
