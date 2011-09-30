@@ -371,6 +371,11 @@ namespace D_Parser.Parser
 			}
 		}
 
+		public bool IsEOF
+		{
+			get { return lookaheadToken == null || lookaheadToken.Kind == DTokens.EOF || lookaheadToken.Kind == DTokens.__EOF__; }
+		}
+
 		#region Abstract Lexer Props & Methods
 		public IList<ParserError> LexerErrors = new List<ParserError>();
 		/// <summary>

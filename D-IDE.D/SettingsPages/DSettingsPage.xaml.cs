@@ -36,6 +36,7 @@ namespace D_IDE.D
 			sett.ForceCodeCompetionPopupCommit = checkBox_CodeInsertionOnNonLetter.IsChecked.Value;
 			sett.UseSemanticHighlighting = checkBox_UseSemanticHighlighting.IsChecked.Value;
 			sett.ShowSemanticErrors = checkBox_ShowSemanticErrors.IsChecked.Value;
+			sett.EnableSmartIndentation = checkBox_SmartIndentation.IsChecked.Value;
 
 			return true;
 		}
@@ -50,6 +51,7 @@ namespace D_IDE.D
 			checkBox_CodeInsertionOnNonLetter.IsChecked = sett.ForceCodeCompetionPopupCommit;
 			checkBox_UseSemanticHighlighting.IsChecked = sett.UseSemanticHighlighting;
 			checkBox_ShowSemanticErrors.IsChecked = sett.ShowSemanticErrors;
+			checkBox_SmartIndentation.IsChecked = sett.EnableSmartIndentation;
 		}
 
 		public override string SettingCategoryName

@@ -8,10 +8,13 @@ using D_Parser.Dom;
 using D_Parser;
 using System.IO;
 using D_IDE.Core;
+using D_Parser.Dom.Statements;
+using D_Parser.Parser;
+using System.Collections;
 
 namespace D_IDE.D
 {
-	public class DIndentationStrategy:IIndentationStrategy
+	public class DIndentationStrategy : IIndentationStrategy
 	{
 		readonly DEditorDocument dEditor;
 		bool _doBeginUpdateManually = false;
@@ -21,10 +24,10 @@ namespace D_IDE.D
 			dEditor = DEditorDocument;
 		}
 
-		public void RawlyIndentLine(int tabsToInsert,TextDocument document,DocumentLine line)
+		public void RawlyIndentLine(int tabsToInsert, TextDocument document, DocumentLine line)
 		{
-			if(!_doBeginUpdateManually)
-			document.BeginUpdate();
+			if (!_doBeginUpdateManually)
+				document.BeginUpdate();
 			/*
 			 * 1) Remove old indentation
 			 * 2) Insert new one
@@ -36,7 +39,7 @@ namespace D_IDE.D
 			if (curOff < document.TextLength)
 			{
 				char curChar = '\0';
-				while (curOff<document.TextLength&& ((curChar = document.GetCharAt(curOff)) == ' ' || curChar == '\t'))
+				while (curOff < document.TextLength && ((curChar = document.GetCharAt(curOff)) == ' ' || curChar == '\t'))
 				{
 					prevInd++;
 					curOff++;
@@ -44,26 +47,172 @@ namespace D_IDE.D
 
 				document.Remove(line.Offset, prevInd);
 			}
-			
+
 			// 2)
-			string indentString ="";
+			string indentString = "";
 			for (int i = 0; i < tabsToInsert; i++)
 				indentString += dEditor.Editor.Options.IndentationString;
 
 			document.Insert(line.Offset, indentString);
 			if (!_doBeginUpdateManually)
-			document.EndUpdate();
+				document.EndUpdate();
+		}
+
+		public class RawDScanner
+		{
+			public class CodeBlock
+			{
+				public int InitialToken;
+				public CodeLocation StartLocation;
+				//public CodeLocation EndLocation;
+
+				public bool IsSingleLineIndentation = false;
+				//public bool IsWaitingForSemiColon = false;
+
+				public bool IsNonClampBlock
+				{
+					get { return InitialToken != DTokens.OpenParenthesis && InitialToken != DTokens.OpenSquareBracket && InitialToken != DTokens.OpenCurlyBrace; }
+				}
+
+				/// <summary>
+				/// The last token before this CodeBlock started.
+				/// </summary>
+				public DToken LastPreBlockIdentifier;
+
+				/// <summary>
+				/// Last token found within current block.
+				/// </summary>
+				public DToken LastToken;
+
+				public CodeBlock Parent;
+
+				public int OuterIndentation
+				{
+					get {
+						if (Parent != null)
+							return Parent.OuterIndentation + 1;
+
+						return 0;
+					}
+				}
+
+				public int InnerIndentation
+				{
+					get {
+						return OuterIndentation + 1;			
+					}
+				}
+			}
+
+			static bool IsPreStatementToken(int t)
+			{
+				return
+					t==DTokens.Version ||
+					t==DTokens.Debug ||
+					t == DTokens.If ||
+					t == DTokens.While ||
+					t == DTokens.For ||
+					t == DTokens.Foreach ||
+					t == DTokens.Foreach_Reverse ||
+					t == DTokens.Synchronized;
+			}
+
+			public static CodeBlock CalculateIndentation(string code, int offset)
+			{
+				if (offset >= code.Length)
+					offset = code.Length-1;
+
+				CodeBlock block = null;
+
+				var lex = new Lexer(new StringReader(code.Substring(0, offset)));
+
+				lex.NextToken();
+
+				while(!lex.IsEOF)
+				{
+					lex.NextToken();
+
+					var t=lex.CurrentToken;
+					var la=lex.LookAhead;
+
+					if (t != null && (t.Kind == DTokens.Case || t.Kind == DTokens.Default))
+					{
+						if (block != null && block.IsNonClampBlock)
+							block = block.Parent;
+
+						if (la.Kind != DTokens.Colon)
+						{
+							var psr = new DParser(lex);
+							psr.AssignExpression();
+						}
+						
+						lex.NextToken();
+
+						block = new CodeBlock
+						{ 
+							InitialToken=DTokens.Case,
+							StartLocation=t.EndLocation,
+
+							Parent=block
+						};
+					}
+
+					else if (block!=null && (block.IsSingleLineIndentation) && la.Kind == DTokens.Semicolon)
+						block=block.Parent;
+
+					else if(la.Kind==DTokens.OpenParenthesis || la.Kind==DTokens.OpenSquareBracket || la.Kind==DTokens.OpenCurlyBrace)
+					{
+						block = new CodeBlock
+						{ 
+							LastPreBlockIdentifier=t, 
+							InitialToken=la.Kind , 
+							StartLocation=la.Location,
+
+							Parent=block
+						};
+					}
+
+					else if (
+						block != null && (
+						la.Kind == DTokens.CloseParenthesis ||
+						la.Kind == DTokens.CloseSquareBracket ||
+						la.Kind == DTokens.CloseCurlyBrace))
+					{
+						if (block.InitialToken == DTokens.OpenParenthesis && la.Kind == DTokens.CloseParenthesis
+							&& IsPreStatementToken(block.LastPreBlockIdentifier.Kind)
+							&& lex.Peek().Kind != DTokens.OpenCurlyBrace)
+						{
+							block = new CodeBlock
+							{
+								LastPreBlockIdentifier = t,
+								IsSingleLineIndentation = true,
+								StartLocation = t.Location,
+
+								Parent = block
+							};
+						}
+
+					rep:
+						block = block.Parent;
+
+						if (block != null && la.Kind == DTokens.CloseCurlyBrace && block.IsNonClampBlock)
+							goto rep;
+					}
+				}
+
+				return block;
+			}
 		}
 
 		public int GetLineTabIndentation(string lineText)
 		{
 			int ret = 0;
-			
-			foreach(var c in lineText)
+
+			foreach (var c in lineText)
 			{
-				if(c==' ' || c=='\t')
+				if (c == ' ' || c == '\t')
 					ret++;
-				else 
+				else
 					break;
 			}
 
@@ -72,117 +221,46 @@ namespace D_IDE.D
 
 		public void UpdateIndentation(string typedText)
 		{
-			// if both typed { or }, remove one tab
-			if (typedText == "{" || typedText == "}")
-			{
-				var document = dEditor.Editor.Document;
-				var line = dEditor.Editor.Document.GetLineByOffset(dEditor.Editor.CaretOffset);
-				var lineText = document.GetText(line);
-
-				// Check if nothing else stands in front of the { or } on 'line'
-				if (!lineText.TrimStart().StartsWith(typedText))
-					return;
-
-				var prevLineText = line.PreviousLine != null ? document.GetText(line.PreviousLine) : "";
-
-				// New indentation is that of the previous line - 1
-				int newInd = GetLineTabIndentation(prevLineText)-1;
-				RawlyIndentLine(newInd, document, line);
-			}
+			IndentLine(dEditor.Editor.Document, dEditor.Editor.Document.GetLineByNumber(dEditor.Editor.TextArea.Caret.Line),true);
 		}
 
 		public void IndentLine(TextDocument document, DocumentLine line)
 		{
-			/*
-			 * Way of solving this:
-			 *	1) Get the indentation of the previous line
-			 *	2) If the prev line NOT ends with a semicolon, add an additional tab EXCEPT when a { was typed
-			 *	3) When a } was typed, remove one tab
-			 *	4) Insert calculated indentation
-			 *	
-			 * Note: Primarily, this method is fired only when a new line is about to be created - so for better indentation, firing after (special) keys were typed is needed!
-			 */
-			if (line.PreviousLine == null)
+			IndentLine(document, line, false);
+		}
+
+		public void IndentLine(TextDocument document, DocumentLine line, bool TakeCaret)
+		{
+			if (!DSettings.Instance.EnableSmartIndentation ||line.PreviousLine == null)
 				return;
 
-			string lineText = null;
+			bool hasPostCaretCurlyCloser = false;
 
-			var prevLineText = document.GetText(line.PreviousLine);
+			var offset = TakeCaret?dEditor.CaretOffset: (line.PreviousLine.Offset + line.PreviousLine.Length);
 
-			var caretChar = 
-				_doBeginUpdateManually? // When doing a multi-line reformat, take the first non-ws line character instead of the character beneath the caret
-				(!string.IsNullOrWhiteSpace(lineText=document.GetText(line))?lineText.TrimStart()[0]:'\0'):
+			if (document.GetText(line).TrimStart().StartsWith("}") ||(TakeCaret && document.GetCharAt(offset-1)==':'))
+				hasPostCaretCurlyCloser = true;
 
-				(dEditor.Editor.CaretOffset>=document.TextLength?'\0':document.GetCharAt(dEditor.Editor.CaretOffset));
+			var block = RawDScanner.CalculateIndentation(document.Text, offset);
 
-			// 1)
-			int prevInd = GetLineTabIndentation(prevLineText);
-
-			// 2)
-			prevLineText=prevLineText.TrimEnd();
-			if (!string.IsNullOrWhiteSpace(prevLineText) && !prevLineText.EndsWith("}") && prevLineText.EndsWith("{") && caretChar!='{')
+			if (block != null)
 			{
-				prevInd++;
+				int ind = block.InnerIndentation;
+
+				if (hasPostCaretCurlyCloser)
+					ind--;
+
+				RawlyIndentLine(ind, document, line);
 			}
-			// After a : was typed, check for possible multi-scope attributes (e.g. private, public, protected) and insert a new line + 1 more tab
-			else if (prevLineText.EndsWith(":"))
-			{
-				prevInd++;
-				/*string attrIdentifier = "";
-				bool foundIdChars = false;
-				int modStartOffset = 0;
-
-				for (int i = Editor.CaretOffset - 2; i >= 0; i--)
-				{
-					var c = Editor.Document.GetCharAt(i);
-
-					if (char.IsLetter(c))
-					{
-						foundIdChars = true;
-						attrIdentifier = c + attrIdentifier;
-					}
-					else if (foundIdChars)
-					{
-						modStartOffset = i;
-						break;
-					}
-					else if (!char.IsWhiteSpace(c))
-						break;
-				}
-
-				if (!string.IsNullOrEmpty(attrIdentifier))
-				{
-					int token = DTokens.GetTokenID(attrIdentifier);
-
-					if (token>=0&& DTokens.Modifiers[token])
-					{
-						var stringToInsert = "\n";
-
-						var line = Editor.Document.GetLineByOffset(modStartOffset);
-
-						for (int i = indentationStrategy.GetLineTabIndentation(Editor.Document.GetText(line)); i >= 0; i--)
-							stringToInsert += Editor.Options.IndentationString;
-
-						Editor.Document.Insert(Editor.CaretOffset, stringToInsert);
-					}
-				}*/
-			}
-
-			// 3)
-			if (caretChar == '}')
-				prevInd--;
-
-			// 4)
-			RawlyIndentLine(prevInd, document, line);
 		}
 
 		public void IndentLines(TextDocument document, int beginLine, int endLine)
 		{
 			_doBeginUpdateManually = true;
 			document.BeginUpdate();
-			while(beginLine<=endLine)
+			while (beginLine <= endLine)
 			{
-				IndentLine(document,document.GetLineByNumber(beginLine));
+				IndentLine(document, document.GetLineByNumber(beginLine));
 				beginLine++;
 			}
 			document.EndUpdate();

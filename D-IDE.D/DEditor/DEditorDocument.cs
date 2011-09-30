@@ -1166,9 +1166,9 @@ namespace D_IDE.D
 		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
 			// If typed a block-related char, update line indentation
-			if (e.Text == "{" || e.Text == "}" || e.Text==";")
+			if (e.Text=="{" || e.Text == "}" || e.Text==":")
 				indentationStrategy.UpdateIndentation(e.Text);
-
+			
 			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
 			if ((e.Text == "." || e.Text==" ") && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);

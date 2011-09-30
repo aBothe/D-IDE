@@ -36,6 +36,8 @@ namespace D_IDE.D
 		public bool UseSemanticHighlighting = true;
 		public bool ShowSemanticErrors = true;
 
+		public bool EnableSmartIndentation = true;
+
 		/// <summary>
 		/// If non-letter has been typed, the popup will close down and insert the selected item's completion text.
 		/// If this value is false, the completion text will _not_ be inserted.
@@ -78,6 +80,10 @@ namespace D_IDE.D
 			x.WriteAttributeString("value", ShowSemanticErrors.ToString().ToLower());
 			x.WriteEndElement();
 
+			x.WriteStartElement("SmartIndentation");
+			x.WriteAttributeString("value", EnableSmartIndentation. ToString().ToLower());
+			x.WriteEndElement();
+
 			dmd1.Save(x);
 			dmd2.Save(x);
 
@@ -118,6 +124,11 @@ namespace D_IDE.D
 					case "ShowSemanticErrors":
 						if (x.MoveToAttribute("value"))
 							ShowSemanticErrors = x.ReadContentAsBoolean();
+						break;
+
+					case "SmartIndentation":
+						if (x.MoveToAttribute("value"))
+							EnableSmartIndentation = x.ReadContentAsBoolean();
 						break;
 
 					case "cv2pdb":
