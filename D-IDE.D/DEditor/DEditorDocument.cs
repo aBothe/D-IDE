@@ -793,7 +793,19 @@ namespace D_IDE.D
 		{
 			public readonly EditorDocument EditorDocument;
 			public readonly IdentifierDeclaration Id;
-			public ResolveResult ResolveResult;
+			ResolveResult rr;
+			public ResolveResult ResolveResult
+			{
+				get { return rr; }
+				set {
+					rr = value;
+
+					if (rr is ModuleResult)
+						ForegroundColor = Colors.DarkRed;
+					else
+						ForegroundColor = Color.FromRgb(0x2b, 0x91, 0xaf);
+				}
+			}
 
 			public CodeSymbolMarker(EditorDocument EditorDoc, IdentifierDeclaration Id, int StartOffset, int Length)
 				: base(EditorDoc.MarkerStrategy, StartOffset, Length)
@@ -813,6 +825,7 @@ namespace D_IDE.D
 			void Init()
 			{
 				this.MarkerType = TextMarkerType.None;
+
 				ForegroundColor = Color.FromRgb(0x2b, 0x91, 0xaf);
 			}
 		}

@@ -232,7 +232,7 @@ namespace D_Parser.Resolver
 						}
 					}
 
-					if (curRes is TypeResult)
+					else if (curRes is TypeResult)
 					{
 						// Yeah, in quite all cases we do identify a class via its name ;-)
 						if (curTypeDeclBase is IdentifierDeclaration &&
@@ -244,6 +244,13 @@ namespace D_Parser.Resolver
 							// See performance reasons
 							//if (curRes != rr && !WasAlreadyResolved) compDict.Add(curTypeDeclBase.ToString(), curRes);
 						}
+					}
+
+					else if (curRes is ModuleResult)
+					{
+						if (curTypeDeclBase is IdentifierDeclaration &&
+							!csr.ResolvedIdentifiers.ContainsKey(curTypeDeclBase as IdentifierDeclaration))
+							csr.ResolvedIdentifiers.Add(curTypeDeclBase as IdentifierDeclaration, curRes);
 					}
 
 					curRes = curRes.ResultBase;
