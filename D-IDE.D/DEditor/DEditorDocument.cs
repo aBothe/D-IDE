@@ -623,7 +623,7 @@ namespace D_IDE.D
 			SyntaxTree.ModuleName = ProposedModuleName;
 
 			//TODO: Make semantic highlighting 1) faster and 2) redraw symbols immediately
-			UpdateSemanticHighlighting();
+			UpdateSemanticHighlighting(true);
 			//CanRefreshSemanticHighlightings = false;
 
 			UpdateBlockCompletionData();
