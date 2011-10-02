@@ -123,7 +123,7 @@ namespace D_Parser.Completion
 					out trackVars);
 
 				// 2) If in declaration and if node identifier is expected, do not show any data
-				if (
+				if (trackVars==null ||
 					(trackVars.LastParsedObject is INode && trackVars.ExpectingIdentifier) ||
 					(trackVars.LastParsedObject is TokenExpression && DTokens.BasicTypes[(trackVars.LastParsedObject as TokenExpression).Token] &&
 					!string.IsNullOrEmpty(EnteredText) &&
