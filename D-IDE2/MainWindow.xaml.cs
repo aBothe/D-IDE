@@ -454,16 +454,18 @@ namespace D_IDE
 
 		private void LaunchDebugger_Click(object sender, RoutedEventArgs e)
 		{
+			BuildResult br = null;
 			if (CoreManager.DebugManagement.IsDebugging)
 				Button_ResumeExecution_Click(null, null);
-			else if (RunCurrentModuleOnly ? IDEManager.BuildManagement.BuildSingle() : IDEManager.BuildManagement.Build())
+			else if (RunCurrentModuleOnly ? ((br= IDEManager.BuildManagement.BuildSingle())!=null && br.Successful) : IDEManager.BuildManagement.Build())
 				IDEManager.IDEDebugManagement.LaunchWithDebugger();
 		}
 
 		bool _showextconsole = false;
 		private void LaunchWithoutDebugger_Click(object sender, RoutedEventArgs e)
 		{
-			if (RunCurrentModuleOnly ? IDEManager.BuildManagement.BuildSingle() : IDEManager.BuildManagement.Build())
+			BuildResult br = null;
+			if (RunCurrentModuleOnly ? ((br = IDEManager.BuildManagement.BuildSingle()) != null && br.Successful) : IDEManager.BuildManagement.Build())
 				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(_showextconsole);
 			_showextconsole = false;
 		}

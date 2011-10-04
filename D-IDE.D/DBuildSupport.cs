@@ -15,6 +15,11 @@ namespace D_IDE.D
 		Process TempPrc = null;
 		bool ShallStop = false;
 
+		/// <summary>
+		/// Maximum compilation time (10 Seconds)
+		/// </summary>
+		public const int MaxCompilationTime=10000;
+
 		public DVersion DMDVersion = DVersion.D2;
 		public bool CompileRelease = true;
 		public DMDConfig CurrentDMDConfig
@@ -135,7 +140,7 @@ namespace D_IDE.D
 					}, OnExit);
 
 			if (TempPrc != null && !TempPrc.HasExited)
-				TempPrc.WaitForExit(10000);
+				TempPrc.WaitForExit(MaxCompilationTime);
 
 			br.Successful = br.Successful && TempPrc!=null && TempPrc.ExitCode==0 && File.Exists(obj);
 			return br;
@@ -181,7 +186,7 @@ namespace D_IDE.D
 			}, OnExit);
 
 			if (TempPrc != null && !TempPrc.HasExited)
-				TempPrc.WaitForExit(10000);
+				TempPrc.WaitForExit(MaxCompilationTime);
 
 			br.Successful = br.Successful && TempPrc.ExitCode==0 && File.Exists(targetFile);
 
@@ -388,6 +393,8 @@ namespace D_IDE.D
 
 			if (TempPrc != null && !TempPrc.HasExited)
 				TempPrc.Kill();
+
+			base.StopBuilding();
 		}
 	}
 }

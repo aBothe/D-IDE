@@ -14,36 +14,58 @@ namespace D_IDE.Core
 		public abstract void BuildProject(Project Project);
 		public abstract void BuildModule(SourceModule Module, string OutputDirectory, string ExecDirectory, bool LinkToStandAlone);
 
-		#region TODO: Async build support
-		public virtual void BuildModuleAsync(SourceModule Module, string OutputDirectory, string ExecDirectory, bool LinkToStandAlone)
+		public delegate void BuildFinishedEvent(BuildResult Result);
+		public event BuildFinishedEvent BuildFinished;
+		protected virtual void OnBuildFinished(BuildResult res)
+		{
+			if (BuildFinished != null)
+				BuildFinished(res);
+		}
+
+		public virtual void StopBuilding()
 		{
 			if (buildThread != null && buildThread.IsAlive)
 				buildThread.Abort();
 
+			buildThread = null;
+		}
+
+		public void BuildProjectAsync(Project Project)
+		{
+			if (Project == null)
+				return;
+		}
+
+		public void BuildModuleAsync(SourceModule Module, string OutputDirectory, string ExecDirectory, bool LinkToStandAlone)
+		{
+			if (Module == null)
+				return;
+
+			StopBuilding();
+
 			buildThread = new Thread(delegate()
 			{
-				BuildModule(Module,OutputDirectory,ExecDirectory,LinkToStandAlone);
+				BuildModule(Module, OutputDirectory,ExecDirectory, LinkToStandAlone);
+				OnBuildFinished(Module.LastBuildResult);
 			});
 
 			buildThread.IsBackground = true;
 			buildThread.Start();
 		}
 
+		public void BuildStandAloneAsync(SourceModule Module)
+		{
+			if (Module == null)
+				return;
+
+			var dir=Path.GetDirectoryName(Module.AbsoluteFileName);
+			BuildModuleAsync(Module, dir, dir, true);
+		}
+
 		public void BuildStandAlone(SourceModule Module)
 		{
 			BuildModule(Module, Path.GetDirectoryName(Module.FileName), Path.GetDirectoryName(Module.FileName), true);
 		}
-
-		public delegate void BuildFinishedEvent(BuildResult Result);
-		public event BuildFinishedEvent BuildFinished;
-		protected void OnBuildFinished(BuildResult res)
-		{
-			if (BuildFinished != null)
-				BuildFinished(res);
-		}
-
-		public abstract void StopBuilding();
-		#endregion
 
 		public BuildResult BuildStandAlone(string file)
 		{

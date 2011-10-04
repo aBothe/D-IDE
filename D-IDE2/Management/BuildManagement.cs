@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using D_IDE.Core;
 using System.IO;
+using System.Threading;
 
 namespace D_IDE
 {
@@ -32,7 +33,22 @@ namespace D_IDE
 				if (CurrentSolution != null)
 					return Build(CurrentSolution, true);
 
-				return BuildSingle();
+				var br= BuildSingle();
+				if (br != null)
+					return br.Successful;
+
+				return false;
+			}
+
+			public static void BuildAsync(bool BuildSingle=false,Action<bool> OnFinished=null)
+			{
+				var t = new Thread(() =>
+				{
+
+				});
+
+				t.IsBackground = true;
+				t.Start();
 			}
 
 			public static bool Build(Solution sln, bool Incrementally)
@@ -68,6 +84,7 @@ namespace D_IDE
 				// Disable build menu
 				IsBuilding = false;
 				IDEManager.Instance.MainWindow.RefreshMenu();
+				ErrorManagement.RefreshErrorList();
 				return ret;
 			}
 
@@ -75,8 +92,10 @@ namespace D_IDE
 			{
 				// Enable build menu
 				IsBuilding = true;
+				IDEManager.EditingManagement.SaveAllFiles();
 				IDEManager.Instance.MainWindow.RefreshMenu();
 				IDEManager.Instance.MainWindow.LeftStatusText = "Build " + Project.Name;
+				IDEManager.Instance.MainWindow.ClearLog();
 
 				// Build project with the interal method that's dedicated to build a project
 				var r = InternalBuild(Project, Incrementally);
@@ -85,16 +104,12 @@ namespace D_IDE
 				IsBuilding = false;
 				IDEManager.Instance.MainWindow.RefreshMenu();
 				IDEManager.Instance.MainWindow.LeftStatusText = r ? "Build successful" : "Build failed";
+				ErrorManagement.RefreshErrorList();
 				return r;
 			}
 
 			static bool InternalBuild(Project Project, bool Incrementally)
 			{
-				// Save all files that belong to Project
-				foreach (var ed in Instance.Editors.Where(e=>Project.ContainsFile(e.AbsoluteFilePath)))
-					ed.Save();
-
-				Instance.MainWindow.ClearLog();
 				// Important: Reset error list's unbound build result
 				ErrorManagement.LastSingleBuildResult = null;
 
@@ -112,9 +127,10 @@ namespace D_IDE
 					// Set debug support
 					if (lang.CanUseDebugging)
 						DebugManagement.CurrentDebugSupport = lang.DebugSupport;
-					else DebugManagement.CurrentDebugSupport = null;
+					else 
+						DebugManagement.CurrentDebugSupport = null;
 
-					// Increment build number if the user wants it to be
+					// Increment build number if the user enabled it
 					if (Project.AutoIncrementBuildNumber)
 						if (Project.LastBuildResult!=null && Project.LastBuildResult.Successful)
 							Project.Version.IncrementBuild();
@@ -128,18 +144,9 @@ namespace D_IDE
 					if (Project.LastBuildResult.Successful)
 						Project.CopyCopyableOutputFiles();
 
-					// Update error list
-					ErrorManagement.RefreshErrorList();
-
 					return Project.LastBuildResult.Successful;
 				}
 				return false;
-			}
-
-			public static bool BuildSingle()
-			{
-				string _u = null;
-				return BuildSingle(out _u);
 			}
 
 			/// <summary>
@@ -147,10 +154,23 @@ namespace D_IDE
 			/// </summary>
 			public static bool BuildSingle(out string CreatedExecutable)
 			{
-				CreatedExecutable = null;
-				var ed = Instance.CurrentEditor;
+				CreatedExecutable=null;
+				var succ = BuildSingle();
+				if (succ != null)
+				{
+					CreatedExecutable = succ.TargetFile;
+					return succ.Successful;
+				}
+
+				return false;
+			}
+
+			public static BuildResult BuildSingle()
+			{
+				AbstractEditorDocument ed = ed = Instance.CurrentEditor;
+
 				if (ed == null)
-					return false;
+					return null;
 
 				// Save module
 				ed.Save();
@@ -162,15 +182,17 @@ namespace D_IDE
 
 				// Check if binding supports building
 				if (lang == null || IsProject || !lang.CanBuild)
-					return false;
+					return null;
 
 				// Set debug support
 				if (lang.CanUseDebugging)
 					DebugManagement.CurrentDebugSupport = lang.DebugSupport;
-				else DebugManagement.CurrentDebugSupport = null;
+				else
+					DebugManagement.CurrentDebugSupport = null;
 
 				// Enable build menu
 				IsBuilding = true;
+
 				IDEManager.Instance.MainWindow.RefreshMenu();
 
 				// Clear build output
@@ -178,14 +200,13 @@ namespace D_IDE
 
 				// Execute build
 				var br = ErrorManagement.LastSingleBuildResult = lang.BuildSupport.BuildStandAlone(file);
-				CreatedExecutable = br.TargetFile;
 
 				// Update error list, Disable build menu
 				ErrorManagement.RefreshErrorList();
 				IsBuilding = false;
 				IDEManager.Instance.MainWindow.RefreshMenu();
 
-				return br.Successful;
+				return br;
 			}
 
 			public static void CleanUpOutput(Solution sln)

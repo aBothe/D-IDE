@@ -149,6 +149,18 @@ namespace D_IDE.Core
 			}
 		}
 
+		/// <summary>
+		/// Executes an anonymous and parameterless delegate on the MainWindow's Dispatcher thread
+		/// </summary>
+		/// <param name="deleg"></param>
+		public static void ExecuteOnUIThread(ThreadStart deleg)
+		{
+			if (CoreManager.Instance != null && CoreManager.Instance.MainWindow != null)
+				CoreManager.Instance.MainWindow.Dispatcher.Invoke(deleg);
+			else
+				deleg();
+		}
+
 		#region Icons
 		public static BitmapImage FromDrawingImage(System.Drawing.Icon ico)
 		{

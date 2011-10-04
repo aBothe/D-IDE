@@ -596,7 +596,6 @@ namespace D_IDE.Controls.Panels
 					}
 					else
 					{
-
 						var prj = pn.Project;
 
 						cm.Items.Add("Build", CommonIcons.Icons_16x16_BuildCurrentSelectedProject, delegate(Object o, EventArgs _e)
