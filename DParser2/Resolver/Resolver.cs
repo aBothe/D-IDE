@@ -883,7 +883,10 @@ namespace D_Parser.Resolver
 						string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
 
 						// Scan for static properties
-						var staticProp = StaticPropertyResolver.TryResolveStaticProperties(rbase, declaration as IdentifierDeclaration);
+						var staticProp = StaticPropertyResolver.TryResolveStaticProperties(
+							rbase, 
+							declaration as IdentifierDeclaration,
+							ctxt);
 						if (staticProp != null)
 						{
 							returnedResults.Add(staticProp);
@@ -1033,7 +1036,7 @@ namespace D_Parser.Resolver
 			/// </summary>
 			/// <param name="InitialResult"></param>
 			/// <returns></returns>
-			public static ResolveResult TryResolveStaticProperties(ResolveResult InitialResult, IdentifierDeclaration Identifier)
+			public static ResolveResult TryResolveStaticProperties(ResolveResult InitialResult, IdentifierDeclaration Identifier, ResolverContext ctxt=null)
 			{
 				if (InitialResult==null || Identifier==null || InitialResult is ModuleResult)
 				{
@@ -1056,7 +1059,8 @@ namespace D_Parser.Resolver
 				{
 					var prop_Init = new DVariable
 					{
-						Name = "init"
+						Name = "init",
+						Description = "Initializer"
 					};
 
 					if (relatedNode != null)
@@ -1086,9 +1090,64 @@ namespace D_Parser.Resolver
 
 				#region sizeof
 				if (propertyName == "sizeof")
-				{
+					return new MemberResult
+					{
+						ResultBase = InitialResult,
+						TypeDeclarationBase = Identifier,
+						ResolvedMember = new DVariable { 
+							Name="sizeof",
+							Type=new DTokenDeclaration(DTokens.Int),
+							Initializer=new IdentifierExpression(4),
+							Description = "Size in bytes (equivalent to C's sizeof(type))"
+						}
+					};
+				#endregion
 
-				}
+				#region alignof
+				if (propertyName == "alignof")
+					return new MemberResult
+					{
+						ResultBase = InitialResult,
+						TypeDeclarationBase = Identifier,
+						ResolvedMember = new DVariable
+						{
+							Name = "alignof",
+							Type = new DTokenDeclaration(DTokens.Int),
+							Description = "Alignment size"
+						}
+					};
+				#endregion
+
+				#region mangleof
+				if (propertyName == "mangleof")
+					return new MemberResult
+					{
+						ResultBase = InitialResult,
+						TypeDeclarationBase = Identifier,
+						ResolvedMember = new DVariable
+						{
+							Name = "mangleof",
+							Type = new IdentifierDeclaration("string"),
+							Description = "String representing the ‘mangled’ representation of the type"
+						},
+						MemberBaseTypes = ResolveType(new IdentifierDeclaration("string"), ctxt)
+					};
+				#endregion
+
+				#region stringof
+				if (propertyName == "stringof")
+					return new MemberResult
+					{
+						ResultBase = InitialResult,
+						TypeDeclarationBase = Identifier,
+						ResolvedMember = new DVariable
+						{
+							Name = "stringof",
+							Type = new IdentifierDeclaration("string"),
+							Description = "String representing the source representation of the type"
+						},
+						MemberBaseTypes=ResolveType(new IdentifierDeclaration("string"),ctxt)
+					};
 				#endregion
 
 				return null;
