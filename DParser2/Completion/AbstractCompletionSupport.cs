@@ -218,14 +218,20 @@ namespace D_Parser.Completion
 			if (rr is MemberResult)
 			{
 				var mrr = rr as MemberResult;
+				bool dontAddInit = false;
 				if (mrr.MemberBaseTypes != null)
 					foreach (var i in mrr.MemberBaseTypes)
+					{
+						if (i is StaticTypeResult || i is ExpressionResult)
+							dontAddInit = true;
+
 						BuildCompletionData(i, currentlyScopedBlock,
 							(mrr.ResolvedMember is DVariable && (mrr.ResolvedMember as DVariable).IsAlias) ?
 								isVariableInstance : true, rr); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
+					}
 
 				if (resultParent == null)
-					StaticPropertyAddition.AddGenericProperties(rr, CompletionDataGenerator, mrr.ResolvedMember, DontAddInitProperty: mrr.MemberBaseTypes != null);
+					StaticPropertyAddition.AddGenericProperties(rr, CompletionDataGenerator, mrr.ResolvedMember, DontAddInitProperty: dontAddInit);
 			}
 			#endregion
 

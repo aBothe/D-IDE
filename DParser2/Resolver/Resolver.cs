@@ -882,8 +882,14 @@ namespace D_Parser.Resolver
 					{
 						string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
 
-						//TODO: Scan for static properties
-						
+						// Scan for static properties
+						var staticProp = StaticPropertyResolver.TryResolveStaticProperties(rbase, declaration as IdentifierDeclaration);
+						if (staticProp != null)
+						{
+							returnedResults.Add(staticProp);
+							continue;
+						}
+
 						var scanResults = new List<ResolveResult>();
 						scanResults.Add(rbase);
 						var nextResults=new List<ResolveResult>();
@@ -1016,6 +1022,77 @@ namespace D_Parser.Resolver
 			}
 
 			return null;
+		}
+
+		public class StaticPropertyResolver
+		{
+			/// <summary>
+			/// Tries to resolve a static property's name.
+			/// Returns a result describing the theoretical member (".init"-%gt;MemberResult; ".typeof"-&gt;TypeResult etc).
+			/// Returns null if nothing was found.
+			/// </summary>
+			/// <param name="InitialResult"></param>
+			/// <returns></returns>
+			public static ResolveResult TryResolveStaticProperties(ResolveResult InitialResult, IdentifierDeclaration Identifier)
+			{
+				if (InitialResult==null || Identifier==null || InitialResult is ModuleResult)
+				{
+					return null;
+				}
+
+				var propertyName = Identifier.Value as string;
+				if (propertyName == null)
+					return null;
+
+				INode relatedNode=null;
+
+				if(InitialResult is MemberResult)
+					relatedNode=(InitialResult as MemberResult).ResolvedMember;
+				else if(InitialResult is TypeResult)
+					relatedNode=(InitialResult as TypeResult).ResolvedTypeDefinition;
+
+				#region init
+				if (propertyName == "init")
+				{
+					var prop_Init = new DVariable
+					{
+						Name = "init"
+					};
+
+					if (relatedNode != null)
+					{
+						if (!(relatedNode is DVariable))
+						{
+							prop_Init.Parent = relatedNode.Parent;
+							prop_Init.Type = new IdentifierDeclaration( relatedNode.Name);
+						}
+						else
+						{
+							prop_Init.Parent = relatedNode;
+							prop_Init.Initializer = (relatedNode as DVariable).Initializer;
+							prop_Init.Type = relatedNode.Type;
+						}
+					}
+
+					return new MemberResult
+					{
+						ResultBase = InitialResult,
+						MemberBaseTypes=new[]{InitialResult},
+						TypeDeclarationBase = Identifier,
+						ResolvedMember = prop_Init
+					};
+				}
+				#endregion
+
+				#region sizeof
+				if (propertyName == "sizeof")
+				{
+
+				}
+				#endregion
+
+				return null;
+			}
 		}
 
 		/// <summary>
