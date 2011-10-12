@@ -160,7 +160,7 @@ namespace D_Parser.Completion
 				}
 
 				if (visibleMembers != DResolver.MemberTypes.Imports)
-					listedItems = DResolver.EnumAllAvailableMembers(curBlock/*, curStmt*/, Editor.CaretLocation, Editor.ImportCache, visibleMembers);
+					listedItems = DResolver.EnumAllAvailableMembers(curBlock, curStmt, Editor.CaretLocation, Editor.ImportCache, visibleMembers);
 				
 				//TODO: Split the keywords into such that are allowed within block statements and non-block statements
 				if(DResolver.CanShowMemberType(visibleMembers, DResolver.MemberTypes.Keywords))
@@ -758,6 +758,7 @@ namespace D_Parser.Completion
 					new ResolverContext
 					{
 						ScopedBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt),
+						ScopedStatement=curStmt,
 						ParseCache = Editor.ParseCache,
 						ImportCache = Editor.ImportCache
 					}, true, true);

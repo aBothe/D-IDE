@@ -34,6 +34,7 @@ namespace D_Parser.Resolver
 	public class ResolverContext
 	{
 		public IBlockNode ScopedBlock;
+		public IStatement ScopedStatement;
 		public IEnumerable<IAbstractSyntaxTree> ParseCache;
 		public IEnumerable<IAbstractSyntaxTree> ImportCache;
 		public bool ResolveBaseTypes = true;
@@ -112,7 +113,7 @@ namespace D_Parser.Resolver
 		/// <returns></returns>
 		public static IEnumerable<INode> EnumAllAvailableMembers(
 			IBlockNode ScopedBlock
-			/*, IStatement ScopedStatement*/,
+			, IStatement ScopedStatement,
 			CodeLocation Caret,
 			IEnumerable<IAbstractSyntaxTree> CodeCache,
 			MemberTypes VisibleMembers)
@@ -127,12 +128,12 @@ namespace D_Parser.Resolver
 			var ImportCache = ResolveImports(ScopedBlock.NodeRoot as DModule, CodeCache);
 
 			#region Current module/scope related members
-			/*
+			
 			if (ScopedStatement != null)
 			{
 				ret.AddRange(BlockStatement.GetItemHierarchy(ScopedStatement, Caret));
 			}
-			 */
+			 
 
 			var curScope = ScopedBlock;
 
@@ -811,6 +812,24 @@ namespace D_Parser.Resolver
 					else
 					{
 						var matches = new List<INode>();
+
+						// Search in current statement (if possible)
+						var curStmt = ctxt.ScopedStatement;
+						while (curStmt != null && curStmt.Parent!=null)
+						{
+							if (curStmt is BlockStatement)
+							{
+								var bs = curStmt as BlockStatement;
+
+								foreach (var decl in bs.Declarations)
+									if (decl.Name == searchIdentifier)
+										matches.Add(decl);
+							}
+
+							if (curStmt.Parent == curStmt)
+								break;
+							curStmt = curStmt.Parent;
+						}
 
 						// First search along the hierarchy in the current module
 						var curScope = currentScopeOverride;

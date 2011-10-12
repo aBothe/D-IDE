@@ -66,7 +66,8 @@ namespace D_Parser.Dom
             {
                 string s = "";
                 foreach (var attr in Attributes)
-                    s += attr.ToString() + " ";
+					if(attr!=null)
+						s += attr.ToString() + " ";
                 return s.Trim();
             }
         }

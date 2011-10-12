@@ -434,18 +434,20 @@ namespace D_Parser.Parser
 			if(imp.ExclusivelyImportedSymbols==null)
 				imp.ExclusivelyImportedSymbols = new Dictionary<string, string>();
 
-			Expect(Identifier);
-			string imbBind = t.Value;
-			string imbBindDef = "";
-
-			if (laKind == (Assign))
+			if (Expect(Identifier))
 			{
-				Step();
-				Expect(Identifier);
-				imbBindDef = t.Value;
-			}
+				string imbBind = t.Value;
+				string imbBindDef = "";
 
-			imp.ExclusivelyImportedSymbols.Add(imbBind, imbBindDef);
+				if (laKind == (Assign))
+				{
+					Step();
+					Expect(Identifier);
+					imbBindDef = t.Value;
+				}
+
+				imp.ExclusivelyImportedSymbols.Add(imbBind, imbBindDef);
+			}
 		}
 
 
@@ -2744,7 +2746,7 @@ namespace D_Parser.Parser
 			}
 		}
 
-		IStatement Statement(bool BlocksAllowed = true, bool EmptyAllowed = true, IBlockNode Scope = null)
+		IStatement Statement(bool BlocksAllowed = true, bool EmptyAllowed = true, IBlockNode Scope = null, IStatement Parent=null)
 		{
 			IStatement ret = null;
 
@@ -2755,7 +2757,7 @@ namespace D_Parser.Parser
 			}
 
 			if (BlocksAllowed && laKind == OpenCurlyBrace)
-				return BlockStatement(Scope);
+				return BlockStatement(Scope,Parent);
 
 			#region LabeledStatement (loc:... goto loc;)
 			if (laKind == Identifier && Lexer.CurrentPeekToken.Kind == Colon)
@@ -2790,13 +2792,13 @@ namespace D_Parser.Parser
 				Expect(CloseParenthesis);
 				// ThenStatement
 
-				dbs.ThenStatement = Statement(Scope:Scope);
+				dbs.ThenStatement = Statement(Scope:Scope,Parent:dbs);
 
 				// ElseStatement
 				if (laKind == (Else))
 				{
 					Step();
-					dbs.ElseStatement = Statement(Scope: Scope);
+					dbs.ElseStatement = Statement(Scope: Scope, Parent: dbs);
 				}
 
 				dbs.EndLocation = t.EndLocation;
@@ -2816,7 +2818,7 @@ namespace D_Parser.Parser
 				dbs.Condition = Expression(Scope);
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement(Scope: Scope);
+				dbs.ScopedStatement = Statement(Scope: Scope, Parent: dbs);
 				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
@@ -2830,7 +2832,7 @@ namespace D_Parser.Parser
 
 				var dbs = new WhileStatement() { StartLocation=t.Location };
 				LastParsedObject = dbs;
-				dbs.ScopedStatement = Statement(Scope: Scope);
+				dbs.ScopedStatement = Statement(Scope: Scope, Parent: dbs);
 
 				Expect(While);
 				Expect(OpenParenthesis);
@@ -2854,7 +2856,7 @@ namespace D_Parser.Parser
 
 				// Initialize
 				if (laKind != Semicolon)
-					dbs.Initialize = Statement(false, Scope: Scope); // Against the D language theory, blocks aren't allowed here!
+					dbs.Initialize = Statement(false, Scope: Scope, Parent: dbs); // Against the D language theory, blocks aren't allowed here!
 				else 
 					Step();
 				// Enforce a trailing semi-colon only if there hasn't been an expression (the ; gets already skipped in there)
@@ -2872,7 +2874,7 @@ namespace D_Parser.Parser
 
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement(Scope: Scope);
+				dbs.ScopedStatement = Statement(Scope: Scope, Parent: dbs);
 				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
@@ -2938,7 +2940,7 @@ namespace D_Parser.Parser
 
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement(Scope: Scope);
+				dbs.ScopedStatement = Statement(Scope: Scope, Parent: dbs);
 				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
@@ -2960,7 +2962,7 @@ namespace D_Parser.Parser
 				dbs.SwitchExpression = Expression(Scope);
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement(Scope: Scope);
+				dbs.ScopedStatement = Statement(Scope: Scope, Parent: dbs);
 				dbs.EndLocation = t.EndLocation;
 
 				return dbs;
@@ -2991,10 +2993,13 @@ namespace D_Parser.Parser
 
 				while (laKind != Case && laKind != Default && laKind != CloseCurlyBrace && !IsEOF)
 				{
-					var stmt = Statement(Scope: Scope);
+					var stmt = Statement(Scope: Scope, Parent: dbs);
 
 					if (stmt != null)
+					{
+						stmt.Parent = dbs;
 						sl.Add(stmt);
+					}
 				}
 
 				dbs.ScopeStatementList = sl.ToArray();
@@ -3021,10 +3026,13 @@ namespace D_Parser.Parser
 
 				while (laKind != Case && laKind != Default && laKind != CloseCurlyBrace && !IsEOF)
 				{
-					var stmt = Statement(Scope: Scope);
+					var stmt = Statement(Scope: Scope, Parent: dbs);
 
 					if (stmt != null)
+					{
+						stmt.Parent = dbs;
 						sl.Add(stmt);
+					}
 				}
 
 				dbs.ScopeStatementList = sl.ToArray();
@@ -3132,7 +3140,7 @@ namespace D_Parser.Parser
 
 				Expect(CloseParenthesis);
 
-				dbs.ScopedStatement = Statement(Scope: Scope);
+				dbs.ScopedStatement = Statement(Scope: Scope, Parent: dbs);
 
 				dbs.EndLocation = t.EndLocation;
 				return dbs;
@@ -3153,7 +3161,7 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				dbs.ScopedStatement = Statement(Scope: Scope);
+				dbs.ScopedStatement = Statement(Scope: Scope, Parent: dbs);
 
 				dbs.EndLocation = t.EndLocation;
 				return dbs;
@@ -3168,7 +3176,7 @@ namespace D_Parser.Parser
 				var s=new TryStatement(){StartLocation=t.Location};
 				LastParsedObject = s;
 
-				s.ScopedStatement = Statement(Scope: Scope);
+				s.ScopedStatement = Statement(Scope: Scope, Parent: s);
 
 				if (!(laKind == (Catch) || laKind == (Finally)))
 					SemErr(Catch, "At least one catch or a finally block expected!");
@@ -3202,7 +3210,7 @@ namespace D_Parser.Parser
 						c.CatchParameter = catchVar;
 					}
 
-					c.ScopedStatement = Statement(Scope: Scope);
+					c.ScopedStatement = Statement(Scope: Scope, Parent: c);
 					c.EndLocation = t.EndLocation;
 
 					catches.Add(c);
@@ -3245,7 +3253,7 @@ namespace D_Parser.Parser
 			#endregion
 
 			#region ScopeGuardStatement
-			else if (laKind == (DTokens.Scope))
+			else if (laKind == (DTokens.Scope) && Lexer.CurrentPeekToken.Kind==OpenParenthesis)
 			{
 				Step();
 				var s = new ScopeGuardStatement() { StartLocation=t.Location };
@@ -3261,7 +3269,7 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				s.ScopedStatement = Statement(Scope: Scope);
+				s.ScopedStatement = Statement(Scope: Scope, Parent: s);
 
 				s.EndLocation = t.EndLocation;
 				return s;
@@ -3303,7 +3311,7 @@ namespace D_Parser.Parser
 			{
 				var s=_Pragma();
 
-				s.ScopedStatement = Statement(Scope: Scope);
+				s.ScopedStatement = Statement(Scope: Scope, Parent: s);
 				s.EndLocation = t.EndLocation;
 				return s;
 			}
@@ -3359,12 +3367,12 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				s.ScopedStatement = Statement(Scope: Scope);
+				s.ScopedStatement = Statement(Scope: Scope, Parent: s);
 
 				if (laKind == Else)
 				{
 					Step();
-					s.ElseStatement = Statement(Scope: Scope);
+					s.ElseStatement = Statement(Scope: Scope,Parent:s);
 				}
 
 				s.EndLocation = t.EndLocation;
@@ -3395,12 +3403,12 @@ namespace D_Parser.Parser
 					Expect(CloseParenthesis);
 				}
 
-				s.ScopedStatement = Statement();
+				s.ScopedStatement = Statement(Parent:s);
 
 				if (laKind == Else)
 				{
 					Step();
-					s.ElseStatement = Statement();
+					s.ElseStatement = Statement(Parent:s);
 				}
 
 				s.EndLocation = t.EndLocation;
@@ -3431,7 +3439,7 @@ namespace D_Parser.Parser
 				Step();
 				var s = new VolatileStatement() { StartLocation = t.Location };
 				LastParsedObject = s;
-				s.ScopedStatement = Statement(Scope: Scope);
+				s.ScopedStatement = Statement(Scope: Scope,Parent:s);
 				s.EndLocation = t.EndLocation;
 
 				return s;
@@ -3470,12 +3478,12 @@ namespace D_Parser.Parser
 			return null;
 		}
 
-		public BlockStatement BlockStatement(INode ParentNode=null)
+		public BlockStatement BlockStatement(INode ParentNode=null, IStatement Parent=null)
 		{
 			var OldPreviousCommentString = PreviousComment;
 			PreviousComment = "";
 
-			var bs = new BlockStatement() { StartLocation=la.Location, ParentNode=ParentNode};
+			var bs = new BlockStatement() { StartLocation=la.Location, ParentNode=ParentNode, Parent=Parent};
 			LastParsedObject = bs;
 
 			if (Expect(OpenCurlyBrace))
