@@ -100,7 +100,7 @@ namespace D_Parser.Resolver
 
 		public static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)
 		{
-			return (n is DMethod && CanShowMemberType(VisibleMembers, MemberTypes.Methods) ||
+			return (n is DMethod && (n as DMethod).Name!="" && CanShowMemberType(VisibleMembers, MemberTypes.Methods) ||
 					(n is DVariable && !(n as DVariable).IsAlias && CanShowMemberType(VisibleMembers, MemberTypes.Variables)) ||
 					((n is DClassLike || n is DEnum) && CanShowMemberType(VisibleMembers, MemberTypes.Types)));
 		}
@@ -192,6 +192,16 @@ namespace D_Parser.Resolver
 					foreach (var ch in dm.AdditionalChildren)
 						if (CanAddMemberOfType(VisibleMembers, ch))
 							ret.Add(ch);
+
+					// If we're in a anonymous delegate currently,
+					// this one won't be 'linked' to the parent statement directly - 
+					// so, we've to gather the parent method and add its locals to the return list
+					if (dm.SpecialType == DMethod.MethodType.AnonymousDelegate
+						&& dm.Parent is DMethod)
+					{
+						var parDM = dm.Parent as DMethod;
+						ret.AddRange(BlockStatement.GetItemHierarchy(parDM.GetSubBlockAt(Caret), Caret));
+					}
 				}
 				else foreach (var n in curScope)
 					{
