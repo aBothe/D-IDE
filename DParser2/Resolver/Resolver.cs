@@ -817,16 +817,25 @@ namespace D_Parser.Resolver
 						var curStmt = ctxt.ScopedStatement;
 						while (curStmt != null && curStmt.Parent!=null)
 						{
-							if (curStmt is BlockStatement)
+							if (curStmt is IDeclarationContainingStatement && !(curStmt is DeclarationStatement))
 							{
-								var bs = curStmt as BlockStatement;
+								var dcs = curStmt as IDeclarationContainingStatement;
+								bool foundMatch = false;
 
-								foreach (var decl in bs.Declarations)
-									if (decl.Name == searchIdentifier)
-										matches.Add(decl);
+								var decls = dcs.Declarations;
+								if(decls!=null)
+									foreach (var decl in decls)
+										if (decl.Name == searchIdentifier && !matches.Contains(decl))
+										{
+											matches.Add(decl);
+											foundMatch = true;
+										}
+
+								if (foundMatch)
+									curStmt = curStmt.Parent;
 							}
 
-							if (curStmt.Parent == curStmt)
+							if (curStmt!=null && curStmt.Parent == curStmt)
 								break;
 							curStmt = curStmt.Parent;
 						}

@@ -67,7 +67,7 @@ namespace D_Parser.Dom.Statements
 	}
 	#endregion
 
-	public class BlockStatement : StatementContainingStatement, IEnumerable<IStatement>
+	public class BlockStatement : StatementContainingStatement, IEnumerable<IStatement>, IDeclarationContainingStatement
 	{
 		readonly List<IStatement> _Statements = new List<IStatement>();
 

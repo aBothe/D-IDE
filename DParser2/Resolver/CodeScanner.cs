@@ -170,7 +170,6 @@ namespace D_Parser.Resolver
 			bool WasAlreadyResolved = false;
 			ResolveResult[] allCurrentResults = null;
 			ResolveResult rr = null;
-			IStatement _unused = null;
 
 			/*
 			 * string,wstring,dstring are highlighted by the editor's syntax definition automatically..
@@ -179,7 +178,7 @@ namespace D_Parser.Resolver
 			if (typeString == "" || typeString == "string" || typeString == "wstring" || typeString == "dstring")
 				return null;
 
-			lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out _unused);
+			lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out lastResCtxt.ScopedStatement);
 
 			if (!(WasAlreadyResolved = compDict.TryGetValue(typeString, out rr)))
 			{
