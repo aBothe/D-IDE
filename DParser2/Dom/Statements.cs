@@ -114,7 +114,7 @@ namespace D_Parser.Dom.Statements
 				var l = new List<INode>();
 
 				foreach (var s in _Statements)
-					if (s is IDeclarationContainingStatement)
+					if (s is BlockStatement || s is DeclarationStatement)
 					{
 						var decls = (s as IDeclarationContainingStatement).Declarations;
 						if(decls!=null && decls.Length>0)

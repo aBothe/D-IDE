@@ -118,25 +118,28 @@ namespace D_Parser.Resolver
 			IEnumerable<IAbstractSyntaxTree> CodeCache,
 			MemberTypes VisibleMembers)
 		{
-			/* First walk through the current scope.
-			 * Walk up the node hierarchy and add all their items (private as well as public members).
-			 * Resolve base classes and add their non-private|static members.
+			/* 
+			 * Shown items:
+			 * 1) First walk through the current scope.
+			 * 2) Walk up the node hierarchy and add all their items (private as well as public members).
+			 * 3) Resolve base classes and add their non-private|static members.
 			 * 
-			 * Then add public members of the imported modules 
+			 * 4) Then add public members of the imported modules 
 			 */
 			var ret = new List<INode>();
 			var ImportCache = ResolveImports(ScopedBlock.NodeRoot as DModule, CodeCache);
 
 			#region Current module/scope related members
 			
+			// 1)
 			if (ScopedStatement != null)
 			{
 				ret.AddRange(BlockStatement.GetItemHierarchy(ScopedStatement, Caret));
 			}
-			 
 
 			var curScope = ScopedBlock;
 
+			// 2)
 			while (curScope != null)
 			{
 				// Walk up inheritance hierarchy
@@ -168,6 +171,7 @@ namespace D_Parser.Resolver
 						if (!string.IsNullOrEmpty(curWatchedClass.Name) && curWatchedClass.Name.ToLower() == "object")
 							break;
 
+						// 3)
 						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, new ResolverContext { ParseCache = CodeCache, ImportCache = ImportCache });
 
 						if (baseclassDefs == null)
@@ -193,14 +197,16 @@ namespace D_Parser.Resolver
 						if (CanAddMemberOfType(VisibleMembers, ch))
 							ret.Add(ch);
 
-					// If we're in a anonymous delegate currently,
-					// this one won't be 'linked' to the parent statement directly - 
+					// If the method is a nested method,
+					// this method won't be 'linked' to the parent statement tree directly - 
 					// so, we've to gather the parent method and add its locals to the return list
-					if (dm.SpecialType == DMethod.MethodType.AnonymousDelegate
-						&& dm.Parent is DMethod)
+					if (dm.Parent is DMethod)
 					{
 						var parDM = dm.Parent as DMethod;
-						ret.AddRange(BlockStatement.GetItemHierarchy(parDM.GetSubBlockAt(Caret), Caret));
+						var nestedBlock = parDM.GetSubBlockAt(Caret);
+
+						// Search for the deepest statement scope and add all declarations done in the entire hierarchy
+						ret.AddRange(BlockStatement.GetItemHierarchy(nestedBlock.SearchStatementDeeply(Caret), Caret));
 					}
 				}
 				else foreach (var n in curScope)

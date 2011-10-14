@@ -152,6 +152,7 @@ namespace D_Parser.Completion
 				{
 					if (parsedBlock is BlockStatement)
 					{
+						// Insert the updated locals insight.
 						var decls = BlockStatement.GetItemHierarchy(parsedBlock as BlockStatement, Editor.CaretLocation);
 
 						foreach (var n in decls)
@@ -159,10 +160,11 @@ namespace D_Parser.Completion
 					}
 				}
 
-				if (visibleMembers != DResolver.MemberTypes.Imports)
-					listedItems = DResolver.EnumAllAvailableMembers(curBlock, curStmt, Editor.CaretLocation, Editor.ImportCache, visibleMembers);
+				if (visibleMembers != DResolver.MemberTypes.Imports) // Do not pass the curStmt because we already inserted all updated locals a few lines before!
+					listedItems = DResolver.EnumAllAvailableMembers(curBlock, null/*, curStmt*/, Editor.CaretLocation, Editor.ImportCache, visibleMembers);
 				
 				//TODO: Split the keywords into such that are allowed within block statements and non-block statements
+				// Insert typable keywords
 				if(DResolver.CanShowMemberType(visibleMembers, DResolver.MemberTypes.Keywords))
 					foreach (var kv in DTokens.Keywords)
 						CompletionDataGenerator.Add(kv.Key);
