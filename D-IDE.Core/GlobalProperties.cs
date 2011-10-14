@@ -8,6 +8,7 @@ using System.Xml;
 using D_IDE.Core;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit;
+using ICSharpCode.AvalonEdit.Document;
 
 namespace D_IDE
 {
@@ -111,9 +112,14 @@ namespace D_IDE
                                 {
                                     if (xr.LocalName == "f")
                                     {
+										int offset=0,
+											scrollOffset=0;
+
+										Int32.TryParse(xr.GetAttribute("offset"), out offset);
+										Int32.TryParse(xr.GetAttribute("scrolloffset"), out scrollOffset);
                                         try
                                         {
-                                            p.LastOpenFiles.Add(xr.ReadString());
+                                            p.LastOpenFiles.Add(xr.ReadString(),new[]{offset, scrollOffset});
                                         }
                                         catch { }
                                     }
@@ -307,9 +313,13 @@ namespace D_IDE
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("lastopenedfiles");
-			foreach (string f in Instance.LastOpenFiles)
+			foreach (var kv in Instance.LastOpenFiles)
 			{
-				xw.WriteStartElement("f"); xw.WriteCData(f); xw.WriteEndElement();
+				xw.WriteStartElement("f");
+				xw.WriteAttributeString("offset", kv.Value[0].ToString());
+				xw.WriteAttributeString("scrolloffset", kv.Value[1].ToString());
+				xw.WriteCData(kv.Key); 
+				xw.WriteEndElement();
 			}
 			xw.WriteEndElement();
 
@@ -420,8 +430,14 @@ namespace D_IDE
 
 		public List<string>
 			LastProjects = new List<string>(),
-			LastFiles = new List<string>(),
-			LastOpenFiles = new List<string>();
+			LastFiles = new List<string>();
+
+		/// <summary>
+		/// Stores the last opened files including the offsets they've been last edited at
+		/// Key: File name,
+		/// Value: [Caret offset, Scroll offset]
+		/// </summary>
+		public Dictionary<string,int[]> LastOpenFiles=new Dictionary<string,int[]>();
 				
 		public WindowState lastFormState = WindowState.Maximized;
 		public Size lastFormSize=Size.Empty;

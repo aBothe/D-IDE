@@ -228,6 +228,10 @@ namespace D_IDE
 					ed.Editor.CaretOffset = Offset;
 					var loc = ed.Editor.Document.GetLocation(Offset);
 					ed.Editor.ScrollTo(loc.Line, loc.Column);
+					/*
+					var visLine=ed.Editor.TextArea.TextView.GetOrConstructVisualLine(ed.Editor.Document.GetLineByNumber(loc.Line));
+					if(visLine!=null)
+						ed.Editor.ScrollToVerticalOffset(visLine.VisualTop-50);*/
 				}
 				ed.Editor.Focus();
 
