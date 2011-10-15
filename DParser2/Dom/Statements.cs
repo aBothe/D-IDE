@@ -133,40 +133,28 @@ namespace D_Parser.Dom.Statements
 		{
 			var l = new List<INode>();
 
-			while (!(Statement is StatementContainingStatement) && Statement != null)
+			// To a prevent double entry of the same declaration, skip a most scoped declaration first
+			if (Statement is DeclarationStatement)
 				Statement = Statement.Parent;
 
-			var curScope=Statement as StatementContainingStatement;
-
-			if (curScope == null && Statement is StatementContainingStatement)
+			while (Statement != null)
 			{
-				var curPar = Statement;
-				while (curPar is StatementContainingStatement)
-					curPar = (curPar as StatementContainingStatement).Parent;
-				curScope = curPar as StatementContainingStatement;
-			}
-
-			while (curScope != null)
-			{
-				foreach (var i in curScope.SubStatements)
+				if (Statement is IDeclarationContainingStatement)
 				{
-					// if i doesn't contain a Declaration OR is located after the caret's location, disregard it
-					if (Caret!=CodeLocation.Empty?(i.StartLocation > Caret):false)
-						continue;
+					var decls = (Statement as IDeclarationContainingStatement).Declarations;
 
-					if (i is IDeclarationContainingStatement)
-					{
-						var decls = (i as IDeclarationContainingStatement).Declarations;
-						if (decls != null && decls.Length > 0)
-							l.AddRange(decls);
-					}
+					if(decls!=null)
+						foreach (var decl in decls)
+						{
+							// if i doesn't contain a Declaration OR is located after the caret's location, disregard it
+							if (Caret != CodeLocation.Empty ? (decl.StartLocation > Caret) : false)
+								continue;
+
+							l.Add(decl);
+						}
 				}
 
-				var curPar=curScope.Parent;
-				while (curPar is StatementContainingStatement)
-					curPar = (curPar as StatementContainingStatement).Parent;
-
-				curScope = curPar as StatementContainingStatement;
+				Statement=Statement.Parent;
 			}
 
 			return l.ToArray();
@@ -358,7 +346,7 @@ namespace D_Parser.Dom.Statements
 		}
 	}
 
-	public class ForStatement : StatementContainingStatement, IExpressionContainingStatement
+	public class ForStatement : StatementContainingStatement, IDeclarationContainingStatement, IExpressionContainingStatement
 	{
 		public IStatement Initialize;
 		public IExpression Test;
@@ -400,6 +388,16 @@ namespace D_Parser.Dom.Statements
 				ret += ' '+ScopedStatement.ToCode();
 
 			return ret;
+		}
+
+		public INode[] Declarations
+		{
+			get {
+				if (Initialize is DeclarationStatement)
+					return (Initialize as DeclarationStatement).Declarations;
+
+				return null;
+			}
 		}
 	}
 

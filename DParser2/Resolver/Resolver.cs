@@ -605,6 +605,13 @@ namespace D_Parser.Resolver
 
 				var psr = DParser.Create(new StringReader(codeToParse));
 
+				/* Deadly important! For correct resolution behaviour, 
+				 * it is required to set the parser virtually to the blockStart position, 
+				 * so that everything using the returned object is always related to 
+				 * the original code file, not our code extraction!
+				 */
+				psr.Lexer.SetInitialLocation(blockStartLocation);
+
 				object ret = null;
 
 				if (CurrentScope == null || CurrentScope is IAbstractSyntaxTree)
@@ -829,9 +836,13 @@ namespace D_Parser.Resolver
 					{
 						var matches = new List<INode>();
 
+
+
 						// Search in current statement (if possible)
 						var curStmt = ctxt.ScopedStatement;
-						while (curStmt != null && curStmt.Parent!=null)
+						//TODO: Search in statement hierarchy exactly like when executing EnumAvailableMembers!
+						var decls = BlockStatement.GetItemHierarchy(curStmt, curStmt.EndLocation);
+						while (curStmt != null && curStmt.Parent != null)
 						{
 							if (curStmt is IDeclarationContainingStatement && !(curStmt is DeclarationStatement))
 							{
@@ -839,7 +850,7 @@ namespace D_Parser.Resolver
 								bool foundMatch = false;
 
 								var decls = dcs.Declarations;
-								if(decls!=null)
+								if (decls != null)
 									foreach (var decl in decls)
 										if (decl.Name == searchIdentifier && !matches.Contains(decl))
 										{
@@ -851,10 +862,12 @@ namespace D_Parser.Resolver
 									curStmt = curStmt.Parent;
 							}
 
-							if (curStmt!=null && curStmt.Parent == curStmt)
+							if (curStmt != null && curStmt.Parent == curStmt)
 								break;
 							curStmt = curStmt.Parent;
 						}
+
+
 
 						// First search along the hierarchy in the current module
 						var curScope = currentScopeOverride;
@@ -866,6 +879,13 @@ namespace D_Parser.Resolver
 							 */
 							if (curScope is DEnum && curScope.Name == "")
 								curScope = curScope.Parent as IBlockNode;
+
+							if (curScope is DMethod)
+							{
+								var dm = curScope as DMethod;
+
+								
+							}
 
 							var m = ScanNodeForIdentifier(curScope, searchIdentifier, ctxt);
 

@@ -635,7 +635,10 @@ namespace D_IDE.D
 			{
 				try
 				{
-					CoreManager.Instance.MainWindow.SecondLeftStatusText = Math.Round(hp.Duration * 1000, 3).ToString() + "ms (Parsing duration)";
+					if (System.Diagnostics.Debugger.IsAttached)
+						CoreManager.Instance.MainWindow.SecondLeftStatusText = 
+							Math.Round(hp.Duration * 1000, 3).ToString() + "ms (Parsing duration)";
+
 					UpdateFoldings();
 					CoreManager.ErrorManagement.RefreshErrorList();
 					RefreshErrorHighlightings();
@@ -714,7 +717,16 @@ namespace D_IDE.D
 
 		public void UpdateSemanticHighlighting(bool RefreshErrorList = false)
 		{
-			if (!DSettings.Instance.UseSemanticHighlighting || SyntaxTree == null || CompilerConfiguration.ASTCache.IsParsing)
+			if (!DSettings.Instance.UseSemanticHighlighting)
+			{
+				foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
+					if (marker is CodeSymbolMarker)
+						marker.Delete();
+
+				return;
+			}
+
+			if (SyntaxTree == null || CompilerConfiguration.ASTCache.IsParsing)
 				return;
 
 			var hp2 = new HighPrecisionTimer.HighPrecTimer();
@@ -747,7 +759,7 @@ namespace D_IDE.D
 					if (marker is CodeSymbolMarker)
 						marker.Delete();
 
-				if (resolvedItems.Count > 0)
+				if (resolvedItems!=null && resolvedItems.Count > 0)
 					foreach (var kv in resolvedItems)
 						if (kv.Key.Location.Line > 0)
 						{
@@ -759,7 +771,7 @@ namespace D_IDE.D
 
 				SemanticErrors.Clear();
 
-				if (unresolvedItems.Count > 0)
+				if (unresolvedItems!=null && unresolvedItems.Count > 0)
 					foreach (var id in unresolvedItems)
 						if (id.Location.Line > 0)
 						{
@@ -776,9 +788,10 @@ namespace D_IDE.D
 				if (RefreshErrorList)
 					CoreManager.ErrorManagement.RefreshErrorList();
 
-				CoreManager.Instance.MainWindow.LeftStatusText =
-					Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
-					"ms (Semantic Highlighting)";
+				if(System.Diagnostics.Debugger.IsAttached)
+					CoreManager.Instance.MainWindow.LeftStatusText =
+						Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
+						"ms (Semantic Highlighting)";
 			}), DispatcherPriority.Background,
 				res.ResolvedIdentifiers, res.UnresolvedIdentifiers, hp2);
 			}

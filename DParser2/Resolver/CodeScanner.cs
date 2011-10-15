@@ -58,6 +58,10 @@ namespace D_Parser.Resolver
 				#region Identifier Declarations
 				if (o is IdentifierDeclaration)
 				{
+					if ((o as IdentifierDeclaration).Value as string == "i")
+					{
+
+					}
 					HandleIdDeclaration(o as IdentifierDeclaration,
 						lastResCtxt,
 						SyntaxTree,

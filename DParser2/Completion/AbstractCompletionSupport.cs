@@ -152,8 +152,13 @@ namespace D_Parser.Completion
 				{
 					if (parsedBlock is BlockStatement)
 					{
+						var blockStmt = parsedBlock as BlockStatement;
+
 						// Insert the updated locals insight.
-						var decls = BlockStatement.GetItemHierarchy(parsedBlock as BlockStatement, Editor.CaretLocation);
+						// Do not take the caret location anymore because of the limited parsing of our code.
+						var scopedStmt=blockStmt.SearchStatementDeeply(blockStmt.EndLocation /*Editor.CaretLocation*/);
+
+						var decls = BlockStatement.GetItemHierarchy(scopedStmt, Editor.CaretLocation);
 
 						foreach (var n in decls)
 							CompletionDataGenerator.Add(n);
