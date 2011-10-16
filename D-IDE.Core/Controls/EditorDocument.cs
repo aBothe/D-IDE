@@ -1,19 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using D_IDE.Core;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using D_IDE.Core.Controls;
 using D_IDE.Core.Controls.Editor;
 using ICSharpCode.AvalonEdit;
-using ICSharpCode.AvalonEdit.Highlighting;
-using System.Windows.Media;
-using ICSharpCode.AvalonEdit.CodeCompletion;
-using System.Windows.Controls;
-using System.Collections.Generic;
-using System.Windows.Input;
-using D_IDE.Core.Controls;
-using System.Windows;
 using ICSharpCode.AvalonEdit.AddIn;
-using System.Text;
+using ICSharpCode.AvalonEdit.Highlighting;
 
 namespace D_IDE.Core
 {
@@ -121,7 +119,6 @@ namespace D_IDE.Core
 		}
 		#endregion
 
-
 		void Init()
 		{
 			// Apply common editor settings to this instance
@@ -147,22 +144,44 @@ namespace D_IDE.Core
 				Editor.Focus(); 
 			});
 
+			#region UI Command registration
+			/*
+			 * UI Command hack - delete the DeleteLine command (which is bound statically to Ctrl-D)
+			 * and override it with our line duplication event
+			 */
+			var commandBindings=Editor.TextArea.CommandBindings;
+			foreach(CommandBinding cb in commandBindings)
+				if (cb.Command == AvalonEditCommands.DeleteLine)
+				{
+					// Note: We have to break the for-loop because we change the commandBinding's contents!
+					commandBindings.Remove(cb);
+					break;
+				}
+			CommandBindings.Add(new CommandBinding(IDEUICommands.DoubleLine,DoubleLine));
 			CommandBindings.Add(new CommandBinding(ApplicationCommands.Save,Save_event));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.ToggleBreakpoint,ToggleBreakpoint_event));
+			#endregion
 
+			// Setup editor overlay
+
+			// Let a grid own the entire control 
+			// - this enables us in EditorDocument derivates to insert additional controls
 			var gr = new Grid();
 			MainEditorContainer = gr;
 			AddChild(gr);
 			gr.Children.Add(Editor);
 
+			// Let there be no border
 			Editor.Margin = new System.Windows.Thickness(0);
 			Editor.BorderBrush = null;
 
 			// Init bracket hightlighter
 			bracketHightlighter = new BracketHighlightRenderer(Editor.TextArea.TextView);
 
+			//TODO: More editor settings
 			Editor.ShowLineNumbers = true;
 			Editor.TextChanged += new EventHandler(Editor_TextChanged);
+
 			Editor.Document.PropertyChanged+=new System.ComponentModel.PropertyChangedEventHandler(Document_PropertyChanged);
 
 			// Register Marker strategy
@@ -170,8 +189,8 @@ namespace D_IDE.Core
 
 			Editor.TextArea.MouseRightButtonDown += new System.Windows.Input.MouseButtonEventHandler(TextArea_MouseRightButtonDown);
 
-			// Make UTF-16 encoding default
-			Editor.Encoding = Encoding.Unicode;
+			// Make UTF-8 encoding default
+			Editor.Encoding = Encoding.UTF8;
 
 			// Load file contents if file path given
 			Reload();
@@ -346,6 +365,27 @@ namespace D_IDE.Core
 		#endregion
 
 		#region Editor events
+
+		/// <summary>
+		/// Duplicates the currently selected line and moves caret to the new line's start
+		/// </summary>
+		void DoubleLine(object sender, RoutedEventArgs e)
+		{
+			if (Editor.TextArea.Caret.Line < 0)
+				return;
+
+			// Get Line Segment
+			var Line=Editor.Document.GetLineByNumber( Editor.TextArea.Caret.Line);
+			// Get line text
+			var LineText=Editor.Document.GetText(Line);
+
+			// Insert \r\n + line text at end offset of current line
+			Editor.Document.Insert(Line.EndOffset,Environment.NewLine+LineText);
+
+			// Set caret offset
+			Editor.CaretOffset = Line.NextLine.Offset;
+		}
+
 		void Editor_TextChanged(object sender, EventArgs e)
 		{
 			Modified = true;

@@ -91,6 +91,7 @@
     <Compile Include="Controls\Aga.Controls\Tree\TreeListItem.cs" />
     <Compile Include="Controls\Aga.Controls\Tree\TreeNode.cs" />
     <Compile Include="Controls\EditorDocument.cs" />
+    <Compile Include="Controls\IDEUICommands.cs" />
     <Compile Include="Controls\IFormBase.cs" />
     <Compile Include="Controls\ListSelectionDialog.xaml.cs">
       <DependentUpon>ListSelectionDialog.xaml</DependentUpon>

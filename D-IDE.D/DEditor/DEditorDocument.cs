@@ -730,7 +730,7 @@ namespace D_IDE.D
 					foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
 						if (marker is CodeSymbolMarker)
 							marker.Delete();
-				});
+				},false);
 
 				return;
 			}

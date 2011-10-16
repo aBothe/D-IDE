@@ -149,14 +149,24 @@ namespace D_IDE.Core
 			}
 		}
 
+		public static void ExecuteOnUIThread(ThreadStart Delegate)
+		{
+			ExecuteOnUIThread(Delegate, false);
+		}
+
 		/// <summary>
 		/// Executes an anonymous and parameterless delegate on the MainWindow's Dispatcher thread
 		/// </summary>
 		/// <param name="deleg"></param>
-		public static void ExecuteOnUIThread(ThreadStart deleg,bool InBackground=false)
+		public static void ExecuteOnUIThread(ThreadStart deleg,bool InBackground, params object[] Arguments)
 		{
 			if (CoreManager.Instance != null && CoreManager.Instance.MainWindow != null)
-				CoreManager.Instance.MainWindow.Dispatcher.Invoke(deleg);
+			{
+				if (InBackground)
+					CoreManager.Instance.MainWindow.Dispatcher.BeginInvoke(deleg,Arguments);
+				else
+					CoreManager.Instance.MainWindow.Dispatcher.Invoke(deleg, Arguments);
+			}
 			else
 				deleg();
 		}

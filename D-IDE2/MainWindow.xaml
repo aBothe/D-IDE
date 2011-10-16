@@ -92,6 +92,7 @@
 					<r:RibbonButton Command="d:IDEUICommands.CommentBlock" Label="Comment selection"></r:RibbonButton>
 					<r:RibbonButton Command="d:IDEUICommands.UncommentBlock" Label="Uncomment selection"></r:RibbonButton>
 					<r:RibbonButton Command="d:IDEUICommands.ReformatDoc" Label="Reformat document"></r:RibbonButton>
+					<r:RibbonButton Command="d:IDEUICommands.DoubleLine" Label="Duplicate Line"></r:RibbonButton>
 				</r:RibbonGroup>
 
 				<r:RibbonGroup Header="Breakpoints" >

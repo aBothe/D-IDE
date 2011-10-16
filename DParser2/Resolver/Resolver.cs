@@ -526,6 +526,8 @@ namespace D_Parser.Resolver
 				char cur = '\0', peekChar = '\0';
 				int off = 0;
 				IsInString = IsInLineComment = IsInBlockComment = IsInNestedBlockComment = false;
+				bool IsChar = false;
+				bool IsVerbatimString = false;
 
 				while (off < Offset - 1)
 				{
@@ -533,10 +535,53 @@ namespace D_Parser.Resolver
 					if (off < Text.Length - 1) peekChar = Text[off + 1];
 
 					// String check
-					if (!IsInLineComment && !IsInBlockComment && !IsInNestedBlockComment && cur == '\"' && (off < 1 || Text[off - 1] != '\\'))
-						IsInString = !IsInString;
+					if (!IsInLineComment && !IsInBlockComment && !IsInNestedBlockComment)
+					{
+						if (!IsInString)
+						{
+							// Char handling
+							if(!IsChar && cur == '\'')
+								IsChar = true;
+							else
+							{
+								// Single quote char escape
+								if (cur == '\\' && peekChar == '\'')
+								{
+									off += 2;
+									continue;
+								}
+								else if (cur == '\'')
+									IsChar = false;
+							}
 
-					if (!IsInString)
+							// Verbatim string recognition
+							if (cur == 'r' && peekChar == '\"')
+							{
+								off++;
+								IsInString = IsVerbatimString = true;
+							}
+							// if not, test for normal string literals
+							else if (cur == '\"')
+							{
+								IsInString = true;
+							}
+						}
+						else
+						{
+							// Verbatim double quote char escape
+							if ((IsVerbatimString && cur == '\"' && peekChar == '\"') || 
+								// Normal backslash escape
+								(cur == '\\' && peekChar == '\\'))
+							{
+								off += 2;
+								continue;
+							}
+							else if (cur=='\"')
+								IsInString = IsVerbatimString = false;
+						}
+					}
+
+					if (!IsInString && !IsChar)
 					{
 						// Line comment check
 						if (!IsInBlockComment && !IsInNestedBlockComment)
