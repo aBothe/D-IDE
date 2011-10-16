@@ -1246,7 +1246,11 @@ namespace D_Parser.Dom.Expressions
 					return NewExpression.ExpressionTypeRepresentation;
 
 				if (t == null)
+				{
+					if (PostfixForeExpression != null)
+						return PostfixForeExpression.ExpressionTypeRepresentation;
 					return null;
+				}
 
 				t.InnerDeclaration = PostfixForeExpression.ExpressionTypeRepresentation;
 				return t;

@@ -6,6 +6,7 @@ using D_Parser.Dom;
 using D_Parser.Dom.Expressions;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
+using D_Parser.Completion;
 
 /*
 /// Code completion rules:
@@ -35,6 +36,7 @@ namespace D_Parser.Resolver
 	{
 		public IBlockNode ScopedBlock;
 		public IStatement ScopedStatement;
+
 		public IEnumerable<IAbstractSyntaxTree> ParseCache;
 		public IEnumerable<IAbstractSyntaxTree> ImportCache;
 		public bool ResolveBaseTypes = true;
@@ -43,7 +45,7 @@ namespace D_Parser.Resolver
 		/// <summary>
 		/// Stores scoped-block dependent type dictionaries, which store all types that were already resolved once
 		/// </summary>
-		public readonly Dictionary<IBlockNode, Dictionary<string, ResolveResult[]>> ResolvedTypes = new Dictionary<IBlockNode, Dictionary<string, ResolveResult[]>>();
+		public readonly Dictionary<object, Dictionary<string, ResolveResult[]>> ResolvedTypes = new Dictionary<object, Dictionary<string, ResolveResult[]>>();
 
 		public void TryAddResults(string TypeDeclarationString, ResolveResult[] NodeMatches, IBlockNode ScopedType = null)
 		{
@@ -59,20 +61,31 @@ namespace D_Parser.Resolver
 				subDict.Add(TypeDeclarationString, NodeMatches);
 		}
 
-		public bool TryGetAlreadyResolvedType(string TypeDeclarationString, out ResolveResult[] NodeMatches, IBlockNode ScopedType = null)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="TypeDeclarationString"></param>
+		/// <param name="NodeMatches"></param>
+		/// <param name="ScopedType">If null, ScopedBlock variable will be assumed</param>
+		/// <returns></returns>
+		public bool TryGetAlreadyResolvedType(string TypeDeclarationString, out ResolveResult[] NodeMatches, object ScopedType = null)
 		{
 			if (ScopedType == null)
 				ScopedType = ScopedBlock;
 
 			Dictionary<string, ResolveResult[]> subDict = null;
 
-			if (!ResolvedTypes.TryGetValue(ScopedType, out subDict))
+			if (ScopedType!=null && !ResolvedTypes.TryGetValue(ScopedType, out subDict))
 			{
 				NodeMatches = null;
 				return false;
 			}
 
-			return subDict.TryGetValue(TypeDeclarationString, out NodeMatches);
+			if(subDict!=null)
+				return subDict.TryGetValue(TypeDeclarationString, out NodeMatches);
+
+			NodeMatches = null;
+			return false;
 		}
 	}
 
@@ -698,20 +711,21 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		public static ResolveResult[] ResolveType(string code, int caret,
-			CodeLocation caretLocation,
+		public static ResolveResult[] ResolveType(IEditorData editor,
 			ResolverContext ctxt,
 			bool alsoParseBeyondCaret = false,
 			bool onlyAssumeIdentifierList = false)
 		{
-			var start = ReverseParsing.SearchExpressionStart(code, caret);
+			var code = editor.ModuleCode;
+			var start = ReverseParsing.SearchExpressionStart(code,editor.CaretOffset-1);
 
-			if (start < 0)
+			if (start < 0 || editor.CaretOffset<=start)
 				return null;
 
-			var expressionCode = code.Substring(start, alsoParseBeyondCaret ? code.Length - start : caret - start);
+			var expressionCode = code.Substring(start, alsoParseBeyondCaret ? code.Length - start : editor.CaretOffset - start);
 
 			var parser = DParser.Create(new StringReader(expressionCode));
+			parser.Lexer.SetInitialLocation(editor.CaretLocation);
 			parser.Step();
 
 			if (onlyAssumeIdentifierList && parser.Lexer.LookAhead.Kind == DTokens.Identifier)
@@ -722,8 +736,7 @@ namespace D_Parser.Resolver
 
 				if (expr != null)
 				{
-					var relativeCaretLocation = DocumentHelper.OffsetToLocation(expressionCode, caret - start);
-					expr = ExpressionHelper.SearchExpressionDeeply(expr, relativeCaretLocation);
+					expr = ExpressionHelper.SearchExpressionDeeply(expr, editor.CaretLocation);
 
 					var ret = ResolveType(expr.ExpressionTypeRepresentation, ctxt);
 
@@ -750,7 +763,23 @@ namespace D_Parser.Resolver
 				return null;
 
 			ResolveResult[] preRes = null;
-			if (ctxt.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, currentScopeOverride))
+			object scopeObj = null;
+
+			if (ctxt.ScopedStatement != null)
+			{
+				var curStmtLevel=ctxt.ScopedStatement;
+
+				while (curStmtLevel != null && !(curStmtLevel is BlockStatement))
+					curStmtLevel = curStmtLevel.Parent;
+
+				if(curStmtLevel is BlockStatement)
+					scopeObj = curStmtLevel;
+			}
+			if (scopeObj == null)
+				scopeObj = ctxt.ScopedBlock;
+
+			// Check if already resolved once
+			if (ctxt.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, scopeObj))
 				return preRes;
 
 			if (ctxt.ImportCache == null && ctxt.ScopedBlock != null)
@@ -836,38 +865,13 @@ namespace D_Parser.Resolver
 					{
 						var matches = new List<INode>();
 
+						// Search in current statement's declarations (if possible)
+						var decls = BlockStatement.GetItemHierarchy(ctxt.ScopedStatement, declaration.Location);
 
-
-						// Search in current statement (if possible)
-						var curStmt = ctxt.ScopedStatement;
-						//TODO: Search in statement hierarchy exactly like when executing EnumAvailableMembers!
-						var decls = BlockStatement.GetItemHierarchy(curStmt, curStmt.EndLocation);
-						while (curStmt != null && curStmt.Parent != null)
-						{
-							if (curStmt is IDeclarationContainingStatement && !(curStmt is DeclarationStatement))
-							{
-								var dcs = curStmt as IDeclarationContainingStatement;
-								bool foundMatch = false;
-
-								var decls = dcs.Declarations;
-								if (decls != null)
-									foreach (var decl in decls)
-										if (decl.Name == searchIdentifier && !matches.Contains(decl))
-										{
-											matches.Add(decl);
-											foundMatch = true;
-										}
-
-								if (foundMatch)
-									curStmt = curStmt.Parent;
-							}
-
-							if (curStmt != null && curStmt.Parent == curStmt)
-								break;
-							curStmt = curStmt.Parent;
-						}
-
-
+						if(decls!=null)
+							foreach (var decl in decls)
+								if (decl != null && decl.Name == searchIdentifier)
+									matches.Add(decl);
 
 						// First search along the hierarchy in the current module
 						var curScope = currentScopeOverride;
@@ -884,22 +888,50 @@ namespace D_Parser.Resolver
 							{
 								var dm = curScope as DMethod;
 
-								
+								// If the method is a nested method,
+								// this method won't be 'linked' to the parent statement tree directly - 
+								// so, we've to gather the parent method and add its locals to the return list
+								if (dm.Parent is DMethod)
+								{
+									var parDM = dm.Parent as DMethod;
+									var nestedBlock = parDM.GetSubBlockAt(declaration.Location);
+									if (nestedBlock != null)
+									{
+										// Search for the deepest statement scope and test all declarations done in the entire scope hierarchy
+										decls = BlockStatement.GetItemHierarchy(nestedBlock.SearchStatementDeeply(declaration.Location), declaration.Location);
+
+										foreach (var decl in decls)
+											// ... Add them if match was found
+											if (decl != null && decl.Name == searchIdentifier)
+												matches.Add(decl);
+									}
+								}
+
+								// Do not check further method's children but its (template) parameters
+								foreach (var p in dm.Parameters)
+									if (p.Name == searchIdentifier)
+										matches.Add(p);
+
+								if (dm.TemplateParameters != null)
+									foreach (var tp in dm.TemplateParameterNodes)
+										if (tp.Name == searchIdentifier)
+											matches.Add(tp);
 							}
-
-							var m = ScanNodeForIdentifier(curScope, searchIdentifier, ctxt);
-
-							if (m != null)
-								matches.AddRange(m);
-
-							var mod = curScope as IAbstractSyntaxTree;
-							if (mod != null)
+							else
 							{
-								var modNameParts = mod.ModuleName.Split('.');
-								if (!string.IsNullOrEmpty(mod.ModuleName) && modNameParts[0] == searchIdentifier)
-									matches.Add(curScope);
-							}
+								var m = ScanNodeForIdentifier(curScope, searchIdentifier, ctxt);
 
+								if (m != null)
+									matches.AddRange(m);
+
+								var mod = curScope as IAbstractSyntaxTree;
+								if (mod != null)
+								{
+									var modNameParts = mod.ModuleName.Split('.');
+									if (!string.IsNullOrEmpty(mod.ModuleName) && modNameParts[0] == searchIdentifier)
+										matches.Add(curScope);
+								}
+							}
 							curScope = curScope.Parent as IBlockNode;
 						}
 

@@ -85,14 +85,13 @@ namespace D_Parser.Completion
 				alreadyAddedModuleNameParts.Clear();
 
 				var resolveResults = DResolver.ResolveType(
-					Editor.ModuleCode,
-					Editor.CaretOffset - 1,
-					Editor.CaretLocation,
+					Editor,
 					new ResolverContext
 					{
 						ScopedBlock = curBlock,
 						ParseCache = Editor.ParseCache,
-						ImportCache = Editor. ImportCache
+						ImportCache = Editor. ImportCache,
+						ScopedStatement=curStmt
 					}
 					);
 
@@ -761,7 +760,7 @@ namespace D_Parser.Completion
 			try
 			{
 				IStatement curStmt = null;
-				var rr = DResolver.ResolveType(Editor.ModuleCode, Editor.CaretOffset, Editor.CaretLocation,
+				var rr = DResolver.ResolveType(Editor,
 					new ResolverContext
 					{
 						ScopedBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt),

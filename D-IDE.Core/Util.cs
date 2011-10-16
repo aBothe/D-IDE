@@ -153,7 +153,7 @@ namespace D_IDE.Core
 		/// Executes an anonymous and parameterless delegate on the MainWindow's Dispatcher thread
 		/// </summary>
 		/// <param name="deleg"></param>
-		public static void ExecuteOnUIThread(ThreadStart deleg)
+		public static void ExecuteOnUIThread(ThreadStart deleg,bool InBackground=false)
 		{
 			if (CoreManager.Instance != null && CoreManager.Instance.MainWindow != null)
 				CoreManager.Instance.MainWindow.Dispatcher.Invoke(deleg);

@@ -440,9 +440,12 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var rr = DResolver.ResolveType(Editor.Text, Editor.CaretOffset,
-					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
-					new ResolverContext { ParseCache = ParseCache, ImportCache = ImportCache, ScopedBlock = lastSelectedBlock },
+				var rr = DResolver.ResolveType(this,
+					new ResolverContext { 
+						ParseCache = ParseCache,
+						ImportCache = ImportCache, 
+						ScopedBlock = lastSelectedBlock 
+					},
 					true, true);
 
 				ResolveResult res = null;
@@ -501,9 +504,12 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var rr = DResolver.ResolveType(Editor.Text, Editor.CaretOffset,
-					new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line),
-					new ResolverContext { ParseCache = ParseCache, ImportCache = ImportCache, ScopedBlock = lastSelectedBlock },
+				var rr = DResolver.ResolveType(this,
+					new ResolverContext { 
+						ParseCache = ParseCache,
+						ImportCache = ImportCache, 
+						ScopedBlock = lastSelectedBlock 
+					},
 					true, true);
 
 				ResolveResult res = null;
@@ -719,9 +725,12 @@ namespace D_IDE.D
 		{
 			if (!DSettings.Instance.UseSemanticHighlighting)
 			{
-				foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
-					if (marker is CodeSymbolMarker)
-						marker.Delete();
+				Util.ExecuteOnUIThread(() =>
+				{
+					foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
+						if (marker is CodeSymbolMarker)
+							marker.Delete();
+				});
 
 				return;
 			}

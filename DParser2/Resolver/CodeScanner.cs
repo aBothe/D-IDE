@@ -58,10 +58,6 @@ namespace D_Parser.Resolver
 				#region Identifier Declarations
 				if (o is IdentifierDeclaration)
 				{
-					if ((o as IdentifierDeclaration).Value as string == "i")
-					{
-
-					}
 					HandleIdDeclaration(o as IdentifierDeclaration,
 						lastResCtxt,
 						SyntaxTree,
@@ -183,7 +179,10 @@ namespace D_Parser.Resolver
 				return null;
 
 			lastResCtxt.ScopedBlock = DResolver.SearchBlockAt(SyntaxTree, typeId.Location, out lastResCtxt.ScopedStatement);
+			if (typeString == "th" && typeId.Location.Line == 114)
+			{
 
+			}
 			if (!(WasAlreadyResolved = compDict.TryGetValue(typeString, out rr)))
 			{
 				allCurrentResults = DResolver.ResolveType(typeId, lastResCtxt);
@@ -401,7 +400,8 @@ namespace D_Parser.Resolver
 
 						if (exprs != null && exprs.Length > 0)
 							foreach (var e in exprs)
-								SearchIn(e, l);
+								if(e!=null)
+									SearchIn(e, l);
 					}
 				}
 
