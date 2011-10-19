@@ -42,10 +42,31 @@ namespace D_Parser.Resolver
 		public bool ResolveBaseTypes = true;
 		public bool ResolveAliases = true;
 
+		Dictionary<object, Dictionary<string, ResolveResult[]>> resolvedTypes = new Dictionary<object, Dictionary<string, ResolveResult[]>>();
+
+		public void ApplyFrom(ResolverContext other)
+		{
+			if (other == null)
+				return;
+
+			ScopedBlock = other.ScopedBlock;
+			ScopedStatement = other.ScopedStatement;
+			ParseCache = other.ParseCache;
+			ImportCache = other.ImportCache;
+
+			ResolveBaseTypes = other.ResolveBaseTypes;
+			ResolveAliases = other.ResolveAliases;
+
+			resolvedTypes = other.resolvedTypes;
+		}
+
 		/// <summary>
 		/// Stores scoped-block dependent type dictionaries, which store all types that were already resolved once
 		/// </summary>
-		public readonly Dictionary<object, Dictionary<string, ResolveResult[]>> ResolvedTypes = new Dictionary<object, Dictionary<string, ResolveResult[]>>();
+		public Dictionary<object, Dictionary<string, ResolveResult[]>> ResolvedTypes
+		{
+			get{ return resolvedTypes; }
+		}
 
 		public void TryAddResults(string TypeDeclarationString, ResolveResult[] NodeMatches, IBlockNode ScopedType = null)
 		{
@@ -185,9 +206,12 @@ namespace D_Parser.Resolver
 							break;
 
 						// 3)
-						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, new ResolverContext { ParseCache = CodeCache, ImportCache = ImportCache });
+						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, new ResolverContext { 
+							ParseCache = CodeCache,
+							ScopedBlock=ScopedBlock,
+							ImportCache = ImportCache });
 
-						if (baseclassDefs == null)
+						if (baseclassDefs == null || baseclassDefs.Length<0)
 							break;
 						if (curWatchedClass == baseclassDefs[0].ResolvedTypeDefinition)
 							break;
@@ -820,6 +844,7 @@ namespace D_Parser.Resolver
 				if(curStmtLevel is BlockStatement)
 					scopeObj = curStmtLevel;
 			}
+
 			if (scopeObj == null)
 				scopeObj = ctxt.ScopedBlock;
 
@@ -827,8 +852,8 @@ namespace D_Parser.Resolver
 			if (ctxt.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, scopeObj))
 				return preRes;
 
-			if (ctxt.ImportCache == null && ctxt.ScopedBlock != null)
-				ctxt.ImportCache = DResolver.ResolveImports(ctxt.ScopedBlock.NodeRoot as DModule, ctxt.ParseCache);
+			if (ctxt.ImportCache == null && currentScopeOverride != null)
+				ctxt.ImportCache = DResolver.ResolveImports(currentScopeOverride.NodeRoot as DModule, ctxt.ParseCache);
 
 			var returnedResults = new List<ResolveResult>();
 
@@ -1426,7 +1451,61 @@ namespace D_Parser.Resolver
 				return null;
 
 			bcStack++;
-			var results = ResolveType(type, ctxt, ActualClass.Parent as IBlockNode);
+
+			/*
+			 * If the ActualClass is defined in an other module (so not in where the type resolution has been started),
+			 * we have to enable access to the ActualClass's module's imports!
+			 * 
+			 * module modA:
+			 * import modB;
+			 * 
+			 * class A:B{
+			 * 
+			 *		void bar()
+			 *		{
+			 *			fooC(); // Note that modC wasn't publically imported! Anyway, we're still able to access this method!
+			 *			// So, the resolver must know that there is a class C.
+			 *		}
+			 * }
+			 * 
+			 * -----------------
+			 * module modB:
+			 * import modC;
+			 * 
+			 * // --> When being about to resolve B's base class C, we have to use the imports of modB(!), not modA
+			 * class B:C{}
+			 * -----------------
+			 * module modC:
+			 * 
+			 * class C{
+			 * 
+			 * void fooC();
+			 * 
+			 * }
+			 */
+			ResolveResult[] results = null;
+
+			if (ctxt != null)
+			{
+				var ctxtOverride = new ResolverContext();
+
+				// Take ctxt's parse cache etc.
+				ctxtOverride.ApplyFrom(ctxt);
+
+				// First override the scoped block
+				ctxtOverride.ScopedBlock = ActualClass.Parent as IBlockNode;
+
+				// Then override the import cache with imports of the ActualClass's module
+				if (ctxt.ScopedBlock != null &&
+					ctxt.ScopedBlock.NodeRoot != ActualClass.NodeRoot)
+					ctxtOverride.ImportCache = ResolveImports(ActualClass.NodeRoot as DModule, ctxt.ParseCache);
+
+				results = ResolveType(type, ctxtOverride);
+			}
+			else
+			{
+				results = ResolveType(type, null, ActualClass.Parent as IBlockNode);
+			}
 
 			if (results != null)
 				foreach (var i in results)

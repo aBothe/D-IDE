@@ -165,7 +165,7 @@ namespace D_Parser.Completion
 				}
 
 				if (visibleMembers != DResolver.MemberTypes.Imports) // Do not pass the curStmt because we already inserted all updated locals a few lines before!
-					listedItems = DResolver.EnumAllAvailableMembers(curBlock, null/*, curStmt*/, Editor.CaretLocation, Editor.ImportCache, visibleMembers);
+					listedItems = DResolver.EnumAllAvailableMembers(curBlock, null/*, curStmt*/, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
 				
 				//TODO: Split the keywords into such that are allowed within block statements and non-block statements
 				// Insert typable keywords
