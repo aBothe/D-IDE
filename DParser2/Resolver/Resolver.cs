@@ -1463,7 +1463,7 @@ namespace D_Parser.Resolver
 			 * 
 			 *		void bar()
 			 *		{
-			 *			fooC(); // Note that modC wasn't publically imported! Anyway, we're still able to access this method!
+			 *			fooC(); // Note that modC wasn't imported publically! Anyway, we're still able to access this method!
 			 *			// So, the resolver must know that there is a class C.
 			 *		}
 			 * }
