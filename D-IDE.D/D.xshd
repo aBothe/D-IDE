@@ -19,7 +19,9 @@
 	<Color name="NamespaceKeywords" foreground="Blue" exampleText="namespace A.B { using System; }"/>
 	<Color name="TrueFalse" foreground="Blue" exampleText="b = false; a = true;" />
 	<Color name="TypeKeywords" foreground="DarkCyan" exampleText="if (x is int) { a = x as int; type = typeof(int); size = sizeof(int); c = new object(); }"/>
-
+<!--
+	<Color name="TypeIdentifiers" foreground="0x2b91af" />-->
+	
 	<RuleSet name="CommentMarkerSet">
 		<Keywords fontWeight="bold" foreground="Red">
 			<Word>TODO</Word>
