@@ -1,9 +1,17 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace D_Parser.Misc
 {
-    public class HighPrecisionTimer
+	public interface ITimer
+	{
+		long Start();
+		long Stop();
+		double Duration{get;} 
+	}
+	
+    public class HighPrecisionTimer : ITimer
     {
         [DllImport("Kernel32.dll")]
         private static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
@@ -66,4 +74,50 @@ namespace D_Parser.Misc
             }
         }
     }
+	
+    public class BasicTimer : ITimer
+    {
+		Stopwatch timer;
+		
+        public BasicTimer()
+        {		
+			timer = new Stopwatch();
+			
+			//can check if is HighResolution using
+			//Stopwatch.IsHighResolution;
+				
+			//can get frequency using
+			//Stopwatch.Frequency;
+        }
+        /// <summary>
+        /// Start the timer
+        /// </summary>
+        /// <returns>long - tick count</returns>
+        public long Start()
+        {
+			timer.Reset();
+			timer.Start();
+            return 0;
+        }
+        /// <summary>
+        /// Stop timer 
+        /// </summary>
+        /// <returns>long - tick count</returns>
+        public long Stop()
+        {
+            timer.Stop();
+            return timer.ElapsedMilliseconds;
+        }
+        /// <summary>
+        /// Return the duration of the timer (in seconds)
+        /// </summary>
+        /// <returns>double - duration</returns>
+        public double Duration
+        {
+            get
+            {
+                return (double)timer.Elapsed.TotalMilliseconds / (double)1000;
+            }
+        }
+    }	
 }

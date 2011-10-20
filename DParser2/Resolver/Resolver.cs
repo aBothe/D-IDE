@@ -2069,9 +2069,11 @@ namespace D_Parser.Resolver
 			{
 				var substitutionList = new List<ResolveResult>();
 				foreach (var rr in res.ResolvedTypesOrMethods)
-					if (rr is TypeResult)
+				{
+					var rr2 = TryRemoveAliasesFromResult(rr);
+					if (rr2 is TypeResult)
 					{
-						var classDef = (rr as TypeResult).ResolvedTypeDefinition as DClassLike;
+						var classDef = (rr2 as TypeResult).ResolvedTypeDefinition as DClassLike;
 
 						if (classDef == null)
 							continue;
@@ -2079,8 +2081,9 @@ namespace D_Parser.Resolver
 						//TODO: Regard protection attributes for opCall members
 						foreach (var i in classDef)
 							if (i is DMethod && i.Name == "opCall")
-								substitutionList.Add(HandleNodeMatch(i, ctxt, resultBase: rr));
+								substitutionList.Add(HandleNodeMatch(i, ctxt, resultBase: rr2));
 					}
+				}
 
 				if (substitutionList.Count > 0)
 					res.ResolvedTypesOrMethods = substitutionList.ToArray();

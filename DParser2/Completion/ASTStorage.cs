@@ -268,10 +268,24 @@ namespace D_Parser.Completion
 		public ParsePerformanceData UpdateFromBaseDirectory(bool ReturnOnException=false)
 		{
 			Clear();
-
-			string[] files = Directory.GetFiles(BaseDirectory, "*.d?", SearchOption.AllDirectories);
-
-			var hpt = new HighPrecisionTimer();
+			// wild card character ? seems to behave differently across platforms
+			// msdn: -> Exactly zero or one character.
+			// monodocs: -> Exactly one character.
+			string[] dFiles = Directory.GetFiles(BaseDirectory, "*.d", SearchOption.AllDirectories);
+			string[] diFiles = Directory.GetFiles(BaseDirectory, "*.di", SearchOption.AllDirectories);
+			string[] files = new string[dFiles.Length + diFiles.Length];			
+			Array.Copy(dFiles, 0, files, 0, dFiles.Length);
+			Array.Copy(diFiles, 0, files, dFiles.Length, diFiles.Length);
+			
+			ITimer hpt;
+			if ( (System.Environment.OSVersion.Platform == PlatformID.Win32S) || 
+				 (System.Environment.OSVersion.Platform == PlatformID.Win32Windows)	|| 
+				 (System.Environment.OSVersion.Platform == PlatformID.Win32NT)
+			   )
+				hpt = new HighPrecisionTimer();
+			else
+				hpt = new BasicTimer();				
+				
 
 			var ppd = new ParsePerformanceData { BaseDirectory=BaseDirectory };
 			
@@ -280,7 +294,7 @@ namespace D_Parser.Completion
 				if (tf.EndsWith("phobos"+Path.DirectorySeparatorChar+ "index.d") ||
 					tf.EndsWith("phobos" + Path.DirectorySeparatorChar + "phobos.d")) continue; // Skip index.d (D2) || phobos.d (D2|D1)
 
-					string tmodule = Path.ChangeExtension(tf, null).Remove(0, BaseDirectory.Length + 1).Replace('\\', '.');
+					string tmodule = Path.ChangeExtension(tf, null).Remove(0, BaseDirectory.Length + 1).Replace(Path.DirectorySeparatorChar, '.');
 
 					hpt.Start();
 				try
