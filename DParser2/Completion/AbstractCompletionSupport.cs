@@ -142,8 +142,7 @@ namespace D_Parser.Completion
 				}
 				else if (EnteredText == " ")
 					return;
-
-				if (!(parsedBlock is BlockStatement) && !trackVars.IsParsingInitializer)
+				else if (!(parsedBlock is BlockStatement) && !trackVars.IsParsingInitializer)
 					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
 
 				// In a method, parse from the method's start until the actual caret position to get an updated insight
