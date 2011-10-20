@@ -108,7 +108,6 @@
     <Compile Include="CoreManagement\ErrorManagement.cs" />
     <Compile Include="FileExecution.cs" />
     <Compile Include="GlobalProperties.cs" />
-    <Compile Include="HighPrecTimer.cs" />
     <Compile Include="IBuildSupport.cs" />
     <Compile Include="GenericDebugSupport.cs" />
     <Compile Include="IDEInterface.cs" />

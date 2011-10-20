@@ -21,6 +21,7 @@ using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
 using D_Parser.Completion;
+using System.Diagnostics;
 
 namespace D_IDE.D
 {
@@ -100,7 +101,7 @@ namespace D_IDE.D
 		/// </summary>
 		bool KeysTyped = false;
 		Thread parseThread = null;
-		readonly HighPrecisionTimer.HighPrecTimer hp = new HighPrecisionTimer.HighPrecTimer();
+		readonly Stopwatch stopWatch = new Stopwatch();
 		//bool CanRefreshSemanticHighlightings = false;
 
 		bool isUpdatingLookupDropdowns = false;
@@ -598,15 +599,15 @@ namespace D_IDE.D
 			DModule newAst = null;
 			try
 			{
-				hp.Start();
+				stopWatch.Start();
 				var parser = DParser.Create(new StringReader(code));
 				code = null;
 
 				newAst = parser.Parse();
 
-				hp.Stop();
+				stopWatch.Stop();
 
-				ParseTime = hp.Duration;
+				ParseTime = stopWatch.Elapsed.TotalSeconds;
 			}
 			catch (Exception ex)
 			{
@@ -643,7 +644,7 @@ namespace D_IDE.D
 				{
 					if (System.Diagnostics.Debugger.IsAttached)
 						CoreManager.Instance.MainWindow.SecondLeftStatusText = 
-							Math.Round(hp.Duration * 1000, 3).ToString() + "ms (Parsing duration)";
+							Math.Round((decimal)stopWatch.ElapsedMilliseconds, 3).ToString() + "ms (Parsing duration)";
 
 					UpdateFoldings();
 					CoreManager.ErrorManagement.RefreshErrorList();
@@ -738,8 +739,8 @@ namespace D_IDE.D
 			if (SyntaxTree == null || CompilerConfiguration.ASTCache.IsParsing)
 				return;
 
-			var hp2 = new HighPrecisionTimer.HighPrecTimer();
-			hp2.Start();
+			var sw=new Stopwatch();
+			sw.Start();
 
 			var res = CodeScanner.ScanSymbols(new ResolverContext
 			{
@@ -750,7 +751,7 @@ namespace D_IDE.D
 				// Note: for correct results, base classes and variable types have to get resolved
 			}, SyntaxTree);
 
-			hp2.Stop();
+			sw.Stop();
 
 			#region Step 3: Create/Update markers
 			try
@@ -758,10 +759,10 @@ namespace D_IDE.D
 				Dispatcher.Invoke(new Action<
 					Dictionary<IdentifierDeclaration, ResolveResult>,
 					List<IdentifierDeclaration>,
-					HighPrecisionTimer.HighPrecTimer>
+					Stopwatch>
 					((Dictionary<IdentifierDeclaration, ResolveResult> resolvedItems,
 						List<IdentifierDeclaration> unresolvedItems,
-						HighPrecisionTimer.HighPrecTimer highPrecTimer) =>
+						Stopwatch highPrecTimer) =>
 			{
 				// Clear old markers
 				foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
@@ -799,10 +800,10 @@ namespace D_IDE.D
 
 				if(System.Diagnostics.Debugger.IsAttached)
 					CoreManager.Instance.MainWindow.LeftStatusText =
-						Math.Round(highPrecTimer.Duration * 1000, 2).ToString() +
+						Math.Round((decimal)highPrecTimer.ElapsedMilliseconds, 2).ToString() +
 						"ms (Semantic Highlighting)";
 			}), DispatcherPriority.Background,
-				res.ResolvedIdentifiers, res.UnresolvedIdentifiers, hp2);
+				res.ResolvedIdentifiers, res.UnresolvedIdentifiers, stopWatch);
 			}
 			catch (Exception ex)
 			{

@@ -4,8 +4,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using D_Parser.Dom;
-using D_Parser.Misc;
 using D_Parser.Parser;
+using System.Diagnostics;
 
 namespace D_Parser.Completion
 {
@@ -276,16 +276,8 @@ namespace D_Parser.Completion
 			string[] files = new string[dFiles.Length + diFiles.Length];			
 			Array.Copy(dFiles, 0, files, 0, dFiles.Length);
 			Array.Copy(diFiles, 0, files, dFiles.Length, diFiles.Length);
-			
-			ITimer hpt;
-			if ( (System.Environment.OSVersion.Platform == PlatformID.Win32S) || 
-				 (System.Environment.OSVersion.Platform == PlatformID.Win32Windows)	|| 
-				 (System.Environment.OSVersion.Platform == PlatformID.Win32NT)
-			   )
-				hpt = new HighPrecisionTimer();
-			else
-				hpt = new BasicTimer();				
-				
+
+			var sw = new Stopwatch();				
 
 			var ppd = new ParsePerformanceData { BaseDirectory=BaseDirectory };
 			
@@ -296,13 +288,14 @@ namespace D_Parser.Completion
 
 					string tmodule = Path.ChangeExtension(tf, null).Remove(0, BaseDirectory.Length + 1).Replace(Path.DirectorySeparatorChar, '.');
 
-					hpt.Start();
+					sw.Start();
 				try
 				{
 					var ast = DParser.ParseFile(tf,!ParseFunctionBodies);
-					hpt.Stop();
+					sw.Stop();
 					ppd.AmountFiles++;
-					ppd.TotalDuration += hpt.Duration;
+					ppd.TotalDuration += sw.Elapsed.TotalSeconds;
+					sw.Reset();
 					ast.ModuleName = tmodule;
 					ast.FileName = tf;
 					Add(ast);
@@ -329,6 +322,10 @@ namespace D_Parser.Completion
 	{
 		public string BaseDirectory;
 		public int AmountFiles = 0;
+
+		/// <summary>
+		/// Duration (in seconds)
+		/// </summary>
 		public double TotalDuration = 0.0;
 		public double FileDuration { get {
 			if (AmountFiles > 0)
