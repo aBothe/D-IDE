@@ -825,6 +825,19 @@ namespace D_Parser.Resolver
 			ResolverContext ctxt,
 			IBlockNode currentScopeOverride = null)
 		{
+			
+			var ctxtOverride=ctxt;
+			
+			if(currentScopeOverride!=ctxt.ScopedBlock){
+				ctxtOverride=new ResolverContext();
+				ctxtOverride.ApplyFrom(ctxt);
+			}			
+			
+			if(currentScopeOverride!=null && currentScopeOverride.NodeRoot!=ctxt.ScopedBlock.NodeRoot)
+			{
+				ctxtOverride.ImportCache=ResolveImports(currentScopeOverride.NodeRoot as DModule,ctxt.ParseCache);
+			}
+			
 			if (currentScopeOverride == null)
 				currentScopeOverride = ctxt.ScopedBlock;
 
@@ -849,18 +862,15 @@ namespace D_Parser.Resolver
 				scopeObj = ctxt.ScopedBlock;
 
 			// Check if already resolved once
-			if (ctxt.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, scopeObj))
+			if (ctxtOverride.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, scopeObj))
 				return preRes;
-
-			if (ctxt.ImportCache == null && currentScopeOverride != null)
-				ctxt.ImportCache = DResolver.ResolveImports(currentScopeOverride.NodeRoot as DModule, ctxt.ParseCache);
 
 			var returnedResults = new List<ResolveResult>();
 
 			// Walk down recursively to resolve everything from the very first to declaration's base type declaration.
 			ResolveResult[] rbases = null;
 			if (declaration.InnerDeclaration != null)
-				rbases = ResolveType(declaration.InnerDeclaration, ctxt, currentScopeOverride);
+				rbases = ResolveType(declaration.InnerDeclaration, ctxtOverride);
 
 			/* 
 			 * If there is no parent resolve context (what usually means we are searching the type named like the first identifier in the entire declaration),
@@ -891,7 +901,7 @@ namespace D_Parser.Resolver
 
 						if (classDef is DClassLike)
 						{
-							var res = HandleNodeMatch(classDef, ctxt, currentScopeOverride, typeBase: declaration);
+							var res = HandleNodeMatch(classDef, ctxtOverride, typeBase: declaration);
 
 							if (res != null)
 								returnedResults.Add(res);
@@ -907,7 +917,7 @@ namespace D_Parser.Resolver
 
 						if (classDef != null)
 						{
-							var baseClassDefs = ResolveBaseClass(classDef as DClassLike, ctxt);
+							var baseClassDefs = ResolveBaseClass(classDef as DClassLike, ctxtOverride);
 
 							if (baseClassDefs != null)
 							{
@@ -989,7 +999,7 @@ namespace D_Parser.Resolver
 							}
 							else
 							{
-								var m = ScanNodeForIdentifier(curScope, searchIdentifier, ctxt);
+								var m = ScanNodeForIdentifier(curScope, searchIdentifier, ctxtOverride);
 
 								if (m != null)
 									matches.AddRange(m);
@@ -1022,15 +1032,15 @@ namespace D_Parser.Resolver
 									matches.Add(mod);
 							}
 
-						if (ctxt.ImportCache != null)
-							foreach (var mod in ctxt.ImportCache)
+						if (ctxtOverride.ImportCache != null)
+							foreach (var mod in ctxtOverride.ImportCache)
 							{
 								var m = ScanNodeForIdentifier(mod, searchIdentifier, null);
 								if (m != null)
 									matches.AddRange(m);
 							}
 
-						var results = HandleNodeMatches(matches, ctxt, currentScopeOverride, TypeDeclaration: declaration);
+						var results = HandleNodeMatches(matches, ctxtOverride, TypeDeclaration: declaration);
 						if (results != null)
 							returnedResults.AddRange(results);
 					}
@@ -1054,7 +1064,7 @@ namespace D_Parser.Resolver
 						var staticProp = StaticPropertyResolver.TryResolveStaticProperties(
 							rbase,
 							declaration as IdentifierDeclaration,
-							ctxt);
+							ctxtOverride);
 						if (staticProp != null)
 						{
 							returnedResults.Add(staticProp);
@@ -1080,7 +1090,7 @@ namespace D_Parser.Resolver
 								{
 									var results = HandleNodeMatches(
 										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, ctxt),
-										ctxt, currentScopeOverride, resultBase: rbase, TypeDeclaration: declaration);
+										ctxtOverride, resultBase: rbase, TypeDeclaration: declaration);
 									if (results != null)
 										returnedResults.AddRange(results);
 								}
@@ -1106,8 +1116,8 @@ namespace D_Parser.Resolver
 									else
 									{
 										var results = HandleNodeMatches(
-										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, ctxt),
-										ctxt, currentScopeOverride, rbase, TypeDeclaration: declaration);
+										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, ctxtOverride),
+										ctxtOverride, currentScopeOverride, rbase, TypeDeclaration: declaration);
 										if (results != null)
 											returnedResults.AddRange(results);
 									}
