@@ -825,17 +825,21 @@ namespace D_Parser.Resolver
 			ResolverContext ctxt,
 			IBlockNode currentScopeOverride = null)
 		{
-			
+			if (ctxt == null)
+				return null;
+
 			var ctxtOverride=ctxt;
 			
-			if(currentScopeOverride!=ctxt.ScopedBlock){
+			if(currentScopeOverride!=null && currentScopeOverride!=ctxt.ScopedBlock){
 				ctxtOverride=new ResolverContext();
 				ctxtOverride.ApplyFrom(ctxt);
+				ctxtOverride.ScopedBlock = currentScopeOverride;
+				ctxtOverride.ScopedStatement = null;
 			}			
 			
-			if(currentScopeOverride!=null && currentScopeOverride.NodeRoot!=ctxt.ScopedBlock.NodeRoot)
+			if(ctxtOverride.ScopedBlock!=null &&( ctxtOverride.ImportCache==null !=null || ctxtOverride.ScopedBlock.NodeRoot!=ctxt.ScopedBlock.NodeRoot))
 			{
-				ctxtOverride.ImportCache=ResolveImports(currentScopeOverride.NodeRoot as DModule,ctxt.ParseCache);
+				ctxtOverride.ImportCache=ResolveImports(ctxtOverride.ScopedBlock.NodeRoot as DModule,ctxt.ParseCache);
 			}
 			
 			if (currentScopeOverride == null)
@@ -847,9 +851,9 @@ namespace D_Parser.Resolver
 			ResolveResult[] preRes = null;
 			object scopeObj = null;
 
-			if (ctxt.ScopedStatement != null)
+			if (ctxtOverride.ScopedStatement != null)
 			{
-				var curStmtLevel=ctxt.ScopedStatement;
+				var curStmtLevel=ctxtOverride.ScopedStatement;
 
 				while (curStmtLevel != null && !(curStmtLevel is BlockStatement))
 					curStmtLevel = curStmtLevel.Parent;
@@ -859,7 +863,7 @@ namespace D_Parser.Resolver
 			}
 
 			if (scopeObj == null)
-				scopeObj = ctxt.ScopedBlock;
+				scopeObj = ctxtOverride.ScopedBlock;
 
 			// Check if already resolved once
 			if (ctxtOverride.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, scopeObj))
@@ -954,7 +958,7 @@ namespace D_Parser.Resolver
 									matches.Add(decl);
 
 						// First search along the hierarchy in the current module
-						var curScope = currentScopeOverride;
+						var curScope = ctxtOverride.ScopedBlock;
 						while (curScope != null)
 						{
 							/* 
@@ -1088,9 +1092,16 @@ namespace D_Parser.Resolver
 
 								else if (scanResult is TypeResult)
 								{
+									var tr=scanResult as TypeResult;
+									var nodeMatches=ScanNodeForIdentifier(tr.ResolvedTypeDefinition, searchIdentifier, ctxtOverride);
+
 									var results = HandleNodeMatches(
-										ScanNodeForIdentifier((scanResult as TypeResult).ResolvedTypeDefinition, searchIdentifier, ctxt),
-										ctxtOverride, resultBase: rbase, TypeDeclaration: declaration);
+										nodeMatches,
+										ctxtOverride, 
+										tr.ResolvedTypeDefinition, 
+										resultBase: rbase, 
+										TypeDeclaration: declaration);
+
 									if (results != null)
 										returnedResults.AddRange(results);
 								}
@@ -1171,24 +1182,21 @@ namespace D_Parser.Resolver
 						{
 							var mr = rbase as MemberResult;
 							if (mr.MemberBaseTypes != null && mr.MemberBaseTypes.Length > 0)
-								foreach (var memberType in mr.MemberBaseTypes)
+								foreach (var memberType in TryRemoveAliasesFromResult(mr.MemberBaseTypes))
 								{
-									var curRes = TryRemoveAliasesFromResult(memberType);
-
 									if (expr is PostfixExpression_Index)
 									{
-										var str = (curRes as StaticTypeResult);
+										var str = (memberType as StaticTypeResult);
 										/*
 										 * If the member's type is an array, and if our expression contains an index-expression (e.g. myArray[0]),
 										 * take the value type of the 
 										 */
 										// For array and pointer declarations, the StaticTypeResult object contains the array's value type / pointer base type.
 										if (str != null && (str.TypeDeclarationBase is ArrayDecl || str.TypeDeclarationBase is PointerDecl))
-											curRes = TryRemoveAliasesFromResult(str.ResultBase);
+											returnedResults.AddRange(TryRemoveAliasesFromResult(str.ResultBase));
 									}
-
-									if (curRes != null)
-										returnedResults.Add(curRes);
+									else
+										returnedResults.Add(memberType);
 								}
 						}
 					}
@@ -1197,7 +1205,7 @@ namespace D_Parser.Resolver
 
 			if (returnedResults.Count > 0)
 			{
-				ctxt.TryAddResults(declaration.ToString(), returnedResults.ToArray(), currentScopeOverride);
+				ctxt.TryAddResults(declaration.ToString(), returnedResults.ToArray(), ctxtOverride.ScopedBlock);
 
 				return returnedResults.ToArray();
 			}
@@ -1423,21 +1431,37 @@ namespace D_Parser.Resolver
 		/// </summary>
 		/// <param name="rr"></param>
 		/// <returns></returns>
-		public static ResolveResult TryRemoveAliasesFromResult(ResolveResult rr)
+		public static ResolveResult[] TryRemoveAliasesFromResult(params ResolveResult[] initialResults)
 		{
-			ResolveResult ret = rr;
-			while (ret is MemberResult && (ret as MemberResult).ResolvedMember is DVariable && ((ret as MemberResult).ResolvedMember as DVariable).IsAlias)
+			var ret=new List<ResolveResult> (initialResults);
+			var l2 = new List<ResolveResult>();
+
+			while (ret.Count > 0)
 			{
-				var mr2 = ret as MemberResult;
-				/*
-				 * Although it's theoretically possible to ignore multiple definitions, 
-				 * only take the first aliased type for performance reasons
-				 */
-				if (mr2.MemberBaseTypes != null && mr2.MemberBaseTypes.Length > 0)
-					ret = mr2.MemberBaseTypes[0];
-				else break;
+				foreach (var res in ret)
+				{
+					var mr = res as MemberResult;
+					if (mr!=null &&
+
+						// Alias check
+						mr.ResolvedMember is DVariable &&
+						(mr.ResolvedMember as DVariable).IsAlias &&
+
+						// Check if it has resolved base types
+						mr.MemberBaseTypes != null && 
+						mr.MemberBaseTypes.Length > 0)
+							l2.AddRange(mr.MemberBaseTypes);
+				}
+
+				if (l2.Count < 1)
+					break;
+
+				ret.Clear();
+				ret.AddRange(l2);
+				l2.Clear();
 			}
-			return ret;
+
+			return ret.ToArray();
 		}
 
 		static int bcStack = 0;
@@ -1925,12 +1949,20 @@ namespace D_Parser.Resolver
 			DMethod MethodScope,
 			IEnumerable<IAbstractSyntaxTree> parseCache)
 		{
-			IStatement curStmt = null;
 			var ctxt = new ResolverContext { ScopedBlock = MethodScope, ParseCache = parseCache };
 
 			#region Parse the code between the last block opener and the caret
 
 			var curMethodBody = MethodScope.GetSubBlockAt(caretLocation);
+
+			if (curMethodBody == null && MethodScope.Parent is DMethod)
+			{
+				MethodScope = MethodScope.Parent as DMethod;
+				curMethodBody = MethodScope.GetSubBlockAt(caretLocation);
+			}
+
+			if (curMethodBody == null)
+				return null;
 
 			var blockOpenerLocation = curMethodBody.StartLocation;
 			var blockOpenerOffset = blockOpenerLocation.Line <= 0 ? blockOpenerLocation.Column :
@@ -1943,15 +1975,15 @@ namespace D_Parser.Resolver
 				curMethodBody = DParser.ParseBlockStatement(codeToParse, blockOpenerLocation, MethodScope);
 
 				if (curMethodBody != null)
-					curStmt = curMethodBody.SearchStatementDeeply(caretLocation);
+					ctxt.ScopedStatement = curMethodBody.SearchStatementDeeply(caretLocation);
 			}
 
-			if (curMethodBody == null || curStmt == null)
+			if (curMethodBody == null || ctxt.ScopedStatement == null)
 				return null;
 			#endregion
 
 			// Scan statement for method calls or template instantiations
-			var e = DResolver.SearchForMethodCallsOrTemplateInstances(curStmt, caretLocation);
+			var e = DResolver.SearchForMethodCallsOrTemplateInstances(ctxt.ScopedStatement, caretLocation);
 
 			/*
 			 * 1) foo(			-- normal arguments only
@@ -2068,12 +2100,13 @@ namespace D_Parser.Resolver
 			else if (e is PostfixExpression_MethodCall)
 			{
 				var substitutionList = new List<ResolveResult>();
-				foreach (var rr in res.ResolvedTypesOrMethods)
-				{
-					var rr2 = TryRemoveAliasesFromResult(rr);
-					if (rr2 is TypeResult)
+
+				var nonAliases=TryRemoveAliasesFromResult(res.ResolvedTypesOrMethods);
+
+				foreach (var rr in nonAliases)
+					if (rr is TypeResult)
 					{
-						var classDef = (rr2 as TypeResult).ResolvedTypeDefinition as DClassLike;
+						var classDef = (rr as TypeResult).ResolvedTypeDefinition as DClassLike;
 
 						if (classDef == null)
 							continue;
@@ -2081,12 +2114,13 @@ namespace D_Parser.Resolver
 						//TODO: Regard protection attributes for opCall members
 						foreach (var i in classDef)
 							if (i is DMethod && i.Name == "opCall")
-								substitutionList.Add(HandleNodeMatch(i, ctxt, resultBase: rr2));
+								substitutionList.Add(HandleNodeMatch(i, ctxt, resultBase: rr));
 					}
-				}
 
 				if (substitutionList.Count > 0)
-					res.ResolvedTypesOrMethods = substitutionList.ToArray();
+					nonAliases = substitutionList.ToArray();
+
+				res.ResolvedTypesOrMethods = nonAliases;
 			}
 
 			return res;
