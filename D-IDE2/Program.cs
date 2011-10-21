@@ -6,6 +6,7 @@ using System.Windows;
 using D_IDE.Core;
 using System.IO.Pipes;
 using System.Diagnostics;
+using System.IO;
 
 namespace D_IDE
 {
@@ -24,6 +25,21 @@ namespace D_IDE
 		[STAThread]
 		public static void Main(string[] args)
 		{
+			var dir = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)+"\\D-IDE.config";
+			var file = dir + "\\a.xml";
+
+			Util.CreateDirectoryRecursively(dir);
+
+			File.WriteAllText(file,"initial content");
+
+			File.AppendAllText(file, "s n stuff");
+
+			File.WriteAllText(file, "second content");
+
+			File.Delete(file);
+
+			File.WriteAllText(file, "third content");
+
 			if(Debugger.IsAttached)
 				new Program().Run(args);
 			else try
