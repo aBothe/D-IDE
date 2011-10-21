@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 using System.Windows;
 using D_IDE.Core;
-using System.IO.Pipes;
-using System.Diagnostics;
-using System.IO;
 
 namespace D_IDE
 {
@@ -25,21 +20,6 @@ namespace D_IDE
 		[STAThread]
 		public static void Main(string[] args)
 		{
-			var dir = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)+"\\D-IDE.config";
-			var file = dir + "\\a.xml";
-
-			Util.CreateDirectoryRecursively(dir);
-
-			File.WriteAllText(file,"initial content");
-
-			File.AppendAllText(file, "s n stuff");
-
-			File.WriteAllText(file, "second content");
-
-			File.Delete(file);
-
-			File.WriteAllText(file, "third content");
-
 			if(Debugger.IsAttached)
 				new Program().Run(args);
 			else try
@@ -61,7 +41,7 @@ namespace D_IDE
 		{
 			var CurrentApp = new Application();
 			
-			var mw = new MainWindow(eventArgs.CommandLine.ToArray());
+			var mw = new MainWindow(eventArgs.CommandLine);
 			CurrentApp.MainWindow = mw;
 			CurrentApp.Run();
 			// Return false to avoid base.Run() throwing an exception that no Winforms MainWindow could be found

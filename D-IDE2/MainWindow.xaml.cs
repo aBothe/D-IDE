@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Windows.Threading;
 using ICSharpCode.AvalonEdit.Document;
+using System.Collections.ObjectModel;
 
 namespace D_IDE
 {
@@ -148,8 +149,8 @@ namespace D_IDE
 
 		#region Initializer
 		SplashScreen splashScreen;
-		string[] args;
-		public MainWindow(string[] args)
+		ReadOnlyCollection<string> args;
+		public MainWindow(ReadOnlyCollection<string> args)
 		{
 			this.args = args;
 			if (!Debugger.IsAttached)
@@ -276,7 +277,7 @@ namespace D_IDE
 			Dispatcher.BeginInvoke(new Action(() =>{
 
 				// If given, iterate over all cmd line arguments
-				if (args.Length > 0)
+				if (args.Count > 0)
 					foreach (var a in args)
 						IDEManager.EditingManagement.OpenFile(a);
 				else
