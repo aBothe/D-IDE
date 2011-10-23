@@ -371,19 +371,37 @@ namespace D_IDE.Core
 		/// </summary>
 		void DoubleLine(object sender, RoutedEventArgs e)
 		{
-			if (Editor.TextArea.Caret.Line < 0)
+			if (Editor.CaretOffset < 0 || Editor.SelectionStart<0)
 				return;
 
-			// Get Line Segment
-			var Line=Editor.Document.GetLineByNumber( Editor.TextArea.Caret.Line);
-			// Get line text
-			var LineText=Editor.Document.GetText(Line);
+			// If nothing selected explicitly, duplicate the entire line
+			if (Editor.SelectionLength < 1)
+			{
+				// Get Line Segment
+				var Line = Editor.Document.GetLineByNumber(Editor.TextArea.Caret.Line);
+				// Get line text
+				var LineText = Editor.Document.GetText(Line);
 
-			// Insert \r\n + line text at end offset of current line
-			Editor.Document.Insert(Line.EndOffset,Environment.NewLine+LineText);
+				// Insert \r\n + line text at end offset of current line
+				Editor.Document.Insert(Line.EndOffset, Environment.NewLine + LineText);
 
-			// Set caret offset
-			Editor.CaretOffset = Line.NextLine.Offset;
+				// Set caret offset
+				Editor.CaretOffset = Line.NextLine.Offset;
+			}
+			else
+			{
+				var start = Editor.SelectionStart;
+				var len = Editor.SelectionLength;
+
+				// Get selected text
+				var SelectedText = Editor.SelectedText;
+
+				// Put it at the end of the current one
+				Editor.Document.Insert(start + len, SelectedText);
+
+				// Reset selection
+				Editor.Select(start, len);
+			}
 		}
 
 		void Editor_TextChanged(object sender, EventArgs e)
