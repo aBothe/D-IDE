@@ -296,7 +296,7 @@ namespace D_IDE.D
 					"No compiler configuration detected.\r\n"+
 					"Shall D-IDE search for existing DMD configurations right now?", 
 					"First-time launch", 
-					MessageBoxButton.YesNo);
+					MessageBoxButton.YesNo, MessageBoxImage.Question);
 
 			if (res == MessageBoxResult.No)
 				return;
@@ -320,7 +320,7 @@ namespace D_IDE.D
 				if(MessageBox.Show(
 					"A "+dmdName+" installation was found at \"" + kv.Value + "\". Use it?", 
 					"Installation found", 
-					MessageBoxButton.YesNo) 
+					MessageBoxButton.YesNo, MessageBoxImage.Question) 
 					== MessageBoxResult.Yes)
 				{
 					var cfg=DSettings.Instance.DMDConfig(kv.Key);
@@ -337,7 +337,19 @@ namespace D_IDE.D
 		static string SearchForDmdInstallations(DVersion Version = DVersion.D2)
 		{
 			string dmdRoot = Version == DVersion.D2 ? "dmd2" : "dmd";
+			string windowsBinPath=Path.Combine(dmdRoot,"windows", "bin");
 
+			// Search in %PATH% variable
+
+			var PATH= Environment.GetEnvironmentVariable("path");
+			var PATH_Directories = PATH.Split(';');
+
+			foreach (var PATH_Dir in PATH_Directories)
+				if (PATH_Dir.TrimEnd('\\').EndsWith(windowsBinPath) &&
+					File.Exists(Path.Combine(PATH_Dir, "dmd.exe")))
+					return PATH_Dir;
+
+			// Search logical drives
 			var usuallyUsedDirectories = new[] { "", "D\\" };
 
 			var drives = Directory.GetLogicalDrives();
@@ -345,7 +357,7 @@ namespace D_IDE.D
 			foreach (var drv in drives)
 				foreach (var usedDir in usuallyUsedDirectories)
 				{
-					var assumedDmdDir = Path.Combine(drv, usedDir, dmdRoot, "windows", "bin");
+					var assumedDmdDir = Path.Combine(drv, usedDir, windowsBinPath );
 					var assumendDmdExe = assumedDmdDir+ "\\dmd.exe";
 
 					if (File.Exists(assumendDmdExe))
