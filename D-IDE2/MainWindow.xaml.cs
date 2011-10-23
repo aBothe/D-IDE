@@ -216,13 +216,14 @@ namespace D_IDE
 
 			new Thread(Init).Start();
 
+			/*
 			if (GlobalProperties.Instance.IsFirstTimeStart)
 			{
 				if(splashScreen!=null)
 					splashScreen.Close(TimeSpan.FromSeconds( 0));
 				if (MessageBox.Show("D-IDE seems to be launched for the first time. Start configuration now?", "First time startup", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
 					new GlobalSettingsDlg() { Owner = this }.ShowDialog();
-			}
+			}*/
 		}
 
 		void Init()

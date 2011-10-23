@@ -248,7 +248,7 @@ namespace D_IDE.D
 		/// If the dmd bin directory contains a 'dmd' or 'dmd2', 
 		/// check if phobos and/or core paths are existing, 
 		/// and add them to the ASTCache
-		/// OR empirically update the directorie paths
+		/// OR empirically update the directory paths
 		/// </summary>
 		public void TryAddImportPaths(bool UpdateOldPaths=true)
 		{
@@ -257,7 +257,7 @@ namespace D_IDE.D
 			int k = BaseDirectory.IndexOf(defaultDmdDirname+'\\');
 			if (k>0)
 			{
-				var dmdPath=BaseDirectory.Substring(k+defaultDmdDirname.Length);
+				var dmdPath=BaseDirectory.Substring(0,k+defaultDmdDirname.Length);
 
 				var dirs=new[]{@"src\phobos",@"src\druntime\import"};
 

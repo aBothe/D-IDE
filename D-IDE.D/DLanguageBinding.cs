@@ -13,6 +13,7 @@ using System.IO;
 using System.Diagnostics;
 using D_IDE.D.CodeCompletion;
 using D_Parser.Parser;
+using System.Windows;
 
 namespace D_IDE.D
 {
@@ -249,17 +250,21 @@ namespace D_IDE.D
 
 		public override void LoadSettings(string SuggestedFileName)
 		{
-			if (!File.Exists(SuggestedFileName))
-				return;
+			var fExits=File.Exists(SuggestedFileName);
 
-			var x = XmlTextReader.Create(SuggestedFileName);
+			if (fExits)
+			{
+				var x = XmlTextReader.Create(SuggestedFileName);
 
-			DSettings.Instance.Load(x);
+				DSettings.Instance.Load(x);
 
-			x.Close();
+				x.Close();
+			}
+
+			// Provide first-time-start support by finding existing D installations and insert them + their libraries into the configuration
+			if (InitialSetup.ShallProvideConfigSuppport)
+				InitialSetup.SetupInitialDmdConfig();
 		}
-
-		
 
 		public override AbstractSettingsPage SettingsPage
 		{
@@ -268,5 +273,86 @@ namespace D_IDE.D
 			}
 		}
 		#endregion
+	}
+
+	/// <summary>
+	/// Helper class for initial D-specific compiler settings such as searching existing dmd installations.
+	/// </summary>
+	class InitialSetup
+	{
+		public static bool ShallProvideConfigSuppport
+		{
+			get
+			{
+				return (!File.Exists(DSettings.Instance.dmd1.BaseDirectory + DSettings.Instance.dmd1.SoureCompiler) &&
+					!File.Exists(DSettings.Instance.dmd2.BaseDirectory + DSettings.Instance.dmd2.SoureCompiler)) &&
+					GlobalProperties.Instance.IsFirstTimeStart;
+			}
+		}
+
+		public static void SetupInitialDmdConfig()
+		{
+			var res = MessageBox.Show(
+					"No compiler configuration detected.\r\n"+
+					"Shall D-IDE search for existing DMD configurations right now?", 
+					"First-time launch", 
+					MessageBoxButton.YesNo);
+
+			if (res == MessageBoxResult.No)
+				return;
+
+			// 1) Find installations
+			var dict = new Dictionary<DVersion, string>();
+
+			foreach (var dVersion in new[] { DVersion.D1, DVersion.D2 })
+			{
+				var instDir = SearchForDmdInstallations(dVersion);
+
+				if (!string.IsNullOrEmpty(instDir))
+					dict.Add(dVersion, instDir);
+			}
+				
+			// 2) Offer them to the user & Insert them
+			foreach (var kv in dict)
+			{
+				var dmdName=kv.Key==DVersion.D2?"dmd2":"dmd1";
+
+				if(MessageBox.Show(
+					"A "+dmdName+" installation was found at \"" + kv.Value + "\". Use it?", 
+					"Installation found", 
+					MessageBoxButton.YesNo) 
+					== MessageBoxResult.Yes)
+				{
+					var cfg=DSettings.Instance.DMDConfig(kv.Key);
+
+					// Set new base directory
+					cfg.BaseDirectory = kv.Value;
+
+					// Insert library paths
+					cfg.TryAddImportPaths();
+				}
+			}
+		}
+
+		static string SearchForDmdInstallations(DVersion Version = DVersion.D2)
+		{
+			string dmdRoot = Version == DVersion.D2 ? "dmd2" : "dmd";
+
+			var usuallyUsedDirectories = new[] { "", "D\\" };
+
+			var drives = Directory.GetLogicalDrives();
+			
+			foreach (var drv in drives)
+				foreach (var usedDir in usuallyUsedDirectories)
+				{
+					var assumedDmdDir = Path.Combine(drv, usedDir, dmdRoot, "windows", "bin");
+					var assumendDmdExe = assumedDmdDir+ "\\dmd.exe";
+
+					if (File.Exists(assumendDmdExe))
+						return assumedDmdDir;
+				}
+
+			return null;
+		}
 	}
 }
