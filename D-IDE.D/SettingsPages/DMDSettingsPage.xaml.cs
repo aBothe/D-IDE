@@ -129,9 +129,23 @@ namespace D_IDE.D
 				Libs[List_DefaultLibs.SelectedIndex] = text_CurLib.Text;
 		}
 
+		/// <summary>
+		/// Removes currently selected library from the list. Selects the following library so there's a library reference selected even after deletion.
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
 		private void button_DeleteLib_Click(object sender, RoutedEventArgs e)
 		{
-			Libs.RemoveAt(List_DefaultLibs.SelectedIndex);
+			if(List_DefaultLibs.SelectedIndex>=0)
+			{
+				int i=List_DefaultLibs.SelectedIndex;
+				Libs.RemoveAt(i);
+				
+				if(Libs.Count>i)
+					List_DefaultLibs.SelectedIndex=i;
+				else if(Libs.Count>0)
+					List_DefaultLibs.SelectedIndex=Libs.Count;
+			}
 		}
 		#endregion
 
