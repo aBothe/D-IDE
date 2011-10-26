@@ -151,7 +151,9 @@
 					<r:RibbonSplitButton Label="Run without Debugger" Command="d:IDEUICommands.LaunchWithoutDebugger" SmallImageSource="Resources/build.png" ToolTipTitle="Build &amp; Launch Solution/Current Module without attaching a debugger to it (Shift+F5)">
 						<r:RibbonMenuItem Header="Run in external console" Click="LaunchInConsole_Click" ToolTipTitle="Build &amp; Launch the program in an external console box" />
 					</r:RibbonSplitButton>
-					</r:RibbonGroup>
+					<r:RibbonButton Label="Open bin directory" Click="OpenBinDirectory_Click" SmallImageSource="Resources/open16.png" ToolTipTitle="Open the project's/module's output directory in the explorer" />
+
+				</r:RibbonGroup>
 			</r:RibbonTab>
 			
 			<r:RibbonTab Header="Debug" Name="Tab_Debug">

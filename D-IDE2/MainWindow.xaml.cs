@@ -829,6 +829,25 @@ namespace D_IDE
 				Dispatcher.BeginInvoke(new Action((IDEManager.Instance.CurrentEditor as EditorDocument).DoOutsideModificationCheck));
 			}
 		}
+
+		/// <summary>
+		/// Opens either the project's output directory OR the current module's output directory.
+		/// Depends on if a project's been opened and/or the current module shall be built only.
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		private void OpenBinDirectory_Click(object sender, RoutedEventArgs e)
+		{
+			var ed = IDEManager.Instance.CurrentEditor;
+
+			if (ed == null)
+				return;
+
+			if (!RunCurrentModuleOnly && ed.HasProject)
+				Process.Start(ed.Project.OutputDirectory);
+			else
+				Process.Start(Path.GetDirectoryName( ed.AbsoluteFilePath));
+		}
 	}
 
 }
