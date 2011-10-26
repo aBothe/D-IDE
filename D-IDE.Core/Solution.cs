@@ -76,11 +76,16 @@ namespace D_IDE.Core
 		/// <param name="Project"></param>
 		public bool AddProject(Project Project)
 		{
-			if (!AddProject(Project.FileName))
+			if (Project == null)
 				return false;
-			
+
 			if (!ProjectCache.Contains(Project))
+			{
+				AddProject(Project.FileName);
 				ProjectCache.Add(Project);
+			}
+			else
+				return false;
 			Project.Solution = this;
 			return true;
 		}

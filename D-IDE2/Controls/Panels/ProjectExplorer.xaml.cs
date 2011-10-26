@@ -591,7 +591,7 @@ namespace D_IDE.Controls.Panels
 						cm.Items.Add("Exclude", CommonIcons.delete16, delegate(Object o, EventArgs _e)
 						{
 							if(MessageBox.Show("Continue with excluding project?","Excluding project",MessageBoxButtons.YesNo,MessageBoxIcon.Asterisk,MessageBoxDefaultButton.Button2)==DialogResult.Yes)
-								IDEManager.ProjectManagement.ExcludeProject(pn.Solution,pn.Text);
+								IDEManager.ProjectManagement.ExcludeProject(pn.Solution,pn.AbsolutePath);
 						});
 					}
 					else
@@ -911,7 +911,8 @@ namespace D_IDE.Controls.Panels
 			public override string AbsolutePath
 			{
 				get {
-					if (IsExternalFile) 
+					// Return if it's an external file OR if project is unloaded
+					if (IsExternalFile || (Project==null && Tag is string)) 
 						return Tag as string;
 					if (Project == null)
 						return string.Empty;
