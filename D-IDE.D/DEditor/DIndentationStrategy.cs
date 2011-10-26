@@ -83,24 +83,18 @@ namespace D_IDE.D
 				return;
 			}
 
-			bool hasPostCaretCurlyCloser = false;
+			//bool hasPostCaretCurlyCloser = false;
 
-			var offset = TakeCaret?dEditor.CaretOffset: (line.PreviousLine.Offset + line.PreviousLine.Length);
-
+			var offset = TakeCaret?dEditor.CaretOffset: line.Offset;
+			/*
 			if (document.GetText(line).TrimStart().StartsWith("}") ||(TakeCaret && document.GetCharAt(offset-1)==':'))
 				hasPostCaretCurlyCloser = true;
-
+			*/
 			var block = CalculateIndentation(document.Text, offset);
 
-			if (block != null)
-			{
-				int ind = block.InnerIndentation;
+			//if (hasPostCaretCurlyCloser)	ind--;
 
-				if (hasPostCaretCurlyCloser)
-					ind--;
-
-				RawlyIndentLine(ind, document, line);
-			}
+			RawlyIndentLine(block != null ? block.InnerIndentation : 0, document, line);
 		}
 
 		public void IndentLines(TextDocument document, int beginLine, int endLine)
