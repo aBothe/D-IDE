@@ -61,6 +61,9 @@ namespace D_Parser.Dom
 			set;
 		}
 
+		/// <summary>
+		/// A module's first statement can be a module ABC; statement. If so, this variable will keep it.
+		/// </summary>
 		public ModuleStatement OptionalModuleStatement;
 
 		ImportStatement[] imports = null;

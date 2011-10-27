@@ -420,6 +420,8 @@ namespace D_Parser.Parser
 		public object LastParsedObject { get { return lastParsedObj; } set { PreviousParsedObject = lastParsedObj; lastParsedObj = value; } }
 		object lastParsedObj = null;
 
+		public readonly List<Comment> Comments = new List<Comment>();
+
 		/// <summary>
 		/// Required for code completion.
 		/// True if a type/variable/method/etc. identifier is expected.

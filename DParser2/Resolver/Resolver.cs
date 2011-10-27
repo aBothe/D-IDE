@@ -437,126 +437,49 @@ namespace D_Parser.Resolver
 		/// </summary>
 		public class CommentSearching
 		{
-			public static int IndexOf(string HayStack, bool Nested, int Start)
+			public enum TokenContext
 			{
-				string Needle = Nested ? "+/" : "*/";
-				char cur = '\0';
-				int off = Start;
-				bool IsInString = false;
-				int block = 0, nested = 0;
-
-				while (off < HayStack.Length - 1)
-				{
-					cur = HayStack[off];
-
-					// String check
-					if (cur == '\"' && (off < 1 || HayStack[off - 1] != '\\'))
-					{
-						IsInString = !IsInString;
-					}
-
-					if (!IsInString && (cur == '/') && (HayStack[off + 1] == '*' || HayStack[off + 1] == '+'))
-					{
-						if (HayStack[off + 1] == '*')
-							block++;
-						else
-							nested++;
-
-						off += 2;
-						continue;
-					}
-
-					if (!IsInString && cur == Needle[0])
-					{
-						if (off + Needle.Length - 1 >= HayStack.Length)
-							return -1;
-
-						if (HayStack.Substring(off, Needle.Length) == Needle)
-						{
-							if (Nested) nested--; else block--;
-
-							if ((Nested ? nested : block) < 0) // that value has to be -1 because we started to count at 0
-								return off;
-
-							off++; // Skip + or *
-						}
-
-						if (HayStack.Substring(off, 2) == (Nested ? "*/" : "+/"))
-						{
-							if (Nested) block--; else nested--;
-							off++;
-						}
-					}
-
-					off++;
-				}
-				return -1;
+				None=0,
+				String=2<<0,
+				VerbatimString=2<<1,
+				LineComment=2<<5,
+				BlockComment=2<<2,
+				NestedComment=2<<3,
+				CharLiteral=2<<4
 			}
 
-			public static int LastIndexOf(string HayStack, bool Nested, int Start)
+			public static TokenContext GetTokenContext(string Text, int Offset)
 			{
-				string Needle = Nested ? "/+" : "/*";
-				char cur = '\0', prev = '\0';
-				int off = Start;
-				bool IsInString = false;
-				int block = 0, nested = 0;
-
-				while (off >= 0)
-				{
-					cur = HayStack[off];
-					if (off > 0) prev = HayStack[off - 1];
-
-					// String check
-					if (cur == '\"' && (off < 1 || HayStack[off - 1] != '\\'))
-					{
-						IsInString = !IsInString;
-					}
-
-					if (!IsInString && (cur == '+' || cur == '*') && HayStack[off + 1] == '/')
-					{
-						if (cur == '*')
-							block--;
-						else
-							nested--;
-
-						off -= 2;
-						continue;
-					}
-
-					if (!IsInString && cur == '/')
-					{
-						if (HayStack.Substring(off, Needle.Length) == Needle)
-						{
-							if (Nested) nested++; else block++;
-
-							if ((Nested ? nested : block) >= 1)
-								return off;
-						}
-
-						if (HayStack.Substring(off, 2) == (Nested ? "/*" : "/+"))
-						{
-							if (Nested) block++; else nested++;
-							off--;
-						}
-					}
-
-					off--;
-				}
-				return -1;
+				int _u;
+				return GetTokenContext(Text, Offset, out _u, out _u);
 			}
 
-			public static void IsInCommentAreaOrString(string Text, int Offset, out bool IsInString, out bool IsInLineComment, out bool IsInBlockComment, out bool IsInNestedBlockComment)
+			public static TokenContext GetTokenContext(string Text, int Offset, out int lastBeginOffset, out int lastEndOffset)
 			{
 				char cur = '\0', peekChar = '\0';
 				int off = 0;
-				IsInString = IsInLineComment = IsInBlockComment = IsInNestedBlockComment = false;
+				bool IsInString = false;
+				bool IsInLineComment = false;
+				bool IsInBlockComment = false;
+				bool IsInNestedBlockComment = false;
 				bool IsChar = false;
 				bool IsVerbatimString = false;
 
-				while (off < Offset - 1)
+				lastBeginOffset = -1;
+				lastEndOffset = -1;
+
+				/*
+				 * Continue searching if
+				 *	1) Caret offset hasn't been reached yet
+				 *	2) An end of a context block is still expected
+				 */
+				bool isBeyondCaret = false; // Only reset bool states if NOT beyond target offset
+				while (off < Offset - 1 || 
+					(isBeyondCaret=(lastBeginOffset != -1 && lastEndOffset == -1 && off < Text.Length)))
 				{
 					cur = Text[off];
-					if (off < Text.Length - 1) peekChar = Text[off + 1];
+					if (off < Text.Length - 1) 
+						peekChar = Text[off + 1];
 
 					// String check
 					if (!IsInLineComment && !IsInBlockComment && !IsInNestedBlockComment)
@@ -564,8 +487,12 @@ namespace D_Parser.Resolver
 						if (!IsInString)
 						{
 							// Char handling
-							if(!IsChar && cur == '\'')
+							if (!IsChar && cur == '\'')
+							{
+								lastBeginOffset = off;
+								lastEndOffset = -1;
 								IsChar = true;
+							}
 							else
 							{
 								// Single quote char escape
@@ -575,12 +502,17 @@ namespace D_Parser.Resolver
 									continue;
 								}
 								else if (cur == '\'')
-									IsChar = false;
+								{
+									IsChar = isBeyondCaret;
+									lastEndOffset = off;
+								}
 							}
 
 							// Verbatim string recognition
 							if (cur == 'r' && peekChar == '\"')
 							{
+								lastBeginOffset = off;
+								lastEndOffset = -1;
 								off++;
 								IsInString = IsVerbatimString = true;
 							}
@@ -593,15 +525,18 @@ namespace D_Parser.Resolver
 						else
 						{
 							// Verbatim double quote char escape
-							if ((IsVerbatimString && cur == '\"' && peekChar == '\"') || 
+							if ((IsVerbatimString && cur == '\"' && peekChar == '\"') ||
 								// Normal backslash escape
 								(cur == '\\' && peekChar == '\\'))
 							{
 								off += 2;
 								continue;
 							}
-							else if (cur=='\"')
-								IsInString = IsVerbatimString = false;
+							else if (cur == '\"')
+							{
+								IsInString = IsVerbatimString = isBeyondCaret;
+								lastEndOffset = off;
+							}
 						}
 					}
 
@@ -611,34 +546,72 @@ namespace D_Parser.Resolver
 						if (!IsInBlockComment && !IsInNestedBlockComment)
 						{
 							if (cur == '/' && peekChar == '/')
+							{
 								IsInLineComment = true;
-							if (IsInLineComment && cur == '\n')
-								IsInLineComment = false;
+								lastBeginOffset = off;
+								lastEndOffset = -1;
+							} 
+							else if (IsInLineComment && cur == '\n')
+							{
+								IsInLineComment = isBeyondCaret;
+								lastEndOffset = off;
+							}
 						}
 
 						// Block comment check
 						if (cur == '/' && peekChar == '*')
+						{
 							IsInBlockComment = true;
-						if (IsInBlockComment && cur == '*' && peekChar == '/')
-							IsInBlockComment = false;
+							lastBeginOffset = off;
+							lastEndOffset = -1;
+						}
+						else if (IsInBlockComment && cur == '*' && peekChar == '/')
+						{
+							IsInBlockComment = isBeyondCaret;
+							off++;
+							lastEndOffset = off+1;
+						}
 
 						// Nested comment check
 						if (!IsInString && cur == '/' && peekChar == '+')
+						{
 							IsInNestedBlockComment = true;
-						if (IsInNestedBlockComment && cur == '+' && peekChar == '/')
-							IsInNestedBlockComment = false;
+							lastBeginOffset = off;
+							lastEndOffset = -1;
+						} 
+						else if (IsInNestedBlockComment && cur == '+' && peekChar == '/')
+						{
+							IsInNestedBlockComment = isBeyondCaret;
+							off++;
+							lastEndOffset = off+1;
+						}
 					}
 
 					off++;
 				}
+
+				var ret=TokenContext.None;
+
+				if (IsChar)
+					ret |= TokenContext.CharLiteral;
+				if (IsInLineComment)
+					ret |= TokenContext.LineComment;
+				if (IsInBlockComment)
+					ret |= TokenContext.BlockComment;
+				else if (IsInNestedBlockComment)
+					ret |= TokenContext.NestedComment;
+				if (IsInString)
+					ret |= TokenContext.String;
+				if (IsVerbatimString)
+					ret |= TokenContext.VerbatimString;
+
+				return ret;
 			}
 
 			public static bool IsInCommentAreaOrString(string Text, int Offset)
 			{
-				bool a, b, c, d;
-				IsInCommentAreaOrString(Text, Offset, out a, out b, out c, out d);
-
-				return a || b || c || d;
+				int _u;
+				return GetTokenContext(Text, Offset, out _u, out _u)!=TokenContext.None;
 			}
 		}
 
@@ -786,7 +759,23 @@ namespace D_Parser.Resolver
 			bool onlyAssumeIdentifierList = false)
 		{
 			var code = editor.ModuleCode;
-			var start = ReverseParsing.SearchExpressionStart(code,editor.CaretOffset-1);
+
+			// First check if caret is inside a comment/string etc.
+			int lastNonNormalStart = 0;
+			int lastNonNormalEnd = 0;
+			var caretContext = CommentSearching.GetTokenContext(code, editor.CaretOffset, out lastNonNormalStart,out lastNonNormalEnd);
+
+			// Return if comment etc. found
+			if (caretContext != CommentSearching.TokenContext.None)
+				return null;
+
+			var start = ReverseParsing.SearchExpressionStart(code,editor.CaretOffset-1,
+				/*FIXME: Only backward-parse code until the last comment - 
+				 * this can be provoking errors e.g. 
+				 * on MyType /* Some comment * / .myProp
+				 * But: In quite all cases this shouldn't occur - so it's still acceptable
+				 */
+				(lastNonNormalEnd>0 && lastNonNormalEnd<editor.CaretOffset)?lastNonNormalEnd:0);
 
 			if (start < 0 || editor.CaretOffset<=start)
 				return null;
@@ -837,7 +826,7 @@ namespace D_Parser.Resolver
 				ctxtOverride.ScopedStatement = null;
 			}			
 			
-			if(ctxtOverride.ScopedBlock!=null &&( ctxtOverride.ImportCache==null !=null || ctxtOverride.ScopedBlock.NodeRoot!=ctxt.ScopedBlock.NodeRoot))
+			if(ctxtOverride.ScopedBlock!=null &&( ctxtOverride.ImportCache==null || ctxtOverride.ScopedBlock.NodeRoot!=ctxt.ScopedBlock.NodeRoot))
 			{
 				ctxtOverride.ImportCache=ResolveImports(ctxtOverride.ScopedBlock.NodeRoot as DModule,ctxt.ParseCache);
 			}
@@ -2257,7 +2246,7 @@ namespace D_Parser.Resolver
 	{
 		static IList<string> preParenthesisBreakTokens = new List<string> { "if", "while", "for", "foreach", "foreach_reverse", "with", "try", "catch", "finally", "synchronized", "pragma" };
 
-		public static int SearchExpressionStart(string Text, int CaretOffset)
+		public static int SearchExpressionStart(string Text, int CaretOffset, int MinimumSearchOffset=0)
 		{
 			if (CaretOffset > Text.Length)
 				throw new ArgumentOutOfRangeException("CaretOffset", "Caret offset must be smaller than text length");
@@ -2284,7 +2273,7 @@ namespace D_Parser.Resolver
 			bool stopSeeking = false;
 
 			// Step backward
-			for (int i = CaretOffset; i >= 0 && !stopSeeking; i--)
+			for (int i = CaretOffset; i >= MinimumSearchOffset && !stopSeeking; i--)
 			{
 				IdentListStart = i;
 				var c = Text[i];

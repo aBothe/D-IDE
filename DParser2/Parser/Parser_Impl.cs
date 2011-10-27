@@ -117,10 +117,6 @@ namespace D_Parser.Parser
 			return ' '+ret;
 		}
 
-		void ClearCommentCache()
-		{
-			Lexer.Comments.Clear();
-		}
 		#endregion
 
 		void DeclDef(IBlockNode module)

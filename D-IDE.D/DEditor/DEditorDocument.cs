@@ -363,10 +363,10 @@ namespace D_IDE.D
 				{
 					Editor.Document.UndoStack.StartUndoGroup();
 
-					bool a, b, IsInBlock, IsInNested;
-					DResolver.CommentSearching.IsInCommentAreaOrString(Editor.Text, Editor.SelectionStart, out a, out b, out IsInBlock, out IsInNested);
-
-					if (!IsInBlock && !IsInNested)
+					var ctxt = DResolver.CommentSearching.GetTokenContext(Editor.Text, Editor.SelectionStart);
+					
+					if (ctxt!=DResolver.CommentSearching.TokenContext.BlockComment &&
+						ctxt!= DResolver.CommentSearching.TokenContext.NestedComment)
 					{
 						Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "*/");
 						Editor.Document.Insert(Editor.SelectionStart, "/*");
@@ -387,48 +387,54 @@ namespace D_IDE.D
 		void UncommentBlock(object s, ExecutedRoutedEventArgs e)
 		{
 			var CaretOffset = Editor.CaretOffset;
-			#region Remove line comments first
-			var ls = Editor.Document.GetLineByNumber(Editor.TextArea.Caret.Line);
+
+			if (CaretOffset < 2) 
+				return;
+
 			int commStart = CaretOffset;
-			for (; commStart > ls.Offset; commStart--)
+			int commEnd = 0;
+			var context = DResolver.CommentSearching.GetTokenContext(Editor.Text, CaretOffset, out commStart, out commEnd);
+
+			if (commStart < 0)
+				return;
+
+			// Remove single-line comments
+			if (context == DResolver.CommentSearching.TokenContext.LineComment)
 			{
-				if (Editor.Document.GetCharAt(commStart) == '/' && commStart > 0 &&
-					Editor.Document.GetCharAt(commStart - 1) == '/')
-				{
-					// Check if DDoc comment
-					bool isDDoc=commStart>1 && Editor.Document.GetCharAt(commStart-2)=='/';
-					Editor.Document.Remove(commStart - (isDDoc?2:1), isDDoc?3:2);
-					return;
-				}
+				int removedSlashCount = 0;
+
+				while(Editor.Document.GetCharAt(commStart+removedSlashCount)=='/')
+					removedSlashCount++;
+
+				Editor.Document.Remove(commStart,removedSlashCount);
+				return;
 			}
-			#endregion
+
 			#region If no single-line comment was removed, delete multi-line comment block tags
-			if (CaretOffset < 2) return;
-			int off = CaretOffset - 2;
 
-			// Seek the comment block opener
-			commStart = DResolver.CommentSearching.LastIndexOf(Editor.Text, false, off);
-			int nestedCommStart = DResolver.CommentSearching.LastIndexOf(Editor.Text, true, off);
-			if (commStart < 0 && nestedCommStart < 0) return;
+			if (context != DResolver.CommentSearching.TokenContext.BlockComment &&
+				context != DResolver.CommentSearching.TokenContext.NestedComment)
+				return;
 
-			// Seek the fitting comment block closer
-			int off2 = off + (Math.Max(nestedCommStart, commStart) == off ? 2 : 0);
-			int commEnd = DResolver.CommentSearching.IndexOf(Editor.Text, false, off2);
-			int commEnd2 = DResolver.CommentSearching.IndexOf(Editor.Text, true, off2);
+			if (commEnd < 0) 
+				return;
 
-			if (nestedCommStart > commStart && commEnd2 > nestedCommStart)
-			{
-				commStart = nestedCommStart;
-				commEnd = commEnd2;
-			}
+			int removeCount_initialStarToken = 1;
+			int removeCount_finalStarToken = 1;
 
-			if (commStart < 0 || commEnd < 0) return;
+			char starToken = context== DResolver.CommentSearching.TokenContext.NestedComment?'+':'*';
+
+			// Find and strip all leading and trailing * (+ on nested comments)
+			while (Editor.Document.GetCharAt(commStart + removeCount_initialStarToken) == starToken)
+				removeCount_initialStarToken++;
+
+			while (Editor.Document.GetCharAt(commEnd - 1 - removeCount_finalStarToken) == starToken)
+				removeCount_finalStarToken++;
 
 			Editor.Document.UndoStack.StartUndoGroup();
-			Editor.Document.Remove(commEnd, 2);
-			Editor.Document.Remove(commStart, 2);
 
-			if (commStart != off) Editor.CaretOffset = off;
+			Editor.Document.Remove(commEnd-removeCount_finalStarToken, removeCount_finalStarToken);
+			Editor.Document.Remove(commStart, removeCount_initialStarToken);
 
 			Editor.Document.UndoStack.EndUndoGroup();
 			#endregion
@@ -1169,9 +1175,9 @@ namespace D_IDE.D
 			get
 			{
 				return
-					DSettings.Instance.UseCodeCompletion &&
-					SyntaxTree != null && //(SyntaxTree.ParseErrors!=null?SyntaxTree.ParseErrors.Count() <1 :true) &&
-					!DResolver.CommentSearching.IsInCommentAreaOrString(Editor.Text, Editor.CaretOffset);
+					DSettings.Instance.UseCodeCompletion &&	
+					SyntaxTree != null && 
+					DCodeCompletionSupport.CanShowCompletionWindow(this);
 			}
 		}
 

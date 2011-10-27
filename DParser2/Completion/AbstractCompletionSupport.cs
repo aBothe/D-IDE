@@ -753,9 +753,6 @@ namespace D_Parser.Completion
 
 		public static AbstractTooltipContent[] BuildToolTip(IEditorData Editor)
 		{
-			if (DResolver.CommentSearching.IsInCommentAreaOrString(Editor.ModuleCode, Editor.CaretOffset))
-				return null;
-
 			try
 			{
 				IStatement curStmt = null;
