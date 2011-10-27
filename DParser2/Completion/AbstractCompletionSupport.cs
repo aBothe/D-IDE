@@ -206,7 +206,7 @@ namespace D_Parser.Completion
 			if (listedItems != null)
 				foreach (var i in listedItems)
 				{
-					if (CanItemBeShownGenerally(i as DNode)/* && dm.IsStatic*/)
+					if (CanItemBeShownGenerally(i)/* && dm.IsStatic*/)
 						CompletionDataGenerator.Add(i);
 				}
 		}
@@ -619,8 +619,8 @@ namespace D_Parser.Completion
 						continue;
 					}
 
-					if (di.IsPublic && CanItemBeShownGenerally(di))
-						CompletionDataGenerator.Add(di);
+					if (di.IsPublic && CanItemBeShownGenerally(i))
+						CompletionDataGenerator.Add(i);
 				}
 			else
 			{
