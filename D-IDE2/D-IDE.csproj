@@ -121,6 +121,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Dialogs\FeedbackDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\GlobalSettingsDlg.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -194,6 +198,9 @@
     </Compile>
     <Compile Include="Dialogs\CrashDialog.xaml.cs">
       <DependentUpon>CrashDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\FeedbackDialog.xaml.cs">
+      <DependentUpon>FeedbackDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\GlobalSettingsDlg.xaml.cs">
       <DependentUpon>GlobalSettingsDlg.xaml</DependentUpon>
