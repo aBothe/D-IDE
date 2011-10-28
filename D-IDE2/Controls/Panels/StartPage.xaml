@@ -41,7 +41,7 @@
 				<DataTemplate>
 					<StackPanel>
 						<Label Padding="0" Margin="0" Content="{Binding TimeString}" FontSize="9" Foreground="#FF454545" />
-						<TextBlock Text="{Binding Content}" Margin="0" IsHyphenationEnabled="True" TextWrapping="Wrap" Padding="0" />
+						<TextBox Text="{Binding Content}" BorderBrush="{x:Null}" BorderThickness="0" Background="{x:Null}"  Margin="0" IsReadOnly="True" TextWrapping="Wrap" Padding="0" />
 					</StackPanel>
 				</DataTemplate>
 			</ListView.ItemTemplate>
