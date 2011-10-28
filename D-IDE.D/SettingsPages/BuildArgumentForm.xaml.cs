@@ -54,5 +54,14 @@ namespace D_IDE.D
 			Apply();
 			DialogResult = true;
 		}
+
+		private void button_Defaults_Click(object sender, RoutedEventArgs e)
+		{
+			if (MessageBox.Show("All custom settings will be lost. Continue?", "Reset build arguments", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+			{
+				buildArgs.Reset();
+				LoadCurrent();
+			}
+		}
 	}
 }

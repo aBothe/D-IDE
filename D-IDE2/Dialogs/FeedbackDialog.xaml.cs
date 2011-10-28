@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace D_IDE.Dialogs
 {
@@ -18,9 +11,57 @@ namespace D_IDE.Dialogs
 	/// </summary>
 	public partial class FeedbackDialog : Window
 	{
+		const string feedbackUrl = "http://d-ide.sourceforge.net/contrib_feedback.php";
+
 		public FeedbackDialog()
 		{
 			InitializeComponent();
+
+			input_Message_TextChanged(this, null);
+		}
+
+		private void input_Message_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			textBlock_CharCount.Text = input_Message.Text.Length.ToString() + "/" + input_Message.MaxLength + " chars";
+		}
+
+		private void button_Send_Click(object sender, RoutedEventArgs e)
+		{
+			var wc = new WebClient();
+
+			var mail = input_MailAddress.Text;
+			var message = input_Message.Text.Trim();
+
+			// Check mail address
+			if(!string.IsNullOrWhiteSpace(mail) && !Regex.IsMatch(mail,@"^[\w\.\-]+@[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]{1,})*(\.[a-zA-Z]{2,3}){1,2}$"))
+			{
+				MessageBox.Show("Please leave address field empty or enter a valid e-mail address","Validation error");
+				return;
+			}
+
+			// Null-check of the entered message
+			if(string.IsNullOrEmpty(message))
+			{
+				MessageBox.Show("Please enter a message","Validation error");
+				return;
+			}
+
+			// Upload the form data
+			var answer=wc.UploadValues(feedbackUrl, "POST", new System.Collections.Specialized.NameValueCollection {
+				{"mail", mail},
+				{"message", message}
+			});
+
+			var answerString = Encoding.ASCII.GetString(answer);
+
+			// Check answer string
+			if (answerString.Length > 0)
+				MessageBox.Show(answerString, "Error sending feedback", MessageBoxButton.OK, MessageBoxImage.Error);
+			else
+			{
+				MessageBox.Show("Thank you!","Message sent",MessageBoxButton.OK,MessageBoxImage.Information);
+				Close();
+			}
 		}
 	}
 }

@@ -457,6 +457,9 @@
   <ItemGroup>
     <Resource Include="Resources\d-ide_256.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\mail.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>"$(ProjectDir)7z" u -y -x!*.vshost.* "$(SolutionDir)d-ide.zip"</PostBuildEvent>

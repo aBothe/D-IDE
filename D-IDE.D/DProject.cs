@@ -30,6 +30,8 @@ namespace D_IDE.D
 				var f = base.OutputFile;
 				if (OutputType == OutputTypes.StaticLibrary)
 					return Path.ChangeExtension(f,".lib");
+				if (OutputType == OutputTypes.DynamicLibary)
+					return Path.ChangeExtension(f, ".dll");
 				return f;
 			}
 			set

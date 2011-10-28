@@ -843,10 +843,32 @@ namespace D_IDE
 			if (ed == null)
 				return;
 
+			string dir = "";
+
 			if (!RunCurrentModuleOnly && ed.HasProject)
-				Process.Start(ed.Project.OutputDirectory);
+				dir=(ed.Project.OutputDirectory);
 			else
-				Process.Start(Path.GetDirectoryName( ed.AbsoluteFilePath));
+				dir=(Path.GetDirectoryName(ed.AbsoluteFilePath));
+
+			if (Directory.Exists(dir))
+				Process.Start(dir);
+			else
+				MessageBox.Show("\""+dir+"\" not created yet.");
+		}
+
+		private void Image_Feedback_MouseDown(object sender, MouseButtonEventArgs e)
+		{
+			OpenFeedbackDialogue();
+		}
+
+		private void Button_GiveFeedback_Click(object sender, RoutedEventArgs e)
+		{
+			OpenFeedbackDialogue();
+		}
+
+		public void OpenFeedbackDialogue()
+		{
+			(new FeedbackDialog() { Owner = this }).ShowDialog();
 		}
 	}
 

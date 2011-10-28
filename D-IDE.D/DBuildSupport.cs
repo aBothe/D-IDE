@@ -169,14 +169,26 @@ namespace D_IDE.D
 				}
 			}
 
-			var linker = linkerExe;
+			// Ensure that target directory exists
+			var tarDir = Path.GetDirectoryName(targetFile);
+			try
+			{
+				Util.CreateDirectoryRecursively(tarDir);
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Build);
+				br.Successful = false;
+				return br;
+			}
 
 			// Always enable it to use environment paths to find dmd.exe
-			if (!Path.IsPathRooted(linker) && Directory.Exists(dmd.BaseDirectory))
-				linker = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
+			if (!Path.IsPathRooted(linkerExe) && Directory.Exists(dmd.BaseDirectory))
+				linkerExe = Path.Combine(dmd.BaseDirectory, linkerExe);
 
+			//CRITICAL: Execute linker exe
 			TempPrc = FileExecution.ExecuteSilentlyAsync(
-					linker,	BuildDLinkerArgumentString(linkerArgs,targetFile,dmd.ASTCache.DirectoryPaths,files), startDirectory,
+					linkerExe,	BuildDLinkerArgumentString(linkerArgs, startDirectory,targetFile,dmd.ASTCache.DirectoryPaths,files), startDirectory,
 					OnOutput, delegate(string s)
 			{
 				var err = ParseErrorMessage(s);
@@ -190,7 +202,7 @@ namespace D_IDE.D
 
 			br.Successful = br.Successful && TempPrc.ExitCode==0 && File.Exists(targetFile);
 
-			// If targetFile is executable or library, create PDB
+			// If targetFile is executable or dynamic linked library, create PDB
 			if (br.Successful && CreatePDB && (targetFile.EndsWith(".exe") || targetFile.EndsWith(".dll")))
 			{
 				var br_=CreatePDBFromExe(targetFile);
@@ -361,7 +373,7 @@ namespace D_IDE.D
 		/// <param name="targetFile"></param>
 		/// <param name="Objects"></param>
 		/// <returns></returns>
-		public static string BuildDLinkerArgumentString(string input, string targetFile, IEnumerable<string> ImportPaths, params string[] Objects)
+		public static string BuildDLinkerArgumentString(string input, string baseDirectory, string targetFile, IEnumerable<string> ImportPaths, params string[] Objects)
 		{
 			string importPaths = "";
 
@@ -375,8 +387,15 @@ namespace D_IDE.D
 			if(Objects!=null && Objects.Length>0)
 				objs="\"" + string.Join("\" \"", Objects) + "\"";
 
+			string relativeTargetDirectory="";
+			
+			if(targetFile.StartsWith(baseDirectory))
+				relativeTargetDirectory=targetFile.Substring(baseDirectory.Length);
+
 			return BuildArgumentString(input, new Dictionary<string, string>{
 				{"$objs",objs},
+				{"$projectDir", baseDirectory},
+				{"$relativeTargetDir",relativeTargetDirectory},
 				{"$targetDir",Path.GetDirectoryName(targetFile)},
 				{"$target",targetFile},
 				{"$importPaths",importPaths},

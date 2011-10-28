@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
+using System.IO;
+using System.Windows;
+using System.Xml;
 using D_IDE.Core;
-using D_Parser;
-using DebugEngineWrapper;
+using D_Parser.Dom;
+using D_Parser.Parser;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using D_Parser.Dom;
-using System.Xml;
-using System.IO;
-using System.Diagnostics;
-using D_IDE.D.CodeCompletion;
-using D_Parser.Parser;
-using System.Windows;
 
 namespace D_IDE.D
 {
@@ -80,7 +74,7 @@ namespace D_IDE.D
 			});
 
 			// Associate highlighting definitions
-			var ms = new MemoryStream(DIcons.d_xshd);
+			var ms = new MemoryStream(DResources.D_xshd);
 			var hi = HighlightingLoader.Load(new XmlTextReader(ms), HighlightingManager.Instance);
 			HighlightingManager.Instance.RegisterHighlighting(
 				"D", new[] { ".d", ".di" }, hi);
@@ -111,13 +105,7 @@ namespace D_IDE.D
 
 					var mainFile = prj.BaseDirectory+ "\\main.d";
 
-					File.WriteAllText(mainFile,
-						"import std.stdio, std.cstream;\r\n"+
-						"\r\n"+
-						"void main(string[] args)\t{\r\n"+
-						"\twriteln(\"Hello World!\");\r\n"+
-						"\tdin.getc();\r\n"+
-						"}");
+					File.WriteAllText(mainFile,	DResources.helloWorldConsoleApp);
 
 					prj.Add(mainFile);
 					prj.Save();
@@ -125,12 +113,31 @@ namespace D_IDE.D
 					break;
 				case 1: // Win32 app
 					prj.OutputType = OutputTypes.CommandWindowLessExecutable;
+
+					var mainFile2 = prj.BaseDirectory + "\\main.d";
+
+					File.WriteAllText(mainFile2, DResources.winsamp_d);
+
+					prj.Add(mainFile2);
+					prj.Save();
+
 					break;
 				case 2: // DLL
 					prj.OutputType = OutputTypes.DynamicLibary;
+
+					// We have explicitly reference to phobos library when linking to a .dll
+					prj.LinkedLibraries.Add("phobos.lib");
+
 					break;
 				case 3:// Lib
 					prj.OutputType = OutputTypes.StaticLibrary;
+
+					var libmainFile = prj.BaseDirectory + Path.DirectorySeparatorChar + prj.Name.Replace(' ','_')+".d";
+
+					File.WriteAllText(libmainFile, DResources.libExample);
+
+					prj.Add(libmainFile);
+					prj.Save();
 					break;
 				default:
 					return null;

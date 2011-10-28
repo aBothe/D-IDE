@@ -178,13 +178,24 @@
 					<r:RibbonButton Label="Visit d-ide.sourceforge.net" Click="Visitdide_sourceforge_net_Click" />
 					<r:RibbonButton Label="Visit digitalmars.com" Click="Visitdigitalmars_Click" />
 				</r:RibbonGroup>
+				
+				<r:RibbonGroup Header="Support">
+					<r:RibbonButton Name="Button_GiveFeedback" Click="Button_GiveFeedback_Click" Label="Give Feedback" SmallImageSource="Resources/mail.png" />
+				</r:RibbonGroup>
 			</r:RibbonTab>
 				
 		</r:Ribbon>
 		
 		<StatusBar Grid.Row="1" Name="statusBar1" VerticalAlignment="Bottom">
-			<TextBlock HorizontalAlignment="Stretch" Name="StatusLabel1" />
-			<TextBlock HorizontalAlignment="Stretch" Name="StatusLabel2" Padding="10,0,0,0" />
+			<StatusBarItem>
+				<TextBlock HorizontalAlignment="Stretch" Name="StatusLabel1" />
+			</StatusBarItem>
+			<StatusBarItem>
+				<TextBlock HorizontalAlignment="Stretch" Name="StatusLabel2" Padding="10,0,0,0" />
+			</StatusBarItem>
+			<StatusBarItem HorizontalAlignment="Right">
+				<Image Source="Resources/mail.png" Height="16" Width="16" ToolTip="Give Feedback" Name="Image_Feedback" MouseDown="Image_Feedback_MouseDown" Cursor="Hand" />
+			</StatusBarItem>
 		</StatusBar>
 		<my:DockingManager Grid.Row="1" Name="DockMgr" Margin="0,0,0,22" ActiveDocumentChanged="DockMgr_ActiveDocumentChanged" DocumentClosed="DockMgr_DocumentClosed" DocumentClosing="DockMgr_DocumentClosing" />
 	</Grid>

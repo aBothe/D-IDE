@@ -158,6 +158,12 @@ namespace D_IDE.D
 
 	public class DMDConfig
 	{
+		public DMDConfig()
+		{
+			DebugArgs.Reset();
+			ReleaseArgs.Reset();
+		}
+
 		public class DBuildArguments
 		{
 			public bool IsDebug = false;
@@ -237,6 +243,41 @@ namespace D_IDE.D
 				ExeLinker = other.ExeLinker;
 				DllLinker = other.DllLinker;
 				LibLinker = other.LibLinker;
+			}
+
+			/// <summary>
+			/// Reset arguments to defaults
+			/// </summary>
+			public void Reset()
+			{
+				ProvideDefaultBuildArguments(this, IsDebug);
+			}
+
+			/// <summary>
+			/// (Re-)Sets all arguments back to what they were originally
+			/// </summary>
+			public static void ProvideDefaultBuildArguments(DBuildArguments args, bool DebugArguments = false)
+			{
+				string commonLinkerArgs = "";
+				if (DebugArguments)
+				{
+					commonLinkerArgs = "$objs -gc -debug ";
+
+					args.IsDebug = true;
+					args.SoureCompiler = "-c \"$src\" -of\"$obj\" $importPaths -gc -debug";
+					args.LibLinker = "-c -n \"$lib\" $objs";
+				}
+				else
+				{
+					commonLinkerArgs = "$objs -L/WINPACK -release -O -inline ";
+
+					args.SoureCompiler = "-c \"$src\" -of\"$obj\" $importPaths -release -O -inline";
+					args.LibLinker = "-c -n \"$lib\" $objs";
+				}
+
+				args.Win32ExeLinker = commonLinkerArgs + "-L/su:windows -L/exet:nt -of\"$exe\"";
+				args.ExeLinker = commonLinkerArgs + "-of\"$exe\"";
+				args.DllLinker = commonLinkerArgs + "-L/IMPLIB:$relativeTargetDir -of\"$dll\"";
 			}
 		}
 
@@ -324,22 +365,9 @@ namespace D_IDE.D
 			return ReleaseArgs;
 		}
 
-		public DBuildArguments DebugArgs=new DBuildArguments(){
-			IsDebug=true,
-			SoureCompiler = "-c \"$src\" -of\"$obj\" $importPaths -gc -debug",
-			Win32ExeLinker = "$objs -L/su:windows -L/exet:nt -of\"$exe\" -gc -debug",
-			ExeLinker = "$objs -of\"$exe\" -gc -debug",
-			DllLinker = "$objs -L/IMPLIB:\"$lib\" -of\"$dll\" -gc -debug",
-			LibLinker = "-c -n -of\"$lib\" $objs"
-		};
+		public DBuildArguments DebugArgs = new DBuildArguments() { IsDebug=true };
 
-		public DBuildArguments ReleaseArgs=new DBuildArguments(){
-			SoureCompiler = "-c \"$src\" -of\"$obj\" $importPaths -release -O -inline",
-			Win32ExeLinker = "$objs -L/su:windows -L/exet:nt -of\"$exe\" -release -O -inline",
-			ExeLinker = "$objs -of\"$exe\" -release -O -inline",
-			DllLinker = "$objs -L/IMPLIB:\"$lib\" -of\"$dll\" -release -O -inline",
-			LibLinker = "-c -n \"$lib\" $objs"
-		};
+		public DBuildArguments ReleaseArgs=new DBuildArguments();
 
 		public void Load(XmlReader x)
 		{
@@ -405,7 +433,11 @@ namespace D_IDE.D
 						while (xr2.Read())
 						{
 							if (xr2.LocalName == "lib")
-								DefaultLinkedLibraries.Add(xr2.ReadString());
+							{
+								var libF = xr2.ReadString();
+								if(!DefaultLinkedLibraries.Contains(libF))
+									DefaultLinkedLibraries.Add(libF);
+							}
 						}
 						break;
 				}
