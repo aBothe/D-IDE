@@ -269,7 +269,7 @@ namespace D_IDE.D
 				}
 				else
 				{
-					commonLinkerArgs = "$objs -L/WINPACK -release -O -inline ";
+					commonLinkerArgs = "$objs -release -O -inline ";
 
 					args.SoureCompiler = "-c \"$src\" -of\"$obj\" $importPaths -release -O -inline";
 					args.LibLinker = "-c -n \"$lib\" $objs";
