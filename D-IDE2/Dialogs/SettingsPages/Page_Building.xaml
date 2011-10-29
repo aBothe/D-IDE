@@ -7,8 +7,9 @@
              d:DesignHeight="300" d:DesignWidth="640" Background="White">
     <w:Grid>
 		<w:CheckBox Content="Save all open editors before building" Height="16" HorizontalAlignment="Left" Margin="12,34,0,0" Name="cb_SaveBeforeBuild" VerticalAlignment="Top" />
-		<w:TextBox Height="23" Margin="12,76,12,0" Name="tb_DefBinPath" VerticalAlignment="Top" />
-		<w:Label Content="Standard binary output path:" Height="14" HorizontalAlignment="Left" Padding="0" Margin="12,56,0,0" Name="label1" VerticalAlignment="Top" Width="225" />
+		<w:TextBox Height="23" Margin="12,98,12,0" Name="tb_DefBinPath" VerticalAlignment="Top" />
+		<w:Label Content="Standard binary output path:" Height="14" HorizontalAlignment="Left" Padding="0" Margin="12,78,0,0" Name="label1" VerticalAlignment="Top" Width="225" />
 		<w:CheckBox Content="Verbose build output" Height="16" HorizontalAlignment="Left" Margin="12,12,0,0" Name="cb_VerboseBuildOutput" VerticalAlignment="Top" />
+		<w:CheckBox Content="Enable Incremental Build" Height="16" HorizontalAlignment="Left" Margin="12,56,0,0" Name="checkBox_IncrBuild" VerticalAlignment="Top" />
 	</w:Grid>
 </AbstractSettingsPage>

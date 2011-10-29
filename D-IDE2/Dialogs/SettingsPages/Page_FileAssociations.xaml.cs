@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using D_IDE.Core;
 using BrendanGrant.Helpers.FileAssociation;
+using System.Security;
 
 namespace D_IDE.Dialogs.SettingsPages
 {
@@ -106,7 +107,7 @@ namespace D_IDE.Dialogs.SettingsPages
 					else
 						AssociationManager.RemoveAssociation(Extension);
 				}
-				catch (UnauthorizedAccessException)
+				catch (SecurityException)
 				{
 					MessageBox.Show("Please restart D-IDE in admin mode!","Insufficient access rights");
 				}

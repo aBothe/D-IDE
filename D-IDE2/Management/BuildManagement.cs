@@ -144,6 +144,9 @@ namespace D_IDE
 					if (Project.LastBuildResult.Successful)
 						Project.CopyCopyableOutputFiles();
 
+					if (Project.LastBuildResult.NoBuildNeeded)
+						ErrorLogger.Log("No project files were changed -- No compilation required", ErrorType.Information, ErrorOrigin.Build);
+
 					return Project.LastBuildResult.Successful;
 				}
 				return false;
@@ -200,6 +203,10 @@ namespace D_IDE
 
 				// Execute build
 				var br = ErrorManagement.LastSingleBuildResult = lang.BuildSupport.BuildStandAlone(file);
+
+				if (br.Successful && br.NoBuildNeeded)
+					ErrorLogger.Log("File wasn't changed -- No compilation required", ErrorType.Information, ErrorOrigin.Build);
+
 
 				// Update error list, Disable build menu
 				ErrorManagement.RefreshErrorList();

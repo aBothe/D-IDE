@@ -49,7 +49,7 @@ namespace D_IDE.D
 			set
 			{
 				base.FileName = value;
-				ParsedModules.BaseDirectory = value;
+				ParsedModules.BaseDirectory = Path.GetDirectoryName( value);
 			}
 		}
 

@@ -77,7 +77,7 @@ namespace D_IDE.Core
 					ext = ".dll";
 
 				if (string.IsNullOrEmpty(OutputFileOverride))
-					return ToAbsoluteFileName("bin\\" + Util.PurifyFileName(Name) + ext);
+					return ToAbsoluteFileName(GlobalProperties.Instance.DefaultBinariesPath+"\\" + Util.PurifyFileName(Name) + ext);
 				else return ToAbsoluteFileName(OutputFileOverride);
 			}
 			set
@@ -473,6 +473,9 @@ namespace D_IDE.Core
 			}
 		}
 
+		/// <summary>
+		/// Updates the internal modification timestamp of a source file.
+		/// </summary>
 		public void ResetModifiedTime()
 		{
 			LastModified = File.GetLastWriteTimeUtc(AbsoluteFileName).ToFileTime();

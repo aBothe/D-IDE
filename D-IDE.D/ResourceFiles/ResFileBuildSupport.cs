@@ -46,7 +46,7 @@ namespace D_IDE.ResourceFiles
 			var res = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(src) + ".res");
 
 			// Check if creation can be skipped
-			if (!Module.Modified && File.Exists(res))
+			if (GlobalProperties.Instance.EnableIncrementalBuild && !Module.Modified && File.Exists(res))
 			{
 				Module.LastBuildResult = new BuildResult() { SourceFile = src, TargetFile = res, Successful = true, NoBuildNeeded = true };
 				return;
@@ -71,6 +71,7 @@ namespace D_IDE.ResourceFiles
 						ResConfig.Instance.ResourceCompilerArguments, 
 						src, res, outputDir),
 					ExecDirectory,
+					// Output handling
 					delegate(string s)
 					{
 						var err = ParseErrorMessage(s);
@@ -82,9 +83,12 @@ namespace D_IDE.ResourceFiles
 						if (!GlobalProperties.Instance.VerboseBuildOutput)
 							ErrorLogger.Log(s, ErrorType.Message, ErrorOrigin.Build);
 					}, 
+					// Error handling
 					delegate(string s)
 					{
 						br.Successful = false;
+
+						ErrorLogger.Log(s, ErrorType.Error, ErrorOrigin.Build);
 					}, 
 					OnExit);
 
@@ -92,6 +96,9 @@ namespace D_IDE.ResourceFiles
 				TempPrc.WaitForExit(MaxCompilationTime);
 
 			br.Successful = br.Successful && TempPrc != null && TempPrc.ExitCode == 0 && File.Exists(res);
+
+			if (br.Successful)
+				Module.ResetModifiedTime();
 
 			Module.LastBuildResult = br;
 		}

@@ -244,6 +244,14 @@ namespace D_IDE
                                 }
                                 break;
 
+							case "EnableIncrementalBuild":
+								if (xr.MoveToAttribute("value"))
+									p.EnableIncrementalBuild = xr.Value == "1";
+								break;
+
+							case "DefaultBinDirectory":
+								Instance.DefaultBinariesPath = xr.ReadString();
+								break;
 
                             case "highlightings":
                                 if (xr.IsEmptyElement) break;
@@ -385,8 +393,12 @@ namespace D_IDE
 			xw.WriteAttributeString("value", Instance.DoAutoSaveOnBuilding ? "1" : "0");
 			xw.WriteEndElement();
 
-			xw.WriteStartElement("autosave");
-			xw.WriteAttributeString("value", Instance.DoAutoSaveOnBuilding ? "1" : "0");
+			xw.WriteStartElement("EnableIncrementalBuild");
+			xw.WriteAttributeString("value", Instance.EnableIncrementalBuild ? "1" : "0");
+			xw.WriteEndElement();
+
+			xw.WriteStartElement("DefaultBinDirectory");
+			xw.WriteCData(Instance.DefaultBinariesPath);
 			xw.WriteEndElement();
 
 			xw.WriteStartElement("highlightings");
@@ -447,6 +459,7 @@ namespace D_IDE
 		public bool VerboseBuildOutput = true;
 		public bool DoAutoSaveOnBuilding = true;
 		public string DefaultBinariesPath = "bin";
+		public bool EnableIncrementalBuild = true;
 		#endregion
 
 		#region Debugging

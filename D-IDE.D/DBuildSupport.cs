@@ -242,7 +242,7 @@ namespace D_IDE.D
 			var obj = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(src) + ".obj");
 
 			// Check if creation can be skipped
-			if (!Link && !Module.Modified && File.Exists(obj))
+			if (GlobalProperties.Instance.EnableIncrementalBuild &&  !Link && !Module.Modified && File.Exists(obj))
 			{
 				Module.LastBuildResult = new BuildResult() { SourceFile=src, TargetFile=obj,Successful = true, NoBuildNeeded=true};
 				return;
@@ -250,12 +250,21 @@ namespace D_IDE.D
 
 			var br =Module.LastBuildResult= CompileSource(Module,dmd,compileDebug,obj,ExecDir);
 
+			if (br.Successful)
+				Module.ResetModifiedTime();
+
 			if (Link && br.Successful)
 			{
 				br.Successful = false;
+
 				#region Link To StandAlone executable
 				var exe = OutputDirectory + "\\" + Path.GetFileNameWithoutExtension(src) + ".exe";
 				br.TargetFile = exe;
+
+				if (GlobalProperties.Instance.EnableIncrementalBuild && br.NoBuildNeeded && File.Exists(br.TargetFile))
+				{
+					return;
+				}
 
 				var br_ = LinkFiles(dmd,dmd.ExeLinker, dmd.BuildArguments(compileDebug).ExeLinker, Path.GetDirectoryName(obj), exe,compileDebug, obj);
 				
