@@ -146,6 +146,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>ResResources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>D_IDE.ResourceFiles</CustomToolNamespace>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\dfile.ico" />
   </ItemGroup>
@@ -160,7 +161,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ResourceFiles\RC.xshd">
+    <None Include="RC.xshd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Resources\resx32.png" />
