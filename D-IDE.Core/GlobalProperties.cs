@@ -250,7 +250,7 @@ namespace D_IDE
 								break;
 
 							case "DefaultBinDirectory":
-								Instance.DefaultBinariesPath = xr.ReadString();
+								p.DefaultBinariesPath = xr.ReadString();
 								break;
 
                             case "highlightings":
