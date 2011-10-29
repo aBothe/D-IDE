@@ -918,6 +918,9 @@ namespace D_IDE.D
 				IStatement curStmt = null;
 				var curBlock = DResolver.SearchBlockAt(SyntaxTree, CaretLocation, out curStmt);
 
+				if (curBlock == null)
+					curBlock = SyntaxTree;
+
 				if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
 					blockCompletionDataOperation.Abort();
 
@@ -932,7 +935,7 @@ namespace D_IDE.D
 
 						// First fill the Types-Dropdown
 						var types = new List<DCompletionData>();
-						DCompletionData selectedItem = null;
+						ICompletionData selectedItem = null;
 						var l1 = new List<INode> { SyntaxTree };
 						var l2 = new List<INode>();
 
@@ -945,7 +948,10 @@ namespace D_IDE.D
 								{
 									var completionData = new DCompletionData(n);
 									if (CaretLocation >= n.StartLocation && CaretLocation <= n.EndLocation)
+									{
 										selectedItem = completionData;
+										curBlock = n as IBlockNode;
+									}
 									types.Add(completionData);
 								}
 
@@ -962,8 +968,8 @@ namespace D_IDE.D
 							l2.Clear();
 						}
 
-						if (selectedItem != null && selectedItem.Node is IBlockNode)
-							curBlock = selectedItem.Node as IBlockNode;
+						if (selectedItem == null && SyntaxTree != null)
+							curBlock = SyntaxTree;
 
 						// For better usability, pre-sort items
 						try
@@ -984,7 +990,7 @@ namespace D_IDE.D
 							// Search a parent class to show all this one's members and to select that member where the caret currently is located
 							var watchedParent = curBlock as IBlockNode;
 
-							while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum))
+							while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum || watchedParent is IAbstractSyntaxTree))
 								watchedParent = watchedParent.Parent as IBlockNode;
 
 							if (watchedParent != null)

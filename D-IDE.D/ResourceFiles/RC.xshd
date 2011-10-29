@@ -1,164 +1,115 @@
 <?xml version = "1.0"?>
-<!-- D mode VS.NET style -->
-<!-- Alexander Bothe edit -->
-<SyntaxDefinition name = "RC" extensions = ".rc">
+<SyntaxDefinition name="RC" extensions=".rc" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+	<Color name="Comment" foreground="Green" exampleText="// comment" />
+	<Color name="String" foreground="Red" exampleText="string text = &quot;Hello, World!&quot;"/>
+	<Color name="Char" foreground="Red" exampleText="char linefeed = '\n';"/>
+	<Color name="Punctuation" exampleText="a(b.c);" />
+	<Color name="NumberLiteral" exampleText="3.1415f"/>
+	<Color name="Keywords" foreground="Blue" fontWeight="bold" exampleText="if (a) {} else {}"/>
 
-  <Environment>
-    <Default      color = "SystemColors.WindowText"    bgcolor = "SystemColors.Window"/>
-    <Selection    color = "SystemColors.HighlightText" bgcolor = "SystemColors.Highlight"/>
-    <!--		<Selection    bgcolor = "LightBlue"/> -->
-    <VRuler       color = "SystemColors.ControlLight"/>
-    <InvalidLines color = "Red"/>
-    <CaretMarker  color = "Yellow"/>
+	<RuleSet name="CommentMarkerSet">
+		<Keywords fontWeight="bold" foreground="Red">
+			<Word>TODO</Word>
+			<Word>FIXME</Word>
+		</Keywords>
+		<Keywords fontWeight="bold" foreground="#E0E000">
+			<Word>HACK</Word>
+			<Word>UNDONE</Word>
+		</Keywords>
+	</RuleSet>
 
-    <LineNumbers  color = "SystemColors.ControlDark" bgcolor = "SystemColors.Window"/>
+	<!-- Main ruleset -->
+	<RuleSet>
 
-    <FoldLine     color = "#808080" bgcolor="Black"/>
-    <FoldMarker   color = "#808080" bgcolor="White"/>
-    <SelectedFoldLine color = "Black" bgcolor="Black"/>
+		<Span color="Comment" ruleSet="CommentMarkerSet">
+			<Begin>//</Begin>
+		</Span>
 
-    <EOLMarkers   color = "#E0E0E5"/>
-    <SpaceMarkers color = "#E0E0E5"/>
-    <TabMarkers   color = "#E0E0E5"/>
-  </Environment>
+		<Span color="Comment" ruleSet="CommentMarkerSet" multiline="true">
+			<Begin>/\*</Begin>
+			<End>\*/</End>
+		</Span>
 
-  <Properties>
-    <Property name="LineComment" value="//"/>
-  </Properties>
+		<Span color="String">
+			<Begin>"</Begin>
+			<End>"</End>
+			<RuleSet>
+				<!-- span for escape sequences -->
+				<Span begin="\\" end="."/>
+			</RuleSet>
+		</Span>
 
-  <Digits name = "Digits" bold = "false" italic = "false" color = "DarkBlue"/>
+		<Span color="Char">
+			<Begin>'</Begin>
+			<End>'</End>
+			<RuleSet>
+				<!-- span for escape sequences -->
+				<Span begin="\\" end="."/>
+			</RuleSet>
+		</Span>
 
-  <RuleSets>
-    <RuleSet ignorecase="false">
-      <Delimiters>&amp;&lt;&gt;~!@%^*()-+=|\#/{}[]:;"' ,	.?</Delimiters>
-      <Span name = "PreprocessorDirectives" bold="false" italic="false" color="DarkViolet" stopateol = "true">
-        <Begin>#</Begin>
-      </Span>
+		<Span color="String" multiline="true">
+			<Begin color="String">r"</Begin>
+			<End>"</End>
+			<RuleSet>
+				<!-- span for escape sequences -->
+				<Span begin='""' end=""/>
+			</RuleSet>
+		</Span>
 
-      <Span name = "LINE_COMMENT"  bold = "false" italic = "false" color = "Green" stopateol = "true">
-        <Begin bold = "false" italic = "false" color = "Gray">///</Begin>
-      </Span>
+		<Keywords color="Keywords">
+			<Word>ACCELERATORS</Word>
+			<Word>BITMAP</Word>
+			<Word>CURSOR</Word>
+			<Word>DIALOG</Word>
+			<Word>DIALOGEX</Word>
+			<Word>FONT</Word>
+			<Word>ICON</Word>
+			<Word>MENU</Word>
+			<Word>MENUEX</Word>
+			<Word>MESSAGETABLE</Word>
+			<Word>POPUP</Word>
+			<Word>RCDATA</Word>
+			<Word>STRINGTABLE</Word>
+			<Word>VERSIONINFO</Word>
 
-      <Span name = "LINE_COMMENT" bold = "false" italic = "false" color = "Green" stopateol = "true">
-        <Begin>//</Begin>
-      </Span>
+			<Word>AUTO3STATE</Word>
+			<Word>AUTOCHECKBOX</Word>
+			<Word>AUTORADIOBUTTON</Word>
+			<Word>CHECKBOX</Word>
+			<Word>COMBOBOX</Word>
+			<Word>CONTROL</Word>
+			<Word>CTEXT</Word>
+			<Word>DEFPUSHBUTTON</Word>
+			<Word>EDITTEXT</Word>
+			<Word>GROUPBOX</Word>
+			<Word>ICON</Word>
+			<Word>LISTBOX</Word>
+			<Word>LTEXT</Word>
+			<Word>PUSHBOX</Word>
+			<Word>PUSHBUTTON</Word>
+			<Word>RADIOBUTTON</Word>
+			<Word>RTEXT</Word>
+			<Word>SCROLLBAR</Word>
+			<Word>STATE3</Word>
 
-      <Span name = "BLOCK_COMMENT"  bold = "false" italic = "false" color = "Green" stopateol = "false">
-        <Begin>/*</Begin>
-        <End>*/</End>
-      </Span>
+			<Word>CAPTION</Word>
+			<Word>CHARACTERISTICS</Word>
+			<Word>CLASS</Word>
+			<Word>EXSTYLE</Word>
+			<Word>FONT</Word>
+			<Word>LANGUAGE</Word>
+			<Word>MENU</Word>
+			<Word>MENUITEM</Word>
+			<Word>STYLE</Word>
+			<Word>VERSION</Word>
 
-      <Span name = "NESTED_COMMENT" rule = "NEST_D1" bold = "false" italic = "false" color = "Green" stopateol = "false">
-        <Begin>/+</Begin>
-        <End>+/</End>
-      </Span>
+			<Word>BEGIN</Word>
+			<Word>END</Word>
+		</Keywords>
 
-
-
-      <Span name = "STRING" bold = "false" italic = "false" color = "Red" stopateol = "false" noescapesequences="true">
-        <Begin bold = "false" italic = "false" color = "Brown">"</Begin>
-        <End bold = "false" italic = "false" color = "Brown">"</End>
-      </Span>
-
-      <Span name = "WYS_STRING" bold = "false" italic = "false" color = "Brown" stopateol = "false" noescapesequences="true">
-        <Begin bold = "false" italic = "false" color = "Brown">r"</Begin>
-        <End bold = "false" italic = "false" color = "Brown">"</End>
-      </Span>
-
-      <Span name = "ALT_STRING" bold = "false" italic = "false" color = "Brown" stopateol = "false" noescapesequences="true">
-        <Begin bold = "false" italic = "false" color = "Brown">`</Begin>
-        <End bold = "false" italic = "false" color = "Brown">`</End>
-      </Span>
-
-      <Span name = "CHAR" bold = "false" italic = "false" color = "SystemColors.WindowText" stopateol = "true">
-        <Begin bold = "false" italic = "false" color = "SystemColors.WindowText">&apos;</Begin>
-        <End bold = "false" italic = "false" color = "SystemColors.WindowText">&apos;</End>
-      </Span>
-
-      <KeyWords name = "Punctuation" bold = "false" italic = "false" color = "DarkBlue">
-        <Key word = "(" />
-        <Key word = ")" />
-        <Key word = "[" />
-        <Key word = "]" />
-        <Key word = "{" />
-        <Key word = "}" />
-        <Key word = "," />
-        <Key word = ";" />
-        <Key word = ":" />
-      </KeyWords>
-
-
-      <KeyWords name = "Keyword" bold="false" italic="false" color="Blue">
-        <Key word = "ACCELERATORS" />
-        <Key word = "BITMAP" />
-        <Key word = "CURSOR" />
-        <Key word = "DIALOG" />
-        <Key word = "DIALOGEX" />
-        <Key word = "FONT" />
-        <Key word = "ICON" />
-        <Key word = "MENU" />
-        <Key word = "MENUEX" />
-        <Key word = "MESSAGETABLE" />
-        <Key word = "POPUP" />
-        <Key word = "RCDATA" />
-        <Key word = "STRINGTABLE" />
-        <Key word = "VERSIONINFO" />
-
-        <Key word = "AUTO3STATE" />
-        <Key word = "AUTOCHECKBOX" />
-        <Key word = "AUTORADIOBUTTON" />
-        <Key word = "CHECKBOX" />
-        <Key word = "COMBOBOX" />
-        <Key word = "CONTROL" />
-        <Key word = "CTEXT" />
-        <Key word = "DEFPUSHBUTTON" />
-        <Key word = "EDITTEXT" />
-        <Key word = "GROUPBOX" />
-        <Key word = "ICON" />
-        <Key word = "LISTBOX" />
-        <Key word = "LTEXT" />
-        <Key word = "PUSHBOX" />
-        <Key word = "PUSHBUTTON" />
-        <Key word = "RADIOBUTTON" />
-        <Key word = "RTEXT" />
-        <Key word = "SCROLLBAR" />
-        <Key word = "STATE3" />
-
-        <Key word = "CAPTION" />
-        <Key word = "CHARACTERISTICS" />
-        <Key word = "CLASS" />
-        <Key word = "EXSTYLE" />
-        <Key word = "FONT" />
-        <Key word = "LANGUAGE" />
-        <Key word = "MENU" />
-        <Key word = "MENUITEM" />
-        <Key word = "STYLE" />
-        <Key word = "VERSION" />
-      </KeyWords>
-
-      <KeyWords name = "PreprocessorDirectives" bold="false" italic="false" color="DarkViolet">
-        <Key word = "#line" />
-      </KeyWords>
-
-    </RuleSet>
-
-
-    <RuleSet name = "NEST_D1">
-      <Span name = "NESTED_COMMENT_D1" rule = "NEST_D2" bold = "false" italic = "false" color = "Green" stopateol = "false">
-        <Begin>/+</Begin>
-        <End>+/</End>
-      </Span>
-    </RuleSet>
-
-    <RuleSet name = "NEST_D2">
-      <Span name = "NESTED_COMMENT_D2" bold = "false" italic = "false" color = "Green" stopateol = "false">
-        <Begin>/+</Begin>
-        <End>+/</End>
-      </Span>
-    </RuleSet>
-
-
-
-  </RuleSets>
+		<Rule color="Punctuation">
+			[?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
+		</Rule>
+	</RuleSet>
 </SyntaxDefinition>
-
