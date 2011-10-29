@@ -13,7 +13,7 @@ namespace D_IDE
 		public class BuildManagement
 		{
 			public static bool IsBuilding { get; protected set; }
-			static IBuildSupport curBuildSupp = null;
+			static AbstractBuildSupport curBuildSupp = null;
 
 			/// <summary>
 			/// Stops all build processes.
@@ -118,7 +118,7 @@ namespace D_IDE
 				var lang = AbstractLanguageBinding.SearchBinding(Project.FileName, out isPrj);
 
 				// If binding is able to build..
-				if (lang != null && isPrj && lang.CanBuild)
+				if (lang != null && isPrj && lang.CanBuild && lang.BuildSupport.CanBuildProject(Project))
 				{
 					// If not building the project incrementally, cleanup project outputs first
 					if(!Incrementally)
@@ -181,7 +181,7 @@ namespace D_IDE
 				var lang = AbstractLanguageBinding.SearchBinding(file, out IsProject);
 
 				// Check if binding supports building
-				if (lang == null || IsProject || !lang.CanBuild)
+				if (lang == null || IsProject || !lang.CanBuild || !lang.BuildSupport.CanBuildFile(file))
 					return null;
 
 				// Set debug support

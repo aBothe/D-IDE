@@ -256,6 +256,8 @@ namespace D_IDE
 			try
 			{
 				LanguageLoader.LoadLanguageInterface(Util.ApplicationStartUpPath + "\\D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
+
+				LanguageLoader.LoadLanguageInterface(Util.ApplicationStartUpPath + "\\D-IDE.D.dll", "D_IDE.ResourceFiles.ResScriptFileBinding");
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 

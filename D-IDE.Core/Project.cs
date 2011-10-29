@@ -324,25 +324,31 @@ namespace D_IDE.Core
 		}
 		#endregion
 
-		public bool Add(string FileName)
+		public SourceModule Add(string FileName)
 		{
 			if (ContainsFile(FileName))
 			{
 				ErrorLogger.Log(new ProjectException(this,"Project already contains "+FileName));
-				return false;
+				return null;
 			}
 
 			// Check if other projects of the same solution own these files
 			if(Solution!=null)
-			foreach (var p in Solution)
-				if (p.BaseDirectory == BaseDirectory && p.ContainsFile(FileName))
-				{
-					ErrorLogger.Log(new ProjectException(this,"An other Project is already containing "+FileName));
-					return false;
-				}
+				foreach (var p in Solution)
+					if (p.BaseDirectory == BaseDirectory && p.ContainsFile(FileName))
+					{
+						ErrorLogger.Log(new ProjectException(this,"An other Project is already containing "+FileName));
+						return null;
+					}
 
-			_Files.Add(new SourceModule() {Project=this,  FileName=ToRelativeFileName(FileName), Action=SourceModule.BuildAction.Compile});
-			return true;
+			var sm = new SourceModule() { 
+				Project = this, 
+				FileName = ToRelativeFileName(FileName), 
+				Action = SourceModule.BuildAction.Compile 
+			};
+
+			_Files.Add(sm);
+			return sm;
 		}
 
 		public bool Remove(string FileName)

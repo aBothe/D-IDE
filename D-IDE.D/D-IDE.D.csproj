@@ -88,6 +88,17 @@
       <DependentUpon>DResources.resx</DependentUpon>
     </Compile>
     <Compile Include="GenericError.cs" />
+    <Compile Include="ResourceFiles\ResFileBuildSupport.cs" />
+    <Compile Include="ResourceFiles\ResSettingsPage.xaml.cs">
+      <DependentUpon>ResSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceFiles\ResResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ResResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceFiles\ResScriptFileBinding.cs" />
+    <Compile Include="ResourceFiles\ResConfig.cs" />
     <Compile Include="SettingsPages\DSettingsPage.xaml.cs">
       <DependentUpon>DSettingsPage.xaml</DependentUpon>
     </Compile>
@@ -131,6 +142,11 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>DResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="ResourceFiles\ResResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ResResources.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>D_IDE.ResourceFiles</CustomToolNamespace>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\dfile.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +160,13 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ResourceFiles\RC.xshd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\resx32.png" />
+    <None Include="Resources\resx16.png" />
+    <None Include="Resources\res32.png" />
+    <None Include="Resources\res16.png" />
     <None Include="Resources\libExample.d" />
     <None Include="Resources\helloWorldConsoleApp.d" />
     <EmbeddedResource Include="Resources\cc\Icons.16x16.Class.png" />
@@ -186,6 +209,7 @@
     <None Include="DEditor\Commenting.cs" />
     <Content Include="Resources\cc\Icons.16x16.Literal.png" />
     <Content Include="Resources\cmd.png" />
+    <None Include="Resources\defResource.rc" />
     <Content Include="Resources\dfile16.png" />
     <Content Include="Resources\dfile32.png" />
     <Content Include="Resources\dll48.png" />
@@ -193,6 +217,7 @@
     <Content Include="Resources\dproj32.png" />
     <Content Include="Resources\dproj48.png" />
     <Content Include="Resources\Generic_Application.png" />
+    <None Include="Resources\Win32Manifest.manifest" />
     <None Include="Resources\winsamp.d" />
   </ItemGroup>
   <ItemGroup>
@@ -201,6 +226,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="ResourceFiles\ResSettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="SettingsPages\DSettingsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

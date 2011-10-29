@@ -1,0 +1,17 @@
+﻿<core:AbstractSettingsPage x:Class="D_IDE.ResourceFiles.ResSettingsPage"
+			 xmlns:core="clr-namespace:D_IDE.Core;assembly=d-ide.core"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" Background="White"
+             d:DesignHeight="158" d:DesignWidth="527">
+    <Grid>
+		<TextBox Height="23" Margin="115,12,42,0" Name="textBox_ResCmpPath" VerticalAlignment="Top" />
+		<Label Content="Compiler .exe" Height="23" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Padding="0,2" Width="97" />
+		<Button Content="..." Height="23" Margin="0,12,12,0" Name="button1" VerticalAlignment="Top" HorizontalAlignment="Right" Width="24" Click="buttonResCmpPath_Click" />
+		<TextBox Height="23" Margin="115,40,42,0" Name="textBox_CmpArgs" VerticalAlignment="Top" />
+		<Label Content="Build Arguments" Height="23" HorizontalAlignment="Left" Margin="12,41,0,0" Name="label2" Padding="0,2" VerticalAlignment="Top" Width="97" />
+		<Button Content="Reset arguments" Height="23" HorizontalAlignment="Left" Margin="12,70,0,0" Name="buttonResetArgs" VerticalAlignment="Top" Width="97" Click="button2_Click" />
+	</Grid>
+</core:AbstractSettingsPage>

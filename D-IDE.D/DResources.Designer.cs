@@ -68,6 +68,17 @@ namespace D_IDE.D {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die 
+        ///// To enable enhanced visual styles for Win32 Apps, link in a manifest file
+        ///1 24 &quot;Resources\Win32Manifest.manifest&quot; ähnelt.
+        /// </summary>
+        internal static string defResource {
+            get {
+                return ResourceManager.GetString("defResource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die import std.stdio, std.cstream;
         ///
         ///void main(string[] args)
@@ -98,6 +109,25 @@ namespace D_IDE.D {
         internal static string libExample {
             get {
                 return ResourceManager.GetString("libExample", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?&gt;
+        ///&lt;assembly xmlns=&quot;urn:schemas-microsoft-com:asm.v1&quot; manifestVersion=&quot;1.0&quot;&gt;
+        ///&lt;assemblyIdentity name=&quot;DApplication&quot; processorArchitecture=&quot;x86&quot; version=&quot;1.0.0.0&quot; type=&quot;win32&quot;/&gt;
+        ///&lt;description&gt;&lt;/description&gt;
+        ///&lt;dependency&gt;
+        ///&lt;dependentAssembly&gt;
+        ///&lt;assemblyIdentity type=&quot;win32&quot; name=&quot;Microsoft.Windows.Common-Controls&quot; version=&quot;6.0.0.0&quot; processorArchitecture=&quot;x86&quot; publicKeyToken=&quot;6595b64144ccf1df&quot; language=&quot;*&quot; /&gt;
+        ///&lt;/dependentAssembly&gt;
+        ///&lt;/dependency&gt;
+        ///&lt;/assembly&gt;
+        /// ähnelt.
+        /// </summary>
+        internal static string Win32Manifest {
+            get {
+                return ResourceManager.GetString("Win32Manifest", resourceCulture);
             }
         }
         

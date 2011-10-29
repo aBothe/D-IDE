@@ -8,7 +8,7 @@ using DebugEngineWrapper;
 
 namespace D_IDE.Core
 {
-	public abstract class IBuildSupport
+	public abstract class AbstractBuildSupport
 	{
 		protected Thread buildThread;
 		public abstract void BuildProject(Project Project);
@@ -20,6 +20,16 @@ namespace D_IDE.Core
 		{
 			if (BuildFinished != null)
 				BuildFinished(res);
+		}
+
+		public virtual bool CanBuildProject(Project Project)
+		{
+			return true;
+		}
+
+		public virtual bool CanBuildFile(string SourceFile)
+		{
+			return true;
 		}
 
 		public virtual void StopBuilding()

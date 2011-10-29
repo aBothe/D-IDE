@@ -170,7 +170,7 @@ namespace D_IDE.D
 		{
 			get
 			{
-				yield return new DPrjSettingsPage();
+				return new[]{ new DPrjSettingsPage() };
 			}
 		}
 	}

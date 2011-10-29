@@ -891,7 +891,7 @@ namespace D_IDE.Controls.Panels
 
 				// First add observed directories
 				foreach (var d in Project.SubDirectories)
-					DirectoryNode.CheckIfSubDirExists(this, d.StartsWith(baseDir) ? d.Substring(baseDir.Length) : d);
+					DirectoryNode.CheckIfSubDirExists(this, d.StartsWith(baseDir) ? d.Substring(baseDir.TrimEnd(Path.DirectorySeparatorChar).Length+1) : d);
 
 				// Then add modules/files
 				foreach (var f in from m in Project.Files select m.FileName)

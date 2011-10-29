@@ -28,7 +28,7 @@ namespace D_IDE
 					if (File.Exists(absFile))
 						return false;
 
-					if (Project.Add(file))
+					if (Project.Add(file)!=null)
 					{
 						// Set standard encoding to UTF8
 						File.WriteAllText(absFile, "",Encoding.UTF8);
@@ -86,7 +86,7 @@ namespace D_IDE
 					 */
 					var newFile = absPath + "\\" + Path.GetFileName(FileName);
 
-					if (Project.Add(newFile))
+					if (Project.Add(newFile)!=null)
 					{
 						try
 						{
@@ -128,7 +128,7 @@ namespace D_IDE
 					var newFile_rel = file.Substring(DirectoryPath.Length).Trim('\\');
 					var newFile_abs = newDir_abs + "\\" + newFile_rel;
 
-					if (Project.Add(newFile_abs))
+					if (Project.Add(newFile_abs)!=null)
 					{
 						try
 						{

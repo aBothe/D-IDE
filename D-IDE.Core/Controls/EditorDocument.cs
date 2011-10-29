@@ -253,11 +253,6 @@ namespace D_IDE.Core
 			}catch{}
 		}
 
-		public static IHighlightingDefinition GetHighlighting(string file)
-		{
-			return null;
-		}
-
 		public class ErrorMarker:TextMarker
 		{
 			public readonly EditorDocument EditorDocument;

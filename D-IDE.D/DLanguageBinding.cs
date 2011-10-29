@@ -114,11 +114,32 @@ namespace D_IDE.D
 				case 1: // Win32 app
 					prj.OutputType = OutputTypes.CommandWindowLessExecutable;
 
+					// Create main file
 					var mainFile2 = prj.BaseDirectory + "\\main.d";
 
 					File.WriteAllText(mainFile2, DResources.winsamp_d);
-
 					prj.Add(mainFile2);
+
+					// Create Resources-directory
+					var resDir = prj.BaseDirectory + "\\Resources";
+					Util.CreateDirectoryRecursively(resDir);
+					prj.SubDirectories.Add(resDir);
+
+					// Create manifest & resource file
+					var manifest=resDir+"\\Win32.manifest";
+					
+					File.WriteAllText(manifest,DResources.Win32Manifest);
+					var manifestModule=prj.Add(manifest);
+
+					// Prevent compilation of the manifest file
+					manifestModule.Action = SourceModule.BuildAction.None;
+
+					var rc = resDir + "\\Resources.rc";
+
+					File.WriteAllText(rc, DResources.defResource);
+					prj.Add(rc);
+
+					// Finally save changes to the project
 					prj.Save();
 
 					break;
@@ -221,7 +242,7 @@ namespace D_IDE.D
 		#region Building
 		readonly DBuildSupport _BuildSupport = new DBuildSupport();
 
-		public override IBuildSupport BuildSupport
+		public override AbstractBuildSupport BuildSupport
 		{
 			get
 			{

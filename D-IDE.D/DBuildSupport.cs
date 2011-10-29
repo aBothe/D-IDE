@@ -9,7 +9,7 @@ using D_Parser.Dom;
 
 namespace D_IDE.D
 {
-	public class DBuildSupport:IBuildSupport
+	public class DBuildSupport:AbstractBuildSupport
 	{
 		#region Properties
 		Process TempPrc = null;
@@ -29,11 +29,21 @@ namespace D_IDE.D
 
 		#endregion
 
+		public override bool CanBuildFile(string SourceFile)
+		{
+			return DLanguageBinding.IsDSource(SourceFile);
+		}
+
+		public override bool CanBuildProject(Project Project)
+		{
+			return Project is DProject;
+		}
+
 		public override void BuildProject(Project prj)
 		{
 			var dprj = prj as DProject;
 			if (dprj == null)
-				throw new Exception("Cannot compile non-D project");
+				return;
 
 			DMDVersion=dprj.DMDVersion;
 
@@ -55,7 +65,7 @@ namespace D_IDE.D
 				if(lang==null || !lang.CanHandleFile(f.FileName))
 					lang=AbstractLanguageBinding.SearchBinding(f.FileName, out _u);
 
-				if (lang == null || _u || !lang.CanBuild)
+				if (lang == null || _u || !lang.CanBuild || !lang.BuildSupport.CanBuildFile(f.FileName))
 					continue;
 
 				lang.BuildSupport.BuildModule(f,objectDirectory,prj.BaseDirectory,false);
@@ -222,6 +232,8 @@ namespace D_IDE.D
 			var src = Module.AbsoluteFileName;
 
 			var outputDir = Path.IsPathRooted(OutputDirectory) ? OutputDirectory : Path.Combine(Path.GetDirectoryName(src), OutputDirectory);
+
+			// Ensure that target directory exists
 			Util.CreateDirectoryRecursively(outputDir);
 			
 			// Compile .d source file to obj

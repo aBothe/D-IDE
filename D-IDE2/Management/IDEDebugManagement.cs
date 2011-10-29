@@ -348,7 +348,7 @@ namespace D_IDE
 				{
 					IDEManager.Instance.MainWindow.LeftStatusText = "Launch external debugger";
 					CurrentProcess = FileExecution.ExecuteAsync(GlobalProperties.Instance.ExternalDebugger_Bin,
-						IBuildSupport.BuildArgumentString(GlobalProperties.Instance.ExternalDebugger_Arguments, new Dictionary<string, string>{
+						AbstractBuildSupport.BuildArgumentString(GlobalProperties.Instance.ExternalDebugger_Arguments, new Dictionary<string, string>{
 							{"$sourcePath",sourcePath},
 							{"$targetDir",Path.GetDirectoryName(exe)},
 							{"$target",exe},

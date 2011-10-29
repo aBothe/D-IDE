@@ -36,7 +36,7 @@ namespace D_IDE.D
 		public bool UseSemanticHighlighting = false;
 		public bool ShowSemanticErrors = true;
 
-		public bool EnableSmartIndentation = false;
+		public bool EnableSmartIndentation = true;
 
 		/// <summary>
 		/// If non-letter has been typed, the popup will close down and insert the selected item's completion text.

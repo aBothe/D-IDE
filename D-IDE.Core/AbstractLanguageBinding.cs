@@ -108,7 +108,7 @@ namespace D_IDE.Core
 		/// <summary>
 		/// Language build support. Only requested if CanBuild returns true.
 		/// </summary>
-		public virtual IBuildSupport BuildSupport { get { return null; } }
+		public virtual AbstractBuildSupport BuildSupport { get { return null; } }
 
 		/// <summary>
 		/// Debug symbol resolving suppport. Only requested if CanUseDebugging is set to true
