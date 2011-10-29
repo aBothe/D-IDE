@@ -71,14 +71,22 @@ namespace D_IDE.ResourceFiles
 						ResConfig.Instance.ResourceCompilerArguments, 
 						src, res, outputDir),
 					ExecDirectory,
-					OnOutput, delegate(string s)
-			{
-				if (string.IsNullOrEmpty(s.Trim()))
-					return;
+					delegate(string s)
+					{
+						var err = ParseErrorMessage(s);
+						if (Module.Project != null && Module.Project.ContainsFile(err.FileName))
+							err.Project = Module.Project;
+						br.BuildErrors.Add(err);
+						br.Successful = false;
 
-				br.BuildErrors.Add(ParseErrorMessage(s));
-				br.Successful = false;
-			}, OnExit);
+						if (!GlobalProperties.Instance.VerboseBuildOutput)
+							ErrorLogger.Log(s, ErrorType.Message, ErrorOrigin.Build);
+					}, 
+					delegate(string s)
+					{
+						br.Successful = false;
+					}, 
+					OnExit);
 
 			if (TempPrc != null && !TempPrc.HasExited)
 				TempPrc.WaitForExit(MaxCompilationTime);
@@ -104,10 +112,10 @@ namespace D_IDE.ResourceFiles
 			int to = s.IndexOf(".rc(");
 			if (to >= 0)
 			{
-				to += 2;
+				to += 3;
 				string FileName = s.Substring(0, to);
 				to += 1;
-				int to2 = s.IndexOf("):", to);
+				int to2 = s.IndexOf(") :", to);
 				if (to2 > 0)
 				{
 					int lineNumber = Convert.ToInt32(s.Substring(to, to2 - to));
@@ -124,12 +132,6 @@ namespace D_IDE.ResourceFiles
 			if (GlobalProperties.Instance.VerboseBuildOutput ? true : TempPrc.ExitCode != 0)
 				ErrorLogger.Log("Process ended with code " + TempPrc.ExitCode.ToString(),
 					TempPrc.ExitCode == 0 ? ErrorType.Information : ErrorType.Error, ErrorOrigin.Build);
-		}
-
-		static void OnOutput(string s)
-		{
-			if (!GlobalProperties.Instance.VerboseBuildOutput)
-				ErrorLogger.Log(s, ErrorType.Message, ErrorOrigin.Build);
 		}
 	}
 }

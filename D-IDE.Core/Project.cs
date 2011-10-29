@@ -106,6 +106,7 @@ namespace D_IDE.Core
 		/// <summary>
 		/// Central method to load a project whereas its file extension is used to identify
 		/// the generic project type.
+		/// After loading, the project will be added to the solution.
 		/// </summary>
 		public static Project LoadProjectFromFile(Solution sln,string FileName)
 		{

@@ -126,12 +126,12 @@ namespace D_IDE.D
 			dprj.LastBuildResult = LinkFiles(CurrentDMDConfig,linkerExe, linkerArgs, dprj.BaseDirectory, dprj.OutputFile, !dprj.IsRelease, objs.ToArray());
 		}
 
-		public BuildResult CompileSource(DMDConfig dmd,bool DebugCompile, string srcFile, string objFile, string execDirectory)
+		public BuildResult CompileSource(SourceModule Module,DMDConfig dmd,bool DebugCompile, string objFile, string execDirectory)
 		{
 			var obj = Path.ChangeExtension(objFile, ".obj");
-			var br = new BuildResult() { SourceFile = srcFile,TargetFile=obj,Successful=true };
+			var br = new BuildResult() { SourceFile = Module.AbsoluteFileName,TargetFile=obj,Successful=true };
 
-			ErrorLogger.Log("Compile " + srcFile,ErrorType.Information,ErrorOrigin.Build);
+			ErrorLogger.Log("Compile " + Module.FileName,ErrorType.Information,ErrorOrigin.Build);
 
 			var dmd_exe = dmd.SoureCompiler;
 
@@ -140,10 +140,12 @@ namespace D_IDE.D
 				dmd_exe = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
 
 			TempPrc = FileExecution.ExecuteSilentlyAsync(dmd_exe,
-					BuildDSourceCompileArgumentString(dmd.BuildArguments(DebugCompile).SoureCompiler, srcFile, obj,dmd.ASTCache.DirectoryPaths), // Compile our program always in debug mode
+					BuildDSourceCompileArgumentString(dmd.BuildArguments(DebugCompile).SoureCompiler, Module.AbsoluteFileName, obj,dmd.ASTCache.DirectoryPaths), // Compile our program always in debug mode
 					execDirectory,
 					OnOutput, delegate(string s) {
 						var err = ParseErrorMessage(s);
+						if (Module.Project != null && Module.Project.ContainsFile(err.FileName))
+							err.Project = Module.Project;
 						if (err.Type == GenericError.ErrorType.Error)
 							br.Successful = false;
 						br.BuildErrors.Add(err);
@@ -246,7 +248,7 @@ namespace D_IDE.D
 				return;
 			}
 
-			var br =Module.LastBuildResult= CompileSource(dmd,compileDebug,src,obj,ExecDir);
+			var br =Module.LastBuildResult= CompileSource(Module,dmd,compileDebug,obj,ExecDir);
 
 			if (Link && br.Successful)
 			{

@@ -86,11 +86,7 @@ namespace D_IDE
 
 					foreach (var f in sln.ProjectFiles)
 						if (File.Exists(sln.ToAbsoluteFileName(f)))
-						{
-							var prj = Project.LoadProjectFromFile(sln, f);
-							if(prj!=null)
-								sln.ProjectCache.Add(prj);
-						}
+							Project.LoadProjectFromFile(sln, f);
 
 					foreach (var prj in sln)
 						if (prj != null && prj.LastOpenedFiles.Count > 0)
