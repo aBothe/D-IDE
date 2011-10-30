@@ -56,7 +56,7 @@ namespace D_IDE.ResourceFiles
 			var br = new BuildResult() { SourceFile = src, TargetFile = res, Successful = true };
 
 			// Print verbose information message
-			ErrorLogger.Log("Compile " + src, ErrorType.Information, ErrorOrigin.Build);
+			ErrorLogger.Log("Compile " + (Module.Project != null ? Module.Project.ToRelativeFileName(Module.FileName) : Module.FileName), ErrorType.Information, ErrorOrigin.Build);
 
 			var resourceCompiler = ResConfig.Instance.ResourceCompilerPath;
 

@@ -456,7 +456,7 @@ namespace D_IDE
 		public Dictionary<string, string> SyntaxHighlightingEntries = new Dictionary<string, string>();
 
 		#region Build
-		public bool VerboseBuildOutput = true;
+		public bool VerboseBuildOutput = false;
 		public bool DoAutoSaveOnBuilding = true;
 		public string DefaultBinariesPath = "bin";
 		public bool EnableIncrementalBuild = true;

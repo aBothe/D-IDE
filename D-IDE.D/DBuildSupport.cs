@@ -131,7 +131,7 @@ namespace D_IDE.D
 			var obj = Path.ChangeExtension(objFile, ".obj");
 			var br = new BuildResult() { SourceFile = Module.AbsoluteFileName,TargetFile=obj,Successful=true };
 
-			ErrorLogger.Log("Compile " + Module.FileName,ErrorType.Information,ErrorOrigin.Build);
+			ErrorLogger.Log("Compile " + (Module.Project!=null?Module.Project.ToRelativeFileName( Module.FileName):Module.FileName),ErrorType.Information,ErrorOrigin.Build);
 
 			var dmd_exe = dmd.SoureCompiler;
 
@@ -166,7 +166,7 @@ namespace D_IDE.D
 			var errList = new List<GenericError>();
 			var br = new BuildResult() { TargetFile=targetFile, Successful=true};
 
-			ErrorLogger.Log("Link files to "+targetFile,ErrorType.Information,ErrorOrigin.Build);
+			ErrorLogger.Log("Link files to "+Path.GetFileName( targetFile),ErrorType.Information,ErrorOrigin.Build);
 
 			if (File.Exists(targetFile))
 			{
@@ -298,7 +298,7 @@ namespace D_IDE.D
 			if (!Path.IsPathRooted(cv2pdb) && File.Exists(Util.ApplicationStartUpPath + "\\" + cv2pdb))
 				cv2pdb = Util.ApplicationStartUpPath + "\\" + cv2pdb;
 
-			ErrorLogger.Log("Create debug information database " + pdb,ErrorType.Information,ErrorOrigin.Build);
+			ErrorLogger.Log("Create debug information database " + Path.GetFileName(pdb),ErrorType.Information,ErrorOrigin.Build);
 			try
 			{
 				var prc = FileExecution.ExecuteSilentlyAsync(cv2pdb, "\"" + Executable + "\"", Path.GetDirectoryName(Executable),
@@ -308,7 +308,8 @@ namespace D_IDE.D
 				{
 					if (File.Exists(pdb))
 					{
-						ErrorLogger.Log("Debug information database created successfully",ErrorType.Information,ErrorOrigin.Build);
+						if(GlobalProperties.Instance.VerboseBuildOutput)
+							ErrorLogger.Log("Debug information database created successfully",ErrorType.Information,ErrorOrigin.Build);
 						br.Successful = true;
 					}
 					else
