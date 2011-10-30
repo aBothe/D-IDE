@@ -1,7 +1,6 @@
 
 // Example code taken from winsamp.d (Listed under D examples)
 
-pragma(lib, "gdi32.lib");
 import core.runtime;
 import std.c.windows.windows;
 import std.string;

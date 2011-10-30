@@ -102,7 +102,6 @@ namespace D_IDE.D
 				case 0: // Console app
 					prj.OutputType = OutputTypes.Executable;
 
-
 					var mainFile = prj.BaseDirectory+ "\\main.d";
 
 					File.WriteAllText(mainFile,	DResources.helloWorldConsoleApp);
@@ -119,6 +118,9 @@ namespace D_IDE.D
 
 					File.WriteAllText(mainFile2, DResources.winsamp_d);
 					prj.Add(mainFile2);
+
+					// Add library references
+					prj.LinkedLibraries.AddRange(new[]{"kernel32.lib","gdi32.lib"});
 
 					// Create Resources-directory
 					var resDir = prj.BaseDirectory + "\\Resources";
