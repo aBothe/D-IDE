@@ -31,7 +31,7 @@ namespace D_IDE.D
 		public static bool CanShowCompletionWindow(DEditorDocument EditorDocument)
 		{
 			return 
-				DResolver.CommentSearching.IsInCommentAreaOrString(EditorDocument.Editor.Text, EditorDocument.Editor.CaretOffset);
+				!DResolver.CommentSearching.IsInCommentAreaOrString(EditorDocument.Editor.Text, EditorDocument.Editor.CaretOffset);
 		}
 
 		public static void BuildToolTip(DEditorDocument EditorDocument, ToolTipRequestArgs ToolTipRequest)
