@@ -248,6 +248,13 @@ namespace D_Parser.Resolver
 				}
 				else foreach (var n in curScope)
 					{
+						// Add anonymous enums' items
+						if (n is DEnum && string.IsNullOrEmpty(n.Name) && CanAddMemberOfType(VisibleMembers, n))
+						{
+							ret.AddRange((n as DEnum).Children);
+							continue;
+						}
+
 						var dm3 = n as DMethod; // Only show normal & delegate methods
 						if (
 							!CanAddMemberOfType(VisibleMembers, n) ||
@@ -273,11 +280,23 @@ namespace D_Parser.Resolver
 					var dn = i as DNode;
 					if (dn != null)
 					{
+						// Add anonymous enums' items
+						if (dn is DEnum && 
+							string.IsNullOrEmpty(i.Name) && 
+							dn.IsPublic && 
+							!dn.ContainsAttribute(DTokens.Package) && 
+							CanAddMemberOfType(VisibleMembers, i))
+						{
+							ret.AddRange((i as DEnum).Children);
+							continue;
+						}
+
 						if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package) &&
 							CanAddMemberOfType(VisibleMembers, dn))
 							ret.Add(dn);
 					}
-					else ret.Add(i);
+					else 
+						ret.Add(i);
 				}
 			}
 			#endregion
