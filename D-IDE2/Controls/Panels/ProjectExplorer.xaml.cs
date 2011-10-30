@@ -577,9 +577,14 @@ namespace D_IDE.Controls.Panels
 
 					if (pn.IsUnloaded)
 					{
-						cm.Items.Add("Reload", CommonIcons.Refresh, delegate(Object o, EventArgs _e)
+						cm.Items.Add("Load", CommonIcons.Refresh, delegate(Object o, EventArgs _e)
 						{
-							var prj =Project.LoadProjectFromFile(  pn.Solution, pn.Text);
+							var prjFile=pn.AbsolutePath;
+
+							if (string.IsNullOrEmpty(prjFile))
+								prjFile = pn.Solution.ToAbsoluteFileName(pn.Text);
+
+							var prj =Project.LoadProjectFromFile(pn.Solution,prjFile);
 							if (prj!=null)
 									Update();
 						});
@@ -645,6 +650,12 @@ namespace D_IDE.Controls.Panels
 						AddCutCopyPasteButtons(cm, pn, true, false, true);
 
 						cm.Items.Add(new ToolStripSeparator());
+
+						cm.Items.Add("Unload", CommonIcons.delete16, delegate(Object o, EventArgs _e)
+						{
+							IDEManager.ProjectManagement.UnloadProject(prj);
+							Update();
+						});
 
 						cm.Items.Add("Exclude", CommonIcons.delete16, delegate(Object o, EventArgs _e)
 						{

@@ -75,6 +75,10 @@ namespace D_IDE
 						return null;
 					}
 
+					// Before load a new solution, close all related edited files
+					if(CurrentSolution!=null)
+						CloseFilesRelatedTo(CurrentSolution);
+
 					/*
 					 * - Load solution
 					 * - Load all of its projects
@@ -280,6 +284,24 @@ namespace D_IDE
 				*/
 				Instance.CurrentEditor.FileName = NewFilePath;
 				Instance.CurrentEditor.Save();
+			}
+
+
+			public static void CloseFilesRelatedTo(Solution Solution)
+			{
+				if(Solution!=null)
+					foreach (var prj in Solution)
+						CloseFilesRelatedTo(prj);
+			}
+
+			public static void CloseFilesRelatedTo(Project Project)
+			{
+				if (Project == null)
+					return;
+
+				foreach (var ed in IDEManager.Instance.Editors)
+					if (ed.HasProject && ed.Project == Project)
+						ed.Close();
 			}
 		}
 	}

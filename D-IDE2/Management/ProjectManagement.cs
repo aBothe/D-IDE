@@ -212,6 +212,19 @@ namespace D_IDE
 			}
 
 			/// <summary>
+			/// Unloads a project.
+			/// </summary>
+			/// <param name="prj"></param>
+			public static void UnloadProject(Project prj)
+			{
+				// Close all open files of it
+				EditingManagement.CloseFilesRelatedTo(prj);
+
+				// Remove it from the project cache
+				CurrentSolution.UnloadProject(prj);
+			}
+
+			/// <summary>
 			/// (Since we don't want to remove a whole project we still can exclude them from solutions)
 			/// </summary>
 			/// <param name="prj"></param>
@@ -223,8 +236,7 @@ namespace D_IDE
 				 * - Save solution
 				 */
 
-				foreach (var ed in Instance.Editors.Where(e => e.Project == prj))
-					ed.Close();
+				EditingManagement.CloseFilesRelatedTo(prj);
 
 				var sln = prj.Solution;
 				sln.ExcludeProject(prj.FileName);
