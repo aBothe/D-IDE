@@ -121,7 +121,7 @@ namespace D_IDE.D
 
 		public IBlockNode lastSelectedBlock { get; protected set; }
 
-		DispatcherOperation blockCompletionDataOperation = null;
+		DispatcherOperation typeLookupUpdateOperation = null;
 		//DispatcherOperation showCompletionWindowOperation = null;
 		DispatcherOperation parseOperation = null;
 
@@ -639,7 +639,7 @@ namespace D_IDE.D
 			UpdateSemanticHighlighting(true);
 			//CanRefreshSemanticHighlightings = false;
 
-			UpdateBlockCompletionData();
+			UpdateTypeLookupData();
 			
 			if (parseOperation != null && parseOperation.Status != DispatcherOperationStatus.Completed)
 				parseOperation.Abort();
@@ -898,7 +898,7 @@ namespace D_IDE.D
 		/// If different code block was selected, 
 		/// update the list of items that are available in the current scope
 		/// </summary>
-		public void UpdateBlockCompletionData()
+		public void UpdateTypeLookupData()
 		{
 			try
 			{
@@ -921,12 +921,12 @@ namespace D_IDE.D
 				if (curBlock == null)
 					curBlock = SyntaxTree;
 
-				if (blockCompletionDataOperation != null && blockCompletionDataOperation.Status != DispatcherOperationStatus.Completed)
-					blockCompletionDataOperation.Abort();
+				if (typeLookupUpdateOperation != null && typeLookupUpdateOperation.Status != DispatcherOperationStatus.Completed)
+					typeLookupUpdateOperation.Abort();
 
 				lastSelectedBlock = curBlock;
 
-				blockCompletionDataOperation = Dispatcher.BeginInvoke(new Action(() =>
+				typeLookupUpdateOperation = Dispatcher.BeginInvoke(new Action(() =>
 				{
 					try
 					{
@@ -1028,7 +1028,7 @@ namespace D_IDE.D
 
 		void TextArea_SelectionChanged(object sender, EventArgs e)
 		{
-			UpdateBlockCompletionData();
+			UpdateTypeLookupData();
 		}
 
 		/// <summary>
