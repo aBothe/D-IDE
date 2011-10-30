@@ -469,6 +469,26 @@ namespace D_IDE
 				IDEManager.BuildManagement.Build();
 		}
 
+		private void CleanupProject_Click(object sender, RoutedEventArgs e)
+		{
+			if (!RunCurrentModuleOnly)
+				IDEManager.BuildManagement.CleanUpOutput(IDEManager.CurrentSolution);
+			else
+				IDEManager.BuildManagement.CleanUpLastSingleBuild();
+				
+		}
+
+		private void Rebuild_Click(object sender, RoutedEventArgs e)
+		{
+			if (!RunCurrentModuleOnly)
+				IDEManager.BuildManagement.Build(IDEManager.CurrentSolution, false);
+			else
+			{
+				IDEManager.BuildManagement.CleanUpLastSingleBuild();
+				IDEManager.BuildManagement.BuildSingle();
+			}
+		}
+
 		private void LaunchDebugger_Click(object sender, RoutedEventArgs e)
 		{
 			BuildResult br = null;

@@ -111,7 +111,7 @@ namespace D_IDE
 			static bool InternalBuild(Project Project, bool Incrementally)
 			{
 				// Important: Reset error list's unbound build result
-				ErrorManagement.LastSingleBuildResult = null;
+				LastSingleBuildResult = null;
 
 				// Select appropriate language binding
 				bool isPrj = false;
@@ -168,6 +168,33 @@ namespace D_IDE
 				return false;
 			}
 
+			public static void CleanUpLastSingleBuild()
+			{
+				if(LastSingleBuildResult!=null && File.Exists(LastSingleBuildResult.TargetFile))
+					try	{
+						File.Delete(LastSingleBuildResult.TargetFile);
+					}
+					catch (Exception ex) { 
+						ErrorLogger.Log(ex); 
+					}
+			}
+
+			static BuildResult _lastsinglebuildresult = null;
+			public static BuildResult LastSingleBuildResult
+			{
+				get
+				{
+					return _lastsinglebuildresult;
+				}
+				set
+				{
+					_lastsinglebuildresult = value;
+					ErrorManagement.UnboundErrors.Clear();
+					if(value!=null)
+						ErrorManagement.UnboundErrors.AddRange(value.BuildErrors);
+				}
+			}
+
 			public static BuildResult BuildSingle()
 			{
 				AbstractEditorDocument ed = ed = Instance.CurrentEditor;
@@ -202,7 +229,7 @@ namespace D_IDE
 				Instance.MainWindow.ClearLog();
 
 				// Execute build
-				var br = ErrorManagement.LastSingleBuildResult = lang.BuildSupport.BuildStandAlone(file);
+				var br = LastSingleBuildResult = lang.BuildSupport.BuildStandAlone(file);
 
 				if (br.Successful && br.NoBuildNeeded)
 					ErrorLogger.Log("File wasn't changed -- No compilation required", ErrorType.Information, ErrorOrigin.Build);
@@ -218,8 +245,9 @@ namespace D_IDE
 
 			public static void CleanUpOutput(Solution sln)
 			{
-				foreach (var prj in sln)
-					CleanUpOutput(prj);
+				if(sln!=null)
+					foreach (var prj in sln)
+						CleanUpOutput(prj);
 			}
 
 			/// <summary>

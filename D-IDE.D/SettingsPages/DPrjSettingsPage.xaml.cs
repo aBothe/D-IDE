@@ -96,7 +96,16 @@ namespace D_IDE.D
 
 		private void button_DeleteLib_Click(object sender, RoutedEventArgs e)
 		{
-			Libs.RemoveAt(List_Libs.SelectedIndex);
+			if (List_Libs.SelectedIndex >= 0)
+			{
+				int i = List_Libs.SelectedIndex;
+				Libs.RemoveAt(i);
+
+				if (Libs.Count > i)
+					List_Libs.SelectedIndex = i;
+				else if (Libs.Count > 0)
+					List_Libs.SelectedIndex = Libs.Count;
+			}
 		}
 
 		private void button_ReparseProjSources_Click(object sender, RoutedEventArgs e)

@@ -651,7 +651,7 @@ namespace D_IDE.Controls.Panels
 
 						cm.Items.Add(new ToolStripSeparator());
 
-						cm.Items.Add("Unload", CommonIcons.delete16, delegate(Object o, EventArgs _e)
+						cm.Items.Add("Unload", null, delegate(Object o, EventArgs _e)
 						{
 							IDEManager.ProjectManagement.UnloadProject(prj);
 							Update();

@@ -25,8 +25,6 @@ namespace D_IDE.Core
 				return Errors.Where(err => err.FileName == file).ToArray();
 			}
 
-			public static BuildResult LastSingleBuildResult { get; set; }
-
 			public static GenericError[] LastParseErrors
 			{
 				get
@@ -40,6 +38,8 @@ namespace D_IDE.Core
 				}
 			}
 
+			public static readonly List<GenericError> UnboundErrors = new List<GenericError>();
+
 			/// <summary>
 			/// Refreshes the commonly used error list.
 			/// Also updates the error panel's error list view.
@@ -49,8 +49,8 @@ namespace D_IDE.Core
 				var el = new List<GenericError>();
 
 				// Add unbound build errors
-				if (LastSingleBuildResult != null)
-					el.AddRange(LastSingleBuildResult.BuildErrors);
+				if (UnboundErrors.Count>0)
+					el.AddRange(UnboundErrors);
 				// (Bound) Solution errors
 				else if (CurrentSolution != null)
 					foreach (var prj in CurrentSolution)

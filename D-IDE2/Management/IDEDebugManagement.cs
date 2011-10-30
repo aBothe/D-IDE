@@ -24,10 +24,10 @@ namespace D_IDE
 			public static void LaunchWithDebugger()
 			{
 				IDEManager.Instance.MainWindow.LeftStatusText = "Launch debugger";
-				if (ErrorManagement.LastSingleBuildResult != null)
+				if (BuildManagement.LastSingleBuildResult != null)
 				{
-					if (ErrorManagement.LastSingleBuildResult.Successful)
-						LaunchWithDebugger(ErrorManagement.LastSingleBuildResult.TargetFile, "",Path.GetDirectoryName(ErrorManagement.LastSingleBuildResult.SourceFile),true);
+					if (BuildManagement.LastSingleBuildResult.Successful)
+						LaunchWithDebugger(BuildManagement.LastSingleBuildResult.TargetFile, "", Path.GetDirectoryName(BuildManagement.LastSingleBuildResult.SourceFile), true);
 				}
 				else
 					LaunchWithDebugger(CurrentSolution.StartProject);
@@ -49,10 +49,10 @@ namespace D_IDE
 			/// <param name="ShowConsole">Show an external program console?</param>
 			public static Process LaunchWithoutDebugger(bool ShowConsole)
 			{
-				if (ErrorManagement.LastSingleBuildResult != null)
+				if (BuildManagement.LastSingleBuildResult != null)
 				{
-					if (ErrorManagement.LastSingleBuildResult.Successful)
-						return LaunchWithoutDebugger(ErrorManagement.LastSingleBuildResult.TargetFile, "", ShowConsole);
+					if (BuildManagement.LastSingleBuildResult.Successful)
+						return LaunchWithoutDebugger(BuildManagement.LastSingleBuildResult.TargetFile, "", ShowConsole);
 				}
 				else
 				{

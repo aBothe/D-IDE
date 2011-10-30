@@ -144,6 +144,10 @@
 					<r:RibbonButton Click="BuildSolution_Click" Label="Build" ToolTipTitle="Build current solution or module" ToolTipDescription="Note: If the 'Current Module' Checkbox has been ticked, the current module will be built only" SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
 					<r:RibbonButton Label="Stop Building" Click="Button_StopBuilding_Click" IsEnabled="False" Name="Button_StopBuilding" SmallImageSource="Resources/stop_build.png" />
 					<r:RibbonCheckBox Label="Current Module" ToolTipTitle="Build and/or Run current module only." ToolTipDescription="Build and Run the currently opened source file instead of running the current project" Name="Check_RunCurModule" />
+
+					<r:RibbonButton Click="CleanupProject_Click" Label="Clean Up" ToolTipTitle="Clean up build output" ToolTipDescription="Removes all kinds of output files." />
+					<r:RibbonButton Click="Rebuild_Click" Label="Rebuild" ToolTip="Entirely rebuilds the solution/module" />
+
 				</r:RibbonGroup>
 				
 				<r:RibbonGroup Header="Run">
