@@ -433,9 +433,12 @@ namespace D_IDE
 			{
 				IDEManager.Instance.MainWindow.Dispatcher.BeginInvoke(new Action( () =>
 				{
-					ErrorLogger.Log(IDEManager.Instance.MainWindow.LeftStatusText = "Process exited with code " + CurrentProcess.ExitCode.ToString() + " (" + (CurrentProcess.ExitTime - CurrentProcess.StartTime).ToString() + ")",
-						CurrentProcess.ExitCode < 1 ? ErrorType.Information : ErrorType.Error,
-						ErrorOrigin.Program);
+					if (CurrentProcess == null)
+						ErrorLogger.Log(IDEManager.Instance.MainWindow.LeftStatusText= "Process ended", ErrorType.Information, ErrorOrigin.Program);
+					else
+						ErrorLogger.Log(IDEManager.Instance.MainWindow.LeftStatusText = "Process exited with code " + CurrentProcess.ExitCode.ToString() + " (" + (CurrentProcess.ExitTime - CurrentProcess.StartTime).ToString() + ")",
+							CurrentProcess.ExitCode < 1 ? ErrorType.Information : ErrorType.Error,
+							ErrorOrigin.Program);
 
 					EditingManagement.AllDocumentsReadOnly = false;
 					Instance.MainWindow.RefreshMenu();

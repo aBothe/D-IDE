@@ -498,20 +498,33 @@ namespace D_IDE
 				IDEManager.IDEDebugManagement.LaunchWithDebugger();
 		}
 
-		bool _showextconsole = false;
 		private void LaunchWithoutDebugger_Click(object sender, RoutedEventArgs e)
 		{
-			BuildResult br = null;
-			if (RunCurrentModuleOnly ? ((br = IDEManager.BuildManagement.BuildSingle()) != null && br.Successful) : IDEManager.BuildManagement.Build())
-				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(_showextconsole);
-			_showextconsole = false;
+			LaunchWithoutDebugger();
 		}
 
 		private void LaunchInConsole_Click(object sender, RoutedEventArgs e)
 		{
-			_showextconsole = true;
+			LaunchWithoutDebugger(true);
 		}
 
+		public void LaunchWithoutDebugger(bool ExternalConsole=false)
+		{
+			BuildResult br = null;
+			if (RunCurrentModuleOnly ? ((br = IDEManager.BuildManagement.BuildSingle()) != null && br.Successful) : IDEManager.BuildManagement.Build())
+				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(ExternalConsole);
+		}
+		/*
+		private void SendInput_Click(object sender, RoutedEventArgs e)
+		{
+			var prc=IDEManager.IDEDebugManagement.CurrentProcess;
+			if (prc != null && prc.StartInfo.RedirectStandardInput)
+			{
+				prc.StandardInput.WriteLine("hello");
+				prc.StandardInput.Flush();
+			}
+		}
+		*/
 		private void RefreshBreakpoints_Click(object sender, RoutedEventArgs e)
 		{
 			foreach (var ed in IDEManager.Instance.Editors)

@@ -32,11 +32,13 @@ namespace D_IDE.Core
 				WorkingDirectory=StartDirectory,
 				CreateNoWindow=true,
 				UseShellExecute=false,
+				//RedirectStandardInput=true,
 				RedirectStandardError=true,
 				RedirectStandardOutput=true
 			};
 
 			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=true};
+
 			prc.ErrorDataReceived += delegate(object s, DataReceivedEventArgs e) {
 				if (!string.IsNullOrEmpty(e.Data))
 				{ 
