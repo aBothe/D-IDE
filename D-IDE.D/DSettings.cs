@@ -265,19 +265,19 @@ namespace D_IDE.D
 
 					args.IsDebug = true;
 					args.SoureCompiler = "-c \"$src\" -of\"$obj\" $importPaths -gc -debug";
-					args.LibLinker = "-c -n \"$lib\" $objs";
 				}
 				else
 				{
 					commonLinkerArgs = "$objs -release -O -inline ";
 
 					args.SoureCompiler = "-c \"$src\" -of\"$obj\" $importPaths -release -O -inline";
-					args.LibLinker = "-c -n \"$lib\" $objs";
 				}
 
 				args.Win32ExeLinker = commonLinkerArgs + "-L/su:windows -L/exet:nt -of\"$exe\"";
 				args.ExeLinker = commonLinkerArgs + "-of\"$exe\"";
 				args.DllLinker = commonLinkerArgs + "-L/IMPLIB:$relativeTargetDir -of\"$dll\"";
+
+				args.LibLinker = "-lib -of\"$lib\" $objs";
 			}
 		}
 
@@ -354,7 +354,7 @@ namespace D_IDE.D
 		public string ExeLinker = "dmd.exe";
 		public string Win32ExeLinker = "dmd.exe";
 		public string DllLinker = "dmd.exe";
-		public string LibLinker = "lib.exe";
+		public string LibLinker = "dmd.exe";
 
 		public List<string> DefaultLinkedLibraries = new List<string>();
 
