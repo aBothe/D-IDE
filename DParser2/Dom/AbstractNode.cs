@@ -41,6 +41,8 @@ namespace D_Parser.Dom
 			set { _Name = value; }
 		}
 
+		public bool IsAnonymous { get { return string.IsNullOrEmpty(Name); } }
+
 		public INode Parent
 		{
 			get { return _Parent; }

@@ -503,7 +503,7 @@ namespace D_Parser.Dom
         {
 			return (Attributes ? (AttributeString + " ") : "") + "enum " + (IncludePath?GetNodePath(this,true):Name);
         }
-    }
+	}
 
     public class DEnumValue : DVariable
     {

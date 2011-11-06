@@ -275,6 +275,9 @@ namespace D_Parser.Parser
             }
             else
             {
+				if (IsEOF)
+					TrackerVariables.LastToken = t;
+
                 SynErr(n, reason);
                 return false;
             }
@@ -419,6 +422,8 @@ namespace D_Parser.Parser
 		/// </summary>
 		public object LastParsedObject { get { return lastParsedObj; } set { PreviousParsedObject = lastParsedObj; lastParsedObj = value; } }
 		object lastParsedObj = null;
+
+		public DToken LastToken;
 
 		public readonly List<Comment> Comments = new List<Comment>();
 

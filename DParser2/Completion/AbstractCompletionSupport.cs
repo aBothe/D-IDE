@@ -121,11 +121,23 @@ namespace D_Parser.Completion
 					Editor.CaretLocation,
 					out trackVars);
 
+				bool CaretAfterLastParsedObject = false;
+
+				if (trackVars != null && trackVars.LastParsedObject != null)
+				{
+					if (trackVars.LastParsedObject is IExpression)
+						CaretAfterLastParsedObject = Editor.CaretLocation > (trackVars.LastParsedObject as IExpression).EndLocation;
+					else if (trackVars.LastParsedObject is INode)
+						CaretAfterLastParsedObject = Editor.CaretLocation > (trackVars.LastParsedObject as INode).EndLocation;
+				}
+
 				// 2) If in declaration and if node identifier is expected, do not show any data
 				if (trackVars==null ||
-					(trackVars.LastParsedObject is INode && (trackVars.LastParsedObject as INode).EndLocation>Editor.CaretLocation && trackVars.ExpectingIdentifier) ||
+					(trackVars.LastParsedObject is INode && 
+						!CaretAfterLastParsedObject && 
+						trackVars.ExpectingIdentifier) ||
 					(trackVars.LastParsedObject is TokenExpression && 
-						(trackVars.LastParsedObject as IExpression).EndLocation > Editor.CaretLocation && 
+						!CaretAfterLastParsedObject &&
 						DTokens.BasicTypes[(trackVars.LastParsedObject as TokenExpression).Token] &&
 						!string.IsNullOrEmpty(EnteredText) &&
 						IsIdentifierChar(EnteredText[0]))
@@ -134,16 +146,13 @@ namespace D_Parser.Completion
 
 				var visibleMembers = DResolver.MemberTypes.All;
 
-				if (trackVars.LastParsedObject is ImportStatement)
-				{
+				if (trackVars.LastParsedObject is ImportStatement && !CaretAfterLastParsedObject)
 					visibleMembers = DResolver.MemberTypes.Imports;
-				}
-				else if (trackVars.LastParsedObject is NewExpression)
-				{
+				else if (trackVars.LastParsedObject is NewExpression && (trackVars.IsParsingInitializer || !CaretAfterLastParsedObject))
 					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types;
-				}
 				else if (EnteredText == " ")
 					return;
+				// In class bodies, do not show variables
 				else if (!(parsedBlock is BlockStatement) && !trackVars.IsParsingInitializer)
 					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
 

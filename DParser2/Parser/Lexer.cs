@@ -597,7 +597,7 @@ namespace D_Parser.Parser
 							{
 								foreach (var kv in DTokens.Keywords)
 									if (s == kv.Value)
-										return new DToken(kv.Key, x, y);
+										return new DToken(kv.Key, x, y, s);
 							}
 							return new DToken(DTokens.Identifier, x, y, s);
 						}

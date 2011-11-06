@@ -129,13 +129,36 @@ namespace D_Parser.Resolver
 
 		public static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)
 		{
-			return (n is DMethod && (n as DMethod).Name!="" && VisibleMembers.HasFlag(MemberTypes.Methods) ||
-				(n is DVariable && 
-					// Only add aliases if at least types,methods or variables shall be shown.
-					(n as DVariable).IsAlias?
-						(VisibleMembers.HasFlag(MemberTypes.Methods) || VisibleMembers.HasFlag(MemberTypes.Types) || VisibleMembers.HasFlag(MemberTypes.Variables)):
-						VisibleMembers.HasFlag(MemberTypes.Variables)) ||
-					((n is DClassLike || n is DEnum) && VisibleMembers.HasFlag(MemberTypes.Types)));
+			if(n is DMethod)
+				return (n as DMethod).Name!="" && VisibleMembers.HasFlag(MemberTypes.Methods);
+
+			if(n is DVariable)
+			{
+				var d=n as DVariable;
+
+				// Only add aliases if at least types,methods or variables shall be shown.
+				if(d.IsAlias)
+					return 
+						VisibleMembers.HasFlag(MemberTypes.Methods) || 
+						VisibleMembers.HasFlag(MemberTypes.Types) || 
+						VisibleMembers.HasFlag(MemberTypes.Variables);
+
+				return VisibleMembers.HasFlag(MemberTypes.Variables);
+			}
+
+			if (n is DClassLike)
+				return VisibleMembers.HasFlag(MemberTypes.Types);
+
+			if(n is DEnum)
+			{
+				var d=n as DEnum;
+
+				// Only show enums if a) they're named and types are allowed or b) variables are allowed
+				return (d.IsAnonymous ? false : VisibleMembers.HasFlag(MemberTypes.Types)) ||
+					VisibleMembers.HasFlag(MemberTypes.Variables);
+			}
+
+			return false;
 		}
 
 		/// <summary>
