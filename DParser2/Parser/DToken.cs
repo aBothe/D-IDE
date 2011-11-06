@@ -76,8 +76,7 @@ namespace D_Parser.Parser
         {
             next = t.next;
         }
-        //public DToken(int kind):base(kind)	{}
-        public DToken(int kind, int col, int line) : this(kind, col, line, null) { }
+
         public DToken(int kind, int col, int line, string val)
         {
             this.Kind = kind;
@@ -86,6 +85,15 @@ namespace D_Parser.Parser
             this.val = val;
             this.endLocation = new CodeLocation(col + (val == null ? 1 : val.Length), line);
         }
+
+		public DToken(int kind, int col, int line, int TokenLength=0)
+		{
+			this.Kind = kind;
+			this.col = col;
+			this.line = line;
+			this.endLocation = new CodeLocation(col+TokenLength,line);
+		}
+
         public DToken(int kind, int x, int y, string val, object literalValue, LiteralFormat literalFormat)
             : this(kind, new CodeLocation(x, y), new CodeLocation(x + val.Length, y), val, literalValue, literalFormat)
         {
