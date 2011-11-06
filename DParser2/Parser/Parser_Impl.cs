@@ -3519,7 +3519,10 @@ namespace D_Parser.Parser
 				SynErr(t.Kind, "union or struct required");
 			Step();
 
-			var ret = new DClassLike(t.Kind) { StartLocation = t.Location, Description = GetComments() };
+			var ret = new DClassLike(t.Kind) { 
+				StartLocation = t.Location, 
+				Description = GetComments() 
+			};
 			LastParsedObject = ret;
 
 			ApplyAttributes(ret);
@@ -3558,7 +3561,10 @@ namespace D_Parser.Parser
 		{
 			Expect(Class);
 
-			var dc = new DClassLike(Class) { StartLocation = t.Location, Description=GetComments() };
+			var dc = new DClassLike(Class) { 
+				StartLocation = t.Location,
+				Description=GetComments() 
+			};
 			LastParsedObject = dc;
 
 			ApplyAttributes(dc);
@@ -3619,8 +3625,6 @@ namespace D_Parser.Parser
 
 		public void ClassBody(IBlockNode ret,bool KeepBlockAttributes=false)
 		{
-			if (String.IsNullOrEmpty(ret.Description))
-				ret.Description = GetComments();
 			var OldPreviousCommentString = PreviousComment;
 			PreviousComment = "";
 
@@ -3729,7 +3733,10 @@ namespace D_Parser.Parser
 		private IBlockNode InterfaceDeclaration()
 		{
 			Expect(Interface);
-			var dc = new DClassLike() { StartLocation = t.Location, Description = GetComments() };
+			var dc = new DClassLike() { 
+				StartLocation = t.Location, 
+				Description = GetComments() 
+			};
 			LastParsedObject = dc;
 
 			ApplyAttributes(dc);
