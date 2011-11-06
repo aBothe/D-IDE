@@ -123,10 +123,12 @@ namespace D_Parser.Completion
 
 				// 2) If in declaration and if node identifier is expected, do not show any data
 				if (trackVars==null ||
-					(trackVars.LastParsedObject is INode && trackVars.ExpectingIdentifier) ||
-					(trackVars.LastParsedObject is TokenExpression && DTokens.BasicTypes[(trackVars.LastParsedObject as TokenExpression).Token] &&
-					!string.IsNullOrEmpty(EnteredText) &&
-					IsIdentifierChar(EnteredText[0]))
+					(trackVars.LastParsedObject is INode && (trackVars.LastParsedObject as INode).EndLocation>Editor.CaretLocation && trackVars.ExpectingIdentifier) ||
+					(trackVars.LastParsedObject is TokenExpression && 
+						(trackVars.LastParsedObject as IExpression).EndLocation > Editor.CaretLocation && 
+						DTokens.BasicTypes[(trackVars.LastParsedObject as TokenExpression).Token] &&
+						!string.IsNullOrEmpty(EnteredText) &&
+						IsIdentifierChar(EnteredText[0]))
 					)
 					return;
 
@@ -146,7 +148,7 @@ namespace D_Parser.Completion
 					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
 
 				// In a method, parse from the method's start until the actual caret position to get an updated insight
-				if (DResolver.CanShowMemberType(visibleMembers,DResolver.MemberTypes.Variables) && curBlock is DMethod)
+				if (visibleMembers.HasFlag(DResolver.MemberTypes.Variables) && curBlock is DMethod)
 				{
 					if (parsedBlock is BlockStatement)
 					{
@@ -168,12 +170,12 @@ namespace D_Parser.Completion
 				
 				//TODO: Split the keywords into such that are allowed within block statements and non-block statements
 				// Insert typable keywords
-				if(DResolver.CanShowMemberType(visibleMembers, DResolver.MemberTypes.Keywords))
+				if (visibleMembers.HasFlag(DResolver.MemberTypes.Keywords))
 					foreach (var kv in DTokens.Keywords)
 						CompletionDataGenerator.Add(kv.Key);
 
 				#region Add module name stubs of importable modules
-				if (DResolver.CanShowMemberType(visibleMembers, DResolver.MemberTypes.Imports))
+				if (visibleMembers.HasFlag(DResolver.MemberTypes.Imports))
 				{
 					var nameStubs = new Dictionary<string, string>();
 					var availModules = new List<IAbstractSyntaxTree>();

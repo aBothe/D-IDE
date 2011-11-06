@@ -127,16 +127,15 @@ namespace D_Parser.Resolver
 			All = Imports | Variables | Methods | Types | Keywords
 		}
 
-		public static bool CanShowMemberType(MemberTypes visMembers, MemberTypes flag)
-		{
-			return (visMembers & flag) == flag;
-		}
-
 		public static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)
 		{
-			return (n is DMethod && (n as DMethod).Name!="" && CanShowMemberType(VisibleMembers, MemberTypes.Methods) ||
-					(n is DVariable && !(n as DVariable).IsAlias && CanShowMemberType(VisibleMembers, MemberTypes.Variables)) ||
-					((n is DClassLike || n is DEnum) && CanShowMemberType(VisibleMembers, MemberTypes.Types)));
+			return (n is DMethod && (n as DMethod).Name!="" && VisibleMembers.HasFlag(MemberTypes.Methods) ||
+				(n is DVariable && 
+					// Only add aliases if at least types,methods or variables shall be shown.
+					(n as DVariable).IsAlias?
+						(VisibleMembers.HasFlag(MemberTypes.Methods) || VisibleMembers.HasFlag(MemberTypes.Types) || VisibleMembers.HasFlag(MemberTypes.Variables)):
+						VisibleMembers.HasFlag(MemberTypes.Variables)) ||
+					((n is DClassLike || n is DEnum) && VisibleMembers.HasFlag(MemberTypes.Types)));
 		}
 
 		/// <summary>
@@ -222,7 +221,7 @@ namespace D_Parser.Resolver
 				{
 					var dm = curScope as DMethod;
 
-					if (CanShowMemberType(VisibleMembers, MemberTypes.Variables))
+					if (VisibleMembers.HasFlag(MemberTypes.Variables))
 						ret.AddRange(dm.Parameters);
 
 					if (dm.TemplateParameters != null)
