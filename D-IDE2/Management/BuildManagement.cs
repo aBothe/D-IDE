@@ -40,6 +40,7 @@ namespace D_IDE
 				return false;
 			}
 
+			//TODO: Implement async build procedure
 			public static void BuildAsync(bool BuildSingle=false,Action<bool> OnFinished=null)
 			{
 				var t = new Thread(() =>
