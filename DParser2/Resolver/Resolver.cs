@@ -1439,6 +1439,7 @@ namespace D_Parser.Resolver
 				}
 				#endregion
 
+				//TODO: Resolve static [assoc] array props
 				if (isArray || isAssocArray)
 				{
 
