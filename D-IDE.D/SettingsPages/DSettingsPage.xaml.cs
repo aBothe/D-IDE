@@ -35,7 +35,6 @@ namespace D_IDE.D
 			sett.UseMethodInsight = checkBox_MethodInsight.IsChecked.Value;
 			sett.ForceCodeCompetionPopupCommit = checkBox_CodeInsertionOnNonLetter.IsChecked.Value;
 			sett.UseSemanticHighlighting = checkBox_UseSemanticHighlighting.IsChecked.Value;
-			sett.ShowSemanticErrors = checkBox_ShowSemanticErrors.IsChecked.Value;
 			sett.EnableSmartIndentation = checkBox_SmartIndentation.IsChecked.Value;
 
 			return true;
@@ -50,7 +49,6 @@ namespace D_IDE.D
 			checkBox_MethodInsight.IsChecked = sett.UseMethodInsight;
 			checkBox_CodeInsertionOnNonLetter.IsChecked = sett.ForceCodeCompetionPopupCommit;
 			checkBox_UseSemanticHighlighting.IsChecked = sett.UseSemanticHighlighting;
-			checkBox_ShowSemanticErrors.IsChecked = sett.ShowSemanticErrors;
 			checkBox_SmartIndentation.IsChecked = sett.EnableSmartIndentation;
 		}
 

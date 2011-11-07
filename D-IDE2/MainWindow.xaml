@@ -71,6 +71,8 @@
 					<r:RibbonApplicationMenuItem Header="Project Settings" ToolTip="Show the current project's settings" Command="d:IDEUICommands.ShowProjectSettings" />
 					<r:RibbonApplicationMenuItem Header="Settings" ToolTip="Show D-IDE Settings"  Command="Properties" ImageSource="Resources/settings_32.png" />
 					<r:RibbonSeparator />
+					<r:RibbonApplicationMenuItem Header="Close Workspace" Click="CloseWorkspace_Click" ToolTip="Saves and closes the current solution, all open files and projects." />
+					<r:RibbonSeparator />
 					<r:RibbonApplicationMenuItem Header="Exit" Command="Close" ImageSource="Resources/application-exit-3.ico" ToolTipTitle="Exit D-IDE (Alt+X)" />
 				</r:RibbonApplicationMenu>
 			</r:Ribbon.ApplicationMenu>

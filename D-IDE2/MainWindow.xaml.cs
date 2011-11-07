@@ -903,7 +903,29 @@ namespace D_IDE
 
 		public void OpenFeedbackDialogue()
 		{
-			(new FeedbackDialog() { Owner = this }).ShowDialog();
+			(new FeedbackDialog() { Owner = this }).Show();
+		}
+
+		private void CloseWorkspace_Click(object sender, RoutedEventArgs e)
+		{
+			// Close open files
+			foreach (var doc in IDEManager.Instance.Editors.ToArray())
+				doc.Close();
+
+			// Save projects and solution
+			if (IDEManager.CurrentSolution != null)
+			{
+				foreach (var prj in IDEManager.CurrentSolution.ProjectCache)
+					prj.Save();
+
+				IDEManager.CurrentSolution.Save();
+			}
+
+			// Reset solution instance
+			IDEManager.CurrentSolution = null;
+
+			// Update GUI
+			RefreshGUI();
 		}
 	}
 

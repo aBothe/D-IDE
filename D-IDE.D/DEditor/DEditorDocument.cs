@@ -1247,7 +1247,11 @@ namespace D_IDE.D
 				{
 					int offset = Editor.Document.GetOffset(pos.Value.Line, pos.Value.Column);
 					// Avoid showing a tooltip if the cursor is located after a line-end
-					var vpos = Editor.TextArea.TextView.GetVisualPosition(new TextViewPosition(pos.Value.Line, Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength), ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineMiddle);
+					var vpos = Editor.TextArea.TextView.GetVisualPosition(
+						new TextViewPosition(
+							pos.Value.Line, 
+							Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength), 
+						ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineMiddle);
 					// Add TextView position to Editor-related point
 					vpos = Editor.TextArea.TextView.TranslatePoint(vpos, Editor);
 
@@ -1255,6 +1259,7 @@ namespace D_IDE.D
 					try
 					{
 						bool handled = false;
+						//TODO: Show debuggee locals when debugging
 						// Prefer showing error markers' error messages
 						foreach (var tm in MarkerStrategy.TextMarkers)
 							if (tm is ErrorMarker && tm.StartOffset <= offset && offset <= tm.EndOffset)

@@ -824,7 +824,7 @@ namespace D_Parser.Resolver
 			var expressionCode = code.Substring(start, alsoParseBeyondCaret ? code.Length - start : editor.CaretOffset - start);
 
 			var parser = DParser.Create(new StringReader(expressionCode));
-			parser.Lexer.SetInitialLocation(editor.CaretLocation);
+			parser.Lexer.SetInitialLocation(DocumentHelper.OffsetToLocation(editor.ModuleCode,start));
 			parser.Step();
 
 			if (onlyAssumeIdentifierList && parser.Lexer.LookAhead.Kind == DTokens.Identifier)

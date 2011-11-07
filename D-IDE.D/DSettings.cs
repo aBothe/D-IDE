@@ -34,7 +34,6 @@ namespace D_IDE.D
 		public bool UseMethodInsight = true;
 		public bool EnableMatchingBracketHighlighting = true;
 		public bool UseSemanticHighlighting = false;
-		public bool ShowSemanticErrors = true;
 
 		public bool EnableSmartIndentation = true;
 
@@ -76,10 +75,6 @@ namespace D_IDE.D
 			x.WriteAttributeString("value", UseSemanticHighlighting.ToString().ToLower());
 			x.WriteEndElement();
 
-			x.WriteStartElement("ShowSemanticErrors");
-			x.WriteAttributeString("value", ShowSemanticErrors.ToString().ToLower());
-			x.WriteEndElement();
-
 			x.WriteStartElement("SmartIndentation");
 			x.WriteAttributeString("value", EnableSmartIndentation. ToString().ToLower());
 			x.WriteEndElement();
@@ -119,11 +114,6 @@ namespace D_IDE.D
 					case "UseSemanticHighlighting":
 						if (x.MoveToAttribute("value"))
 							UseSemanticHighlighting = x.ReadContentAsBoolean();
-						break;
-
-					case "ShowSemanticErrors":
-						if (x.MoveToAttribute("value"))
-							ShowSemanticErrors = x.ReadContentAsBoolean();
 						break;
 
 					case "SmartIndentation":
