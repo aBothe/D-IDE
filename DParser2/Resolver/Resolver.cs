@@ -851,9 +851,17 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
+		/*
+		public static ResolveResult[] ResolveExpression(IExpression Expression,
+		                                           		ResolverContext ctxt,
+		                                           		IBlockNode currentScopeOverride=null)
+		{
+			
+		}
+		*/
 		public static ResolveResult[] ResolveType(ITypeDeclaration declaration,
-			ResolverContext ctxt,
-			IBlockNode currentScopeOverride = null)
+		                                          ResolverContext ctxt,
+												  IBlockNode currentScopeOverride = null)
 		{
 			if (ctxt == null)
 				return null;
@@ -1081,6 +1089,43 @@ namespace D_Parser.Resolver
 				}
 				#endregion
 
+				else if(declaration is TypeOfDeclaration)
+				{
+					var typeOf=declaration as TypeOfDeclaration;
+					
+					// typeof(return)
+					if(typeOf.InstanceId is TokenExpression && (typeOf.InstanceId as TokenExpression).Token==DTokens.Return)
+					{
+						var m= HandleNodeMatch(currentScopeOverride,ctxt,currentScopeOverride,null,declaration);
+						if(m!=null)
+							returnedResults.Add(m);
+					}
+					// typeOf(myInt) === int
+					else if(typeOf.InstanceId!=null)
+					{
+						var wantedTypes=ResolveType(typeOf.InstanceId.ExpressionTypeRepresentation,ctxt,currentScopeOverride);
+						
+						// Scan down for variable's base types
+						var c1=new List<ResolveResult>(wantedTypes);
+						var c2=new List<ResolveResult>();
+						
+						while(c1.Count>0)
+						{
+							foreach(var t in c1)
+							{
+								if(t is MemberResult)
+									c2.AddRange((t as MemberResult).MemberBaseTypes);
+								else
+									returnedResults.Add(t);
+							}
+							
+							c1.Clear();
+							c1.AddRange(c2);
+							c2.Clear();
+						}
+					}
+				}
+				
 				else
 					returnedResults.Add(new StaticTypeResult() { TypeDeclarationBase = declaration });
 			}

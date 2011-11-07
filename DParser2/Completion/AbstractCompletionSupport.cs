@@ -261,7 +261,29 @@ namespace D_Parser.Completion
 				var tr = rr as TypeResult;
 				var vis = ItemVisibility.All;
 
-				if (!HaveSameAncestors(currentlyScopedBlock, tr.ResolvedTypeDefinition))
+				/* Cases:
+				 * myVar. (not located in basetype definition) 	<-- Show public||static members
+				 * myVar. (located in basetype definition)		<-- Show everything
+				 * this. 										<-- Show everything
+				 * super. 										<-- Show public||static base type members
+				 * myClass. (not located in myClass)			<-- Show public&&static members
+				 * myClass. (located in myClass)				<-- Show public&&static members
+				 */
+				bool HasSameAncestor=HaveSameAncestors(currentlyScopedBlock, tr.ResolvedTypeDefinition);
+				bool IsThis=false, IsSuper=false;
+				
+				if(tr.TypeDeclarationBase is DTokenDeclaration)
+				{
+					IsThis= (tr.TypeDeclarationBase as DTokenDeclaration).Token==DTokens.This;
+					IsSuper=(tr.TypeDeclarationBase as DTokenDeclaration).Token==DTokens.Super;
+				}
+				
+				if(IsSuper || (isVariableInstance && !HasSameAncestor))
+						vis=ItemVisibility.PublicOrStatic;
+				else if(!isVariableInstance)
+					vis= ItemVisibility.PublicAndStatic;
+				
+				if ()
 				{
 					if (isVariableInstance ||
 						(tr.TypeDeclarationBase is DTokenDeclaration &&
@@ -269,6 +291,17 @@ namespace D_Parser.Completion
 						vis = ItemVisibility.PublicOrStatic;
 					else
 						vis = ItemVisibility.PublicAndStatic;
+				}
+				else
+				{
+					// typeof(myClass)  <---> this
+					// [Do not show non-static members]  <---> [Show all members]
+					if(isVariableInstance)
+					{
+						
+					}else{
+						
+					}
 				}
 
 				BuildTypeCompletionData(tr, vis);
