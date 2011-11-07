@@ -851,14 +851,6 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		/*
-		public static ResolveResult[] ResolveExpression(IExpression Expression,
-		                                           		ResolverContext ctxt,
-		                                           		IBlockNode currentScopeOverride=null)
-		{
-			
-		}
-		*/
 		public static ResolveResult[] ResolveType(ITypeDeclaration declaration,
 		                                          ResolverContext ctxt,
 												  IBlockNode currentScopeOverride = null)
@@ -1089,6 +1081,7 @@ namespace D_Parser.Resolver
 				}
 				#endregion
 
+				#region TypeOfDeclaration
 				else if(declaration is TypeOfDeclaration)
 				{
 					var typeOf=declaration as TypeOfDeclaration;
@@ -1125,7 +1118,8 @@ namespace D_Parser.Resolver
 						}
 					}
 				}
-				
+				#endregion
+
 				else
 					returnedResults.Add(new StaticTypeResult() { TypeDeclarationBase = declaration });
 			}

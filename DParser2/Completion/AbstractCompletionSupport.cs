@@ -24,11 +24,11 @@ namespace D_Parser.Completion
 
 		public enum ItemVisibility
 		{
-			All,
-			Static,
-			PublicAndStatic,
-			PublicOrStatic,
-			Protected
+			All=1,
+			StaticMembers=2,
+			PublicStaticMembers=4,
+			PublicMembers=8,
+			ProtectedMembers=16
 		}
 
 		public static bool CanItemBeShownGenerally(INode dn)
@@ -261,49 +261,39 @@ namespace D_Parser.Completion
 				var tr = rr as TypeResult;
 				var vis = ItemVisibility.All;
 
-				/* Cases:
-				 * myVar. (not located in basetype definition) 	<-- Show public||static members
-				 * myVar. (located in basetype definition)		<-- Show everything
-				 * this. 										<-- Show everything
-				 * super. 										<-- Show public||static base type members
-				 * myClass. (not located in myClass)			<-- Show public&&static members
-				 * myClass. (located in myClass)				<-- Show public&&static members
-				 */
-				bool HasSameAncestor=HaveSameAncestors(currentlyScopedBlock, tr.ResolvedTypeDefinition);
-				bool IsThis=false, IsSuper=false;
-				
-				if(tr.TypeDeclarationBase is DTokenDeclaration)
+				bool HasSameAncestor = HaveSameAncestors(currentlyScopedBlock, tr.ResolvedTypeDefinition);
+				bool IsThis = false, IsSuper = false;
+
+				if (tr.TypeDeclarationBase is DTokenDeclaration)
 				{
-					IsThis= (tr.TypeDeclarationBase as DTokenDeclaration).Token==DTokens.This;
-					IsSuper=(tr.TypeDeclarationBase as DTokenDeclaration).Token==DTokens.Super;
-				}
-				
-				if(IsSuper || (isVariableInstance && !HasSameAncestor))
-						vis=ItemVisibility.PublicOrStatic;
-				else if(!isVariableInstance)
-					vis= ItemVisibility.PublicAndStatic;
-				
-				if ()
-				{
-					if (isVariableInstance ||
-						(tr.TypeDeclarationBase is DTokenDeclaration &&
-						(tr.TypeDeclarationBase as DTokenDeclaration).Token == DTokens.Super))
-						vis = ItemVisibility.PublicOrStatic;
-					else
-						vis = ItemVisibility.PublicAndStatic;
-				}
-				else
-				{
-					// typeof(myClass)  <---> this
-					// [Do not show non-static members]  <---> [Show all members]
-					if(isVariableInstance)
-					{
-						
-					}else{
-						
-					}
+					int token=(tr.TypeDeclarationBase as DTokenDeclaration).Token;
+					IsThis = token == DTokens.This;
+					IsSuper = token == DTokens.Super;
 				}
 
+				// Cases:
+
+				// myVar. (located in basetype definition)		<-- Show everything
+				// this. 										<-- Show everything
+				if (IsThis || (isVariableInstance && HasSameAncestor))
+					vis = ItemVisibility.All;
+
+				// myVar. (not located in basetype definition) 	<-- Show public and public static members
+				else if (isVariableInstance && !HasSameAncestor)
+					vis = ItemVisibility.PublicMembers | ItemVisibility.PublicStaticMembers;
+
+				// super. 										<-- Show protected|public or protected|public static base type members
+				else if (IsSuper)
+					vis = ItemVisibility.ProtectedMembers | ItemVisibility.PublicMembers | ItemVisibility.PublicStaticMembers;
+
+				// myClass. (not located in myClass)			<-- Show public static members
+				else if (!isVariableInstance && !HasSameAncestor)
+					vis = ItemVisibility.PublicStaticMembers;
+
+				// myClass. (located in myClass)				<-- Show static members
+				else if (!isVariableInstance && HasSameAncestor)
+					vis = ItemVisibility.StaticMembers;
+				
 				BuildTypeCompletionData(tr, vis);
 				if (resultParent == null)
 					StaticPropertyAddition.AddGenericProperties(rr, CompletionDataGenerator, tr.ResolvedTypeDefinition);
@@ -708,32 +698,20 @@ namespace D_Parser.Completion
 							continue;
 						}
 
-						// If "this." ,add all items, also those of superior classes
-						// if "super." , add public items
-						// if neither nor, add public static items
-
-						bool IsPublicOrStatic = dn.IsPublic || dn.IsStatic;
-						bool IsProtectedOrPublic = IsPublicOrStatic || dn.ContainsAttribute(DTokens.Protected);
-
 						bool add = false;
 
-						switch (tvisMod)
+						if (tvisMod.HasFlag(ItemVisibility.All))
+							add = true;
+						else
 						{
-							case ItemVisibility.All:
-								add = true;
-								break;
-							case ItemVisibility.Protected:
-								add = IsProtectedOrPublic;
-								break;
-							case ItemVisibility.PublicAndStatic:
-								add = dn.IsPublic && dn.IsStatic;
-								break;
-							case ItemVisibility.PublicOrStatic:
-								add = IsPublicOrStatic;
-								break;
-							case ItemVisibility.Static:
-								add = dn.IsStatic;
-								break;
+							if (tvisMod.HasFlag(ItemVisibility.ProtectedMembers))
+								add = add || dn.ContainsAttribute(DTokens.Protected);
+							if (tvisMod.HasFlag(ItemVisibility.PublicMembers))
+								add = add || dn.IsPublic;
+							if (tvisMod.HasFlag(ItemVisibility.PublicStaticMembers))
+								add = add || (dn.IsPublic && dn.IsStatic);
+							if (tvisMod.HasFlag(ItemVisibility.StaticMembers))
+								add = add || dn.IsStatic;
 						}
 
 						if (add)
@@ -754,7 +732,7 @@ namespace D_Parser.Completion
 					// After having shown all items on the current node level,
 					// allow showing public (static) and/or protected items in the more basic levels then
 					if (tvisMod == ItemVisibility.All)
-						tvisMod = ItemVisibility.Protected;
+						tvisMod = ItemVisibility.ProtectedMembers | ItemVisibility.PublicMembers;
 				}
 			}
 			else if (n is DEnum)
