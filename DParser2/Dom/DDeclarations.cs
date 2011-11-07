@@ -223,6 +223,19 @@ namespace D_Parser.Dom
             return (IncludesBase&& InnerDeclaration != null ? (InnerDeclaration.ToString()+" ") : "") + DTokens.GetTokenString(Modifier) + "(" + (InnerType != null ? InnerType.ToString() : "") + ")";
         }
     }
+    
+    /// <summary>
+    /// typeof(...)
+    /// </summary>
+    public class TypeOfDeclaration : AbstractTypeDeclaration
+    {
+    	public IExpression InstanceId;
+    	
+		public override string ToString(bool IncludesBase)
+		{
+			return (IncludesBase&& InnerDeclaration != null ? (InnerDeclaration.ToString()+" ") : "") + "typeof(" + (InstanceId != null ? InstanceId.ToString() : "") + ")";
+		}
+    }
 
 	/// <summary>
 	/// template myTemplate(T...)

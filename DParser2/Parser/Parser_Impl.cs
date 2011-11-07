@@ -1437,23 +1437,20 @@ namespace D_Parser.Parser
 			}
 		}
 
-		ITypeDeclaration TypeOf()
+		TypeOfDeclaration TypeOf()
 		{
-			var startLoc = t.Location;
+			var startLoc = t==null?new CodeLocation():t.Location;
 			Expect(Typeof);
 			Expect(OpenParenthesis);
-			var md = new MemberFunctionAttributeDecl(Typeof) { Location=startLoc };
+			var md = new TypeOfDeclaration { Location=startLoc };
 			LastParsedObject = md;
 			if (laKind == (Return))
 			{
 				Step();
-				md.InnerType = new DTokenDeclaration(Return) { Location = t.Location, EndLocation = t.EndLocation };
+				md.InstanceId = new TokenExpression(Return) { Location = t.Location, EndLocation = t.EndLocation };
 			}
 			else
-			{
-				startLoc = la.Location;
-				md.InnerType = new DExpressionDecl(Expression()) { Location=startLoc, EndLocation=t.EndLocation };
-			}
+				md.InstanceId = Expression();
 			Expect(CloseParenthesis);
 			md.EndLocation = t.EndLocation;
 			return md;
