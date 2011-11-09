@@ -1133,7 +1133,10 @@ namespace D_Parser.Dom.Expressions
 				ret = ret.TrimEnd(' ');
 			}
 
-			ret += ") " + UnaryExpression.ToString();
+			ret += ") ";
+			
+			if(UnaryExpression!=null)
+				UnaryExpression.ToString();
 
 			return ret;
 		}
