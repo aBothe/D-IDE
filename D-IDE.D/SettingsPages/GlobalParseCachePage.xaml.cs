@@ -32,7 +32,7 @@ namespace D_IDE.D
 		{
 			cfg.ASTCache.ParsedGlobalDictionaries.Clear();
 			cfg.ASTCache.ParsedGlobalDictionaries.AddRange(Dirs);
-			cfg.ASTCache.UpdateEditorParseCache();
+			cfg.ASTCache.UpdateEditorFastAccessCache();
 
 			return true;
 		}

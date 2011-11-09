@@ -103,7 +103,7 @@ namespace D_Parser.Completion
 						l.Add(ppd);
 				}
 
-				UpdateEditorParseCache();
+				UpdateEditorFastAccessCache();
 			}
 			finally
 			{
@@ -112,7 +112,7 @@ namespace D_Parser.Completion
 			return l.ToArray();
 		}
 
-		public void UpdateEditorParseCache()
+		public void UpdateEditorFastAccessCache()
 		{
 			var cache = new List<IAbstractSyntaxTree>();
 
