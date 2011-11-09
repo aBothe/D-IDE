@@ -569,7 +569,11 @@ namespace D_IDE.D
 
 		public string Text
 		{
-			get { return Node.Name; }
+			get {
+				if (Node==null || Node.Name == null)
+					return "";
+				return Node.Name; 
+			}
 			protected set { }
 		}
 

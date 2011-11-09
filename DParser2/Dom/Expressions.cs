@@ -1127,8 +1127,9 @@ namespace D_Parser.Dom.Expressions
 				ret += Type.ToString();
 			else
 			{
-				foreach (var tk in CastParamTokens)
-					ret += DTokens.GetTokenString(tk) + " ";
+				if(CastParamTokens!=null)
+					foreach (var tk in CastParamTokens)
+						ret += DTokens.GetTokenString(tk) + " ";
 				ret = ret.TrimEnd(' ');
 			}
 

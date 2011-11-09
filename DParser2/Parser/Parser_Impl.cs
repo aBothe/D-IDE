@@ -3188,20 +3188,29 @@ namespace D_Parser.Parser
 					if (laKind == (OpenParenthesis))
 					{
 						Step();
-						var catchVar = new DVariable();
-						LastParsedObject = catchVar;
-						var tt = la; //TODO?
-						catchVar.Type = BasicType();
-						if (laKind != Identifier)
-						{
-							la = tt;
-							catchVar.Type = new IdentifierDeclaration("Exception");
-						}
-						Expect(Identifier);
-						catchVar.Name = t.Value;
-						Expect(CloseParenthesis);
 
-						c.CatchParameter = catchVar;
+						if (laKind == CloseParenthesis)
+						{
+							SemErr(CloseParenthesis, "Catch parameter expected, not ')'");
+							Step();
+						}
+						else
+						{
+							var catchVar = new DVariable();
+							LastParsedObject = catchVar;
+							var tt = la; //TODO?
+							catchVar.Type = BasicType();
+							if (laKind != Identifier)
+							{
+								la = tt;
+								catchVar.Type = new IdentifierDeclaration("Exception");
+							}
+							Expect(Identifier);
+							catchVar.Name = t.Value;
+							Expect(CloseParenthesis);
+
+							c.CatchParameter = catchVar;
+						}
 					}
 
 					c.ScopedStatement = Statement(Scope: Scope, Parent: c);
