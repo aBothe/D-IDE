@@ -223,6 +223,9 @@ namespace D_IDE
 				if (ed == null)
 					return ret;
 
+				if (Offset > ed.Editor.Document.TextLength)
+					Offset = ed.Editor.Document.TextLength;
+
 				if (Offset >= 0)
 				{
 					ed.Editor.CaretOffset = Offset;
