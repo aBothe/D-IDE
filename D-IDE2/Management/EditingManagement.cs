@@ -208,7 +208,11 @@ namespace D_IDE
 				if (ed == null)
 					return ret;
 
-				ed.Editor.CaretOffset = ed.Editor.Document.GetOffset(Line, Col);
+				if (Line >= ed.Editor.Document.LineCount && Col >= ed.Editor.Document.Lines[ed.Editor.Document.LineCount].Length)
+					ed.Editor.CaretOffset = ed.Editor.Document.TextLength;
+				else
+					ed.Editor.CaretOffset = ed.Editor.Document.GetOffset(Line, Col);
+
 				ed.Editor.ScrollTo(Line,Col);
 				ed.Editor.Focus();
 
