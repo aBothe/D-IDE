@@ -245,7 +245,7 @@ namespace D_Parser.Parser
 			return 0;
 		}
 
-		public static double ParseDecimalValue(string digit, int NumBase)
+		public static double ParseFloatValue(string digit, int NumBase)
 		{
 			double ret = 0;
 
@@ -262,7 +262,7 @@ namespace D_Parser.Parser
 				if (i >= digit.Length) break;
 
 				int n = GetHexNumber(digit[i]);
-				ret += n * Math.Pow(NumBase, (double)(k - i));
+				ret += n * Math.Pow(NumBase, k - i);
 			}
 
 			return ret;
@@ -495,7 +495,7 @@ namespace D_Parser.Parser
 										break;
 								}
 
-								return new DToken(DTokens.Literal, Col - 1, Line, numString, ParseDecimalValue(numString, 16), LiteralFormat.Scalar);
+								return new DToken(DTokens.Literal, Col - 1, Line, numString, ParseFloatValue(numString, 16), LiteralFormat.Scalar);
 							}
 						}
 						else if (ch == 'q') // Token strings
@@ -712,6 +712,7 @@ namespace D_Parser.Parser
 				bool HasDot = false;
 				bool isunsigned = false;
 				bool isfloat = false;
+				bool islong = false;
 				int NumBase = 0; // Set it to 0 initially - it'll be set to another value later for sure
 
 				char peek = (char)ReaderPeek();
@@ -859,7 +860,7 @@ namespace D_Parser.Parser
 
 					if (peek == 'L')
 					{
-						isfloat = true;
+						islong = true;
 						ReaderRead();
 						suffix += "L";
 						//islong = true;
@@ -882,7 +883,7 @@ namespace D_Parser.Parser
 					ReaderRead();
 					suffix += 'L';
 					//isreal = true;
-					isfloat = true;
+					islong = true;
 					peek = (char)ReaderPeek();
 				}
 
@@ -901,13 +902,42 @@ namespace D_Parser.Parser
 				DToken token = null;
 
 				#region Parse the digit string
-				var num = ParseDecimalValue(digit, NumBase);
+
+				var num = ParseFloatValue(digit, NumBase);
 
 				if (exponent != 1)
 					num = Math.Pow(num, exponent);
+
+				object val = null;
+
+				if (HasDot)
+				{
+					if (isfloat)
+						val = (float)num;
+					else
+						val = (double)num;
+				}
+				else
+				{
+					if (isunsigned)
+					{
+						if (islong)
+							val = (ulong)num;
+						else
+							val = (uint)num;
+					}
+					else
+					{
+						if (islong)
+							val = (long)num;
+						else
+							val = (int)num;
+					}
+				}
+
 				#endregion
 
-				token = new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + stringValue.Length, y), stringValue, num, isfloat || HasDot ? (LiteralFormat.FloatingPoint | LiteralFormat.Scalar) : LiteralFormat.Scalar);
+				token = new DToken(DTokens.Literal, new CodeLocation(x, y), new CodeLocation(x + stringValue.Length, y), stringValue, val, isfloat || HasDot ? (LiteralFormat.FloatingPoint | LiteralFormat.Scalar) : LiteralFormat.Scalar);
 
 				if (token != null) token.next = nextToken;
 				return token;
@@ -1469,7 +1499,7 @@ namespace D_Parser.Parser
 											{
 												case '=':
 													ReaderRead();
-													return new DToken(DTokens.TripleRightAssign, x, y);
+													return new DToken(DTokens.TripleRightShiftAssign, x, y);
 											}
 											return new DToken(DTokens.ShiftRightUnsigned, x, y); // >>>
 										}

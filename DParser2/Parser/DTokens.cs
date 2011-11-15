@@ -58,7 +58,7 @@ namespace D_Parser.Parser
         public const int ShiftLeftAssign = 46;
         public const int TildeAssign = 47;
         public const int ShiftRightAssign = 48;
-        public const int TripleRightAssign = 49;
+        public const int TripleRightShiftAssign = 49;
 
         // ----- keywords -----
         public const int Align = 50;
@@ -115,7 +115,7 @@ namespace D_Parser.Parser
         public const int Is = 101;
         public const int Lazy = 102;
         public const int Long = 103;
-        public const int Macro = 104;
+        public const int empty1 = 104;
         public const int Mixin = 105;
         public const int Module = 106;
         public const int New = 107;
@@ -279,7 +279,7 @@ namespace D_Parser.Parser
 	"is"},{Lazy,
 
 	"lazy"},{Long,
-	"long"},{Macro,
+	"long"},{empty1,
 
 	"macro"},{Mixin,
 	"mixin"},{Module,
@@ -361,7 +361,7 @@ namespace D_Parser.Parser
             TildeAssign, // ~=
             ShiftLeftAssign, // <<=
             ShiftRightAssign, // >>=
-            TripleRightAssign,// >>>=
+            TripleRightShiftAssign,// >>>=
             PowAssign,
             LessEqual,
             GreaterEqual,
