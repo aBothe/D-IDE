@@ -641,7 +641,8 @@ namespace D_Parser.Parser
 				if (laKind == (Assign))
 				{
 					TrackerVariables.InitializedNode = firstNode;
-					(firstNode as DVariable).Initializer = Initializer(Scope);
+					if(firstNode is DVariable)
+						(firstNode as DVariable).Initializer = Initializer(Scope);
 				}
 				firstNode.EndLocation = t.EndLocation;
 				var ret = new List<INode>();
