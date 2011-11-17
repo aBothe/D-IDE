@@ -141,6 +141,9 @@ namespace D_IDE.Core
 
 		public string ToAbsoluteFileName(string file)
 		{
+			if (file == null)
+				return null;
+
 			var f = file.Trim('\\');
 			if (Path.IsPathRooted(f))
 				return f;
@@ -148,6 +151,9 @@ namespace D_IDE.Core
 		}
 		public string ToRelativeFileName(string file)
 		{
+			if (file == null)
+				return null;
+
 			var f = file.Trim('\\');
 			if (Path.IsPathRooted(f) && f.StartsWith(BaseDirectory))
 				return f.Substring(BaseDirectory.Length).Trim('\\');
