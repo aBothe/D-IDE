@@ -37,6 +37,8 @@ namespace D_IDE.Controls.Panels
 			tms1 = new TextMarkerService(Text_Sys);
 			tms2 = new TextMarkerService(Text_Build);
 			tms3 = new TextMarkerService(Text_Output);
+
+			Text_Output.Encoding = Encoding.Unicode;
 		}
 
 		public LogTab SelectedTab{
