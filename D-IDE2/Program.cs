@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Windows;
 using D_IDE.Core;
+using D_IDE.Dialogs;
 
 namespace D_IDE
 {
@@ -26,7 +27,7 @@ namespace D_IDE
 				{
 					new Program().Run(args);
 				}
-				catch (Exception ex) { ErrorLogger.Log(ex); }
+				catch (Exception ex) { new CrashDialog(ex).ShowDialog(); }
 		}
 
 		public Program()
