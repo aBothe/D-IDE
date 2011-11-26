@@ -209,14 +209,14 @@ namespace D_Parser.Parser
 
         StringBuilder qualidentBuilder = new StringBuilder();
 
-        DToken t
-        {
-            [System.Diagnostics.DebuggerStepThrough]
-            get
-            {
-                return (DToken)Lexer.CurrentToken;
-            }
-        }
+		DToken t
+		{
+			[System.Diagnostics.DebuggerStepThrough]
+			get
+			{
+				return (DToken)Lexer.CurrentToken;
+			}
+		}
 
         void OverPeekBrackets(int OpenBracketKind)
         {
