@@ -34,7 +34,9 @@ namespace D_IDE.Core
 				UseShellExecute=false,
 				//RedirectStandardInput=true,
 				RedirectStandardError=true,
-				RedirectStandardOutput=true
+				RedirectStandardOutput=true,
+                StandardErrorEncoding= Encoding.UTF8,
+                StandardOutputEncoding=Encoding.UTF8
 			};
 
 			var prc = new Process() { StartInfo=psi, EnableRaisingEvents=true};
