@@ -914,6 +914,10 @@ namespace D_Parser.Resolver
 			#region Search initial member/type/module/whatever
 			if (rbases == null)
 			{
+				// If it's a template, resolve the template id first
+				if (declaration is TemplateInstanceExpression)
+					declaration = (declaration as TemplateInstanceExpression).TemplateIdentifier;
+
 				#region IdentifierDeclaration
 				if (declaration is IdentifierDeclaration)
 				{
