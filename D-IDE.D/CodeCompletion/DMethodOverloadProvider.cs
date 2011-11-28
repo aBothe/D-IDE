@@ -24,7 +24,8 @@ namespace D_IDE.D.CodeCompletion
 					doc.Editor.CaretOffset, 
 					doc.CaretLocation, 
 					doc.lastSelectedBlock as D_Parser.Dom.DMethod, 
-					DCodeCompletionSupport.EnumAvailableModules(doc));
+					doc.ParseCache, 
+					doc.ImportCache);
 
 				if (argsResult == null || argsResult.ResolvedTypesOrMethods == null || argsResult.ResolvedTypesOrMethods.Length < 1)
 					return null;

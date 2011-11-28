@@ -2017,9 +2017,9 @@ namespace D_Parser.Resolver
 			int caretOffset,
 			CodeLocation caretLocation,
 			DMethod MethodScope,
-			IEnumerable<IAbstractSyntaxTree> parseCache)
+			IEnumerable<IAbstractSyntaxTree> parseCache, IEnumerable<IAbstractSyntaxTree> ImportCache)
 		{
-			var ctxt = new ResolverContext { ScopedBlock = MethodScope, ParseCache = parseCache };
+			var ctxt = new ResolverContext { ScopedBlock = MethodScope, ParseCache = parseCache, ImportCache=ImportCache };
 
 			#region Parse the code between the last block opener and the caret
 

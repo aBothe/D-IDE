@@ -1221,7 +1221,7 @@ namespace D_IDE.D
 			if ((e.Text == "." || e.Text==" ") && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
 
-			else if (e.Text == "," || e.Text == "(")
+			else if (e.Text == "," || e.Text == "(" || e.Text == "!")
 				ShowInsightWindow(e.Text);
 
 			else if (e.Text == ")" && insightWindow != null && insightWindow.IsLoaded)

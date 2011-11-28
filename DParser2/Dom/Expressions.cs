@@ -1453,7 +1453,7 @@ namespace D_Parser.Dom.Expressions
 
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return new IdentifierDeclaration(TemplateIdentifier); }
+			get { return TemplateIdentifier; }
 		}
 
 		public override string ToString(bool IncludesBase)
