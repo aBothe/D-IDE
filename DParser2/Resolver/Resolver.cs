@@ -2290,11 +2290,16 @@ namespace D_Parser.Resolver
 
 					if (curExpression is PostfixExpression_MethodCall)
 						curMethodOrTemplateInstance = curExpression;
+
 					else if (curExpression is TemplateInstanceExpression)
 						curMethodOrTemplateInstance = curExpression;
+                    else if (curExpression is PostfixExpression_Access && 
+                        (curExpression as PostfixExpression_Access).TemplateOrIdentifier is TemplateInstanceExpression)
+                        curMethodOrTemplateInstance = curExpression.ExpressionTypeRepresentation as TemplateInstanceExpression;
+
 					else if (curExpression is NewExpression)
 						curMethodOrTemplateInstance = curExpression;
-
+                    
 					if (curExpression is ContainerExpression)
 					{
 						var currentContainer = curExpression as ContainerExpression;
