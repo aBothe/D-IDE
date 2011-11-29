@@ -906,6 +906,10 @@ namespace D_Parser.Resolver
 			if (declaration.InnerDeclaration != null)
 				rbases = ResolveType(declaration.InnerDeclaration, ctxtOverride);
 
+            // If it's a template, resolve the template id first
+            if (declaration is TemplateInstanceExpression)
+                declaration = (declaration as TemplateInstanceExpression).TemplateIdentifier;
+
 			/* 
 			 * If there is no parent resolve context (what usually means we are searching the type named like the first identifier in the entire declaration),
 			 * search the very first type declaration by walking along the current block scope hierarchy.
@@ -914,10 +918,6 @@ namespace D_Parser.Resolver
 			#region Search initial member/type/module/whatever
 			if (rbases == null)
 			{
-				// If it's a template, resolve the template id first
-				if (declaration is TemplateInstanceExpression)
-					declaration = (declaration as TemplateInstanceExpression).TemplateIdentifier;
-
 				#region IdentifierDeclaration
 				if (declaration is IdentifierDeclaration)
 				{
@@ -2116,7 +2116,7 @@ namespace D_Parser.Resolver
 					}
 				}
 
-				methodIdentifier = templ.ExpressionTypeRepresentation;
+                methodIdentifier = new IdentifierDeclaration(templ.TemplateIdentifier.Value) { InnerDeclaration=templ.InnerDeclaration };
 			}
 			else if (e is NewExpression)
 			{
