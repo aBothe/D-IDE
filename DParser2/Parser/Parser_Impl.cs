@@ -58,6 +58,7 @@ namespace D_Parser.Parser
 			foreach(var c in Lexer.Comments)
 				ret += c.CommentText+ ' ';
 
+			TrackerVariables.Comments.AddRange(Lexer.Comments);
 			Lexer.Comments.Clear();
 
 			ret = ret.Trim();
@@ -100,6 +101,7 @@ namespace D_Parser.Parser
 
 				ret += c.CommentText+' ';
 				i++;
+				TrackerVariables.Comments.Add(c);
 			}
 			Lexer.Comments.RemoveRange(0, i);
 
@@ -3975,9 +3977,8 @@ namespace D_Parser.Parser
 					goto check_again;
 			}
 
-			if (HadIn || HadOut)
-				Expect(Body);
-			else if (laKind == (Body))
+			// Although there can be in&out constraints, there doesn't have to be a direct body definition. Used on abstract class/interface methods.
+			if (laKind == (Body))
 				Step();
 
 			if (laKind == Semicolon) // A function declaration can be empty, of course. This here represents a simple abstract or virtual function
