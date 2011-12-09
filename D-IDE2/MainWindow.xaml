@@ -7,6 +7,8 @@
 		x:Name="RibbonWindow"
 		Icon="d-ide.ico"
 		Width="1054" Height="852" MinWidth="640" MinHeight="480" 
+		TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
 		xmlns:my="clr-namespace:AvalonDock;assembly=AvalonDock"
 		Closing="RibbonWindow_Closing" Loaded="RibbonWindow_Loaded" Activated="RibbonWindow_Activated">
 	
