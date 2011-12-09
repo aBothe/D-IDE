@@ -76,7 +76,7 @@ namespace D_IDE.D
 
 			if (!DSettings.Instance.EnableSmartIndentation)
 			{
-				var prevIndent = GetLineTabIndentation(document.GetText(line.PreviousLine));
+				var prevIndent = GetLineIndentation(document.GetText(line.PreviousLine));
 
 				RawlyIndentLine(prevIndent, document, line);
 
