@@ -194,6 +194,7 @@ namespace D_IDE.Core
 
 			// Enhance text rendering
 			TextOptions.SetTextFormattingMode(Editor, TextFormattingMode.Display);
+			TextOptions.SetTextHintingMode(Editor, TextHintingMode.Animated);
 			TextOptions.SetTextRenderingMode(Editor, TextRenderingMode.ClearType);
 
 			// Load file contents if file path given
