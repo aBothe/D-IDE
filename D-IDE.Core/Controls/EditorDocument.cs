@@ -192,6 +192,10 @@ namespace D_IDE.Core
 			// Make UTF-8 encoding default
 			Editor.Encoding = Encoding.UTF8;
 
+			// Enhance text rendering
+			TextOptions.SetTextFormattingMode(Editor, TextFormattingMode.Display);
+			TextOptions.SetTextRenderingMode(Editor, TextRenderingMode.ClearType);
+
 			// Load file contents if file path given
 			Reload();
 
