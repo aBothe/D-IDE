@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System;
 
 namespace D_Parser.Dom
 {
@@ -43,9 +44,10 @@ namespace D_Parser.Dom
 		INode this[string Name] { get; set; }
 	}
 
-	public interface INode
+	public interface INode:IEquatable<INode>
 	{
 		string Name { get; set; }
+		CodeLocation NameLocation { get; set; }
 		string Description { get; set; }
 		ITypeDeclaration Type { get; set; }
 

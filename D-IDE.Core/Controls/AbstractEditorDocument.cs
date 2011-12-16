@@ -33,6 +33,8 @@ namespace D_IDE
 		void Init()
 		{
 			AllowDrop = true;
+
+			Name = "Doc" + (CoreManager.Instance.MainWindow.DockManager.Documents.Count + 1).ToString();
 		}
 
 		protected override void OnDragOver(System.Windows.DragEventArgs e)

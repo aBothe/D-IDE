@@ -24,6 +24,7 @@ namespace D_IDE.Controls.Panels
 	{
 		public ErrorListPanel()
 		{
+			Name = "ErrorListPanel";
 			DataContext = this;
 			InitializeComponent();
 		}

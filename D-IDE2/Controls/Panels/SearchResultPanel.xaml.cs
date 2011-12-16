@@ -21,6 +21,7 @@ namespace D_IDE.Controls.Panels
 	{
 		public SearchResultPanel()
 		{
+			Name = "SearchResults";
 			DataContext=this;
 			InitializeComponent();
 		}

@@ -25,6 +25,7 @@ namespace D_IDE.Controls.Panels
 	{
 		public DebugLocalsPanel()
 		{
+			Name = "DebugLocalsPanel";
 			InitializeComponent();
 
 			MainTree.Model = null;

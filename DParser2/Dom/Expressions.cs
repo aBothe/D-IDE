@@ -1469,7 +1469,7 @@ namespace D_Parser.Dom.Expressions
 						ret += e.ToString() + ",";
 					ret = ret.TrimEnd(',') + ")";
 				}
-				else if(Arguments.Length==0)
+				else if(Arguments.Length==1)
 					ret += Arguments[0].ToString();
 			}
 
@@ -2249,7 +2249,7 @@ namespace D_Parser.Dom.Expressions
 
 			Name = param.Name;
 
-			StartLocation = param.Location;
+			StartLocation = NameLocation = param.Location;
 			EndLocation = param.EndLocation;
 		}
 

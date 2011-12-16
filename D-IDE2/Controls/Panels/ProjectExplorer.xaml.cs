@@ -32,6 +32,7 @@ namespace D_IDE.Controls.Panels
 
 		public ProjectExplorer()
 		{
+			Name = "ProjectExplorer";
 			InitializeComponent();
 
 			#region Manual WinForms Code

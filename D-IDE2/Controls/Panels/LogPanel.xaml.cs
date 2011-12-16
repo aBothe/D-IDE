@@ -32,6 +32,7 @@ namespace D_IDE.Controls.Panels
 
 		public LogPanel()
 		{
+			Name = "LogPanel";
 			InitializeComponent();
 
 			tms1 = new TextMarkerService(Text_Sys);

@@ -26,6 +26,7 @@ namespace D_IDE.Controls.Panels
 	{
 		public StartPage()
 		{
+			Name = "StartPage";
 			DataContext = this;
 			InitializeComponent();
 

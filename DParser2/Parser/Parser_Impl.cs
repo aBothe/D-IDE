@@ -55,9 +55,11 @@ namespace D_Parser.Parser
 		{
 			string ret = "";
 
-			foreach(var c in Lexer.Comments)
-				if(c.CommentType.HasFlag(Comment.Type.Documentation))
-					ret += c.CommentText+ ' ';
+			foreach (var c in Lexer.Comments)
+			{
+				if (c.CommentType.HasFlag(Comment.Type.Documentation))
+					ret += c.CommentText + ' ';
+			}
 
 			TrackerVariables.Comments.AddRange(Lexer.Comments);
 			Lexer.Comments.Clear();
@@ -97,6 +99,7 @@ namespace D_Parser.Parser
 					if (c.EndPosition <= t.Location)
 					{
 						i++;
+						TrackerVariables.Comments.Add(c);
 						continue;
 					}
 					else if (c.StartPosition.Line > ExpectedLine)
@@ -104,8 +107,9 @@ namespace D_Parser.Parser
 
 					ret += c.CommentText + ' ';
 					i++;
+
+					TrackerVariables.Comments.Add(c);
 				}
-				TrackerVariables.Comments.Add(c);
 			}
 			Lexer.Comments.RemoveRange(0, i);
 
@@ -561,6 +565,7 @@ namespace D_Parser.Parser
 					dv.StartLocation = Lexer.LastToken.Location;
 					dv.IsAlias = true;
 					dv.Name = "this";
+					dv.NameLocation = t.Location;
 					dv.Type = new IdentifierDeclaration(t.Value);
 					dv.EndLocation = t.EndLocation;
 					Step();
@@ -669,6 +674,7 @@ namespace D_Parser.Parser
 					otherNode.AssignFrom(firstNode);
 					otherNode.StartLocation = t.Location;
 					otherNode.Name = t.Value;
+					otherNode.NameLocation = t.Location;
 
 					if (laKind == (Assign))
 					{
@@ -974,8 +980,11 @@ namespace D_Parser.Parser
 					return ret;
 				}
 
-				if(Expect(Identifier))
+				if (Expect(Identifier))
+				{
 					ret.Name = t.Value;
+					ret.NameLocation = t.Location;
+				}
 			}
 
 			if (IsDeclaratorSuffix || MemberFunctionAttribute[laKind])
@@ -3584,6 +3593,7 @@ namespace D_Parser.Parser
 
 			Expect(Identifier);
 			dc.Name = t.Value;
+			dc.NameLocation = t.Location;
 
 			if (laKind == (OpenParenthesis))
 			{
@@ -3756,6 +3766,7 @@ namespace D_Parser.Parser
 
 			Expect(Identifier);
 			dc.Name = t.Value;
+			dc.NameLocation = t.Location;
 
 			if (laKind == (OpenParenthesis))
 				dc.TemplateParameters = TemplateParameterList();
@@ -3811,6 +3822,7 @@ namespace D_Parser.Parser
 				{
 					Step();
 					mye.Name = t.Value;
+					mye.NameLocation = t.Location;
 				}
 				else
 				{
@@ -3818,6 +3830,7 @@ namespace D_Parser.Parser
 
 					Expect(Identifier);
 					mye.Name = t.Value;
+					mye.NameLocation = t.Location;
 				}
 			}
 
@@ -3849,6 +3862,7 @@ namespace D_Parser.Parser
 						Step();
 						Expect(Identifier);
 						enumVar.Name = t.Value;
+						enumVar.NameLocation = t.Location;
 					}
 
 					if (laKind == (Assign))
@@ -3891,12 +3905,14 @@ namespace D_Parser.Parser
 					{
 						Step();
 						ev.Name = t.Value;
+						ev.NameLocation = t.Location;
 					}
 					else
 					{
 						ev.Type = Type();
 						Expect(Identifier);
 						ev.Name = t.Value;
+						ev.NameLocation = t.Location;
 					}
 
 					if (laKind == (Assign))
@@ -4037,6 +4053,7 @@ namespace D_Parser.Parser
 
 			Expect(Identifier);
 			dc.Name = t.Value;
+			dc.NameLocation = t.Location;
 
 			dc.TemplateParameters = TemplateParameterList();
 

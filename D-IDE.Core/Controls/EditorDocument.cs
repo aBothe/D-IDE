@@ -193,9 +193,8 @@ namespace D_IDE.Core
 			Editor.Encoding = Encoding.UTF8;
 
 			// Enhance text rendering
-			TextOptions.SetTextFormattingMode(Editor, TextFormattingMode.Display);
-			TextOptions.SetTextHintingMode(Editor, TextHintingMode.Animated);
-			TextOptions.SetTextRenderingMode(Editor, TextRenderingMode.ClearType);
+			TextOptions.SetTextFormattingMode(Editor.TextArea.TextView, TextFormattingMode.Display);
+			TextOptions.SetTextRenderingMode(Editor.TextArea.TextView, TextRenderingMode.ClearType);
 
 			// Load file contents if file path given
 			Reload();
