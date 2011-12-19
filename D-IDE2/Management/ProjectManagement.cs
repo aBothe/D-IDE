@@ -196,14 +196,20 @@ namespace D_IDE
 				 * - Save everything
 				 */
 
-				var newSolutionFileName = Util.PurifyFileName(NewName) + Path.GetExtension(prj.FileName);
-				var ret = Util.MoveFile(prj.FileName, newSolutionFileName);
+				var newPrjFileName = Util.PurifyFileName(NewName) + Path.GetExtension(prj.FileName);
+				var newAbsPrjFileName = prj.ToAbsoluteFileName(newPrjFileName);
+				var ret = Util.MoveFile(prj.FileName, newPrjFileName);
 				if (ret)
 				{
+					var isStartProject = prj.Solution.StartProject == prj;
+
 					prj.Solution.ExcludeProject(prj.FileName);
 					prj.Name = NewName;
-					prj.FileName = prj.BaseDirectory + "\\" + newSolutionFileName;
+					prj.FileName = newAbsPrjFileName;
 					prj.Solution.AddProject(prj);
+
+					if (isStartProject)
+						prj.Solution.StartProject = prj;
 
 					prj.Solution.Save();
 					prj.Save();

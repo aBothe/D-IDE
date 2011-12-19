@@ -360,8 +360,8 @@ namespace D_IDE.Core
 
 		public bool Remove(string FileName)
 		{
-			var relPath=ToRelativeFileName(FileName);
-			bool r= _Files.RemoveAll(m => m.FileName==relPath) >0;
+			var path=ToAbsoluteFileName(FileName);
+			bool r= _Files.RemoveAll(m => m.AbsoluteFileName==path) >0;
 			if(!r)
 				ErrorLogger.Log(new ProjectException(this, "Couldn't remove " + FileName+ " from project"));
 			return r;

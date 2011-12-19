@@ -312,17 +312,20 @@ namespace D_IDE
 			public static bool RenameFile(Project Project, string file, string NewFileName)
 			{
 				var absPath = Project.ToAbsoluteFileName(file);
-				var newFilePath =Path.Combine( Path.GetDirectoryName(NewFileName),Util.PurifyFileName(Path.GetFileName(NewFileName)));
+				var newFilePath =Path.Combine(Project.BaseDirectory, Path.GetDirectoryName(NewFileName),Util.PurifyFileName(Path.GetFileName(NewFileName)));
 				var ret = Util.MoveFile(absPath, newFilePath);
 				if (ret)
 				{
 					Project.Remove(file);
-					Project.Add(Path.GetDirectoryName(absPath) + "\\" + newFilePath);
+					Project.Add(newFilePath);
 					Project.Save();
 
 					foreach (var e in Instance.Editors)
 						if (e.AbsoluteFilePath == absPath)
-							e.FileName = Path.GetDirectoryName(absPath) + "\\" + newFilePath;
+						{
+							e.AbsoluteFilePath = newFilePath;
+							e.Reload();
+						}
 				}
 				return ret;
 			}

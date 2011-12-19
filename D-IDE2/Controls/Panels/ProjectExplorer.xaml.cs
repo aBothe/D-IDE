@@ -75,7 +75,7 @@ namespace D_IDE.Controls.Panels
 		void MainTree_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
 		{
 			var n = e.Node as PrjExplorerNode;
-			if (_IsRefreshing || (n is ProjectNode &&(n as ProjectNode).IsUnloaded))
+			if (_IsRefreshing || (n is ProjectNode && (n as ProjectNode).IsUnloaded))
 				e.CancelEdit = true;
 		}
 
@@ -98,39 +98,53 @@ namespace D_IDE.Controls.Panels
 			if (!IsAddingDirectory && e.Label == null)
 				return;
 
+			var renamingSuccessful = false;
+
 			if (e.Node is SolutionNode)
-				e.CancelEdit = !IDEManager.ProjectManagement.Rename((e.Node as SolutionNode).Solution, e.Label);
+			{
+				renamingSuccessful = IDEManager.ProjectManagement.Rename((e.Node as SolutionNode).Solution, e.Label);
+
+				if (renamingSuccessful)
+					e.Node.Text = (e.Node as SolutionNode).Solution.Name;
+			}
 			else if (e.Node is ProjectNode)
-				e.CancelEdit = (e.Node as ProjectNode).IsUnloaded || !IDEManager.ProjectManagement.Rename((e.Node as ProjectNode).Project, e.Label);
+			{
+				renamingSuccessful = (e.Node as ProjectNode).IsUnloaded || !IDEManager.ProjectManagement.Rename((e.Node as ProjectNode).Project, e.Label);
+
+				if (renamingSuccessful)
+					e.Node.Text = (e.Node as ProjectNode).Project.Name;
+			}
 			else if (e.Node is DirectoryNode)
 			{
 				var dn = e.Node as DirectoryNode;
 				if (IsAddingDirectory)
 				{
 					IsAddingDirectory = false;
-					e.CancelEdit = !IDEManager.FileManagement.AddNewDirectoryToProject(dn.ParentProjectNode.Project, dn.RelativePath, e.Label);
-					if (e.CancelEdit) // We don't want to keep our empty directory node
+					renamingSuccessful= IDEManager.FileManagement.AddNewDirectoryToProject(dn.ParentProjectNode.Project, dn.RelativePath, e.Label);
+					if (!renamingSuccessful) // We don't want to keep our empty directory node
 					{
 						dn.Remove();
 						return;
 					}
 				}
 				else
-					e.CancelEdit = !IDEManager.FileManagement.RenameDirectory(dn.ParentProjectNode.Project, dn.RelativePath, e.Label);
-				
-				if (!e.CancelEdit) // If successful, apply the new (purified) name
+					renamingSuccessful= IDEManager.FileManagement.RenameDirectory(dn.ParentProjectNode.Project, dn.RelativePath, e.Label);
+
+				if (renamingSuccessful) // If successful, apply the new (purified) name
 					dn.Text = Util.PurifyDirName(e.Label);
 			}
 			else if (e.Node is FileNode)
 			{
 				var n = e.Node as FileNode;
-				e.CancelEdit = !IDEManager.FileManagement.RenameFile(n.ParentProjectNode.Project, n.AbsolutePath, e.Label);
-				
-				if (!e.CancelEdit) 
+				renamingSuccessful = IDEManager.FileManagement.RenameFile(n.ParentProjectNode.Project, n.AbsolutePath, e.Label);
+
+				if (renamingSuccessful)
 					n.Text = Util.PurifyFileName(e.Label);
 			}
 
-			if (!e.CancelEdit)
+			e.CancelEdit = renamingSuccessful;
+
+			if (renamingSuccessful)
 				Update();
 		}
 
@@ -421,6 +435,11 @@ namespace D_IDE.Controls.Panels
 				var cm = new System.Windows.Forms.ContextMenuStrip();
 				// Set node tag to our node
 				cm.Tag = n;
+
+				cm.Items.Add("Rename", null, delegate(Object o, EventArgs _e)
+				{
+					n.BeginEdit();
+				});
 
 				#region Build context menu
 
