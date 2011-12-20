@@ -24,29 +24,43 @@ namespace D_Parser.Formatting
 				t == DTokens.Synchronized;
 		}
 
-		public static CodeBlock CalculateIndentation(string code, int offset)
+		public static int ReadRawLineIndentation(string lineText)
+		{
+			int ret = 0;
+
+			foreach (var c in lineText)
+			{
+				if (c == ' ' || c == '\t')
+					ret++;
+				else
+					break;
+			}
+
+			return ret;
+		}
+
+		DToken t { get { return Lexer.CurrentToken; } }
+		DToken la { get { return Lexer.LookAhead; } }
+		bool IsEOFInNextIteration;
+		CodeBlock block;
+
+		Lexer Lexer;
+
+		public CodeBlock CalculateIndentation(string code, int offset)
 		{
 			if (offset >= code.Length)
 				offset = code.Length - 1;
 
-			CodeBlock block = null;
-
+			block = null;
 			var parserEndLocation = DocumentHelper.OffsetToLocation(code, offset);
 
-			var lexer = new Lexer(new StringReader(code));
+			Lexer = new Lexer(new StringReader(code));
 			
-			lexer.NextToken();
+			Lexer.NextToken();
 
-			DToken t = null;
-			DToken la = null;
-			bool IsEOFInNextIteration= false;
-
-			while (!lexer.IsEOF)
+			while (!Lexer.IsEOF)
 			{
-				lexer.NextToken();
-
-				t = lexer.CurrentToken;
-				la = lexer.LookAhead;
+				Lexer.NextToken();
 
 				IsEOFInNextIteration = la.Location>=parserEndLocation;
 				// Ensure one token after the caret offset becomes parsed
@@ -64,16 +78,16 @@ namespace D_Parser.Formatting
 					if (la.Kind != DTokens.Colon)
 					{
 						// To prevent further issues, skip the expression
-						var psr = new DParser(lexer);
+						var psr = new DParser(Lexer);
 						psr.AssignExpression();
 						// FIXME: What if cursor is somewhere between case and ':'??
 					}
 
-					if(lexer.LookAhead.EndLocation >= parserEndLocation)
+					if(la.EndLocation >= parserEndLocation)
 					{
 						break;
 					}
-					else if(lexer.CurrentPeekToken.Kind!=DTokens.OpenCurlyBrace)
+					else if(Lexer.CurrentPeekToken.Kind!=DTokens.OpenCurlyBrace)
 						block = new CodeBlock
 						{
 							InitialToken = DTokens.Case,
@@ -138,7 +152,7 @@ namespace D_Parser.Formatting
 						&& IsPreStatementToken(block.LastPreBlockIdentifier.Kind)) || 
 						la.Kind==DTokens.Do) // 'Do'-Statements allow single statements inside
 
-						&& lexer.Peek().Kind != DTokens.OpenCurlyBrace /* Ensure that no block statement follows */)
+						&& Lexer.Peek().Kind != DTokens.OpenCurlyBrace /* Ensure that no block statement follows */)
 					{
 						block = new CodeBlock
 						{
@@ -175,8 +189,8 @@ namespace D_Parser.Formatting
 					}
 				}
 
-				else if (
-					(t.Kind!=DTokens.Semicolon && t.Kind!=DTokens.OpenCurlyBrace) && 
+				else if ( (!IsEOFInNextIteration || t.line==la.line) &&
+					(t.Kind!=DTokens.OpenCurlyBrace) && 
 					(block == null || (
 					!block.IsStatementIndentation &&
 					!block.IsSingleSubStatementIndentation &&
@@ -187,7 +201,7 @@ namespace D_Parser.Formatting
 					{
 						IsStatementIndentation = true,
 						LastPreBlockIdentifier = t,
-						StartLocation = t.EndLocation,
+						StartLocation = la.Location,
 
 						Parent = block
 					};
@@ -199,20 +213,7 @@ namespace D_Parser.Formatting
 
 		
 
-		public static int ReadRawLineIndentation(string lineText)
-		{
-			int ret = 0;
 
-			foreach (var c in lineText)
-			{
-				if (c == ' ' || c == '\t')
-					ret++;
-				else
-					break;
-			}
-
-			return ret;
-		}
 	}
 
 	public class CodeBlock
