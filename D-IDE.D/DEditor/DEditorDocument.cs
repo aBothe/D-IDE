@@ -1046,7 +1046,11 @@ namespace D_IDE.D
 		{
 			try
 			{
-				if ((EnteredText!=null && EnteredText.Length>0 && !(EnteredText==" " || char.IsLetter(EnteredText[0]) || EnteredText[0] == '.')) || 
+				if ((EnteredText!=null && EnteredText.Length>0 && !(
+					EnteredText=="@"||
+					EnteredText==" " || 
+					char.IsLetter(EnteredText[0]) || 
+					EnteredText[0] == '.')) || 
 					!DCodeCompletionSupport.CanShowCompletionWindow(this) || 
 					Editor.IsReadOnly)
 					return;
@@ -1207,14 +1211,14 @@ namespace D_IDE.D
 				return;
 
 			// Note: Show completion window even before the first key has been processed by the editor!
-			else if (char.IsLetter(e.Text[0]) && !DResolver.IsTypeIdentifier(Editor.Text, Editor.CaretOffset))
+			else if (e.Text=="@" || char.IsLetter(e.Text[0]) && !DResolver.IsTypeIdentifier(Editor.Text, Editor.CaretOffset))
 				ShowCodeCompletionWindow(e.Text);
 		}
 
 		void TextArea_TextEntered(object sender, System.Windows.Input.TextCompositionEventArgs e)
 		{
 			// If typed a block-related char, update line indentation
-			if (/*e.Text == "{" ||*/ e.Text == "}" || e.Text == ":" || e.Text == ";")
+			if (e.Text == "{" || e.Text == "}" || e.Text == ":" || e.Text == ";")
 				indentationStrategy.UpdateIndentation(e.Text);
 
 			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway

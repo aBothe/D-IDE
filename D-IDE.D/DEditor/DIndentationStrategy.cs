@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ICSharpCode.AvalonEdit.Indentation;
+﻿using D_Parser.Formatting;
 using ICSharpCode.AvalonEdit.Document;
-using D_Parser.Dom;
-using D_Parser;
-using System.IO;
-using D_IDE.Core;
-using D_Parser.Dom.Statements;
-using D_Parser.Parser;
-using System.Collections;
-using D_Parser.Formatting;
+using ICSharpCode.AvalonEdit.Indentation;
 
 namespace D_IDE.D
 {
@@ -76,7 +65,7 @@ namespace D_IDE.D
 
 			if (!DSettings.Instance.EnableSmartIndentation)
 			{
-				var prevIndent = GetLineIndentation(document.GetText(line.PreviousLine));
+				var prevIndent = ReadRawLineIndentation(document.GetText(line));
 
 				RawlyIndentLine(prevIndent, document, line);
 
@@ -94,7 +83,7 @@ namespace D_IDE.D
 
 			//if (hasPostCaretCurlyCloser)	ind--;
 
-			RawlyIndentLine(block != null ? block.InnerIndentation : 0, document, line);
+			RawlyIndentLine(block != null ? block.GetLineIndentation(line.LineNumber) : 0, document, line);
 		}
 
 		public void IndentLines(TextDocument document, int beginLine, int endLine)

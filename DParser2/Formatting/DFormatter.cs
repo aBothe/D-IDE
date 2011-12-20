@@ -175,7 +175,7 @@ namespace D_Parser.Formatting
 					}
 				}
 
-				else if (!IsEOFInNextIteration &&
+				else if (
 					(t.Kind!=DTokens.Semicolon && t.Kind!=DTokens.OpenCurlyBrace) && 
 					(block == null || (
 					!block.IsStatementIndentation &&

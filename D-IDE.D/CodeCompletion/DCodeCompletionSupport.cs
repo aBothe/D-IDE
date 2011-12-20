@@ -220,6 +220,54 @@ namespace D_IDE.D
 		{
 			CompletionList.Add(new NamespaceCompletionData(ModuleName, Module) { ExplicitModulePath=PathOverride });
 		}
+
+		public void AddPropertyAttribute(string AttributeText)
+		{
+			CompletionList.Add(new PropertyAttributeCompletionData(AttributeText));
+		}
+	}
+
+	public class PropertyAttributeCompletionData : ICompletionData
+	{
+		string Attribute;
+
+		public PropertyAttributeCompletionData(string AttributeName)
+		{
+			this.Attribute = AttributeName;
+
+			Image = DCodeCompletionSupport.GetNodeImage("keyword");
+		}
+
+		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
+		{
+			textArea.Document.Replace(completionSegment, Text);
+		}
+
+		public object Content
+		{
+			get { return "@"+Attribute; }
+		}
+
+		public object Description
+		{
+			get { return DTokens.GetDescription("@"+Attribute); }
+		}
+
+		public ImageSource Image
+		{
+			get;
+			set;
+		}
+
+		public double Priority
+		{
+			get { return 1; }
+		}
+
+		public string Text
+		{
+			get { return "@"+Attribute; }
+		}
 	}
 
 	public class TokenCompletionData : ICompletionData, IComparable<ICompletionData>
