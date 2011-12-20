@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using D_Parser.Dom;
+using System;
 
 namespace D_Parser.Parser
 {
@@ -209,11 +210,6 @@ namespace D_Parser.Parser
             {__thread,	    "__thread"},
             {__traits,	    "__traits"},
 
-            /*{PropertyAttribute,"@property"},
-            {DisabledAttribute,	        "@disabled"},
-            {SafeAttribute,            "@safe"},
-            {SystemAttribute,            "@system"},
-            {TrustedAttribute,            "@trusted"},*/
             {__LINE__,"__LINE__"},
             {__FILE__,"__FILE__"},
             {__EOF__,"__EOF__"},
@@ -467,234 +463,195 @@ namespace D_Parser.Parser
                 mods.Remove(Package);
         }
 
-        static string[] tokenList = new string[] {
-			// ----- terminal classes -----
-			"<EOF>",
-			"<Identifier>",
-			"<Literal>",
-			// ----- special character -----
-			"=",
-			"+",
-			"-",
-			"*",
-			"/",
-			"%",
-			":",
-			"..",
-			";",
-			"?",
-			"$",
-			",",
-			".",
-			"{",
-			"}",
-			"[",
-			"]",
-			"(",
-			")",
-			">",
-			"<",
-			"!",
-			"&&",
-			"||",
-			"~",
-			"&",
-			"|",
-			"^",
-			"++",
-			"--",
-			"==",
-			"!=",
-			">=",
-			"<=",
-			"<<",
-			"+=",
-			"-=",
-			"*=",
-			"/=",
-			"%=",
-			"&=",
-			"|=",
-			"^=",
-			"<<=",
-			"~=",
-			">>=",
-			">>>=",
-			// ----- keywords -----
-	"align",
-	"asm",
-	"assert",
-	"auto",
+		static Dictionary<int, string> NonKeywords = new Dictionary<int, string> {
+			// Meta
+			{EOF,"<EOF>"},
+			{Identifier,"<Identifier>"},
+			{Literal,"<Literal>"},
 
-	"body",
-	"bool",
-	"break",
-	"byte",
+			// Math operations
+			{Assign,"="},
+			{Plus,"+"},
+			{Minus,"-"},
+			{Times,"*"},
+			{Div,"/"},
+			{Mod,"%"},
+			{Pow,"^^"},
 
-	"case",
-	"cast",
-	"catch",
-	"cdouble",
-	"cent",
-	"cfloat",
-	"char",
-	"class",
-	"const",
-	"continue",
-	"creal",
+			// Special chars
+			{Dot,"."},
+			{DoubleDot,".."},
+			{TripleDot,"..."},
+			{Colon,":"},
+			{Semicolon,";"},
+			{Question,"?"},
+			{Dollar,"$"},
+			{Comma,","},
+			
+			// Brackets
+			{OpenCurlyBrace,"{"},
+			{CloseCurlyBrace,"}"},
+			{OpenSquareBracket,"["},
+			{CloseSquareBracket,"]"},
+			{OpenParenthesis,"("},
+			{CloseParenthesis,")"},
 
-	"dchar",
-	"debug",
-	"default",
-	"delegate",
-	"delete",
-	"deprecated",
-	"do",
-	"double",
+			// Relational
+			{GreaterThan,">"},
+			{NotGreaterThan,"!>"},
+			{LessThan,"<"},
+			{NotLessThan,"!<"},
+			{Not,"!"},
+			{Unequal,"<>"},
+			{NotUnequal,"!<>"},
+			{LogicalAnd,"&&"},
+			{LogicalOr,"||"},
+			{Tilde,"~"},
+			{BitwiseAnd,"&"},
+			{BitwiseOr,"|"},
+			{Xor,"^"},
 
-	"else",
-	"enum",
-	"export",
-	"extern",
+			// Shift
+			{ShiftLeft,"<<"},
+			{ShiftRight,">>"},
+			{ShiftRightUnsigned,">>>"},
 
-	"false",
-	"final",
-	"finally",
-	"float",
-	"for",
-	"foreach",
-	"foreach_reverse",
-	"function",
+			// Increment
+			{Increment,"++"},
+			{Decrement,"--"},
 
-	"goto",
+			// Assign operators
+			{Equal,"=="},
+			{NotEqual,"!="},
+			{GreaterEqual,">="},
+			{LessEqual,"<="},
+			{PlusAssign,"+="},
+			{MinusAssign,"-="},
+			{TimesAssign,"*="},
+			{DivAssign,"/="},
+			{ModAssign,"%="},
+			{BitwiseOrAssign,"|="},
+			{XorAssign,"^="},
+			{TildeAssign,"~="},
 
-	"idouble",
-	"if",
-	"ifloat",
-	"import",
-	"immutable",
-	"in",
-	"inout",
-	"int",
-	"interface",
-	"invariant",
-	"ireal",
-	"is",
-
-	"lazy",
-	"long",
-
-	"macro",
-	"mixin",
-	"module",
-
-	"new",
-	"nothrow",
-	"null",
-
-	"out",
-	"override",
-
-	"package",
-	"pragma",
-	"private",
-	"protected",
-	"public",
-	"pure",
-
-	"real",
-	"ref",
-	"return",
-
-	"scope",
-	"shared",
-	"short",
-	"static",
-	"struct",
-	"super",
-	"switch",
-	"synchronized",
-
-	"template",
-	"this",
-	"throw",
-	"true",
-	"try",
-	"typedef",
-	"typeid",
-	"typeof",
-
-	"ubyte",
-	"ucent",
-	"uint",
-	"ulong",
-	"union",
-	"unittest",
-	"ushort",
-
-	"version",
-	"void",
-	"volatile",
-
-	"wchar",
-	"while",
-	"with",
-
-	"__gshared",
-	"__thread",
-	"__traits",
-
-	"abstract",
-	"alias",
-
-	"@property",
-	"@disable",
-    "@safe",
-    "@system",
-
-    // Additional operators
-        "^^=",
-        "!<>=",
-        "!<>",
-        "<>",
-        "<>=",
-        "!>",
-        "!>=",
-        "!<",
-        "!<=",
-        ">>",
-        ">>>",
-        "^^",
-        "...",
-
-    "@trusted",
-	"__FILE__",
-	"__LINE__",
-	"__EOF__"
+			{ShiftLeftAssign,"<<="},
+			{ShiftRightAssign,">>="},
+			{TripleRightShiftAssign,">>>="},
+			
+			{PowAssign,"^^="},
+			{UnequalAssign,"<>="},
+			{NotUnequalAssign,"!<>="},
+			{NotGreaterThanAssign,"!>="},
+			{NotLessThanAssign,"!<="},
 		};
+
         public static string GetTokenString(int token)
         {
-            if (token >= 0 && token < tokenList.Length)
-            {
-                return tokenList[token];
-            }
-            throw new System.NotSupportedException("Unknown token:" + token);
+			if (Keywords.ContainsKey(token))
+				return Keywords[token];
+			if (NonKeywords.ContainsKey(token))
+				return NonKeywords[token];
+
+			return "<Unknown>";
         }
 
         public static int GetTokenID(string token)
         {
-            if (token == null || token.Length < 1) return -1;
+            if (token == null || token.Length < 1) 
+				return -1;
 
-            for (int i = 0; i < tokenList.Length; i++)
-            {
-                if (tokenList[i] == token) return i;
-            }
+			foreach (var kv in Keywords)
+				if (kv.Value == token)
+					return kv.Key;
+
+			foreach (var kv in NonKeywords)
+				if (kv.Value == token)
+					return kv.Key;
 
             return -1;
         }
 
         public static string GetDescription(string token)
         {
+			if (token.StartsWith("@"))
+			{
+				var n=Environment.NewLine;
+				if (token == "@disable")
+					return @"Disables a declaration
+A ref­er­ence to a de­c­la­ra­tion marked with the @dis­able at­tribute causes a com­pile time error. 
+
+This can be used to ex­plic­itly dis­al­low cer­tain op­er­a­tions 
+or over­loads at com­pile time 
+rather than re­ly­ing on gen­er­at­ing a run­time error.";
+
+				if (token == "@property")
+					return 
+@"Prop­erty func­tions 
+can be called with­out paren­the­ses (hence act­ing like prop­er­ties).
+
+struct S {
+  int m_x;
+  @property {
+    int x() { return m_x; }
+    int x(int newx) { return m_x = newx; }
+  }
+}
+
+void foo() {
+  S s;
+  s.x = 3;   // calls s.x(int)
+  bar(s.x);  // calls bar(s.x())
+}";
+
+				if (token == "@safe")
+					return @"Safe func­tions
+
+The fol­low­ing op­er­a­tions are not al­lowed in safe func­tions:
+
+- No cast­ing from a pointer type 
+  to any type other than void*.
+- No cast­ing from any non-pointer 
+  type to a pointer type.
+- No mod­i­fi­ca­tion of pointer val­ues.
+- Can­not ac­cess unions that have point­ers or 
+  ref­er­ences over­lap­ping with other types.
+- Call­ing any sys­tem func­tions.
+- No catch­ing of ex­cep­tions that 
+  are not de­rived from class Ex­cep­tion.
+- No in­line as­sem­bler.
+- No ex­plicit cast­ing of mu­ta­ble ob­jects to im­mutable.
+- No ex­plicit cast­ing of im­mutable ob­jects to mu­ta­ble.
+- No ex­plicit cast­ing of thread local ob­jects to shared.
+- No ex­plicit cast­ing of shared ob­jects to thread local.
+- No tak­ing the ad­dress of a local 
+  vari­able or func­tion pa­ra­me­ter.
+- Can­not ac­cess __gshared vari­ables.
+- Func­tions nested in­side safe 
+  func­tions de­fault to being safe func­tions.
+
+Safe func­tions are co­vari­ant with trusted or sys­tem func­tions.";
+
+
+				if (token == "@system")
+					return @"Sys­tem func­tions 
+are func­tions not marked with @safe or @trusted and are not nested in­side @safe func­tions. 
+
+Sys­tem func­tions may be marked with the @sys­tem at­tribute.
+ 
+A func­tion being sys­tem does not mean it ac­tu­ally is un­safe, it just means that the com­piler is un­able to ver­ify that it can­not ex­hibit un­de­fined be­hav­ior.
+
+Sys­tem func­tions are not co­vari­ant with trusted or safe func­tions.";
+
+
+				if (token == "@trusted")
+					return string.Join(Environment.NewLine, "Trusted func­tions","",
+"- Are marked with the @trusted at­tribute,",
+@"- Are guar­an­teed by the pro­gram­mer to not ex­hibit 
+  any un­de­fined be­hav­ior if called by a safe func­tion,",
+"- May call safe, trusted, or sys­tem func­tions,",
+"- Are co­vari­ant with safe or sys­tem func­tions");
+			}
+
             return GetDescription(GetTokenID(token));
         }
 
