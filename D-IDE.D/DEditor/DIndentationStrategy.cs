@@ -72,16 +72,7 @@ namespace D_IDE.D
 				return;
 			}
 
-			//bool hasPostCaretCurlyCloser = false;
-
-			var offset = TakeCaret?dEditor.CaretOffset: line.Offset;
-			/*
-			if (document.GetText(line).TrimStart().StartsWith("}") ||(TakeCaret && document.GetCharAt(offset-1)==':'))
-				hasPostCaretCurlyCloser = true;
-			*/
-			var block = CalculateIndentation(document.Text, offset);
-
-			//if (hasPostCaretCurlyCloser)	ind--;
+			var block = CalculateIndentation(document.Text, line.LineNumber);
 
 			RawlyIndentLine(block != null ? block.GetLineIndentation(line.LineNumber) : 0, document, line);
 		}

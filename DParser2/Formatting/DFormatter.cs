@@ -56,14 +56,6 @@ namespace D_Parser.Formatting
 
 		Lexer Lexer;
 
-		public CodeBlock CalculateIndentation(string code, int offset)
-		{
-			if (offset >= code.Length)
-				offset = code.Length - 1;
-
-			return CalculateIndentation(code, DocumentHelper.OffsetToLocation(code, offset));
-		}
-
 		CodeBlock PushBlock()
 		{
 			return block = new CodeBlock { 
@@ -86,15 +78,17 @@ namespace D_Parser.Formatting
 				lastLineIndent = block;
 		}
 
-		public CodeBlock CalculateIndentation(string code, CodeLocation caret)
+		public CodeBlock CalculateIndentation(string code, int line)
 		{
 			block = null;
-			
-			Lexer = new Lexer(new StringReader(code));
+
+			var clippedCode = code.Substring(0, DocumentHelper.GetLineEndOffset(code, line));
+
+			Lexer = new Lexer(new StringReader(clippedCode));
 
 			Lexer.NextToken();
 
-			while (!Lexer.IsEOF && (t==null || t.Location.Line <= caret.Line))
+			while (!Lexer.IsEOF && (t==null || t.Location.Line <= line))
 			{
 				if (t != null && la.line > t.line)
 					lastLineIndent = null;
