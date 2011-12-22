@@ -44,6 +44,7 @@ namespace D_Parser.Formatting
 		CodeBlock block;
 
 		CodeBlock lastLineIndent;
+		bool HadCaseStatementBegin;
 
 		bool IsSemicolonContainingStatement
 		{
@@ -70,12 +71,6 @@ namespace D_Parser.Formatting
 			if (block != null)
 				return block = block.Parent;
 			return null;
-		}
-
-		void SetLastLineIndent()
-		{
-			if (lastLineIndent == null)
-				lastLineIndent = block;
 		}
 
 		public CodeBlock CalculateIndentation(string code, int line)
@@ -125,9 +120,11 @@ namespace D_Parser.Formatting
 					t.Kind == DTokens.OpenSquareBracket ||
 					t.Kind == DTokens.OpenCurlyBrace)
 				{
-					while (block != null && (block.Reason == CodeBlock.IndentReason.SingleLineStatement || block.Reason == CodeBlock.IndentReason.UnfinishedStatement))
+					if(block != null && (
+						block.Reason == CodeBlock.IndentReason.SingleLineStatement || 
+						block.Reason == CodeBlock.IndentReason.UnfinishedStatement))
 						PopBlock();
-
+					
 					PushBlock().BlockStartToken = t.Kind;
 				}
 
@@ -155,30 +152,58 @@ namespace D_Parser.Formatting
 					}
 					else
 					{
-						SetLastLineIndent();
-						PopBlock();
+						while (block != null && !block.IsClampBlock)
+							PopBlock();
+
+						if (lastLineIndent == null && (block == null || block.StartLocation.Line < t.line))
+							lastLineIndent = block;
+
+						if (t.Kind == DTokens.CloseParenthesis &&
+							block != null &&
+							block.BlockStartToken == DTokens.OpenParenthesis && 
+							la.Kind!=DTokens.OpenCurlyBrace)
+						{
+							PopBlock();
+
+							PushBlock().Reason = CodeBlock.IndentReason.UnfinishedStatement;
+							continue;
+						}
+						else
+							PopBlock();
 
 						if (t.Kind == DTokens.Do ||
 							t.Kind == DTokens.CloseParenthesis &&
 							block != null &&
-							block.BlockStartToken == DTokens.OpenParenthesis && IsPreStatementToken(block.LastPreBlockIdentifier.Kind))
+							block.BlockStartToken == DTokens.OpenParenthesis)
 						{
 							PopBlock();
 							if (la.Kind == DTokens.OpenCurlyBrace && la.line > t.line)
 							{ }
-							else
+							else if (block==null || block.LastPreBlockIdentifier!=null && IsPreStatementToken(block.LastPreBlockIdentifier.Kind))
 								PushBlock().Reason = CodeBlock.IndentReason.SingleLineStatement;
 						}
 					}
 				}
 
-				else if (t.Kind == DTokens.Colon)
+				else if (t.Kind == DTokens.Case || t.Kind==DTokens.Default)
 				{
 					while (block != null && block.BlockStartToken!=DTokens.OpenCurlyBrace)
 						PopBlock();
 
 					PushBlock().Reason = CodeBlock.IndentReason.StatementLabel;
+
+					HadCaseStatementBegin = true;
 				}
+				else if (t.Kind == DTokens.Colon)
+				{
+					if (HadCaseStatementBegin)
+					{
+						while (block != null && block.Reason != CodeBlock.IndentReason.StatementLabel)
+							PopBlock();
+						HadCaseStatementBegin = false;
+					}
+				}
+
 
 				else if (block == null ||
 					block.Reason != CodeBlock.IndentReason.UnfinishedStatement &&
