@@ -16,7 +16,8 @@ namespace ParserTests
 		public static string curFile = @"A:\D\dmd2\src\phobos\std\range.d";
 		public static void Main(string[] args)
 		{
-			b();
+			FormatterTest.RunTests();
+
 			Console.ReadKey();
 		}
 
