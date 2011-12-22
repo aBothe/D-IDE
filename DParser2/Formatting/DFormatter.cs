@@ -180,7 +180,7 @@ namespace D_Parser.Formatting
 
 				else if (t.Kind == DTokens.Colon)
 				{
-					if (block != null && block.Reason!= CodeBlock.IndentReason.Other)
+					while (block != null && block.BlockStartToken!=DTokens.OpenCurlyBrace)
 						PopBlock();
 
 					PushBlock().Reason = CodeBlock.IndentReason.StatementLabel;
