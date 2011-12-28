@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using D_Parser.Parser;
+using D_Parser.Dom.Statements;
 
 namespace D_Parser.Dom.Expressions
 {
@@ -99,15 +100,17 @@ namespace D_Parser.Dom.Expressions
 
 				if (subExpressions == null || subExpressions.Length < 1)
 					break;
-
+				bool foundOne = false;
 				foreach (var se in subExpressions)
 					if (se != null && Where >= se.Location && Where <= se.EndLocation)
 					{
 						e = se;
+						foundOne = true;
 						break;
 					}
 
-				break;
+				if (!foundOne)
+					break;
 			}
 
 			return e;
@@ -1792,6 +1795,7 @@ namespace D_Parser.Dom.Expressions
 	public class FunctionLiteral : PrimaryExpression
 	{
 		public int LiteralToken = DTokens.Delegate;
+		public bool IsLambda = false;
 
 		public DMethod AnonymousMethod = new DMethod(DMethod.MethodType.AnonymousDelegate);
 
@@ -1800,6 +1804,33 @@ namespace D_Parser.Dom.Expressions
 
 		public override string ToString()
 		{
+			if (IsLambda)
+			{
+				var s = "";
+
+				if (AnonymousMethod.Parameters.Count == 1 && AnonymousMethod.Parameters[0].Type == null)
+					s += AnonymousMethod.Parameters[0].Name;
+				else
+				{
+					s += '(';
+					foreach (var par in AnonymousMethod.Parameters)
+					{
+						s += par.ToString()+',';
+					}
+
+					s = s.TrimEnd(',')+')';
+				}
+
+				s += " => ";
+
+				IStatement[] stmts=null;
+				if (AnonymousMethod.Body != null && (stmts = AnonymousMethod.Body.SubStatements).Length > 0 &&
+					stmts[0] is ReturnStatement)
+					s += (stmts[0] as ReturnStatement).ReturnExpression.ToString();
+
+				return s;
+			}
+
 			return DTokens.GetTokenString(LiteralToken) + (string.IsNullOrEmpty (AnonymousMethod.Name)?"": " ") + AnonymousMethod.ToString();
 		}
 
