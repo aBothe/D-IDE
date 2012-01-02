@@ -274,7 +274,13 @@ namespace D_IDE.Core
 					MarkerColor = Error.MarkerColor.Value;
 
 				// Init offsets manually
-				StartOffset=EditorDoc.Editor.Document.GetOffset(Error.Line,Error.Column);
+				try
+				{
+					StartOffset = EditorDoc.Editor.Document.GetOffset(Error.Line, Error.Column);
+				}catch
+				{ 
+					StartOffset=EditorDoc.Editor.Document.TextLength-1;
+				}
 
 				if (Error.Length > 0)
 					Length = Error.Length;
