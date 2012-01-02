@@ -19,7 +19,7 @@ namespace D_IDE.D.CodeCompletion
 
 			try
 			{
-				var argsResult = DResolver.ResolveArgumentContext(
+				var argsResult = ParameterContextResolution.ResolveArgumentContext(
 					doc.Editor.Text, 
 					doc.Editor.CaretOffset, 
 					doc.CaretLocation, 
@@ -35,13 +35,13 @@ namespace D_IDE.D.CodeCompletion
 			catch { return null; }
 		}
 		
-		DMethodOverloadProvider(DResolver.ArgumentsResolutionResult argsResult)
+		DMethodOverloadProvider(ArgumentsResolutionResult argsResult)
 		{
 			args = argsResult;
 			SelectedIndex = args.CurrentlyCalledMethod;
 		}
 
-		DResolver.ArgumentsResolutionResult args;
+		ArgumentsResolutionResult args;
 		int selIndex = 0;
 
 		public int Count

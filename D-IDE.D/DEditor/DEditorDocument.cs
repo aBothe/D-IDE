@@ -363,10 +363,10 @@ namespace D_IDE.D
 				{
 					Editor.Document.UndoStack.StartUndoGroup();
 
-					var ctxt = DResolver.CommentSearching.GetTokenContext(Editor.Text, Editor.SelectionStart);
+					var ctxt = CaretContextAnalyzer.GetTokenContext(Editor.Text, Editor.SelectionStart);
 					
-					if (ctxt!=DResolver.CommentSearching.TokenContext.BlockComment &&
-						ctxt!= DResolver.CommentSearching.TokenContext.NestedComment)
+					if (ctxt!=TokenContext.BlockComment &&
+						ctxt!= TokenContext.NestedComment)
 					{
 						Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "*/");
 						Editor.Document.Insert(Editor.SelectionStart, "/*");
@@ -393,13 +393,13 @@ namespace D_IDE.D
 
 			int commStart = CaretOffset;
 			int commEnd = 0;
-			var context = DResolver.CommentSearching.GetTokenContext(Editor.Text, CaretOffset, out commStart, out commEnd);
+			var context = CaretContextAnalyzer.GetTokenContext(Editor.Text, CaretOffset, out commStart, out commEnd);
 
 			if (commStart < 0)
 				return;
 
 			// Remove single-line comments
-			if (context == DResolver.CommentSearching.TokenContext.LineComment)
+			if (context == TokenContext.LineComment)
 			{
 				int removedSlashCount = 0;
 
@@ -412,8 +412,8 @@ namespace D_IDE.D
 
 			#region If no single-line comment was removed, delete multi-line comment block tags
 
-			if (context != DResolver.CommentSearching.TokenContext.BlockComment &&
-				context != DResolver.CommentSearching.TokenContext.NestedComment)
+			if (context != TokenContext.BlockComment &&
+				context != TokenContext.NestedComment)
 				return;
 
 			if (commEnd < 0) 
@@ -422,7 +422,7 @@ namespace D_IDE.D
 			int removeCount_initialStarToken = 1;
 			int removeCount_finalStarToken = 1;
 
-			char starToken = context== DResolver.CommentSearching.TokenContext.NestedComment?'+':'*';
+			char starToken = context== TokenContext.NestedComment?'+':'*';
 
 			// Find and strip all leading and trailing * (+ on nested comments)
 			while (Editor.Document.GetCharAt(commStart + removeCount_initialStarToken) == starToken)
@@ -1211,7 +1211,7 @@ namespace D_IDE.D
 				return;
 
 			// Note: Show completion window even before the first key has been processed by the editor!
-			else if (e.Text=="@" || char.IsLetter(e.Text[0]) && !DResolver.IsTypeIdentifier(Editor.Text, Editor.CaretOffset))
+			else if (e.Text=="@" || char.IsLetter(e.Text[0])/* && !DResolver.IsTypeIdentifier(Editor.Text, Editor.CaretOffset)*/)
 				ShowCodeCompletionWindow(e.Text);
 		}
 
