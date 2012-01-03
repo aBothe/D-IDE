@@ -750,12 +750,13 @@ namespace D_IDE.D
 
 			var res = CodeScanner.ScanSymbols(new ResolverContext
 			{
+				ScopedBlock=SyntaxTree,
 				ImportCache = ImportCache,
 				ParseCache = ParseCache,
 				// For performance reasons, do not scan down aliases
 				ResolveAliases = false
 				// Note: for correct results, base classes and variable types have to get resolved
-			}, SyntaxTree);
+			});
 
 			sw.Stop();
 
@@ -763,10 +764,10 @@ namespace D_IDE.D
 			try
 			{
 				Dispatcher.Invoke(new Action<
-					Dictionary<IdentifierDeclaration, ResolveResult>,
+					Dictionary<IdentifierDeclaration, INode>,
 					List<IdentifierDeclaration>,
 					Stopwatch>
-					((Dictionary<IdentifierDeclaration, ResolveResult> resolvedItems,
+					((Dictionary<IdentifierDeclaration, INode> resolvedItems,
 						List<IdentifierDeclaration> unresolvedItems,
 						Stopwatch highPrecTimer) =>
 			{
@@ -822,14 +823,14 @@ namespace D_IDE.D
 		{
 			public readonly EditorDocument EditorDocument;
 			public readonly IdentifierDeclaration Id;
-			ResolveResult rr;
-			public ResolveResult ResolveResult
+			INode rr;
+			public INode ResolveResult
 			{
 				get { return rr; }
 				set {
 					rr = value;
 
-					if (rr is ModuleResult)
+					if (rr is IAbstractSyntaxTree)
 						ForegroundColor = Colors.DarkRed;
 					else
 						ForegroundColor = Color.FromRgb(0x2b, 0x91, 0xaf);
