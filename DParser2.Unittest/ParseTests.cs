@@ -134,7 +134,7 @@ namespace ParserTests
 
 		public static void TestExpressionStartFinder(string code_untilCaretOffset)
 		{
-			var start = ReverseParsing.SearchExpressionStart(code_untilCaretOffset, code_untilCaretOffset.Length);
+			var start = CaretContextAnalyzer.SearchExpressionStart(code_untilCaretOffset, code_untilCaretOffset.Length);
 
 			var expressionCode = code_untilCaretOffset.Substring(start, code_untilCaretOffset.Length- start);
 
@@ -161,14 +161,6 @@ namespace ParserTests
 
 				Console.WriteLine("type:\t\t" + type.ToString());
 			}
-		}
-
-		public static void IsTypeIdentifierTest(string code)
-		{
-			bool ShowCCPopup = !DResolver.IsTypeIdentifier(code, code.Length - 1);
-
-			Console.WriteLine("Code before caret:\t\t" + code);
-			Console.WriteLine("Show the completion popup:\t" + ShowCCPopup.ToString());
 		}
 
 
