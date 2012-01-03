@@ -282,6 +282,19 @@ void main(string[] args)
 	}
 }", 12, 3);
 
+			TestLastLine(@"
+void main(string[] args)
+{
+    if(true)
+    {
+		for(int i=0; i<5;i++)
+		{
+			i = i % 4;
+			if(i == 3)
+			{
+				i++;
+			}}", 3);
+
 		}
 
 		static void TestLastLine(string code, int targetIndent)
