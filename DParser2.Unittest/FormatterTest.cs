@@ -240,6 +240,48 @@ private:
 	foo()
 {",0);
 
+			TestLastLine(@"
+void main(string[] args)
+{
+    if(true)
+    {
+		for(int i=0; i<5;i++)
+		{
+			i = i % 4;
+			if(i == 3)
+			{
+				i++;
+				", 4);
+
+			TestLastLine(@"
+void main(string[] args)
+{
+    if(true)
+    {
+		for(int i=0; i<5;i++)
+		{
+			i = i % 4;
+			if(i == 3)
+			{
+				i++;
+			}", 3);
+
+			TestLine(@"
+void main(string[] args)
+{
+    if(true)
+    {
+		for(int i=0; i<5;i++)
+		{
+			i = i % 4;
+			if(i == 3)
+			{
+				i++;
+			}
+		}
+	}
+}", 12, 3);
+
 		}
 
 		static void TestLastLine(string code, int targetIndent)
