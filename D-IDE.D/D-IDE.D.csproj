@@ -224,6 +224,7 @@
   <ItemGroup>
     <EmbeddedResource Include="D.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
