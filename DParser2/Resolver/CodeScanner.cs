@@ -138,7 +138,11 @@ namespace D_Parser.Resolver
 			List<IBlockNode> types = null;
 			if (resCache.Types.TryGetValue(typeId.ToString(false), out types))
 			{
-				csr.ResolvedIdentifiers.Add(typeId as IdentifierDeclaration, types[0]);
+				try
+				{
+					csr.ResolvedIdentifiers.Add(typeId as IdentifierDeclaration, types[0]);
+				}
+				catch { }
 
 				return types;
 			}
