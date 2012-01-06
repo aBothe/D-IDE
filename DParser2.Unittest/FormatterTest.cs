@@ -29,11 +29,10 @@ import
 			TestLastLine(@"import std;
 import
 ",1);
-			TestLine(@"import std;
+			TestLastLine(@"import std;
 import
-	std;
+	std;",1);
 
-class A{}",3,1);
 			TestLastLine(@"class A{
 	void foo()
 	{
@@ -94,6 +93,33 @@ class A{}",3,1);
 			TestLastLine(@"foo(){
 	a;
 	bar();}",1);
+
+
+			TestLastLine(@"foo()
+	if(..)",1);
+			TestLastLine(@"foo()
+	if(..)
+in",0);
+			TestLastLine(@"foo()
+in",0);
+			TestLastLine(@"foo()
+out",0);
+			TestLastLine(@"foo()
+out(result)",0);
+			TestLastLine(@"foo()
+	if(true)
+out(result)",0);
+			TestLastLine(@"foo()
+out(result){",0);
+			TestLastLine(@"foo()
+body",0);
+			TestLastLine(@"void foo(in
+",1);
+			TestLastLine(@"void foo(out
+",1);
+
+
+
 			TestLastLine(@"foo()
 {
 	b(
