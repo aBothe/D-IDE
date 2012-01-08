@@ -282,7 +282,8 @@ namespace D_IDE
 			/// </summary>
 			public static void SaveCurrentFileAs(string NewFilePath)
 			{
-				if (Instance.CurrentEditor == null) return;
+				if (Instance.CurrentEditor == null) 
+					return;
 				/*
 				if (Instance.CurrentEditor.Project != null)
 					IDEManager.FileManagement.RenameFile(
@@ -290,6 +291,7 @@ namespace D_IDE
 						Instance.CurrentEditor.FileName, NewFilePath);
 				*/
 				Instance.CurrentEditor.FileName = NewFilePath;
+				Instance.CurrentEditor.Modified = true;
 				Instance.CurrentEditor.Save();
 			}
 

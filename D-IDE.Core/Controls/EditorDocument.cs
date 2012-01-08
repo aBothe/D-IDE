@@ -94,6 +94,8 @@ namespace D_IDE.Core
 					Editor.CaretOffset = caretOffset;
 				lastWriteTime = File.GetLastWriteTimeUtc(AbsoluteFilePath);
 			}
+			else
+				lastWriteTime = DateTime.MinValue;
 
 			UpdateSyntaxHighlighter();
 			
