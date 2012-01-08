@@ -115,6 +115,11 @@ namespace D_IDE.Core
 				var mbr = MessageBox.Show(CoreManager.Instance.MainWindow as Window,"Reload file?", "File has been modified", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
 				if (mbr == MessageBoxResult.Yes)
 					Reload();
+				else
+				{
+					lastWriteTime = File.Exists(AbsoluteFilePath)? File.GetLastWriteTimeUtc(AbsoluteFilePath) : DateTime.MinValue;
+					Modified = true;
+				}
 			}
 		}
 		#endregion
