@@ -14,6 +14,7 @@ using D_IDE.Core;
 using System.Collections.ObjectModel;
 using AvalonDock;
 using System.ComponentModel;
+using System.IO;
 
 namespace D_IDE.Controls.Panels
 {
@@ -46,7 +47,7 @@ namespace D_IDE.Controls.Panels
 			var item=e.OriginalSource as FrameworkElement;
 			var err=item.DataContext as GenericError;
 
-			if (err == null || string.IsNullOrEmpty( err.FileName))
+			if (err == null || string.IsNullOrEmpty( err.FileName) || !File.Exists(err.FileName))
 				return;
 
 			IDEManager.EditingManagement.OpenFile(err.FileName,err.Line,err.Column);

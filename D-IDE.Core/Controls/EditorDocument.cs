@@ -269,30 +269,45 @@ namespace D_IDE.Core
 			public readonly EditorDocument EditorDocument;
 			public readonly GenericError Error;
 
-			public ErrorMarker(EditorDocument EditorDoc, GenericError Error)
-				:base(EditorDoc.MarkerStrategy)
+			public static ErrorMarker Create(EditorDocument EditorDoc, GenericError Error)
 			{
-				this.EditorDocument = EditorDoc;
-				this.Error = Error;
+				var em = new ErrorMarker(EditorDoc, Error);
 
-				ForegroundColor = Error.ForegroundColor;
-				BackgroundColor = Error.BackgroundColor;
+				em.ForegroundColor = Error.ForegroundColor;
+				em.BackgroundColor = Error.BackgroundColor;
 				if (Error.MarkerColor.HasValue)
-					MarkerColor = Error.MarkerColor.Value;
+					em.MarkerColor = Error.MarkerColor.Value;
 
 				// Init offsets manually
 				try
 				{
-					StartOffset = EditorDoc.Editor.Document.GetOffset(Error.Line, Error.Column);
-				}catch
-				{ 
-					StartOffset=EditorDoc.Editor.Document.TextLength-1;
+					if (Error.Line > EditorDoc.Editor.Document.LineCount)
+						return null;
+
+					if (Error.Line == EditorDoc.Editor.Document.LineCount &&
+						EditorDoc.Editor.Document.Lines[Error.Line].Length > Error.Column)
+						return null;
+
+					em.StartOffset = EditorDoc.Editor.Document.GetOffset(Error.Line, Error.Column);
+				}
+				catch
+				{
+					return null;
 				}
 
 				if (Error.Length > 0)
-					Length = Error.Length;
+					em.Length = Error.Length;
 				else
-					CalculateWordOffset(StartOffset, false);
+					em.CalculateWordOffset(em.StartOffset, false);
+
+				return em;
+			}
+
+			ErrorMarker(EditorDocument EditorDoc, GenericError Error)
+				:base(EditorDoc.MarkerStrategy)
+			{
+				this.EditorDocument = EditorDoc;
+				this.Error = Error;
 			}
 		}
 
@@ -320,10 +335,14 @@ namespace D_IDE.Core
 
 			foreach (var err in CoreManager.ErrorManagement.GetErrorsForFile(AbsoluteFilePath))
 			{
-				var m = new ErrorMarker(this, err);
-				MarkerStrategy.Add(m);
+				var m = ErrorMarker.Create(this, err);
 
-				m.Redraw();
+				if (m != null)
+				{
+					MarkerStrategy.Add(m);
+
+					m.Redraw();
+				}
 			}
 		}
 

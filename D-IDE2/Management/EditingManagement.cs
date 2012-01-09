@@ -205,7 +205,7 @@ namespace D_IDE
 				var ret = OpenFile(FileName);
 				var ed = ret as EditorDocument;
 
-				if (ed == null)
+				if (ed == null || ed.Editor == null || ed.Editor.Document == null)
 					return ret;
 
 				if (Line >= ed.Editor.Document.LineCount && Col >= ed.Editor.Document.Lines[ed.Editor.Document.LineCount].Length)
