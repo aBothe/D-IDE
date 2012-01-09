@@ -281,10 +281,10 @@ namespace D_IDE.Core
 				// Init offsets manually
 				try
 				{
-					if (Error.Line > EditorDoc.Editor.Document.LineCount)
+					if (Error.Line >= EditorDoc.Editor.Document.LineCount)
 						return null;
 
-					if (Error.Line == EditorDoc.Editor.Document.LineCount &&
+					if (Error.Line == EditorDoc.Editor.Document.LineCount-1 &&
 						EditorDoc.Editor.Document.Lines[Error.Line].Length > Error.Column)
 						return null;
 
