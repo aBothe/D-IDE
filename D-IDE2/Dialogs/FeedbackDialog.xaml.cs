@@ -63,5 +63,20 @@ namespace D_IDE.Dialogs
 				Close();
 			}
 		}
+
+		private void button_Cancel_Click(object sender, RoutedEventArgs e)
+		{
+			if (input_Message.Text.Length > 0 && 
+				MessageBox.Show(
+					"Discard entered feedback message?", 
+					"Discard feedback", 
+					MessageBoxButton.YesNo, 
+					MessageBoxImage.Question, 
+					MessageBoxResult.Yes) ==
+				MessageBoxResult.No)
+				return;
+
+			Close();
+		}
 	}
 }

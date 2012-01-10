@@ -8,7 +8,7 @@
 		<TextBlock Height="30" Margin="12,62,12,0" Name="textBlock3" Text="Note: The address will not be passed to third parties; Only required if you have a question that shall be answered" VerticalAlignment="Top" TextWrapping="Wrap" FontSize="11" FontFamily="1" />
 		<TextBox Margin="12,122,12,41" Name="input_Message" MaxLength="10000" TextChanged="input_Message_TextChanged" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" AcceptsTab="True" />
 		<TextBlock Height="18" HorizontalAlignment="Left" Margin="12,98,0,0" Name="textBlock4" Text="Your opinion/comments/recommendations/ideas:" VerticalAlignment="Top" FontWeight="Bold" />
-		<Button Content="Cancel" Height="23" HorizontalAlignment="Right" Margin="0,0,12,12" Name="button_Cancel" VerticalAlignment="Bottom" Width="70" IsCancel="True" />
+		<Button Content="Cancel" Height="23" HorizontalAlignment="Right" Margin="0,0,12,12" Name="button_Cancel" VerticalAlignment="Bottom" Width="70" IsCancel="True" Click="button_Cancel_Click" />
 		<Button Content="Send" Height="23" HorizontalAlignment="Right" IsCancel="False" Margin="0,0,88,12" Name="button_Send" VerticalAlignment="Bottom" Width="70" IsDefault="True" Click="button_Send_Click" />
 		<TextBlock Height="15" HorizontalAlignment="Left" Margin="12,0,0,27" Name="textBlock_CharCount" Text="" VerticalAlignment="Bottom" Width="108" FontSize="9" Foreground="#FFB1B1B1" />
 	</Grid>
