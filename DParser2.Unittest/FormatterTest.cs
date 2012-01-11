@@ -93,6 +93,19 @@ import
 			TestLastLine(@"foo(){
 	a;
 	bar();}",1);
+			TestLastLine(@"foo(){
+lol(); ger++;
+} yeah;",0);
+			TestLastLine(@"foo(){
+	lol(); } foo();",1);
+			TestLastLine(@"foo(){
+	lol(); } foo();
+", 0);
+			TestLastLine(@"foo(){
+	asdf();
+	if(true){
+		whynot();
+		bar(); }} fooGer();",2);
 
 
 			TestLastLine(@"foo()
