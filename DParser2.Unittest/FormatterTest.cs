@@ -23,6 +23,8 @@ std", 1);
 			TestLastLine(@"import std;
 import std;
 ",0);
+			TestLastLine(@"import std.stdio,
+	std.conv;",1);
 			TestLastLine(@"import std;
 import 
 	lol;",1);
@@ -71,6 +73,14 @@ import
 ",1);
 			TestLastLine(@"foo(asdf)
 ",1);
+			TestLastLine(@"writeln(34,
+	joLol);",1);
+			TestLastLine(@"writeln,
+	lolSecondExpression();",1);
+			TestLastLine(@"std.stdio.
+	writeln(a)",1);
+			TestLastLine(@"std.stdio.
+	writeln(a);",1);
 
 			TestLastLine(@"foo()
 {

@@ -91,7 +91,7 @@ namespace D_Parser.Formatting
 				if (t != null && la.line > t.line)
 				{
 					RemoveNextLineUnindentBlocks();
-					lastLineIndent = null;
+					//lastLineIndent = null;
 				}
 
 				lastToken = t;
