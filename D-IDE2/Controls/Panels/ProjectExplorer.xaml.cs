@@ -156,7 +156,7 @@ namespace D_IDE.Controls.Panels
 			MainTree.SelectedNode = n;
 
 			if (n is FileNode)
-				IDEManager.EditingManagement.OpenFile((n as FileNode).AbsolutePath);
+				IDEManager.Instance.OpenFile((n as FileNode).AbsolutePath);
 			
 			// Set to start project
 			else if (n is ProjectNode)
@@ -363,7 +363,7 @@ namespace D_IDE.Controls.Panels
 			// Solution
 			if (file.EndsWith(Solution.SolutionExtension))
 			{
-				IDEManager.EditingManagement.OpenFile(file);
+				IDEManager.Instance.OpenFile(file);
 				return;
 			}
 
@@ -451,7 +451,7 @@ namespace D_IDE.Controls.Panels
 
 					cm.Items.Add("Open", CommonIcons.open16, delegate(Object o, EventArgs _e)
 					{
-						IDEManager.EditingManagement.OpenFile(fn.AbsolutePath);
+						IDEManager.Instance.OpenFile(fn.AbsolutePath);
 					});
 
 					AddCutCopyPasteButtons(cm, fn, true, true, false);

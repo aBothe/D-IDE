@@ -224,7 +224,7 @@ namespace D_IDE
 			public static void UnloadProject(Project prj)
 			{
 				// Close all open files of it
-				EditingManagement.CloseFilesRelatedTo(prj);
+				WorkbenchLogic.Instance.CloseFilesRelatedTo(prj);
 
 				// Remove it from the project cache
 				CurrentSolution.UnloadProject(prj);
@@ -242,7 +242,7 @@ namespace D_IDE
 				 * - Save solution
 				 */
 
-				EditingManagement.CloseFilesRelatedTo(prj);
+				WorkbenchLogic.Instance.CloseFilesRelatedTo(prj);
 
 				var sln = prj.Solution;
 				sln.ExcludeProject(prj.FileName);

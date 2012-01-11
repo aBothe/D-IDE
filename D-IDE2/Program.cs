@@ -57,7 +57,7 @@ namespace D_IDE
 			IDEManager.Instance.MainWindow.Activate();
 
 			foreach(var s in eventArgs.CommandLine)
-				IDEManager.EditingManagement.OpenFile(s);
+				IDEManager.Instance.OpenFile(s);
 		}
 	}
 }

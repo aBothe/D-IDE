@@ -1,22 +1,18 @@
-﻿using System.Collections.Generic;
-using System.Windows;
-using Microsoft.Windows.Controls.Ribbon;
-using D_IDE.Core;
-using D_IDE.Dialogs;
-using D_IDE.Controls.Panels;
-using System.Windows.Input;
-using System;
-using Microsoft.Win32;
-using System.Linq;
-using System.IO;
-using System.Threading;
-using AvalonDock;
-using D_IDE.Core.Controls;
-using System.Diagnostics;
-using System.Text;
-using System.Windows.Threading;
-using ICSharpCode.AvalonEdit.Document;
+﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Threading;
+using AvalonDock;
+using D_IDE.Controls.Panels;
+using D_IDE.Core;
+using D_IDE.Core.Controls;
+using D_IDE.Dialogs;
+using Microsoft.Windows.Controls.Ribbon;
 
 namespace D_IDE
 {
@@ -148,11 +144,9 @@ namespace D_IDE
 		#endregion
 
 		#region Initializer
-		SplashScreen splashScreen;
-		ReadOnlyCollection<string> args;
+		internal SplashScreen splashScreen;
 		public MainWindow(ReadOnlyCollection<string> args)
 		{
-			this.args = args;
 			if (!Debugger.IsAttached)
 			{
 				splashScreen = new SplashScreen("Resources/d-ide_256.png");
@@ -160,33 +154,20 @@ namespace D_IDE
 			}
 
 			// Init Manager
+			WorkbenchLogic.Instance = new WorkbenchLogic(this);
 			IDEManager.Instance = new IDEManager(this);
 
 			InitializeComponent();
 
+			encoding_DropDown.ItemsSource = new[] { 
+				Encoding.ASCII, 
+				Encoding.UTF8, 
+				Encoding.Unicode, 
+				Encoding.UTF32 
+			};
+
 			// Init logging support
 			ErrorLogger.Instance = new IDELogger(this);
-
-			// Load global settings
-			try
-			{
-				GlobalProperties.Init();
-			}
-			catch { }
-
-			try
-			{
-				// Apply window state & size
-				WindowState = GlobalProperties.Instance.lastFormState;
-				if (!GlobalProperties.Instance.lastFormSize.IsEmpty)
-				{
-					Width = GlobalProperties.Instance.lastFormSize.Width;
-					Height = GlobalProperties.Instance.lastFormSize.Height;
-				}
-
-				Ribbon.SelectedIndex = GlobalProperties.Instance.LastSelectedRibbonTab;
-			}
-			catch (Exception ex) { ErrorLogger.Log(ex); }
 
 			// Showing the window is required because the DockMgr has to init all panels first before being able to restore last layouts
 			Show();
@@ -209,12 +190,11 @@ namespace D_IDE
 			Panel_ErrorList.Name = "ErrorList";
 			Panel_ErrorList.HideOnClose = true;
 			Panel_ErrorList.DockableStyle |= DockableStyle.AutoHide;
+
 			RestoreDefaultPanelLayout();
 			#endregion
 
-			//Dispatcher.BeginInvoke(new Action<string[]>(Init),(object)args);
-
-			new Thread(Init).Start();
+			WorkbenchLogic.Instance.InitializeEnvironment(args);
 
 			/*
 			if (GlobalProperties.Instance.IsFirstTimeStart)
@@ -226,99 +206,28 @@ namespace D_IDE
 			}*/
 		}
 
-		void Init()
+		private void RibbonWindow_Loaded(object sender, RoutedEventArgs e)
 		{
-			Thread.CurrentThread.IsBackground = true;
-
 			try
 			{
-				Dispatcher.BeginInvoke(new Action(() =>
+				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
+
+				// Exclude this call in develop (debug) time
+				if (//!System.Diagnostics.Debugger.IsAttached&&
+					File.Exists(layoutFile))
 				{
-					var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
-					// Exclude this call in develop (debug) time
-					if (//!System.Diagnostics.Debugger.IsAttached&&
-						File.Exists(layoutFile))
+					var fcontent = File.ReadAllText(layoutFile);
+					if (!string.IsNullOrWhiteSpace(fcontent))
 					{
-						var fcontent = File.ReadAllText(layoutFile);
-						if (!string.IsNullOrWhiteSpace(fcontent))
-						{
-							var s = new StringReader(fcontent);
-							DockMgr.RestoreLayout(s);
-							s.Close();
-						}
+						var s = new StringReader(fcontent);
+						DockMgr.RestoreLayout(s);
+						s.Close();
 					}
-				}),DispatcherPriority.Background);
-			}
-			catch { }
-
-			// Load language bindings
-			LanguageLoader.Bindings.Add(new GenericFileBinding());
-			try
-			{
-				LanguageLoader.LoadLanguageInterface(Util.ApplicationStartUpPath + "\\D-IDE.D.dll", "D_IDE.D.DLanguageBinding");
-
-				LanguageLoader.LoadLanguageInterface(Util.ApplicationStartUpPath + "\\D-IDE.D.dll", "D_IDE.ResourceFiles.ResScriptFileBinding");
+				}
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
-			// Load all language-specific settings
-			foreach (var lang in LanguageLoader.Bindings)
-				try
-				{
-					if (lang.CanUseSettings)
-						lang.LoadSettings(AbstractLanguageBinding.CreateSettingsFileName(lang));
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex);
-				}
-
-			encoding_DropDown.Dispatcher.Invoke(new Action(() =>
-			encoding_DropDown.ItemsSource = new[] { Encoding.ASCII, Encoding.UTF8, Encoding.Unicode, Encoding.UTF32 }));
-
-			// Load last solution
-			Dispatcher.BeginInvoke(new Action(() =>{
-
-				// If given, iterate over all cmd line arguments
-				if (args.Count > 0)
-					foreach (var a in args)
-						IDEManager.EditingManagement.OpenFile(a);
-				else
-				{
-					// ... or load last project otherwise
-					try
-					{
-						if (GlobalProperties.Instance.OpenLastPrj && GlobalProperties.Instance.LastProjects.Count > 0)
-							IDEManager.EditingManagement.OpenFile(GlobalProperties.Instance.LastProjects[0]);
-					}
-					catch (Exception ex)
-					{
-						ErrorLogger.Log(ex);
-					}
-
-					try
-					{
-						// Finally re-open all lastly edited files
-						if (GlobalProperties.Instance.OpenLastFiles)
-							foreach (var kv in GlobalProperties.Instance.LastOpenFiles)
-								if (File.Exists(kv.Key))
-								{
-									var ed = IDEManager.EditingManagement.OpenFile(kv.Key, kv.Value[0]);
-
-									if (ed is EditorDocument)
-										(ed as EditorDocument).Editor.ScrollToVerticalOffset(kv.Value[1]);
-								}
-					}
-					catch (Exception ex)
-					{
-						ErrorLogger.Log(ex);
-					}
-				}
-				RefreshGUI();
-			}),System.Windows.Threading.DispatcherPriority.Background);
-
-			if(splashScreen!=null)
-				splashScreen.Close(TimeSpan.FromSeconds(0.5));
+			IDEUtil.CheckForUpdates(false);
 		}
 		#endregion
 
@@ -365,81 +274,24 @@ namespace D_IDE
 			}
 		}
 
-		public void DoNewProject()
-		{
-			var pdlg = new NewProjectDlg(NewProjectDlg.DialogMode.CreateNew | (IDEManager.CurrentSolution != null ? NewProjectDlg.DialogMode.Add : 0));
-
-			Util.CreateDirectoryRecursively(GlobalProperties.Instance.DefaultProjectDirectory);
-			pdlg.ProjectDir = GlobalProperties.Instance.DefaultProjectDirectory;
-
-			if (pdlg.ShowDialog().Value)
-			{
-				var pdir = pdlg.ProjectDir;
-
-				if (pdlg.CreateSolutionDir && !pdlg.AddToCurrentSolution)
-					pdir += "\\" + Util.PurifyDirName(pdlg.SolutionName);
-
-				Util.CreateDirectoryRecursively(pdir);
-
-				if (IDEManager.CurrentSolution != null && pdlg.AddToCurrentSolution)
-					IDEManager.ProjectManagement.AddNewProjectToSolution(
-						pdlg.SelectedLanguageBinding,
-						pdlg.SelectedProjectType,
-						pdlg.ProjectName,
-						pdir);
-				else if (!pdlg.AddToCurrentSolution)
-				{
-					IDEManager.CurrentSolution = IDEManager.ProjectManagement.CreateNewProjectAndSolution(
-						pdlg.SelectedLanguageBinding,
-						pdlg.SelectedProjectType,
-						pdlg.ProjectName,
-						pdir,
-						pdlg.SolutionName);
-					IDEManager.EditingManagement.AdjustLastFileList(IDEManager.CurrentSolution.FileName, true);
-				}
-
-				RefreshGUI();
-			}
-		}
-
 		private void NewProject(object sender, RoutedEventArgs e)
 		{
-			DoNewProject();
+			WorkbenchLogic.Instance.DoNewProject();
 		}
 
 		private void Open(object sender, RoutedEventArgs e)
 		{
-			var dlg = new OpenFileDialog();
-
-			// Add filter
-			dlg.Filter = "All files (*.*)|*.*";
-			dlg.InitialDirectory = GlobalProperties.Instance.DefaultProjectDirectory;
-			dlg.Multiselect = true;
-
-			if (dlg.ShowDialog().Value)
-				foreach (var fn in dlg.FileNames)
-					IDEManager.EditingManagement.OpenFile(fn);
+			WorkbenchLogic.Instance.DoOpenFile();
 		}
 
 		private void SaveAll(object sender, RoutedEventArgs e)
 		{
-			IDEManager.EditingManagement.SaveAllFiles();
+			WorkbenchLogic.Instance.SaveAllFiles();
 		}
 
 		private void SaveAs(object sender, RoutedEventArgs e)
 		{
-			var ce = IDEManager.Instance.CurrentEditor;
-			if (ce == null)
-				return;
-
-			var dlg = new SaveFileDialog();
-
-			// Add filter
-			dlg.Filter = "All files (*.*)|*.*";
-			dlg.FileName = ce.AbsoluteFilePath;
-
-			if (dlg.ShowDialog().Value)
-				IDEManager.EditingManagement.SaveCurrentFileAs(dlg.FileName);
+			WorkbenchLogic.Instance.DoSaveAs();
 		}
 
 		private void Exit(object sender, RoutedEventArgs e)
@@ -449,71 +301,39 @@ namespace D_IDE
 
 		private void Settings(object sender, RoutedEventArgs e)
 		{
-			try
-			{
-				var dlg = new GlobalSettingsDlg();
-				dlg.Owner = this;
-				dlg.ShowDialog();
-			}
-			catch (Exception ex)
-			{
-				ErrorLogger.Log(ex);
-			}
+			WorkbenchLogic.Instance.DoShowGlobalSettings();
 		}
 
 		private void BuildSolution_Click(object sender, RoutedEventArgs e)
 		{
-			if (RunCurrentModuleOnly)
-				IDEManager.BuildManagement.BuildSingle();
-			else
-				IDEManager.BuildManagement.Build();
+			WorkbenchLogic.Instance.DoBuild();
 		}
 
 		private void CleanupProject_Click(object sender, RoutedEventArgs e)
 		{
-			if (!RunCurrentModuleOnly)
-				IDEManager.BuildManagement.CleanUpOutput(IDEManager.CurrentSolution);
-			else
-				IDEManager.BuildManagement.CleanUpLastSingleBuild();
-				
+			WorkbenchLogic.Instance.DoCleanSolution();				
 		}
 
 		private void Rebuild_Click(object sender, RoutedEventArgs e)
 		{
-			if (!RunCurrentModuleOnly)
-				IDEManager.BuildManagement.Build(IDEManager.CurrentSolution, false);
-			else
-			{
-				IDEManager.BuildManagement.CleanUpLastSingleBuild();
-				IDEManager.BuildManagement.BuildSingle();
-			}
+			WorkbenchLogic.Instance.DoExplicitRebuild();
 		}
 
 		private void LaunchDebugger_Click(object sender, RoutedEventArgs e)
 		{
-			BuildResult br = null;
-			if (CoreManager.DebugManagement.IsDebugging)
-				Button_ResumeExecution_Click(null, null);
-			else if (RunCurrentModuleOnly ? ((br= IDEManager.BuildManagement.BuildSingle())!=null && br.Successful) : IDEManager.BuildManagement.Build())
-				IDEManager.IDEDebugManagement.LaunchWithDebugger();
+			WorkbenchLogic.Instance.DoDebugSolution();
 		}
 
 		private void LaunchWithoutDebugger_Click(object sender, RoutedEventArgs e)
 		{
-			LaunchWithoutDebugger();
+			WorkbenchLogic.Instance.DoLaunchWithoutDebugger(false);
 		}
 
 		private void LaunchInConsole_Click(object sender, RoutedEventArgs e)
 		{
-			LaunchWithoutDebugger(true);
+			WorkbenchLogic.Instance.DoLaunchWithoutDebugger(true);
 		}
 
-		public void LaunchWithoutDebugger(bool ExternalConsole=false)
-		{
-			BuildResult br = null;
-			if (RunCurrentModuleOnly ? ((br = IDEManager.BuildManagement.BuildSingle()) != null && br.Successful) : IDEManager.BuildManagement.Build())
-				IDEManager.IDEDebugManagement.LaunchWithoutDebugger(ExternalConsole);
-		}
 		/*
 		private void SendInput_Click(object sender, RoutedEventArgs e)
 		{
@@ -549,12 +369,7 @@ namespace D_IDE
 
 		private void Button_RestartExecution_Click(object sender, RoutedEventArgs e)
 		{
-			var dbg = IDEManager.IDEDebugManagement.IsDebugging;
-			Button_StopExecution_Click(sender, e);
-			if (dbg)
-				LaunchDebugger_Click(sender, e);
-			else
-				LaunchWithoutDebugger_Click(sender, e);
+			WorkbenchLogic.Instance.DoRestartExecution();
 		}
 
 		private void Button_StepIn_Click(object sender, RoutedEventArgs e)
@@ -587,7 +402,7 @@ namespace D_IDE
 				ToolTipTitle = file;
 				Click += delegate(Object o, RoutedEventArgs _e)
 				{
-					IDEManager.EditingManagement.OpenFile(file);
+					IDEManager.Instance.OpenFile(file);
 				};
 
 				Height = 22;
@@ -657,32 +472,8 @@ namespace D_IDE
 				DockMgr.SaveLayout(layoutFile);
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
-			try
-			{
-				// Save all files
-				IDEManager.EditingManagement.SaveAllFiles();
 
-				// Save global settings
-				GlobalProperties.Save();
-
-				// Save language-specific settings
-				foreach (var lang in LanguageLoader.Bindings)
-					if (lang.CanUseSettings)
-						try
-						{
-							var fn = AbstractLanguageBinding.CreateSettingsFileName(lang);
-
-							if (File.Exists(fn))
-								File.Delete(fn);
-
-							lang.SaveSettings(fn);
-						}
-						catch (Exception ex)
-						{
-							ErrorLogger.Log(ex);
-						}
-			}
-			catch (Exception ex) { ErrorLogger.Log(ex); }
+			WorkbenchLogic.Instance.SaveIDEStates();
 		}
 
 		public DockingManager DockManager
@@ -718,18 +509,12 @@ namespace D_IDE
 
 		private void PrjSettings_Click(object sender, RoutedEventArgs e)
 		{
-			if (IDEManager.Instance.CurrentEditor != null)
-				IDEManager.ProjectManagement.ShowProjectPropertiesDialog(IDEManager.Instance.CurrentEditor.Project);
+			WorkbenchLogic.Instance.DoShowSolutionSettings();
 		}
 
 		private void CanOpenProjectSettings(object sender, CanExecuteRoutedEventArgs e)
 		{
-			e.CanExecute = IDEManager.Instance.CurrentEditor != null && IDEManager.Instance.CurrentEditor.HasProject;
-		}
-
-		private void RibbonWindow_Loaded(object sender, RoutedEventArgs e)
-		{
-			IDEUtil.CheckForUpdates(false);
+			e.CanExecute = WorkbenchLogic.Instance.SolutionSettingsAvailable;
 		}
 
 		private void Button_Update_Click(object sender, RoutedEventArgs e)
@@ -739,14 +524,7 @@ namespace D_IDE
 
 		private void Button_OpenPrjDir_Click(object sender, RoutedEventArgs e)
 		{
-			string dir = "";
-
-			if (IDEManager.Instance.CurrentEditor != null)
-				dir = Path.GetDirectoryName(IDEManager.Instance.CurrentEditor.AbsoluteFilePath);
-			else
-				dir = CoreManager.CurrentSolution.BaseDirectory;
-
-			System.Diagnostics.Process.Start("explorer.exe", dir);
+			WorkbenchLogic.Instance.DoOpenProjectDirectoryInExplorer();
 		}
 
 		private void Button_SetStackFrame_Click(object sender, RoutedEventArgs e)
@@ -793,21 +571,7 @@ namespace D_IDE
 
 		private void GotoLine(object sender, ExecutedRoutedEventArgs e)
 		{
-			var dlg = new GotoDialog();
-			dlg.Owner = this;
-			if (dlg.ShowDialog().Value)
-			{
-				var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
-
-				if (dlg.EnteredNumber >= ed.Editor.Document.LineCount)
-				{
-					MessageBox.Show("Number must be a value between 0 and " + ed.Editor.Document.LineCount);
-					return;
-				}
-
-				ed.Editor.TextArea.Caret.Line = dlg.EnteredNumber;
-				ed.Editor.TextArea.Caret.BringCaretToView();
-			}
+			WorkbenchLogic.Instance.DoGotoLine();
 		}
 
 		private void CommandBinding_CanExecute_SaveAs(object sender, CanExecuteRoutedEventArgs e)
@@ -859,10 +623,9 @@ namespace D_IDE
 
 		private void RibbonWindow_Activated(object sender, EventArgs e)
 		{
-			if (IDEManager.Instance.CurrentEditor is EditorDocument)
-			{
-				Dispatcher.BeginInvoke(new Action((IDEManager.Instance.CurrentEditor as EditorDocument).DoOutsideModificationCheck));
-			}
+			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+			if (ed!=null)
+				ed.DoOutsideModificationCheck();
 		}
 
 		/// <summary>
@@ -873,60 +636,22 @@ namespace D_IDE
 		/// <param name="e"></param>
 		private void OpenBinDirectory_Click(object sender, RoutedEventArgs e)
 		{
-			var ed = IDEManager.Instance.CurrentEditor;
-
-			if (ed == null)
-				return;
-
-			string dir = "";
-
-			if (!RunCurrentModuleOnly && ed.HasProject)
-				dir=(ed.Project.OutputDirectory);
-			else
-				dir=(Path.GetDirectoryName(ed.AbsoluteFilePath));
-
-			if (Directory.Exists(dir))
-				Process.Start(dir);
-			else
-				MessageBox.Show("\""+dir+"\" not created yet.");
+			WorkbenchLogic.Instance.DoOpenOutputDirectoryInExplorer();
 		}
 
 		private void Image_Feedback_MouseDown(object sender, MouseButtonEventArgs e)
 		{
-			OpenFeedbackDialogue();
+			WorkbenchLogic.Instance.DoOpenFeedbackDialog();
 		}
 
 		private void Button_GiveFeedback_Click(object sender, RoutedEventArgs e)
 		{
-			OpenFeedbackDialogue();
-		}
-
-		public void OpenFeedbackDialogue()
-		{
-			(new FeedbackDialog() { Owner = this }).Show();
+			WorkbenchLogic.Instance.DoOpenFeedbackDialog();
 		}
 
 		private void CloseWorkspace_Click(object sender, RoutedEventArgs e)
 		{
-			// Close open files
-			foreach (var doc in IDEManager.Instance.Editors.ToArray())
-				doc.Close();
-
-			// Save projects and solution
-			if (IDEManager.CurrentSolution != null)
-			{
-				foreach (var prj in IDEManager.CurrentSolution.ProjectCache)
-					prj.Save();
-
-				IDEManager.CurrentSolution.Save();
-			}
-
-			// Reset solution instance
-			IDEManager.CurrentSolution = null;
-
-			// Update GUI
-			RefreshGUI();
+			WorkbenchLogic.Instance.DoCloseWorkspace();
 		}
 	}
-
 }

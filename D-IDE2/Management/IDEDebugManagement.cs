@@ -156,7 +156,7 @@ namespace D_IDE
 				ulong off = Engine.CurrentFrame.InstructionOffset;
 				if (Engine.Symbols.GetLineByOffset(off, out fn, out ln))
 				{
-					var ed = EditingManagement.OpenFile(fn) as EditorDocument;
+					var ed = Instance.OpenFile(fn) as EditorDocument;
 					if (ed != null && ln<ed.Editor.Document.LineCount)
 					{
 						ed.Editor.TextArea.Caret.Line=(int)ln;
@@ -252,7 +252,7 @@ namespace D_IDE
 					if(GlobalProperties.Instance.VerboseDebugOutput)
 						Log(fn + ":" + ln.ToString(),ErrorType.Information);
 
-					var ed=EditingManagement.OpenFile(fn) as EditorDocument;
+					var ed = IDEManager.Instance.OpenFile(fn) as EditorDocument;
 					if (ed == null)
 					{
 						Log("Unable to move to "+fn+":"+ln,ErrorType.Warning);
@@ -296,7 +296,7 @@ namespace D_IDE
 						Log(msg=extype + "-Exception",ErrorType.Error);
 					}
 
-					var ed = EditingManagement.OpenFile(ex.SourceFile) as EditorDocument;
+					var ed = IDEManager.Instance.OpenFile(ex.SourceFile) as EditorDocument;
 					if (ed != null)
 					{
 						var m = new DebugErrorMarker(ed.MarkerStrategy, ex);
@@ -341,7 +341,7 @@ namespace D_IDE
 				StopExecution();
 
 				// Make all documents read-only
-				EditingManagement.AllDocumentsReadOnly = true;
+				WorkbenchLogic.Instance.AllDocumentsReadOnly = true;
 
 				// If there's an external debugger specified and if it's wanted to launch it, start that one
 				if (GlobalProperties.Instance.UseExternalDebugger)
@@ -410,7 +410,7 @@ namespace D_IDE
 				IDEManager.Instance.MainWindow.LeftStatusText = "Launch "+Path.GetFileName( exe)+" without debugger";
 
 				// Make all documents read-only
-				EditingManagement.AllDocumentsReadOnly = true;
+				WorkbenchLogic.Instance.AllDocumentsReadOnly = true;
 
 				try
 				{
@@ -440,7 +440,7 @@ namespace D_IDE
 							CurrentProcess.ExitCode < 1 ? ErrorType.Information : ErrorType.Error,
 							ErrorOrigin.Program);
 
-					EditingManagement.AllDocumentsReadOnly = false;
+					WorkbenchLogic.Instance.AllDocumentsReadOnly = false;
 					Instance.MainWindow.RefreshMenu();
 				}));
 			}
@@ -486,7 +486,7 @@ namespace D_IDE
 					CurrentProcess = null;
 				}
 
-				EditingManagement.AllDocumentsReadOnly = false;
+				WorkbenchLogic.Instance.AllDocumentsReadOnly = false;
 			}
 
 			public static bool IsExecuting

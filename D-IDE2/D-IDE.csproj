@@ -96,6 +96,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>CommonIcons.resx</DependentUpon>
     </Compile>
+    <Compile Include="WorkbenchLogic.cs" />
     <Page Include="Controls\Panels\ErrorListPanel.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -256,7 +257,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Management\EditingManagement.cs" />
     <Compile Include="Management\IDEManager.cs" />
     <Compile Include="Management\BuildManagement.cs" />
     <Compile Include="Management\FileManagement.cs" />

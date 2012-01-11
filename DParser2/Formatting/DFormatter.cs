@@ -5,6 +5,8 @@ using D_Parser.Dom;
 using D_Parser.Parser;
 using System.IO;
 using D_Parser.Resolver;
+using D_Parser.Dom.Statements;
+using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Formatting
 {
@@ -219,6 +221,23 @@ namespace D_Parser.Formatting
 			}
 
 			return lastLineIndent ?? block;
+		}
+
+		public static int CalculateIndentation() { return 0; }
+
+		public static int CalculateRelativeIndentation(INode Scope, CodeLocation Caret)
+		{
+			return 0;
+		}
+
+		public static int CalculateRelativeIndentation(IStatement Statement, CodeLocation Caret)
+		{
+			return 0;
+		}
+
+		public static int CalculateRelativeIndentation(IExpression Expression, CodeLocation Caret)
+		{
+			return 0;
 		}
 	}
 

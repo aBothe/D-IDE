@@ -187,6 +187,15 @@ b,
 c,
 }",0);
 
+			TestLastLine(@"enum A
+{
+	a,b
+}
+
+void foo()
+{
+	",1);
+
 
 			TestLastLine(@"if(a)
 {",0);

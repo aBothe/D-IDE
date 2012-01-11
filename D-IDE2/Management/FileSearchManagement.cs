@@ -357,7 +357,7 @@ namespace D_IDE
 
 				if (FindNext_Internal(out file, out offset))
 				{
-					var ed=EditingManagement.OpenFile(file, offset) as EditorDocument;
+					var ed = WorkbenchLogic.Instance.OpenFile(file, offset) as EditorDocument;
 					
 					if (ed == null)
 						return false;
@@ -382,7 +382,7 @@ namespace D_IDE
 				if (string.IsNullOrEmpty(file))
 					return false;
 
-				var ed = EditingManagement.OpenFile(file, offset) as EditorDocument;
+				var ed = WorkbenchLogic.Instance.OpenFile(file, offset) as EditorDocument;
 
 				if (ed == null)
 					return false;
@@ -421,7 +421,7 @@ namespace D_IDE
 					if (string.IsNullOrEmpty(file))
 						return false;
 
-					ed = EditingManagement.OpenFile(file, offset) as EditorDocument;
+					ed = WorkbenchLogic.Instance.OpenFile(file, offset) as EditorDocument;
 
 					if (ed == null)
 						return false;

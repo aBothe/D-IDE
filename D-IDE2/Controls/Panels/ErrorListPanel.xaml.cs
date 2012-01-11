@@ -50,7 +50,7 @@ namespace D_IDE.Controls.Panels
 			if (err == null || string.IsNullOrEmpty( err.FileName) || !File.Exists(err.FileName))
 				return;
 
-			IDEManager.EditingManagement.OpenFile(err.FileName,err.Line,err.Column);
+			IDEManager.Instance.OpenFile(err.FileName, err.Line, err.Column);
 		}
 	}
 }

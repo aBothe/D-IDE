@@ -93,7 +93,7 @@ namespace D_IDE
 			{
 				// Enable build menu
 				IsBuilding = true;
-				IDEManager.EditingManagement.SaveAllFiles();
+				WorkbenchLogic.Instance.SaveAllFiles();
 				IDEManager.Instance.MainWindow.RefreshMenu();
 				IDEManager.Instance.MainWindow.LeftStatusText = "Build " + Project.Name;
 				IDEManager.Instance.MainWindow.ClearLog();

@@ -42,7 +42,7 @@ namespace D_IDE.Controls.Panels
 			if (sr == null || string.IsNullOrEmpty( sr.File))
 				return;
 
-			var ed=IDEManager.EditingManagement.OpenFile(sr.File,sr.Offset);
+			var ed = WorkbenchLogic.Instance.OpenFile(sr.File, sr.Offset);
 
 			// Select match
 			if (ed is EditorDocument)

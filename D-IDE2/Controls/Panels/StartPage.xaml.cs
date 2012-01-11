@@ -36,12 +36,12 @@ namespace D_IDE.Controls.Panels
 		private void Button_Open_Click(object sender, RoutedEventArgs e)
 		{
 			if (RecentProjectsList.SelectedItem != null)
-				IDEManager.EditingManagement.OpenFile((RecentProjectsList.SelectedItem as RecentPrjItem).Path);
+				IDEManager.Instance.OpenFile((RecentProjectsList.SelectedItem as RecentPrjItem).Path);
 		}
 
 		private void Button_CreatePrj_Click(object sender, RoutedEventArgs e)
 		{
-			IDEManager.Instance.MainWindow.DoNewProject();
+			WorkbenchLogic.Instance.DoNewProject();
 		}
 
 		public bool CheckForNewsFlag
@@ -141,8 +141,8 @@ namespace D_IDE.Controls.Panels
 		private void RecentProjectsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
 		{
 			var i = (RecentProjectsList.SelectedItem as TreeNode).Tag as RecentPrjItem;
-			if(i!=null)		
-				IDEManager.EditingManagement.OpenFile(i.Path);
+			if(i!=null)
+				IDEManager.Instance.OpenFile(i.Path);
 		}
 
 		private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
