@@ -29,13 +29,6 @@ namespace D_IDE
 
 		public void InitializeEnvironment(ReadOnlyCollection<string> args)
 		{
-			// Load global settings
-			try
-			{
-				GlobalProperties.Init();
-			}
-			catch { }
-
 			try
 			{
 				// Apply window state & size

@@ -157,6 +157,13 @@ namespace D_IDE
 			WorkbenchLogic.Instance = new WorkbenchLogic(this);
 			IDEManager.Instance = new IDEManager(this);
 
+			// Load global settings
+			try
+			{
+				GlobalProperties.Init();
+			}
+			catch { }
+
 			InitializeComponent();
 
 			encoding_DropDown.ItemsSource = new[] { 
@@ -194,20 +201,6 @@ namespace D_IDE
 			RestoreDefaultPanelLayout();
 			#endregion
 
-			WorkbenchLogic.Instance.InitializeEnvironment(args);
-
-			/*
-			if (GlobalProperties.Instance.IsFirstTimeStart)
-			{
-				if(splashScreen!=null)
-					splashScreen.Close(TimeSpan.FromSeconds( 0));
-				if (MessageBox.Show("D-IDE seems to be launched for the first time. Start configuration now?", "First time startup", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
-					new GlobalSettingsDlg() { Owner = this }.ShowDialog();
-			}*/
-		}
-
-		private void RibbonWindow_Loaded(object sender, RoutedEventArgs e)
-		{
 			try
 			{
 				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
@@ -227,6 +220,20 @@ namespace D_IDE
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 
+			WorkbenchLogic.Instance.InitializeEnvironment(args);
+
+			/*
+			if (GlobalProperties.Instance.IsFirstTimeStart)
+			{
+				if(splashScreen!=null)
+					splashScreen.Close(TimeSpan.FromSeconds( 0));
+				if (MessageBox.Show("D-IDE seems to be launched for the first time. Start configuration now?", "First time startup", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+					new GlobalSettingsDlg() { Owner = this }.ShowDialog();
+			}*/
+		}
+
+		private void RibbonWindow_Loaded(object sender, RoutedEventArgs e)
+		{
 			IDEUtil.CheckForUpdates(false);
 		}
 		#endregion
@@ -443,6 +450,16 @@ namespace D_IDE
 
 		private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
+			try
+			{
+				// Save docking layout
+				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
+				if (File.Exists(layoutFile))
+					File.Delete(layoutFile);
+				DockMgr.SaveLayout(layoutFile);
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex); }
+
 			// Important: To free the handle of the search&replace-dlg it's needed to destroy the dlg
 			if (SearchAndReplaceDlg != null && SearchAndReplaceDlg.IsLoaded)
 				SearchAndReplaceDlg.Close();
@@ -462,16 +479,6 @@ namespace D_IDE
 					GlobalProperties.Instance.LastOpenFiles.Add(aed.AbsoluteFilePath,ed==null? new[]{0,0}: 
 						new[]{ed.Editor.CaretOffset,(int)ed.Editor.TextArea.TextView.ScrollOffset.Y});
 			}
-
-			try
-			{
-				// Save docking layout
-				var layoutFile = Path.Combine(IDEInterface.ConfigDirectory, GlobalProperties.LayoutFile);
-				if (File.Exists(layoutFile))
-					File.Delete(layoutFile);
-				DockMgr.SaveLayout(layoutFile);
-			}
-			catch (Exception ex) { ErrorLogger.Log(ex); }
 
 			WorkbenchLogic.Instance.SaveIDEStates();
 		}

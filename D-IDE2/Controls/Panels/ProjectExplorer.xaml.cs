@@ -178,6 +178,10 @@ namespace D_IDE.Controls.Panels
 			if (e.Effect == DragDropEffects.None) return;
 
 			var targetNode = new DnDData(MainTree.GetNodeAt(MainTree.PointToClient(new System.Drawing.Point(e.X, e.Y))) as PrjExplorerNode);
+
+			if (targetNode == null)
+				return;
+			
 			MainTree.SelectedNode = targetNode.Node;
 			bool LastState = IsCut;
 			IsCut = e.Effect == System.Windows.Forms.DragDropEffects.Move;
@@ -194,6 +198,10 @@ namespace D_IDE.Controls.Panels
 		{
 			e.Effect = System.Windows.Forms.DragDropEffects.None;
 			var targetNode = new DnDData( MainTree.GetNodeAt(MainTree.PointToClient(new System.Drawing.Point(e.X, e.Y))) as PrjExplorerNode);
+
+			if (targetNode == null)
+				return;
+			
 			MainTree.SelectedNode = targetNode.Node;
 
 			if (targetNode.Node != null)
