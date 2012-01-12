@@ -59,9 +59,10 @@ namespace D_Parser.Formatting
 
 		Lexer Lexer;
 
-		CodeBlock PushBlock()
+		CodeBlock PushBlock(CodeBlock previousBlock=null)
 		{
 			return block = new CodeBlock { 
+				previousBlock=previousBlock,
 				LastPreBlockIdentifier=Lexer.LastToken ?? null,
 				Parent=block,
 				StartLocation = t.Location
@@ -85,13 +86,13 @@ namespace D_Parser.Formatting
 
 			Lexer.NextToken();
 			DToken lastToken = null;
+			CodeBlock tBlock = null;
 
 			while (!Lexer.IsEOF && (t==null || t.Location.Line <= line))
 			{
 				if (t != null && la.line > t.line)
 				{
 					RemoveNextLineUnindentBlocks();
-					//lastLineIndent = null;
 				}
 
 				lastToken = t;
@@ -129,12 +130,17 @@ namespace D_Parser.Formatting
 					t.Kind == DTokens.OpenSquareBracket ||
 					t.Kind == DTokens.OpenCurlyBrace)
 				{
-					if(block != null && (
-						block.Reason == CodeBlock.IndentReason.SingleLineStatement || 
+					tBlock = null;
+
+					if (block != null && (
+						block.Reason == CodeBlock.IndentReason.SingleLineStatement ||
 						block.Reason == CodeBlock.IndentReason.UnfinishedStatement))
+					{
+						tBlock = block;
 						PopBlock();
-					
-					PushBlock().BlockStartToken = t.Kind;
+					}
+
+					PushBlock(tBlock).BlockStartToken = t.Kind;
 				}
 
 				// ),],}
@@ -172,9 +178,8 @@ namespace D_Parser.Formatting
 							block.BlockStartToken == DTokens.OpenParenthesis && 
 							la.Kind!=DTokens.OpenCurlyBrace)
 						{
-							PopBlock();
+							block=block.previousBlock;
 
-							PushBlock().Reason = CodeBlock.IndentReason.UnfinishedStatement;
 							continue;
 						}
 						else
@@ -185,11 +190,10 @@ namespace D_Parser.Formatting
 							block != null &&
 							block.BlockStartToken == DTokens.OpenParenthesis)
 						{
-							PopBlock();
 							if (la.Kind == DTokens.OpenCurlyBrace && la.line > t.line)
-							{ }
+								PopBlock();
 							else if (block==null || block.LastPreBlockIdentifier!=null && IsPreStatementToken(block.LastPreBlockIdentifier.Kind))
-								PushBlock().Reason = CodeBlock.IndentReason.SingleLineStatement;
+								block = block.previousBlock;
 						}
 					}
 				}
@@ -278,6 +282,8 @@ namespace D_Parser.Formatting
 		}
 
 		public IndentReason Reason= IndentReason.Other;
+
+		public CodeBlock previousBlock;
 
 		public CodeLocation StartLocation;
 		//public CodeLocation EndLocation;
