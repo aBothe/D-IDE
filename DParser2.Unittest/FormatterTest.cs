@@ -26,9 +26,6 @@ import std;
 			TestLastLine(@"import std.stdio,
 	std.conv;",1);
 			TestLastLine(@"import std;
-import 
-	lol;",1);
-			TestLastLine(@"import std;
 import
 ",1);
 			TestLastLine(@"import std;
@@ -40,7 +37,6 @@ import
 	{
 	}
 	",1);
-
 			TestLastLine(@"foo();",0);
 
 			TestLastLine(@"foo();
@@ -81,6 +77,12 @@ import
 	writeln(a)",1);
 			TestLastLine(@"std.stdio.
 	writeln(a);",1);
+			TestLastLine(@"writeln(
+	a());",1);
+			TestLastLine(@"writeln(""Hello Word!""
+	);",1);
+			TestLastLine(@"writeln(
+	(162*2)%315==9);",1);
 
 			TestLastLine(@"foo()
 {
@@ -154,7 +156,7 @@ body",0);
 	b({
 		nestedFoo();
 	});
-",1);
+	",1);
 
 			TestLastLine(@"foo()
 {
@@ -364,7 +366,7 @@ void main(string[] args)
 			if(i == 3)
 			{
 				i++;
-;;", 4);
+				;;", 4);
 
 		}
 
@@ -403,6 +405,8 @@ void main(string[] args)
 		static int GetLastLineIndent(string code)
 		{
 			var caret = DocumentHelper.OffsetToLocation(code, code.Length);
+
+			code += "\r\n\r\nStaticFinalContent;";
 
 			return GetLineIndent(code, caret.Line);
 		}

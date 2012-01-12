@@ -72,7 +72,9 @@ namespace D_IDE.D
 				return;
 			}
 
-			var block = CalculateIndentation(document.Text, line.LineNumber);
+			var tr=document.CreateReader();
+			var block = CalculateIndentation(tr, line.LineNumber);
+			tr.Close();
 
 			RawlyIndentLine(block != null ? block.GetLineIndentation(line.LineNumber) : 0, document, line);
 		}
