@@ -14,6 +14,8 @@ namespace ParserTests
 		{
 			Console.WriteLine("Indentation tests...");
 
+			TestLastLine("", 0);
+
 			TestLastLine(@"import
 std", 1);
 			TestLastLine(@"import std;
