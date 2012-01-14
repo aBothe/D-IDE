@@ -406,9 +406,16 @@ void main(string[] args)
 		{
 			var caret = DocumentHelper.OffsetToLocation(code, code.Length);
 
+			var ind1= GetLineIndent(code, caret.Line);
+
 			code += "\r\n\r\nStaticFinalContent;";
 
-			return GetLineIndent(code, caret.Line);
+			var ind2 = GetLineIndent(code, caret.Line);
+
+			if (ind1 != ind2)
+				return ind1;
+
+			return ind2;
 		}
 	}
 }
