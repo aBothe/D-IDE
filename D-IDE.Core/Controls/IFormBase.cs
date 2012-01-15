@@ -32,7 +32,7 @@ namespace D_IDE.Core.Controls
 			set;
 		}
 
-		SearchResult[] Results
+		IEnumerable<SearchResult> Results
 		{
 			get;
 			set;

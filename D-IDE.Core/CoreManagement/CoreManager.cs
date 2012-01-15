@@ -26,7 +26,7 @@ namespace D_IDE.Core
 				return MainWindow.DockManager.ActiveDocument as AbstractEditorDocument; }
 		}
 
-		public IEnumerable<AbstractEditorDocument> Editors
+		public ICollection<AbstractEditorDocument> Editors
 		{
 			get
 			{

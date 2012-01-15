@@ -62,9 +62,9 @@ namespace D_IDE.Controls.Panels
 			}
 		}
 		
-		public SearchResult[] Results{
-			get{return MainList.ItemsSource as SearchResult[];}
-			set{MainList.ItemsSource=value;}
+		public IEnumerable<SearchResult> Results{
+			get{ return MainList.ItemsSource as IEnumerable<SearchResult>; }
+			set{ MainList.ItemsSource = value; }
 		}
 	}
 }

@@ -31,7 +31,7 @@ namespace D_IDE.Dialogs
 		/// </summary>
 		public void SetWindowPositionNextToCurrentCaret()
 		{
-			return;
+            return;
 			/* 
 			 * 1) Check if window is floating
 			 * 2) Get screen position of the caret
@@ -76,36 +76,46 @@ namespace D_IDE.Dialogs
 			checkBox_CaseSensitive.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.CaseSensitive);
 			checkBox_SearchUpward.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.Upward);
 			checkBox_WordOnly.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.FullWord);
+            checkBox_WrapAround.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.Wrap);
 
 			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
 			if (ed != null && ed.Editor.SelectionLength>0)
 			{
 				comboBox_InputString.Text = ed.Editor.SelectedText;
 			}
+
+            optionsChanged = true;
 		}
 
 		public void ApplySearchOptions()
-		{
-			var fsm = IDEManager.FileSearchManagement.Instance;
-			
-			fsm.CurrentSearchString = comboBox_InputString.Text;
-			fsm.CurrentReplaceString = comboBox_ReplaceString.Text;
+        {
+            var fsm = IDEManager.FileSearchManagement.Instance;
 
-			comboBox_InputString.ItemsSource = fsm.LastSearchStrings;
-			comboBox_ReplaceString.ItemsSource = fsm.LastReplaceStrings;
+            fsm.CurrentSearchString = comboBox_InputString.Text;
+            fsm.CurrentReplaceString = comboBox_ReplaceString.Text;
 
-			fsm.CurrentSearchLocation = (IDEManager.FileSearchManagement.SearchLocations)comboBox_SearchLocation.SelectedIndex;
+            if (optionsChanged)
+            {
+                fsm.CurrentSearchLocation = (IDEManager.FileSearchManagement.SearchLocations)comboBox_SearchLocation.SelectedIndex;
 
-			fsm.SearchOptions = 0;
+                fsm.SearchOptions = 0;
 
-			if (checkBox_CaseSensitive.IsChecked.Value)
-				fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.CaseSensitive;
+                if (checkBox_CaseSensitive.IsChecked.Value)
+                    fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.CaseSensitive;
 
-			if (checkBox_SearchUpward.IsChecked.Value)
-				fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.Upward;
+                if (checkBox_SearchUpward.IsChecked.Value)
+                    fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.Upward;
 
-			if (checkBox_WordOnly.IsChecked.Value)
-				fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.FullWord;
+                if (checkBox_WordOnly.IsChecked.Value)
+                    fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.FullWord;
+
+                if (checkBox_WrapAround.IsChecked.Value)
+                    fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.Wrap;
+
+                fsm.ResetSearch();
+
+                optionsChanged = false;
+            }
 		}
 
 		bool PreCheck()
@@ -208,5 +218,11 @@ namespace D_IDE.Dialogs
 			DoFindAll();
 			button_FindAll.Focus();
 		}
+
+        bool optionsChanged;
+        private void OnOptionsChange(object sender, EventArgs e)
+        {
+            optionsChanged = true;
+        }
 	}
 }
