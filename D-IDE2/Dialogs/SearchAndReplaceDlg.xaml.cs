@@ -65,14 +65,15 @@ namespace D_IDE.Dialogs
 		{
 			var fsm = IDEManager.FileSearchManagement.Instance;
 
-			comboBox_InputString.Text = fsm.CurrentSearchString;
-			comboBox_ReplaceString.Text = fsm.CurrentReplaceString;
+			comboBox_InputString.Text = fsm.CurrentSearchStr;
+			comboBox_ReplaceString.Text = fsm.CurrentReplaceStr;
 
 			comboBox_InputString.ItemsSource = fsm.LastSearchStrings;
 			comboBox_ReplaceString.ItemsSource = fsm.LastReplaceStrings;
 
 			comboBox_SearchLocation.SelectedIndex = (int)fsm.CurrentSearchLocation;
 
+            checkBox_EscapeSequences.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.EscapeSequences);
 			checkBox_CaseSensitive.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.CaseSensitive);
 			checkBox_SearchUpward.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.Upward);
 			checkBox_WordOnly.IsChecked = fsm.SearchOptions.HasFlag(IDEManager.FileSearchManagement.SearchFlags.FullWord);
@@ -91,14 +92,17 @@ namespace D_IDE.Dialogs
         {
             var fsm = IDEManager.FileSearchManagement.Instance;
 
-            fsm.CurrentSearchString = comboBox_InputString.Text;
-            fsm.CurrentReplaceString = comboBox_ReplaceString.Text;
+            fsm.CurrentSearchStr = comboBox_InputString.Text;
+            fsm.CurrentReplaceStr = comboBox_ReplaceString.Text;
 
             if (optionsChanged)
             {
                 fsm.CurrentSearchLocation = (IDEManager.FileSearchManagement.SearchLocations)comboBox_SearchLocation.SelectedIndex;
 
                 fsm.SearchOptions = 0;
+
+                if (checkBox_EscapeSequences.IsChecked.Value)
+                    fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.EscapeSequences;
 
                 if (checkBox_CaseSensitive.IsChecked.Value)
                     fsm.SearchOptions |= IDEManager.FileSearchManagement.SearchFlags.CaseSensitive;

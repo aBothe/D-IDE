@@ -1,7 +1,7 @@
 ﻿<Window x:Class="D_IDE.Dialogs.SearchAndReplaceDlg"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-		xmlns:a="clr-namespace:AvalonDock;assembly=AvalonDock" Title="Search &amp; Replace" WindowStyle="ToolWindow" ShowInTaskbar="False" ResizeMode="NoResize" IsVisibleChanged="Window_IsVisibleChanged" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Height="275" Width="473">
+		xmlns:a="clr-namespace:AvalonDock;assembly=AvalonDock" Title="Search &amp; Replace" WindowStyle="ToolWindow" ShowInTaskbar="False" ResizeMode="NoResize" IsVisibleChanged="Window_IsVisibleChanged" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Height="295" Width="473">
 	<Grid Background="#FFF0F0F0" Loaded="Grid_Loaded">
 		<Label Content="Find..." Height="16" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" Padding="0" VerticalAlignment="Top" Width="44" />
 		<ComboBox Height="23" Margin="12,34,43,0" Name="comboBox_InputString" VerticalAlignment="Top" IsEditable="True" TabIndex="0" />
@@ -18,8 +18,9 @@
 		<Label Content="Replace with..." Height="16" HorizontalAlignment="Left" Margin="12,114,0,0" Name="label4" Padding="0" VerticalAlignment="Top" Width="76" />
 		<ComboBox Height="23" Margin="12,136,43,0" Name="comboBox_ReplaceString" VerticalAlignment="Top" IsEditable="True" TabIndex="1" />
 		<Button Content="Find next" Height="23" HorizontalAlignment="Right" Margin="0,0,98,41" Name="button_FindNext" VerticalAlignment="Bottom" Width="80" Click="FindNext_Click" IsDefault="True" TabIndex="6" />
-		<WrapPanel Height="40" Margin="12,180,0,0" Name="stackPanel1" VerticalAlignment="Top" Orientation="Vertical" HorizontalAlignment="Left" Width="224">
-			<CheckBox Content="Case sensitive" Height="16" Name="checkBox_CaseSensitive" Margin="2" TabIndex="2" Checked="OnOptionsChange" Unchecked="OnOptionsChange" />
+        <WrapPanel Height="60" Margin="12,180,0,0" Name="stackPanel1" VerticalAlignment="Top" Orientation="Vertical" HorizontalAlignment="Left" Width="224">
+            <CheckBox Content="Escape sequences" Height="16" Name="checkBox_EscapeSequences" Margin="2" Checked="OnOptionsChange" Unchecked="OnOptionsChange" />
+            <CheckBox Content="Case sensitive" Height="16" Name="checkBox_CaseSensitive" Margin="2" TabIndex="2" Checked="OnOptionsChange" Unchecked="OnOptionsChange" />
 			<CheckBox Content="Full word only" Height="16" Name="checkBox_WordOnly" Margin="2" TabIndex="3" Checked="OnOptionsChange" Unchecked="OnOptionsChange" />
 			<CheckBox Content="Search upward" Height="16" Name="checkBox_SearchUpward" Margin="2" TabIndex="4" Checked="OnOptionsChange" Unchecked="OnOptionsChange" />
             <CheckBox Content="Wrap around" Height="16" Name="checkBox_WrapAround" Margin="2" TabIndex="5" Checked="OnOptionsChange" Unchecked="OnOptionsChange" />

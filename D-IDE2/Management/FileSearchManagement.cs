@@ -19,38 +19,43 @@ namespace D_IDE
             const int StringHistoryCount = 10;
             const int ContextPadding = 10;
 
-            string currentSearchString;
+            string escapedSearchStr;
+            string translatedSearchStr;
             LinkedList<string> lastSearchStrings = new LinkedList<string>();
-			public string CurrentSearchString { 
-				get { return currentSearchString; } 
+			public string CurrentSearchStr
+            { 
+				get { return escapedSearchStr; } 
 				set {
-					if (currentSearchString == value)
+					if (value.Equals(escapedSearchStr))
 						return;
 
                     lastSearchStrings.AddFirst(value);
 					if(lastSearchStrings.Count > StringHistoryCount)
 						lastSearchStrings.RemoveLast();
 
-					currentSearchString = value;
+					escapedSearchStr = value;
+                    translatedSearchStr = translateEscapes(escapedSearchStr);
 				} 
 			}
             public ICollection<string> LastSearchStrings { get { return lastSearchStrings; } }
 
-            string currentReplaceString;
+            string escapedReplaceStr;
+            string translatedReplaceStr;
             LinkedList<string> lastReplaceStrings = new LinkedList<string>();
-			public string CurrentReplaceString
+			public string CurrentReplaceStr
 			{
-				get { return currentReplaceString; }
+				get { return escapedReplaceStr; }
 				set
 				{
-					if (currentReplaceString == value)
+					if (value.Equals(escapedReplaceStr))
 						return;
 
                     lastReplaceStrings.AddFirst(value);
 					if(lastReplaceStrings.Count > StringHistoryCount)
 						lastReplaceStrings.RemoveLast();
 
-					currentReplaceString = value;
+					escapedReplaceStr = value;
+                    translatedReplaceStr = translateEscapes(escapedReplaceStr);
 				}
 			}
 			public ICollection<string> LastReplaceStrings { get { return lastReplaceStrings; } }
@@ -67,10 +72,11 @@ namespace D_IDE
             [Flags]
             public enum SearchFlags
             {
-                CaseSensitive = 1,
-                FullWord = 1 << 2,
-                Upward = 1 << 3,
-                Wrap = 1 << 4
+                EscapeSequences = 1,
+                CaseSensitive = 1 << 2,
+                FullWord = 1 << 3,
+                Upward = 1 << 4,
+                Wrap = 1 << 5
             }
             public SearchFlags SearchOptions { get; set; }
                 #endregion
@@ -120,7 +126,7 @@ namespace D_IDE
                 {
                     // Select found match
                     ed.Editor.SelectionStart = currentOffset;
-                    ed.Editor.SelectionLength = CurrentSearchString.Length;
+                    ed.Editor.SelectionLength = TranslatedSearchStr.Length;
                 }
             }
             /// <summary>
@@ -136,8 +142,8 @@ namespace D_IDE
                 {
                     var ed = (IDEManager.Instance.CurrentEditor as EditorDocument).Editor;
                     var compMode = SearchOptions.HasFlag(SearchFlags.CaseSensitive) ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
-                    if (null != ed && string.Equals(currentSearchString, ed.SelectedText, compMode))
-                        ed.Document.Replace(ed.SelectionStart, ed.SelectionLength, currentReplaceString);
+                    if (null != ed && string.Equals(TranslatedSearchStr, ed.SelectedText, compMode))
+                        ed.Document.Replace(ed.SelectionStart, ed.SelectionLength, TranslatedReplaceStr);
                 }
 
                 FindNext();
@@ -150,6 +156,27 @@ namespace D_IDE
 
             // This region could be simpler, faster, and more correct if FileSearchManagement could subscribe to update events for all searchable files.
 			#region Private Implementation
+            string TranslatedSearchStr
+            {
+                get
+                {
+                    if (SearchOptions.HasFlag(SearchFlags.EscapeSequences))
+                        return translatedSearchStr;
+                    else
+                        return escapedSearchStr;
+                }
+            }
+            string TranslatedReplaceStr
+            {
+                get
+                {
+                    if (SearchOptions.HasFlag(SearchFlags.EscapeSequences))
+                        return translatedReplaceStr;
+                    else
+                        return escapedReplaceStr;
+                }
+            }
+
             string currentFile;
             int startOffset;
             int currentOffset;
@@ -157,8 +184,10 @@ namespace D_IDE
 
             protected FileSearchManagement()
             {
-                currentSearchString = "";
-                currentReplaceString = "";
+                escapedSearchStr = "";
+                translatedSearchStr = "";
+                escapedReplaceStr = "";
+                translatedReplaceStr = "";
 
                 currentFile = null;
                 startOffset = -1;
@@ -167,8 +196,11 @@ namespace D_IDE
             }
             protected FileSearchManagement(FileSearchManagement original)
             {
-                currentSearchString = original.currentSearchString;
-                currentReplaceString = original.currentReplaceString;
+                escapedSearchStr = original.escapedSearchStr;
+                translatedSearchStr = original.translatedSearchStr;
+                escapedReplaceStr = original.escapedReplaceStr;
+                translatedReplaceStr = original.translatedReplaceStr;
+
                 CurrentSearchLocation = original.CurrentSearchLocation;
                 SearchOptions = original.SearchOptions;
 
@@ -176,6 +208,46 @@ namespace D_IDE
                 startOffset = original.startOffset;
                 currentOffset = original.currentOffset;
                 stopOffset = original.stopOffset;
+            }
+
+            string translateEscapes(string escapedString)
+            {
+                StringBuilder translated = new StringBuilder();
+                for (int cX = 0; cX < escapedString.Length; ++cX)
+                {
+                    if (escapedString[cX] == '\\')
+                    {
+                        ++cX;
+                        char ctrlC = escapedString[cX];
+                        switch (ctrlC)
+                        {
+                            case 'a':
+                                translated.Append('\a'); break;
+                            case 'b':
+                                translated.Append('\b'); break;
+                            case 'f':
+                                translated.Append('\f'); break;
+                            case 'n':
+                                translated.Append('\n'); break;
+                            case 'r':
+                                translated.Append('\r'); break;
+                            case 't':
+                                translated.Append('\t'); break;
+                            case 'v':
+                                translated.Append('\v'); break;
+                            case '0':
+                                translated.Append('\0'); break;
+                            // TODO: 'x', 'u', and 'U' unicode literals
+                            // TODO: Named character entities?
+                            default:
+                                translated.Append(ctrlC); break;
+                        }
+                    }
+                    else
+                        translated.Append(escapedString[cX]);
+                }
+
+                return translated.ToString();
             }
 
             bool NextFile()
@@ -350,13 +422,13 @@ namespace D_IDE
                             currentOffset = haystack.Length;
                         currentOffset--;
                         if(currentOffset >= 0)
-                            matchX = haystack.LastIndexOf(currentSearchString, currentOffset, compMode);
+                            matchX = haystack.LastIndexOf(TranslatedSearchStr, currentOffset, compMode);
 
                         found = (matchX != -1 && matchX > stopOffset);
                     } else {
                         currentOffset++;
                         if(currentOffset < haystack.Length)
-                            matchX = haystack.IndexOf(currentSearchString, currentOffset, compMode);
+                            matchX = haystack.IndexOf(TranslatedSearchStr, currentOffset, compMode);
 
                         found = (matchX != -1 && (stopOffset == -1 || matchX < stopOffset));
                     }
@@ -402,7 +474,7 @@ namespace D_IDE
                     if (replace)
                     {
                         var ed = WorkbenchLogic.Instance.OpenFile(searcher.currentFile, searcher.currentOffset) as EditorDocument;
-                        ed.Editor.Document.Replace(searcher.currentOffset, currentSearchString.Length, currentReplaceString);
+                        ed.Editor.Document.Replace(searcher.currentOffset, TranslatedSearchStr.Length, TranslatedReplaceStr);
                         haystack = ed.Editor.Document.Text;
                     }
 
@@ -439,375 +511,11 @@ namespace D_IDE
                 }
 
                 var pan = IDEManager.Instance.MainWindow.SearchResultPanel;
-                pan.SearchString = replace? currentReplaceString : currentSearchString;
+                pan.SearchString = replace? TranslatedReplaceStr : TranslatedSearchStr;
                 pan.Results = matches;
                 pan.Show();
             }
 			#endregion
-
-            #region Old Implementation
-            /*/// <summary>
-            /// Searches a string in a file. Works independently from FileSearchManagement class.
-            /// </summary>
-            /// <returns>-1 if nothing has been found. Otherwise the offset of the first occurence</returns>
-            static int ScanFile(string file, int startOffset, string searchString, SearchFlags flags)
-            {
-                var ret = startOffset;
-                string fileContent = "";
-
-                //Note: If file is already open, take the EditorDocument instance instead loading the physical file
-                foreach (var ed in IDEManager.Instance.Editors)
-                {
-                    var ed_ = ed as EditorDocument;
-                    if (ed_ == null || ed.AbsoluteFilePath != file)
-                        continue;
-
-                    fileContent = ed_.Editor.Text;
-                }
-
-                if (string.IsNullOrEmpty(fileContent))
-                    if (File.Exists(file))
-                        File.ReadAllText(file);
-
-                if (string.IsNullOrEmpty(fileContent))
-                    return -1;
-
-                if (flags.HasFlag(SearchFlags.Upward))
-                    while (true)
-                    {
-                        // Search last occurence of searchString between 0 and ret
-                        ret = fileContent.LastIndexOf(searchString, ret - 1,
-                                flags.HasFlag(SearchFlags.CaseSensitive) ?
-                                StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase);
-
-                        // (If full-word search activated,) Check if result isn't surrounded by letters. Otherwise continue search
-                        if (ret > -1 && flags.HasFlag(SearchFlags.FullWord) && (
-                                (fileContent.Length > ret + searchString.Length - 1 && char.IsLetter(fileContent[ret + searchString.Length]))
-                                || (ret > 0 && char.IsLetter(fileContent[ret - 1]))
-                            ))
-                        {
-                            ret++;
-                            continue;
-                        }
-
-                        break;
-                    }
-                else
-                    while (true)
-                    {
-                        // Search first occurence of searchString between ret and fileContent.Length
-                        ret = fileContent.IndexOf(searchString, ret,
-                                flags.HasFlag(SearchFlags.CaseSensitive) ?
-                                StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase);
-
-                        // (If full-word search activated,) Check if result isn't surrounded by letters. Otherwise continue search
-                        if (ret > -1 && flags.HasFlag(SearchFlags.FullWord) && (
-                                (fileContent.Length > ret + searchString.Length - 1 && char.IsLetter(fileContent[ret + searchString.Length]))
-                                || (ret > 0 && char.IsLetter(fileContent[ret - 1]))
-                            ))
-                        {
-                            ret++;
-                            continue;
-                        }
-
-                        break;
-                    }
-
-                return ret;
-            }
-            /// <summary>
-            /// Builds list containing all files, depending on CurrentSearchLocation
-            /// </summary>
-            List<string> BuildSearchFileList()
-            {
-                var files = new List<string>();
-
-                switch (CurrentSearchLocation)
-                {
-                    case SearchLocations.CurrentDocument:
-                        var ed = IDEManager.Instance.CurrentEditor;
-                        if (ed == null)
-                            return null;
-                        files.Add(ed.AbsoluteFilePath);
-                        break;
-                    case SearchLocations.OpenDocuments:
-                        foreach (var ed2 in IDEManager.Instance.Editors)
-                            if (ed2 is EditorDocument)
-                                files.Add(ed2.AbsoluteFilePath);
-                        break;
-                    case SearchLocations.CurrentProject:
-                        if (IDEManager.Instance.CurrentEditor == null || !IDEManager.Instance.CurrentEditor.HasProject)
-                            return null;
-
-                        foreach (var pf in IDEManager.Instance.CurrentEditor.Project)
-                            files.Add(pf.AbsoluteFileName);
-
-                        files.Sort();
-                        break;
-                    case SearchLocations.CurrentSolution:
-                        if (IDEManager.CurrentSolution == null)
-                            return null;
-
-                        foreach (var prj in IDEManager.CurrentSolution)
-                            foreach (var pf2 in prj)
-                                files.Add(pf2.AbsoluteFileName);
-
-                        files.Sort();
-                        break;
-                }
-
-                return files;
-            }
-
-            bool FindNext_Internal(out string file, out int offset, bool ignoreCurrentSelection = false)
-            {
-                file = "";
-                offset = -1;
-
-                // 1) Build array of scannable files
-                // 2) Get file/offset of the currently opened file - to find the next/previous occurence of CurrentSearchString
-                // 3) Go through all files (Note: if already opened, search within the EditorDocument object)
-
-                // 1)
-                var files = BuildSearchFileList();
-
-                if (files == null)
-                    return false;
-
-                // 2)
-                var startFilesIndex = 0;
-                int startOffset = 0;
-
-                var curEd = IDEManager.Instance.CurrentEditor as EditorDocument;
-                if (curEd != null)
-                {
-                    var i = files.IndexOf(curEd.AbsoluteFilePath);
-                    if (i >= 0)
-                        startFilesIndex = i;
-
-                    // if searching backward, take the selection start (the caret position) only. If searching downward (as usual), begin to search right after the selected block 
-                    if (!ignoreCurrentSelection)
-                        startOffset = curEd.Editor.SelectionStart + (SearchOptions.HasFlag(SearchFlags.Upward) ? 0 : curEd.Editor.SelectionLength);
-                }
-
-                // 3)
-                int deltaJ = SearchOptions.HasFlag(SearchFlags.Upward) ? -1 : 1; // If searching "upward", move backward in the file list - decrement j
-                for (var j = startFilesIndex; j >= 0 && j < files.Count; j += deltaJ)
-                {
-                    file = files[j];
-                    var res = ScanFile(file, j == startFilesIndex ? startOffset : 0, CurrentSearchString, SearchOptions);
-
-                    if (res >= 0)
-                    {
-                        offset = res;
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-            /// <summary>
-            /// Finds the next match (if possible), then opens the matching file and selects the matching text.
-            /// </summary>
-            public void FindNext()
-            {
-                string file = "";
-                int offset = 0;
-
-                if (!FindNext_Internal(out file, out offset))
-                    return;
-
-                var ed = WorkbenchLogic.Instance.OpenFile(file, offset) as EditorDocument;
-                if (ed == null)
-                    return;
-
-                // Select found match
-                ed.Editor.SelectionStart = offset;
-                ed.Editor.SelectionLength = CurrentSearchString.Length;
-            }*/
-
-            /*/// <summary>
-            /// Finds all matches and returns an array of them.
-            /// </summary>
-            SearchResult[] FindAll_Raw()
-            {
-                var l = new List<SearchResult>();
-
-                var files = BuildSearchFileList();
-
-                if (files == null)
-                    return null;
-
-                // Iterate through all files
-                foreach (var file in files)
-                {
-                    string fileContent = "";
-
-                    //Note: If file is already open, take the EditorDocument instance instead loading the physical file
-                    foreach (var ed in IDEManager.Instance.Editors)
-                    {
-                        var ed_ = ed as EditorDocument;
-                        if (ed_ == null || ed.AbsoluteFilePath != file)
-                            continue;
-
-                        fileContent = ed_.Editor.Text;
-                    }
-
-                    if (string.IsNullOrEmpty(fileContent))
-                        if (File.Exists(file))
-                            File.ReadAllText(file);
-
-                    // Search matches until eof
-
-                    // lastOffset, Line and Col are used for calculating correct match locations
-                    int lastOffset = 0;
-                    int Line = 1;
-                    int Col = 1;
-
-                    int offset = 0;
-
-                    while (offset > -1)
-                    {
-                        offset = fileContent.IndexOf(currentSearchString, offset,
-                            SearchOptions.HasFlag(SearchFlags.CaseSensitive) ?
-                            StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase);
-
-                        if (offset < 0)
-                            break;
-
-                        // (If full-word search activated,) Check if result isn't surrounded by letters. Otherwise continue search
-                        if (SearchOptions.HasFlag(SearchFlags.FullWord) && (
-                                (fileContent.Length > offset + currentSearchString.Length - 1 &&
-                                char.IsLetter(fileContent[offset + currentSearchString.Length]))
-                                || (offset > 0 && char.IsLetter(fileContent[offset - 1]))
-                            ))
-                        {
-                            offset += currentSearchString.Length;
-                            continue;
-                        }
-
-                        // Line and Col calculation
-                        for (int k = lastOffset; k < offset; k++)
-                        {
-                            Col++;
-                            if (fileContent[k] == '\n')
-                            {
-                                Line++;
-                                Col = 1;
-                            }
-                        }
-                        lastOffset = offset;
-
-                        // Opt: Extract a code snippet with e.g. 10 surrounding chars on each side
-                        const int padLen = 10;
-                        int leftPad = offset > padLen ? (offset - padLen) : 0;
-                        int rightPad = offset < fileContent.Length - padLen ? (offset + padLen) : fileContent.Length;
-
-                        // Add one search result object per match
-                        l.Add(new SearchResult
-                        {
-                            File = file,
-                            Offset = offset,
-                            Line = Line,
-                            Column = Col,
-                            CodeSnippet = fileContent.Substring(leftPad, rightPad - leftPad).Trim()
-                        });
-
-                        offset += currentSearchString.Length;
-                    }
-                }
-
-                return l.ToArray();
-            }
-            /// <summary>
-			/// Finds all matches and shows them in the search result panel of the main window
-			/// </summary>
-			public void FindAll()
-			{
-				var matches = FindAll_Raw();
-
-				var pan = IDEManager.Instance.MainWindow.SearchResultPanel;
-
-				pan.SearchString = CurrentSearchString;
-				pan.Results = matches;
-				pan.Show();
-			}*/
-
-            /*/// <summary>
-            /// Replaces the current match (if any), then finds the next match (if possible) and opens the matching file,
-            /// selecting the matching text.
-            /// </summary>
-			public bool ReplaceNext()
-			{
-				string file = "";
-				int offset = 0;
-
-				bool foundMatch=FindNext_Internal(out file, out offset);
-
-				var ed = WorkbenchLogic.Instance.OpenFile(file, offset) as EditorDocument;
-
-				if (ed == null)
-					return false;
-
-				// Replace selected string
-				if (string.Compare(ed.Editor.SelectedText, CurrentSearchString, !SearchOptions.HasFlag(SearchFlags.CaseSensitive)) == 0)
-				{
-					ed.Editor.Document.Replace(ed.Editor.SelectionStart, ed.Editor.SelectionLength, CurrentReplaceString);
-
-					if(foundMatch)
-						offset += CurrentReplaceString.Length - CurrentSearchString.Length;
-				}
-
-				if (foundMatch)
-				{
-					ed.Editor.SelectionStart = offset;
-					ed.Editor.SelectionLength = CurrentSearchString.Length;
-				}
-
-				return false;
-			}
-
-			public bool ReplaceAll()
-			{
-				string file = "";
-				int offset = 0;
-				EditorDocument ed = null;
-
-				while (offset>=0)
-				{
-					bool foundMatch=FindNext_Internal(out file, out offset);
-
-					if (ed != null && ed.AbsoluteFilePath != file)
-						ed.Editor.Document.UndoStack.EndUndoGroup();
-
-					if (string.IsNullOrEmpty(file))
-						return false;
-
-					ed = WorkbenchLogic.Instance.OpenFile(file, offset) as EditorDocument;
-
-					if (ed == null)
-						return false;
-
-					// Replace selected string
-					if (string.Compare(ed.Editor.SelectedText, CurrentSearchString, !SearchOptions.HasFlag(SearchFlags.CaseSensitive)) == 0)
-					{
-						ed.Editor.Document.UndoStack.StartContinuedUndoGroup(ed);
-
-						ed.Editor.Document.Replace(ed.Editor.SelectionStart, ed.Editor.SelectionLength, CurrentReplaceString);
-						if (foundMatch)
-							offset += CurrentReplaceString.Length - CurrentSearchString.Length;
-					}
-
-					if (foundMatch)
-					{
-						ed.Editor.SelectionStart = offset;
-						ed.Editor.SelectionLength = CurrentSearchString.Length;
-					}
-				}
-
-				return false;
-            }*/
-            #endregion
         }
 	}
 }
