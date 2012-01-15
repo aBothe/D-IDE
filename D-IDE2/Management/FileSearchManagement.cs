@@ -210,6 +210,18 @@ namespace D_IDE
                 stopOffset = original.stopOffset;
             }
 
+            bool IsIdentifierChar(char ch)
+            {
+                return char.IsLetterOrDigit(ch) || ch == '_';
+            }
+            bool IsOctalDigit(char ch)
+            {
+                return (ch >= '0' && ch <= '7');
+            }
+            bool IsHexDigit(char ch)
+            {
+                return (char.IsDigit(ch) || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f'));
+            }
             string translateEscapes(string escapedString)
             {
                 StringBuilder translated = new StringBuilder();
@@ -235,12 +247,75 @@ namespace D_IDE
                                 translated.Append('\t'); break;
                             case 'v':
                                 translated.Append('\v'); break;
-                            case '0':
-                                translated.Append('\0'); break;
-                            // TODO: 'x', 'u', and 'U' unicode literals
+                            case 'x':
+                                {
+                                    if ((cX + 2 < escapedString.Length)
+                                        && IsHexDigit(escapedString[cX + 1])
+                                        && IsHexDigit(escapedString[cX + 2]))
+                                    {
+                                        translated.Append((char)Convert.ToInt32(escapedString.Substring(cX + 1, 2), 16));
+                                        cX += 2;
+                                    }
+                                    else
+                                        goto default;
+                                } break;
+                            case 'u':
+                                {
+                                    if ((cX + 4 < escapedString.Length)
+                                        && IsHexDigit(escapedString[cX + 1])
+                                        && IsHexDigit(escapedString[cX + 2])
+                                        && IsHexDigit(escapedString[cX + 3])
+                                        && IsHexDigit(escapedString[cX + 4]))
+                                    {
+                                        translated.Append((char)Convert.ToInt32(escapedString.Substring(cX + 1, 4), 16));
+                                        cX += 4;
+                                    }
+                                    else
+                                        goto default;
+                                } break;
+                            case 'U':
+                                {
+                                    if ((cX + 8 < escapedString.Length)
+                                        && IsHexDigit(escapedString[cX + 1])
+                                        && IsHexDigit(escapedString[cX + 2])
+                                        && IsHexDigit(escapedString[cX + 3])
+                                        && IsHexDigit(escapedString[cX + 4])
+                                        && IsHexDigit(escapedString[cX + 5])
+                                        && IsHexDigit(escapedString[cX + 6])
+                                        && IsHexDigit(escapedString[cX + 7])
+                                        && IsHexDigit(escapedString[cX + 8]))
+                                    {
+                                        translated.Append((char)Convert.ToInt32(escapedString.Substring(cX + 1, 8), 16));
+                                        cX += 8;
+                                    }
+                                    else
+                                        goto default;
+                                } break;
                             // TODO: Named character entities?
                             default:
-                                translated.Append(ctrlC); break;
+                                {
+                                    if (IsOctalDigit(ctrlC))
+                                    {
+                                        int digitCount;
+                                        if (((cX + 1) < escapedString.Length) && IsOctalDigit(escapedString[cX + 1]))
+                                        {
+                                            if (((cX + 2) < escapedString.Length) && IsOctalDigit(escapedString[cX + 2]))
+                                                digitCount = 3;
+                                            else
+                                                digitCount = 2;
+                                        }
+                                        else
+                                            digitCount = 1;
+
+                                        translated.Append((char)Convert.ToInt32(escapedString.Substring(cX, digitCount), 8));
+                                        cX += digitCount - 1;
+                                    }
+                                    else
+                                    {
+                                        translated.Append('\\');
+                                        translated.Append(ctrlC);
+                                    }
+                                } break;
                         }
                     }
                     else
@@ -378,10 +453,6 @@ namespace D_IDE
                 }
                 return isNext;
             }
-            bool IsIdentifierChar(char ch)
-            {
-                return char.IsLetterOrDigit(ch) || ch == '_';
-            }
             string NextMatch(string haystack = null)
             {
                 if (currentFile == null)
@@ -464,7 +535,7 @@ namespace D_IDE
             {
                 var searcher = new FileSearchManagement(this);
                 if(SearchOptions.HasFlag(SearchFlags.Upward))
-                    searcher.SearchOptions ^= SearchFlags.Upward; // This isn't necessary, and could cause subtle bugs.
+                    searcher.SearchOptions ^= SearchFlags.Upward; // "Search upward" isn't necessary in bulk mode, and could cause subtle bugs.
                 searcher.ResetSearch(false);
 
                 var matches = new LinkedList<SearchResult>();
