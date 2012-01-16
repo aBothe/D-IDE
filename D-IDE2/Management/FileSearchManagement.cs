@@ -122,9 +122,9 @@ namespace D_IDE
 				{
 					// If nothing found, reset and search again 
 					// -- do begin to search at the begin of the file, 
-					// because searching after the last selected match would bring nothing
+					// because searching after the last selected match would make no sense
 					ResetSearch(false);
-					//TODO: Notice the user that file search has begun from start, again
+					//TODO: Inform the user that file search has begun from start, again
 
 					// If there's nothing found anyway, return
 					if(NextMatch()==null)
@@ -220,19 +220,19 @@ namespace D_IDE
                 stopOffset = original.stopOffset;
             }
 
-            bool IsIdentifierChar(char ch)
+            static bool IsIdentifierChar(char ch)
             {
                 return char.IsLetterOrDigit(ch) || ch == '_';
             }
-            bool IsOctalDigit(char ch)
+            static bool IsOctalDigit(char ch)
             {
                 return (ch >= '0' && ch <= '7');
             }
-            bool IsHexDigit(char ch)
+            static bool IsHexDigit(char ch)
             {
                 return (char.IsDigit(ch) || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f'));
             }
-            string translateEscapes(string escapedString)
+            static string translateEscapes(string escapedString)
             {
                 StringBuilder translated = new StringBuilder();
                 for (int cX = 0; cX < escapedString.Length; ++cX)
@@ -463,10 +463,7 @@ namespace D_IDE
                 }
                 return isNext;
             }
-            static bool IsIdentifierChar(char ch)
-            {
-                return char.IsLetterOrDigit(ch) || ch == '_';
-            }
+
             string NextMatch(string haystack = null)
             {
                 if (currentFile == null)
