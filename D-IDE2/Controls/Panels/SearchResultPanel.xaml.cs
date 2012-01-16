@@ -42,11 +42,11 @@ namespace D_IDE.Controls.Panels
 			if (sr == null || string.IsNullOrEmpty( sr.File))
 				return;
 
-			var ed = WorkbenchLogic.Instance.OpenFile(sr.File, sr.Offset);
+			var ed = WorkbenchLogic.Instance.OpenFile(sr.File, sr.Offset) as EditorDocument;
 
 			// Select match
-			if (ed is EditorDocument)
-				(ed as EditorDocument).Editor.SelectionLength = searchString.Length;
+			if (ed !=null)
+				ed.Editor.Select(sr.Offset, searchString.Length);
 		}
 		
 		string searchString;

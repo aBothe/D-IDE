@@ -118,8 +118,18 @@ namespace D_IDE
             /// </summary>
             public void FindNext()
             {
-                if (NextMatch() == null)
-                    return;
+				if (NextMatch() == null)
+				{
+					// If nothing found, reset and search again 
+					// -- do begin to search at the begin of the file, 
+					// because searching after the last selected match would bring nothing
+					ResetSearch(false);
+					//TODO: Notice the user that file search has begun from start, again
+
+					// If there's nothing found anyway, return
+					if(NextMatch()==null)
+						return;
+				}
 
                 var ed = WorkbenchLogic.Instance.OpenFile(currentFile, currentOffset) as EditorDocument;
                 if (ed != null)
@@ -378,7 +388,7 @@ namespace D_IDE
                 }
                 return isNext;
             }
-            bool IsIdentifierChar(char ch)
+            static bool IsIdentifierChar(char ch)
             {
                 return char.IsLetterOrDigit(ch) || ch == '_';
             }
