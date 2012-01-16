@@ -1,7 +1,7 @@
 ﻿<Window x:Class="D_IDE.Dialogs.SearchAndReplaceDlg"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-		xmlns:a="clr-namespace:AvalonDock;assembly=AvalonDock" Title="Search &amp; Replace" WindowStyle="ToolWindow" ShowInTaskbar="False" ResizeMode="NoResize" IsVisibleChanged="Window_IsVisibleChanged" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Height="295" Width="473">
+		xmlns:a="clr-namespace:AvalonDock;assembly=AvalonDock" Title="Search &amp; Replace" WindowStyle="ToolWindow" ShowInTaskbar="False" ResizeMode="NoResize" IsVisibleChanged="Window_IsVisibleChanged" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Height="280" Width="473">
 	<Grid Background="#FFF0F0F0" Loaded="Grid_Loaded">
 		<Label Content="Find..." Height="16" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" Padding="0" VerticalAlignment="Top" Width="44" />
 		<ComboBox Height="23" Margin="12,34,43,0" Name="comboBox_InputString" VerticalAlignment="Top" IsEditable="True" TabIndex="0" />
