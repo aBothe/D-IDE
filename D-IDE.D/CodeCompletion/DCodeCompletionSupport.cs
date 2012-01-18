@@ -474,10 +474,10 @@ namespace D_IDE.D
 			{
 				try
 				{
-					var n = Node as DNode;
-
-					if (n == null)
+					if (Node == null)
 						return null;
+
+					var n = Node as DNode;
 
 					if (n is DClassLike)
 					{
@@ -599,9 +599,15 @@ namespace D_IDE.D
 								return DCodeCompletionSupport.GetNodeImage("parameter");
 							return DCodeCompletionSupport.GetNodeImage("local");
 						}
+					}
+					else if (Node is TemplateParameterNode)
+					{
+						var tpl = Node as TemplateParameterNode;
 
-						if (realParent.ContainsTemplateParameter(n.Name))
+						if (tpl.TemplateParameter is TemplateValueParameter)
 							return DCodeCompletionSupport.GetNodeImage("parameter");
+
+						return DCodeCompletionSupport.GetNodeImage("class");
 					}
 				}
 				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
