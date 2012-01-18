@@ -31,7 +31,6 @@ namespace D_IDE.Dialogs
 		/// </summary>
 		public void SetWindowPositionNextToCurrentCaret()
 		{
-            return;
 			/* 
 			 * 1) Check if window is floating
 			 * 2) Get screen position of the caret
@@ -44,6 +43,9 @@ namespace D_IDE.Dialogs
 
 			// 2)
 			var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+            if (!ed.Editor.IsVisible)
+                return;
+
 			var cr_relative=ed.Editor.TextArea.Caret.CalculateCaretRectangle();
 			var cr_absolute = ed.Editor.PointToScreen(cr_relative.Location);
 
@@ -140,7 +142,7 @@ namespace D_IDE.Dialogs
 
 			ApplySearchOptions();
 
-			IDEManager.FileSearchManagement.Instance.FindNext();
+            IDEManager.FileSearchManagement.Instance.FindNext();
 
 			SetWindowPositionNextToCurrentCaret();
 		}
@@ -227,6 +229,11 @@ namespace D_IDE.Dialogs
         private void OnOptionsChange(object sender, EventArgs e)
         {
             optionsChanged = true;
+        }
+
+        private void OnResumeSearch(object sender, EventArgs e)
+        {
+            IDEManager.FileSearchManagement.Instance.SearchFromCaret();
         }
 	}
 }

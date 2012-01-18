@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using D_IDE.Core;
 using System.IO;
+using System.Windows;
+using D_IDE.Core;
 using D_IDE.Core.Controls;
 
 namespace D_IDE
@@ -84,33 +85,40 @@ namespace D_IDE
             /// <summary>
             /// Reset the search position and wrap point.
             /// </summary>
+            public void SearchFromCaret(bool checkFileChange = true)
+            {
+                var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+                if (ed == null)
+                    return;
+
+                if (checkFileChange && !ed.AbsoluteFilePath.Equals(currentFile))
+                {
+                    // The file changed, so we should reset the wrap point, also, to avoid confusing the user.
+                    ResetSearch();
+                    return;
+                }
+
+                currentFile = ed.AbsoluteFilePath;
+                currentOffset = ed.Editor.TextArea.Caret.Offset - 1;
+                if (currentOffset >= ed.Editor.SelectionStart && currentOffset < (ed.Editor.SelectionStart + ed.Editor.SelectionLength))
+                {
+                    currentOffset = ed.Editor.SelectionStart;
+                    if (SearchOptions.HasFlag(SearchFlags.Upward))
+                        currentOffset += ed.Editor.SelectionLength;
+                }
+            }
             public void ResetSearch(bool startAtCaret = true)
             {
                 currentFile = null;
-                startOffset = -1;
+                currentOffset = -1;
 
-                if (CurrentSearchLocation == SearchLocations.CurrentDocument)
-                {
-                    var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
+                if (startAtCaret && (CurrentSearchLocation == SearchLocations.CurrentDocument))
+                    SearchFromCaret(false);
 
-                    if (ed != null)
-                    {
-                        currentFile = ed.AbsoluteFilePath;
-                        if (startAtCaret)
-                        {
-                            startOffset = ed.Editor.TextArea.Caret.Offset - 1;
-                            if (startOffset >= ed.Editor.SelectionStart && startOffset < (ed.Editor.SelectionStart + ed.Editor.SelectionLength))
-                            {
-                                startOffset = ed.Editor.SelectionStart;
-                                if (SearchOptions.HasFlag(SearchFlags.Upward))
-                                    startOffset += ed.Editor.SelectionLength;
-                            }
-                        }
-                    }
-                }
-
-                currentOffset = startOffset;
+                startOffset = currentOffset;
                 stopOffset = -1;
+
+                somethingFound = false;
             }
 
             /// <summary>
@@ -118,18 +126,45 @@ namespace D_IDE
             /// </summary>
             public void FindNext()
             {
-				if (NextMatch() == null)
-				{
-					// If nothing found, reset and search again 
-					// -- do begin to search at the begin of the file, 
-					// because searching after the last selected match would make no sense
-					ResetSearch(false);
-					//TODO: Inform the user that file search has begun from start, again
+                if (NextMatch() == null)
+                {
+                    if (somethingFound)
+                    {
+                        var response = MessageBox.Show("No more matches were found. Restart search from the beginning?", "End of Search", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        if (response == MessageBoxResult.Yes)
+                        {
+                            ResetSearch(false);
+                            NextMatch();
+                        }
+                        else
+                            return;
+                    }
 
-					// If there's nothing found anyway, return
-					if(NextMatch()==null)
-						return;
-				}
+                    // Do NOT change this into an else {} clause of the above; somethingFound can change in the call to NextMatch() if the user chooses to restart the search.
+                    if(!somethingFound) {
+                        StringBuilder msg = new StringBuilder("The search string could not be found ");
+
+                        // This is a subtle hint to the user that he might want to broaden his search scope.
+                        switch (CurrentSearchLocation)
+                        {
+                            case SearchLocations.CurrentDocument:
+                                msg.Append("in the current document.");
+                                break;
+                            case SearchLocations.OpenDocuments:
+                                msg.Append("in any of the open documents.");
+                                break;
+                            case SearchLocations.CurrentProject:
+                                msg.Append("in the current project.");
+                                break;
+                            case SearchLocations.CurrentSolution:
+                                msg.Append("in the current solution.");
+                                break;
+                        }
+
+                        MessageBox.Show(msg.ToString(), "Not Found", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
+                }
 
                 var ed = WorkbenchLogic.Instance.OpenFile(currentFile, currentOffset) as EditorDocument;
                 if (ed != null)
@@ -137,7 +172,10 @@ namespace D_IDE
                     // Select found match
                     ed.Editor.SelectionStart = currentOffset;
                     ed.Editor.SelectionLength = TranslatedSearchStr.Length;
+                    return;
                 }
+
+                throw new Exception("FindNext() found a match, but is unable to display the containing file.");
             }
             /// <summary>
             /// Outputs a list of all matches to the search results panel of the main window.
@@ -191,6 +229,7 @@ namespace D_IDE
             int startOffset;
             int currentOffset;
             int stopOffset;
+            bool somethingFound;
 
             protected FileSearchManagement()
             {
@@ -203,6 +242,8 @@ namespace D_IDE
                 startOffset = -1;
                 currentOffset = -1;
                 stopOffset = -1;
+
+                somethingFound = false;
             }
             protected FileSearchManagement(FileSearchManagement original)
             {
@@ -218,6 +259,8 @@ namespace D_IDE
                 startOffset = original.startOffset;
                 currentOffset = original.currentOffset;
                 stopOffset = original.stopOffset;
+
+                somethingFound = false;
             }
 
             static bool IsIdentifierChar(char ch)
@@ -524,6 +567,8 @@ namespace D_IDE
                                 || (currentOffset < (haystack.Length - 1) && IsIdentifierChar(haystack[currentOffset + 1])))
                                 goto Search;
                         }
+
+                        somethingFound = true;
                         return haystack;
                     }
 

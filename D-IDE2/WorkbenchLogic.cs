@@ -470,6 +470,8 @@ namespace D_IDE
 
 		public void DoBuild()
 		{
+            SaveAllFiles();
+
 			if (RootWindow.RunCurrentModuleOnly)
 				IDEManager.BuildManagement.BuildSingle();
 			else
@@ -477,7 +479,9 @@ namespace D_IDE
 		}
 
 		public void DoExplicitRebuild()
-		{
+        {
+            SaveAllFiles();
+
 			if (!RootWindow.RunCurrentModuleOnly)
 				IDEManager.BuildManagement.Build(IDEManager.CurrentSolution, false);
 			else
@@ -496,7 +500,9 @@ namespace D_IDE
 		}
 
 		public void DoDebugSolution()
-		{
+        {
+            SaveAllFiles();
+
 			BuildResult br = null;
 			if (CoreManager.DebugManagement.IsDebugging)
 				IDEManager.IDEDebugManagement.ContinueDebugging();
@@ -507,7 +513,9 @@ namespace D_IDE
 		}
 
 		public void DoLaunchWithoutDebugger(bool ExternalConsole = false)
-		{
+        {
+            SaveAllFiles();
+
 			BuildResult br = null;
 			if (RootWindow.RunCurrentModuleOnly ? 
 				((br = IDEManager.BuildManagement.BuildSingle()) != null && br.Successful) : 
