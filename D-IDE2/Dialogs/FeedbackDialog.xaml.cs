@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace D_IDE.Dialogs
 {
@@ -31,6 +32,8 @@ namespace D_IDE.Dialogs
 
 			var mail = input_MailAddress.Text;
 			var message = input_Message.Text.Trim();
+			var versionString = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString(3);
+
 
 			// Check mail address
 			if(!string.IsNullOrWhiteSpace(mail) && !Regex.IsMatch(mail,@"^[\w\.\-]+@[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]{1,})*(\.[a-zA-Z]{2,3}){1,2}$"))
@@ -49,7 +52,8 @@ namespace D_IDE.Dialogs
 			// Upload the form data
 			var answer=wc.UploadValues(feedbackUrl, "POST", new System.Collections.Specialized.NameValueCollection {
 				{"mail", mail},
-				{"message", message}
+				{"message", message},
+				{"version",versionString}
 			});
 
 			var answerString = Encoding.ASCII.GetString(answer);
