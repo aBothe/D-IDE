@@ -76,6 +76,16 @@ namespace D_Parser.Completion
 			if (curBlock == null)
 				return;
 
+			// If typing a begun identifier, return immediately
+			if ((EnteredText!=null && EnteredText.Length>0 ? IsIdentifierChar(EnteredText[0]):true) &&
+				Editor.CaretOffset > 0 &&
+				IsIdentifierChar(Editor.ModuleCode[Editor.CaretOffset - 1]))
+				return;
+
+			if (CaretContextAnalyzer.IsInCommentAreaOrString(Editor.ModuleCode, Editor.CaretOffset))
+				return;
+
+
 			IEnumerable<INode> listedItems = null;
 
 			// Usually shows variable members
@@ -115,13 +125,7 @@ namespace D_Parser.Completion
 				EnteredText.Length < 1 ||
 				IsIdentifierChar(EnteredText[0]))
 			{
-				// If typing a begun identifier, return immediately
-				if (EnteredText!=" " && 
-					Editor.CaretOffset > 0 && 
-					IsIdentifierChar(Editor.ModuleCode[Editor.CaretOffset - 1]))
-					return;
-
-				// 1) Get current context the caret is at.
+				// 1) Get current context the caret is at
 				ParserTrackerVariables trackVars = null;
 
 				var parsedBlock = DResolver.FindCurrentCaretContext(
@@ -131,60 +135,67 @@ namespace D_Parser.Completion
 					Editor.CaretLocation,
 					out trackVars);
 
-				// 2) If in declaration and if node identifier is expected, do not show any data
-				if (trackVars == null)
-					return;
-
-				if (trackVars.LastParsedObject is INode &&
-					trackVars.ExpectingIdentifier)
-					return;
-
-				if (trackVars.LastParsedObject is TokenExpression &&
-					DTokens.BasicTypes[(trackVars.LastParsedObject as TokenExpression).Token] &&
-					!string.IsNullOrEmpty(EnteredText) &&
-					IsIdentifierChar(EnteredText[0]))
-					return;
-
-				if (trackVars.LastParsedObject is DAttribute)
-				{
-					var attr = trackVars.LastParsedObject as DAttribute;
-
-					if (attr.IsStorageClass && attr.Token!=DTokens.Abstract)
-						return;
-				}
-
 				var visibleMembers = DResolver.MemberTypes.All;
 
-				if (trackVars.LastParsedObject is ImportStatement /*&& !CaretAfterLastParsedObject*/)
-					visibleMembers = DResolver.MemberTypes.Imports;
-				else if (trackVars.LastParsedObject is NewExpression && (trackVars.IsParsingInitializer/* || !CaretAfterLastParsedObject*/))
-					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types;
-				else if (EnteredText == " ")
-					return;
-				// In class bodies, do not show variables
-				else if (!(parsedBlock is BlockStatement) && !trackVars.IsParsingInitializer)
+				// 2) If in declaration and if node identifier is expected, do not show any data
+				if (trackVars == null)
+				{
+					// --> Happens if no actual declaration syntax given --> Show types/imports/keywords anyway
 					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
 
-				// In a method, parse from the method's start until the actual caret position to get an updated insight
-				if (visibleMembers.HasFlag(DResolver.MemberTypes.Variables) && curBlock is DMethod)
-				{
-					if (parsedBlock is BlockStatement)
-					{
-						var blockStmt = parsedBlock as BlockStatement;
-
-						// Insert the updated locals insight.
-						// Do not take the caret location anymore because of the limited parsing of our code.
-						var scopedStmt = blockStmt.SearchStatementDeeply(blockStmt.EndLocation /*Editor.CaretLocation*/);
-
-						var decls = BlockStatement.GetItemHierarchy(scopedStmt, Editor.CaretLocation);
-
-						foreach (var n in decls)
-							CompletionDataGenerator.Add(n);
-					}
+					listedItems = DResolver.EnumAllAvailableMembers(curBlock, null, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
 				}
+				else
+				{
+					if (trackVars.LastParsedObject is INode &&
+						trackVars.ExpectingIdentifier)
+						return;
 
-				if (visibleMembers != DResolver.MemberTypes.Imports) // Do not pass the curStmt because we already inserted all updated locals a few lines before!
-					listedItems = DResolver.EnumAllAvailableMembers(curBlock, null/*, curStmt*/, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
+					if (trackVars.LastParsedObject is TokenExpression &&
+						DTokens.BasicTypes[(trackVars.LastParsedObject as TokenExpression).Token] &&
+						!string.IsNullOrEmpty(EnteredText) &&
+						IsIdentifierChar(EnteredText[0]))
+						return;
+
+					if (trackVars.LastParsedObject is DAttribute)
+					{
+						var attr = trackVars.LastParsedObject as DAttribute;
+
+						if (attr.IsStorageClass && attr.Token != DTokens.Abstract)
+							return;
+					}
+
+					if (trackVars.LastParsedObject is ImportStatement /*&& !CaretAfterLastParsedObject*/)
+						visibleMembers = DResolver.MemberTypes.Imports;
+					else if (trackVars.LastParsedObject is NewExpression && (trackVars.IsParsingInitializer/* || !CaretAfterLastParsedObject*/))
+						visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types;
+					else if (EnteredText == " ")
+						return;
+					// In class bodies, do not show variables
+					else if (!(parsedBlock is BlockStatement) && !trackVars.IsParsingInitializer)
+						visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
+
+					// In a method, parse from the method's start until the actual caret position to get an updated insight
+					if (visibleMembers.HasFlag(DResolver.MemberTypes.Variables) && curBlock is DMethod)
+					{
+						if (parsedBlock is BlockStatement)
+						{
+							var blockStmt = parsedBlock as BlockStatement;
+
+							// Insert the updated locals insight.
+							// Do not take the caret location anymore because of the limited parsing of our code.
+							var scopedStmt = blockStmt.SearchStatementDeeply(blockStmt.EndLocation /*Editor.CaretLocation*/);
+
+							var decls = BlockStatement.GetItemHierarchy(scopedStmt, Editor.CaretLocation);
+
+							foreach (var n in decls)
+								CompletionDataGenerator.Add(n);
+						}
+					}
+
+					if (visibleMembers != DResolver.MemberTypes.Imports) // Do not pass the curStmt because we already inserted all updated locals a few lines before!
+						listedItems = DResolver.EnumAllAvailableMembers(curBlock, null/*, curStmt*/, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
+				}
 
 				//TODO: Split the keywords into such that are allowed within block statements and non-block statements
 				// Insert typable keywords

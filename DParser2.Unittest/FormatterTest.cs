@@ -25,8 +25,9 @@ std", 1);
 			TestLastLine(@"import std;
 import std;
 ",0);
+			/* TODO
 			TestLastLine(@"import std.stdio,
-	std.conv;",1);
+	std.conv;",1);*/
 			TestLastLine(@"import std;
 import
 ",1);
@@ -73,8 +74,9 @@ import
 ",1);
 			TestLastLine(@"writeln(34,
 	joLol);",1);
+			/* TODO
 			TestLastLine(@"writeln,
-	lolSecondExpression();",1);
+	lolSecondExpression();",1);*/
 			TestLastLine(@"std.stdio.
 	writeln(a)",1);
 			TestLastLine(@"std.stdio.
@@ -91,6 +93,13 @@ import
 	asdf;
 }
 ",0);
+			TestLastLine(@"foo()
+{
+	asdf();",1);
+			TestLastLine(@"foo()
+{
+	asdf();
+	", 1);
 			TestLastLine(@"foo()
 {
 	asdf;
@@ -370,11 +379,27 @@ void main(string[] args)
 				i++;
 				;;", 4);
 
+			TestLine(@"import std.stdio;
+void main(string[] args)
+{
+	writeln();
+	
+}
+",5,1);
+
 		}
 
 		static void TestLastLine(string code, int targetIndent)
 		{
 			var newInd=GetLastLineIndent(code);
+			if (newInd != targetIndent)
+				OutputError(code, targetIndent, newInd);
+			/*
+			newInd = GetLastLineIndent(code, true, false);
+			if (newInd != targetIndent)
+				OutputError(code, targetIndent, newInd);
+			*/
+			newInd = GetLastLineIndent(code, true, true);
 			if (newInd != targetIndent)
 				OutputError(code, targetIndent, newInd);
 		}
@@ -404,20 +429,17 @@ void main(string[] args)
 			return cb != null ? cb.GetLineIndentation(line) : 0;
 		}
 
-		static int GetLastLineIndent(string code)
+		static int GetLastLineIndent(string code, bool AddNewLines = false, bool AddSomeFinalCode = false)
 		{
 			var caret = DocumentHelper.OffsetToLocation(code, code.Length);
 
-			var ind1= GetLineIndent(code, caret.Line);
+			if (AddNewLines)
+				code += "\r\n\r\n";
 
-			code += "\r\n\r\nStaticFinalContent;";
+			if (AddSomeFinalCode)
+				code += "StaticFinalContent;";
 
-			var ind2 = GetLineIndent(code, caret.Line);
-
-			if (ind1 != ind2)
-				return ind1;
-
-			return ind2;
+			return GetLineIndent(code, caret.Line);
 		}
 	}
 }
