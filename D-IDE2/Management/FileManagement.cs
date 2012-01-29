@@ -246,7 +246,15 @@ namespace D_IDE
 						if (srcDir_abs != destDir_abs)
 							Directory.Move(srcDir_abs, destDir_abs);
 					}
-					catch (Exception ex) { ErrorLogger.Log(ex); return false; }
+					catch (Exception ex) 
+					{ 
+						ErrorLogger.Log(ex); 
+						return false; 
+					}
+
+					var relativeParentDirectory = Path.GetDirectoryName(RelativeDir);
+					if (!Project.SubDirectories.Contains(relativeParentDirectory) && !string.IsNullOrEmpty(relativeParentDirectory))
+						Project.SubDirectories.Add(relativeParentDirectory);
 
 					return AddExistingDirectoryToProject(destDir_abs, TargetProject, NewDir);
 				}
