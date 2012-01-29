@@ -2136,7 +2136,7 @@ namespace D_Parser.Parser
 			}
 		}
 
-		List<IExpression> ArgumentList(IBlockNode Scope = null)
+		public List<IExpression> ArgumentList(IBlockNode Scope = null)
 		{
 			var ret = new List<IExpression>();
 
@@ -2708,7 +2708,7 @@ namespace D_Parser.Parser
 			
 			SynErr(Identifier);
 			Step();
-			return new TokenExpression(t.Kind) { Location = t.Location, EndLocation = t.EndLocation };
+			return new TokenExpression() { Location = t.Location, EndLocation = t.EndLocation };
 		}
 
 		bool IsLambaExpression()
@@ -4100,7 +4100,7 @@ namespace D_Parser.Parser
 						Step();
 						if (Expect(Identifier))
 						{
-							//TODO: Handle returned variable called t.Value
+							par.OutResultVariable = new IdentifierDeclaration(t.Value) { Location=t.Location, EndLocation=t.EndLocation };
 						}
 						Expect(CloseParenthesis);
 					}

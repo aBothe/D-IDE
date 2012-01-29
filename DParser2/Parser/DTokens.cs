@@ -169,7 +169,7 @@ namespace D_Parser.Parser
         public const int Alias = 154;
         public const int PropertyAttribute = 155;
         public const int GoesTo = 156; // =>  (lambda expressions)
-        public const int empty3 = 157;
+        public const int INVALID = 157;
         public const int empty4 = 158;
 
         // Additional operators
@@ -478,6 +478,7 @@ namespace D_Parser.Parser
 
 		static Dictionary<int, string> NonKeywords = new Dictionary<int, string> {
 			// Meta
+			{INVALID,"<Invalid Token>"},
 			{EOF,"<EOF>"},
 			{Identifier,"<Identifier>"},
 			{Literal,"<Literal>"},

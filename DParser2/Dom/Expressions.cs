@@ -188,12 +188,12 @@ namespace D_Parser.Dom.Expressions
 
 		public CodeLocation Location
 		{
-			get { return Expressions[0].Location; }
+			get { return Expressions.Count>0 ? Expressions[0].Location : CodeLocation.Empty; }
 		}
 
 		public CodeLocation EndLocation
 		{
-			get { return Expressions[Expressions.Count].EndLocation; }
+			get { return Expressions.Count>0 ? Expressions[Expressions.Count - 1].EndLocation : CodeLocation.Empty; }
 		}
 
 		public bool IsConstant
@@ -1572,7 +1572,7 @@ namespace D_Parser.Dom.Expressions
 
 	public class TokenExpression : PrimaryExpression
 	{
-		public int Token;
+		public int Token=DTokens.INVALID;
 
 		public TokenExpression() { }
 		public TokenExpression(int T) { Token = T; }
