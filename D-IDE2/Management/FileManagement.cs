@@ -192,17 +192,31 @@ namespace D_IDE
 			{
 				/*
 				 * - Copy file
-				 * - Delete old one from project
 				 * - Delete old physically
+				 * - Delete old one from project
 				 */
 				Instance.CanUpdateGUI = false;
-				if (CopyFile(Project, FileName, TargetProject, NewDirectory) && Project.Remove(FileName))
+				if (CopyFile(Project, FileName, TargetProject, NewDirectory) && 
+					Project.Remove(FileName))
 				{
 					var oldDir_rel = Path.GetDirectoryName(Project.ToRelativeFileName(FileName));
-					Win32.MoveToRecycleBin(Project.ToAbsoluteFileName(FileName));
 
+					foreach(var ed in IDEManager.Instance.Editors)
+						if (ed.AbsoluteFilePath == Project.ToAbsoluteFileName(FileName))
+						{
+							ed.FileName = TargetProject.ToAbsoluteFileName(Path.Combine(NewDirectory, Path.GetFileName(FileName)));
+						}
+
+					try
+					{
+						File.Delete(Project.ToAbsoluteFileName(FileName));
+					}
+					catch (Exception ex)
+					{
+						IDELogger.Log(ex);
+					}
 					// If directory empty, keep it managed by the project
-					if (!Project.SubDirectories.Contains(oldDir_rel))
+					if (!Project.SubDirectories.Contains(oldDir_rel) && !string.IsNullOrEmpty(oldDir_rel))
 						Project.SubDirectories.Add(oldDir_rel);
 					Project.Save();
 				}

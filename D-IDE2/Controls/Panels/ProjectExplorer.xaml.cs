@@ -348,7 +348,7 @@ namespace D_IDE.Controls.Panels
 			{
 				var src_path = (data.Node as FileNode).RelativeFilePath;
 				var src_prj = data.Project;
-
+				
 				var dest_path = dropNode.IsDir ? (dropNode.Node as DirectoryNode).RelativePath : "";
 				if (dropNode.IsFile) dest_path = Path.GetDirectoryName(dropNode.Path);
 				var dest_prj = dropNode.Project;

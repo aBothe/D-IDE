@@ -110,10 +110,13 @@ namespace D_IDE.Core
 			get { return File.Exists(AbsoluteFilePath)? lastWriteTime != File.GetLastWriteTimeUtc(AbsoluteFilePath):true; }
 		}
 
+		bool _isDoingModCheck = false;
 		public void DoOutsideModificationCheck()
 		{
-			if (HasBeenModifiedOutside && lastWriteTime!=DateTime.MinValue)
+			if (!_isDoingModCheck && HasBeenModifiedOutside && lastWriteTime!=DateTime.MinValue)
 			{
+				_isDoingModCheck = true;
+
 				var mbr = MessageBox.Show(CoreManager.Instance.MainWindow as Window,"Reload file?", "File has been modified", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
 				if (mbr == MessageBoxResult.Yes)
 					Reload();
@@ -122,6 +125,8 @@ namespace D_IDE.Core
 					lastWriteTime = File.Exists(AbsoluteFilePath)? File.GetLastWriteTimeUtc(AbsoluteFilePath) : DateTime.MinValue;
 					Modified = true;
 				}
+
+				_isDoingModCheck = false;
 			}
 		}
 		#endregion
