@@ -16,7 +16,8 @@ namespace D_Parser.Resolver
 		LineComment = 2 << 5,
 		BlockComment = 2 << 2,
 		NestedComment = 2 << 3,
-		CharLiteral = 2 << 4
+		CharLiteral = 2 << 4,
+		NumberLiteral= 2 << 6
 	}
 
 	public class CaretContextAnalyzer
@@ -51,6 +52,7 @@ namespace D_Parser.Resolver
 
 			int isComment = 0;
 			bool isString = false, expectDot = false, hadDot = true;
+			bool isAlternateWysiwygString = false; // ´string" yeah" still string´
 			bool hadString = false;
 			var bracketStack = new Stack<char>();
 
@@ -78,12 +80,19 @@ namespace D_Parser.Resolver
 				// Primitive string check
 				//TODO: "blah">.<
 				hadString = false;
-				if (isComment < 1 && c == '"' && p != '\\')
+				if(isComment < 1 && p != '\\')
 				{
-					isString = !isString;
+					if (!isAlternateWysiwygString && c == '"')
+					{
+						isString = !isString;
 
-					if (!isString)
-						hadString = true;
+						if (!isString)
+							hadString = true;
+					}
+					else if (c == '`')
+					{
+						isAlternateWysiwygString = isString = !isAlternateWysiwygString;
+					}
 				}
 
 				// Vector!float>.< does not mean T but Vector --> !float needs to get skipped
@@ -294,7 +303,7 @@ namespace D_Parser.Resolver
 							IsInString = IsAlternateVerbatimString = isBeyondCaret;
 							lastEndOffset = off;
 						}
-						else if (cur == '\"')
+						else if (!IsAlternateVerbatimString && cur == '\"')
 						{
 							IsInString = IsVerbatimString = isBeyondCaret;
 							lastEndOffset = off;
@@ -353,6 +362,10 @@ namespace D_Parser.Resolver
 			}
 
 			var ret = TokenContext.None;
+
+			if (char.IsDigit(Text[Offset]) || 
+				(Offset>0 && char.IsDigit(Text[Offset-1])))
+				ret |= TokenContext.NumberLiteral;
 
 			if (IsChar)
 				ret |= TokenContext.CharLiteral;
