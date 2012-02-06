@@ -33,7 +33,7 @@ namespace D_IDE.D
 		public bool UseCodeCompletion = true;
 		public bool UseMethodInsight = true;
 		public bool EnableMatchingBracketHighlighting = true;
-		public bool UseSemanticHighlighting = false;
+		public bool UseSemanticHighlighting = true;
 
 		public bool EnableSmartIndentation = true;
 
