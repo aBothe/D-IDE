@@ -28,7 +28,8 @@ namespace D_Parser.Completion
 			StaticMembers=2,
 			PublicStaticMembers=4,
 			PublicMembers=8,
-			ProtectedMembers=16
+			ProtectedMembers=16,
+			ProtectedStaticMembers=32
 		}
 
 		public static bool CanItemBeShownGenerally(INode dn)
@@ -743,6 +744,8 @@ namespace D_Parser.Completion
 						{
 							if (tvisMod.HasFlag(ItemVisibility.ProtectedMembers))
 								add |= dn.ContainsAttribute(DTokens.Protected);
+							if (tvisMod.HasFlag(ItemVisibility.ProtectedStaticMembers))
+								add |= dn.ContainsAttribute(DTokens.Protected) && (dn.IsStatic || IsTypeNode(i));
 							if (tvisMod.HasFlag(ItemVisibility.PublicMembers))
 								add |= dn.IsPublic;
 							if (tvisMod.HasFlag(ItemVisibility.PublicStaticMembers))
@@ -792,7 +795,12 @@ namespace D_Parser.Completion
 					// After having shown all items on the current node level,
 					// allow showing public (static) and/or protected items in the more basic levels then
 					if (tvisMod.HasFlag(ItemVisibility.All))
-						tvisMod = ItemVisibility.ProtectedMembers | ItemVisibility.PublicMembers;
+					{
+						if ((n as DClassLike).ContainsAttribute(DTokens.Static))
+							tvisMod = ItemVisibility.ProtectedStaticMembers | ItemVisibility.PublicStaticMembers;
+						else
+							tvisMod = ItemVisibility.ProtectedMembers | ItemVisibility.PublicMembers;
+					}
 				}
 			}
 			else if (n is DEnum)

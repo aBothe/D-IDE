@@ -605,7 +605,7 @@ namespace D_IDE.D
 			DModule newAst = null;
 			try
 			{
-				stopWatch.Start();
+				stopWatch.Restart();
 				var parser = DParser.Create(new StringReader(code));
 				code = null;
 
@@ -810,7 +810,7 @@ namespace D_IDE.D
 						Math.Round((decimal)highPrecTimer.ElapsedMilliseconds, 2).ToString() +
 						"ms (Semantic Highlighting)";
 			}), DispatcherPriority.Background,
-				res.ResolvedIdentifiers, res.UnresolvedIdentifiers, stopWatch);
+				res.ResolvedIdentifiers, res.UnresolvedIdentifiers, sw);
 			}
 			catch (Exception ex)
 			{
