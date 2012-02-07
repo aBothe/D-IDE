@@ -748,7 +748,7 @@ namespace D_IDE.D
 			var sw=new Stopwatch();
 			sw.Start();
 
-			var res = CodeScanner.ScanSymbols(new ResolverContext
+			var res = CodeSymbolsScanner.ScanSymbols(new ResolverContext
 			{
 				ScopedBlock=SyntaxTree,
 				ImportCache = ImportCache,

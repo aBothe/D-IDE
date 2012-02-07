@@ -44,7 +44,7 @@ namespace D_IDE.D
 			dataOverride.CaretLocation = new CodeLocation(ToolTipRequest.Column, ToolTipRequest.Line);
 			dataOverride.CaretOffset = EditorDocument.Editor.Document.GetOffset(ToolTipRequest.Position);
 
-			var ttContents = BuildToolTip(dataOverride);
+			var ttContents = AbstractTooltipProvider.BuildToolTip(dataOverride);
 
 			if (ttContents == null)
 				return;
