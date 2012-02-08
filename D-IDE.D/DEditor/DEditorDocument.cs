@@ -995,16 +995,17 @@ namespace D_IDE.D
 								watchedParent = watchedParent.Parent as IBlockNode;
 
 							if (watchedParent != null)
-								foreach (var n in watchedParent)
-								{
-									if (n == null)
-										continue;
+								lock(watchedParent)
+									foreach (var n in watchedParent)
+									{
+										if (n == null)
+											continue;
 
-									var cData = new DCompletionData(n);
-									if (selectedItem == null && cData.Node!=null && CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
-										selectedItem = cData;
-									members.Add(cData);
-								}
+										var cData = new DCompletionData(n);
+										if (selectedItem == null && cData.Node!=null && CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
+											selectedItem = cData;
+										members.Add(cData);
+									}
 
 							try
 							{
