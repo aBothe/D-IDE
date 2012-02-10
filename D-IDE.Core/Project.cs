@@ -225,6 +225,10 @@ namespace D_IDE.Core
 			xw.WriteCData(Version.ToString());
 			xw.WriteEndElement();
 
+			xw.WriteStartElement("execargs");
+			xw.WriteCData(ExecutingArguments);
+			xw.WriteEndElement();
+
 			xw.WriteStartElement("languagespecific");
 			SaveLanguageSpecificSettings(xw);
 
@@ -318,6 +322,10 @@ namespace D_IDE.Core
 							if (xr.MoveToAttribute("autoincrementbuild"))
 								AutoIncrementBuildNumber = xr.GetAttribute("autoincrementbuild").ToLower()=="true";
 							Version.Parse(xr.ReadString());
+							break;
+
+						case "execargs":
+							ExecutingArguments = xr.ReadString();
 							break;
 
 						case "languagespecific":
