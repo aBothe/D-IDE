@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="376" d:DesignWidth="624" Background="White">
+             d:DesignHeight="286" d:DesignWidth="654" Background="White">
 	<w:Grid Name="stackPanel1">
 		<w:GroupBox Header="General" Height="167" Name="groupBox1" VerticalAlignment="Top">
 			<w:Grid>
@@ -21,6 +21,12 @@
 				<w:TextBox Height="23" Margin="115,116,87,0" Name="Text_OutputFile" VerticalAlignment="Top" />
 				<w:Label Content="Output File" Height="17" HorizontalAlignment="Left" Margin="6,119,0,0" Name="label4" Padding="0" VerticalAlignment="Top" Width="85" />
 				<w:Button Content="Reset" Margin="0,0,6,5" Name="button1" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" Click="button1_Click" ToolTip="Set output file path to default value" />
+			</w:Grid>
+		</w:GroupBox>
+		<w:GroupBox Header="Execution" Height="58" Margin="0,173,0,0" Name="groupBox2" VerticalAlignment="Top">
+			<w:Grid>
+				<w:Label Content="Execution args" Height="20" HorizontalAlignment="Left" Margin="6,9,0,0" Name="label5" VerticalAlignment="Top" Padding="0" Width="103" />
+				<w:TextBox Height="23" Margin="115,6,6,0" Name="textBox_ExecArgs" VerticalAlignment="Top" />
 			</w:Grid>
 		</w:GroupBox>
 	</w:Grid>

@@ -42,6 +42,8 @@ namespace D_IDE.Dialogs.SettingsPages
 			}
 			catch (Exception ex) { MessageBox.Show(ex.ToString()); return false; }
 			prj.AutoIncrementBuildNumber = Check_AutoIncrBuild.IsChecked.Value;
+
+			prj.ExecutingArguments = textBox_ExecArgs.Text;
 			return true;
 		}
 		
@@ -62,6 +64,8 @@ namespace D_IDE.Dialogs.SettingsPages
 			Text_Build.Text = prj.Version.Build.ToString();
 			Text_Revision.Text = prj.Version.Revision.ToString();
 			Check_AutoIncrBuild.IsChecked = prj.AutoIncrementBuildNumber;
+
+			textBox_ExecArgs.Text = prj.ExecutingArguments;
 		}
 
 		private void button1_Click(object sender, RoutedEventArgs e)
