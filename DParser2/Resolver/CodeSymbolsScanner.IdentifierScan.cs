@@ -144,7 +144,7 @@ namespace D_Parser.Resolver
 
 							if (decls != null && decls.Length > 0)
 								foreach (var d in decls)
-									if(!(d is DVariable)) // Initializers are searched already
+									if (!(d is DVariable)) // Initializers are searched already
 										SearchIn(d, l);
 						}
 
