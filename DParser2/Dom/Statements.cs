@@ -163,6 +163,28 @@ namespace D_Parser.Dom.Statements
 						}
 				}
 
+				if (Statement is StatementContainingStatement)
+					foreach (var s in (Statement as StatementContainingStatement).SubStatements)
+					{
+						if (s is MixinStatement)
+						{
+							// TODO: Parse MixinStatements à la mixin("int x" ~ "="~ to!string(5) ~";");
+						}
+						else if (s is TemplateMixin)
+						{
+							var tm = s as TemplateMixin;
+
+							if (string.IsNullOrEmpty(tm.MixinId))
+							{
+
+							}
+							else
+							{
+
+							}
+						}
+					}
+
 				Statement=Statement.Parent;
 			}
 

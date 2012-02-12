@@ -1201,7 +1201,7 @@ namespace D_IDE.D
 			if (completionWindow != null)
 			{
 				// If entered key isn't part of the identifier anymore, close the completion window and insert the item text.
-				if (!DCodeCompletionSupport.IsIdentifierChar(e.Text[0]))
+				if (!AbstractCompletionProvider.IsIdentifierChar(e.Text[0]))
 					if (DSettings.Instance.ForceCodeCompetionPopupCommit)
 						completionWindow.CompletionList.RequestInsertion(e);
 					else

@@ -15,17 +15,17 @@ using D_Parser.Completion;
 
 namespace D_IDE.D
 {
-	public class DCodeCompletionSupport:AbstractCompletionSupport
+	public class DCodeCompletionSupport
 	{
-		public DCodeCompletionSupport(ICompletionDataGenerator CompletionDataGenerator)
-			: base(CompletionDataGenerator) { }
-
 		public static void BuildCompletionData(DEditorDocument EditorDocument, IList<ICompletionData> l, string EnteredText,
 			out string lastResultPath)
 		{
-			var ccs = new DCodeCompletionSupport(new IDECompletionDataGenerator(l));
+			lastResultPath = null;
 
-			ccs.BuildCompletionData(EditorDocument,EnteredText,out lastResultPath);
+			var provider = AbstractCompletionProvider.BuildCompletionData(new IDECompletionDataGenerator(l), EditorDocument, EnteredText);
+
+			if (provider is MemberCompletionProvider)
+				lastResultPath = (provider as MemberCompletionProvider).lastResultPath;
 		}
 
 		public static bool CanShowCompletionWindow(DEditorDocument EditorDocument)

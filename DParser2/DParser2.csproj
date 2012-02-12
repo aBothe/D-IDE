@@ -67,8 +67,11 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Completion\AbstractCompletionSupport.cs" />
+    <Compile Include="Completion\AbstractCompletionProvider.cs" />
     <Compile Include="Completion\AbstractTooltipProvider.cs" />
+    <Compile Include="Completion\CtrlSpaceCompletionProvider.cs" />
+    <Compile Include="Completion\MemberCompletionProvider.cs" />
+    <Compile Include="Completion\PropertyAttributeCompletionProvider.cs" />
     <Compile Include="Resolver\CodeSymbolsScanner.IdentifierScan.cs" />
     <Compile Include="Resolver\StaticTypePropertyProvider.cs" />
     <Compile Include="Misc\ASTStorage.cs" />
