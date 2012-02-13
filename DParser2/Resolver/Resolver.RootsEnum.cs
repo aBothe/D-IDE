@@ -72,7 +72,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 						{
 							var dm2 = m as DNode;
 							var dm3 = m as DMethod; // Only show normal & delegate methods
-							if (!DResolver.CanAddMemberOfType(VisibleMembers, m) || dm2 == null ||
+							if (!CanAddMemberOfType(VisibleMembers, m) || dm2 == null ||
 								(dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate))
 								)
 								continue;
@@ -103,7 +103,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 					// Add 'out' variable if typing in the out test block currently
 					if (dm.OutResultVariable != null && dm.Out != null && dm.GetSubBlockAt(Caret) == dm.Out)
-						HandleItem(DResolver.BuildOutResultVariable(dm));
+						HandleItem(BuildOutResultVariable(dm));
 
 					if (VisibleMembers.HasFlag(MemberTypes.Variables))
 						HandleItems(dm.Parameters);
@@ -114,7 +114,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 					// The method's declaration children are handled above already via BlockStatement.GetItemHierarchy().
 					// except AdditionalChildren:
 					foreach (var ch in dm.AdditionalChildren)
-						if (DResolver.CanAddMemberOfType(VisibleMembers, ch))
+						if (CanAddMemberOfType(VisibleMembers, ch))
 							HandleItem(ch);
 
 					// If the method is a nested method,
@@ -132,7 +132,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 				else foreach (var n in curScope)
 					{
 						// Add anonymous enums' items
-						if (n is DEnum && string.IsNullOrEmpty(n.Name) && DResolver.CanAddMemberOfType(VisibleMembers, n))
+						if (n is DEnum && string.IsNullOrEmpty(n.Name) && CanAddMemberOfType(VisibleMembers, n))
 						{
 							HandleItems((n as DEnum).Children);
 							continue;
@@ -140,7 +140,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 						var dm3 = n as DMethod; // Only show normal & delegate methods
 						if (
-							!DResolver.CanAddMemberOfType(VisibleMembers, n) ||
+							!CanAddMemberOfType(VisibleMembers, n) ||
 							(dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate)))
 							continue;
 
@@ -151,7 +151,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 			}
 
 			// Add __ctfe variable
-			if(DResolver.CanAddMemberOfType(VisibleMembers, __ctfe))
+			if(CanAddMemberOfType(VisibleMembers, __ctfe))
 				HandleItem(__ctfe);
 
 			#endregion
@@ -173,14 +173,14 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 							string.IsNullOrEmpty(i.Name) &&
 							dn.IsPublic &&
 							!dn.ContainsAttribute(DTokens.Package) &&
-							DResolver.CanAddMemberOfType(VisibleMembers, i))
+							CanAddMemberOfType(VisibleMembers, i))
 						{
 							HandleItems((i as DEnum).Children);
 							continue;
 						}
 
 						if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package) &&
-							DResolver.CanAddMemberOfType(VisibleMembers, dn))
+							CanAddMemberOfType(VisibleMembers, dn))
 							HandleItem(dn);
 					}
 					else
@@ -189,5 +189,65 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 			}
 			#endregion
 		}
+
+		static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)
+		{
+			if (n is DMethod)
+				return (n as DMethod).Name != "" && VisibleMembers.HasFlag(MemberTypes.Methods);
+
+			if (n is DVariable)
+			{
+				var d = n as DVariable;
+
+				// Only add aliases if at least types,methods or variables shall be shown.
+				if (d.IsAlias)
+					return
+						VisibleMembers.HasFlag(MemberTypes.Methods) ||
+						VisibleMembers.HasFlag(MemberTypes.Types) ||
+						VisibleMembers.HasFlag(MemberTypes.Variables);
+
+				return VisibleMembers.HasFlag(MemberTypes.Variables);
+			}
+
+			if (n is DClassLike)
+				return VisibleMembers.HasFlag(MemberTypes.Types);
+
+			if (n is DEnum)
+			{
+				var d = n as DEnum;
+
+				// Only show enums if a) they're named and types are allowed or b) variables are allowed
+				return (d.IsAnonymous ? false : VisibleMembers.HasFlag(MemberTypes.Types)) ||
+					VisibleMembers.HasFlag(MemberTypes.Variables);
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Returns a variable wrapper for the out test variable defined in the out(Identifier)-section
+		/// 
+		/// int foo()
+		/// out(result)
+		/// {
+		///		assert(result>0); // 'result' is of type int
+		/// }
+		/// { ... }
+		/// </summary>
+		/// <param name="dm"></param>
+		/// <returns></returns>
+		static DVariable BuildOutResultVariable(DMethod dm)
+		{
+			return new DVariable
+			{
+				Name = dm.OutResultVariable.Value as string,
+				NameLocation = dm.OutResultVariable.Location,
+				Type = dm.Type, // TODO: What to do on auto functions?
+				Parent = dm,
+				StartLocation = dm.OutResultVariable.Location,
+				EndLocation = dm.OutResultVariable.EndLocation,
+			};
+		}
+
 	}
 }

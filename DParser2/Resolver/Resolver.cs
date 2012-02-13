@@ -15,40 +15,6 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public partial class DResolver
 	{
-		public static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)
-		{
-			if(n is DMethod)
-				return (n as DMethod).Name!="" && VisibleMembers.HasFlag(MemberTypes.Methods);
-
-			if(n is DVariable)
-			{
-				var d=n as DVariable;
-
-				// Only add aliases if at least types,methods or variables shall be shown.
-				if(d.IsAlias)
-					return 
-						VisibleMembers.HasFlag(MemberTypes.Methods) || 
-						VisibleMembers.HasFlag(MemberTypes.Types) || 
-						VisibleMembers.HasFlag(MemberTypes.Variables);
-
-				return VisibleMembers.HasFlag(MemberTypes.Variables);
-			}
-
-			if (n is DClassLike)
-				return VisibleMembers.HasFlag(MemberTypes.Types);
-
-			if(n is DEnum)
-			{
-				var d=n as DEnum;
-
-				// Only show enums if a) they're named and types are allowed or b) variables are allowed
-				return (d.IsAnonymous ? false : VisibleMembers.HasFlag(MemberTypes.Types)) ||
-					VisibleMembers.HasFlag(MemberTypes.Variables);
-			}
-
-			return false;
-		}
-
 		public static IBlockNode SearchBlockAt(IBlockNode Parent, CodeLocation Where, out IStatement ScopedStatement)
 		{
 			ScopedStatement = null;
@@ -323,31 +289,6 @@ namespace D_Parser.Resolver
 		}
 
 		#region ResolveType
-		/// <summary>
-		/// Returns a variable wrapper for the out test variable defined in the out(Identifier)-section
-		/// 
-		/// int foo()
-		/// out(result)
-		/// {
-		///		assert(result>0); // 'result' is of type int
-		/// }
-		/// { ... }
-		/// </summary>
-		/// <param name="dm"></param>
-		/// <returns></returns>
-		internal static DVariable BuildOutResultVariable(DMethod dm)
-		{
-			return new DVariable
-			{
-				Name = dm.OutResultVariable.Value as string,
-				NameLocation = dm.OutResultVariable.Location,
-				Type = dm.Type, // TODO: What to do on auto functions?
-				Parent = dm,
-				StartLocation = dm.OutResultVariable.Location,
-				EndLocation = dm.OutResultVariable.EndLocation,
-			};
-		}
-
 		public static ResolveResult[] ResolveType(IEditorData editor,
 			ResolverContext ctxt,
 			bool alsoParseBeyondCaret = false,
@@ -370,7 +311,7 @@ namespace D_Parser.Resolver
 							!=ex)
 							break;
 
-				if (targetExpr != null)
+				if (targetExpr != null && editor.CaretLocation >= targetExpr.Location && editor.CaretLocation <= targetExpr.EndLocation)
 				{
 					startLocation = targetExpr.Location;
 					start = DocumentHelper.LocationToOffset(editor.ModuleCode, startLocation);
@@ -663,7 +604,7 @@ namespace D_Parser.Resolver
 								else if (scanResult is TypeResult)
 								{
 									var tr=scanResult as TypeResult;
-									var nodeMatches=ScanNodeForIdentifier(tr.ResolvedTypeDefinition, searchIdentifier, ctxtOverride);
+									var nodeMatches=NameScan.ScanNodeForIdentifier(tr.ResolvedTypeDefinition, searchIdentifier, ctxtOverride);
 
 									var results = HandleNodeMatches(
 										nodeMatches,
@@ -697,7 +638,7 @@ namespace D_Parser.Resolver
 									else
 									{
 										var results = HandleNodeMatches(
-										ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, ctxtOverride),
+										NameScan.ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, ctxtOverride),
 										ctxtOverride, currentScopeOverride, rbase, TypeDeclaration: declaration);
 										if (results != null)
 											returnedResults.AddRange(results);
@@ -962,72 +903,6 @@ namespace D_Parser.Resolver
 			bcStack--;
 
 			return ret.Count > 0 ? ret.ToArray() : null;
-		}
-
-		/// <summary>
-		/// Scans through the node. Also checks if n is a DClassLike or an other kind of type node and checks their specific child and/or base class nodes.
-		/// </summary>
-		/// <param name="n"></param>
-		/// <param name="name"></param>
-		/// <param name="parseCache">Needed when trying to search base classes</param>
-		/// <returns></returns>
-		public static INode[] ScanNodeForIdentifier(IBlockNode curScope, string name, ResolverContext ctxt)
-		{
-			var matches = new List<INode>();
-
-			if (curScope.Count > 0)
-				foreach (var n in curScope)
-				{
-					// Scan anonymous enums
-					if (n is DEnum && n.Name == "")
-					{
-						foreach (var k in n as DEnum)
-							if (k.Name == name)
-								matches.Add(k);
-					}
-
-					if (n.Name == name)
-						matches.Add(n);
-				}
-
-			// If our current Level node is a class-like, also attempt to search in its baseclass!
-			if (curScope is DClassLike)
-			{
-				var baseClasses = ResolveBaseClass(curScope as DClassLike, ctxt);
-				if (baseClasses != null)
-					foreach (var i in baseClasses)
-					{
-						var baseClass = i as TypeResult;
-						if (baseClass == null)
-							continue;
-						// Search for items called name in the base class(es)
-						var r = ScanNodeForIdentifier(baseClass.ResolvedTypeDefinition, name, ctxt);
-
-						if (r != null)
-							matches.AddRange(r);
-					}
-			}
-
-			// Check parameters
-			if (curScope is DMethod)
-			{
-				var dm = curScope as DMethod;
-				foreach (var ch in dm.Parameters)
-				{
-					if (name == ch.Name)
-						matches.Add(ch);
-				}
-			}
-
-			// and template parameters
-			if (curScope is DNode && (curScope as DNode).TemplateParameters != null)
-				foreach (var ch in (curScope as DNode).TemplateParameters)
-				{
-					if (name == ch.Name)
-						matches.Add(new TemplateParameterNode(ch));
-				}
-
-			return matches.Count > 0 ? matches.ToArray() : null;
 		}
 
 		/// <summary>
