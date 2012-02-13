@@ -48,7 +48,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 			// 1)
 			if (ctxt.ScopedStatement != null)
 			{
-				var hierarchy = BlockStatement.GetItemHierarchy(ctxt.ScopedStatement, Caret);
+				var hierarchy = GetItemHierarchy(ctxt.ScopedStatement, Caret);
 
 				HandleItems(hierarchy);
 			}
@@ -126,7 +126,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 						var nestedBlock = parDM.GetSubBlockAt(Caret);
 
 						// Search for the deepest statement scope and add all declarations done in the entire hierarchy
-						HandleItems(BlockStatement.GetItemHierarchy(nestedBlock.SearchStatementDeeply(Caret), Caret));
+						HandleItems(GetItemHierarchy(nestedBlock.SearchStatementDeeply(Caret), Caret));
 					}
 				}
 				else foreach (var n in curScope)
@@ -188,6 +188,72 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 				}
 			}
 			#endregion
+		}
+
+		/// <summary>
+		/// Walks up the statement scope hierarchy and enlists all declarations that have been made BEFORE the caret position. 
+		/// (If CodeLocation.Empty given, this parameter will be ignored)
+		/// </summary>
+		public static INode[] GetItemHierarchy(IStatement Statement, CodeLocation Caret)
+		{
+			var l = new List<INode>();
+
+			// To a prevent double entry of the same declaration, skip a most scoped declaration first
+			if (Statement is DeclarationStatement)
+				Statement = Statement.Parent;
+
+			while (Statement != null)
+			{
+				if (Statement is IDeclarationContainingStatement)
+				{
+					var decls = (Statement as IDeclarationContainingStatement).Declarations;
+
+					if (decls != null)
+						foreach (var decl in decls)
+						{
+							if (Caret != CodeLocation.Empty)
+							{
+								if (Caret < decl.StartLocation)
+									continue;
+
+								var dv = decl as DVariable;
+								if (dv != null &&
+									dv.Initializer != null &&
+									!(Caret < dv.Initializer.Location ||
+									Caret > dv.Initializer.EndLocation))
+									continue;
+							}
+
+							l.Add(decl);
+						}
+				}
+
+				if (Statement is StatementContainingStatement)
+					foreach (var s in (Statement as StatementContainingStatement).SubStatements)
+					{
+						if (s is MixinStatement)
+						{
+							// TODO: Parse MixinStatements à la mixin("int x" ~ "="~ to!string(5) ~";");
+						}
+						else if (s is TemplateMixin)
+						{
+							var tm = s as TemplateMixin;
+
+							if (string.IsNullOrEmpty(tm.MixinId))
+							{
+
+							}
+							else
+							{
+
+							}
+						}
+					}
+
+				Statement = Statement.Parent;
+			}
+
+			return l.ToArray();
 		}
 
 		static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)

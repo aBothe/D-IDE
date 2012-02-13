@@ -30,8 +30,7 @@ namespace D_Parser.Completion
 				return;
 
 			// 1) Get current context the caret is at
-
-			var parsedBlock = DResolver.FindCurrentCaretContext(
+			var parsedBlock = FindCurrentCaretContext(
 				Editor.ModuleCode,
 				curBlock,
 				Editor.CaretOffset,
@@ -88,7 +87,7 @@ namespace D_Parser.Completion
 						// Do not take the caret location anymore because of the limited parsing of our code.
 						var scopedStmt = blockStmt.SearchStatementDeeply(blockStmt.EndLocation /*Editor.CaretLocation*/);
 
-						var decls = BlockStatement.GetItemHierarchy(scopedStmt, Editor.CaretLocation);
+						var decls = RootsEnum.GetItemHierarchy(scopedStmt, Editor.CaretLocation);
 
 						foreach (var n in decls)
 							CompletionDataGenerator.Add(n);
@@ -145,6 +144,104 @@ namespace D_Parser.Completion
 					CompletionDataGenerator.Add(mod.ModuleName, mod);
 			}
 			#endregion
+		}
+
+		/// <returns>Either CurrentScope, a BlockStatement object that is associated with the parent method or a complete new DModule object</returns>
+		static object FindCurrentCaretContext(string code,
+			IBlockNode CurrentScope,
+			int caretOffset, CodeLocation caretLocation,
+			out ParserTrackerVariables TrackerVariables)
+		{
+			bool ParseDecl = false;
+
+			int blockStart = 0;
+			var blockStartLocation = CurrentScope.BlockStartLocation;
+
+			if (CurrentScope is DMethod)
+			{
+				var block = (CurrentScope as DMethod).GetSubBlockAt(caretLocation);
+
+				if (block != null)
+					blockStart = DocumentHelper.LocationToOffset(code, blockStartLocation = block.StartLocation);
+				else
+					return FindCurrentCaretContext(code, CurrentScope.Parent as IBlockNode, caretOffset, caretLocation, out TrackerVariables);
+			}
+			else if (CurrentScope != null)
+			{
+				if (CurrentScope.BlockStartLocation.IsEmpty || caretLocation < CurrentScope.BlockStartLocation && caretLocation > CurrentScope.StartLocation)
+				{
+					ParseDecl = true;
+					blockStart = DocumentHelper.LocationToOffset(code, blockStartLocation = CurrentScope.StartLocation);
+				}
+				else
+					blockStart = DocumentHelper.LocationToOffset(code, CurrentScope.BlockStartLocation);
+			}
+
+			if (blockStart >= 0 && caretOffset - blockStart > 0)
+			{
+				var codeToParse = code.Substring(blockStart, caretOffset - blockStart);
+
+				var psr = DParser.Create(new System.IO.StringReader(codeToParse));
+
+				/* Deadly important! For correct resolution behaviour, 
+				 * it is required to set the parser virtually to the blockStart position, 
+				 * so that everything using the returned object is always related to 
+				 * the original code file, not our code extraction!
+				 */
+				psr.Lexer.SetInitialLocation(blockStartLocation);
+
+				object ret = null;
+
+				if (CurrentScope == null || CurrentScope is IAbstractSyntaxTree)
+					ret = psr.Parse();
+				else if (CurrentScope is DMethod)
+				{
+					psr.Step();
+					ret = psr.BlockStatement();
+				}
+				else if (CurrentScope is DModule)
+					ret = psr.Root();
+				else
+				{
+					psr.Step();
+					if (ParseDecl)
+					{
+						var ret2 = psr.Declaration();
+
+						if (ret2 != null && ret2.Length > 0)
+							ret = ret2[0];
+					}
+					else
+					{
+						IBlockNode bn = null;
+						if (CurrentScope is DClassLike)
+						{
+							var t = new DClassLike((CurrentScope as DClassLike).ClassType);
+							t.AssignFrom(CurrentScope);
+							bn = t;
+						}
+						else if (CurrentScope is DEnum)
+						{
+							var t = new DEnum();
+							t.AssignFrom(CurrentScope);
+							bn = t;
+						}
+
+						bn.Clear();
+
+						psr.ClassBody(bn);
+						ret = bn;
+					}
+				}
+
+				TrackerVariables = psr.TrackerVariables;
+
+				return ret;
+			}
+
+			TrackerVariables = null;
+
+			return null;
 		}
 	}
 }
