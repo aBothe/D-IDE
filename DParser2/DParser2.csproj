@@ -73,6 +73,9 @@
     <Compile Include="Completion\MemberCompletionProvider.cs" />
     <Compile Include="Completion\PropertyAttributeCompletionProvider.cs" />
     <Compile Include="Resolver\CodeSymbolsScanner.IdentifierScan.cs" />
+    <Compile Include="Resolver\ItemEnumeration.cs" />
+    <Compile Include="Resolver\NameScan.cs" />
+    <Compile Include="Resolver\Resolver.RootsEnum.cs" />
     <Compile Include="Resolver\StaticTypePropertyProvider.cs" />
     <Compile Include="Misc\ASTStorage.cs" />
     <Compile Include="Completion\ICompletionDataGenerator.cs" />

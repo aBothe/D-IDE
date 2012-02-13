@@ -13,37 +13,8 @@ namespace D_Parser.Resolver
 	/// <summary>
 	/// Generic class for resolve module relations and/or declarations
 	/// </summary>
-	public class DResolver
+	public partial class DResolver
 	{
-		static DResolver()
-		{
-			__ctfe = new DVariable
-			{
-				Name = "__ctfe",
-				Type = new DTokenDeclaration(DTokens.Bool),
-				Initializer = new TokenExpression(DTokens.True),
-				Description = @"The __ctfe boolean pseudo-vari­able, 
-which eval­u­ates to true at com­pile time, but false at run time, 
-can be used to pro­vide an al­ter­na­tive ex­e­cu­tion path 
-to avoid op­er­a­tions which are for­bid­den at com­pile time.",
-			};
-
-			__ctfe.Attributes.Add(new DAttribute(DTokens.Static));
-			__ctfe.Attributes.Add(new DAttribute(DTokens.Const));
-		}
-
-		[Flags]
-		public enum MemberTypes
-		{
-			Imports = 1,
-			Variables = 1 << 1,
-			Methods = 1 << 2,
-			Types = 1 << 3,
-			Keywords = 1 << 4,
-
-			All = Imports | Variables | Methods | Types | Keywords
-		}
-
 		public static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)
 		{
 			if(n is DMethod)
@@ -76,183 +47,6 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 			}
 
 			return false;
-		}
-
-		/// <summary>
-		/// Returns a list of all items that can be accessed in the current scope.
-		/// </summary>
-		/// <param name="ScopedBlock"></param>
-		/// <param name="ImportCache"></param>
-		/// <returns></returns>
-		public static IEnumerable<INode> EnumAllAvailableMembers(
-			IBlockNode ScopedBlock
-			, IStatement ScopedStatement,
-			CodeLocation Caret,
-			IEnumerable<IAbstractSyntaxTree> CodeCache,
-			MemberTypes VisibleMembers)
-		{
-			/* 
-			 * Shown items:
-			 * 1) First walk through the current scope.
-			 * 2) Walk up the node hierarchy and add all their items (private as well as public members).
-			 * 3) Resolve base classes and add their non-private|static members.
-			 * 
-			 * 4) Then add public members of the imported modules 
-			 */
-			var ret = new List<INode>();
-			var ImportCache = ResolveImports(ScopedBlock.NodeRoot as DModule, CodeCache);
-
-			#region Current module/scope related members
-			
-			// 1)
-			if (ScopedStatement != null)
-			{
-				ret.AddRange(BlockStatement.GetItemHierarchy(ScopedStatement, Caret));
-			}
-
-			var curScope = ScopedBlock;
-
-			// 2)
-			while (curScope != null)
-			{
-				// Walk up inheritance hierarchy
-				if (curScope is DClassLike)
-				{
-					var curWatchedClass = curScope as DClassLike;
-					// MyClass > BaseA > BaseB > Object
-					while (curWatchedClass != null)
-					{
-						if (curWatchedClass.TemplateParameters != null)
-							ret.AddRange(curWatchedClass.TemplateParameterNodes as IEnumerable<INode>);
-
-						foreach (var m in curWatchedClass)
-						{
-							var dm2 = m as DNode;
-							var dm3 = m as DMethod; // Only show normal & delegate methods
-							if (!CanAddMemberOfType(VisibleMembers, m) || dm2 == null ||
-								(dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate))
-								)
-								continue;
-
-							// Add static and non-private members of all base classes; 
-							// Add everything if we're still handling the currently scoped class
-							if (curWatchedClass == curScope || dm2.IsStatic || !dm2.ContainsAttribute(DTokens.Private))
-								ret.Add(m);
-						}
-
-						// Stop adding if Object class level got reached
-						if (!string.IsNullOrEmpty(curWatchedClass.Name) && curWatchedClass.Name.ToLower() == "object")
-							break;
-
-						// 3)
-						var baseclassDefs = DResolver.ResolveBaseClass(curWatchedClass, new ResolverContext { 
-							ParseCache = CodeCache,
-							ScopedBlock=ScopedBlock,
-							ImportCache = ImportCache });
-
-						if (baseclassDefs == null || baseclassDefs.Length<0)
-							break;
-						if (curWatchedClass == baseclassDefs[0].ResolvedTypeDefinition)
-							break;
-						curWatchedClass = baseclassDefs[0].ResolvedTypeDefinition as DClassLike;
-					}
-				}
-				else if (curScope is DMethod)
-				{
-					var dm = curScope as DMethod;
-
-					// Add 'out' variable if typing in the out test block currently
-					if (dm.OutResultVariable != null && dm.Out != null && dm.GetSubBlockAt(Caret) == dm.Out)
-					{
-						ret.Add(BuildOutResultVariable(dm));
-					}
-
-					if (VisibleMembers.HasFlag(MemberTypes.Variables))
-						ret.AddRange(dm.Parameters);
-
-					if (dm.TemplateParameters != null)
-						ret.AddRange(dm.TemplateParameterNodes as IEnumerable<INode>);
-
-					// The method's declaration children are handled above already via BlockStatement.GetItemHierarchy().
-					// except AdditionalChildren:
-					foreach (var ch in dm.AdditionalChildren)
-						if (CanAddMemberOfType(VisibleMembers, ch))
-							ret.Add(ch);
-
-					// If the method is a nested method,
-					// this method won't be 'linked' to the parent statement tree directly - 
-					// so, we've to gather the parent method and add its locals to the return list
-					if (dm.Parent is DMethod)
-					{
-						var parDM = dm.Parent as DMethod;
-						var nestedBlock = parDM.GetSubBlockAt(Caret);
-
-						// Search for the deepest statement scope and add all declarations done in the entire hierarchy
-						ret.AddRange(BlockStatement.GetItemHierarchy(nestedBlock.SearchStatementDeeply(Caret), Caret));
-					}
-				}
-				else foreach (var n in curScope)
-					{
-						// Add anonymous enums' items
-						if (n is DEnum && string.IsNullOrEmpty(n.Name) && CanAddMemberOfType(VisibleMembers, n))
-						{
-							ret.AddRange((n as DEnum).Children);
-							continue;
-						}
-
-						var dm3 = n as DMethod; // Only show normal & delegate methods
-						if (
-							!CanAddMemberOfType(VisibleMembers, n) ||
-							(dm3 != null && !(dm3.SpecialType == DMethod.MethodType.Normal || dm3.SpecialType == DMethod.MethodType.Delegate)))
-							continue;
-
-						ret.Add(n);
-					}
-
-				curScope = curScope.Parent as IBlockNode;
-			}
-
-			// Add __ctfe variable
-			ret.Add(__ctfe);
-
-			#endregion
-
-			#region Global members
-			// Add all non-private and non-package-only nodes
-			foreach (var mod in ImportCache)
-			{
-				if (mod.FileName == (ScopedBlock.NodeRoot as IAbstractSyntaxTree).FileName)
-					continue;
-
-				foreach (var i in mod)
-				{
-					var dn = i as DNode;
-					if (dn != null)
-					{
-						// Add anonymous enums' items
-						if (dn is DEnum && 
-							string.IsNullOrEmpty(i.Name) && 
-							dn.IsPublic && 
-							!dn.ContainsAttribute(DTokens.Package) && 
-							CanAddMemberOfType(VisibleMembers, i))
-						{
-							ret.AddRange((i as DEnum).Children);
-							continue;
-						}
-
-						if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package) &&
-							CanAddMemberOfType(VisibleMembers, dn))
-							ret.Add(dn);
-					}
-					else 
-						ret.Add(i);
-				}
-			}
-			#endregion
-
-			if (ret.Count < 1)
-				return null;
-			return ret;
 		}
 
 		public static IBlockNode SearchBlockAt(IBlockNode Parent, CodeLocation Where, out IStatement ScopedStatement)
@@ -529,7 +323,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 		}
 
 		#region ResolveType
-		static DVariable __ctfe;
+		internal static DVariable __ctfe;
 
 		/// <summary>
 		/// Returns a variable wrapper for the out test variable defined in the out(Identifier)-section
@@ -543,7 +337,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 		/// </summary>
 		/// <param name="dm"></param>
 		/// <returns></returns>
-		static DVariable BuildOutResultVariable(DMethod dm)
+		internal static DVariable BuildOutResultVariable(DMethod dm)
 		{
 			return new DVariable
 			{

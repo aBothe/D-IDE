@@ -21,7 +21,7 @@ namespace D_Parser.Completion
 		{
 			IEnumerable<INode> listedItems = null;
 			ParserTrackerVariables trackVars = null;
-			var visibleMembers = DResolver.MemberTypes.All;
+			var visibleMembers = MemberTypes.All;
 
 			IStatement curStmt = null;
 			var curBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt);
@@ -42,9 +42,9 @@ namespace D_Parser.Completion
 			if (trackVars == null)
 			{
 				// --> Happens if no actual declaration syntax given --> Show types/imports/keywords anyway
-				visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
+				visibleMembers = MemberTypes.Imports | MemberTypes.Types | MemberTypes.Keywords;
 
-				listedItems = DResolver.EnumAllAvailableMembers(curBlock, null, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
+				listedItems = ItemEnumeration.EnumAllAvailableMembers(curBlock, null, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
 			}
 			else
 			{
@@ -68,17 +68,17 @@ namespace D_Parser.Completion
 				}
 
 				if (trackVars.LastParsedObject is ImportStatement /*&& !CaretAfterLastParsedObject*/)
-					visibleMembers = DResolver.MemberTypes.Imports;
+					visibleMembers = MemberTypes.Imports;
 				else if (trackVars.LastParsedObject is NewExpression && (trackVars.IsParsingInitializer/* || !CaretAfterLastParsedObject*/))
-					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types;
+					visibleMembers = MemberTypes.Imports | MemberTypes.Types;
 				else if (EnteredText == " ")
 					return;
 				// In class bodies, do not show variables
 				else if (!(parsedBlock is BlockStatement || trackVars.IsParsingInitializer))
-					visibleMembers = DResolver.MemberTypes.Imports | DResolver.MemberTypes.Types | DResolver.MemberTypes.Keywords;
+					visibleMembers = MemberTypes.Imports | MemberTypes.Types | MemberTypes.Keywords;
 
 				// In a method, parse from the method's start until the actual caret position to get an updated insight
-				if (visibleMembers.HasFlag(DResolver.MemberTypes.Variables) && curBlock is DMethod)
+				if (visibleMembers.HasFlag(MemberTypes.Variables) && curBlock is DMethod)
 				{
 					if (parsedBlock is BlockStatement)
 					{
@@ -95,8 +95,8 @@ namespace D_Parser.Completion
 					}
 				}
 
-				if (visibleMembers != DResolver.MemberTypes.Imports) // Do not pass the curStmt because we already inserted all updated locals a few lines before!
-					listedItems = DResolver.EnumAllAvailableMembers(curBlock, null/*, curStmt*/, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
+				if (visibleMembers != MemberTypes.Imports) // Do not pass the curStmt because we already inserted all updated locals a few lines before!
+					listedItems = ItemEnumeration.EnumAllAvailableMembers(curBlock, null/*, curStmt*/, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
 			}
 
 			// Add all found items to the referenced list
@@ -109,16 +109,16 @@ namespace D_Parser.Completion
 
 			//TODO: Split the keywords into such that are allowed within block statements and non-block statements
 			// Insert typable keywords
-			if (visibleMembers.HasFlag(DResolver.MemberTypes.Keywords))
+			if (visibleMembers.HasFlag(MemberTypes.Keywords))
 				foreach (var kv in DTokens.Keywords)
 					CompletionDataGenerator.Add(kv.Key);
 
-			else if (visibleMembers.HasFlag(DResolver.MemberTypes.Types))
+			else if (visibleMembers.HasFlag(MemberTypes.Types))
 				foreach (var kv in DTokens.BasicTypes_Array)
 					CompletionDataGenerator.Add(kv);
 
 			#region Add module name stubs of importable modules
-			if (visibleMembers.HasFlag(DResolver.MemberTypes.Imports))
+			if (visibleMembers.HasFlag(MemberTypes.Imports))
 			{
 				var nameStubs = new Dictionary<string, string>();
 				var availModules = new List<IAbstractSyntaxTree>();
