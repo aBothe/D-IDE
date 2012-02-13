@@ -323,8 +323,6 @@ namespace D_Parser.Resolver
 		}
 
 		#region ResolveType
-		internal static DVariable __ctfe;
-
 		/// <summary>
 		/// Returns a variable wrapper for the out test variable defined in the out(Identifier)-section
 		/// 
@@ -510,18 +508,11 @@ namespace D_Parser.Resolver
 				{
 					string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
 
-					// Compile time function evalation variable - a boolean value which is true at compile time, false at run time
-					if (searchIdentifier == "__ctfe")
-					{
-						returnedResults.Add(new MemberResult { ResolvedMember=__ctfe, TypeDeclarationBase=declaration });
-						return returnedResults.ToArray();
-					}
-
 					if (string.IsNullOrEmpty(searchIdentifier))
 						return null;
 
 					// Try to convert the identifier into a token
-					int searchToken = string.IsNullOrEmpty(searchIdentifier) ? 0 : DTokens.GetTokenID(searchIdentifier);
+					int searchToken = DTokens.GetTokenID(searchIdentifier);
 
 					// References current class scope
 					if (searchToken == DTokens.This)
@@ -575,118 +566,7 @@ namespace D_Parser.Resolver
 					// (As usual) Go on searching in the local&global scope(s)
 					else
 					{
-						var matches = new List<INode>();
-
-						// Search in current statement's declarations (if possible)
-						var decls = BlockStatement.GetItemHierarchy(ctxt.ScopedStatement, declaration.Location);
-
-						if(decls!=null)
-							foreach (var decl in decls)
-								if (decl != null &&	decl.Name == searchIdentifier)
-									matches.Add(decl);
-
-						// First search along the hierarchy in the current module
-						var curScope = ctxtOverride.ScopedBlock;
-						while (curScope != null)
-						{
-							/* 
-							 * If anonymous enum, skip that one, because in the following ScanForNodeIdentifier call, 
-							 * its children already become added to the match list
-							 */
-							if (curScope is DEnum && curScope.Name == "")
-								curScope = curScope.Parent as IBlockNode;
-
-							if (curScope is DMethod)
-							{
-								var dm = curScope as DMethod;
-
-								// If the method is a nested method,
-								// this method won't be 'linked' to the parent statement tree directly - 
-								// so, we've to gather the parent method and add its locals to the return list
-								if (dm.Parent is DMethod)
-								{
-									var parDM = dm.Parent as DMethod;
-									var nestedBlock = parDM.GetSubBlockAt(declaration.Location);
-									if (nestedBlock != null)
-									{
-										// Make out test variable resolvable
-										if (parDM.OutResultVariable != null && 
-											nestedBlock == parDM.Out && 
-											parDM.OutResultVariable.Value as string == searchIdentifier)
-										{
-											matches.Add(BuildOutResultVariable(parDM));
-										}
-
-										// Search for the deepest statement scope and test all declarations done in the entire scope hierarchy
-										decls = BlockStatement.GetItemHierarchy(nestedBlock.SearchStatementDeeply(declaration.Location), declaration.Location);
-
-										foreach (var decl in decls)
-											// ... Add them if match was found
-											if (decl != null && decl.Name == searchIdentifier)
-												matches.Add(decl);
-									}
-								}
-
-								// Make out test variable resolvable
-								if (dm.OutResultVariable != null && 
-									dm.GetSubBlockAt(declaration.Location)==dm.Out && 
-									dm.OutResultVariable.Value as string == searchIdentifier)
-								{
-									matches.Add(BuildOutResultVariable(dm));
-								}
-
-								// Do not check further method's children but its (template) parameters
-								foreach (var p in dm.Parameters)
-									if (p.Name == searchIdentifier)
-										matches.Add(p);
-
-								if (dm.TemplateParameters != null)
-									foreach (var tp in dm.TemplateParameterNodes)
-										if (tp.Name == searchIdentifier)
-											matches.Add(tp);
-							}
-							else
-							{
-								var m = ScanNodeForIdentifier(curScope, searchIdentifier, ctxtOverride);
-
-								if (m != null)
-									matches.AddRange(m);
-
-								var mod = curScope as IAbstractSyntaxTree;
-								if (mod != null)
-								{
-									var modNameParts = mod.ModuleName.Split('.');
-									if (!string.IsNullOrEmpty(mod.ModuleName) && modNameParts[0] == searchIdentifier)
-										matches.Add(curScope);
-								}
-							}
-							curScope = curScope.Parent as IBlockNode;
-						}
-
-						// Then go on searching in the global scope
-						var ThisModule =
-							currentScopeOverride is IAbstractSyntaxTree ?
-								currentScopeOverride as IAbstractSyntaxTree :
-								currentScopeOverride.NodeRoot as IAbstractSyntaxTree;
-						if (ctxt.ParseCache != null)
-							foreach (var mod in ctxt.ParseCache)
-							{
-								if (mod == ThisModule)
-									continue;
-
-								var modNameParts = mod.ModuleName.Split('.');
-
-								if (modNameParts[0] == searchIdentifier)
-									matches.Add(mod);
-							}
-
-						if (ctxtOverride.ImportCache != null)
-							foreach (var mod in ctxtOverride.ImportCache)
-							{
-								var m = ScanNodeForIdentifier(mod, searchIdentifier, null);
-								if (m != null)
-									matches.AddRange(m);
-							}
+						var matches = NameScan.SearchMatchesAlongNodeHierarchy(ctxtOverride, declaration.Location, searchIdentifier);
 
 						var results = HandleNodeMatches(matches, ctxtOverride, TypeDeclaration: declaration);
 						if (results != null)

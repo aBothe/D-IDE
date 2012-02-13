@@ -1054,7 +1054,7 @@ namespace D_IDE.D
 				if ((EnteredText!=null && EnteredText.Length>0 && !(
 					EnteredText=="@"||
 					EnteredText==" " || 
-					char.IsLetter(EnteredText[0]) || 
+					AbstractCompletionProvider.IsIdentifierChar(EnteredText[0]) || 
 					EnteredText[0] == '.')) || 
 					!DCodeCompletionSupport.CanShowCompletionWindow(this) || 
 					Editor.IsReadOnly)
@@ -1216,7 +1216,7 @@ namespace D_IDE.D
 				return;
 
 			// Note: Show completion window even before the first key has been processed by the editor!
-			else if (e.Text=="@" || char.IsLetter(e.Text[0])/* && !DResolver.IsTypeIdentifier(Editor.Text, Editor.CaretOffset)*/)
+			else if (e.Text=="@" || char.IsLetter(e.Text[0]) || e.Text=="_")
 				ShowCodeCompletionWindow(e.Text);
 		}
 

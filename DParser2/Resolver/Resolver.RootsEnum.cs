@@ -103,9 +103,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 					// Add 'out' variable if typing in the out test block currently
 					if (dm.OutResultVariable != null && dm.Out != null && dm.GetSubBlockAt(Caret) == dm.Out)
-					{
 						HandleItem(DResolver.BuildOutResultVariable(dm));
-					}
 
 					if (VisibleMembers.HasFlag(MemberTypes.Variables))
 						HandleItems(dm.Parameters);
@@ -153,8 +151,8 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 			}
 
 			// Add __ctfe variable
-			if(DResolver.CanAddMemberOfType(VisibleMembers, DResolver.__ctfe))
-				HandleItem(DResolver.__ctfe);
+			if(DResolver.CanAddMemberOfType(VisibleMembers, __ctfe))
+				HandleItem(__ctfe);
 
 			#endregion
 
