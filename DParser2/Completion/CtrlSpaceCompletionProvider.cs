@@ -77,25 +77,21 @@ namespace D_Parser.Completion
 					visibleMembers = MemberTypes.Imports | MemberTypes.Types | MemberTypes.Keywords;
 
 				// In a method, parse from the method's start until the actual caret position to get an updated insight
-				if (visibleMembers.HasFlag(MemberTypes.Variables) && curBlock is DMethod)
+				if (visibleMembers.HasFlag(MemberTypes.Variables) &&
+					curBlock is DMethod &&
+					parsedBlock is BlockStatement)
 				{
-					if (parsedBlock is BlockStatement)
-					{
-						var blockStmt = parsedBlock as BlockStatement;
+					var bs = parsedBlock as BlockStatement;
 
-						// Insert the updated locals insight.
-						// Do not take the caret location anymore because of the limited parsing of our code.
-						var scopedStmt = blockStmt.SearchStatementDeeply(blockStmt.EndLocation /*Editor.CaretLocation*/);
-
-						var decls = RootsEnum.GetItemHierarchy(scopedStmt, Editor.CaretLocation);
-
-						foreach (var n in decls)
-							CompletionDataGenerator.Add(n);
-					}
+					// Insert the updated locals insight.
+					// Do not take the caret location anymore because of the limited parsing of our code.
+					curStmt = bs.SearchStatementDeeply(bs.EndLocation);
 				}
+				else
+					curStmt = null;
 
 				if (visibleMembers != MemberTypes.Imports) // Do not pass the curStmt because we already inserted all updated locals a few lines before!
-					listedItems = ItemEnumeration.EnumAllAvailableMembers(curBlock, null/*, curStmt*/, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
+					listedItems = ItemEnumeration.EnumAllAvailableMembers(curBlock, curStmt, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
 			}
 
 			// Add all found items to the referenced list
