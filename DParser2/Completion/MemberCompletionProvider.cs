@@ -73,7 +73,7 @@ namespace D_Parser.Completion
 			isVariableInstance |= rr.TypeDeclarationBase.ExpressesVariableAccess;
 
 			if (rr is MemberResult)
-				BuildMemberCompletionData(rr as MemberResult, currentlyScopedBlock, isVariableInstance, resultParent);
+				BuildMemberCompletionData(rr as MemberResult, currentlyScopedBlock, isVariableInstance);
 
 			// A module path has been typed
 			else if (!isVariableInstance && rr is ModuleResult)
@@ -121,6 +121,7 @@ namespace D_Parser.Completion
 				BuildTypeCompletionData(tr, vis);
 				if (resultParent == null)
 					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, tr.ResolvedTypeDefinition);
+				StaticTypePropertyProvider.AddClassTypeProperties(CompletionDataGenerator, tr.ResolvedTypeDefinition);
 			}
 			#endregion
 
@@ -128,8 +129,9 @@ namespace D_Parser.Completion
 			else if (rr is StaticTypeResult)
 			{
 				var srr = rr as StaticTypeResult;
+				
 				if (resultParent == null)
-					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, null, true);
+					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, null);
 
 				var type = srr.TypeDeclarationBase;
 
@@ -193,16 +195,16 @@ namespace D_Parser.Completion
 						StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, null, true);
 						bool isFloat = (idExpr.Format & LiteralFormat.FloatingPoint) == LiteralFormat.FloatingPoint;
 						// Floats also imply integral properties
-						StaticTypePropertyProvider.AddIntegralTypeProperties(DTokens.Int, rr, CompletionDataGenerator, null, isFloat);
+						StaticTypePropertyProvider.AddIntegralTypeProperties(DTokens.Int, rr, CompletionDataGenerator, null, resultParent == null && isFloat);
 
 						// Float-exclusive props
 						if (isFloat)
-							StaticTypePropertyProvider.AddFloatingTypeProperties(DTokens.Float, rr, CompletionDataGenerator);
+							StaticTypePropertyProvider.AddFloatingTypeProperties(DTokens.Float, rr, CompletionDataGenerator, null, resultParent==null);
 					}
 					// String literals
 					else if (idExpr.Format == LiteralFormat.StringLiteral || idExpr.Format == LiteralFormat.VerbatimStringLiteral)
 					{
-						StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, DontAddInitProperty: true);
+						StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, null, resultParent==null);
 						StaticTypePropertyProvider.AddArrayProperties(rr, CompletionDataGenerator, new ArrayDecl()
 						{
 							ValueType =
@@ -223,23 +225,18 @@ namespace D_Parser.Completion
 		void BuildMemberCompletionData(
 			MemberResult mrr,
 			IBlockNode currentlyScopedBlock,
-			bool isVariableInstance = false,
-			ResolveResult resultParent = null)
+			bool isVariableInstance = false)
 		{
-			bool dontAddInit = false;
 			if (mrr.MemberBaseTypes != null)
 				foreach (var i in mrr.MemberBaseTypes)
 				{
-					if (i is StaticTypeResult || i is ExpressionResult)
-						dontAddInit = true;
-
 					BuildCompletionData(i, currentlyScopedBlock,
 						(mrr.ResolvedMember is DVariable && (mrr.ResolvedMember as DVariable).IsAlias) ?
 							isVariableInstance : true, mrr); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
 				}
 
 			if (mrr.ResultBase == null)
-				StaticTypePropertyProvider.AddGenericProperties(mrr, CompletionDataGenerator, mrr.ResolvedMember, DontAddInitProperty: dontAddInit);
+				StaticTypePropertyProvider.AddGenericProperties(mrr, CompletionDataGenerator, mrr.ResolvedMember, false);
 
 		}
 

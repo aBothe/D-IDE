@@ -171,8 +171,8 @@ namespace D_Parser.Dom
 		{
 			get
 			{
-				return !(KeyType is DTokenDeclaration) ||
-					!DTokens.BasicTypes_Integral[(KeyType as DTokenDeclaration).Token];
+				return KeyType!=null && (!(KeyType is DTokenDeclaration) ||
+					!DTokens.BasicTypes_Integral[(KeyType as DTokenDeclaration).Token]);
 			}
 		}
 

@@ -226,7 +226,12 @@ namespace D_Parser.Resolver
 
 					expr = ExpressionHelper.SearchExpressionDeeply(expr, editor.CaretLocation);
 
-					var ret = ResolveType(expr.ExpressionTypeRepresentation, ctxt);
+					ResolveResult[] ret = null;
+
+					if (expr is IdentifierExpression && !(expr as IdentifierExpression).IsIdentifier)
+						ret = new[] { new ExpressionResult() { Expression = expr, TypeDeclarationBase = expr.ExpressionTypeRepresentation } };
+					else
+						ret = ResolveType(expr.ExpressionTypeRepresentation, ctxt);
 
 					if (ret == null && expr != null && !(expr is TokenExpression))
 						ret = new[] { new ExpressionResult() { Expression = expr, TypeDeclarationBase=expr.ExpressionTypeRepresentation } };
