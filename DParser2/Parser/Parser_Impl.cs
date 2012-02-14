@@ -827,7 +827,7 @@ namespace D_Parser.Parser
 					AllowWeakTypeParsing = weaktype;
 
 					if (keyType != null && laKind == CloseSquareBracket)
-						cd = new ArrayDecl() { KeyType = keyType, Location=startLoc };
+						cd = new ArrayDecl() { KeyType = keyType, ClampsEmpty=false, Location=startLoc };
 					else
 						la = la_backup;
 				}
@@ -841,13 +841,15 @@ namespace D_Parser.Parser
 					{
 						Step();
 						cd = new ArrayDecl() {
-							Location=startLoc
-							,KeyExpression= new PostfixExpression_Slice() { 
-								FromExpression=fromExpression, 
+							Location=startLoc,
+							ClampsEmpty=false,
+							KeyType=null,
+							KeyExpression= new PostfixExpression_Slice() { 
+								FromExpression=fromExpression,
 								ToExpression=AssignExpression()}};
 					}
 					else
-						cd = new ArrayDecl() { KeyExpression=fromExpression,Location=startLoc };
+						cd = new ArrayDecl() { KeyType=null, KeyExpression=fromExpression,ClampsEmpty=false,Location=startLoc };
 				}
 
 				if (AllowWeakTypeParsing && laKind != CloseSquareBracket)
@@ -1064,6 +1066,7 @@ namespace D_Parser.Parser
 				ad.InnerDeclaration = td;
 				if (laKind != (CloseSquareBracket))
 				{
+					ad.ClampsEmpty = false;
 					ITypeDeclaration keyType=null;
 					var la_backup = la;
 					if (!IsAssignExpression())
@@ -1634,7 +1637,7 @@ namespace D_Parser.Parser
 							// Skip initial identifier list
 							do
 							{
-								if (Lexer.CurrentPeekToken.Kind == Dot) 
+								if (Lexer.CurrentPeekToken.Kind == Dot)
 									Peek();
 
 								if (Lexer.CurrentPeekToken.Kind == Identifier)
@@ -1659,6 +1662,16 @@ namespace D_Parser.Parser
 								OverPeekBrackets(OpenParenthesis);
 						}
 					}
+				}
+				else if(Peek(1).Kind != Dot && Peek().Kind!=Identifier)
+				{
+					/*
+					 * PrimaryExpression allows
+					 * BasicType . Identifier 
+					 * --> if BasicType IS int or float etc., and NO dot follows, it must be a type
+					 */
+					Peek(1);
+					return false;
 				}
 
 				if (Lexer.CurrentPeekToken == null)
@@ -2110,27 +2123,53 @@ namespace D_Parser.Parser
 				{
 					NewArguments = newArgs,
 					Type=nt,
-					IsArrayArgument = nt is ArrayDecl,
 					Location=startLoc
 				};
 				LastParsedObject = initExpr;
 
 				var args = new List<IExpression>();
 
-				if (nt is ArrayDecl)
-				{
-					var ad = nt as ArrayDecl;
+				var ad=nt as ArrayDecl;
 
-					args.Add(ad.KeyExpression ?? new TypeDeclarationExpression(ad.KeyType));
-
-					initExpr.Type = ad.ValueType;
-				}
-				else if (laKind == (OpenParenthesis))
+				if((ad == null || ad.ClampsEmpty) && laKind == OpenParenthesis)
 				{
 					Step();
 					if (laKind != CloseParenthesis)
 						args = ArgumentList(Scope);
 					Expect(CloseParenthesis);
+
+					if (ad != null)
+					{
+						if (args.Count == 0)
+						{
+							SemErr(CloseParenthesis, "Size for the rightmost array dimension needed");
+
+							initExpr.EndLocation = t.EndLocation;
+							return initExpr;
+						}
+
+						while (ad != null)
+						{
+							if (args.Count == 0)
+								break;
+
+							ad.ClampsEmpty = false;
+							ad.KeyType = null;
+							ad.KeyExpression = args[args.Count - 1];
+
+							args.RemoveAt(args.Count - 1);
+
+							ad = ad.InnerDeclaration as ArrayDecl;
+						}
+					}
+				}
+
+				ad = nt as ArrayDecl;
+
+				if (ad != null && ad.KeyExpression == null)
+				{
+					if (ad.KeyType != null)
+						SemErr(ad.KeyType is DTokenDeclaration ? (ad.KeyType as DTokenDeclaration).Token : CloseSquareBracket, "Size of array expected, not type " + ad.KeyType);
 				}
 
 				initExpr.Arguments = args.ToArray();

@@ -21,7 +21,7 @@ namespace D_Parser.Resolver
 
 	public class ItemEnumeration : RootsEnum
 	{
-		protected ItemEnumeration() { }
+		protected ItemEnumeration(ResolverContext ctxt): base(ctxt) { }
 
 		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock
 			, IStatement ScopedStatement,
@@ -43,9 +43,9 @@ namespace D_Parser.Resolver
 			CodeLocation Caret,
 			MemberTypes VisibleMembers)
 		{
-			var en = new ItemEnumeration();
+			var en = new ItemEnumeration(ctxt);
 
-			en.IterateThroughScopeLayers(ctxt, Caret, VisibleMembers);
+			en.IterateThroughScopeLayers(Caret, VisibleMembers);
 
 			return en.Nodes.Count <1 ? null : en.Nodes;
 		}

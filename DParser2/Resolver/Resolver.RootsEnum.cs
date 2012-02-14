@@ -12,6 +12,16 @@ namespace D_Parser.Resolver
 	public abstract class RootsEnum
 	{
 		public static DVariable __ctfe;
+		ResolverContext ctxt;
+		public ResolverContext Context { 
+			get{ return ctxt;}
+			set{ ctxt=value;}
+		}
+
+		public RootsEnum(ResolverContext context)
+		{
+			ctxt=context;
+		}
 
 		static RootsEnum()
 		{
@@ -38,20 +48,13 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 				HandleItem(n);
 		}
 
-		public void IterateThroughScopeLayers(
-			ResolverContext ctxt, 
-			CodeLocation Caret, 
-			MemberTypes VisibleMembers= MemberTypes.All)
+		public void IterateThroughScopeLayers(CodeLocation Caret, MemberTypes VisibleMembers= MemberTypes.All)
 		{
 			#region Current module/scope related members
 
 			// 1)
 			if (ctxt.ScopedStatement != null)
-			{
-				var hierarchy = GetItemHierarchy(ctxt.ScopedStatement, Caret);
-
-				HandleItems(hierarchy);
-			}
+				IterateThroughItemHierarchy(ctxt.ScopedStatement, Caret);
 
 			var curScope = ctxt.ScopedBlock;
 
@@ -94,6 +97,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 							break;
 						if (curWatchedClass == baseclassDefs[0].ResolvedTypeDefinition)
 							break;
+
 						curWatchedClass = baseclassDefs[0].ResolvedTypeDefinition as DClassLike;
 					}
 				}
@@ -103,7 +107,15 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 					// Add 'out' variable if typing in the out test block currently
 					if (dm.OutResultVariable != null && dm.Out != null && dm.GetSubBlockAt(Caret) == dm.Out)
-						HandleItem(BuildOutResultVariable(dm));
+						HandleItem(new DVariable // Create pseudo-variable
+							{
+								Name = dm.OutResultVariable.Value as string,
+								NameLocation = dm.OutResultVariable.Location,
+								Type = dm.Type, // TODO: What to do on auto functions?
+								Parent = dm,
+								StartLocation = dm.OutResultVariable.Location,
+								EndLocation = dm.OutResultVariable.EndLocation,
+							});
 
 					if (VisibleMembers.HasFlag(MemberTypes.Variables))
 						HandleItems(dm.Parameters);
@@ -122,11 +134,11 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 					// so, we've to gather the parent method and add its locals to the return list
 					if (dm.Parent is DMethod)
 					{
-						var parDM = dm.Parent as DMethod;
-						var nestedBlock = parDM.GetSubBlockAt(Caret);
+						var nestedBlock = (dm.Parent as DMethod).GetSubBlockAt(Caret);
 
 						// Search for the deepest statement scope and add all declarations done in the entire hierarchy
-						HandleItems(GetItemHierarchy(nestedBlock.SearchStatementDeeply(Caret), Caret));
+						if(nestedBlock!=null)
+							IterateThroughItemHierarchy(nestedBlock.SearchStatementDeeply(Caret), Caret);
 					}
 				}
 				else foreach (var n in curScope)
@@ -190,72 +202,6 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 			#endregion
 		}
 
-		/// <summary>
-		/// Walks up the statement scope hierarchy and enlists all declarations that have been made BEFORE the caret position. 
-		/// (If CodeLocation.Empty given, this parameter will be ignored)
-		/// </summary>
-		public static INode[] GetItemHierarchy(IStatement Statement, CodeLocation Caret)
-		{
-			var l = new List<INode>();
-
-			// To a prevent double entry of the same declaration, skip a most scoped declaration first
-			if (Statement is DeclarationStatement)
-				Statement = Statement.Parent;
-
-			while (Statement != null)
-			{
-				if (Statement is IDeclarationContainingStatement)
-				{
-					var decls = (Statement as IDeclarationContainingStatement).Declarations;
-
-					if (decls != null)
-						foreach (var decl in decls)
-						{
-							if (Caret != CodeLocation.Empty)
-							{
-								if (Caret < decl.StartLocation)
-									continue;
-
-								var dv = decl as DVariable;
-								if (dv != null &&
-									dv.Initializer != null &&
-									!(Caret < dv.Initializer.Location ||
-									Caret > dv.Initializer.EndLocation))
-									continue;
-							}
-
-							l.Add(decl);
-						}
-				}
-
-				if (Statement is StatementContainingStatement)
-					foreach (var s in (Statement as StatementContainingStatement).SubStatements)
-					{
-						if (s is MixinStatement)
-						{
-							// TODO: Parse MixinStatements à la mixin("int x" ~ "="~ to!string(5) ~";");
-						}
-						else if (s is TemplateMixin)
-						{
-							var tm = s as TemplateMixin;
-
-							if (string.IsNullOrEmpty(tm.MixinId))
-							{
-
-							}
-							else
-							{
-
-							}
-						}
-					}
-
-				Statement = Statement.Parent;
-			}
-
-			return l.ToArray();
-		}
-
 		static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)
 		{
 			if (n is DMethod)
@@ -291,29 +237,65 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 		}
 
 		/// <summary>
-		/// Returns a variable wrapper for the out test variable defined in the out(Identifier)-section
-		/// 
-		/// int foo()
-		/// out(result)
-		/// {
-		///		assert(result>0); // 'result' is of type int
-		/// }
-		/// { ... }
+		/// Walks up the statement scope hierarchy and enlists all declarations that have been made BEFORE the caret position. 
+		/// (If CodeLocation.Empty given, this parameter will be ignored)
 		/// </summary>
-		/// <param name="dm"></param>
-		/// <returns></returns>
-		static DVariable BuildOutResultVariable(DMethod dm)
+		public void IterateThroughItemHierarchy(IStatement Statement, CodeLocation Caret)
 		{
-			return new DVariable
-			{
-				Name = dm.OutResultVariable.Value as string,
-				NameLocation = dm.OutResultVariable.Location,
-				Type = dm.Type, // TODO: What to do on auto functions?
-				Parent = dm,
-				StartLocation = dm.OutResultVariable.Location,
-				EndLocation = dm.OutResultVariable.EndLocation,
-			};
-		}
+			// To a prevent double entry of the same declaration, skip a most scoped declaration first
+			if (Statement is DeclarationStatement)
+				Statement = Statement.Parent;
 
+			while (Statement != null)
+			{
+				if (Statement is IDeclarationContainingStatement)
+				{
+					var decls = (Statement as IDeclarationContainingStatement).Declarations;
+
+					if (decls != null)
+						foreach (var decl in decls)
+						{
+							if (Caret != CodeLocation.Empty)
+							{
+								if (Caret < decl.StartLocation)
+									continue;
+
+								var dv = decl as DVariable;
+								if (dv != null &&
+									dv.Initializer != null &&
+									!(Caret < dv.Initializer.Location ||
+									Caret > dv.Initializer.EndLocation))
+									continue;
+							}
+
+							HandleItem(decl);
+						}
+				}
+
+				if (Statement is StatementContainingStatement)
+					foreach (var s in (Statement as StatementContainingStatement).SubStatements)
+					{
+						if (s is MixinStatement)
+						{
+							// TODO: Parse MixinStatements à la mixin("int x" ~ "="~ to!string(5) ~";");
+						}
+						else if (s is TemplateMixin)
+						{
+							var tm = s as TemplateMixin;
+
+							if (string.IsNullOrEmpty(tm.MixinId))
+							{
+
+							}
+							else
+							{
+
+							}
+						}
+					}
+
+				Statement = Statement.Parent;
+			}
+		}
 	}
 }

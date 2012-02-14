@@ -141,16 +141,10 @@ namespace D_Parser.Completion
 				{
 					var ad = type as ArrayDecl;
 
-					// Normal array
-					if (ad.KeyType is DTokenDeclaration && DTokens.BasicTypes_Integral[(ad.KeyType as DTokenDeclaration).Token])
-					{
-						StaticTypePropertyProvider.AddArrayProperties(rr, CompletionDataGenerator, ad);
-					}
-					// Associative array
-					else
-					{
+					if(ad.IsAssociative)
 						StaticTypePropertyProvider.AddAssocArrayProperties(rr, CompletionDataGenerator, ad);
-					}
+					else
+						StaticTypePropertyProvider.AddArrayProperties(rr, CompletionDataGenerator, ad);
 				}
 				// Direct pointer accessing - only generic props are available
 				else if (type is PointerDecl)
@@ -194,7 +188,7 @@ namespace D_Parser.Completion
 				if (idExpr != null)
 				{
 					// Char literals, Integrals types & Floats
-					if ((idExpr.Format & LiteralFormat.Scalar) == LiteralFormat.Scalar || idExpr.Format == LiteralFormat.CharLiteral)
+					if (idExpr.Format.HasFlag(LiteralFormat.Scalar) || idExpr.Format == LiteralFormat.CharLiteral)
 					{
 						StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, null, true);
 						bool isFloat = (idExpr.Format & LiteralFormat.FloatingPoint) == LiteralFormat.FloatingPoint;

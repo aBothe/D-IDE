@@ -12,11 +12,13 @@ namespace D_Parser.Resolver
 		string filterId;
 		public List<INode> Matches = new List<INode>();
 
+		NameScan(ResolverContext ctxt) : base(ctxt) { }
+
 		public static IEnumerable<INode> SearchMatchesAlongNodeHierarchy(ResolverContext ctxt, CodeLocation caret, string name)
 		{
-			var scan = new NameScan { filterId=name };
+			var scan = new NameScan(ctxt) { filterId=name };
 
-			scan.IterateThroughScopeLayers(ctxt, caret);
+			scan.IterateThroughScopeLayers(caret);
 
 			if (ctxt.ParseCache != null)
 				foreach (var mod in ctxt.ParseCache)
