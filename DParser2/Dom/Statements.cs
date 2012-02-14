@@ -762,30 +762,20 @@ namespace D_Parser.Dom.Statements
 
 	public class PragmaStatement : StatementContainingStatement,IExpressionContainingStatement
 	{
-		public string PragmaIdentifier;
-		public IExpression[] ArgumentList;
-
-		public override string ToCode()
-		{
-			var ret = "pragma(" + PragmaIdentifier;
-
-			if (ArgumentList != null && ArgumentList.Length > 0)
-				foreach (var arg in ArgumentList)
-					ret += ',' + arg.ToString();
-
-			ret+=')';
-
-			if (ScopedStatement != null)
-				ret += ' '+ScopedStatement.ToCode();
-			else
-				ret+=';'; // An empty pragma is possible
-
-			return ret;
-		}
+		public PragmaAttribute Pragma;
 
 		public IExpression[] SubExpressions
 		{
-			get { return ArgumentList; }
+			get { return Pragma==null ? null: Pragma.Arguments; }
+		}
+
+		public override string ToCode()
+		{
+			var r = Pragma==null? "" : Pragma.ToString();
+
+			r += ScopedStatement==null? "" : (" " + ScopedStatement.ToCode());
+
+			return r;
 		}
 	}
 
@@ -981,6 +971,23 @@ namespace D_Parser.Dom.Statements
 
 				return l.ToArray();
 			}
+		}
+	}
+
+	public class VersionDebugSpecification : AbstractStatement, IExpressionContainingStatement
+	{
+		public int Token;
+
+		public IExpression SpecifiedValue;
+	
+		public override string  ToCode()
+		{
+ 			return DTokens.GetTokenString(Token)+ "="+(SpecifiedValue!=null?SpecifiedValue.ToString():"");
+		}
+
+		public IExpression[] SubExpressions
+		{
+			get { return new[]{ SpecifiedValue }; }
 		}
 	}
 }

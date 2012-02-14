@@ -29,7 +29,7 @@ namespace D_Parser.Parser
 				p.ModuleDeclaration();
 
 			while (p.LA(Import))
-				p.ImportDeclaration();
+				p.ImportDeclaration(p.doc);
 
 			return p.t.EndLocation;
 		}
@@ -174,8 +174,7 @@ namespace D_Parser.Parser
 			if (DTokens.VisModifiers[attr.Token])
 				DAttribute.CleanupAccessorAttributes(stk);
 
-			if (IsEOF)
-				LastParsedObject = attr;
+			LastParsedObject = attr;
 
 			stk.Push(attr);
 		}
