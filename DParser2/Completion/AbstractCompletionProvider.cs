@@ -16,23 +16,68 @@ namespace D_Parser.Completion
 			this.CompletionDataGenerator = CompletionDataGenerator;
 		}
 
-		public static AbstractCompletionProvider Create(ICompletionDataGenerator dataGen, string EnteredText)
+		public static AbstractCompletionProvider Create(ICompletionDataGenerator dataGen, IEditorData Editor, string EnteredText)
 		{
-			if (CtrlSpaceCompletionProvider.CompletesEnteredText(EnteredText))
-				return new CtrlSpaceCompletionProvider(dataGen);
+			if (PropertyAttributeCompletionProvider.CompletesEnteredText(EnteredText))
+				return new PropertyAttributeCompletionProvider(dataGen);
 
 			if (MemberCompletionProvider.CompletesEnteredText(EnteredText))
 				return new MemberCompletionProvider(dataGen);
 
-			if (PropertyAttributeCompletionProvider.CompletesEnteredText(EnteredText))
-				return new PropertyAttributeCompletionProvider(dataGen);
 
-			return null;
+			ParserTrackerVariables trackVars=null;
+			IStatement curStmt = null;
+			var curBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt);
+
+			if (curBlock == null)
+				return null;
+
+			var parsedBlock = CtrlSpaceCompletionProvider.FindCurrentCaretContext(
+				Editor.ModuleCode,
+				curBlock,
+				Editor.CaretOffset,
+				Editor.CaretLocation,
+				out trackVars);
+
+			if (trackVars != null)
+			{
+				if (trackVars.LastParsedObject is PostfixExpression_Access)
+					return new MemberCompletionProvider(dataGen);
+
+				if(trackVars.ExpectingIdentifier)
+				{
+					if (trackVars.LastParsedObject is DAttribute)
+						return new AttributeCompletionProvider(dataGen)
+						{
+							Attribute = trackVars.LastParsedObject as DAttribute
+						};
+					else if (trackVars.LastParsedObject is ScopeGuardStatement)
+						return new ScopeAttributeCompletionProvider(dataGen)
+						{
+							ScopeStmt = trackVars.LastParsedObject as ScopeGuardStatement
+						};
+					else if (trackVars.LastParsedObject is PragmaStatement)
+						return new AttributeCompletionProvider(dataGen)
+						{
+							Attribute= (trackVars.LastParsedObject as PragmaStatement).Pragma
+						};
+				}
+				
+				if (EnteredText == "(")
+					return null;
+			}
+
+
+			return new CtrlSpaceCompletionProvider(dataGen) { 
+				trackVars=trackVars,
+				curBlock=curBlock,
+				parsedBlock=parsedBlock
+			};
 		}
 
 		public static AbstractCompletionProvider BuildCompletionData(ICompletionDataGenerator dataGen, IEditorData editor, string EnteredText)
 		{
-			var provider = Create(dataGen, EnteredText);
+			var provider = Create(dataGen, editor, EnteredText);
 
 			if (provider != null)
 				provider.BuildCompletionData(editor, EnteredText);

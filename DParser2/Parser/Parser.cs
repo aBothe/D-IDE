@@ -264,28 +264,6 @@ namespace D_Parser.Parser
         }
 
         /// <summary>
-        /// Check if current Token equals to n and skip that token.
-        /// </summary>
-        /// <param name="n"></param>
-        /// <returns></returns>
-        protected bool Expect(int n, string reason)
-        {
-            if (laKind == n)
-            {
-                Lexer.NextToken();
-                return true;
-            }
-            else
-            {
-				if (IsEOF)
-					TrackerVariables.LastToken = t;
-
-                SynErr(n, reason);
-                return false;
-            }
-        }
-
-        /// <summary>
         /// LookAhead token check
         /// </summary>
         bool LA(int n)
@@ -370,7 +348,14 @@ namespace D_Parser.Parser
 
 		int laKind = 0;
 
-		public DToken Step() { Lexer.NextToken(); Peek(1); laKind = la.Kind; return t; }
+		public void Step() { 
+			Lexer.NextToken();
+
+			Lexer.StartPeek();
+			Lexer.Peek();
+ 
+			laKind = la.Kind;
+			}
 
         [DebuggerStepThrough()]
         public DModule Parse()
@@ -424,8 +409,6 @@ namespace D_Parser.Parser
 		/// </summary>
 		public object LastParsedObject { get { return lastParsedObj; } set { PreviousParsedObject = lastParsedObj; lastParsedObj = value; } }
 		object lastParsedObj = null;
-
-		public DToken LastToken;
 
 		public readonly List<Comment> Comments = new List<Comment>();
 

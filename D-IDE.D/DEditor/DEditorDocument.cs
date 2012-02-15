@@ -1053,6 +1053,7 @@ namespace D_IDE.D
 			{
 				if ((EnteredText!=null && EnteredText.Length>0 && !(
 					EnteredText=="@"||
+					EnteredText=="(" ||
 					EnteredText==" " || 
 					AbstractCompletionProvider.IsIdentifierChar(EnteredText[0]) || 
 					EnteredText[0] == '.')) || 
@@ -1227,10 +1228,10 @@ namespace D_IDE.D
 				indentationStrategy.UpdateIndentation(e.Text);
 
 			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
-			if ((e.Text == "." || e.Text==" ") && CanShowCodeCompletionPopup)
+			if ((e.Text == "." || e.Text==" " || e.Text=="(") && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
 
-			else if (e.Text == "," || e.Text == "(" || e.Text == "!")
+			if (e.Text == "," || e.Text == "(" || e.Text == "!")
 				ShowInsightWindow(e.Text);
 
 			else if (e.Text == ")" && insightWindow != null && insightWindow.IsLoaded)

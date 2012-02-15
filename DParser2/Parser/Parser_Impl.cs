@@ -143,6 +143,7 @@ namespace D_Parser.Parser
 
 			if (laKind == Semicolon)
 			{
+				LastParsedObject = null;
 				Step();
 				return;
 			}
@@ -1252,8 +1253,14 @@ namespace D_Parser.Parser
 		{
 			ITypeDeclaration td = null;
 
+			bool notInit = false;
 			do
 			{
+				if (notInit)
+					Step();
+				else
+					notInit = true;
+
 				ITypeDeclaration ttd = null;
 
 				if (IsTemplateInstance)
@@ -1267,7 +1274,7 @@ namespace D_Parser.Parser
 					ttd.InnerDeclaration = td;
 				td = ttd;
 			}
-			while (laKind == Dot && Step()!=null);
+			while (laKind == Dot);
 
 			ExpectingIdentifier = false;
 
@@ -1732,10 +1739,11 @@ namespace D_Parser.Parser
 			{
 				PushAttribute(attr, true);
 				Step();
+				LastParsedObject = null;
 			}
 
 			else if (laKind != Semicolon)
-				PushAttribute(attr,false);
+				PushAttribute(attr, false);
 		}
 		#endregion
 
@@ -1783,26 +1791,47 @@ namespace D_Parser.Parser
 						if (laKind == Identifier)
 						{
 							// Skip initial identifier list
-							do
+							if (Lexer.CurrentPeekToken.Kind == Not)
 							{
-								if (Lexer.CurrentPeekToken.Kind == Dot)
-									Peek();
-
-								if (Lexer.CurrentPeekToken.Kind == Identifier)
-									Peek();
-
-								if (Lexer.CurrentPeekToken.Kind == Not)
+								Peek();
+								if (Lexer.CurrentPeekToken.Kind != Is && Lexer.CurrentPeekToken.Kind != In)
 								{
-									Peek();
-									if (Lexer.CurrentPeekToken.Kind != Is && Lexer.CurrentPeekToken.Kind != In)
-									{
-										if (Lexer.CurrentPeekToken.Kind == (OpenParenthesis))
-											OverPeekBrackets(OpenParenthesis);
-										else Peek();
-									}
+									if (Lexer.CurrentPeekToken.Kind == (OpenParenthesis))
+										OverPeekBrackets(OpenParenthesis);
+									else
+										Peek();
 								}
 							}
-							while (Lexer.CurrentPeekToken.Kind == Dot);
+
+							while (Lexer.CurrentPeekToken.Kind == Dot)
+							{
+								Peek();
+
+								if (Lexer.CurrentPeekToken.Kind == Identifier)
+								{
+									Peek();
+
+									if (Lexer.CurrentPeekToken.Kind == Not)
+									{
+										Peek();
+										if (Lexer.CurrentPeekToken.Kind != Is && Lexer.CurrentPeekToken.Kind != In)
+										{
+											if (Lexer.CurrentPeekToken.Kind == (OpenParenthesis))
+												OverPeekBrackets(OpenParenthesis);
+											else 
+												Peek();
+										}
+									}
+								}
+								else
+								{
+									/*
+									 * If a non-identifier follows a dot, treat it as expression, not as declaration.
+									 */
+									Peek(1);
+									return true;
+								}
+							}
 						}
 						else if (laKind == (Typeof) || MemberFunctionAttribute[laKind])
 						{

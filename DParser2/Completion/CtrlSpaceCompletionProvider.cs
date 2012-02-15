@@ -9,33 +9,39 @@ namespace D_Parser.Completion
 {
 	public class CtrlSpaceCompletionProvider : AbstractCompletionProvider
 	{
+		public object parsedBlock;
+		public IBlockNode curBlock;
+		public ParserTrackerVariables trackVars;
+
 		public CtrlSpaceCompletionProvider(ICompletionDataGenerator cdg) : base(cdg) { }
 
 		public static bool CompletesEnteredText(string EnteredText)
 		{
 			return string.IsNullOrWhiteSpace(EnteredText) ||
-				IsIdentifierChar(EnteredText[0]);
+				IsIdentifierChar(EnteredText[0]) ||
+				EnteredText[0] == '(';
 		}
 
 		protected override void BuildCompletionDataInternal(IEditorData Editor, string EnteredText)
 		{
 			IEnumerable<INode> listedItems = null;
-			ParserTrackerVariables trackVars = null;
 			var visibleMembers = MemberTypes.All;
 
 			IStatement curStmt = null;
-			var curBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt);
+			if(curBlock==null)
+				curBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt);
 
 			if (curBlock == null)
 				return;
 
 			// 1) Get current context the caret is at
-			var parsedBlock = FindCurrentCaretContext(
-				Editor.ModuleCode,
-				curBlock,
-				Editor.CaretOffset,
-				Editor.CaretLocation,
-				out trackVars);
+			if(parsedBlock==null)
+				parsedBlock = FindCurrentCaretContext(
+					Editor.ModuleCode,
+					curBlock,
+					Editor.CaretOffset,
+					Editor.CaretLocation,
+					out trackVars);
 
 			// 2) If in declaration and if node identifier is expected, do not show any data
 			if (trackVars == null)
@@ -66,9 +72,9 @@ namespace D_Parser.Completion
 						return;
 				}
 
-				if (trackVars.LastParsedObject is ImportStatement /*&& !CaretAfterLastParsedObject*/)
+				if (trackVars.LastParsedObject is ImportStatement)
 					visibleMembers = MemberTypes.Imports;
-				else if (trackVars.LastParsedObject is NewExpression && (trackVars.IsParsingInitializer/* || !CaretAfterLastParsedObject*/))
+				else if (trackVars.LastParsedObject is NewExpression && trackVars.IsParsingInitializer)
 					visibleMembers = MemberTypes.Imports | MemberTypes.Types;
 				else if (EnteredText == " ")
 					return;
@@ -143,7 +149,7 @@ namespace D_Parser.Completion
 		}
 
 		/// <returns>Either CurrentScope, a BlockStatement object that is associated with the parent method or a complete new DModule object</returns>
-		static object FindCurrentCaretContext(string code,
+		public static object FindCurrentCaretContext(string code,
 			IBlockNode CurrentScope,
 			int caretOffset, CodeLocation caretLocation,
 			out ParserTrackerVariables TrackerVariables)

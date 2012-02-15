@@ -224,6 +224,54 @@ namespace D_IDE.D
 		{
 			CompletionList.Add(new PropertyAttributeCompletionData(AttributeText));
 		}
+
+		public void AddTextItem(string ItemText, string Description)
+		{
+			CompletionList.Add(new TextCompletionData(ItemText,Description));
+		}
+	}
+
+	public class TextCompletionData : ICompletionData
+	{
+		string t;
+		string desc;
+
+		public TextCompletionData(string Text, string Description)
+		{
+			t = Text;
+			desc = Description;
+		}
+
+		public void Complete(ICSharpCode.AvalonEdit.Editing.TextArea textArea, ICSharpCode.AvalonEdit.Document.ISegment completionSegment, EventArgs insertionRequestEventArgs)
+		{
+			textArea.Document.Replace(completionSegment, Text);
+		}
+
+		public object Content
+		{
+			get { return t; }
+		}
+
+		public object Description
+		{
+			get { return desc; }
+		}
+
+		public ImageSource Image
+		{
+			get;
+			set;
+		}
+
+		public double Priority
+		{
+			get { return 1; }
+		}
+
+		public string Text
+		{
+			get { return t; }
+		}
 	}
 
 	public class PropertyAttributeCompletionData : ICompletionData
