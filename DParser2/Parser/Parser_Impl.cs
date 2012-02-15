@@ -898,7 +898,15 @@ namespace D_Parser.Parser
 			if (laKind == (Typeof))
 			{
 				td = TypeOf();
-				if (laKind != (Dot)) return td;
+				if (laKind != Dot)
+					return td;
+			}
+
+			else if (laKind == __vector)
+			{
+				td = Vector();
+				if (laKind != Dot)
+					return td;
 			}
 
 			if (laKind == (Dot))
@@ -1637,6 +1645,27 @@ namespace D_Parser.Parser
 			return md;
 		}
 
+		VectorDeclaration Vector()
+		{
+			var startLoc = t == null ? new CodeLocation() : t.Location;
+			Expect(__vector);
+			var md = new VectorDeclaration { Location = startLoc };
+
+			if (Expect(OpenParenthesis))
+			{
+				LastParsedObject = md;
+
+				if (!IsEOF)
+					md.Id = Expression();
+
+				if (Expect(CloseParenthesis))
+					TrackerVariables.ExpectingIdentifier = false;
+			}
+
+			md.EndLocation = t.EndLocation;
+			return md;
+		}
+
 		#endregion
 
 		#region Attributes
@@ -1922,7 +1951,7 @@ namespace D_Parser.Parser
 			Expect(Question);
 			var se = new ConditionalExpression() { OrOrExpression = trigger };
 			LastParsedObject = se;
-			se.TrueCaseExpression = AssignExpression(Scope);
+			se.TrueCaseExpression = Expression(Scope);
 			Expect(Colon);
 			se.FalseCaseExpression = ConditionalExpression(Scope);
 			return se;

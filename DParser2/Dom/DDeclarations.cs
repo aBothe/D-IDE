@@ -291,6 +291,19 @@ namespace D_Parser.Dom
     }
 
 	/// <summary>
+	/// __vector(...)
+	/// </summary>
+	public class VectorDeclaration : AbstractTypeDeclaration
+	{
+		public IExpression Id;
+
+		public override string ToString(bool IncludesBase)
+		{
+			return (IncludesBase && InnerDeclaration != null ? (InnerDeclaration.ToString() + " ") : "") + "__vector(" + (Id != null ? Id.ToString() : "") + ")";
+		}
+	}
+
+	/// <summary>
 	/// template myTemplate(T...)
 	/// </summary>
     public class VarArgDecl : AbstractTypeDeclaration
