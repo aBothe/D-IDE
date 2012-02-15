@@ -248,7 +248,13 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 			while (Statement != null)
 			{
-				if (Statement is IDeclarationContainingStatement)
+				/*if (Statement is ForeachStatement)
+				{
+					var fe = Statement as ForeachStatement;
+
+					
+				}
+				else*/ if (Statement is IDeclarationContainingStatement)
 				{
 					var decls = (Statement as IDeclarationContainingStatement).Declarations;
 

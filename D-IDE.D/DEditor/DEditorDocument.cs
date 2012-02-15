@@ -632,9 +632,11 @@ namespace D_IDE.D
 
 			lastSelectedBlock = null;
 
-			SyntaxTree.FileName = AbsoluteFilePath;
-			SyntaxTree.ModuleName = ProposedModuleName;
-
+			if (SyntaxTree != null)
+			{
+				SyntaxTree.FileName = AbsoluteFilePath;
+				SyntaxTree.ModuleName = ProposedModuleName;
+			}
 			//TODO: Make semantic highlighting 1) faster and 2) redraw symbols immediately
 			UpdateSemanticHighlighting(true);
 			//CanRefreshSemanticHighlightings = false;
