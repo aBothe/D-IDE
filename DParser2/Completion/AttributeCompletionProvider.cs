@@ -5,6 +5,7 @@ using System.Text;
 using D_Parser.Dom;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
+using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Completion
 {
@@ -112,14 +113,56 @@ namespace D_Parser.Completion
 
 		protected override void BuildCompletionDataInternal(IEditorData Editor, string EnteredText)
 		{
-			if (ScopeStmt!=null)
-			{
-				foreach(var s in new[]{
-					"exit", 
-					"success", 
-					"failure"})
-					CompletionDataGenerator.AddTextItem(s,null);
-			}
+			foreach (var kv in new Dictionary<string, string>{
+				{"exit","Executes on leaving current scope"}, 
+				{"success", "Executes if no error occurred in current scope"}, 
+				{"failure","Executes if error occurred in current scope"}})
+				CompletionDataGenerator.AddTextItem(kv.Key,kv.Value);
+		}
+	}
+
+	internal class TraitsExpressionCompletionProvider : AbstractCompletionProvider
+	{
+		public TraitsExpression TraitsExpr;
+
+		public TraitsExpressionCompletionProvider(ICompletionDataGenerator gen) : base(gen) { }
+
+		protected override void BuildCompletionDataInternal(IEditorData Editor, string EnteredText)
+		{
+			foreach (var kv in new Dictionary<string, string>{
+				{"isArithmetic","If the arguments are all either types that are arithmetic types, or expressions that are typed as arithmetic types, then true is returned. Otherwise, false is returned. If there are no arguments, false is returned."},
+				{"isFloating","Works like isArithmetic, except it's for floating point types (including imaginary and complex types)."},
+				{"isIntegral","Works like isArithmetic, except it's for integral types (including character types)."},
+				{"isScalar","Works like isArithmetic, except it's for scalar types."},
+				{"isUnsigned","Works like isArithmetic, except it's for unsigned types."},
+				{"isStaticArray","Works like isArithmetic, except it's for static array types."},
+				{"isAssociativeArray","Works like isArithmetic, except it's for associative array types."},
+				{"isAbstractClass","If the arguments are all either types that are abstract classes, or expressions that are typed as abstract classes, then true is returned. Otherwise, false is returned. If there are no arguments, false is returned."},
+				{"isFinalClass","Works like isAbstractClass, except it's for final classes."},
+				{"isVirtualFunction","The same as isVirtualMethod, except that final functions that don't override anything return true."},
+				{"isVirtualMethod","Takes one argument. If that argument is a virtual function, true is returned, otherwise false. Final functions that don't override anything return false."},
+				{"isAbstractFunction","Takes one argument. If that argument is an abstract function, true is returned, otherwise false."},
+				{"isFinalFunction","Takes one argument. If that argument is a final function, true is returned, otherwise false."},
+				{"isStaticFunction","Takes one argument. If that argument is a static function, meaning it has no context pointer, true is returned, otherwise false."},
+				{"isRef","Takes one argument. If that argument is a declaration, true is returned if it is ref, otherwise false."},
+				{"isOut","Takes one argument. If that argument is a declaration, true is returned if it is out, otherwise false."},
+				{"isLazy","Takes one argument. If that argument is a declaration, true is returned if it is lazy, otherwise false."},
+				{"hasMember","The first argument is a type that has members, or is an expression of a type that has members. The second argument is a string. If the string is a valid property of the type, true is returned, otherwise false."},
+				{"identifier","Takes one argument, a symbol. Returns the identifier for that symbol as a string literal."},
+				{"getMember","Takes two arguments, the second must be a string. The result is an expression formed from the first argument, followed by a ‘.’, followed by the second argument as an identifier."},
+				{"getOverloads","The first argument is a class type or an expression of class type. The second argument is a string that matches the name of one of the functions of that class. The result is a tuple of all the overloads of that function."},
+				{"getVirtualFunctions","The same as getVirtualMethods, except that final functions that do not override anything are included."},
+				{"getVirtualMethods","The first argument is a class type or an expression of class type. The second argument is a string that matches the name of one of the functions of that class. The result is a tuple of the virtual overloads of that function. It does not include final functions that do not override anything."},
+				{"parent","Takes a single argument which must evaluate to a symbol. The result is the symbol that is the parent of it."},
+				{"classInstanceSize","Takes a single argument, which must evaluate to either a class type or an expression of class type. The result is of type size_t, and the value is the number of bytes in the runtime instance of the class type. It is based on the static type of a class, not the polymorphic type."},
+				{"allMembers","Takes a single argument, which must evaluate to either a type or an expression of type. A tuple of string literals is returned, each of which is the name of a member of that type combined with all of the members of the base classes (if the type is a class). No name is repeated. Builtin properties are not included."},
+				{"derivedMembers","Takes a single argument, which must evaluate to either a type or an expression of type. A tuple of string literals is returned, each of which is the name of a member of that type. No name is repeated. Base class member names are not included. Builtin properties are not included."},
+				{"isSame","Takes two arguments and returns bool true if they are the same symbol, false if not."},
+				{"compiles",@"Returns a bool true if all of the arguments compile (are semantically correct). The arguments can be symbols, types, or expressions that are syntactically correct. The arguments cannot be statements or declarations.
+
+If there are no arguments, the result is false."},
+			})
+				CompletionDataGenerator.AddTextItem(kv.Key, kv.Value);
 		}
 	}
 }

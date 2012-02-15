@@ -59,7 +59,12 @@ namespace D_Parser.Completion
 					else if (trackVars.LastParsedObject is PragmaStatement)
 						return new AttributeCompletionProvider(dataGen)
 						{
-							Attribute= (trackVars.LastParsedObject as PragmaStatement).Pragma
+							Attribute = (trackVars.LastParsedObject as PragmaStatement).Pragma
+						};
+					else if (trackVars.LastParsedObject is TraitsExpression)
+						return new TraitsExpressionCompletionProvider(dataGen) 
+						{ 
+							TraitsExpr=trackVars.LastParsedObject as TraitsExpression 
 						};
 				}
 				

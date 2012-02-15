@@ -235,10 +235,8 @@ namespace D_Parser.Parser
 				 *		version ( Identifier ) 
 				 *		version ( unittest )
 				 */
-				if (c.IsVersionCondition)
+				if (c.IsVersionCondition && Expect(OpenParenthesis))
 				{
-					Expect(OpenParenthesis);
-
 					if (laKind == Unittest)
 					{
 						Step();
@@ -260,7 +258,8 @@ namespace D_Parser.Parser
 							EndLocation = t.EndLocation
 						};
 
-					Expect(CloseParenthesis);
+					if (Expect(CloseParenthesis))
+						TrackerVariables.ExpectingIdentifier = false;
 				}
 
 				/*
@@ -1665,21 +1664,23 @@ namespace D_Parser.Parser
 			Expect(Pragma);
 			var s = new PragmaAttribute();
 			LastParsedObject = s;
-			Expect(OpenParenthesis);
-			Expect(Identifier);
-			s.Identifier = t.Value;
-
-			var l = new List<IExpression>();
-			while (laKind == Comma)
+			if (Expect(OpenParenthesis))
 			{
-				Step();
-				l.Add(AssignExpression());
+				if (Expect(Identifier))
+					s.Identifier = t.Value;
+
+				var l = new List<IExpression>();
+				while (laKind == Comma)
+				{
+					Step();
+					l.Add(AssignExpression());
+				}
+				if (l.Count > 0)
+					s.Arguments = l.ToArray();
+
+				if (Expect(CloseParenthesis))
+					TrackerVariables.ExpectingIdentifier = false;
 			}
-			if(l.Count>0)
-				s.Arguments = l.ToArray();
-
-			Expect(CloseParenthesis);
-
 			return s;
 		}
 
@@ -1705,16 +1706,19 @@ namespace D_Parser.Parser
 				Step(); // Skip extern
 				Step(); // Skip (
 
+				TrackerVariables.ExpectingIdentifier = true;
 				var n = "";
-				do
+				while (!IsEOF && laKind != CloseParenthesis)
 				{
 					Step();
 					n += t.ToString();
 
+					TrackerVariables.ExpectingIdentifier = false;
+
 					if (t.Kind == Identifier && laKind == Identifier)
 						n += ' ';
 				}
-				while (!IsEOF && laKind != CloseParenthesis);
+
 				attr.LiteralContent = n;
 
 				if (!Expect(CloseParenthesis))
@@ -3599,26 +3603,31 @@ namespace D_Parser.Parser
 			#endregion
 
 			#region ScopeGuardStatement
-			else if (laKind == (DTokens.Scope) && Lexer.CurrentPeekToken.Kind==OpenParenthesis)
+			else if (laKind == DTokens.Scope)
 			{
 				Step();
-				var s = new ScopeGuardStatement() { StartLocation = t.Location, Parent = Parent };
-				LastParsedObject = s;
 
 				if (laKind == OpenParenthesis)
 				{
-					Expect(OpenParenthesis);
-					if(Expect(Identifier) && t.Value!=null) // exit, failure, success
-					{
+					var s = new ScopeGuardStatement() { StartLocation = t.Location, Parent = Parent };
+					LastParsedObject = s;
+
+					Step();
+
+					if (Expect(Identifier) && t.Value != null) // exit, failure, success
 						s.GuardedScope = t.Value.ToLower();
-					}
-					Expect(CloseParenthesis);
+
+					if (Expect(CloseParenthesis))
+						TrackerVariables.ExpectingIdentifier = false;
+
+					if(!IsEOF)
+						s.ScopedStatement = Statement(Scope: Scope, Parent: s);
+
+					s.EndLocation = t.EndLocation;
+					return s;
 				}
-
-				s.ScopedStatement = Statement(Scope: Scope, Parent: s);
-
-				s.EndLocation = t.EndLocation;
-				return s;
+				else
+					PushAttribute(new DAttribute(DTokens.Scope), false);
 			}
 			#endregion
 
@@ -3793,11 +3802,15 @@ namespace D_Parser.Parser
 			else if (!(ClassLike[laKind] || BasicTypes[laKind] || laKind == Enum || Modifiers[laKind] || laKind==PropertyAttribute || laKind == Alias || laKind == Typedef) && IsAssignExpression())
 			{
 				var s = new ExpressionStatement() { StartLocation = la.Location, Parent = Parent };
-				LastParsedObject = s;
+
+				if(!IsEOF)
+					LastParsedObject = s;
 				// a==b, a=9; is possible -> Expressions can be there, not only single AssignExpressions!
 				s.Expression = Expression(Scope);
+
 				if (Expect(Semicolon))
 					LastParsedObject = null;
+
 				s.EndLocation = t.EndLocation;
 				return s;
 			}
@@ -4666,23 +4679,26 @@ namespace D_Parser.Parser
 			Expect(__traits);
 			var ce = new TraitsExpression() { Location=t.Location};
 			LastParsedObject = ce;
-			Expect(OpenParenthesis);
-			
-			if(Expect(Identifier))
-				ce.Keyword = t.Value;
-
-			var al = new List<TraitsArgument>();
-
-			while (laKind == Comma)
+			if(Expect(OpenParenthesis))
 			{
-				Step();
-				if (IsAssignExpression())
-					al.Add(new TraitsArgument(){AssignExpression= AssignExpression()});
-				else
-					al.Add(new TraitsArgument(){Type= Type()});
-			}
+				if(Expect(Identifier))
+					ce.Keyword = t.Value;
 
-			Expect(CloseParenthesis);
+				var al = new List<TraitsArgument>();
+
+				while (laKind == Comma)
+				{
+					Step();
+
+					if (IsAssignExpression())
+						al.Add(new TraitsArgument(){AssignExpression= AssignExpression()});
+					else
+						al.Add(new TraitsArgument(){Type= Type()});
+				}
+
+				if (Expect(CloseParenthesis))
+					TrackerVariables.ExpectingIdentifier = false;
+			}
 			ce.EndLocation = t.EndLocation;
 			return ce;
 		}
