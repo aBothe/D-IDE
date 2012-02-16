@@ -406,7 +406,7 @@ namespace D_Parser.Dom.Statements
 			if (Aggregate != null)
 				ret += Aggregate.ToString();
 
-			if (IsRangeStatement)
+			if (UpperAggregate!=null)
 				ret += ".." + UpperAggregate.ToString();
 
 			ret += ')';

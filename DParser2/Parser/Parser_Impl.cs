@@ -3307,8 +3307,7 @@ namespace D_Parser.Parser
 				if (laKind == DoubleDot)
 				{
 					Step();
-					//TODO: Put this in the expression variable
-					Expression();
+					dbs.UpperAggregate = Expression();
 				}
 
 				Expect(CloseParenthesis);
