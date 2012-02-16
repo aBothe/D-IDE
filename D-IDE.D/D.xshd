@@ -77,6 +77,11 @@
 			</RuleSet>
 		</Span>
 
+		<Span color="String" multiline="true">
+			<Begin color="String">`</Begin>
+			<End>`</End>
+		</Span>
+
 		<Keywords color="ThisOrSuperReference">
 			<Word>this</Word>
 			<Word>super</Word>
