@@ -22,14 +22,13 @@ namespace D_Parser.Completion
 			try
 			{
 				IStatement curStmt = null;
-				var rr = DResolver.ResolveType(Editor,
+				var rr = DResolver.ResolveType(Editor,new ResolverContextStack(Editor.ParseCache,
 					new ResolverContext
 					{
 						ScopedBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt),
-						ScopedStatement = curStmt,
-						ParseCache = Editor.ParseCache,
-						ImportCache = Editor.ImportCache
-					}, true, true);
+						ScopedStatement = curStmt
+					}, Editor.ImportCache), 
+					true, true);
 
 				if (rr.Length < 1)
 					return null;

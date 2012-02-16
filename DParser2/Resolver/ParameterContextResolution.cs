@@ -190,7 +190,7 @@ namespace D_Parser.Resolver
 			DMethod MethodScope,
 			IEnumerable<IAbstractSyntaxTree> parseCache, IEnumerable<IAbstractSyntaxTree> ImportCache)
 		{
-			var ctxt = new ResolverContext { ScopedBlock = MethodScope, ParseCache = parseCache, ImportCache = ImportCache };
+			var ctxt = new ResolverContextStack(parseCache, new ResolverContext { ScopedBlock = MethodScope }, ImportCache);
 
 			var res = LookupArgumentRelatedStatement(code, caretOffset, caretLocation, MethodScope);
 

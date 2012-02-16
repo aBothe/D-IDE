@@ -15,150 +15,9 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public partial class DResolver
 	{
-		public static IBlockNode SearchBlockAt(IBlockNode Parent, CodeLocation Where, out IStatement ScopedStatement)
-		{
-			ScopedStatement = null;
-
-			if (Parent != null && Parent.Count > 0)
-				foreach (var n in Parent)
-					if (n is IBlockNode && Where >= n.StartLocation && Where <= n.EndLocation)
-						return SearchBlockAt(n as IBlockNode, Where, out ScopedStatement);
-
-			if (Parent is DMethod)
-			{
-				var dm = Parent as DMethod;
-
-				var body = dm.GetSubBlockAt(Where);
-
-				// First search the deepest statement under the caret
-				if(body!=null)
-					ScopedStatement = body.SearchStatementDeeply(Where);
-			}
-
-			return Parent;
-		}
-
-		public static IBlockNode SearchClassLikeAt(IBlockNode Parent, CodeLocation Where)
-		{
-			if (Parent != null && Parent.Count > 0)
-				foreach (var n in Parent)
-				{
-					if (!(n is DClassLike)) continue;
-
-					var b = n as IBlockNode;
-					if (Where >= b.BlockStartLocation && Where <= b.EndLocation)
-						return SearchClassLikeAt(b, Where);
-				}
-
-			return Parent;
-		}
-
-		#region Import path resolving
-		/// <summary>
-		/// Returns all imports of a module and those public ones of the imported modules
-		/// </summary>
-		/// <param name="cc"></param>
-		/// <param name="ActualModule"></param>
-		/// <returns></returns>
-		public static IEnumerable<IAbstractSyntaxTree> ResolveImports(DModule ActualModule, IEnumerable<IAbstractSyntaxTree> CodeCache)
-		{
-			var ret = new List<IAbstractSyntaxTree>();
-			if (CodeCache == null || ActualModule == null) return ret;
-
-			// Try to add the 'object' module
-			var objmod = SearchModuleInCache(CodeCache, "object");
-			if (objmod != null && !ret.Contains(objmod))
-				ret.Add(objmod);
-
-			/* 
-			 * dmd-feature: public imports only affect the directly superior module
-			 *
-			 * Module A:
-			 * import B;
-			 * 
-			 * foo(); // Will fail, because foo wasn't found
-			 * 
-			 * Module B:
-			 * import C;
-			 * 
-			 * Module C:
-			 * public import D;
-			 * 
-			 * Module D:
-			 * void foo() {}
-			 * 
-			 * 
-			 * Whereas
-			 * Module B:
-			 * public import C;
-			 * 
-			 * will succeed because we have a closed import hierarchy in which all imports are public.
-			 * 
-			 */
-
-			/*
-			 * Procedure:
-			 * 
-			 * 1) Take the imports of the current module
-			 * 2) Add the respective modules
-			 * 3) If that imported module got public imports, also make that module to the current one and repeat Step 1) recursively
-			 * 
-			 */
-
-			foreach (var kv in ActualModule.Imports)
-				if (kv.IsSimpleBinding && !kv.IsStatic)
-				{
-					if (kv.ModuleIdentifier == null)
-						continue;
-
-					var impMod = SearchModuleInCache(CodeCache, kv.ModuleIdentifier.ToString()) as DModule;
-
-					if (impMod != null && !ret.Contains(impMod))
-					{
-						ret.Add(impMod);
-
-						ScanForPublicImports(ret, impMod, CodeCache);
-					}
-
-				}
-
-			return ret;
-		}
-
-		static void ScanForPublicImports(List<IAbstractSyntaxTree> ret, DModule currentlyWatchedImport, IEnumerable<IAbstractSyntaxTree> CodeCache)
-		{
-			if (currentlyWatchedImport != null && currentlyWatchedImport.Imports != null)
-				foreach (var kv2 in currentlyWatchedImport.Imports)
-					if (kv2.IsSimpleBinding && !kv2.IsStatic && kv2.IsPublic)
-					{
-						if (kv2.ModuleIdentifier == null)
-							continue;
-
-						var impMod2 = SearchModuleInCache(CodeCache, kv2.ModuleIdentifier.ToString()) as DModule;
-
-						if (impMod2 != null && !ret.Contains(impMod2))
-						{
-							ret.Add(impMod2);
-
-							ScanForPublicImports(ret, impMod2, CodeCache);
-						}
-					}
-		}
-		#endregion
-
-		static IAbstractSyntaxTree SearchModuleInCache(IEnumerable<IAbstractSyntaxTree> HayStack, string ModuleName)
-		{
-			foreach (var m in HayStack)
-			{
-				if (m.Name == ModuleName)
-					return m;
-			}
-			return null;
-		}
-
 		#region ResolveType
 		public static ResolveResult[] ResolveType(IEditorData editor,
-			ResolverContext ctxt,
+			ResolverContextStack ctxt,
 			bool alsoParseBeyondCaret = false,
 			bool onlyAssumeIdentifierList = false)
 		{
@@ -168,9 +27,9 @@ namespace D_Parser.Resolver
 			CodeLocation startLocation=CodeLocation.Empty;
 			bool IsExpression = false;
 			
-			if (ctxt.ScopedStatement is IExpressionContainingStatement)
+			if (ctxt.CurrentContext.ScopedStatement is IExpressionContainingStatement)
 			{
-				var exprs=(ctxt.ScopedStatement as IExpressionContainingStatement).SubExpressions;
+				var exprs=(ctxt.CurrentContext.ScopedStatement as IExpressionContainingStatement).SubExpressions;
 				IExpression targetExpr = null;
 
 				if(exprs!=null)
@@ -246,38 +105,18 @@ namespace D_Parser.Resolver
 		}
 
 		public static ResolveResult[] ResolveType(ITypeDeclaration declaration,
-		                                          ResolverContext ctxt,
-												  IBlockNode currentScopeOverride = null)
+		                                          ResolverContextStack ctxt)
 		{
-			if (ctxt == null)
-				return null;
-
-			var ctxtOverride=ctxt;
-			
-			if(currentScopeOverride!=null && currentScopeOverride!=ctxt.ScopedBlock){
-				ctxtOverride=new ResolverContext();
-				ctxtOverride.ApplyFrom(ctxt);
-				ctxtOverride.ScopedBlock = currentScopeOverride;
-				ctxtOverride.ScopedStatement = null;
-			}			
-			
-			if(ctxtOverride.ScopedBlock!=null &&( ctxtOverride.ImportCache==null || ctxtOverride.ScopedBlock.NodeRoot!=ctxt.ScopedBlock.NodeRoot))
-			{
-				ctxtOverride.ImportCache=ResolveImports(ctxtOverride.ScopedBlock.NodeRoot as DModule,ctxt.ParseCache);
-			}
-			
-			if (currentScopeOverride == null)
-				currentScopeOverride = ctxt.ScopedBlock;
-
 			if (ctxt == null || declaration == null)
 				return null;
 
+			#region Check if already resolved once
 			ResolveResult[] preRes = null;
 			object scopeObj = null;
 
-			if (ctxtOverride.ScopedStatement != null)
+			if (ctxt.ScopedStatement != null)
 			{
-				var curStmtLevel=ctxtOverride.ScopedStatement;
+				var curStmtLevel=ctxt.ScopedStatement;
 
 				while (curStmtLevel != null && !(curStmtLevel is BlockStatement))
 					curStmtLevel = curStmtLevel.Parent;
@@ -287,11 +126,11 @@ namespace D_Parser.Resolver
 			}
 
 			if (scopeObj == null)
-				scopeObj = ctxtOverride.ScopedBlock;
+				scopeObj = ctxt.ScopedBlock;
 
-			// Check if already resolved once
-			if (ctxtOverride.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, scopeObj))
+			if (ctxt.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, scopeObj))
 				return preRes;
+			#endregion
 
 			var returnedResults = new List<ResolveResult>();
 
@@ -299,7 +138,7 @@ namespace D_Parser.Resolver
 			ResolveResult[] rbases = null;
 			if (declaration.InnerDeclaration != null)
 			{
-				rbases = ResolveType(declaration.InnerDeclaration, ctxtOverride);
+				rbases = ResolveType(declaration.InnerDeclaration, ctxt);
 
 				if (rbases != null)
 					rbases = FilterOutByResultPriority(ctxt, rbases);
@@ -338,7 +177,7 @@ namespace D_Parser.Resolver
 
 						if (classDef is DClassLike)
 						{
-							var res = HandleNodeMatch(classDef, ctxtOverride, typeBase: declaration);
+							var res = HandleNodeMatch(classDef, ctxt, typeBase: declaration);
 
 							if (res != null)
 								returnedResults.Add(res);
@@ -347,14 +186,14 @@ namespace D_Parser.Resolver
 					// References super type of currently scoped class declaration
 					else if (searchToken == DTokens.Super)
 					{
-						var classDef = currentScopeOverride;
+						var classDef = ctxt.ScopedBlock;
 
 						while (!(classDef is DClassLike) && classDef != null)
 							classDef = classDef.Parent as IBlockNode;
 
 						if (classDef != null)
 						{
-							var baseClassDefs = ResolveBaseClass(classDef as DClassLike, ctxtOverride);
+							var baseClassDefs = ResolveBaseClass(classDef as DClassLike, ctxt);
 
 							if (baseClassDefs != null)
 							{
@@ -380,9 +219,9 @@ namespace D_Parser.Resolver
 					// (As usual) Go on searching in the local&global scope(s)
 					else
 					{
-						var matches = NameScan.SearchMatchesAlongNodeHierarchy(ctxtOverride, declaration.Location, searchIdentifier);
+						var matches = NameScan.SearchMatchesAlongNodeHierarchy(ctxt, declaration.Location, searchIdentifier);
 
-						var results = HandleNodeMatches(matches, ctxtOverride, TypeDeclaration: declaration);
+						var results = HandleNodeMatches(matches, ctxt, TypeDeclaration: declaration);
 						if (results != null)
 							returnedResults.AddRange(results);
 					}
@@ -397,14 +236,14 @@ namespace D_Parser.Resolver
 					// typeof(return)
 					if(typeOf.InstanceId is TokenExpression && (typeOf.InstanceId as TokenExpression).Token==DTokens.Return)
 					{
-						var m= HandleNodeMatch(currentScopeOverride,ctxt,currentScopeOverride,null,declaration);
+						var m= HandleNodeMatch(ctxt.ScopedBlock,ctxt,null,declaration);
 						if(m!=null)
 							returnedResults.Add(m);
 					}
 					// typeOf(myInt) === int
 					else if(typeOf.InstanceId!=null)
 					{
-						var wantedTypes=ResolveType(typeOf.InstanceId.ExpressionTypeRepresentation,ctxt,currentScopeOverride);
+						var wantedTypes=ResolveType(typeOf.InstanceId.ExpressionTypeRepresentation,ctxt);
 
 						if (wantedTypes == null)
 							return null;
@@ -448,10 +287,8 @@ namespace D_Parser.Resolver
 						string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
 
 						// Scan for static properties
-						var staticProp = StaticPropertyResolver.TryResolveStaticProperties(
-							rbase,
-							declaration as IdentifierDeclaration,
-							ctxtOverride);
+						var staticProp = StaticPropertyResolver.TryResolveStaticProperties(rbase,declaration as IdentifierDeclaration,ctxt);
+						
 						if (staticProp != null)
 						{
 							returnedResults.Add(staticProp);
@@ -477,17 +314,16 @@ namespace D_Parser.Resolver
 								else if (scanResult is TypeResult)
 								{
 									var tr=scanResult as TypeResult;
-									var nodeMatches=NameScan.ScanNodeForIdentifier(tr.ResolvedTypeDefinition, searchIdentifier, ctxtOverride);
+									var nodeMatches=NameScan.ScanNodeForIdentifier(tr.ResolvedTypeDefinition, searchIdentifier, ctxt);
 
-									var results = HandleNodeMatches(
-										nodeMatches,
-										ctxtOverride, 
-										tr.ResolvedTypeDefinition, 
-										resultBase: rbase, 
-										TypeDeclaration: declaration);
+									ctxt.PushNewScope(tr.ResolvedTypeDefinition);
+
+									var results = HandleNodeMatches(nodeMatches, ctxt, rbase, declaration);
 
 									if (results != null)
 										returnedResults.AddRange(FilterOutByResultPriority(ctxt, results));
+
+									ctxt.Pop();
 								}
 								else if (scanResult is ModuleResult)
 								{
@@ -510,9 +346,10 @@ namespace D_Parser.Resolver
 									}
 									else
 									{
-										var results = HandleNodeMatches(
-										NameScan.ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, ctxtOverride),
-										ctxtOverride, currentScopeOverride, rbase, TypeDeclaration: declaration);
+										var matches=NameScan.ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, ctxt);
+
+										var results = HandleNodeMatches(matches, ctxt, rbase, declaration);
+
 										if (results != null)
 											returnedResults.AddRange(results);
 									}
@@ -595,7 +432,7 @@ namespace D_Parser.Resolver
 
 			if (returnedResults.Count > 0)
 			{
-				ctxt.TryAddResults(declaration.ToString(), returnedResults.ToArray(), ctxtOverride.ScopedBlock);
+				ctxt.TryAddResults(declaration.ToString(), returnedResults.ToArray(), ctxt.ScopedBlock);
 
 				return FilterOutByResultPriority(ctxt, returnedResults.ToArray());
 			}
@@ -604,96 +441,13 @@ namespace D_Parser.Resolver
 		}
 		#endregion
 
-		public static ResolveResult[] FilterOutByResultPriority(
-			ResolverContext ctxt,
-			ResolveResult[] results)
+		public ResolveResult[] ResolveIdentifier(string Identifier, ResolverContext ctxt)
 		{
-			if (results != null && results.Length > 1)
-			{
-				var newRes = new List<ResolveResult>();
-				foreach (var rb in results)
-				{
-					var n = GetResultMember(rb);
-					if (n != null)
-					{
-						// Put priority on locals
-						if (n is DVariable && 
-							(n as DVariable).IsLocal)
-							return new[] { rb };
-
-						// If member/type etc. is part of the actual module, omit external symbols
-						if (n.NodeRoot == ctxt.ScopedBlock.NodeRoot)
-							newRes.Add(rb);
-					}
-				}
-
-				if (newRes.Count > 0)
-					return newRes.ToArray();
-			}
-
-			return results;
-		}
-
-		public static INode GetResultMember(ResolveResult res)
-		{
-			if (res is MemberResult)
-				return (res as MemberResult).ResolvedMember;
-			else if (res is TypeResult)
-				return (res as TypeResult).ResolvedTypeDefinition;
-			else if (res is ModuleResult)
-				return (res as ModuleResult).ResolvedModule;
-
-			return null;
-		}
-
-		/// <summary>
-		/// If an aliased type result has been passed to this method, it'll return the resolved type.
-		/// If aliases were done multiple times, it also tries to skip through these.
-		/// 
-		/// alias char[] A;
-		/// alias A B;
-		/// 
-		/// var resolvedType=TryRemoveAliasesFromResult(% the member result from B %);
-		/// --> resolvedType will be StaticTypeResult from char[]
-		/// 
-		/// </summary>
-		/// <param name="rr"></param>
-		/// <returns></returns>
-		public static ResolveResult[] TryRemoveAliasesFromResult(params ResolveResult[] initialResults)
-		{
-			var ret=new List<ResolveResult> (initialResults);
-			var l2 = new List<ResolveResult>();
-
-			while (ret.Count > 0)
-			{
-				foreach (var res in ret)
-				{
-					var mr = res as MemberResult;
-					if (mr!=null &&
-
-						// Alias check
-						mr.ResolvedMember is DVariable &&
-						(mr.ResolvedMember as DVariable).IsAlias &&
-
-						// Check if it has resolved base types
-						mr.MemberBaseTypes != null && 
-						mr.MemberBaseTypes.Length > 0)
-							l2.AddRange(mr.MemberBaseTypes);
-				}
-
-				if (l2.Count < 1)
-					break;
-
-				ret.Clear();
-				ret.AddRange(l2);
-				l2.Clear();
-			}
-
-			return ret.ToArray();
+			throw new Exception();
 		}
 
 		static int bcStack = 0;
-		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, ResolverContext ctxt)
+		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, ResolverContextStack ctxt)
 		{
 			if (bcStack > 8)
 			{
@@ -745,29 +499,11 @@ namespace D_Parser.Resolver
 			 * 
 			 * }
 			 */
-			ResolveResult[] results = null;
+			ctxt.PushNewScope(ActualClass.Parent as IBlockNode);
 
-			if (ctxt != null)
-			{
-				var ctxtOverride = new ResolverContext();
+			var results = ResolveType(type, ctxt);
 
-				// Take ctxt's parse cache etc.
-				ctxtOverride.ApplyFrom(ctxt);
-
-				// First override the scoped block
-				ctxtOverride.ScopedBlock = ActualClass.Parent as IBlockNode;
-
-				// Then override the import cache with imports of the ActualClass's module
-				if (ctxt.ScopedBlock != null &&
-					ctxt.ScopedBlock.NodeRoot != ActualClass.NodeRoot)
-					ctxtOverride.ImportCache = ResolveImports(ActualClass.NodeRoot as DModule, ctxt.ParseCache);
-
-				results = ResolveType(type, ctxtOverride);
-			}
-			else
-			{
-				results = ResolveType(type, null, ActualClass.Parent as IBlockNode);
-			}
+			ctxt.Pop();
 
 			if (results != null)
 				foreach (var i in results)
@@ -783,22 +519,18 @@ namespace D_Parser.Resolver
 		/// A class' base class will be searched.
 		/// etc..
 		/// </summary>
-		/// <returns></returns>
 		public static ResolveResult HandleNodeMatch(
 			INode m,
-			ResolverContext ctxt,
-			IBlockNode currentlyScopedNode = null,
+			ResolverContextStack ctxt,
 			ResolveResult resultBase = null, ITypeDeclaration typeBase = null)
 		{
-			if (currentlyScopedNode == null)
-				currentlyScopedNode = ctxt.ScopedBlock;
-
 			stackNum_HandleNodeMatch++;
 
 			//HACK: Really dirty stack overflow prevention via manually counting call depth
 			var DoResolveBaseType =
 				stackNum_HandleNodeMatch > 5 ?
-				false : ctxt.ResolveBaseTypes;
+				false : ctxt.CurrentContext.ResolveBaseTypes;
+
 			// Prevent infinite recursion if the type accidently equals the node's name
 			if (m.Type != null && m.Type.ToString(false) == m.Name)
 				DoResolveBaseType = false;
@@ -807,16 +539,16 @@ namespace D_Parser.Resolver
 			{
 				var v = m as DVariable;
 
-				var memberbaseTypes = DoResolveBaseType ? ResolveType(v.Type, ctxt, currentlyScopedNode) : null;
+				var memberbaseTypes = DoResolveBaseType ? ResolveType(v.Type, ctxt) : null;
 
 				// For auto variables, use the initializer to get its type
 				if (memberbaseTypes == null && DoResolveBaseType && v.ContainsAttribute(DTokens.Auto) && v.Initializer != null)
 				{
-					memberbaseTypes = ResolveType(v.Initializer.ExpressionTypeRepresentation, ctxt, currentlyScopedNode);
+					memberbaseTypes = ResolveType(v.Initializer.ExpressionTypeRepresentation, ctxt);
 				}
 
 				// Resolve aliases if wished
-				if (ctxt.ResolveAliases && memberbaseTypes != null)
+				if (ctxt.CurrentContext.ResolveAliases && memberbaseTypes != null)
 				{
 					/*
 					 * To ensure that absolutely all kinds of alias definitions became resolved (includes aliased alias definitions!), 
@@ -836,7 +568,7 @@ namespace D_Parser.Resolver
 								// Note: Normally, a variable's base type mustn't be an other variable but an alias defintion...
 								if (dv.IsAlias)
 								{
-									var newRes = ResolveType(dv.Type, ctxt, currentlyScopedNode);
+									var newRes = ResolveType(dv.Type, ctxt);
 									if (newRes != null)
 										memberBaseTypes_Override.AddRange(newRes);
 									hadAliasResolution = true;
@@ -867,6 +599,7 @@ namespace D_Parser.Resolver
 			else if (m is DMethod)
 			{
 				var method = m as DMethod;
+				bool popOnReturn = false;
 
 				var methodType = method.Type;
 
@@ -909,7 +642,9 @@ namespace D_Parser.Resolver
 
 					if (returnStmt != null && returnStmt.ReturnExpression != null)
 					{
-						currentlyScopedNode = method;
+						ctxt.PushNewScope(method);
+						popOnReturn = true;
+
 						methodType = returnStmt.ReturnExpression.ExpressionTypeRepresentation;
 					}
 				}
@@ -917,10 +652,14 @@ namespace D_Parser.Resolver
 				var ret = new MemberResult()
 				{
 					ResolvedMember = m,
-					MemberBaseTypes = DoResolveBaseType ? ResolveType(methodType, ctxt, currentlyScopedNode) : null,
+					MemberBaseTypes = DoResolveBaseType ? ResolveType(methodType, ctxt) : null,
 					ResultBase = resultBase,
 					TypeDeclarationBase = typeBase
 				};
+
+				if (popOnReturn)
+					ctxt.Pop();
+
 				stackNum_HandleNodeMatch--;
 				return ret;
 			}
@@ -977,9 +716,9 @@ namespace D_Parser.Resolver
 		}
 
 		static int stackNum_HandleNodeMatch = 0;
-		public static ResolveResult[] HandleNodeMatches(IEnumerable<INode> matches,
-			ResolverContext ctxt,
-			IBlockNode currentlyScopedNode = null,
+		public static ResolveResult[] HandleNodeMatches(
+			IEnumerable<INode> matches,
+			ResolverContextStack ctxt,
 			ResolveResult resultBase = null,
 			ITypeDeclaration TypeDeclaration = null)
 		{
@@ -991,7 +730,7 @@ namespace D_Parser.Resolver
 					if (m == null)
 						continue;
 
-					var res = HandleNodeMatch(m, ctxt, currentlyScopedNode, resultBase, typeBase: TypeDeclaration);
+					var res = HandleNodeMatch(m, ctxt, resultBase, typeBase: TypeDeclaration);
 					if (res != null)
 						rl.Add(res);
 				}

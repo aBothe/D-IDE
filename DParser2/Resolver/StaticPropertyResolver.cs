@@ -17,7 +17,7 @@ namespace D_Parser.Resolver
 		/// </summary>
 		/// <param name="InitialResult"></param>
 		/// <returns></returns>
-		public static ResolveResult TryResolveStaticProperties(ResolveResult InitialResult, IdentifierDeclaration Identifier, ResolverContext ctxt = null)
+		public static ResolveResult TryResolveStaticProperties(ResolveResult InitialResult, IdentifierDeclaration Identifier, ResolverContextStack ctxt = null)
 		{
 			if (InitialResult == null || Identifier == null || InitialResult is ModuleResult)
 			{

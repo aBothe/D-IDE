@@ -41,14 +41,10 @@ namespace D_Parser.Completion
 
 			var resolveResults = DResolver.ResolveType(
 				Editor,
-				new ResolverContext
-				{
+				new ResolverContextStack(Editor.ParseCache,	new ResolverContext	{
 					ScopedBlock = curBlock,
-					ParseCache = Editor.ParseCache,
-					ImportCache = Editor.ImportCache,
 					ScopedStatement = curStmt
-				}
-				);
+				}, Editor.ImportCache));
 
 			if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 				return;

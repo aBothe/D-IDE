@@ -132,7 +132,7 @@ namespace D_IDE.D
 					IStatement stmt = null;
 					var block = DResolver.SearchBlockAt(module, new CodeLocation(0, codeLine),out stmt);
 
-					var res = DResolver.ResolveType(new IdentifierDeclaration(Symbol.Name), new ResolverContext { ScopedBlock = block });
+					var res = DResolver.ResolveType(new IdentifierDeclaration(Symbol.Name), new ResolverContextStack(null,new ResolverContext { ScopedBlock = block }));
 
 					if (res!=null && res.Length > 0 && res[0] is MemberResult)
 					{

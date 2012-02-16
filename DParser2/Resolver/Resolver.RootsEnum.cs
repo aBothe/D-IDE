@@ -12,13 +12,14 @@ namespace D_Parser.Resolver
 	public abstract class RootsEnum
 	{
 		public static DVariable __ctfe;
-		ResolverContext ctxt;
-		public ResolverContext Context { 
+
+		ResolverContextStack ctxt;
+		public ResolverContextStack Context { 
 			get{ return ctxt;}
 			set{ ctxt=value;}
 		}
 
-		public RootsEnum(ResolverContext context)
+		public RootsEnum(ResolverContextStack context)
 		{
 			ctxt=context;
 		}
@@ -240,74 +241,18 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 		/// Walks up the statement scope hierarchy and enlists all declarations that have been made BEFORE the caret position. 
 		/// (If CodeLocation.Empty given, this parameter will be ignored)
 		/// </summary>
-		public void IterateThroughItemHierarchy(IStatement Statement, CodeLocation Caret)
+		void IterateThroughItemHierarchy(IStatement Statement, CodeLocation Caret)
 		{
 			// To a prevent double entry of the same declaration, skip a most scoped declaration first
 			if (Statement is DeclarationStatement)
 				Statement = Statement.Parent;
 
 			while (Statement != null)
-			{
+			{/*
 				if (Statement is ForeachStatement)
-				{
-					var fe = Statement as ForeachStatement;
+					HandleForeachHeader(Statement as ForeachStatement);
 
-					DVariable keyIterator = null, valueIterator = null;
-
-					if (fe.ForeachTypeList == null || fe.ForeachTypeList.Length == 0)
-					{}
-					else if (fe.ForeachTypeList.Length == 1)
-						valueIterator = fe.ForeachTypeList[0];
-					else if (fe.ForeachTypeList.Length > 1)
-					{
-						keyIterator = fe.ForeachTypeList[0];
-						valueIterator = fe.ForeachTypeList[1];
-					}
-
-					bool ArrayTypeResolutionRequired = false;
-
-					if (keyIterator != null && keyIterator.Type == null)
-						ArrayTypeResolutionRequired = true;
-
-					if (valueIterator != null && valueIterator.Type == null)
-						ArrayTypeResolutionRequired = true;
-
-					if (ArrayTypeResolutionRequired)
-					{
-						// foreach(v, 0 .. 10)
-						if (fe.IsRangeStatement)
-						{
-							//	Key type is integer
-							//	Value is type of the lower aggregate
-						}
-						else
-						{
-							// Resolve aggregate's type
-
-							// Note: begin to resolve type a scope level higher than this one 
-							// -- it'd end up in an infinite foreach-resolution-recursion otherwise ;)
-							
-
-							// If associative array given:
-							//		Key iterator type is key type
-							//		Value iterator type is value type
-
-							// If normal array given:
-							//		Key iterator type is integer
-							//		Value iterator type is value type
-
-							/* If class-like construct given: (see 'Foreach over Structs and Classes with Ranges')
-							 * 
-							 *		If foreach:
-							 *			Value type is type of property "front"
-							 *		else if foreach_reverse:
-							 *			Value type is type of property "back"
-							 * 
-							 */
-						}
-					}
-				}
-				else if (Statement is IDeclarationContainingStatement)
+				else*/ if (Statement is IDeclarationContainingStatement)
 				{
 					var decls = (Statement as IDeclarationContainingStatement).Declarations;
 
@@ -354,6 +299,64 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 					}
 
 				Statement = Statement.Parent;
+			}
+		}
+
+		void HandleForeachHeader(ForeachStatement fe)
+		{
+			DVariable keyIterator = null, valueIterator = null;
+
+			if (fe.ForeachTypeList == null || fe.ForeachTypeList.Length == 0)
+			{ }
+			else if (fe.ForeachTypeList.Length == 1)
+				valueIterator = fe.ForeachTypeList[0];
+			else if (fe.ForeachTypeList.Length > 1)
+			{
+				keyIterator = fe.ForeachTypeList[0];
+				valueIterator = fe.ForeachTypeList[1];
+			}
+
+			bool ArrayTypeResolutionRequired = false;
+
+			if (keyIterator != null && keyIterator.Type == null)
+				ArrayTypeResolutionRequired = true;
+
+			if (valueIterator != null && valueIterator.Type == null)
+				ArrayTypeResolutionRequired = true;
+
+			if (ArrayTypeResolutionRequired)
+			{
+				// foreach(v, 0 .. 10)
+				if (fe.IsRangeStatement)
+				{
+					//	Key type is integer
+					//	Value is type of the lower aggregate
+				}
+				else
+				{
+					// Resolve aggregate's type
+
+					// Note: begin to resolve type a scope level higher than this one 
+					// -- it'd end up in an infinite foreach-resolution-recursion otherwise ;)
+
+
+					// If associative array given:
+					//		Key iterator type is key type
+					//		Value iterator type is value type
+
+					// If normal array given:
+					//		Key iterator type is integer
+					//		Value iterator type is value type
+
+					/* If class-like construct given: (see 'Foreach over Structs and Classes with Ranges')
+					 * 
+					 *		If foreach:
+					 *			Value type is type of property "front"
+					 *		else if foreach_reverse:
+					 *			Value type is type of property "back"
+					 * 
+					 */
+				}
 			}
 		}
 	}

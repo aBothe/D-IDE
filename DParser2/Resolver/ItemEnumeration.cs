@@ -21,7 +21,7 @@ namespace D_Parser.Resolver
 
 	public class ItemEnumeration : RootsEnum
 	{
-		protected ItemEnumeration(ResolverContext ctxt): base(ctxt) { }
+		protected ItemEnumeration(ResolverContextStack ctxt): base(ctxt) { }
 
 		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock
 			, IStatement ScopedStatement,
@@ -29,17 +29,17 @@ namespace D_Parser.Resolver
 			IEnumerable<IAbstractSyntaxTree> CodeCache,
 			MemberTypes VisibleMembers)
 		{
-			return EnumAllAvailableMembers(new ResolverContext
+			return EnumAllAvailableMembers(new ResolverContextStack(CodeCache,new ResolverContext
 			{
-				ParseCache = CodeCache,
-				ImportCache = DResolver.ResolveImports(ScopedBlock.NodeRoot as DModule, CodeCache),
 				ScopedBlock = ScopedBlock,
 				ScopedStatement = ScopedStatement
-			}, Caret, VisibleMembers);
+			}), 
+			Caret, 
+			VisibleMembers);
 		}
 
 		public static IEnumerable<INode> EnumAllAvailableMembers(
-			ResolverContext ctxt,
+			ResolverContextStack ctxt,
 			CodeLocation Caret,
 			MemberTypes VisibleMembers)
 		{

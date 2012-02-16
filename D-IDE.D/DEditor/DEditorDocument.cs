@@ -87,7 +87,7 @@ namespace D_IDE.D
 		public void UpdateImportCache()
 		{
 			Dispatcher.Invoke(new Action(() => ParseCache = DCodeCompletionSupport.EnumAvailableModules(this)));
-			ImportCache = DResolver.ResolveImports(SyntaxTree, ParseCache);
+			ImportCache = ImportResolver.ResolveImports(SyntaxTree, ParseCache);
 		}
 
 		/// <summary>
@@ -448,11 +448,10 @@ namespace D_IDE.D
 					return;
 
 				var rr = DResolver.ResolveType(this,
-					new ResolverContext { 
-						ParseCache = ParseCache,
-						ImportCache = ImportCache, 
-						ScopedBlock = lastSelectedBlock 
-					},
+					new ResolverContextStack(
+						ParseCache,
+						new ResolverContext { ScopedBlock = lastSelectedBlock }, 
+						ImportCache),
 					true, true);
 
 				ResolveResult res = null;
@@ -511,12 +510,8 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var rr = DResolver.ResolveType(this,
-					new ResolverContext { 
-						ParseCache = ParseCache,
-						ImportCache = ImportCache, 
-						ScopedBlock = lastSelectedBlock 
-					},
+				var rr = DResolver.ResolveType(this,new ResolverContextStack(ParseCache,
+					new ResolverContext { ScopedBlock = lastSelectedBlock },ImportCache),
 					true, true);
 
 				ResolveResult res = null;
@@ -750,15 +745,13 @@ namespace D_IDE.D
 			var sw=new Stopwatch();
 			sw.Start();
 
-			var res = CodeSymbolsScanner.ScanSymbols(new ResolverContext
+			var res = CodeSymbolsScanner.ScanSymbols(new ResolverContextStack(ParseCache, new ResolverContext
 			{
 				ScopedBlock=SyntaxTree,
-				ImportCache = ImportCache,
-				ParseCache = ParseCache,
 				// For performance reasons, do not scan down aliases
 				ResolveAliases = false
 				// Note: for correct results, base classes and variable types have to get resolved
-			});
+			},ImportCache));
 
 			sw.Stop();
 

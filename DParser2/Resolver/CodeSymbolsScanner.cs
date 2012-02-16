@@ -43,7 +43,7 @@ namespace D_Parser.Resolver
 		/// <param name="lastResCtxt"></param>
 		/// <param name="SyntaxTree"></param>
 		/// <returns></returns>
-		public static CodeScanResult ScanSymbols(ResolverContext lastResCtxt)
+		public static CodeScanResult ScanSymbols(ResolverContextStack lastResCtxt)
 		{
 			var csr = new CodeScanResult();
 
@@ -71,7 +71,7 @@ namespace D_Parser.Resolver
 		static IEnumerable<IBlockNode> FindAndEnlistType(
 			CodeScanResult csr,
 			ITypeDeclaration typeId,
-			ResolverContext lastResCtxt,
+			ResolverContextStack lastResCtxt,
 			ResolutionCache resCache)
 		{
 			if (typeId == null)

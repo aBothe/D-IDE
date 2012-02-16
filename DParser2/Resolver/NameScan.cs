@@ -12,9 +12,9 @@ namespace D_Parser.Resolver
 		string filterId;
 		public List<INode> Matches = new List<INode>();
 
-		NameScan(ResolverContext ctxt) : base(ctxt) { }
+		NameScan(ResolverContextStack ctxt) : base(ctxt) { }
 
-		public static IEnumerable<INode> SearchMatchesAlongNodeHierarchy(ResolverContext ctxt, CodeLocation caret, string name)
+		public static IEnumerable<INode> SearchMatchesAlongNodeHierarchy(ResolverContextStack ctxt, CodeLocation caret, string name)
 		{
 			var scan = new NameScan(ctxt) { filterId=name };
 
@@ -45,7 +45,7 @@ namespace D_Parser.Resolver
 		/// <param name="name"></param>
 		/// <param name="parseCache">Needed when trying to search base classes</param>
 		/// <returns></returns>
-		public static INode[] ScanNodeForIdentifier(IBlockNode curScope, string name, ResolverContext ctxt)
+		public static INode[] ScanNodeForIdentifier(IBlockNode curScope, string name, ResolverContextStack ctxt)
 		{
 			var matches = new List<INode>();
 
