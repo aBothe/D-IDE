@@ -138,10 +138,30 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		public void TryAddResults(string TypeDeclarationString, ResolveResult[] NodeMatches, IBlockNode ScopedType = null)
+		object GetMostFittingBlock()
 		{
-			if (ScopedType == null && CurrentContext != null)
-				ScopedType = CurrentContext.ScopedBlock;
+			if (CurrentContext == null)
+				return null;
+
+			if (CurrentContext.ScopedStatement != null)
+			{
+				var r = CurrentContext.ScopedStatement;
+
+				while (r != null)
+				{
+					if (r is BlockStatement)
+						return r;
+					else
+						r = r.Parent;
+				}
+			}
+			
+			return CurrentContext.ScopedBlock;
+		}
+
+		public void TryAddResults(string TypeDeclarationString, ResolveResult[] NodeMatches)
+		{
+			var ScopedType = GetMostFittingBlock();
 
 			Dictionary<string, ResolveResult[]> subDict = null;
 
@@ -152,10 +172,9 @@ namespace D_Parser.Resolver
 				subDict.Add(TypeDeclarationString, NodeMatches);
 		}
 
-		public bool TryGetAlreadyResolvedType(string TypeDeclarationString, out ResolveResult[] NodeMatches, object ScopedType = null)
+		public bool TryGetAlreadyResolvedType(string TypeDeclarationString, out ResolveResult[] NodeMatches)
 		{
-			if (ScopedType == null && CurrentContext!=null)
-				ScopedType = CurrentContext.ScopedBlock;
+			var ScopedType = GetMostFittingBlock();
 
 			Dictionary<string, ResolveResult[]> subDict = null;
 

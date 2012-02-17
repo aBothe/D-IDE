@@ -11,9 +11,9 @@ namespace D_Parser.Resolver
 		public ResolveResult ResultBase;
 
 		/// <summary>
-		/// The type declaration that has been used as the base for our type resolution.
+		/// The type declaration / expression that has been used as the base for this type resolution.
 		/// </summary>
-		public ITypeDeclaration TypeDeclarationBase;
+		public object DeclarationOrExpressionBase;
 
 		public abstract string ResultPath {get;}
 	}
@@ -48,7 +48,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return TypeDeclarationBase.ToString();
+			return DeclarationOrExpressionBase.ToString();
 		}
 
 		public override string ResultPath

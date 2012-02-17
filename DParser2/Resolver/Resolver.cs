@@ -88,12 +88,12 @@ namespace D_Parser.Resolver
 					ResolveResult[] ret = null;
 
 					if (expr is IdentifierExpression && !(expr as IdentifierExpression).IsIdentifier)
-						ret = new[] { new ExpressionResult() { Expression = expr, TypeDeclarationBase = expr.ExpressionTypeRepresentation } };
+						ret = new[] { new ExpressionResult() { Expression = expr, DeclarationOrExpressionBase = expr.ExpressionTypeRepresentation } };
 					else
 						ret = ResolveType(expr.ExpressionTypeRepresentation, ctxt);
 
 					if (ret == null && expr != null && !(expr is TokenExpression))
-						ret = new[] { new ExpressionResult() { Expression = expr, TypeDeclarationBase=expr.ExpressionTypeRepresentation } };
+						ret = new[] { new ExpressionResult() { Expression = expr, DeclarationOrExpressionBase=expr.ExpressionTypeRepresentation } };
 
 					return ret;
 				}
@@ -110,27 +110,10 @@ namespace D_Parser.Resolver
 			if (ctxt == null || declaration == null)
 				return null;
 
-			#region Check if already resolved once
+			// Check if already resolved once
 			ResolveResult[] preRes = null;
-			object scopeObj = null;
-
-			if (ctxt.ScopedStatement != null)
-			{
-				var curStmtLevel=ctxt.ScopedStatement;
-
-				while (curStmtLevel != null && !(curStmtLevel is BlockStatement))
-					curStmtLevel = curStmtLevel.Parent;
-
-				if(curStmtLevel is BlockStatement)
-					scopeObj = curStmtLevel;
-			}
-
-			if (scopeObj == null)
-				scopeObj = ctxt.ScopedBlock;
-
-			if (ctxt.TryGetAlreadyResolvedType(declaration.ToString(), out preRes, scopeObj))
+			if (ctxt.TryGetAlreadyResolvedType(declaration.ToString(), out preRes))
 				return preRes;
-			#endregion
 
 			var returnedResults = new List<ResolveResult>();
 
@@ -156,125 +139,17 @@ namespace D_Parser.Resolver
 			#region Search initial member/type/module/whatever
 			if (rbases == null)
 			{
-				#region IdentifierDeclaration
-				if (declaration is IdentifierDeclaration)
-				{
-					string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
-
-					if (string.IsNullOrEmpty(searchIdentifier))
-						return null;
-
-					// Try to convert the identifier into a token
-					int searchToken = DTokens.GetTokenID(searchIdentifier);
-
-					// References current class scope
-					if (searchToken == DTokens.This)
-					{
-						var classDef = ctxt.ScopedBlock;
-
-						while (!(classDef is DClassLike) && classDef != null)
-							classDef = classDef.Parent as IBlockNode;
-
-						if (classDef is DClassLike)
-						{
-							var res = HandleNodeMatch(classDef, ctxt, typeBase: declaration);
-
-							if (res != null)
-								returnedResults.Add(res);
-						}
-					}
-					// References super type of currently scoped class declaration
-					else if (searchToken == DTokens.Super)
-					{
-						var classDef = ctxt.ScopedBlock;
-
-						while (!(classDef is DClassLike) && classDef != null)
-							classDef = classDef.Parent as IBlockNode;
-
-						if (classDef != null)
-						{
-							var baseClassDefs = ResolveBaseClass(classDef as DClassLike, ctxt);
-
-							if (baseClassDefs != null)
-							{
-								// Important: Overwrite type decl base with 'super' token
-								foreach (var bc in baseClassDefs)
-									bc.TypeDeclarationBase = declaration;
-
-								returnedResults.AddRange(baseClassDefs);
-							}
-						}
-					}
-					// If we found a base type, return a static-type-result
-					else if (searchToken > 0)
-					{
-						if (DTokens.BasicTypes[searchToken])
-							returnedResults.Add(new StaticTypeResult()
-							{
-								BaseTypeToken = searchToken,
-								TypeDeclarationBase = declaration
-							});
-						// anything else is just a keyword, not a type
-					}
-					// (As usual) Go on searching in the local&global scope(s)
-					else
-					{
-						var matches = NameScan.SearchMatchesAlongNodeHierarchy(ctxt, declaration.Location, searchIdentifier);
-
-						var results = HandleNodeMatches(matches, ctxt, TypeDeclaration: declaration);
-						if (results != null)
-							returnedResults.AddRange(results);
-					}
-				}
-				#endregion
+				// call Resolve();
 
 				#region TypeOfDeclaration
-				else if(declaration is TypeOfDeclaration)
+				if(declaration is TypeOfDeclaration)
 				{
-					var typeOf=declaration as TypeOfDeclaration;
 					
-					// typeof(return)
-					if(typeOf.InstanceId is TokenExpression && (typeOf.InstanceId as TokenExpression).Token==DTokens.Return)
-					{
-						var m= HandleNodeMatch(ctxt.ScopedBlock,ctxt,null,declaration);
-						if(m!=null)
-							returnedResults.Add(m);
-					}
-					// typeOf(myInt) === int
-					else if(typeOf.InstanceId!=null)
-					{
-						var wantedTypes=ResolveType(typeOf.InstanceId.ExpressionTypeRepresentation,ctxt);
-
-						if (wantedTypes == null)
-							return null;
-
-						// Scan down for variable's base types
-						var c1=new List<ResolveResult>(wantedTypes);
-						var c2=new List<ResolveResult>();
-						
-						while(c1.Count>0)
-						{
-							foreach(var t in c1)
-							{
-								if (t is MemberResult)
-								{
-									if((t as MemberResult).MemberBaseTypes!=null)
-										c2.AddRange((t as MemberResult).MemberBaseTypes);
-								}
-								else
-									returnedResults.Add(t);
-							}
-							
-							c1.Clear();
-							c1.AddRange(c2);
-							c2.Clear();
-						}
-					}
 				}
 				#endregion
 
 				else
-					returnedResults.Add(new StaticTypeResult() { TypeDeclarationBase = declaration });
+					returnedResults.Add(new StaticTypeResult() { DeclarationOrExpressionBase = declaration });
 			}
 			#endregion
 
@@ -340,7 +215,7 @@ namespace D_Parser.Resolver
 												ResolvedModule = modRes.ResolvedModule,
 												AlreadyTypedModuleNameParts = modRes.AlreadyTypedModuleNameParts + 1,
 												ResultBase = modRes,
-												TypeDeclarationBase = declaration
+												DeclarationOrExpressionBase = declaration
 											});
 										}
 									}
@@ -368,7 +243,7 @@ namespace D_Parser.Resolver
 
 					else if (declaration is ArrayDecl || declaration is PointerDecl)
 					{
-						returnedResults.Add(new StaticTypeResult() { TypeDeclarationBase = declaration, ResultBase = rbase });
+						returnedResults.Add(new StaticTypeResult() { DeclarationOrExpressionBase = declaration, ResultBase = rbase });
 					}
 
 					else if (declaration is DExpressionDecl)
@@ -394,9 +269,9 @@ namespace D_Parser.Resolver
 						{
 							var str = rbase as StaticTypeResult;
 
-							if (str.TypeDeclarationBase is ArrayDecl && expr is PostfixExpression_Index)
+							if (str.DeclarationOrExpressionBase is ArrayDecl && expr is PostfixExpression_Index)
 							{
-								returnedResults.Add(new StaticTypeResult() { TypeDeclarationBase = (str.TypeDeclarationBase as ArrayDecl).ValueType });
+								returnedResults.Add(new StaticTypeResult() { DeclarationOrExpressionBase = (str.DeclarationOrExpressionBase as ArrayDecl).ValueType });
 							}
 						}
 						else if (rbase is MemberResult)
@@ -415,7 +290,7 @@ namespace D_Parser.Resolver
 											 * take the value type of the 
 											 */
 											// For array and pointer declarations, the StaticTypeResult object contains the array's value type / pointer base type.
-											if (str != null && (str.TypeDeclarationBase is ArrayDecl || str.TypeDeclarationBase is PointerDecl))
+											if (str != null && (str.DeclarationOrExpressionBase is ArrayDecl || str.DeclarationOrExpressionBase is PointerDecl))
 											{
 												returnedResults.AddRange(TryRemoveAliasesFromResult(str.ResultBase));
 												continue;
@@ -432,7 +307,7 @@ namespace D_Parser.Resolver
 
 			if (returnedResults.Count > 0)
 			{
-				ctxt.TryAddResults(declaration.ToString(), returnedResults.ToArray(), ctxt.ScopedBlock);
+				ctxt.TryAddResults(declaration.ToString(), returnedResults.ToArray());
 
 				return FilterOutByResultPriority(ctxt, returnedResults.ToArray());
 			}
@@ -593,7 +468,7 @@ namespace D_Parser.Resolver
 					ResolvedMember = m,
 					MemberBaseTypes = memberbaseTypes,
 					ResultBase = resultBase,
-					TypeDeclarationBase = typeBase
+					DeclarationOrExpressionBase = typeBase
 				};
 			}
 			else if (m is DMethod)
@@ -654,7 +529,7 @@ namespace D_Parser.Resolver
 					ResolvedMember = m,
 					MemberBaseTypes = DoResolveBaseType ? ResolveType(methodType, ctxt) : null,
 					ResultBase = resultBase,
-					TypeDeclarationBase = typeBase
+					DeclarationOrExpressionBase = typeBase
 				};
 
 				if (popOnReturn)
@@ -675,7 +550,7 @@ namespace D_Parser.Resolver
 					ResolvedTypeDefinition = Class,
 					BaseClass = bc,
 					ResultBase = resultBase,
-					TypeDeclarationBase = typeBase
+					DeclarationOrExpressionBase = typeBase
 				};
 			}
 			else if (m is IAbstractSyntaxTree)
@@ -686,7 +561,7 @@ namespace D_Parser.Resolver
 					ResolvedModule = m as IAbstractSyntaxTree,
 					AlreadyTypedModuleNameParts = 1,
 					ResultBase = resultBase,
-					TypeDeclarationBase = typeBase
+					DeclarationOrExpressionBase = typeBase
 				};
 			}
 			else if (m is DEnum)
@@ -696,7 +571,7 @@ namespace D_Parser.Resolver
 				{
 					ResolvedTypeDefinition = m as IBlockNode,
 					ResultBase = resultBase,
-					TypeDeclarationBase = typeBase
+					DeclarationOrExpressionBase = typeBase
 				};
 			}
 			else if (m is TemplateParameterNode)
@@ -705,7 +580,7 @@ namespace D_Parser.Resolver
 				return new MemberResult()
 				{
 					ResolvedMember = m,
-					TypeDeclarationBase = typeBase,
+					DeclarationOrExpressionBase = typeBase,
 					ResultBase = resultBase
 				};
 			}

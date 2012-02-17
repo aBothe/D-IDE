@@ -66,7 +66,7 @@ namespace D_Parser.Completion
 			bool isVariableInstance = false,
 			ResolveResult resultParent = null)
 		{
-			isVariableInstance |= rr.TypeDeclarationBase.ExpressesVariableAccess;
+			isVariableInstance |= rr.DeclarationOrExpressionBase.ExpressesVariableAccess;
 
 			if (rr is MemberResult)
 				BuildMemberCompletionData(rr as MemberResult, currentlyScopedBlock, isVariableInstance);
@@ -84,9 +84,9 @@ namespace D_Parser.Completion
 				bool HasSameAncestor = HaveSameAncestors(currentlyScopedBlock, tr.ResolvedTypeDefinition);
 				bool IsThis = false, IsSuper = false;
 
-				if (tr.TypeDeclarationBase is DTokenDeclaration)
+				if (tr.DeclarationOrExpressionBase is DTokenDeclaration)
 				{
-					int token = (tr.TypeDeclarationBase as DTokenDeclaration).Token;
+					int token = (tr.DeclarationOrExpressionBase as DTokenDeclaration).Token;
 					IsThis = token == DTokens.This;
 					IsSuper = token == DTokens.Super;
 				}
@@ -129,7 +129,7 @@ namespace D_Parser.Completion
 				if (resultParent == null)
 					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, null);
 
-				var type = srr.TypeDeclarationBase;
+				var type = srr.DeclarationOrExpressionBase;
 
 				// on things like immutable(char), pass by the surrounding attribute..
 				while (type is MemberFunctionAttributeDecl)

@@ -63,7 +63,7 @@ namespace D_Parser.Resolver
 				{
 					ResultBase = InitialResult,
 					MemberBaseTypes = new[] { InitialResult },
-					TypeDeclarationBase = Identifier,
+					DeclarationOrExpressionBase = Identifier,
 					ResolvedMember = prop_Init
 				};
 			}
@@ -74,7 +74,7 @@ namespace D_Parser.Resolver
 				return new MemberResult
 				{
 					ResultBase = InitialResult,
-					TypeDeclarationBase = Identifier,
+					DeclarationOrExpressionBase = Identifier,
 					ResolvedMember = new DVariable
 					{
 						Name = "sizeof",
@@ -90,7 +90,7 @@ namespace D_Parser.Resolver
 				return new MemberResult
 				{
 					ResultBase = InitialResult,
-					TypeDeclarationBase = Identifier,
+					DeclarationOrExpressionBase = Identifier,
 					ResolvedMember = new DVariable
 					{
 						Name = "alignof",
@@ -105,7 +105,7 @@ namespace D_Parser.Resolver
 				return new MemberResult
 				{
 					ResultBase = InitialResult,
-					TypeDeclarationBase = Identifier,
+					DeclarationOrExpressionBase = Identifier,
 					ResolvedMember = new DVariable
 					{
 						Name = "mangleof",
@@ -121,7 +121,7 @@ namespace D_Parser.Resolver
 				return new MemberResult
 				{
 					ResultBase = InitialResult,
-					TypeDeclarationBase = Identifier,
+					DeclarationOrExpressionBase = Identifier,
 					ResolvedMember = new DVariable
 					{
 						Name = "stringof",
@@ -143,7 +143,7 @@ namespace D_Parser.Resolver
 			{
 				var srr = InitialResult as StaticTypeResult;
 
-				var type = srr.TypeDeclarationBase;
+				var type = srr.DeclarationOrExpressionBase;
 
 				// on things like immutable(char), pass by the surrounding attribute..
 				while (type is MemberFunctionAttributeDecl)
