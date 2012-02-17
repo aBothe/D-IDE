@@ -57,6 +57,22 @@ namespace D_Parser.Resolver
 		}
 	}
 
+	public class ArrayLikeResult : ResolveResult
+	{
+		public ArrayDecl ArrayDeclaration
+		{
+			get { return DeclarationOrExpressionBase as ArrayDecl; }
+			set { DeclarationOrExpressionBase = value; }
+		}
+
+		public ResolveResult[] KeyType;
+
+		public override string ResultPath
+		{
+			get { return ArrayDeclaration!=null? ArrayDeclaration.ToString():""; }
+		}
+	}
+
 	/// <summary>
 	/// Keeps raw expressions like (1+2)
 	/// </summary>
@@ -124,6 +140,15 @@ namespace D_Parser.Resolver
 		/// </summary>
 		public TypeResult[] BaseClass;
 		public TypeResult[] ImplementedInterfaces;
+
+		/// <summary>
+		/// T!int t;
+		/// 
+		/// t. -- will be resolved to:
+		///		1) TypeResult T; TemplateParameter[0]= StaticType int
+		///		2) MemberResult t; MemberDefinition= 1)
+		/// </summary>
+		public ResolveResult[] TemplateParameters;
 
 		public override string ToString()
 		{

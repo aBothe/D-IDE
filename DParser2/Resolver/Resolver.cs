@@ -72,7 +72,7 @@ namespace D_Parser.Resolver
 			parser.Step();
 
 			if (!IsExpression && onlyAssumeIdentifierList && parser.Lexer.LookAhead.Kind == DTokens.Identifier)
-				return ResolveType(parser.IdentifierList(), ctxt);
+				return TypeDeclarationResolver.Resolve(parser.IdentifierList(), ctxt);
 			else if (IsExpression || parser.IsAssignExpression())
 			{
 				var expr = parser.AssignExpression();
@@ -85,21 +85,11 @@ namespace D_Parser.Resolver
 
 					expr = ExpressionHelper.SearchExpressionDeeply(expr, editor.CaretLocation);
 
-					ResolveResult[] ret = null;
-
-					if (expr is IdentifierExpression && !(expr as IdentifierExpression).IsIdentifier)
-						ret = new[] { new ExpressionResult() { Expression = expr, DeclarationOrExpressionBase = expr.ExpressionTypeRepresentation } };
-					else
-						ret = ResolveType(expr.ExpressionTypeRepresentation, ctxt);
-
-					if (ret == null && expr != null && !(expr is TokenExpression))
-						ret = new[] { new ExpressionResult() { Expression = expr, DeclarationOrExpressionBase=expr.ExpressionTypeRepresentation } };
-
-					return ret;
+					return ExpressionTypeResolver.ResolveExpression(expr, ctxt);
 				}
 			}
 			else
-				return ResolveType(parser.Type(), ctxt);
+				return TypeDeclarationResolver.Resolve(parser.Type(), ctxt);
 
 			return null;
 		}
@@ -109,6 +99,10 @@ namespace D_Parser.Resolver
 		{
 			if (ctxt == null || declaration == null)
 				return null;
+
+			return TypeDeclarationResolver.Resolve(declaration, ctxt);
+
+
 
 			// Check if already resolved once
 			ResolveResult[] preRes = null;
@@ -127,126 +121,12 @@ namespace D_Parser.Resolver
 					rbases = FilterOutByResultPriority(ctxt, rbases);
 			}
 
-            // If it's a template, resolve the template id first
-            if (declaration is TemplateInstanceExpression)
-                declaration = (declaration as TemplateInstanceExpression).TemplateIdentifier;
 
-			/* 
-			 * If there is no parent resolve context (what usually means we are searching the type named like the first identifier in the entire declaration),
-			 * search the very first type declaration by walking along the current block scope hierarchy.
-			 * If there wasn't any item found in that procedure, search in the global parse cache
-			 */
-			#region Search initial member/type/module/whatever
-			if (rbases == null)
-			{
-				// call Resolve();
-
-				#region TypeOfDeclaration
-				if(declaration is TypeOfDeclaration)
-				{
-					
-				}
-				#endregion
-
-				else
-					returnedResults.Add(new StaticTypeResult() { DeclarationOrExpressionBase = declaration });
-			}
-			#endregion
 
 			#region Search in further, deeper levels
 			else foreach (var rbase in rbases)
 				{
-					#region Identifier
-					if (declaration is IdentifierDeclaration)
-					{
-						string searchIdentifier = (declaration as IdentifierDeclaration).Id as string;
-
-						// Scan for static properties
-						var staticProp = StaticPropertyResolver.TryResolveStaticProperties(rbase,declaration as IdentifierDeclaration,ctxt);
-						
-						if (staticProp != null)
-						{
-							returnedResults.Add(staticProp);
-							continue;
-						}
-
-						var scanResults = new List<ResolveResult>();
-						scanResults.Add(rbase);
-						var nextResults = new List<ResolveResult>();
-
-						while (scanResults.Count > 0)
-						{
-							foreach (var scanResult in scanResults)
-							{
-								// First filter out all alias and member results..so that there will be only (Static-)Type or Module results left..
-								if (scanResult is MemberResult)
-								{
-									var _m = (scanResult as MemberResult).MemberBaseTypes;
-									if (_m != null) 
-										nextResults.AddRange(FilterOutByResultPriority(ctxt, _m));
-								}
-
-								else if (scanResult is TypeResult)
-								{
-									var tr=scanResult as TypeResult;
-									var nodeMatches=NameScan.ScanNodeForIdentifier(tr.ResolvedTypeDefinition, searchIdentifier, ctxt);
-
-									ctxt.PushNewScope(tr.ResolvedTypeDefinition);
-
-									var results = HandleNodeMatches(nodeMatches, ctxt, rbase, declaration);
-
-									if (results != null)
-										returnedResults.AddRange(FilterOutByResultPriority(ctxt, results));
-
-									ctxt.Pop();
-								}
-								else if (scanResult is ModuleResult)
-								{
-									var modRes = scanResult as ModuleResult;
-
-									if (modRes.IsOnlyModuleNamePartTyped())
-									{
-										var modNameParts = modRes.ResolvedModule.ModuleName.Split('.');
-
-										if (modNameParts[modRes.AlreadyTypedModuleNameParts] == searchIdentifier)
-										{
-											returnedResults.Add(new ModuleResult()
-											{
-												ResolvedModule = modRes.ResolvedModule,
-												AlreadyTypedModuleNameParts = modRes.AlreadyTypedModuleNameParts + 1,
-												ResultBase = modRes,
-												DeclarationOrExpressionBase = declaration
-											});
-										}
-									}
-									else
-									{
-										var matches=NameScan.ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, searchIdentifier, ctxt);
-
-										var results = HandleNodeMatches(matches, ctxt, rbase, declaration);
-
-										if (results != null)
-											returnedResults.AddRange(results);
-									}
-								}
-								else if (scanResult is StaticTypeResult)
-								{
-
-								}
-							}
-
-							scanResults = nextResults;
-							nextResults = new List<ResolveResult>();
-						}
-					}
-					#endregion
-
-					else if (declaration is ArrayDecl || declaration is PointerDecl)
-					{
-						returnedResults.Add(new StaticTypeResult() { DeclarationOrExpressionBase = declaration, ResultBase = rbase });
-					}
-
-					else if (declaration is DExpressionDecl)
+					if (declaration is DExpressionDecl)
 					{
 						var expr = (declaration as DExpressionDecl).Expression;
 
@@ -305,6 +185,8 @@ namespace D_Parser.Resolver
 				}
 			#endregion
 
+
+
 			if (returnedResults.Count > 0)
 			{
 				ctxt.TryAddResults(declaration.ToString(), returnedResults.ToArray());
@@ -315,11 +197,6 @@ namespace D_Parser.Resolver
 			return null;
 		}
 		#endregion
-
-		public ResolveResult[] ResolveIdentifier(string Identifier, ResolverContext ctxt)
-		{
-			throw new Exception();
-		}
 
 		static int bcStack = 0;
 		public static TypeResult[] ResolveBaseClass(DClassLike ActualClass, ResolverContextStack ctxt)

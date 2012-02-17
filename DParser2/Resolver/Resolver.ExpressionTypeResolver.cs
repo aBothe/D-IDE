@@ -8,7 +8,7 @@ using D_Parser.Dom;
 
 namespace D_Parser.Resolver
 {
-	public partial class ExpressionResolver
+	public partial class ExpressionTypeResolver
 	{
 		public static ResolveResult[] ResolveExpression(IExpression ex, ResolverContextStack ctxt)
 		{

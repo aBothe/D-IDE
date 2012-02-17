@@ -76,7 +76,7 @@
     <Compile Include="Resolver\CodeSymbolsScanner.IdentifierScan.cs" />
     <Compile Include="Resolver\ItemEnumeration.cs" />
     <Compile Include="Resolver\NameScan.cs" />
-    <Compile Include="Resolver\Resolver.ExpressionResolver.cs" />
+    <Compile Include="Resolver\Resolver.ExpressionTypeResolver.cs" />
     <Compile Include="Resolver\Resolver.Helper.cs" />
     <Compile Include="Resolver\Resolver.ImportResolver.cs" />
     <Compile Include="Resolver\Resolver.RootsEnum.cs" />
