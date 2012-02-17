@@ -1571,7 +1571,7 @@ namespace D_Parser.Dom.Expressions
 				if (Format == LiteralFormat.StringLiteral || Format == LiteralFormat.VerbatimStringLiteral)
 					return new IdentifierDeclaration("string") { Location=this.Location,EndLocation=this.EndLocation };
 
-				return new IdentifierDeclaration(Value) { Location = this.Location, EndLocation = this.EndLocation };
+				return new IdentifierDeclaration(Value as string) { Location = this.Location, EndLocation = this.EndLocation };
 			}
 		}
 
@@ -2193,7 +2193,7 @@ namespace D_Parser.Dom.Expressions
 		//TODO: Get all the returned value types in detail
 		public ITypeDeclaration ExpressionTypeRepresentation
 		{
-			get { return Keyword.StartsWith("is")||Keyword.StartsWith("has")?new DTokenDeclaration(DTokens.Bool):new IdentifierDeclaration("object"); }
+			get { return Keyword.StartsWith("is")||Keyword.StartsWith("has")?(ITypeDeclaration)new DTokenDeclaration(DTokens.Bool):new IdentifierDeclaration("object"); }
 		}
 
 		public bool IsConstant

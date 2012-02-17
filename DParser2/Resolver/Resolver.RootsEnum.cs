@@ -110,7 +110,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 					if (dm.OutResultVariable != null && dm.Out != null && dm.GetSubBlockAt(Caret) == dm.Out)
 						HandleItem(new DVariable // Create pseudo-variable
 							{
-								Name = dm.OutResultVariable.Value as string,
+								Name = dm.OutResultVariable.Id as string,
 								NameLocation = dm.OutResultVariable.Location,
 								Type = dm.Type, // TODO: What to do on auto functions?
 								Parent = dm,

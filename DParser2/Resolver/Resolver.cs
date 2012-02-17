@@ -159,7 +159,7 @@ namespace D_Parser.Resolver
 					#region Identifier
 					if (declaration is IdentifierDeclaration)
 					{
-						string searchIdentifier = (declaration as IdentifierDeclaration).Value as string;
+						string searchIdentifier = (declaration as IdentifierDeclaration).Id as string;
 
 						// Scan for static properties
 						var staticProp = StaticPropertyResolver.TryResolveStaticProperties(rbase,declaration as IdentifierDeclaration,ctxt);
@@ -397,7 +397,7 @@ namespace D_Parser.Resolver
 		public static ResolveResult HandleNodeMatch(
 			INode m,
 			ResolverContextStack ctxt,
-			ResolveResult resultBase = null, ITypeDeclaration typeBase = null)
+			ResolveResult resultBase = null, object typeBase = null)
 		{
 			stackNum_HandleNodeMatch++;
 
@@ -595,7 +595,7 @@ namespace D_Parser.Resolver
 			IEnumerable<INode> matches,
 			ResolverContextStack ctxt,
 			ResolveResult resultBase = null,
-			ITypeDeclaration TypeDeclaration = null)
+			object TypeDeclaration = null)
 		{
 			var rl = new List<ResolveResult>();
 
@@ -605,7 +605,7 @@ namespace D_Parser.Resolver
 					if (m == null)
 						continue;
 
-					var res = HandleNodeMatch(m, ctxt, resultBase, typeBase: TypeDeclaration);
+					var res = HandleNodeMatch(m, ctxt, resultBase, TypeDeclaration);
 					if (res != null)
 						rl.Add(res);
 				}

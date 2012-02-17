@@ -26,10 +26,10 @@ namespace D_Parser.Resolver
 
 					if (classDef is DClassLike)
 					{
-						var res = HandleNodeMatch(classDef, ctxt, typeBase: declaration);
+						var res = DResolver.HandleNodeMatch(classDef, ctxt, null, ex);
 
 						if (res != null)
-							returnedResults.Add(res);
+							return new[] { res };
 					}
 				}
 				// References super type of currently scoped class declaration
@@ -42,15 +42,15 @@ namespace D_Parser.Resolver
 
 					if (classDef != null)
 					{
-						var baseClassDefs = ResolveBaseClass(classDef as DClassLike, ctxt);
+						var baseClassDefs = DResolver.ResolveBaseClass(classDef as DClassLike, ctxt);
 
 						if (baseClassDefs != null)
 						{
 							// Important: Overwrite type decl base with 'super' token
 							foreach (var bc in baseClassDefs)
-								bc.DeclarationOrExpressionBase = declaration;
+								bc.DeclarationOrExpressionBase = ex;
 
-							returnedResults.AddRange(baseClassDefs);
+							return baseClassDefs;
 						}
 					}
 				}
@@ -61,7 +61,7 @@ namespace D_Parser.Resolver
 
 		public static ResolveResult[] ResolveTemplateInstance(TemplateInstanceExpression tix, ResolverContextStack ctxt)
 		{
-
+			return null;
 		}
 	}
 }

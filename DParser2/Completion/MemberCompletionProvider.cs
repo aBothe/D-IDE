@@ -66,7 +66,8 @@ namespace D_Parser.Completion
 			bool isVariableInstance = false,
 			ResolveResult resultParent = null)
 		{
-			isVariableInstance |= rr.DeclarationOrExpressionBase.ExpressesVariableAccess;
+			if(rr.DeclarationOrExpressionBase is ITypeDeclaration)
+				isVariableInstance |= (rr.DeclarationOrExpressionBase as ITypeDeclaration).ExpressesVariableAccess;
 
 			if (rr is MemberResult)
 				BuildMemberCompletionData(rr as MemberResult, currentlyScopedBlock, isVariableInstance);

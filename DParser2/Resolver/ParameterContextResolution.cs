@@ -157,7 +157,7 @@ namespace D_Parser.Resolver
 					}
 				}
 
-				res.MethodIdentifier = new IdentifierDeclaration(templ.TemplateIdentifier.Value) { InnerDeclaration = templ.InnerDeclaration };
+				res.MethodIdentifier = new IdentifierDeclaration(templ.TemplateIdentifier.Id) { InnerDeclaration = templ.InnerDeclaration };
 			}
 			else if (e is NewExpression)
 			{

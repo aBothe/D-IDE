@@ -24,7 +24,7 @@ namespace D_Parser.Resolver
 				return null;
 			}
 
-			var propertyName = Identifier.Value as string;
+			var propertyName = Identifier.Id as string;
 			if (propertyName == null)
 				return null;
 
