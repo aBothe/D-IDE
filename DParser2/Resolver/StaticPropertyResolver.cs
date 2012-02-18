@@ -112,7 +112,7 @@ namespace D_Parser.Resolver
 						Type = new IdentifierDeclaration("string"),
 						Description = "String representing the ‘mangled’ representation of the type"
 					},
-					MemberBaseTypes = DResolver.ResolveType(new IdentifierDeclaration("string"), ctxt)
+					MemberBaseTypes = TypeDeclarationResolver.Resolve(new IdentifierDeclaration("string"), ctxt)
 				};
 			#endregion
 
@@ -128,7 +128,7 @@ namespace D_Parser.Resolver
 						Type = new IdentifierDeclaration("string"),
 						Description = "String representing the source representation of the type"
 					},
-					MemberBaseTypes = DResolver.ResolveType(new IdentifierDeclaration("string"), ctxt)
+					MemberBaseTypes = TypeDeclarationResolver.Resolve(new IdentifierDeclaration("string"), ctxt)
 				};
 			#endregion
 

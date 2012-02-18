@@ -15,7 +15,6 @@ namespace D_Parser.Resolver
 		public bool IsTemplateInstanceArguments;
 
 		public IExpression ParsedExpression;
-		public ITypeDeclaration MethodIdentifier;
 
 		public ResolveResult[] ResolvedTypesOrMethods;
 
@@ -132,9 +131,6 @@ namespace D_Parser.Resolver
 						i++;
 					}
 				}
-
-				res.MethodIdentifier = call.PostfixForeExpression.ExpressionTypeRepresentation;
-
 			}
 			// 3)
 			else if (e is TemplateInstanceExpression)
@@ -156,8 +152,6 @@ namespace D_Parser.Resolver
 						i++;
 					}
 				}
-
-				res.MethodIdentifier = new IdentifierDeclaration(templ.TemplateIdentifier.Id) { InnerDeclaration = templ.InnerDeclaration };
 			}
 			else if (e is NewExpression)
 			{
@@ -176,8 +170,6 @@ namespace D_Parser.Resolver
 						i++;
 					}
 				}
-
-				res.MethodIdentifier = ne.ExpressionTypeRepresentation;
 			}
 
 			return res;
@@ -194,11 +186,8 @@ namespace D_Parser.Resolver
 
 			var res = LookupArgumentRelatedStatement(code, caretOffset, caretLocation, MethodScope);
 
-			if (res.MethodIdentifier == null)
-				return null;
-
 			// Resolve all types, methods etc. which belong to the methodIdentifier
-			res.ResolvedTypesOrMethods = DResolver.ResolveType(res.MethodIdentifier, ctxt);
+			res.ResolvedTypesOrMethods = ExpressionTypeResolver.ResolveExpression(res.ParsedExpression, ctxt);
 
 			if (res.ResolvedTypesOrMethods == null)
 				return res;

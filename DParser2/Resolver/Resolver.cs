@@ -94,7 +94,7 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		public static ResolveResult[] ResolveType(ITypeDeclaration declaration,
+		static ResolveResult[] ResolveTypesss(ITypeDeclaration declaration,
 		                                          ResolverContextStack ctxt)
 		{
 			if (ctxt == null || declaration == null)
@@ -115,7 +115,7 @@ namespace D_Parser.Resolver
 			ResolveResult[] rbases = null;
 			if (declaration.InnerDeclaration != null)
 			{
-				rbases = ResolveType(declaration.InnerDeclaration, ctxt);
+				rbases = TypeDeclarationResolver.Resolve(declaration.InnerDeclaration, ctxt);
 
 				if (rbases != null)
 					rbases = FilterOutByResultPriority(ctxt, rbases);
@@ -253,7 +253,7 @@ namespace D_Parser.Resolver
 			 */
 			ctxt.PushNewScope(ActualClass.Parent as IBlockNode);
 
-			var results = ResolveType(type, ctxt);
+			var results = TypeDeclarationResolver.Resolve(type, ctxt);
 
 			ctxt.Pop();
 
@@ -291,12 +291,12 @@ namespace D_Parser.Resolver
 			{
 				var v = m as DVariable;
 
-				var memberbaseTypes = DoResolveBaseType ? ResolveType(v.Type, ctxt) : null;
+				var memberbaseTypes = DoResolveBaseType ? TypeDeclarationResolver.Resolve(v.Type, ctxt) : null;
 
 				// For auto variables, use the initializer to get its type
-				if (memberbaseTypes == null && DoResolveBaseType && v.ContainsAttribute(DTokens.Auto) && v.Initializer != null)
+				if (memberbaseTypes == null && DoResolveBaseType && v.Initializer != null)
 				{
-					memberbaseTypes = ResolveType(v.Initializer.ExpressionTypeRepresentation, ctxt);
+					memberbaseTypes = ExpressionTypeResolver.ResolveExpression(v.Initializer, ctxt);
 				}
 
 				// Resolve aliases if wished
@@ -320,7 +320,7 @@ namespace D_Parser.Resolver
 								// Note: Normally, a variable's base type mustn't be an other variable but an alias defintion...
 								if (dv.IsAlias)
 								{
-									var newRes = ResolveType(dv.Type, ctxt);
+									var newRes = TypeDeclarationResolver.Resolve(dv.Type, ctxt);
 									if (newRes != null)
 										memberBaseTypes_Override.AddRange(newRes);
 									hadAliasResolution = true;
@@ -351,66 +351,67 @@ namespace D_Parser.Resolver
 			else if (m is DMethod)
 			{
 				var method = m as DMethod;
-				bool popOnReturn = false;
+				ResolveResult[] returnTypes=null;
 
-				var methodType = method.Type;
-
-				/*
-				 * If a method's type equals null, assume that it's an 'auto' function..
-				 * 1) Search for a return statement
-				 * 2) Resolve the returned expression
-				 * 3) Use that one as the method's type
-				 */
-				if (methodType == null && method.Body != null)
+				if (DoResolveBaseType)
 				{
-					ReturnStatement returnStmt = null;
-					var list = new List<IStatement> { method.Body };
-					var list2 = new List<IStatement>();
-
-					bool foundMatch = false;
-					while (!foundMatch && list.Count > 0)
+					/*
+					 * If a method's type equals null, assume that it's an 'auto' function..
+					 * 1) Search for a return statement
+					 * 2) Resolve the returned expression
+					 * 3) Use that one as the method's type
+					 */
+					if (method.Type != null)
+						returnTypes = TypeDeclarationResolver.Resolve(method.Type, ctxt);
+					else if (method.Body != null)
 					{
-						foreach (var stmt in list)
-						{
-							if (stmt is ReturnStatement)
-							{
-								returnStmt = stmt as ReturnStatement;
+						ReturnStatement returnStmt = null;
+						var list = new List<IStatement> { method.Body };
+						var list2 = new List<IStatement>();
 
-								if (!(returnStmt.ReturnExpression is TokenExpression) ||
-									(returnStmt.ReturnExpression as TokenExpression).Token != DTokens.Null)
+						bool foundMatch = false;
+						while (!foundMatch && list.Count > 0)
+						{
+							foreach (var stmt in list)
+							{
+								if (stmt is ReturnStatement)
 								{
-									foundMatch = true;
-									break;
+									returnStmt = stmt as ReturnStatement;
+
+									if (!(returnStmt.ReturnExpression is TokenExpression) ||
+										(returnStmt.ReturnExpression as TokenExpression).Token != DTokens.Null)
+									{
+										foundMatch = true;
+										break;
+									}
 								}
+
+								if (stmt is StatementContainingStatement)
+									list2.AddRange((stmt as StatementContainingStatement).SubStatements);
 							}
 
-							if (stmt is StatementContainingStatement)
-								list2.AddRange((stmt as StatementContainingStatement).SubStatements);
+							list = list2;
+							list2 = new List<IStatement>();
 						}
 
-						list = list2;
-						list2 = new List<IStatement>();
-					}
+						if (returnStmt != null && returnStmt.ReturnExpression != null)
+						{
+							ctxt.PushNewScope(method);
 
-					if (returnStmt != null && returnStmt.ReturnExpression != null)
-					{
-						ctxt.PushNewScope(method);
-						popOnReturn = true;
+							returnTypes = ExpressionTypeResolver.ResolveExpression(returnStmt.ReturnExpression, ctxt);
 
-						methodType = returnStmt.ReturnExpression.ExpressionTypeRepresentation;
+							ctxt.Pop();
+						}
 					}
 				}
 
 				var ret = new MemberResult()
 				{
 					ResolvedMember = m,
-					MemberBaseTypes = DoResolveBaseType ? ResolveType(methodType, ctxt) : null,
+					MemberBaseTypes = returnTypes,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
 				};
-
-				if (popOnReturn)
-					ctxt.Pop();
 
 				stackNum_HandleNodeMatch--;
 				return ret;
