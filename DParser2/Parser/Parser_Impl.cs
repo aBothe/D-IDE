@@ -2205,18 +2205,17 @@ namespace D_Parser.Parser
 			if (laKind == (Cast))
 			{
 				Step();
-				var startLoc = t.Location;
-				Expect(OpenParenthesis);
-				ITypeDeclaration castType = null;
-				if (laKind != CloseParenthesis) // Yes, it is possible that a cast() can contain an empty type!
-					castType = Type();
-				Expect(CloseParenthesis);
+				var ae = new CastExpression { Location= t.Location };
 
-				var ae = new CastExpression();
-				ae.Type = castType;
+				if (Expect(OpenParenthesis))
+				{
+					if (laKind != CloseParenthesis) // Yes, it is possible that a cast() can contain an empty type!
+						ae.Type = Type();
+					Expect(CloseParenthesis);
+				}
+
 				ae.UnaryExpression = UnaryExpression(Scope);
 
-				ae.Location = startLoc;
 				ae.EndLocation = t.EndLocation;
 
 				return ae;
@@ -2411,6 +2410,7 @@ namespace D_Parser.Parser
 		IExpression PostfixExpression(IBlockNode Scope = null)
 		{
 			var curLastParsedObj = LastParsedObject;
+
 			// PostfixExpression
 			IExpression leftExpr = PrimaryExpression(Scope);
 			
@@ -2423,18 +2423,19 @@ namespace D_Parser.Parser
 				{
 					Step();
 
-					var e = new PostfixExpression_Access();
+					var e = new PostfixExpression_Access { 
+						PostfixForeExpression=leftExpr
+					};
 					LastParsedObject = e;
-					e.PostfixForeExpression = leftExpr;
+
 					leftExpr = e;
+
 					if (laKind == New)
 						e.NewExpression = NewExpression(Scope);
 					else if (IsTemplateInstance)
-						e.TemplateOrIdentifier = TemplateInstance();
-					else {
-						if (Expect(Identifier))
-							e.TemplateOrIdentifier = new IdentifierDeclaration(t.Value) { Location=t.Location, EndLocation=t.EndLocation };
-					}
+						e.TemplateInstance = TemplateInstance();
+					else if (Expect(Identifier))
+							e.Identifier = t.Value;
 
 					e.EndLocation = t.EndLocation;
 				}
@@ -2913,56 +2914,37 @@ namespace D_Parser.Parser
 				return TraitsExpression();
 
 			#region BasicType . Identifier
-			if (laKind == (Const) || laKind == (Immutable) || laKind == (Shared) || laKind == (InOut) || BasicTypes[laKind])
+			if (IsBasicType())
 			{
 				Step();
 				var startLoc = t.Location;
-				IExpression left = null;
-				if (!BasicTypes[t.Kind])
+
+				var bt=BasicType();
+
+				if (bt is TypeOfDeclaration && laKind!=Dot)
 				{
-					int tk = t.Kind;
-					// Put an artificial parenthesis around the following type declaration
-					if (laKind != OpenParenthesis)
-					{
-						var mttd = new MemberFunctionAttributeDecl(tk);
-						LastParsedObject = mttd;
-						mttd.InnerType = Type();
-						left = new TypeDeclarationExpression(mttd);
-					}
-					else
-					{
-						Expect(OpenParenthesis);
-						var mttd = new MemberFunctionAttributeDecl(tk);
-						LastParsedObject = mttd;
-						mttd.InnerType = Type();
-						Expect(CloseParenthesis);
-						left = new TypeDeclarationExpression(mttd);
-					}
+					return new TypeDeclarationExpression(bt);
 				}
-				else
-					left = new TokenExpression(t.Kind) {Location=startLoc,EndLocation=t.EndLocation };
 
-				if (laKind == (Dot) && Peek(1).Kind==Identifier)
+				Expect(Dot);
+
+
+				if (Expect(Identifier))
 				{
-					Step();
-					Step();
-
 					var meaex = new PostfixExpression_Access()
 					{
-						PostfixForeExpression = left,
-						TemplateOrIdentifier = new IdentifierDeclaration(t.Value) { Location=t.Location, EndLocation=t.EndLocation },
+						PostfixForeExpression = new TypeDeclarationExpression(bt),
+						Identifier = t.Value,
 						EndLocation = t.EndLocation
 					};
 
 					return meaex;
 				}
-				return left;
+
+				return null;
 			}
 			#endregion
 
-			// TODO? Expressions can of course be empty...
-			//return null;
-			
 			SynErr(Identifier);
 			Step();
 			return new TokenExpression() { Location = t.Location, EndLocation = t.EndLocation };

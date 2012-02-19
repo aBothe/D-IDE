@@ -24,19 +24,30 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		public static ResolveResult[] Resolve(IdentifierDeclaration declaration, ResolverContextStack ctxt)
+		public static ResolveResult[] ResolveIdentifier(string id, ResolverContextStack ctxt, object idObject)
+		{
+			var loc = CodeLocation.Empty;
+
+			if (idObject is ITypeDeclaration)
+				loc = (idObject as ITypeDeclaration).Location;
+			else if (idObject is IExpression)
+				loc = (idObject as IExpression).Location;
+
+			var matches = NameScan.SearchMatchesAlongNodeHierarchy(ctxt, loc, id);
+
+			return DResolver.HandleNodeMatches(matches, ctxt, null, loc);
+		}
+
+		public static ResolveResult[] Resolve(IdentifierDeclaration declaration, ResolverContextStack ctxt, ResolveResult[] resultBases=null)
 		{
 			var id = declaration as IdentifierDeclaration;
 
-			if (declaration.InnerDeclaration == null)
+			if (declaration.InnerDeclaration == null && resultBases==null)
 			{
-				var matches = NameScan.SearchMatchesAlongNodeHierarchy(ctxt, declaration.Location, id);
-
-				return DResolver.HandleNodeMatches(matches, ctxt, null, declaration);
+				return ResolveIdentifier(id.Id, ctxt, id);
 			}
-			
 
-			var rbases = Resolve(declaration.InnerDeclaration, ctxt);
+			var rbases = resultBases ?? Resolve(declaration.InnerDeclaration, ctxt);
 
 			if (rbases == null || rbases.Length == 0)
 				return null;

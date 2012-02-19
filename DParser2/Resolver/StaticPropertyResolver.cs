@@ -206,6 +206,8 @@ namespace D_Parser.Resolver
 
 			}
 
+			// .classinfo property, too!
+
 			return null;
 		}
 	}

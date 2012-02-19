@@ -230,12 +230,6 @@ namespace D_Parser.Dom.Expressions
 			}
 		}*/
 
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return null; }
-		}
-
 		public decimal DecValue
 		{
 			get { return Expressions[0].DecValue; }
@@ -251,11 +245,6 @@ namespace D_Parser.Dom.Expressions
 	{
 		public AssignExpression(int opToken) { OperatorToken = opToken; }
 		
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return RightOperand.ExpressionTypeRepresentation; }
-		}
-
 		public override bool IsConstant
 		{
 			get
@@ -305,11 +294,6 @@ namespace D_Parser.Dom.Expressions
 			}
 		}*/
 
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return TrueCaseExpression.ExpressionTypeRepresentation; }
-		}
-
 		public decimal DecValue
 		{
 			get { return OrOrExpression.DecValue==1 ? TrueCaseExpression.DecValue : FalseCaseExpression.DecValue; }
@@ -333,11 +317,6 @@ namespace D_Parser.Dom.Expressions
 			}
 		}*/
 
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DTokenDeclaration(DTokens.Bool); }
-		}
-
 		public override decimal DecValue
 		{
 			get
@@ -358,11 +337,6 @@ namespace D_Parser.Dom.Expressions
 				return ExpressionHelper.ToBool(LeftOperand.EvaluatedConstValue) && ExpressionHelper.ToBool(RightOperand.EvaluatedConstValue);
 			}
 		}*/
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DTokenDeclaration(DTokens.Bool); }
-		}
 
 		public override decimal DecValue
 		{
@@ -385,11 +359,6 @@ namespace D_Parser.Dom.Expressions
 			}
 		}*/
 
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return LeftOperand.ExpressionTypeRepresentation; }
-		}
-
 		public override decimal DecValue
 		{
 			get
@@ -411,11 +380,6 @@ namespace D_Parser.Dom.Expressions
 			}
 		}*/
 
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return LeftOperand.ExpressionTypeRepresentation; }
-		}
-
 		public override decimal DecValue
 		{
 			get
@@ -429,11 +393,6 @@ namespace D_Parser.Dom.Expressions
 	{
 		public AndExpression() { OperatorToken = DTokens.BitwiseAnd; }
 
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return LeftOperand.ExpressionTypeRepresentation; }
-		}
-
 		public override decimal DecValue
 		{
 			get
@@ -446,11 +405,6 @@ namespace D_Parser.Dom.Expressions
 	public class EqualExpression : OperatorBasedExpression
 	{
 		public EqualExpression(bool isUnEqual) { OperatorToken = isUnEqual ? DTokens.NotEqual : DTokens.Equal; }
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DTokenDeclaration(DTokens.Bool); }
-		}
 
 		public override decimal DecValue
 		{
@@ -473,21 +427,11 @@ namespace D_Parser.Dom.Expressions
 		{
 			return LeftOperand.ToString() + (Not ? " !" : " ") + "is " + RightOperand.ToString();
 		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DTokenDeclaration(DTokens.Bool); }
-		}
 	}
 
 	public class RelExpression : OperatorBasedExpression
 	{
 		public RelExpression(int relationalOperator) { OperatorToken = relationalOperator; }
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DTokenDeclaration(DTokens.Bool); }
-		}
 
 		public override decimal DecValue
 		{
@@ -540,21 +484,11 @@ namespace D_Parser.Dom.Expressions
 		{
 			return LeftOperand.ToString() + (Not ? " !" : " ") + "in " + RightOperand.ToString();
 		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DTokenDeclaration(DTokens.Bool); }
-		}
 	}
 
 	public class ShiftExpression : OperatorBasedExpression
 	{
 		public ShiftExpression(int shiftOperator) { OperatorToken = shiftOperator; }
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return LeftOperand.ExpressionTypeRepresentation; }
-		}
 
 		public override decimal DecValue
 		{
@@ -579,11 +513,6 @@ namespace D_Parser.Dom.Expressions
 	{
 		public AddExpression(bool isMinus) { OperatorToken = isMinus ? DTokens.Minus : DTokens.Plus; }
 
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return LeftOperand.ExpressionTypeRepresentation; }
-		}
-
 		public override decimal DecValue
 		{
 			get
@@ -596,11 +525,6 @@ namespace D_Parser.Dom.Expressions
 	public class MulExpression : OperatorBasedExpression
 	{
 		public MulExpression(int mulOperator) { OperatorToken = mulOperator; }
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return LeftOperand.ExpressionTypeRepresentation; }
-		}
 
 		public override decimal DecValue
 		{
@@ -623,18 +547,6 @@ namespace D_Parser.Dom.Expressions
 	public class CatExpression : OperatorBasedExpression
 	{
 		public CatExpression() { OperatorToken = DTokens.Tilde; }
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get {
-				var lot = LeftOperand.ExpressionTypeRepresentation;
-
-				if (lot is ArrayDecl)
-					return lot;
-				else
-					return new ArrayDecl() { InnerDeclaration=lot};
-			}
-		}
 	}
 
 	public interface UnaryExpression : IExpression { }
@@ -1123,7 +1035,7 @@ namespace D_Parser.Dom.Expressions
 		public IExpression UnaryExpression;
 
 		public ITypeDeclaration Type { get; set; }
-		public int[] CastParamTokens { get; set; } //TODO: Still unused
+		public int[] CastParamTokens { get; set; }
 
 		public override string ToString()
 		{
@@ -1236,39 +1148,27 @@ namespace D_Parser.Dom.Expressions
 	public class PostfixExpression_Access : PostfixExpression
 	{
 		public IExpression NewExpression;
-		public ITypeDeclaration TemplateOrIdentifier;
+		public TemplateInstanceExpression TemplateInstance;
+		public string Identifier;
 
 		public override string ToString()
 		{
-			return PostfixForeExpression.ToString() + "." + 
-				(TemplateOrIdentifier != null ? TemplateOrIdentifier.ToString() : 
-				(NewExpression!=null? NewExpression.ToString(): ""));
+			var r = PostfixForeExpression.ToString() + '.';
+
+			if (NewExpression != null)
+				r += NewExpression.ToString();
+			else if(TemplateInstance!=null)
+				r += TemplateInstance.ToString();
+			else
+				r += Identifier;
+
+			return r;
 		}
 
 		public override CodeLocation EndLocation
 		{
 			get;
 			set;
-		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get {
-				var t = TemplateOrIdentifier;
-
-				if (t==null && NewExpression!=null)
-					return NewExpression.ExpressionTypeRepresentation;
-
-				if (t == null)
-				{
-					if (PostfixForeExpression != null)
-						return PostfixForeExpression.ExpressionTypeRepresentation;
-					return null;
-				}
-
-				t.InnerDeclaration = PostfixForeExpression.ExpressionTypeRepresentation;
-				return t;
-			}
 		}
 
 		public override IExpression[] SubExpressions

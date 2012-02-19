@@ -274,7 +274,8 @@ namespace D_Parser.Resolver
 		public static ResolveResult HandleNodeMatch(
 			INode m,
 			ResolverContextStack ctxt,
-			ResolveResult resultBase = null, object typeBase = null)
+			ResolveResult resultBase = null, 
+			object typeBase = null)
 		{
 			stackNum_HandleNodeMatch++;
 
