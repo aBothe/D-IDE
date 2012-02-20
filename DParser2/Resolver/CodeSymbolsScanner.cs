@@ -58,12 +58,7 @@ namespace D_Parser.Resolver
 			var typeObjects = IdentifierScan.ScanForTypeIdentifiers(lastResCtxt.ScopedBlock.NodeRoot);
 
 			foreach (var o in typeObjects)
-			{
-				if (o is ITypeDeclaration)
-					FindAndEnlistType(csr, o as ITypeDeclaration, lastResCtxt, resCache);
-				else if (o is IExpression)
-					FindAndEnlistType(csr, (o as IExpression).ExpressionTypeRepresentation, lastResCtxt, resCache);
-			}
+				FindAndEnlistType(csr, o, lastResCtxt, resCache);
 
 			return csr;
 		}

@@ -201,7 +201,7 @@ namespace D_Parser.Resolver
 				keyTypes = Resolve(ad.KeyType, ctxt);
 
 			if (valueTypes == null)
-				return new[] { new ArrayLikeResult { 
+				return new[] { new ArrayResult { 
 					ArrayDeclaration = ad,
 					KeyType=keyTypes
 				}};
@@ -209,7 +209,7 @@ namespace D_Parser.Resolver
 			var r = new List<ResolveResult>(valueTypes.Length);
 
 			foreach (var valType in valueTypes)
-				r.Add(new ArrayLikeResult { 
+				r.Add(new ArrayResult { 
 					ArrayDeclaration = ad,
 					ResultBase=valType,
 					KeyType=keyTypes
@@ -238,6 +238,15 @@ namespace D_Parser.Resolver
 			return r.ToArray();
 		}
 
+		public static ResolveResult[] Resolve(DelegateDeclaration dg, ResolverContextStack ctxt)
+		{
+			var r = new DelegateResult { DeclarationOrExpressionBase=dg };
+
+			r.ReturnType = Resolve(dg.ReturnType, ctxt);
+
+			return new[] { r };
+		}
+
 		public static ResolveResult[] Resolve(ITypeDeclaration declaration, ResolverContextStack ctxt)
 		{
 			if (declaration is DTokenDeclaration)
@@ -259,8 +268,10 @@ namespace D_Parser.Resolver
 				return Resolve(declaration as ArrayDecl, ctxt);
 			else if (declaration is PointerDecl)
 				return Resolve(declaration as PointerDecl, ctxt);
-
-			//TODO: DelegateDeclaration, VarArgDeclaration
+			else if (declaration is DelegateDeclaration)
+				return Resolve(declaration as DelegateDeclaration, ctxt);
+			
+			//TODO: VarArgDeclaration
 
 			return null;
 		}

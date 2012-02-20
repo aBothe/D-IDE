@@ -127,53 +127,113 @@ namespace D_Parser.Resolver
 			{
 				var baseExpression = ResolveExpression((ex as PostfixExpression).PostfixForeExpression, ctxt);
 
-				if (ex is PostfixExpression_Increment || ex is PostfixExpression_Decrement)
+				if (baseExpression == null)
+					return null;
+
+				// Important: To ensure correct behaviour, aliases must be removed before further handling
+				baseExpression = DResolver.TryRemoveAliasesFromResult(baseExpression);
+
+				if (baseExpression==null ||
+					ex is PostfixExpression_Increment || // myInt++ is still of type 'int'
+					ex is PostfixExpression_Decrement)
 					return baseExpression;
 
-				else if (ex is PostfixExpression_MethodCall)
+				var r = new List<ResolveResult>(baseExpression.Length);
+				foreach (var b in baseExpression)
 				{
-
-				}
-
-				else if (ex is PostfixExpression_Access)
-				{
-					var acc = ex as PostfixExpression_Access;
-
-					if (acc.Identifier != null)
+					if (ex is PostfixExpression_MethodCall)
 					{
+						if (b is MemberResult)
+						{
+							var mr = b as MemberResult;
 
+							/*
+							 * int a() { return 1+2; }
+							 * 
+							 * int result = a() // a is member method -- return the method's base type
+							 */
+
+							//TODO: Compare arguments' types with parameter types to whitelist legal method overloads
+
+							if(mr.MemberBaseTypes!=null)
+								r.AddRange(mr.MemberBaseTypes);
+						}
+						else if (b is DelegateResult)
+						{
+							var dg = b as DelegateResult;
+
+							// Should never happen
+							if (dg.IsDelegateDeclaration)
+								return null;
+
+							/*
+							 * int a = delegate(x) { return x*2; } (12); // a is 24 after execution
+							 * dg() , where as dg is a delegate
+							 */
+
+							return dg.ReturnType;
+						}
+
+						/*
+						 * Not allowed:
+						 * 
+						 * MyType() -- ctor -> not allowed / must occur in 'new'-expression
+						 */
 					}
-					else if (acc.TemplateInstance != null)
+
+					else if (ex is PostfixExpression_Access)
 					{
+						var acc = ex as PostfixExpression_Access;
 
+						if (acc.Identifier != null)
+						{
+
+						}
+						else if (acc.TemplateInstance != null)
+						{
+
+						}
+						else if (acc.NewExpression != null)
+						{
+
+						}
 					}
-					else if (acc.NewExpression != null)
+
+					else if (ex is PostfixExpression_Index)
 					{
-
+						/*
+						 * return the value type of a given array result
+						 */
+					}
+					else if (ex is PostfixExpression_Slice)
+					{
+						/*
+						 * like above 
+						 */
 					}
 				}
 
-				else if (ex is PostfixExpression_Index)
-				{
-
-				}
-				else if (ex is PostfixExpression_Slice)
-				{
-
-				}
+				if(r.Count>0)
+					return r.ToArray();
 			}
 
 			else if (ex is IdentifierExpression)
 			{
-				/*
-				 * Can contain (char/string/integer/float) literals,too!
-				 */
+				var id = ex as IdentifierExpression;
+
+				if (id.IsIdentifier)
+					return TypeDeclarationResolver.ResolveIdentifier(id.Value as string, ctxt, id);
+				//TODO: Recognize correct scalar format
+				else if (id.Format == LiteralFormat.CharLiteral)
+					return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Char)) };
+				else if (id.Format.HasFlag(LiteralFormat.FloatingPoint))
+					return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Float)) };
+				else if (id.Format == LiteralFormat.StringLiteral || id.Format.HasFlag(LiteralFormat.VerbatimStringLiteral))
+					return TypeDeclarationResolver.ResolveIdentifier("string", ctxt, null);
 			}
 
 			else if (ex is TemplateInstanceExpression)
-			{
-
-			}
+				return ResolveTemplateInstance(ex as TemplateInstanceExpression, ctxt);
 
 			else if (ex is TokenExpression)
 			{
@@ -221,33 +281,33 @@ namespace D_Parser.Resolver
 
 			else if (ex is ArrayLiteralExpression)
 			{
-
+				
 			}
 
 			else if (ex is AssocArrayExpression)
 			{
-
+				
 			}
 
 			else if (ex is FunctionLiteral)
 			{
-
+				// Return simple DelegateResult
 			}
 
 			else if (ex is AssertExpression)
-			{
-
-			}
+				return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Void)) };
 
 			else if (ex is MixinExpression)
 			{
-
+				/*
+				 * 1) Evaluate the mixin expression
+				 * 2) Parse it as an expression
+				 * 3) Evaluate the expression's type
+				 */
 			}
 
 			else if (ex is ImportExpression)
-			{
-
-			}
+				return TypeDeclarationResolver.ResolveIdentifier("string", ctxt, null);
 
 			else if (ex is TypeDeclarationExpression) // should be containing a typeof() only
 				return TypeDeclarationResolver.Resolve((ex as TypeDeclarationExpression).Declaration, ctxt);
@@ -256,11 +316,11 @@ namespace D_Parser.Resolver
 				return TypeDeclarationResolver.Resolve(new IdentifierDeclaration("TypeInfo") { InnerDeclaration = new IdentifierDeclaration("object") }, ctxt);
 
 			else if (ex is IsExpression)
-				return new[]{ TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Int)) };
+				return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Int)) };
 
 			else if (ex is TraitsExpression)
 			{
-				// TODO: Return either bools, strings, array pointers
+				// TODO: Return either bools, strings, array (pointers) to members or stuff
 			}
 
 			return null;

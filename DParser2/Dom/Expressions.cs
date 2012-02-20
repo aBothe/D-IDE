@@ -28,10 +28,6 @@ namespace D_Parser.Dom.Expressions
 	{
 		CodeLocation Location { get; }
 		CodeLocation EndLocation { get; }
-
-		ITypeDeclaration ExpressionTypeRepresentation{get;}
-		bool IsConstant { get; }
-		decimal DecValue { get; }
 	}
 
 	/// <summary>
@@ -138,21 +134,6 @@ namespace D_Parser.Dom.Expressions
 			get { return RightOperand.EndLocation; }
 		}
 
-		public virtual bool IsConstant
-		{
-			get { return LeftOperand.IsConstant && RightOperand.IsConstant; }
-		}
-
-		public virtual decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
-		}
-
-		public abstract ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get;
-		}
-
 		public IExpression[] SubExpressions
 		{
 			get { return new[]{LeftOperand, RightOperand}; }
@@ -196,45 +177,6 @@ namespace D_Parser.Dom.Expressions
 			get { return Expressions.Count>0 ? Expressions[Expressions.Count - 1].EndLocation : CodeLocation.Empty; }
 		}
 
-		public bool IsConstant
-		{
-			get
-			{
-				foreach (var e in Expressions)
-					if (!e.IsConstant)
-						return false;
-				return true;
-			}
-		}
-
-		/*/// <summary>
-		/// Will return the const value of the first expression only
-		/// </summary>
-		public object EvaluatedConstValue
-		{
-			get { return Expressions[0].EvaluatedConstValue; }
-		}
-
-		/// <summary>
-		/// Will return all values
-		/// </summary>
-		public object[] EvaluatedConstValues
-		{
-			get
-			{
-				var l = new List<object>(Expressions.Count);
-				foreach (var e in Expressions)
-					l.Add(e.EvaluatedConstValue);
-
-				return l.ToArray();
-			}
-		}*/
-
-		public decimal DecValue
-		{
-			get { return Expressions[0].DecValue; }
-		}
-
 		public IExpression[] SubExpressions
 		{
 			get { return Expressions.ToArray(); }
@@ -244,22 +186,6 @@ namespace D_Parser.Dom.Expressions
 	public class AssignExpression : OperatorBasedExpression
 	{
 		public AssignExpression(int opToken) { OperatorToken = opToken; }
-		
-		public override bool IsConstant
-		{
-			get
-			{
-				return RightOperand.IsConstant;
-			}
-		}
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return RightOperand.DecValue;
-			}
-		}
 	}
 
 	public class ConditionalExpression : IExpression, ContainerExpression
@@ -284,21 +210,6 @@ namespace D_Parser.Dom.Expressions
 			get { return FalseCaseExpression.EndLocation; }
 		}
 
-		public bool IsConstant{	get { return OrOrExpression.IsConstant && TrueCaseExpression.IsConstant && FalseCaseExpression.IsConstant; }	}
-		/*
-		public object EvaluatedConstValue
-		{
-			get {
-				var o = OrOrExpression.EvaluatedConstValue;
-				return ExpressionHelper.ToBool(o)?TrueCaseExpression.EvaluatedConstValue : FalseCaseExpression.EvaluatedConstValue;
-			}
-		}*/
-
-		public decimal DecValue
-		{
-			get { return OrOrExpression.DecValue==1 ? TrueCaseExpression.DecValue : FalseCaseExpression.DecValue; }
-		}
-
 		public IExpression[] SubExpressions
 		{
 			get { return new[] {OrOrExpression, TrueCaseExpression, FalseCaseExpression}; }
@@ -308,113 +219,31 @@ namespace D_Parser.Dom.Expressions
 	public class OrOrExpression : OperatorBasedExpression
 	{
 		public OrOrExpression() { OperatorToken = DTokens.LogicalOr; }
-		/*
-		public override object EvaluatedConstValue
-		{
-			get
-			{
-				return ExpressionHelper.ToBool(LeftOperand.EvaluatedConstValue) || ExpressionHelper.ToBool(RightOperand.EvaluatedConstValue);
-			}
-		}*/
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return (LeftOperand.DecValue != 0 || RightOperand.DecValue != 0) ? 1 : 0;
-			}
-		}
 	}
 
 	public class AndAndExpression : OperatorBasedExpression
 	{
 		public AndAndExpression() { OperatorToken = DTokens.LogicalAnd; }
-		/*
-		public override object EvaluatedConstValue
-		{
-			get
-			{
-				return ExpressionHelper.ToBool(LeftOperand.EvaluatedConstValue) && ExpressionHelper.ToBool(RightOperand.EvaluatedConstValue);
-			}
-		}*/
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return (LeftOperand.DecValue != 0 && RightOperand.DecValue != 0) ? 1 : 0;
-			}
-		}
 	}
 
 	public class XorExpression : OperatorBasedExpression
 	{
 		public XorExpression() { OperatorToken = DTokens.Xor; }
-		/*
-		public override object EvaluatedConstValue
-		{
-			get
-			{
-				return ExpressionHelper.ToBool(LeftOperand.EvaluatedConstValue) ^ ExpressionHelper.ToBool(RightOperand.EvaluatedConstValue);
-			}
-		}*/
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return (long)LeftOperand.DecValue ^ (long)RightOperand.DecValue;
-			}
-		}
 	}
 
 	public class OrExpression : OperatorBasedExpression
 	{
 		public OrExpression() { OperatorToken = DTokens.BitwiseOr; }
-		/*
-		public override object EvaluatedConstValue
-		{
-			get
-			{
-				return ExpressionHelper.ToLong(LeftOperand.EvaluatedConstValue) | ExpressionHelper.ToLong(RightOperand.EvaluatedConstValue);
-			}
-		}*/
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return (long)LeftOperand.DecValue | (long)RightOperand.DecValue;
-			}
-		}
 	}
 
 	public class AndExpression : OperatorBasedExpression
 	{
 		public AndExpression() { OperatorToken = DTokens.BitwiseAnd; }
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return (long)LeftOperand.DecValue & (long)RightOperand.DecValue;
-			}
-		}
 	}
 
 	public class EqualExpression : OperatorBasedExpression
 	{
 		public EqualExpression(bool isUnEqual) { OperatorToken = isUnEqual ? DTokens.NotEqual : DTokens.Equal; }
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return (OperatorToken==DTokens.NotEqual?
-					(LeftOperand.DecValue!=RightOperand.DecValue):
-					(LeftOperand.DecValue==RightOperand.DecValue))?1:0;
-			}
-		}
 	}
 
 	public class IdendityExpression : OperatorBasedExpression
@@ -432,46 +261,6 @@ namespace D_Parser.Dom.Expressions
 	public class RelExpression : OperatorBasedExpression
 	{
 		public RelExpression(int relationalOperator) { OperatorToken = relationalOperator; }
-
-		public override decimal DecValue
-		{
-			get
-			{
-				bool ret = false;
-
-				switch (OperatorToken)
-				{
-					case DTokens.LessThan:
-						ret = LeftOperand.DecValue < RightOperand.DecValue;
-						break;
-					case DTokens.NotLessThan:
-						ret = !(LeftOperand.DecValue < RightOperand.DecValue);
-						break;
-					case DTokens.LessEqual:
-						ret = LeftOperand.DecValue <= RightOperand.DecValue;
-						break;
-					case DTokens.GreaterThan:
-						ret = LeftOperand.DecValue > RightOperand.DecValue;
-						break;
-					case DTokens.NotGreaterThan:
-						ret = !(LeftOperand.DecValue > RightOperand.DecValue);
-						break;
-					case DTokens.GreaterEqual:
-						ret = LeftOperand.DecValue >= RightOperand.DecValue;
-						break;
-					case DTokens.UnequalAssign:
-					case DTokens.Unequal:
-						ret= LeftOperand.DecValue<RightOperand.DecValue || LeftOperand.DecValue>RightOperand.DecValue;
-						break;
-					case DTokens.NotUnequalAssign:
-					case DTokens.NotUnequal:
-						ret = !(LeftOperand.DecValue < RightOperand.DecValue || LeftOperand.DecValue > RightOperand.DecValue);
-						break;
-				}
-
-				return ret?1:0;
-			}
-		}
 	}
 
 	public class InExpression : OperatorBasedExpression
@@ -489,59 +278,16 @@ namespace D_Parser.Dom.Expressions
 	public class ShiftExpression : OperatorBasedExpression
 	{
 		public ShiftExpression(int shiftOperator) { OperatorToken = shiftOperator; }
-
-		public override decimal DecValue
-		{
-			get
-			{
-				switch (OperatorToken)
-				{
-					case DTokens.ShiftLeft:
-						return (long)LeftOperand.DecValue << (int)RightOperand.DecValue;
-					case DTokens.ShiftRightUnsigned:
-						return (ulong)LeftOperand.DecValue >> (int)RightOperand.DecValue;
-					case DTokens.ShiftRight:
-						return (long)LeftOperand.DecValue >> (int)RightOperand.DecValue;
-				}
-
-				return 0;
-			}
-		}
 	}
 
 	public class AddExpression : OperatorBasedExpression
 	{
 		public AddExpression(bool isMinus) { OperatorToken = isMinus ? DTokens.Minus : DTokens.Plus; }
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return OperatorToken==DTokens.Minus?LeftOperand.DecValue-RightOperand.DecValue:LeftOperand.DecValue+RightOperand.DecValue;
-			}
-		}
 	}
 
 	public class MulExpression : OperatorBasedExpression
 	{
 		public MulExpression(int mulOperator) { OperatorToken = mulOperator; }
-
-		public override decimal DecValue
-		{
-			get
-			{
-				switch(OperatorToken)
-				{
-					case DTokens.Div:
-						return LeftOperand.DecValue / RightOperand.DecValue;
-					case DTokens.Times:
-						return LeftOperand.DecValue * RightOperand.DecValue;
-					case DTokens.Mod:
-						return LeftOperand.DecValue % RightOperand.DecValue;
-				}
-				return 0;
-			}
-		}
 	}
 
 	public class CatExpression : OperatorBasedExpression
@@ -554,19 +300,6 @@ namespace D_Parser.Dom.Expressions
 	public class PowExpression : OperatorBasedExpression, UnaryExpression
 	{
 		public PowExpression() { OperatorToken = DTokens.Pow; }
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return LeftOperand.ExpressionTypeRepresentation; }
-		}
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return (decimal)Math.Pow((double)LeftOperand.DecValue,(double)RightOperand.DecValue);
-			}
-		}
 	}
 
 	public abstract class SimpleUnaryExpression : UnaryExpression, ContainerExpression
@@ -590,26 +323,6 @@ namespace D_Parser.Dom.Expressions
 			get { return UnaryExpression.EndLocation; }
 		}
 
-
-		public abstract ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get;
-		}
-
-
-		public virtual bool IsConstant
-		{
-			get { return UnaryExpression.IsConstant; }
-		}
-
-		public virtual decimal DecValue
-		{
-			get 
-			{
-				return UnaryExpression.DecValue;
-			}
-		}
-
 		public virtual IExpression[] SubExpressions
 		{
 			get { return new[]{UnaryExpression}; }
@@ -625,11 +338,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { return DTokens.BitwiseAnd; }
 		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new PointerDecl(UnaryExpression.ExpressionTypeRepresentation); }
-		}
 	}
 
 	public class UnaryExpression_Increment : SimpleUnaryExpression
@@ -638,11 +346,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { return DTokens.Increment; }
 		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return UnaryExpression.ExpressionTypeRepresentation; }
-		}
 	}
 
 	public class UnaryExpression_Decrement : SimpleUnaryExpression
@@ -650,11 +353,6 @@ namespace D_Parser.Dom.Expressions
 		public override int ForeToken
 		{
 			get { return DTokens.Decrement; }
-		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return UnaryExpression.ExpressionTypeRepresentation; }
 		}
 	}
 
@@ -667,11 +365,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { return DTokens.Times; }
 		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DExpressionDecl(this) {InnerDeclaration = UnaryExpression.ExpressionTypeRepresentation }; }
-		}
 	}
 
 	public class UnaryExpression_Add : SimpleUnaryExpression
@@ -679,19 +372,6 @@ namespace D_Parser.Dom.Expressions
 		public override int ForeToken
 		{
 			get { return DTokens.Plus; }
-		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return UnaryExpression.ExpressionTypeRepresentation; }
-		}
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return Math.Abs(UnaryExpression.DecValue);
-			}
 		}
 	}
 
@@ -701,19 +381,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get { return DTokens.Minus; }
 		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return UnaryExpression.ExpressionTypeRepresentation; }
-		}
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return -UnaryExpression.DecValue;
-			}
-		}
 	}
 
 	public class UnaryExpression_Not : SimpleUnaryExpression
@@ -721,19 +388,6 @@ namespace D_Parser.Dom.Expressions
 		public override int ForeToken
 		{
 			get { return DTokens.Not; }
-		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return UnaryExpression.ExpressionTypeRepresentation; }
-		}
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return UnaryExpression.DecValue==0 ? 1:0;
-			}
 		}
 	}
 
@@ -750,19 +404,6 @@ namespace D_Parser.Dom.Expressions
 		public override int ForeToken
 		{
 			get { return DTokens.Tilde; }
-		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return UnaryExpression.ExpressionTypeRepresentation; }
-		}
-
-		public override decimal DecValue
-		{
-			get
-			{
-				return ~(long)UnaryExpression.DecValue;
-			}
 		}
 	}
 
@@ -789,21 +430,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DExpressionDecl(this); }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 	}
 
@@ -858,27 +484,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get {
-				if (Type != null)
-					Type.ExpressesVariableAccess = true;
-
-				return Type; 
-			}
-		}
-
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 
 		public IExpression[] SubExpressions
@@ -961,21 +566,6 @@ namespace D_Parser.Dom.Expressions
 			set;
 		}
 
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DExpressionDecl(this); }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
-		}
-
 		public IExpression[] SubExpressions
 		{
 			get
@@ -1003,21 +593,6 @@ namespace D_Parser.Dom.Expressions
 		public override int ForeToken
 		{
 			get { return DTokens.Delete; }
-		}
-
-		public override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return null; }
-		}
-
-		public override bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public override decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 	}
 
@@ -1071,31 +646,6 @@ namespace D_Parser.Dom.Expressions
 			set;
 		}
 
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get 
-			{ 
-				if(IsTypeCast)
-					return Type;
-
-				if (UnaryExpression != null)
-					return UnaryExpression.ExpressionTypeRepresentation;
-
-				return null;
-			}
-		}
-
-
-		public bool IsConstant
-		{
-			get { return UnaryExpression.IsConstant; }
-		}
-
-		public decimal DecValue
-		{
-			get { return UnaryExpression.DecValue; }
-		}
-
 		public IExpression[] SubExpressions
 		{
 			get { return new[]{UnaryExpression}; }
@@ -1112,27 +662,6 @@ namespace D_Parser.Dom.Expressions
 		}
 
 		public abstract CodeLocation EndLocation { get; set; }
-
-
-		public virtual ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { 
-				return new DExpressionDecl(this) { 
-					ExpressesVariableAccess=true,
-					InnerDeclaration = PostfixForeExpression.ExpressionTypeRepresentation}; 
-			}
-		}
-
-
-		public virtual bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public virtual decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
-		}
 
 		public virtual IExpression[] SubExpressions
 		{
@@ -1192,11 +721,6 @@ namespace D_Parser.Dom.Expressions
 			get;
 			set;
 		}
-
-		public sealed override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return PostfixForeExpression.ExpressionTypeRepresentation; }
-		}
 	}
 
 	public class PostfixExpression_Decrement : PostfixExpression
@@ -1210,11 +734,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-		public sealed override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return PostfixForeExpression.ExpressionTypeRepresentation; }
 		}
 	}
 
@@ -1246,18 +765,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-		public sealed override ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get {
-				var t = PostfixForeExpression.ExpressionTypeRepresentation;
-
-				if (t != null)
-					t.ExpressesVariableAccess = true;
-
-				return t; 
-			}
 		}
 
 		public override IExpression[] SubExpressions
@@ -1370,11 +877,6 @@ namespace D_Parser.Dom.Expressions
 		public IdentifierDeclaration TemplateIdentifier;
 		public IExpression[] Arguments;
 
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return TemplateIdentifier; }
-		}
-
 		public override string ToString(bool IncludesBase)
 		{
 			var ret = (IncludesBase && InnerDeclaration != null ? (InnerDeclaration.ToString() + ".") : "") + TemplateIdentifier + '!';
@@ -1393,16 +895,6 @@ namespace D_Parser.Dom.Expressions
 			}
 
 			return ret;
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 
 		public IExpression[] SubExpressions
@@ -1441,7 +933,6 @@ namespace D_Parser.Dom.Expressions
 			return Value==null?null: Value.ToString();
 		}
 
-
 		public CodeLocation Location
 		{
 			get;
@@ -1452,37 +943,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { 
-				if(Format==LiteralFormat.CharLiteral)
-					return new DTokenDeclaration(DTokens.Char) { Location = this.Location, EndLocation = this.EndLocation };
-
-				if ((Format & LiteralFormat.FloatingPoint) == LiteralFormat.FloatingPoint)
-					return new DTokenDeclaration(DTokens.Float) { Location = this.Location, EndLocation = this.EndLocation };
-
-				if (Format == LiteralFormat.Scalar)
-					return new DTokenDeclaration(DTokens.Int) { Location = this.Location, EndLocation = this.EndLocation };
-
-				//ISSUE: For easification, only work with strings, not wstrings or dstrings
-				if (Format == LiteralFormat.StringLiteral || Format == LiteralFormat.VerbatimStringLiteral)
-					return new IdentifierDeclaration("string") { Location=this.Location,EndLocation=this.EndLocation };
-
-				return new IdentifierDeclaration(Value as string) { Location = this.Location, EndLocation = this.EndLocation };
-			}
-		}
-
-		public bool IsConstant
-		{
-			get { return Format==LiteralFormat.Scalar; }
-		}
-
-		public decimal DecValue
-		{
-			get { return Convert.ToDecimal(Value); }
 		}
 	}
 
@@ -1509,22 +969,6 @@ namespace D_Parser.Dom.Expressions
 			get;
 			set;
 		}
-
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DTokenDeclaration(Token) { Location = this.Location, EndLocation = this.EndLocation }; }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
-		}
 	}
 
 	/// <summary>
@@ -1550,22 +994,6 @@ namespace D_Parser.Dom.Expressions
 		public CodeLocation EndLocation
 		{
 			get { return Declaration != null ? Declaration.EndLocation : CodeLocation.Empty; }
-		}
-
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return Declaration; }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 	}
 
@@ -1602,30 +1030,6 @@ namespace D_Parser.Dom.Expressions
 			set;
 		}
 
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get {
-
-				var ret = new ArrayDecl();
-
-				var exprs = Expressions;
-				if (exprs.Count > 0)
-					ret.ValueType = exprs[0].ExpressionTypeRepresentation;
-
-				return ret; }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
-		}
-
 		public IExpression[] SubExpressions
 		{
 			get { return Expressions!=null && Expressions.Count>0? Expressions.ToArray() : null; }
@@ -1655,42 +1059,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get {
-				var ret = new ArrayDecl();
-
-				if (KeyValuePairs.Count > 0)
-					foreach(var kv in KeyValuePairs)
-					{
-						if(kv.Value!=null)
-							ret.ValueType = kv.Value.ExpressionTypeRepresentation;
-
-						if (kv.Key != null)
-						{
-							ret.KeyType = kv.Key.ExpressionTypeRepresentation;
-							ret.ClampsEmpty = false;
-						}
-
-						// Break if we resolved both key and value types
-						if (ret.ValueType!=null && ret.KeyType!=null)
-							break;
-					}
-
-				return ret;
-			}
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 
 		public IExpression[] SubExpressions
@@ -1764,21 +1132,6 @@ namespace D_Parser.Dom.Expressions
 			get;
 			set;
 		}
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DelegateDeclaration() { IsFunction=LiteralToken==DTokens.Function, ReturnType=AnonymousMethod.Type, Parameters=AnonymousMethod.Parameters}; }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
-		}
 	}
 
 	public class AssertExpression : PrimaryExpression,ContainerExpression
@@ -1805,33 +1158,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DTokenDeclaration(DTokens.Bool); }
-		}
-
-		public bool IsConstant
-		{
-			get {
-				foreach (var e in AssignExpressions)
-					if (!e.IsConstant)
-						return false;
-				return true; 
-			}
-		}
-
-		public decimal DecValue
-		{
-			get {
-				foreach (var e in AssignExpressions)
-					if (e.DecValue == 0)
-						return 0;
-
-				return 1;
-			}
 		}
 
 		public IExpression[] SubExpressions
@@ -1861,22 +1187,6 @@ namespace D_Parser.Dom.Expressions
 			set;
 		}
 
-		//TODO: How to get this resolved?
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return null; }
-		}
-
-		public bool IsConstant
-		{
-			get { return AssignExpression.IsConstant; }
-		}
-
-		public decimal DecValue
-		{
-			get { return AssignExpression.DecValue; }
-		}
-
 		public IExpression[] SubExpressions
 		{
 			get { return new[]{AssignExpression}; }
@@ -1902,22 +1212,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DExpressionDecl(new IdentifierExpression("", LiteralFormat.StringLiteral)); }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 
 		public IExpression[] SubExpressions
@@ -1946,22 +1240,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new IdentifierDeclaration("TypeInfo") { ExpressesVariableAccess=true, Location=Location, EndLocation=EndLocation, InnerDeclaration=new IdentifierDeclaration("object")}; }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 
 		public IExpression[] SubExpressions
@@ -2031,22 +1309,6 @@ namespace D_Parser.Dom.Expressions
 			set;
 		}
 
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DTokenDeclaration(DTokens.Bool); }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
-		}
-
 		public IExpression[] SubExpressions
 		{
 			get { 
@@ -2088,22 +1350,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-		//TODO: Get all the returned value types in detail
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return Keyword.StartsWith("is")||Keyword.StartsWith("has")?(ITypeDeclaration)new DTokenDeclaration(DTokens.Bool):new IdentifierDeclaration("object"); }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 	}
 
@@ -2152,22 +1398,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return Expression.ExpressionTypeRepresentation; }
-		}
-
-		public bool IsConstant
-		{
-			get { return Expression.IsConstant; }
-		}
-
-		public decimal DecValue
-		{
-			get { return Expression.DecValue; }
 		}
 
 		public IExpression[] SubExpressions
@@ -2371,22 +1601,6 @@ namespace D_Parser.Dom.Expressions
 		{
 			get;
 			set;
-		}
-
-
-		public ITypeDeclaration ExpressionTypeRepresentation
-		{
-			get { return new DExpressionDecl(this); }
-		}
-
-		public bool IsConstant
-		{
-			get { return false; }
-		}
-
-		public decimal DecValue
-		{
-			get { throw new NotImplementedException(); }
 		}
 	}
 

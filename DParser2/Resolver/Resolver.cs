@@ -351,65 +351,10 @@ namespace D_Parser.Resolver
 			}
 			else if (m is DMethod)
 			{
-				var method = m as DMethod;
-				ResolveResult[] returnTypes=null;
-
-				if (DoResolveBaseType)
-				{
-					/*
-					 * If a method's type equals null, assume that it's an 'auto' function..
-					 * 1) Search for a return statement
-					 * 2) Resolve the returned expression
-					 * 3) Use that one as the method's type
-					 */
-					if (method.Type != null)
-						returnTypes = TypeDeclarationResolver.Resolve(method.Type, ctxt);
-					else if (method.Body != null)
-					{
-						ReturnStatement returnStmt = null;
-						var list = new List<IStatement> { method.Body };
-						var list2 = new List<IStatement>();
-
-						bool foundMatch = false;
-						while (!foundMatch && list.Count > 0)
-						{
-							foreach (var stmt in list)
-							{
-								if (stmt is ReturnStatement)
-								{
-									returnStmt = stmt as ReturnStatement;
-
-									if (!(returnStmt.ReturnExpression is TokenExpression) ||
-										(returnStmt.ReturnExpression as TokenExpression).Token != DTokens.Null)
-									{
-										foundMatch = true;
-										break;
-									}
-								}
-
-								if (stmt is StatementContainingStatement)
-									list2.AddRange((stmt as StatementContainingStatement).SubStatements);
-							}
-
-							list = list2;
-							list2 = new List<IStatement>();
-						}
-
-						if (returnStmt != null && returnStmt.ReturnExpression != null)
-						{
-							ctxt.PushNewScope(method);
-
-							returnTypes = ExpressionTypeResolver.ResolveExpression(returnStmt.ReturnExpression, ctxt);
-
-							ctxt.Pop();
-						}
-					}
-				}
-
 				var ret = new MemberResult()
 				{
 					ResolvedMember = m,
-					MemberBaseTypes = returnTypes,
+					MemberBaseTypes = DoResolveBaseType ? GetMethodReturnType(m as DMethod, ctxt) : null,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
 				};
@@ -489,6 +434,64 @@ namespace D_Parser.Resolver
 						rl.Add(res);
 				}
 			return rl.ToArray();
+		}
+
+
+		public static ResolveResult[] GetMethodReturnType(DMethod method, ResolverContextStack ctxt)
+		{
+			ResolveResult[] returnType=null;
+
+			/*
+			 * If a method's type equals null, assume that it's an 'auto' function..
+			 * 1) Search for a return statement
+			 * 2) Resolve the returned expression
+			 * 3) Use that one as the method's type
+			 */
+
+			if (method.Type != null)
+				returnType = TypeDeclarationResolver.Resolve(method.Type, ctxt);
+			else if (method.Body != null)
+			{
+				ReturnStatement returnStmt = null;
+				var list = new List<IStatement> { method.Body };
+				var list2 = new List<IStatement>();
+
+				bool foundMatch = false;
+				while (!foundMatch && list.Count > 0)
+				{
+					foreach (var stmt in list)
+					{
+						if (stmt is ReturnStatement)
+						{
+							returnStmt = stmt as ReturnStatement;
+
+							if (!(returnStmt.ReturnExpression is TokenExpression) ||
+								(returnStmt.ReturnExpression as TokenExpression).Token != DTokens.Null)
+							{
+								foundMatch = true;
+								break;
+							}
+						}
+
+						if (stmt is StatementContainingStatement)
+							list2.AddRange((stmt as StatementContainingStatement).SubStatements);
+					}
+
+					list = list2;
+					list2 = new List<IStatement>();
+				}
+
+				if (returnStmt != null && returnStmt.ReturnExpression != null)
+				{
+					ctxt.PushNewScope(method);
+
+					returnType = ExpressionTypeResolver.ResolveExpression(returnStmt.ReturnExpression, ctxt);
+
+					ctxt.Pop();
+				}
+			}
+
+			return returnType;
 		}
 	}
 }

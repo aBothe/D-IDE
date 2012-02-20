@@ -207,6 +207,11 @@ namespace D_Parser.Dom
 
     public class DelegateDeclaration : AbstractTypeDeclaration
     {
+		/// <summary>
+		/// Alias for InnerDeclaration.
+		/// Contains 'int' in
+		/// int delegate() foo;
+		/// </summary>
         public ITypeDeclaration ReturnType
         {
             get { return InnerDeclaration; }
@@ -218,6 +223,7 @@ namespace D_Parser.Dom
         public bool IsFunction = false;
 
         public List<INode> Parameters = new List<INode>();
+		public DAttribute[] Modifiers;
 
 		public override string ToString(bool IncludesBase)
         {

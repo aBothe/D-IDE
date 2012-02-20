@@ -57,7 +57,7 @@ namespace D_Parser.Resolver
 		}
 	}
 
-	public class ArrayLikeResult : ResolveResult
+	public class ArrayResult : ResolveResult
 	{
 		public ArrayDecl ArrayDeclaration
 		{
@@ -158,6 +158,34 @@ namespace D_Parser.Resolver
 		public override string ResultPath
 		{
 			get { return DNode.GetNodePath(ResolvedTypeDefinition, true); }
+		}
+	}
+
+	/// <summary>
+	/// Will be returned on both
+	/// 1) int delegate() dg;
+	/// 2) delegate() { ... }
+	/// whereas on case 1), IsDelegateDeclaration will be true
+	/// </summary>
+	public class DelegateResult : ResolveResult
+	{
+		public bool IsDelegateDeclaration
+		{
+			get
+			{
+				return DeclarationOrExpressionBase is DelegateDeclaration;
+			}
+		}
+
+		/// <summary>
+		/// delegate() { return 12; } has a return type of static type 'int'
+		/// int delegate() dg; will also have the return type 'int', like it's given already
+		/// </summary>
+		public ResolveResult[] ReturnType;
+
+		public override string ResultPath
+		{
+			get { return DeclarationOrExpressionBase==null ? "" : DeclarationOrExpressionBase.ToString(); }
 		}
 	}
 }

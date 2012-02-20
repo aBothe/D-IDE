@@ -347,7 +347,7 @@ namespace D_Parser.Parser
     {With,	"with"}
         };
 
-        public static BitArray FunctionAttribute = NewSet(Pure, Nothrow, PropertyAttribute/*, DisabledAttribute, SafeAttribute, SystemAttribute, TrustedAttribute*/);
+        public static BitArray FunctionAttribute = NewSet(Pure, Nothrow, PropertyAttribute);
         public static BitArray MemberFunctionAttribute = NewSet(Const, Immutable, Shared, InOut, Pure, Nothrow, PropertyAttribute);
         public static BitArray ParamModifiers = NewSet(In, Out, InOut, Ref, Lazy, Scope);
         public static BitArray ClassLike = NewSet(Class, Template, Interface, Struct, Union);

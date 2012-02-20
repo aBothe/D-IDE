@@ -1007,7 +1007,6 @@ namespace D_Parser.Parser
 			else if (laKind == (Delegate) || laKind == (Function))
 			{
 				Step();
-				ITypeDeclaration td = null;
 				var dd = new DelegateDeclaration() { Location=t.Location};
 				dd.IsFunction = t.Kind == Function;
 
@@ -1018,15 +1017,16 @@ namespace D_Parser.Parser
 				if (!IsEOF)
 					LastParsedObject = lpo;
 
-				td = dd;
-				//TODO: add attributes to declaration
+				var attributes = new List<DAttribute>();
 				while (FunctionAttribute[laKind])
 				{
 					Step();
-					td = new DTokenDeclaration(t.Kind, td) { Location=t.Location, EndLocation=t.EndLocation };
+					attributes.Add(new DAttribute(t.Kind, t.Value));
 				}
-				td.EndLocation = t.EndLocation;
-				return td;
+				dd.Modifiers= attributes.Count>0? attributes.ToArray() : null;
+
+				dd.EndLocation = t.EndLocation;
+				return dd;
 			}
 			else
 				SynErr(Identifier);
