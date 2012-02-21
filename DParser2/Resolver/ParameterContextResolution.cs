@@ -189,58 +189,6 @@ namespace D_Parser.Resolver
 			// Resolve all types, methods etc. which belong to the methodIdentifier
 			res.ResolvedTypesOrMethods = ExpressionTypeResolver.ResolveExpression(res.ParsedExpression, ctxt);
 
-			if (res.ResolvedTypesOrMethods == null)
-				return res;
-
-			// 4),5),6)
-			if (res.ParsedExpression is NewExpression)
-			{
-				var substitutionList = new List<ResolveResult>();
-				foreach (var rr in res.ResolvedTypesOrMethods)
-					if (rr is TypeResult)
-					{
-						var classDef = (rr as TypeResult).ResolvedTypeDefinition as DClassLike;
-
-						if (classDef == null)
-							continue;
-
-						//TODO: Regard protection attributes for ctor members
-						foreach (var i in classDef)
-							if (i is DMethod && (i as DMethod).SpecialType == DMethod.MethodType.Constructor)
-								substitutionList.Add(DResolver.HandleNodeMatch(i, ctxt, resultBase: rr));
-					}
-
-				if (substitutionList.Count > 0)
-					res.ResolvedTypesOrMethods = substitutionList.ToArray();
-			}
-
-			// 7)
-			else if (res.ParsedExpression is PostfixExpression_MethodCall)
-			{
-				var substitutionList = new List<ResolveResult>();
-
-				var nonAliases = DResolver.TryRemoveAliasesFromResult(res.ResolvedTypesOrMethods);
-
-				foreach (var rr in nonAliases)
-					if (rr is TypeResult)
-					{
-						var classDef = (rr as TypeResult).ResolvedTypeDefinition as DClassLike;
-
-						if (classDef == null)
-							continue;
-
-						//TODO: Regard protection attributes for opCall members
-						foreach (var i in classDef)
-							if (i is DMethod && i.Name == "opCall")
-								substitutionList.Add(DResolver.HandleNodeMatch(i, ctxt, resultBase: rr));
-					}
-
-				if (substitutionList.Count > 0)
-					nonAliases = substitutionList.ToArray();
-
-				res.ResolvedTypesOrMethods = nonAliases;
-			}
-
 			return res;
 		}
 
@@ -337,9 +285,16 @@ namespace D_Parser.Resolver
 
 					else if (curExpression is TemplateInstanceExpression)
 						curMethodOrTemplateInstance = curExpression;
-					else if (curExpression is PostfixExpression_Access &&
-						(curExpression as PostfixExpression_Access).TemplateOrIdentifier is TemplateInstanceExpression)
-						curMethodOrTemplateInstance = curExpression.ExpressionTypeRepresentation as TemplateInstanceExpression;
+
+					else if (curExpression is PostfixExpression_Access)
+					{
+						var acc = curExpression as PostfixExpression_Access;
+
+						if (acc.TemplateInstance != null)
+							curMethodOrTemplateInstance = acc.TemplateInstance;
+						else if (acc.NewExpression != null)
+							curMethodOrTemplateInstance = acc.NewExpression;
+					}
 
 					else if (curExpression is NewExpression)
 						curMethodOrTemplateInstance = curExpression;

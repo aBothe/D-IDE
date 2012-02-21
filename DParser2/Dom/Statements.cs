@@ -202,7 +202,7 @@ namespace D_Parser.Dom.Statements
 	{
 		public bool IsStatic = false;
 		public IExpression IfCondition;
-		public DVariable IfVariable;
+		public DVariable[] IfVariable;
 
 		public IStatement ThenStatement
 		{
@@ -264,9 +264,7 @@ namespace D_Parser.Dom.Statements
 		public INode[] Declarations
 		{
 			get { 
-				if(IfVariable!=null)
-					return new[]{IfVariable};
-				return null;
+				return IfVariable;
 			}
 		}
 	}

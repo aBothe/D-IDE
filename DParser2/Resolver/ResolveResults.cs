@@ -73,29 +73,6 @@ namespace D_Parser.Resolver
 		}
 	}
 
-	/// <summary>
-	/// Keeps raw expressions like (1+2)
-	/// </summary>
-	public class ExpressionResult : ResolveResult
-	{
-		public IExpression Expression;
-
-		public override string ToString()
-		{
-			return Expression.ToString();
-		}
-
-		public override string ResultPath
-		{
-			get {
-				if (Expression == null)
-					return "";
-
-				return Expression.ExpressionTypeRepresentation.ToString();
-			}
-		}
-	}
-
 	public class ModuleResult : ResolveResult
 	{
 		public IAbstractSyntaxTree ResolvedModule;

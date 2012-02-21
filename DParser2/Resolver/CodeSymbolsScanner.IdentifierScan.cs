@@ -12,6 +12,13 @@ namespace D_Parser.Resolver
 	{
 		public class IdentifierScan
 		{
+			/// <summary>
+			/// The returned list will contain all
+			/// 1) IdentifierDeclaration
+			/// 2) PostfixExpression_Access
+			/// 3) IdentifierExpression
+			/// occurring in the given Node
+			/// </summary>
 			public static List<object> ScanForTypeIdentifiers(INode Node)
 			{
 				var l = new List<object>();
@@ -225,21 +232,19 @@ namespace D_Parser.Resolver
 						if (e is UnaryExpression_Type)
 							SearchIn((e as UnaryExpression_Type).Type, l);
 
-						if (e is NewExpression || e is PostfixExpression_Access)
+						if (e is NewExpression)
 						{
-							SearchIn(e.ExpressionTypeRepresentation, l);
+							SearchIn((e as NewExpression).Type, l);
 							continue;
 						}
+						else if (e is PostfixExpression_Access)
+							l.Add(e);
 						else if (e is IdentifierExpression && (e as IdentifierExpression).IsIdentifier)
-						{
-							var t = e.ExpressionTypeRepresentation;
-							if(!l.Contains(t))
-								l.Add(t);
-						}
+							l.Add(e);
 						else if (e is TemplateInstanceExpression)
 						{
 							var tie = e as TemplateInstanceExpression;
-
+							
 							if (tie.TemplateIdentifier != null && !l.Contains(tie.TemplateIdentifier))
 								l.Add(tie.TemplateIdentifier);
 						}

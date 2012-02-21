@@ -138,6 +138,11 @@ namespace D_Parser.Resolver
 					ex is PostfixExpression_Decrement)
 					return baseExpression;
 
+
+				if (ex is PostfixExpression_Access)
+					return Resolve(ex as PostfixExpression_Access, ctxt, baseExpression);
+
+
 				var r = new List<ResolveResult>(baseExpression.Length);
 				foreach (var b in baseExpression)
 				{
@@ -173,29 +178,20 @@ namespace D_Parser.Resolver
 
 							return dg.ReturnType;
 						}
-
-						/*
-						 * Not allowed:
-						 * 
-						 * MyType() -- ctor -> not allowed / must occur in 'new'-expression
-						 */
-					}
-
-					else if (ex is PostfixExpression_Access)
-					{
-						var acc = ex as PostfixExpression_Access;
-
-						if (acc.Identifier != null)
+						else if (b is TypeResult)
 						{
+							/*
+							 * auto a = MyStruct(); -- opCall-Overloads can be used
+							 */
+							var classDef = (b as TypeResult).ResolvedTypeDefinition as DClassLike;
 
-						}
-						else if (acc.TemplateInstance != null)
-						{
+							if (classDef == null)
+								continue;
 
-						}
-						else if (acc.NewExpression != null)
-						{
-
+							//TODO: Regard protection attributes for opCall members
+							foreach (var i in classDef)
+								if (i.Name == "opCall" && i is DMethod)
+									r.Add(TypeDeclarationResolver.HandleNodeMatch(i, ctxt, b, ex));
 						}
 					}
 
@@ -223,13 +219,13 @@ namespace D_Parser.Resolver
 
 				if (id.IsIdentifier)
 					return TypeDeclarationResolver.ResolveIdentifier(id.Value as string, ctxt, id);
-				//TODO: Recognize correct scalar format
+				//TODO: Recognize correct scalar format, i.e. 0.5 => double; 0.5f => float; char, wchar, dchar
 				else if (id.Format == LiteralFormat.CharLiteral)
 					return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Char)) };
 				else if (id.Format.HasFlag(LiteralFormat.FloatingPoint))
 					return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Float)) };
 				else if (id.Format == LiteralFormat.StringLiteral || id.Format.HasFlag(LiteralFormat.VerbatimStringLiteral))
-					return TypeDeclarationResolver.ResolveIdentifier("string", ctxt, null);
+					return TypeDeclarationResolver.ResolveIdentifier("string", ctxt, ex);
 			}
 
 			else if (ex is TemplateInstanceExpression)
@@ -249,7 +245,7 @@ namespace D_Parser.Resolver
 
 					if (classDef is DClassLike)
 					{
-						var res = DResolver.HandleNodeMatch(classDef, ctxt, null, ex);
+						var res = TypeDeclarationResolver.HandleNodeMatch(classDef, ctxt, null, ex);
 
 						if (res != null)
 							return new[] { res };
@@ -326,7 +322,51 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		public static ResolveResult[] ResolveTemplateInstance(TemplateInstanceExpression tix, ResolverContextStack ctxt, ResolveResult[] resolvedBases=null)
+		public static ResolveResult[] Resolve(PostfixExpression_Access acc, ResolverContextStack ctxt, IEnumerable<ResolveResult> resultBases=null)
+		{
+			var baseExpression = resultBases ?? ResolveExpression(acc.PostfixForeExpression, ctxt);
+
+			if (acc.TemplateInstance != null)
+			{
+
+			}
+			else if (acc.NewExpression != null)
+			{
+
+			}
+			else if (acc.Identifier != null)
+			{
+				/*
+				 * First off, try to resolve the identifier as it was a type declaration's identifer list part
+				 */
+				var results = TypeDeclarationResolver.ResolveFurtherTypeIdentifier(acc.Identifier, baseExpression, ctxt, acc);
+
+				if (results != null)
+					return results;
+
+				/*
+				 * Handle cases which can occur in an expression context only
+				 */
+
+				foreach (var b in baseExpression)
+				{
+					/*
+					 * 1) Static properties
+					 * 2) 
+					 */
+					var staticTypeProperty = StaticPropertyResolver.TryResolveStaticProperties(b, acc.Identifier, ctxt);
+
+					if (staticTypeProperty != null)
+						return new[] { staticTypeProperty };
+				}
+			}
+			else
+				return baseExpression.ToArray();
+
+			return null;
+		}
+
+		public static ResolveResult[] ResolveTemplateInstance(TemplateInstanceExpression tix, ResolverContextStack ctxt)
 		{
 			return null;
 		}

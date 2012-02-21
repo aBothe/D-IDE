@@ -136,17 +136,8 @@ namespace D_Parser.Completion
 				while (type is MemberFunctionAttributeDecl)
 					type = (type as MemberFunctionAttributeDecl).InnerType;
 
-				if (type is ArrayDecl)
-				{
-					var ad = type as ArrayDecl;
-
-					if(ad.IsAssociative)
-						StaticTypePropertyProvider.AddAssocArrayProperties(rr, CompletionDataGenerator, ad);
-					else
-						StaticTypePropertyProvider.AddArrayProperties(rr, CompletionDataGenerator, ad);
-				}
 				// Direct pointer accessing - only generic props are available
-				else if (type is PointerDecl)
+				if (type is PointerDecl)
 				{
 					// Do nothing
 				}
@@ -173,7 +164,17 @@ namespace D_Parser.Completion
 			}
 			#endregion
 
-			#region "abcd" , (200), (0.123) //, [1,2,3,4], [1:"asdf", 2:"hey", 3:"yeah"]
+			else if (rr is ArrayResult)
+			{
+				var ar = rr as ArrayResult;
+
+				if (ar.ArrayDeclaration.IsAssociative)
+					StaticTypePropertyProvider.AddAssocArrayProperties(rr, CompletionDataGenerator, ar.ArrayDeclaration);
+				else
+					StaticTypePropertyProvider.AddArrayProperties(rr, CompletionDataGenerator, ar.ArrayDeclaration);
+			}
+
+			/*
 			else if (rr is ExpressionResult)
 			{
 				var err = rr as ExpressionResult;
@@ -214,9 +215,9 @@ namespace D_Parser.Completion
 					}
 				}
 				// Pointer conversions (e.g. (myInt*).sizeof)
-
 			}
-			#endregion
+			*/
+			
 		}
 
 		void BuildMemberCompletionData(

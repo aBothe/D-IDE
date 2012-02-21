@@ -798,7 +798,8 @@ namespace D_Parser.Dom.Expressions
 
 			if (Arguments != null)
 				foreach (var a in Arguments)
-					ret += a.ToString() + ",";
+					if(a!=null)
+						ret += a.ToString() + ",";
 
 			return ret.TrimEnd(',') + "]";
 		}

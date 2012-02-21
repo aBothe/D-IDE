@@ -103,7 +103,7 @@ namespace D_Parser.Resolver
 		/// </summary>
 		/// <param name="rr"></param>
 		/// <returns></returns>
-		public static ResolveResult[] TryRemoveAliasesFromResult(params ResolveResult[] initialResults)
+		public static ResolveResult[] TryRemoveAliasesFromResult(IEnumerable<ResolveResult> initialResults)
 		{
 			var ret = new List<ResolveResult>(initialResults);
 			var l2 = new List<ResolveResult>();

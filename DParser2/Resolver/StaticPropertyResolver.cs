@@ -17,15 +17,9 @@ namespace D_Parser.Resolver
 		/// </summary>
 		/// <param name="InitialResult"></param>
 		/// <returns></returns>
-		public static ResolveResult TryResolveStaticProperties(ResolveResult InitialResult, IdentifierDeclaration Identifier, ResolverContextStack ctxt = null)
+		public static ResolveResult TryResolveStaticProperties(ResolveResult InitialResult, string propertyIdentifier, ResolverContextStack ctxt = null, IdentifierDeclaration idContainter = null)
 		{
-			if (InitialResult == null || Identifier == null || InitialResult is ModuleResult)
-			{
-				return null;
-			}
-
-			var propertyName = Identifier.Id as string;
-			if (propertyName == null)
+			if (InitialResult == null || InitialResult is ModuleResult)
 				return null;
 
 			INode relatedNode = null;
@@ -36,7 +30,7 @@ namespace D_Parser.Resolver
 				relatedNode = (InitialResult as TypeResult).ResolvedTypeDefinition;
 
 			#region init
-			if (propertyName == "init")
+			if (propertyIdentifier == "init")
 			{
 				var prop_Init = new DVariable
 				{
@@ -63,18 +57,18 @@ namespace D_Parser.Resolver
 				{
 					ResultBase = InitialResult,
 					MemberBaseTypes = new[] { InitialResult },
-					DeclarationOrExpressionBase = Identifier,
+					DeclarationOrExpressionBase = idContainter,
 					ResolvedMember = prop_Init
 				};
 			}
 			#endregion
 
 			#region sizeof
-			if (propertyName == "sizeof")
+			if (propertyIdentifier == "sizeof")
 				return new MemberResult
 				{
 					ResultBase = InitialResult,
-					DeclarationOrExpressionBase = Identifier,
+					DeclarationOrExpressionBase = idContainter,
 					ResolvedMember = new DVariable
 					{
 						Name = "sizeof",
@@ -86,11 +80,11 @@ namespace D_Parser.Resolver
 			#endregion
 
 			#region alignof
-			if (propertyName == "alignof")
+			if (propertyIdentifier == "alignof")
 				return new MemberResult
 				{
 					ResultBase = InitialResult,
-					DeclarationOrExpressionBase = Identifier,
+					DeclarationOrExpressionBase = idContainter,
 					ResolvedMember = new DVariable
 					{
 						Name = "alignof",
@@ -101,11 +95,11 @@ namespace D_Parser.Resolver
 			#endregion
 
 			#region mangleof
-			if (propertyName == "mangleof")
+			if (propertyIdentifier == "mangleof")
 				return new MemberResult
 				{
 					ResultBase = InitialResult,
-					DeclarationOrExpressionBase = Identifier,
+					DeclarationOrExpressionBase = idContainter,
 					ResolvedMember = new DVariable
 					{
 						Name = "mangleof",
@@ -117,11 +111,11 @@ namespace D_Parser.Resolver
 			#endregion
 
 			#region stringof
-			if (propertyName == "stringof")
+			if (propertyIdentifier == "stringof")
 				return new MemberResult
 				{
 					ResultBase = InitialResult,
-					DeclarationOrExpressionBase = Identifier,
+					DeclarationOrExpressionBase = idContainter,
 					ResolvedMember = new DVariable
 					{
 						Name = "stringof",
@@ -133,12 +127,11 @@ namespace D_Parser.Resolver
 			#endregion
 
 			bool
-				isArray = false,
+				isArray= false,
 				isAssocArray = false,
 				isInt = false,
 				isFloat = false;
 
-			#region See AbsractCompletionSupport.StaticPropertyAddition
 			if (InitialResult is StaticTypeResult)
 			{
 				var srr = InitialResult as StaticTypeResult;
@@ -149,14 +142,7 @@ namespace D_Parser.Resolver
 				while (type is MemberFunctionAttributeDecl)
 					type = (type as MemberFunctionAttributeDecl).InnerType;
 
-				if (type is ArrayDecl)
-				{
-					var ad = type as ArrayDecl;
-
-					isAssocArray = ad.IsAssociative;
-					isArray = !ad.IsAssociative;
-				}
-				else if (!(type is PointerDecl))
+				if (!(type is PointerDecl))
 				{
 					int TypeToken = srr.BaseTypeToken;
 
@@ -171,40 +157,14 @@ namespace D_Parser.Resolver
 					}
 				}
 			}
-			else if (InitialResult is ExpressionResult)
+			else if (InitialResult is ArrayResult)
 			{
-				var err = InitialResult as ExpressionResult;
-				var expr = err.Expression;
+				isArray=true;
 
-				// 'Skip' surrounding parentheses
-				while (expr is SurroundingParenthesesExpression)
-					expr = (expr as SurroundingParenthesesExpression).Expression;
+				var ar = InitialResult as ArrayResult;
 
-				var idExpr = expr as IdentifierExpression;
-				if (idExpr != null)
-				{
-					// Char literals, Integrals types & Floats
-					if ((idExpr.Format & LiteralFormat.Scalar) == LiteralFormat.Scalar || idExpr.Format == LiteralFormat.CharLiteral)
-					{
-						// Floats also imply integral properties
-						isInt = true;
-						isFloat = (idExpr.Format & LiteralFormat.FloatingPoint) == LiteralFormat.FloatingPoint;
-					}
-					// String literals
-					else if (idExpr.Format == LiteralFormat.StringLiteral || idExpr.Format == LiteralFormat.VerbatimStringLiteral)
-					{
-						isArray = true;
-					}
-				}
-				// Pointer conversions (e.g. (myInt*).sizeof)
-			}
-			#endregion
-
-			//TODO: Resolve static [assoc] array props
-			if (isArray || isAssocArray)
-			{
-
-			}
+				isAssocArray = ar.ArrayDeclaration.IsAssociative;
+			}			
 
 			// .classinfo property, too!
 
