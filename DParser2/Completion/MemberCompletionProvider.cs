@@ -118,7 +118,9 @@ namespace D_Parser.Completion
 				BuildTypeCompletionData(tr, vis);
 				if (resultParent == null)
 					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, tr.ResolvedTypeDefinition);
-				StaticTypePropertyProvider.AddClassTypeProperties(CompletionDataGenerator, tr.ResolvedTypeDefinition);
+
+				if(tr.ResolvedTypeDefinition is DClassLike)
+					StaticTypePropertyProvider.AddClassTypeProperties(CompletionDataGenerator, tr.ResolvedTypeDefinition);
 			}
 			#endregion
 

@@ -12,6 +12,7 @@ namespace D_Parser.Resolver
 	{
 		public static ResolveResult[] ResolveExpression(IExpression ex, ResolverContextStack ctxt)
 		{
+			#region Operand based/Trivial expressions
 			if (ex is Expression) // a,b,c;
 			{
 				return null;
@@ -37,7 +38,7 @@ namespace D_Parser.Resolver
 			else if (ex is OrOrExpression || // a || b
 				ex is AndAndExpression || // a && b
 				ex is EqualExpression || // a==b
-				ex is IdentifierExpression || // a is T
+				ex is IdendityExpression || // a is T
 				ex is RelExpression) // a <= b
 				return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Bool)) };
 
@@ -48,11 +49,14 @@ namespace D_Parser.Resolver
 
 				return ResolveExpression((ex as InExpression).RightOperand, ctxt);
 			}
+			#endregion
 
+			#region UnaryExpressions
 			else if (ex is UnaryExpression)
 			{
 				if (ex is UnaryExpression_Cat) // a = ~b;
 					return ResolveExpression((ex as SimpleUnaryExpression).UnaryExpression, ctxt);
+
 				else if (ex is NewExpression)
 				{
 					// http://www.d-programming-language.org/expression.html#NewExpression
@@ -64,6 +68,8 @@ namespace D_Parser.Resolver
 
 					return TypeDeclarationResolver.Resolve(nex.Type, ctxt);
 				}
+
+				
 				else if (ex is CastExpression)
 				{
 					var ce = ex as CastExpression;
@@ -122,7 +128,9 @@ namespace D_Parser.Resolver
 					return TypeDeclarationResolver.Resolve(id, ctxt, type);
 				}
 			}
+#endregion
 
+			#region PostfixExpressions
 			else if (ex is PostfixExpression)
 			{
 				var baseExpression = ResolveExpression((ex as PostfixExpression).PostfixForeExpression, ctxt);
@@ -212,7 +220,9 @@ namespace D_Parser.Resolver
 				if(r.Count>0)
 					return r.ToArray();
 			}
+			#endregion
 
+			#region PrimaryExpressions
 			else if (ex is IdentifierExpression)
 			{
 				var id = ex as IdentifierExpression;
@@ -318,6 +328,7 @@ namespace D_Parser.Resolver
 			{
 				// TODO: Return either bools, strings, array (pointers) to members or stuff
 			}
+			#endregion
 
 			return null;
 		}
@@ -332,7 +343,9 @@ namespace D_Parser.Resolver
 			}
 			else if (acc.NewExpression != null)
 			{
-
+				/*
+				 * This can be both a normal new-Expression as well as an anonymous class declaration!
+				 */
 			}
 			else if (acc.Identifier != null)
 			{

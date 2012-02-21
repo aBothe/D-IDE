@@ -970,7 +970,7 @@ namespace D_Parser.Parser
 
 				if (keyType != null && 
 					laKind == CloseSquareBracket && 
-					!(keyType is IdentifierDeclaration))
+					!(keyType is IdentifierDeclaration)) //HACK: If it's constProp.length, it rather is a expression than a declaration identifier
 					cd = new ArrayDecl() { KeyType = keyType, ClampsEmpty = false, Location = startLoc };
 				else
 				{

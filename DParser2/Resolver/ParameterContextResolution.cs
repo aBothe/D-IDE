@@ -16,6 +16,12 @@ namespace D_Parser.Resolver
 
 		public IExpression ParsedExpression;
 
+		/// <summary>
+		/// Usually some part of the ParsedExpression.
+		/// For instance in a PostfixExpression_MethodCall it'd be the PostfixForeExpression.
+		/// </summary>
+		public object MethodIdentifier;
+
 		public ResolveResult[] ResolvedTypesOrMethods;
 
 		public readonly Dictionary<IExpression, ResolveResult[]> TemplateArguments = new Dictionary<IExpression, ResolveResult[]>();
@@ -57,19 +63,17 @@ namespace D_Parser.Resolver
 		/// counts its already typed arguments
 		/// and returns a wrapper containing all the information.
 		/// </summary>
-		/// <param name="code"></param>
-		/// <param name="caret"></param>
-		/// <param name="caretLocation"></param>
-		/// <param name="MethodScope"></param>
-		/// <param name="scopedStatement"></param>
-		/// <returns></returns>
 		public static ArgumentsResolutionResult LookupArgumentRelatedStatement(
 			string code, 
 			int caret, 
 			CodeLocation caretLocation,
-			DMethod MethodScope)
+			ResolverContextStack ctxt)
 		{
 			IStatement scopedStatement = null;
+			var MethodScope = ctxt.ScopedBlock as DMethod;
+
+			if (MethodScope == null)
+				return null;
 
 			var curMethodBody = MethodScope.GetSubBlockAt(caretLocation);
 
@@ -93,10 +97,12 @@ namespace D_Parser.Resolver
 				curMethodBody = DParser.ParseBlockStatement(codeToParse, blockOpenerLocation, MethodScope);
 
 				if (curMethodBody != null)
-					scopedStatement = curMethodBody.SearchStatementDeeply(caretLocation);
+					ctxt.ScopedStatement = scopedStatement = curMethodBody.SearchStatementDeeply(caretLocation);
+				else
+					return null;
 			}
 
-			if (curMethodBody == null || scopedStatement == null)
+			if (scopedStatement == null)
 				return null;
 
 			var e= SearchForMethodCallsOrTemplateInstances(scopedStatement, caretLocation);
@@ -110,13 +116,17 @@ namespace D_Parser.Resolver
 			 * 6) new myclass!(...)(
 			 * 7) mystruct(		-- opCall call
 			 */
-			var res = new ArgumentsResolutionResult() { ParsedExpression = e };
+			var res = new ArgumentsResolutionResult() { 
+				ParsedExpression = e
+			};
 
 			// 1), 2)
 			if (e is PostfixExpression_MethodCall)
 			{
 				res.IsMethodArguments = true;
 				var call = e as PostfixExpression_MethodCall;
+
+				res.ResolvedTypesOrMethods = ExpressionTypeResolver.ResolveExpression(call.PostfixForeExpression, ctxt);
 
 				if (call.Arguments != null)
 				{
@@ -131,6 +141,19 @@ namespace D_Parser.Resolver
 						i++;
 					}
 				}
+
+			}
+			else if (e is PostfixExpression_Access)
+			{
+				var acc = e as PostfixExpression_Access;
+
+				var baseTypes = ExpressionTypeResolver.ResolveExpression(acc.PostfixForeExpression, ctxt);
+
+				if (baseTypes == null)
+					return res;
+
+				if (acc.NewExpression is NewExpression)
+					Handle(acc.NewExpression as NewExpression, res, caretLocation, ctxt, baseTypes);
 			}
 			// 3)
 			else if (e is TemplateInstanceExpression)
@@ -138,6 +161,8 @@ namespace D_Parser.Resolver
 				var templ = e as TemplateInstanceExpression;
 
 				res.IsTemplateInstanceArguments = true;
+
+
 
 				if (templ.Arguments != null)
 				{
@@ -154,25 +179,30 @@ namespace D_Parser.Resolver
 				}
 			}
 			else if (e is NewExpression)
-			{
-				var ne = e as NewExpression;
-
-				if (ne.Arguments != null)
-				{
-					int i = 0;
-					foreach (var arg in ne.Arguments)
-					{
-						if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
-						{
-							res.CurrentlyTypedArgumentIndex = i;
-							break;
-						}
-						i++;
-					}
-				}
-			}
+				Handle(e as NewExpression, res, caretLocation, ctxt);
 
 			return res;
+		}
+
+		static void Handle(NewExpression nex, 
+			ArgumentsResolutionResult res, 
+			CodeLocation caretLocation, 
+			ResolverContextStack ctxt,
+			IEnumerable<ResolveResult> resultBases=null)
+		{
+			if (nex.Arguments != null)
+			{
+				int i = 0;
+				foreach (var arg in nex.Arguments)
+				{
+					if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
+					{
+						res.CurrentlyTypedArgumentIndex = i;
+						break;
+					}
+					i++;
+				}
+			}
 		}
 
 		public static ArgumentsResolutionResult ResolveArgumentContext(
@@ -182,14 +212,14 @@ namespace D_Parser.Resolver
 			DMethod MethodScope,
 			IEnumerable<IAbstractSyntaxTree> parseCache, IEnumerable<IAbstractSyntaxTree> ImportCache)
 		{
-			var ctxt = new ResolverContextStack(parseCache, new ResolverContext { ScopedBlock = MethodScope }, ImportCache);
 
-			var res = LookupArgumentRelatedStatement(code, caretOffset, caretLocation, MethodScope);
+			IStatement stmt = null;
+			var ctxt = new ResolverContextStack(parseCache, new ResolverContext { 
+				ScopedBlock = DResolver.SearchBlockAt(MethodScope, caretLocation, out stmt),
+				ScopedStatement = stmt
+			}, ImportCache);
 
-			// Resolve all types, methods etc. which belong to the methodIdentifier
-			res.ResolvedTypesOrMethods = ExpressionTypeResolver.ResolveExpression(res.ParsedExpression, ctxt);
-
-			return res;
+			return LookupArgumentRelatedStatement(code, caretOffset, caretLocation, ctxt);
 		}
 
 		public static IExpression SearchForMethodCallsOrTemplateInstances(IStatement Statement, CodeLocation Caret)
