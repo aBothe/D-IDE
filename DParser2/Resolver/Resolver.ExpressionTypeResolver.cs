@@ -69,7 +69,7 @@ namespace D_Parser.Resolver
 					return TypeDeclarationResolver.Resolve(nex.Type, ctxt);
 				}
 
-				
+
 				else if (ex is CastExpression)
 				{
 					var ce = ex as CastExpression;
@@ -128,7 +128,7 @@ namespace D_Parser.Resolver
 					return TypeDeclarationResolver.Resolve(id, ctxt, type);
 				}
 			}
-#endregion
+			#endregion
 
 			#region PostfixExpressions
 			else if (ex is PostfixExpression)
@@ -141,7 +141,7 @@ namespace D_Parser.Resolver
 				// Important: To ensure correct behaviour, aliases must be removed before further handling
 				baseExpression = DResolver.TryRemoveAliasesFromResult(baseExpression);
 
-				if (baseExpression==null ||
+				if (baseExpression == null ||
 					ex is PostfixExpression_Increment || // myInt++ is still of type 'int'
 					ex is PostfixExpression_Decrement)
 					return baseExpression;
@@ -150,6 +150,45 @@ namespace D_Parser.Resolver
 				if (ex is PostfixExpression_Access)
 					return Resolve(ex as PostfixExpression_Access, ctxt, baseExpression);
 
+				else if (ex is PostfixExpression_MethodCall)
+				{
+					var call = ex as PostfixExpression_MethodCall;
+
+					/*
+					 * int a() { return 1+2; }
+					 * 
+					 * int result = a() // a is member method -- return the method's base type
+					 * 
+					 */
+
+					var resolvedCallArguments = new List<ResolveResult[]>();
+					
+					// Note: If an arg wasn't able to be resolved (returns null) - add it anyway to keep the indexes parallel
+					if (call.Arguments != null)
+						foreach (var arg in call.Arguments)
+							resolvedCallArguments.Add(ExpressionTypeResolver.ResolveExpression(arg, ctxt));
+
+					/*
+					 * std.stdio.writeln(123) does actually contain
+					 * a template instance argument: writeln!int(123);
+					 * So although there's no explicit type given, 
+					 * TemplateParameters will still contain static type int!
+					 * 
+					 * Therefore, and only if no writeln!int was given as foreexpression like in writeln!int(123),
+					 * try to match the call arguments with template parameters.
+					 * 
+					 * If no template parameters were required, baseExpression will remain untouched.
+					 */
+
+					var resultsWithResolvedTemplateArgs =
+						call.PostfixForeExpression is TemplateInstanceExpression ?
+						baseExpression:
+						TemplateInstanceParameterHandler.ResolveAndFilterTemplateResults(resolvedCallArguments, baseExpression, ctxt);
+
+					//TODO: Compare arguments' types with parameter types to whitelist legal method overloads
+
+					return resultsWithResolvedTemplateArgs;
+				}
 
 				var r = new List<ResolveResult>(baseExpression.Length);
 				foreach (var b in baseExpression)
@@ -159,16 +198,10 @@ namespace D_Parser.Resolver
 						if (b is MemberResult)
 						{
 							var mr = b as MemberResult;
+							
+							
 
-							/*
-							 * int a() { return 1+2; }
-							 * 
-							 * int result = a() // a is member method -- return the method's base type
-							 */
-
-							//TODO: Compare arguments' types with parameter types to whitelist legal method overloads
-
-							if(mr.MemberBaseTypes!=null)
+							if (mr.MemberBaseTypes != null)
 								r.AddRange(mr.MemberBaseTypes);
 						}
 						else if (b is DelegateResult)
@@ -208,16 +241,18 @@ namespace D_Parser.Resolver
 						/*
 						 * return the value type of a given array result
 						 */
+						//TODO
 					}
 					else if (ex is PostfixExpression_Slice)
 					{
 						/*
 						 * like above 
 						 */
+						//TODO
 					}
 				}
 
-				if(r.Count>0)
+				if (r.Count > 0)
 					return r.ToArray();
 			}
 			#endregion
@@ -287,17 +322,17 @@ namespace D_Parser.Resolver
 
 			else if (ex is ArrayLiteralExpression)
 			{
-				
+				//TODO
 			}
 
 			else if (ex is AssocArrayExpression)
 			{
-				
+				//TODO
 			}
 
 			else if (ex is FunctionLiteral)
 			{
-				// Return simple DelegateResult
+				//TODO Return simple DelegateResult
 			}
 
 			else if (ex is AssertExpression)
@@ -310,6 +345,7 @@ namespace D_Parser.Resolver
 				 * 2) Parse it as an expression
 				 * 3) Evaluate the expression's type
 				 */
+				//TODO
 			}
 
 			else if (ex is ImportExpression)
@@ -330,6 +366,9 @@ namespace D_Parser.Resolver
 			}
 			#endregion
 
+			else if (ex is TypeDeclarationExpression)
+				return TypeDeclarationResolver.Resolve((ex as TypeDeclarationExpression).Declaration, ctxt);
+
 			return null;
 		}
 
@@ -338,21 +377,24 @@ namespace D_Parser.Resolver
 			var baseExpression = resultBases ?? ResolveExpression(acc.PostfixForeExpression, ctxt);
 
 			if (acc.TemplateInstance != null)
-			{
-
-			}
+				return ResolveTemplateInstance(acc.TemplateInstance, ctxt, baseExpression);
 			else if (acc.NewExpression != null)
 			{
 				/*
 				 * This can be both a normal new-Expression as well as an anonymous class declaration!
 				 */
+				//TODO!
 			}
 			else if (acc.Identifier != null)
 			{
 				/*
 				 * First off, try to resolve the identifier as it was a type declaration's identifer list part
 				 */
-				var results = TypeDeclarationResolver.ResolveFurtherTypeIdentifier(acc.Identifier, baseExpression, ctxt, acc);
+				var results = TypeDeclarationResolver.ResolveFurtherTypeIdentifier(
+					acc.Identifier,
+					baseExpression,
+					ctxt,
+					acc);
 
 				if (results != null)
 					return results;
@@ -365,7 +407,7 @@ namespace D_Parser.Resolver
 				{
 					/*
 					 * 1) Static properties
-					 * 2) 
+					 * 2) ??
 					 */
 					var staticTypeProperty = StaticPropertyResolver.TryResolveStaticProperties(b, acc.Identifier, ctxt);
 
@@ -379,9 +421,19 @@ namespace D_Parser.Resolver
 			return null;
 		}
 
-		public static ResolveResult[] ResolveTemplateInstance(TemplateInstanceExpression tix, ResolverContextStack ctxt)
+		public static ResolveResult[] ResolveTemplateInstance(
+			TemplateInstanceExpression tix, 
+			ResolverContextStack ctxt, 
+			IEnumerable<ResolveResult> resultBases=null)
 		{
-			return null;
+			ResolveResult[] r = null;
+
+			if (resultBases == null)
+				r = TypeDeclarationResolver.ResolveIdentifier(tix.TemplateIdentifier.Id, ctxt,tix);
+			else
+				r = TypeDeclarationResolver.ResolveFurtherTypeIdentifier(tix.TemplateIdentifier.Id, resultBases, ctxt, tix);
+
+			return TemplateInstanceParameterHandler.ResolveAndFilterTemplateResults(tix, r, ctxt);
 		}
 	}
 }

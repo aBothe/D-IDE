@@ -73,13 +73,14 @@
     <Compile Include="Completion\CtrlSpaceCompletionProvider.cs" />
     <Compile Include="Completion\MemberCompletionProvider.cs" />
     <Compile Include="Completion\PropertyAttributeCompletionProvider.cs" />
+    <Compile Include="Dom\TemplateParameters.cs" />
     <Compile Include="Resolver\CodeSymbolsScanner.IdentifierScan.cs" />
     <Compile Include="Resolver\ItemEnumeration.cs" />
     <Compile Include="Resolver\NameScan.cs" />
     <Compile Include="Resolver\Resolver.ExpressionTypeResolver.cs" />
-    <Compile Include="Resolver\Resolver.Helper.cs" />
     <Compile Include="Resolver\Resolver.ImportResolver.cs" />
     <Compile Include="Resolver\Resolver.RootsEnum.cs" />
+    <Compile Include="Resolver\TemplateInstanceParameterHandler.cs" />
     <Compile Include="Resolver\Resolver.TypeDeclarationResolver.cs" />
     <Compile Include="Completion\StaticTypePropertyProvider.cs" />
     <Compile Include="Misc\ASTStorage.cs" />

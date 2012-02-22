@@ -1,4 +1,5 @@
 ﻿using D_Parser.Dom;
+using System.Collections.Generic;
 using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Resolver
@@ -27,6 +28,11 @@ namespace D_Parser.Resolver
 		/// If the origin of ResolvedMember seems to be unclear (if there are multiple same-named types), there will be two or more items
 		/// </summary>
 		public ResolveResult[] MemberBaseTypes;
+
+		/// <summary>
+		/// If a method requires template arguments, this dictionary will store them.
+		/// </summary>
+		public Dictionary<ITemplateParameter, ResolveResult[]> TemplateParameters;
 
 		public override string ToString()
 		{
@@ -125,7 +131,7 @@ namespace D_Parser.Resolver
 		///		1) TypeResult T; TemplateParameter[0]= StaticType int
 		///		2) MemberResult t; MemberDefinition= 1)
 		/// </summary>
-		public ResolveResult[] TemplateParameters;
+		public Dictionary<ITemplateParameter,ResolveResult[]> TemplateParameters;
 
 		public override string ToString()
 		{

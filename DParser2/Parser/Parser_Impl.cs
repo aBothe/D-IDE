@@ -4699,17 +4699,48 @@ namespace D_Parser.Parser
 			{
 				Step();
 
+				/*
+				 * TemplateSingleArgument: 
+				 *		Identifier 
+				 *		BasicTypeX 
+				 *		CharacterLiteral 
+				 *		StringLiteral 
+				 *		IntegerLiteral 
+				 *		FloatLiteral 
+				 *		true 
+				 *		false 
+				 *		null 
+				 *		__FILE__ 
+				 *		__LINE__
+				 */
+
 				IExpression arg= null;
 
 				if (t.Kind == Literal)
 					arg = new IdentifierExpression(t.LiteralValue, LiteralFormat.Scalar) 
-					{ Location=t.Location, EndLocation=t.EndLocation };
+					{ 
+						Location = t.Location, 
+						EndLocation = t.EndLocation 
+					};
 				else if (t.Kind == Identifier)
-					arg=new IdentifierExpression(t.Value) 
-					{ Location = t.Location, EndLocation = t.EndLocation };
-				else
-					arg=new TokenExpression(t.Kind)
-					{ Location = t.Location, EndLocation = t.EndLocation };
+					arg = new IdentifierExpression(t.Value) { 
+						Location = t.Location, 
+						EndLocation = t.EndLocation 
+					};
+				else if (BasicTypes[t.Kind])
+					arg = new TypeDeclarationExpression(new DTokenDeclaration(t.Kind) { 
+						Location = t.Location, 
+						EndLocation = t.EndLocation 
+					});
+				else if (
+					t.Kind == True || 
+					t.Kind == False || 
+					t.Kind == Null || 
+					t.Kind == __FILE__ || 
+					t.Kind == __LINE__)
+					arg = new TokenExpression(t.Kind) { 
+						Location = t.Location, 
+						EndLocation = t.EndLocation };
 
 				args.Add(arg);
 			}

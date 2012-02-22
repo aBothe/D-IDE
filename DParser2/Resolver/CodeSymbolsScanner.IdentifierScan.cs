@@ -188,10 +188,6 @@ namespace D_Parser.Resolver
 						if (ad.KeyType != null)
 							SearchIn(ad.KeyType, l);
 					}
-					else if (type is DExpressionDecl)
-					{
-						SearchIn((type as DExpressionDecl).Expression, l);
-					}
 					else if (type is TemplateInstanceExpression)
 					{
 						var tie = type as TemplateInstanceExpression;
