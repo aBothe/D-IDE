@@ -4,6 +4,7 @@ using D_Parser.Dom.Expressions;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
 using D_Parser.Resolver;
+using D_Parser.Resolver.ASTScanner;
 
 namespace D_Parser.Completion
 {
@@ -29,7 +30,7 @@ namespace D_Parser.Completion
 
 			IStatement curStmt = null;
 			if(curBlock==null)
-				curBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt);
+				curBlock = D_Parser.Resolver.TypeResolution.DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt);
 
 			if (curBlock == null)
 				return;

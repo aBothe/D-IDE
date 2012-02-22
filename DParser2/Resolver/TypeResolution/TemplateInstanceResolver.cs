@@ -5,7 +5,7 @@ using System.Text;
 using D_Parser.Dom.Expressions;
 using D_Parser.Dom;
 
-namespace D_Parser.Resolver
+namespace D_Parser.Resolver.TypeResolution
 {
 	public class TemplateInstanceParameterHandler
 	{
@@ -40,7 +40,7 @@ namespace D_Parser.Resolver
 			// Note: If an arg wasn't able to be resolved (returns null) - add it anyway to keep the indexes parallel
 			if (templateArguments != null)
 				foreach (var arg in templateArguments)
-					templateArgs.Add(ExpressionTypeResolver.ResolveExpression(arg, ctxt));
+					templateArgs.Add(ExpressionTypeResolver.Resolve(arg, ctxt));
 
 			return ResolveAndFilterTemplateResults(templateArgs.Count > 0 ? templateArgs : null, resolvedTypes, ctxt);
 		}

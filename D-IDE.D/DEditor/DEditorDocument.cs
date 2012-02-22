@@ -22,6 +22,7 @@ using D_Parser.Resolver;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
+using D_Parser.Resolver.TypeResolution;
 
 namespace D_IDE.D
 {
@@ -745,7 +746,7 @@ namespace D_IDE.D
 			var sw=new Stopwatch();
 			sw.Start();
 
-			var res = CodeSymbolsScanner.ScanSymbols(new ResolverContextStack(ParseCache, new ResolverContext
+			var res = D_Parser.Resolver.ASTScanner.CodeSymbolsScanner.ScanSymbols(new ResolverContextStack(ParseCache, new ResolverContext
 			{
 				ScopedBlock=SyntaxTree,
 				// For performance reasons, do not scan down aliases

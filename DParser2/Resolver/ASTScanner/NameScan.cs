@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using D_Parser.Dom;
 using D_Parser.Dom.Expressions;
+using D_Parser.Resolver.TypeResolution;
 
-namespace D_Parser.Resolver
+namespace D_Parser.Resolver.ASTScanner
 {
-	public class NameScan : RootsEnum
+	public class NameScan : AbstractAstScanner
 	{
 		string filterId;
 		public List<INode> Matches = new List<INode>();

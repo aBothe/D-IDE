@@ -4,6 +4,7 @@ using D_Parser.Dom.Expressions;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
 using D_Parser.Resolver;
+using D_Parser.Resolver.TypeResolution;
 
 namespace D_Parser.Completion
 {

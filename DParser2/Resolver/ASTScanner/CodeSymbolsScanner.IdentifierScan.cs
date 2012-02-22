@@ -6,7 +6,7 @@ using D_Parser.Dom.Expressions;
 using D_Parser.Dom;
 using D_Parser.Dom.Statements;
 
-namespace D_Parser.Resolver
+namespace D_Parser.Resolver.ASTScanner
 {
 	public partial class CodeSymbolsScanner
 	{

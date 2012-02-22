@@ -4,8 +4,9 @@ using D_Parser.Dom.Expressions;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
 using System;
+using D_Parser.Resolver.TypeResolution;
 
-namespace D_Parser.Resolver
+namespace D_Parser.Resolver.ASTScanner
 {
 	/// <summary>
 	/// Class for scanning symbols inside a parsed code file.
@@ -47,7 +48,7 @@ namespace D_Parser.Resolver
 		{
 			var csr = new CodeScanResult();
 
-			var resCache = new ResolutionCache();
+			var resCache = new ResultCache();
 
 			if (lastResCtxt.ScopedBlock != null)
 				resCache.Add(lastResCtxt.ScopedBlock.NodeRoot as IAbstractSyntaxTree);
@@ -67,7 +68,7 @@ namespace D_Parser.Resolver
 			CodeScanResult csr,
 			object typeId,
 			ResolverContextStack lastResCtxt,
-			ResolutionCache resCache)
+			ResultCache resCache)
 		{
 			if (typeId == null)
 				return null;

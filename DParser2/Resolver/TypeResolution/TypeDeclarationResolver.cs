@@ -6,8 +6,9 @@ using D_Parser.Dom;
 using D_Parser.Parser;
 using D_Parser.Dom.Expressions;
 using D_Parser.Dom.Statements;
+using D_Parser.Resolver.ASTScanner;
 
-namespace D_Parser.Resolver
+namespace D_Parser.Resolver.TypeResolution
 {
 	public partial class TypeDeclarationResolver
 	{
@@ -155,7 +156,7 @@ namespace D_Parser.Resolver
 			// typeOf(myInt)  =>  int
 			else if (typeOf.InstanceId != null)
 			{
-				var wantedTypes = ExpressionTypeResolver.ResolveExpression(typeOf.InstanceId, ctxt);
+				var wantedTypes = ExpressionTypeResolver.Resolve(typeOf.InstanceId, ctxt);
 
 				if (wantedTypes == null)
 					return null;
@@ -212,7 +213,7 @@ namespace D_Parser.Resolver
 			ResolveResult[] keyTypes = null;
 
 			if (ad.KeyExpression != null)
-				keyTypes = ExpressionTypeResolver.ResolveExpression(ad.KeyExpression, ctxt);
+				keyTypes = ExpressionTypeResolver.Resolve(ad.KeyExpression, ctxt);
 			else
 				keyTypes = Resolve(ad.KeyType, ctxt);
 
@@ -275,7 +276,7 @@ namespace D_Parser.Resolver
 			else if (declaration is IdentifierDeclaration)
 				return Resolve(declaration as IdentifierDeclaration, ctxt);
 			else if (declaration is TemplateInstanceExpression)
-				return ExpressionTypeResolver.ResolveTemplateInstance(declaration as TemplateInstanceExpression, ctxt);
+				return ExpressionTypeResolver.Resolve(declaration as TemplateInstanceExpression, ctxt);
 			else if (declaration is TypeOfDeclaration)
 				return Resolve(declaration as TypeOfDeclaration, ctxt);
 			else if (declaration is MemberFunctionAttributeDecl)
@@ -349,7 +350,7 @@ namespace D_Parser.Resolver
 				// For auto variables, use the initializer to get its type
 				if (memberbaseTypes == null && DoResolveBaseType && v.Initializer != null)
 				{
-					memberbaseTypes = ExpressionTypeResolver.ResolveExpression(v.Initializer, ctxt);
+					memberbaseTypes = ExpressionTypeResolver.Resolve(v.Initializer, ctxt);
 				}
 
 				// Resolve aliases if wished
@@ -536,7 +537,7 @@ namespace D_Parser.Resolver
 				{
 					ctxt.PushNewScope(method);
 
-					returnType = ExpressionTypeResolver.ResolveExpression(returnStmt.ReturnExpression, ctxt);
+					returnType = ExpressionTypeResolver.Resolve(returnStmt.ReturnExpression, ctxt);
 
 					ctxt.Pop();
 				}

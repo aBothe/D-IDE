@@ -6,10 +6,11 @@ using D_Parser.Dom;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
 using D_Parser.Dom.Expressions;
+using D_Parser.Resolver.TypeResolution;
 
-namespace D_Parser.Resolver
+namespace D_Parser.Resolver.ASTScanner
 {
-	public abstract class RootsEnum
+	public abstract class AbstractAstScanner
 	{
 		public static DVariable __ctfe;
 
@@ -19,12 +20,12 @@ namespace D_Parser.Resolver
 			set{ ctxt=value;}
 		}
 
-		public RootsEnum(ResolverContextStack context)
+		public AbstractAstScanner(ResolverContextStack context)
 		{
 			ctxt=context;
 		}
 
-		static RootsEnum()
+		static AbstractAstScanner()
 		{
 			__ctfe = new DVariable
 			{

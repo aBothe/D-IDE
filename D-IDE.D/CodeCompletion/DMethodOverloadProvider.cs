@@ -7,6 +7,7 @@ using D_Parser.Resolver;
 using D_IDE.Core;
 using System.Windows.Controls;
 using System.Windows;
+using D_Parser.Completion;
 
 namespace D_IDE.D.CodeCompletion
 {
@@ -19,7 +20,7 @@ namespace D_IDE.D.CodeCompletion
 
 			try
 			{
-				var argsResult = ParameterContextResolution.ResolveArgumentContext(
+				var argsResult = ParameterInsightResolution.ResolveArgumentContext(
 					doc.Editor.Text, 
 					doc.Editor.CaretOffset, 
 					doc.CaretLocation, 

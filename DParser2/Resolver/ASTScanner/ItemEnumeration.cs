@@ -5,7 +5,7 @@ using System.Text;
 using D_Parser.Dom;
 using D_Parser.Dom.Statements;
 
-namespace D_Parser.Resolver
+namespace D_Parser.Resolver.ASTScanner
 {
 	[Flags]
 	public enum MemberTypes
@@ -19,7 +19,7 @@ namespace D_Parser.Resolver
 		All = Imports | Variables | Methods | Types | Keywords
 	}
 
-	public class ItemEnumeration : RootsEnum
+	public class ItemEnumeration : AbstractAstScanner
 	{
 		protected ItemEnumeration(ResolverContextStack ctxt): base(ctxt) { }
 
