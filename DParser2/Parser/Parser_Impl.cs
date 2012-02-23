@@ -663,7 +663,7 @@ namespace D_Parser.Parser
 			{
 				Step();
 				// _t is just a synthetic node which holds possible following attributes
-				var _t = new DMethod();
+				var _t = new DVariable();
 				ApplyAttributes(_t);
 
 				// AliasThis
@@ -751,6 +751,20 @@ namespace D_Parser.Parser
 			}
 			else
 				ttd = BasicType();
+
+			/*
+			 * T! -- tix.Arguments == null
+			 * T!(int, -- last argument == null
+			 * T!(int, bool, -- ditto
+			 * T!(int) -- now every argument is complete
+			 */
+			var tix=ttd as TemplateInstanceExpression;
+			if (IsEOF && tix!=null && (tix.Arguments == null ||
+				tix.Arguments[tix.Arguments.Length-1]==null))
+			{
+				LastParsedObject = ttd;
+				return null;
+			}
 
 			// Declarators
 			var firstNode = Declarator(ttd,false);
@@ -4665,6 +4679,12 @@ namespace D_Parser.Parser
 						if (!init) Step();
 						init = false;
 
+						if (IsEOF)
+						{
+							args.Add(null);
+							return td;
+						}
+
 						var la_Backup = la;
 
 						bool wp = AllowWeakTypeParsing;
@@ -4709,30 +4729,39 @@ namespace D_Parser.Parser
 				IExpression arg= null;
 
 				if (t.Kind == Literal)
-					arg = new IdentifierExpression(t.LiteralValue, LiteralFormat.Scalar) 
-					{ 
-						Location = t.Location, 
-						EndLocation = t.EndLocation 
+					arg = new IdentifierExpression(t.LiteralValue, LiteralFormat.Scalar)
+					{
+						Location = t.Location,
+						EndLocation = t.EndLocation
 					};
 				else if (t.Kind == Identifier)
-					arg = new IdentifierExpression(t.Value) { 
-						Location = t.Location, 
-						EndLocation = t.EndLocation 
+					arg = new IdentifierExpression(t.Value)
+					{
+						Location = t.Location,
+						EndLocation = t.EndLocation
 					};
 				else if (BasicTypes[t.Kind])
-					arg = new TypeDeclarationExpression(new DTokenDeclaration(t.Kind) { 
-						Location = t.Location, 
-						EndLocation = t.EndLocation 
+					arg = new TypeDeclarationExpression(new DTokenDeclaration(t.Kind)
+					{
+						Location = t.Location,
+						EndLocation = t.EndLocation
 					});
 				else if (
-					t.Kind == True || 
-					t.Kind == False || 
-					t.Kind == Null || 
-					t.Kind == __FILE__ || 
+					t.Kind == True ||
+					t.Kind == False ||
+					t.Kind == Null ||
+					t.Kind == __FILE__ ||
 					t.Kind == __LINE__)
-					arg = new TokenExpression(t.Kind) { 
-						Location = t.Location, 
-						EndLocation = t.EndLocation };
+					arg = new TokenExpression(t.Kind)
+					{
+						Location = t.Location,
+						EndLocation = t.EndLocation
+					};
+				else if (IsEOF)
+				{
+					ExpectingIdentifier = false;
+					return td;
+				}
 
 				args.Add(arg);
 			}

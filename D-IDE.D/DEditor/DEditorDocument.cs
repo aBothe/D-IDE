@@ -750,7 +750,7 @@ namespace D_IDE.D
 			{
 				ScopedBlock=SyntaxTree,
 				// For performance reasons, do not scan down aliases
-				ResolveAliases = false
+				//ResolveAliases = false
 				// Note: for correct results, base classes and variable types have to get resolved
 			},ImportCache));
 

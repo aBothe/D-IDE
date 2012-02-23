@@ -863,7 +863,12 @@ namespace D_Parser.Dom.Expressions
 
 		public override string ToString(bool IncludesBase)
 		{
-			var ret = (IncludesBase && InnerDeclaration != null ? (InnerDeclaration.ToString() + ".") : "") + TemplateIdentifier + '!';
+			var ret = IncludesBase && InnerDeclaration != null ? (InnerDeclaration.ToString() + ".") : "";
+			
+			if(TemplateIdentifier!=null)
+				ret+=TemplateIdentifier.ToString();
+
+			ret += "!";
 
 			if (Arguments != null)
 			{

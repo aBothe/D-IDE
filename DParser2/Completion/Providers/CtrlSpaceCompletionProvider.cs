@@ -16,12 +16,14 @@ namespace D_Parser.Completion
 
 		public CtrlSpaceCompletionProvider(ICompletionDataGenerator cdg) : base(cdg) { }
 
+		/*
 		public static bool CompletesEnteredText(string EnteredText)
 		{
 			return string.IsNullOrWhiteSpace(EnteredText) ||
 				IsIdentifierChar(EnteredText[0]) ||
 				EnteredText[0] == '(';
 		}
+		 */
 
 		protected override void BuildCompletionDataInternal(IEditorData Editor, string EnteredText)
 		{
@@ -54,12 +56,16 @@ namespace D_Parser.Completion
 			}
 			else
 			{
-				if (trackVars.LastParsedObject is INode &&
-					string.IsNullOrEmpty((trackVars.LastParsedObject as INode).Name) &&
-					trackVars.ExpectingIdentifier)
+				var n = trackVars.LastParsedObject as INode;
+				var dv=n as DVariable;
+				if (dv != null && dv.IsAlias && dv.Type == null && trackVars.ExpectingIdentifier)
+				{ 
+					// Show completion because no aliased type has been entered yet
+				}
+				else if (n != null && string.IsNullOrEmpty(n.Name) && trackVars.ExpectingIdentifier)
 					return;
 
-				if (trackVars.LastParsedObject is TokenExpression &&
+				else if (trackVars.LastParsedObject is TokenExpression &&
 					DTokens.BasicTypes[(trackVars.LastParsedObject as TokenExpression).Token] &&
 					!string.IsNullOrEmpty(EnteredText) &&
 					IsIdentifierChar(EnteredText[0]))
@@ -75,7 +81,8 @@ namespace D_Parser.Completion
 
 				if (trackVars.LastParsedObject is ImportStatement)
 					visibleMembers = MemberTypes.Imports;
-				else if (trackVars.LastParsedObject is NewExpression && trackVars.IsParsingInitializer)
+				else if ((trackVars.LastParsedObject is NewExpression && trackVars.IsParsingInitializer) ||
+					trackVars.LastParsedObject is TemplateInstanceExpression && ((TemplateInstanceExpression)trackVars.LastParsedObject).Arguments==null)
 					visibleMembers = MemberTypes.Imports | MemberTypes.Types;
 				else if (EnteredText == " ")
 					return;
