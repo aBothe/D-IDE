@@ -16,7 +16,8 @@ namespace ParserTests
 		public static string curFile = @"A:\D\dmd2\src\phobos\std\range.d";
 		public static void Main(string[] args)
 		{
-			FormatterTest.RunTests();
+			//FormatterTest.RunTests();
+			ParseTests.TestSourcePackages(false);
 
 			Console.ReadKey();
 		}
@@ -48,7 +49,6 @@ namespace ParserTests
 @"is(T[0] == This[]) && is(T==class) && is(T[0] T)";
 
 			//var mod = ParseTests.TestCode(input);
-			ParseTests.TestSourcePackages(false);
 			//ParseTests.TestExpression(input);
 			//ParseTests.TestExpressionStartFinder(input);
 		}

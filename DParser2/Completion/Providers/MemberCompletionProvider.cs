@@ -10,6 +10,10 @@ namespace D_Parser.Completion
 {
 	public class MemberCompletionProvider : AbstractCompletionProvider
 	{
+		public PostfixExpression_Access AccessExpression;
+		public IStatement ScopedStatement;
+		public IBlockNode ScopedBlock;
+
 		public string lastResultPath;
 		List<string> alreadyAddedModuleNameParts = new List<string>();
 
@@ -34,17 +38,10 @@ namespace D_Parser.Completion
 		{
 			alreadyAddedModuleNameParts.Clear();
 
-			IStatement curStmt = null;
-			var curBlock = DResolver.SearchBlockAt(Editor.SyntaxTree, Editor.CaretLocation, out curStmt);
-
-			if (curBlock == null)
-				return;
-
-			var resolveResults = DResolver.ResolveType(
-				Editor,
+			var resolveResults = ExpressionTypeResolver.Resolve(AccessExpression,
 				new ResolverContextStack(Editor.ParseCache,	new ResolverContext	{
-					ScopedBlock = curBlock,
-					ScopedStatement = curStmt
+					ScopedBlock = ScopedBlock,
+					ScopedStatement = ScopedStatement
 				}, Editor.ImportCache));
 
 			if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
@@ -57,7 +54,7 @@ namespace D_Parser.Completion
 			foreach (var rr in resolveResults)
 			{
 				lastResultPath = rr.ResultPath;
-				BuildCompletionData(rr, curBlock);
+				BuildCompletionData(rr, ScopedBlock);
 			}
 		}
 
@@ -83,7 +80,7 @@ namespace D_Parser.Completion
 				var tr = rr as TypeResult;
 				var vis = ItemVisibility.All;
 
-				bool HasSameAncestor = HaveSameAncestors(currentlyScopedBlock, tr.ResolvedTypeDefinition);
+				bool HasSameAncestor = HaveSameAncestors(currentlyScopedBlock, tr.TypeNode);
 				bool IsThis = false, IsSuper = false;
 
 				if (tr.DeclarationOrExpressionBase is DTokenDeclaration)
@@ -118,10 +115,10 @@ namespace D_Parser.Completion
 
 				BuildTypeCompletionData(tr, vis);
 				if (resultParent == null)
-					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, tr.ResolvedTypeDefinition);
+					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, tr.TypeNode);
 
-				if(tr.ResolvedTypeDefinition is DClassLike)
-					StaticTypePropertyProvider.AddClassTypeProperties(CompletionDataGenerator, tr.ResolvedTypeDefinition);
+				if(tr.TypeNode is DClassLike)
+					StaticTypePropertyProvider.AddClassTypeProperties(CompletionDataGenerator, tr.TypeNode);
 			}
 			#endregion
 
@@ -139,10 +136,10 @@ namespace D_Parser.Completion
 				while (type is MemberFunctionAttributeDecl)
 					type = (type as MemberFunctionAttributeDecl).InnerType;
 
-				// Direct pointer accessing - only generic props are available
 				if (type is PointerDecl)
 				{
-					// Do nothing
+					if(!(rr.ResultBase is StaticTypeResult && rr.ResultBase.DeclarationOrExpressionBase is PointerDecl))
+						BuildCompletionData(rr.ResultBase, currentlyScopedBlock, true, rr);
 				}
 				else
 				{
@@ -283,7 +280,7 @@ namespace D_Parser.Completion
 
 		void BuildTypeCompletionData(TypeResult tr, ItemVisibility visMod)
 		{
-			var n = tr.ResolvedTypeDefinition;
+			var n = tr.TypeNode;
 			if (n is DClassLike) // Add public static members of the class and including all base classes
 			{
 				var propertyMethodsToIgnore = new List<string>();
@@ -292,7 +289,7 @@ namespace D_Parser.Completion
 				var tvisMod = visMod;
 				while (curlevel != null)
 				{
-					foreach (var i in curlevel.ResolvedTypeDefinition)
+					foreach (var i in curlevel.TypeNode)
 					{
 						var dn = i as DNode;
 
@@ -349,7 +346,7 @@ namespace D_Parser.Completion
 							}
 
 							// Add members of anonymous enums
-							else if (dn is DEnum && dn.Name == "")
+							else if (dn is DEnum && string.IsNullOrEmpty(dn.Name))
 							{
 								foreach (var k in dn as DEnum)
 									CompletionDataGenerator.Add(k);

@@ -154,7 +154,7 @@ namespace D_Parser.Parser
 
 			//Constructor
 			else if (laKind == (This))
-				module.Add(Constructor(module is DClassLike ? (module as DClassLike).ClassType == DTokens.Struct : false));
+				module.Add(Constructor(module is DClassLike ? ((DClassLike)module).ClassType == DTokens.Struct : false));
 
 			//Destructor
 			else if (laKind == (Tilde) && Lexer.CurrentPeekToken.Kind == (This))
@@ -628,11 +628,6 @@ namespace D_Parser.Parser
 		#region Declarations
 		// http://www.digitalmars.com/d/2.0/declaration.html
 
-		bool IsDeclaration()
-		{
-			return laKind == (Alias) || IsStorageClass || IsBasicType();
-		}
-
 		bool CheckForStorageClasses()
 		{
 			bool ret = false;
@@ -646,24 +641,6 @@ namespace D_Parser.Parser
 					// Always allow more than only one property attribute
 					if (t.Kind == PropertyAttribute || !DAttribute.ContainsAttribute(DeclarationAttributes.ToArray(), t.Kind))
 						PushAttribute(new DAttribute(t.Kind, t.Value), false);
-				}
-				ret = true;
-			}
-			return ret;
-		}
-
-		bool CheckForModifiers()
-		{
-			bool ret = false;
-			while (Modifiers[laKind] || laKind==PropertyAttribute)
-			{
-				if (IsAttributeSpecifier()) // extern, align
-					AttributeSpecifier();
-				else
-				{
-					Step();
-					if (!DAttribute.ContainsAttribute(DeclarationAttributes.ToArray(), t.Kind))
-						PushAttribute(new DAttribute(t.Kind), false);
 				}
 				ret = true;
 			}
@@ -714,10 +691,10 @@ namespace D_Parser.Parser
 					foreach (var n in decls)
 					{
 						if (n is DNode)
-							(n as DNode).Attributes.AddRange(_t.Attributes);
+							((DNode)n).Attributes.AddRange(_t.Attributes);
 
 						if (n is DVariable)
-							(n as DVariable).IsAlias = true;
+							((DVariable)n).IsAlias = true;
 					}
 
 				return decls;
@@ -793,8 +770,9 @@ namespace D_Parser.Parser
 				if (laKind == (Assign))
 				{
 					TrackerVariables.InitializedNode = firstNode;
-					if(firstNode is DVariable)
-						(firstNode as DVariable).Initializer = Initializer(Scope);
+					var dv = firstNode as DVariable;
+					if(dv!=null)
+						dv.Initializer = Initializer(Scope);
 				}
 				firstNode.EndLocation = t.EndLocation;
 				var ret = new List<INode>();
@@ -842,7 +820,7 @@ namespace D_Parser.Parser
 			{
 				firstNode.Description += CheckForPostSemicolonComment();
 
-				FunctionBody(firstNode as DMethod);
+				FunctionBody((DMethod)firstNode);
 
 				firstNode.Description += CheckForPostSemicolonComment();
 
@@ -1420,11 +1398,11 @@ namespace D_Parser.Parser
 
 				Step();
 
-				if (!HadComma && ret.Count > 0 && ret is IBlockNode)
+				var bn = ret as IBlockNode;
+				if (!HadComma && ret.Count > 0 && bn!=null)
 				{
 					// Put a VarArgDecl around the type of the last parameter
-					((ret as IBlockNode)[(ret as IBlockNode).Count - 1] as IBlockNode).Type = 
-						new VarArgDecl((ret as IBlockNode)[(ret as IBlockNode).Count - 1].Type);
+					bn[bn.Count - 1].Type = new VarArgDecl(bn[bn.Count - 1].Type);
 				}
 				else
 				{
@@ -1479,8 +1457,9 @@ namespace D_Parser.Parser
 
 				var defInit = AssignExpression(Scope);
 
-				if (ret is DVariable)
-					(ret as DVariable).Initializer = defInit;
+				var dv = ret as DVariable;
+				if (dv!=null)
+					dv.Initializer = defInit;
 
 				if (!IsEOF)
 					TrackerVariables.IsParsingInitializer = false;
@@ -2527,7 +2506,7 @@ namespace D_Parser.Parser
 
 					Expect(CloseSquareBracket);
 					if(leftExpr is PostfixExpression)
-						(leftExpr as PostfixExpression).EndLocation = t.EndLocation;
+						((PostfixExpression)leftExpr).EndLocation = t.EndLocation;
 				}
 				else break;
 			}
@@ -2537,9 +2516,7 @@ namespace D_Parser.Parser
 
 		IExpression PrimaryExpression(IBlockNode Scope=null)
 		{
-			bool isModuleScoped = false;
-			// For minimizing possible overhead, skip 'useless' tokens like an initial dot <<< TODO
-			if (isModuleScoped= laKind == Dot)
+			if (laKind == Dot)
 				Step();
 
 			if (laKind == __FILE__ || laKind == __LINE__)
@@ -3070,7 +3047,7 @@ namespace D_Parser.Parser
 						Step();
 
 						if (n is DVariable)
-							(n as DVariable).Initializer = Expression(par.ParentNode as IBlockNode);
+							((DVariable)n).Initializer = Expression(par.ParentNode as IBlockNode);
 					}
 					n.EndLocation = t.EndLocation;
 				}
@@ -3119,8 +3096,6 @@ namespace D_Parser.Parser
 
 		IStatement Statement(bool BlocksAllowed = true, bool EmptyAllowed = true, IBlockNode Scope = null, IStatement Parent=null)
 		{
-			IStatement ret = null;
-
 			if (EmptyAllowed && laKind == Semicolon)
 			{
 				LastParsedObject = null;
@@ -3136,7 +3111,7 @@ namespace D_Parser.Parser
 			{
 				Step();
 
-				ret = (new LabeledStatement() { StartLocation = t.Location, Identifier = t.Value, Parent = Parent });
+				var ret = new LabeledStatement() { StartLocation = t.Location, Identifier = t.Value, Parent = Parent };
 				LastParsedObject = ret;
 				Step();
 				ret.EndLocation = t.EndLocation;
@@ -3148,7 +3123,7 @@ namespace D_Parser.Parser
 			#region IfStatement
 			else if (laKind == (If) || (laKind == Static && Lexer.CurrentPeekToken.Kind == If))
 			{
-				bool isStatic = laKind==Static;
+				bool isStatic = laKind == Static;
 				if (isStatic)
 					Step();
 
@@ -3164,7 +3139,7 @@ namespace D_Parser.Parser
 				Expect(CloseParenthesis);
 				// ThenStatement
 
-				dbs.ThenStatement = Statement(Scope:Scope,Parent:dbs);
+				dbs.ThenStatement = Statement(Scope: Scope, Parent: dbs);
 
 				// ElseStatement
 				if (laKind == (Else))
@@ -3229,7 +3204,7 @@ namespace D_Parser.Parser
 				// Initialize
 				if (laKind != Semicolon)
 					dbs.Initialize = Statement(false, Scope: Scope, Parent: dbs); // Against the D language theory, blocks aren't allowed here!
-				else 
+				else
 					Step();
 				// Enforce a trailing semi-colon only if there hasn't been an expression (the ; gets already skipped in there)
 				//	Expect(Semicolon);
@@ -3242,7 +3217,7 @@ namespace D_Parser.Parser
 
 				// Increment
 				if (laKind != (CloseParenthesis))
-					dbs.Increment= Expression(Scope);
+					dbs.Increment = Expression(Scope);
 
 				Expect(CloseParenthesis);
 
@@ -3254,68 +3229,8 @@ namespace D_Parser.Parser
 			#endregion
 
 			#region ForeachStatement
-			else if (laKind == (Foreach) || laKind == (Foreach_Reverse))
-			{
-				Step();
-
-				var dbs = new ForeachStatement() { StartLocation = t.Location, IsReverse = t.Kind == Foreach_Reverse, Parent=Parent };
-				LastParsedObject = dbs;
-				Expect(OpenParenthesis);
-
-				var tl = new List<DVariable>();
-
-				bool init = true;
-				while (init || laKind == (Comma))
-				{
-					if (!init) Step();
-					init = false;
-
-					var forEachVar = new DVariable();
-					LastParsedObject = forEachVar;
-					forEachVar.StartLocation = la.Location;
-
-					if (laKind == (Ref))
-					{
-						Step();
-						forEachVar.Attributes.Add(new DAttribute(Ref));
-					}
-					if (laKind == (Identifier) && (Lexer.CurrentPeekToken.Kind == (Semicolon) || Lexer.CurrentPeekToken.Kind == Comma))
-					{
-						Step();
-						forEachVar.Name = t.Value;
-					}
-					else
-					{
-						forEachVar.Type = Type();
-						if (laKind == Identifier)
-						{
-							Expect(Identifier);
-							forEachVar.Name = t.Value;
-						}
-					}
-					forEachVar.EndLocation = t.EndLocation;
-
-					tl.Add(forEachVar);
-				}
-				dbs.ForeachTypeList = tl.ToArray();
-
-				Expect(Semicolon);
-				dbs.Aggregate = Expression(Scope);
-
-				// ForeachRangeStatement
-				if (laKind == DoubleDot)
-				{
-					Step();
-					dbs.UpperAggregate = Expression();
-				}
-
-				Expect(CloseParenthesis);
-
-				dbs.ScopedStatement = Statement(Scope: Scope, Parent: dbs);
-				dbs.EndLocation = t.EndLocation;
-
-				return dbs;
-			}
+			else if (laKind == Foreach || laKind == Foreach_Reverse)
+				return ForeachStatement(Scope, Parent);
 			#endregion
 
 			#region [Final] SwitchStatement
@@ -3597,7 +3512,7 @@ namespace D_Parser.Parser
 					catches.Add(c);
 				}
 
-				if(catches.Count>0)
+				if (catches.Count > 0)
 					s.Catches = catches.ToArray();
 
 				if (laKind == (Finally))
@@ -3651,7 +3566,7 @@ namespace D_Parser.Parser
 					if (Expect(CloseParenthesis))
 						TrackerVariables.ExpectingIdentifier = false;
 
-					if(!IsEOF)
+					if (!IsEOF)
 						s.ScopedStatement = Statement(Scope: Scope, Parent: s);
 
 					s.EndLocation = t.EndLocation;
@@ -3663,39 +3578,14 @@ namespace D_Parser.Parser
 			#endregion
 
 			#region AsmStmt
-			else if (laKind == (Asm))
-			{
-				Step();
-				var s = new AsmStatement() { StartLocation = t.Location, Parent = Parent };
-				LastParsedObject = s;
-
-				Expect(OpenCurlyBrace);
-
-				var l=new List<string>();
-				var curInstr = "";
-				while (!IsEOF && laKind != (CloseCurlyBrace))
-				{
-					if (laKind == Semicolon)
-					{
-						l.Add(curInstr.Trim());
-						curInstr = "";
-					}
-					else
-						curInstr += laKind==Identifier? la.Value: DTokens.GetTokenString(laKind);
-
-					Step();
-				}
-
-				Expect(CloseCurlyBrace);
-				s.EndLocation = t.EndLocation;
-				return s;
-			}
+			else if (laKind == Asm)
+				return AsmStatement(Parent);
 			#endregion
 
 			#region PragmaStatement
 			else if (laKind == (Pragma))
 			{
-				var s = new PragmaStatement { StartLocation= la.Location };
+				var s = new PragmaStatement { StartLocation = la.Location };
 
 				s.Pragma = _Pragma();
 				s.Parent = Parent;
@@ -3719,75 +3609,10 @@ namespace D_Parser.Parser
 
 			#region Conditions
 			if (laKind == Debug)
-			{
-				Step();
-				var s = new ConditionStatement.DebugStatement() { StartLocation = t.Location, Parent = Parent };
-				LastParsedObject = s;
-
-				if (laKind == OpenParenthesis)
-				{
-					Step();
-					if (laKind == Identifier || laKind == Literal)
-					{
-						Step();
-						if (laKind == Literal)
-							s.DebugIdentifierOrLiteral = t.LiteralValue;
-						else 
-							s.DebugIdentifierOrLiteral = t.Value;
-					}
-					else 
-						SynErr(t.Kind, "Identifier or Literal expected, "+DTokens.GetTokenString(t.Kind)+" found");
-
-					Expect(CloseParenthesis);
-				}
-
-				s.ScopedStatement = Statement(Scope: Scope, Parent: s);
-
-				if (laKind == Else)
-				{
-					Step();
-					s.ElseStatement = Statement(Scope: Scope,Parent:s);
-				}
-
-				s.EndLocation = t.EndLocation;
-				return s;
-			}
+				return DebugStatement(Scope, Parent);
 
 			if (laKind == Version)
-			{
-				Step();
-				var s = new ConditionStatement.VersionStatement() { StartLocation = t.Location, Parent = Parent };
-
-				if (laKind == OpenParenthesis)
-				{
-					Step();
-					if (laKind == Identifier || laKind == Literal || laKind==Unittest)
-					{
-						Step();
-						if(laKind==Unittest)
-							s.VersionIdentifierOrLiteral = "unittest";
-						else if(laKind==Literal)
-							s.VersionIdentifierOrLiteral=t.LiteralValue;
-						else 
-							s.VersionIdentifierOrLiteral=t.Value;
-					}
-					else
-						SynErr(t.Kind, "Identifier or Literal expected, " + DTokens.GetTokenString(t.Kind) + " found");
-
-					Expect(CloseParenthesis);
-				}
-
-				s.ScopedStatement = Statement(Parent:s);
-
-				if (laKind == Else)
-				{
-					Step();
-					s.ElseStatement = Statement(Parent:s);
-				}
-
-				s.EndLocation = t.EndLocation;
-				return s;
-			}
+				return VersionStatement(Scope, Parent);
 			#endregion
 
 			#region (Static) AssertExpression
@@ -3819,7 +3644,7 @@ namespace D_Parser.Parser
 				Step();
 				var s = new VolatileStatement() { StartLocation = t.Location, Parent = Parent };
 				LastParsedObject = s;
-				s.ScopedStatement = Statement(Scope: Scope,Parent:s);
+				s.ScopedStatement = Statement(Scope: Scope, Parent: s);
 				s.EndLocation = t.EndLocation;
 
 				return s;
@@ -3828,13 +3653,13 @@ namespace D_Parser.Parser
 
 			// ImportDeclaration
 			else if (laKind == Import)
-				ImportDeclaration(Scope,Parent);
+				ImportDeclaration(Scope, Parent);
 
-			else if (!(ClassLike[laKind] || BasicTypes[laKind] || laKind == Enum || Modifiers[laKind] || laKind==PropertyAttribute || laKind == Alias || laKind == Typedef) && IsAssignExpression())
+			else if (!(ClassLike[laKind] || BasicTypes[laKind] || laKind == Enum || Modifiers[laKind] || laKind == PropertyAttribute || laKind == Alias || laKind == Typedef) && IsAssignExpression())
 			{
 				var s = new ExpressionStatement() { StartLocation = la.Location, Parent = Parent };
 
-				if(!IsEOF)
+				if (!IsEOF)
 					LastParsedObject = s;
 				// a==b, a=9; is possible -> Expressions can be there, not only single AssignExpressions!
 				s.Expression = Expression(Scope);
@@ -3860,6 +3685,173 @@ namespace D_Parser.Parser
 			}
 
 			return null;
+		}
+
+		ForeachStatement ForeachStatement(IBlockNode Scope,IStatement Parent)
+		{
+			Step();
+
+			var dbs = new ForeachStatement() { 
+				StartLocation = t.Location, 
+				IsReverse = t.Kind == Foreach_Reverse, 
+				Parent = Parent 
+			};
+
+			LastParsedObject = dbs;
+			Expect(OpenParenthesis);
+
+			var tl = new List<DVariable>();
+
+			bool init = true;
+			while (init || laKind == (Comma))
+			{
+				if (!init) Step();
+				init = false;
+
+				var forEachVar = new DVariable();
+				LastParsedObject = forEachVar;
+				forEachVar.StartLocation = la.Location;
+
+				if (laKind == (Ref))
+				{
+					Step();
+					forEachVar.Attributes.Add(new DAttribute(Ref));
+				}
+				if (laKind == (Identifier) && (Lexer.CurrentPeekToken.Kind == (Semicolon) || Lexer.CurrentPeekToken.Kind == Comma))
+				{
+					Step();
+					forEachVar.Name = t.Value;
+				}
+				else
+				{
+					forEachVar.Type = Type();
+					if (laKind == Identifier)
+					{
+						Expect(Identifier);
+						forEachVar.Name = t.Value;
+					}
+				}
+				forEachVar.EndLocation = t.EndLocation;
+
+				tl.Add(forEachVar);
+			}
+			dbs.ForeachTypeList = tl.ToArray();
+
+			Expect(Semicolon);
+			dbs.Aggregate = Expression(Scope);
+
+			// ForeachRangeStatement
+			if (laKind == DoubleDot)
+			{
+				Step();
+				dbs.UpperAggregate = Expression();
+			}
+
+			Expect(CloseParenthesis);
+
+			dbs.ScopedStatement = Statement(Scope: Scope, Parent: dbs);
+			dbs.EndLocation = t.EndLocation;
+
+			return dbs;
+		}
+
+		AsmStatement AsmStatement(IStatement Parent)
+		{
+			Step();
+			var s = new AsmStatement() { StartLocation = t.Location, Parent = Parent };
+			LastParsedObject = s;
+
+			Expect(OpenCurlyBrace);
+
+			var l = new List<string>();
+			var curInstr = "";
+			while (!IsEOF && laKind != (CloseCurlyBrace))
+			{
+				if (laKind == Semicolon)
+				{
+					l.Add(curInstr.Trim());
+					curInstr = "";
+				}
+				else
+					curInstr += laKind == Identifier ? la.Value : DTokens.GetTokenString(laKind);
+
+				Step();
+			}
+
+			Expect(CloseCurlyBrace);
+			s.EndLocation = t.EndLocation;
+			return s;
+		}
+
+		ConditionStatement.DebugStatement DebugStatement(IBlockNode Scope, IStatement Parent)
+		{
+			Step();
+			var s = new ConditionStatement.DebugStatement() { StartLocation = t.Location, Parent = Parent };
+			LastParsedObject = s;
+
+			if (laKind == OpenParenthesis)
+			{
+				Step();
+				if (laKind == Identifier || laKind == Literal)
+				{
+					Step();
+					if (laKind == Literal)
+						s.DebugIdentifierOrLiteral = t.LiteralValue;
+					else
+						s.DebugIdentifierOrLiteral = t.Value;
+				}
+				else
+					SynErr(t.Kind, "Identifier or Literal expected, " + DTokens.GetTokenString(t.Kind) + " found");
+
+				Expect(CloseParenthesis);
+			}
+
+			s.ScopedStatement = Statement(Scope: Scope, Parent: s);
+
+			if (laKind == Else)
+			{
+				Step();
+				s.ElseStatement = Statement(Scope: Scope, Parent: s);
+			}
+
+			s.EndLocation = t.EndLocation;
+			return s;
+		}
+
+		ConditionStatement.VersionStatement VersionStatement(IBlockNode Scope, IStatement Parent)
+		{
+			Step();
+			var s = new ConditionStatement.VersionStatement() { StartLocation = t.Location, Parent = Parent };
+
+			if (laKind == OpenParenthesis)
+			{
+				Step();
+				if (laKind == Identifier || laKind == Literal || laKind == Unittest)
+				{
+					Step();
+					if (laKind == Unittest)
+						s.VersionIdentifierOrLiteral = "unittest";
+					else if (laKind == Literal)
+						s.VersionIdentifierOrLiteral = t.LiteralValue;
+					else
+						s.VersionIdentifierOrLiteral = t.Value;
+				}
+				else
+					SynErr(t.Kind, "Identifier or Literal expected, " + DTokens.GetTokenString(t.Kind) + " found");
+
+				Expect(CloseParenthesis);
+			}
+
+			s.ScopedStatement = Statement(Parent: s);
+
+			if (laKind == Else)
+			{
+				Step();
+				s.ElseStatement = Statement(Parent: s);
+			}
+
+			s.EndLocation = t.EndLocation;
+			return s;
 		}
 
 		public BlockStatement BlockStatement(INode ParentNode=null, IStatement Parent=null)

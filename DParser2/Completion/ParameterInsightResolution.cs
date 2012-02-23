@@ -126,7 +126,7 @@ namespace D_Parser.Completion
 			if (e is PostfixExpression_MethodCall)
 			{
 				res.IsMethodArguments = true;
-				var call = e as PostfixExpression_MethodCall;
+				var call = (PostfixExpression_MethodCall) e;
 
 				res.ResolvedTypesOrMethods = ExpressionTypeResolver.Resolve(call.PostfixForeExpression, ctxt);
 

@@ -54,7 +54,7 @@ namespace D_Parser.Resolver.ASTScanner
 				foreach (var n in curScope)
 				{
 					// Scan anonymous enums
-					if (n is DEnum && n.Name == "")
+					if (n is DEnum && string.IsNullOrEmpty(n.Name))
 					{
 						foreach (var k in n as DEnum)
 							if (k.Name == name)
@@ -76,7 +76,7 @@ namespace D_Parser.Resolver.ASTScanner
 						if (baseClass == null)
 							continue;
 						// Search for items called name in the base class(es)
-						var r = ScanNodeForIdentifier(baseClass.ResolvedTypeDefinition, name, ctxt);
+						var r = ScanNodeForIdentifier(baseClass.TypeNode, name, ctxt);
 
 						if (r != null)
 							matches.AddRange(r);

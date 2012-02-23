@@ -48,16 +48,16 @@ namespace D_Parser.Resolver.TypeResolution
 			if(!IsExpression)
 			{
 				// First check if caret is inside a comment/string etc.
-				int lastNonNormalStart = 0;
-				int lastNonNormalEnd = 0;
-				var caretContext = CaretContextAnalyzer.GetTokenContext(code, editor.CaretOffset, out lastNonNormalStart, out lastNonNormalEnd);
+				int lastStart=-1;
+				int lastEnd=-1;
+				var caretContext = CaretContextAnalyzer.GetTokenContext(code, editor.CaretOffset, out lastStart, out lastEnd);
 
 				// Return if comment etc. found
 				if (caretContext != TokenContext.None)
 					return null;
 
 				start = CaretContextAnalyzer.SearchExpressionStart(code, editor.CaretOffset - 1,
-					(lastNonNormalEnd > 0 && lastNonNormalEnd < editor.CaretOffset) ? lastNonNormalEnd : 0);
+					(lastEnd > 0 && lastEnd < editor.CaretOffset) ? lastEnd : 0);
 				startLocation = DocumentHelper.OffsetToLocation(editor.ModuleCode, start);
 			}
 
@@ -235,11 +235,11 @@ namespace D_Parser.Resolver.TypeResolution
 		public static INode GetResultMember(ResolveResult res)
 		{
 			if (res is MemberResult)
-				return (res as MemberResult).ResolvedMember;
+				return ((MemberResult)res).ResolvedMember;
 			else if (res is TypeResult)
-				return (res as TypeResult).ResolvedTypeDefinition;
+				return ((TypeResult)res).TypeNode;
 			else if (res is ModuleResult)
-				return (res as ModuleResult).ResolvedModule;
+				return ((ModuleResult)res).ResolvedModule;
 
 			return null;
 		}

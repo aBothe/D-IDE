@@ -97,10 +97,10 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 						if (baseclassDefs == null || baseclassDefs.Length < 0)
 							break;
-						if (curWatchedClass == baseclassDefs[0].ResolvedTypeDefinition)
+						if (curWatchedClass == baseclassDefs[0].TypeNode)
 							break;
 
-						curWatchedClass = baseclassDefs[0].ResolvedTypeDefinition as DClassLike;
+						curWatchedClass = baseclassDefs[0].TypeNode as DClassLike;
 					}
 				}
 				else if (curScope is DMethod)
@@ -207,7 +207,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 		static bool CanAddMemberOfType(MemberTypes VisibleMembers, INode n)
 		{
 			if (n is DMethod)
-				return (n as DMethod).Name != "" && VisibleMembers.HasFlag(MemberTypes.Methods);
+				return !string.IsNullOrEmpty(n.Name) && VisibleMembers.HasFlag(MemberTypes.Methods);
 
 			if (n is DVariable)
 			{

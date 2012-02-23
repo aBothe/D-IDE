@@ -61,7 +61,6 @@ namespace D_Parser.Parser
 			{
 				IdentListStart = i;
 				var c = Text[i];
-				var str = Text.Substring(i);
 				char p = ' ';
 				if (i > 0) p = Text[i - 1];
 

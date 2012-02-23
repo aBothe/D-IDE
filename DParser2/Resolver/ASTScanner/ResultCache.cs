@@ -93,7 +93,7 @@ namespace D_Parser.Resolver.TypeResolution
 
 		protected bool HandleTypeEntry(INode n)
 		{
-			if ((n is DEnum || n is DClassLike) && n.Name!=null && n.Name!="")
+			if ((n is DEnum || n is DClassLike) && !string.IsNullOrEmpty(n.Name))
 			{
 				List<IBlockNode> entries = null;
 
@@ -117,7 +117,7 @@ namespace D_Parser.Resolver.TypeResolution
 
 		protected void HandleGlobalMemberEntry(INode n)
 		{
-			if (n.Name != null && n.Name != "")
+			if (!string.IsNullOrEmpty(n.Name))
 			{
 				List<INode> entries = null;
 

@@ -487,7 +487,7 @@ namespace D_IDE.D
 				if (res is MemberResult)
 					n = (res as MemberResult).ResolvedMember;
 				else if (res is TypeResult)
-					n = (res as TypeResult).ResolvedTypeDefinition;
+					n = (res as TypeResult).TypeNode;
 				else if (res is ModuleResult)
 					n = (res as ModuleResult).ResolvedModule;
 				else
@@ -547,7 +547,7 @@ namespace D_IDE.D
 				if (res is MemberResult)
 					n = (res as MemberResult).ResolvedMember;
 				else if (res is TypeResult)
-					n = (res as TypeResult).ResolvedTypeDefinition;
+					n = (res as TypeResult).TypeNode;
 
 				if (n == null)
 				{

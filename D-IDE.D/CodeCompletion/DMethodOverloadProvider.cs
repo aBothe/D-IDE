@@ -64,7 +64,7 @@ namespace D_IDE.D.CodeCompletion
 				if (CurrentResult is MemberResult)
 					return (CurrentResult as MemberResult).ResolvedMember.Description;
 				if (CurrentResult is TypeResult)
-					return (CurrentResult as TypeResult).ResolvedTypeDefinition.Description;
+					return (CurrentResult as TypeResult).TypeNode.Description;
 
 				return null;
 			}

@@ -146,15 +146,6 @@ namespace D_Parser.Parser
 
 		List<ImportStatement> imports = new List<ImportStatement>();
 
-		bool ContainsImport(string ModuleId)
-		{
-			foreach (var i in imports)
-				if (string.IsNullOrEmpty(i.ModuleAlias) && i.ExclusivelyImportedSymbols.Count < 1 && i.ModuleIdentifier!=null && i.ModuleIdentifier.ToString() == ModuleId)
-					return true;
-
-			return false;
-		}
-
 		public readonly ParserTrackerVariables TrackerVariables = new ParserTrackerVariables();
 
         /// <summary>
@@ -208,8 +199,6 @@ namespace D_Parser.Parser
             this.Lexer = lexer;
 			Lexer.LexerErrors = ParseErrors;
         }
-
-        StringBuilder qualidentBuilder = new StringBuilder();
 
 		DToken t
 		{
@@ -393,10 +382,10 @@ namespace D_Parser.Parser
         {
 			ParseErrors.Add(new ParserError(true, msg, n, t == null ? la.Location : t.EndLocation));
         }
-        void SemErr(int n)
+        /*void SemErr(int n)
         {
 			ParseErrors.Add(new ParserError(true, DTokens.GetTokenString(n) + " expected" + (t != null ? (", " + DTokens.GetTokenString(t.Kind) + " found") : ""), n, t == null ? la.Location : t.EndLocation));
-        }
+        }*/
         #endregion
     }
 

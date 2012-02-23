@@ -93,9 +93,9 @@ namespace D_Parser.Resolver.TypeResolution
 						else if (scanResult is TypeResult)
 						{
 							var tr = scanResult as TypeResult;
-							var nodeMatches = NameScan.ScanNodeForIdentifier(tr.ResolvedTypeDefinition, nextIdentifier, ctxt);
+							var nodeMatches = NameScan.ScanNodeForIdentifier(tr.TypeNode, nextIdentifier, ctxt);
 
-							ctxt.PushNewScope(tr.ResolvedTypeDefinition);
+							ctxt.PushNewScope(tr.TypeNode);
 
 							var results = HandleNodeMatches(nodeMatches, ctxt, b, typeIdObject);
 
@@ -421,7 +421,7 @@ namespace D_Parser.Resolver.TypeResolution
 
 				var ret = new TypeResult()
 				{
-					ResolvedTypeDefinition = Class,
+					TypeNode = Class,
 					BaseClass = DoResolveBaseType ? DResolver.ResolveBaseClass(Class, ctxt) : null,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
@@ -446,7 +446,7 @@ namespace D_Parser.Resolver.TypeResolution
 				stackNum_HandleNodeMatch--;
 				return new TypeResult()
 				{
-					ResolvedTypeDefinition = m as IBlockNode,
+					TypeNode = m as IBlockNode,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
 				};

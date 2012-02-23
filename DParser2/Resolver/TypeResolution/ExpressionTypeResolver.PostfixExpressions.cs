@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using D_Parser.Dom.Expressions;
+﻿using System.Collections.Generic;
 using D_Parser.Dom;
+using D_Parser.Dom.Expressions;
 
 namespace D_Parser.Resolver.TypeResolution
 {
@@ -24,124 +21,163 @@ namespace D_Parser.Resolver.TypeResolution
 				ex is PostfixExpression_Decrement)
 				return baseExpression;
 
-
 			if (ex is PostfixExpression_Access)
 				return Resolve(ex as PostfixExpression_Access, ctxt, baseExpression);
 
 			else if (ex is PostfixExpression_MethodCall)
-			{
-				var call = ex as PostfixExpression_MethodCall;
-
-				/*
-				 * int a() { return 1+2; }
-				 * 
-				 * int result = a() // a is member method -- return the method's base type
-				 * 
-				 */
-
-				var resolvedCallArguments = new List<ResolveResult[]>();
-
-				// Note: If an arg wasn't able to be resolved (returns null) - add it anyway to keep the indexes parallel
-				if (call.Arguments != null)
-					foreach (var arg in call.Arguments)
-						resolvedCallArguments.Add(ExpressionTypeResolver.Resolve(arg, ctxt));
-
-				/*
-				 * std.stdio.writeln(123) does actually contain
-				 * a template instance argument: writeln!int(123);
-				 * So although there's no explicit type given, 
-				 * TemplateParameters will still contain static type int!
-				 * 
-				 * Therefore, and only if no writeln!int was given as foreexpression like in writeln!int(123),
-				 * try to match the call arguments with template parameters.
-				 * 
-				 * If no template parameters were required, baseExpression will remain untouched.
-				 */
-
-				var resultsWithResolvedTemplateArgs =
-					call.PostfixForeExpression is TemplateInstanceExpression ?
-					baseExpression :
-					TemplateInstanceParameterHandler.ResolveAndFilterTemplateResults(resolvedCallArguments, baseExpression, ctxt);
-
-				//TODO: Compare arguments' types with parameter types to whitelist legal method overloads
-
-				return resultsWithResolvedTemplateArgs;
-			}
+				return Resolve(ex as PostfixExpression_MethodCall, ctxt, baseExpression);
 
 			var r = new List<ResolveResult>(baseExpression.Length);
 			foreach (var b in baseExpression)
 			{
-				if (ex is PostfixExpression_MethodCall)
+				ResolveResult[] arrayBaseType = null;
+				if (b is MemberResult)
+					arrayBaseType = (b as MemberResult).MemberBaseTypes;
+				else
+					arrayBaseType = new[] { b };
+
+				if (ex is PostfixExpression_Index)
 				{
-					if (b is MemberResult)
+					foreach (var rr in arrayBaseType)
 					{
-						var mr = b as MemberResult;
+						if (rr is ArrayResult)
+						{
+							var ar = rr as ArrayResult;
+							/*
+							 * myType_Array[0] -- returns TypeResult myType
+							 * return the value type of a given array result
+							 */
+							//TODO: Handle opIndex overloads
 
+							if (ar != null && ar.ResultBase != null)
+								r.Add(ar.ResultBase);
+						}
 						/*
-						 * opCall overloads are possible
+						 * int* a = new int[10];
+						 * 
+						 * a[0] = 12;
 						 */
-
-						if (mr.MemberBaseTypes != null)
-							r.AddRange(mr.MemberBaseTypes);
+						else if (rr is StaticTypeResult && rr.DeclarationOrExpressionBase is PointerDecl)
+							r.Add(rr.ResultBase);
 					}
-					else if (b is DelegateResult)
-					{
-						var dg = b as DelegateResult;
-
-						// Should never happen
-						if (dg.IsDelegateDeclaration)
-							return null;
-
-						/*
-						 * int a = delegate(x) { return x*2; } (12); // a is 24 after execution
-						 * dg() , where as dg is a delegate
-						 */
-
-						return dg.ReturnType;
-					}
-					else if (b is TypeResult)
-					{
-						/*
-						 * auto a = MyStruct(); -- opCall-Overloads can be used
-						 */
-						var classDef = (b as TypeResult).ResolvedTypeDefinition as DClassLike;
-
-						if (classDef == null)
-							continue;
-
-						//TODO: Regard protection attributes for opCall members
-						foreach (var i in classDef)
-							if (i.Name == "opCall" &&
-								i is DMethod &&
-								(i as DNode).IsStatic)
-								r.Add(TypeDeclarationResolver.HandleNodeMatch(i, ctxt, b, ex));
-					}
-				}
-
-				else if (ex is PostfixExpression_Index)
-				{
-					/*
-					 * return the value type of a given array result
-					 */
-					//TODO
 				}
 				else if (ex is PostfixExpression_Slice)
 				{
 					/*
-					 * like above 
+					 * myType_Array[0 .. 5] -- returns an array
 					 */
-					//TODO
+
+					foreach (ArrayResult ar in arrayBaseType)
+					{
+						//TODO: Handle opSlice overloads
+
+						r.Add(ar);
+					}
 				}
 			}
 
-			if (r.Count > 0)
+			if (r.Count > 0)	
 				return r.ToArray();
 			return null;
 		}
 
+		public static ResolveResult[] Resolve(PostfixExpression_MethodCall call, ResolverContextStack ctxt, ResolveResult[] baseExpression=null)
+		{
+			if(baseExpression==null)
+				baseExpression = Resolve(call.PostfixForeExpression, ctxt);
 
+			if (baseExpression == null)
+				return null;
 
-		public static ResolveResult[] Resolve(PostfixExpression_Access acc, ResolverContextStack ctxt, IEnumerable<ResolveResult> resultBases = null)
+			// Important: To ensure correct behaviour, aliases must be removed before further handling
+			baseExpression = DResolver.TryRemoveAliasesFromResult(baseExpression);
+
+			/*
+			 * int a() { return 1+2; }
+			 * 
+			 * int result = a() // a is member method -- return the method's base type
+			 * 
+			 */
+
+			var resolvedCallArguments = new List<ResolveResult[]>();
+
+			// Note: If an arg wasn't able to be resolved (returns null) - add it anyway to keep the indexes parallel
+			if (call.Arguments != null)
+				foreach (var arg in call.Arguments)
+					resolvedCallArguments.Add(ExpressionTypeResolver.Resolve(arg, ctxt));
+
+			/*
+			 * std.stdio.writeln(123) does actually contain
+			 * a template instance argument: writeln!int(123);
+			 * So although there's no explicit type given, 
+			 * TemplateParameters will still contain static type int!
+			 * 
+			 * Therefore, and only if no writeln!int was given as foreexpression like in writeln!int(123),
+			 * try to match the call arguments with template parameters.
+			 * 
+			 * If no template parameters were required, baseExpression will remain untouched.
+			 */
+
+			if(!(call.PostfixForeExpression is TemplateInstanceExpression))
+				TemplateInstanceParameterHandler.ResolveAndFilterTemplateResults(
+					resolvedCallArguments, baseExpression, ctxt);
+
+			//TODO: Compare arguments' types with parameter types to whitelist legal method overloads
+
+			var r = new List<ResolveResult>();
+
+			foreach (var b in baseExpression)
+			{
+				if (b is MemberResult)
+				{
+					var mr = b as MemberResult;
+
+					/*
+					 * opCall overloads are possible
+					 */
+
+					if (mr.MemberBaseTypes != null)
+						r.AddRange(mr.MemberBaseTypes);
+				}
+				else if (b is DelegateResult)
+				{
+					var dg = b as DelegateResult;
+
+					// Should never happen
+					if (dg.IsDelegateDeclaration)
+						return null;
+
+					/*
+					 * int a = delegate(x) { return x*2; } (12); // a is 24 after execution
+					 * dg() , where as dg is a delegate
+					 */
+
+					return dg.ReturnType;
+				}
+				else if (b is TypeResult)
+				{
+					/*
+					 * auto a = MyStruct(); -- opCall-Overloads can be used
+					 */
+					var classDef = (b as TypeResult).TypeNode as DClassLike;
+
+					if (classDef == null)
+						continue;
+
+					foreach (var i in classDef)
+						if (i.Name == "opCall" &&
+							i is DMethod &&
+							(i as DNode).IsStatic)
+							r.Add(TypeDeclarationResolver.HandleNodeMatch(i, ctxt, b, call));
+				}
+			}
+
+			if(r.Count> 0)
+				return r.ToArray();
+			return null;
+		}
+
+		public static ResolveResult[] Resolve(PostfixExpression_Access acc, ResolverContextStack ctxt, ResolveResult[] resultBases = null)
 		{
 			var baseExpression = resultBases ?? Resolve(acc.PostfixForeExpression, ctxt);
 
@@ -185,10 +221,9 @@ namespace D_Parser.Resolver.TypeResolution
 				}
 			}
 			else
-				return baseExpression.ToArray();
+				return baseExpression;
 
 			return null;
 		}
-
 	}
 }

@@ -36,7 +36,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return ResolvedMember.ToString();
+			return "[MemberResult] " + ResolvedMember.ToString();
 		}
 
 		public override string ResultPath
@@ -54,7 +54,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return DeclarationOrExpressionBase.ToString();
+			return "[Static Type] " + DeclarationOrExpressionBase.ToString();
 		}
 
 		public override string ResultPath
@@ -77,6 +77,11 @@ namespace D_Parser.Resolver
 		{
 			get { return ArrayDeclaration!=null? ArrayDeclaration.ToString():""; }
 		}
+
+		public override string ToString()
+		{
+			return "[ArrayResult] "+DeclarationOrExpressionBase.ToString();
+		}
 	}
 
 	public class ModuleResult : ResolveResult
@@ -92,7 +97,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return ResolvedModule.ToString();
+			return "[ModuleResult] " + ResolvedModule.ToString();
 		}
 
 		public override string ResultPath
@@ -116,7 +121,7 @@ namespace D_Parser.Resolver
 	/// </summary>
 	public class TypeResult : ResolveResult
 	{
-		public IBlockNode ResolvedTypeDefinition;
+		public IBlockNode TypeNode;
 
 		/// <summary>
 		/// Only will have two or more items if there are multiple definitions of its base class - theoretically, this should be marked as a precompile error then.
@@ -135,12 +140,12 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return ResolvedTypeDefinition.ToString();
+			return "[TypeResult] " + TypeNode.ToString();
 		}
 
 		public override string ResultPath
 		{
-			get { return DNode.GetNodePath(ResolvedTypeDefinition, true); }
+			get { return DNode.GetNodePath(TypeNode, true); }
 		}
 	}
 
@@ -169,6 +174,11 @@ namespace D_Parser.Resolver
 		public override string ResultPath
 		{
 			get { return DeclarationOrExpressionBase==null ? "" : DeclarationOrExpressionBase.ToString(); }
+		}
+
+		public override string ToString()
+		{
+			return "[DelegateResulö]";
 		}
 	}
 }

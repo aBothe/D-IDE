@@ -21,17 +21,10 @@ namespace D_Parser.Dom
         public override void AssignFrom(INode Other)
         {
 			if (Other is IAbstractSyntaxTree)
-			{
-				var ast = Other as IAbstractSyntaxTree;
-				ParseErrors = ast.ParseErrors;
-				//FileName = ast.FileName;
-			}
+				ParseErrors = ((IAbstractSyntaxTree)Other).ParseErrors;
 
 			if (Other is DModule)
-			{
-				var dm = Other as DModule;
-				Imports = dm.Imports;
-			}
+				Imports = ((DModule)Other).Imports;
 
 			base.AssignFrom(Other);
         }
@@ -197,11 +190,12 @@ namespace D_Parser.Dom
 
 		public override void AssignFrom(INode other)
 		{
-			if (other is IBlockNode)
+			var bn = other as IBlockNode;
+			if (bn!=null)
 			{
-				BlockStartLocation = (other as IBlockNode).BlockStartLocation;
+				BlockStartLocation = bn.BlockStartLocation;
 				Clear();
-				AddRange(other as IBlockNode);
+				AddRange(bn);
 			}
 
 			base.AssignFrom(other);

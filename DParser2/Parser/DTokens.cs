@@ -595,7 +595,6 @@ namespace D_Parser.Parser
         {
 			if (token.StartsWith("@"))
 			{
-				var n=Environment.NewLine;
 				if (token == "@disable")
 					return @"Disables a declaration
 A ref­er­ence to a de­c­la­ra­tion marked with the @dis­able at­tribute causes a com­pile time error. 

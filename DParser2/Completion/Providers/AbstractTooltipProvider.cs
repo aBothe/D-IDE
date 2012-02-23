@@ -58,7 +58,7 @@ namespace D_Parser.Completion
 			else if (memRes != null)
 				description = memRes.ResolvedMember.Description;
 			else if (typRes != null)
-				description = typRes.ResolvedTypeDefinition.Description;
+				description = typRes.TypeNode.Description;
 
 			return new AbstractTooltipContent
 			{

@@ -13,8 +13,16 @@ namespace D_Parser.Resolver.TypeResolution
 		/// </summary>
 		/// <param name="InitialResult"></param>
 		/// <returns></returns>
-		public static ResolveResult TryResolveStaticProperties(ResolveResult InitialResult, string propertyIdentifier, ResolverContextStack ctxt = null, IdentifierDeclaration idContainter = null)
+		public static ResolveResult TryResolveStaticProperties(
+			ResolveResult InitialResult, 
+			string propertyIdentifier, 
+			ResolverContextStack ctxt = null, 
+			IdentifierDeclaration idContainter = null)
 		{
+			// If a pointer'ed type is given, take its base type
+			if (InitialResult is StaticTypeResult && InitialResult.DeclarationOrExpressionBase is PointerDecl)
+				InitialResult = InitialResult.ResultBase;
+
 			if (InitialResult == null || InitialResult is ModuleResult)
 				return null;
 
@@ -23,7 +31,7 @@ namespace D_Parser.Resolver.TypeResolution
 			if (InitialResult is MemberResult)
 				relatedNode = (InitialResult as MemberResult).ResolvedMember;
 			else if (InitialResult is TypeResult)
-				relatedNode = (InitialResult as TypeResult).ResolvedTypeDefinition;
+				relatedNode = (InitialResult as TypeResult).TypeNode;
 
 			#region init
 			if (propertyIdentifier == "init")
@@ -160,9 +168,21 @@ namespace D_Parser.Resolver.TypeResolution
 				var ar = InitialResult as ArrayResult;
 
 				isAssocArray = ar.ArrayDeclaration.IsAssociative;
-			}			
+			}
+			else if (InitialResult is TypeResult && propertyIdentifier == "classinfo")
+			{
+				var ti=TypeDeclarationResolver.Resolve(new IdentifierDeclaration("TypeInfo_Class")
+				{
+					InnerDeclaration = new IdentifierDeclaration("object"),
+					ExpressesVariableAccess = true,
+				}, ctxt);
 
-			// .classinfo property, too!
+				return new MemberResult {
+					MemberBaseTypes=ti, 
+					ResultBase=InitialResult, 
+					DeclarationOrExpressionBase=idContainter
+				};
+			}
 
 			return null;
 		}
