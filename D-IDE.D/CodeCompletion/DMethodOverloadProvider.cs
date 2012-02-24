@@ -62,9 +62,9 @@ namespace D_IDE.D.CodeCompletion
 			get {
 
 				if (CurrentResult is MemberResult)
-					return (CurrentResult as MemberResult).ResolvedMember.Description;
+					return (CurrentResult as MemberResult).Node.Description;
 				if (CurrentResult is TypeResult)
-					return (CurrentResult as TypeResult).TypeNode.Description;
+					return (CurrentResult as TypeResult).Node.Description;
 
 				return null;
 			}

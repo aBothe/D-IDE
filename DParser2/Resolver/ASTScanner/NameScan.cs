@@ -76,7 +76,7 @@ namespace D_Parser.Resolver.ASTScanner
 						if (baseClass == null)
 							continue;
 						// Search for items called name in the base class(es)
-						var r = ScanNodeForIdentifier(baseClass.TypeNode, name, ctxt);
+						var r = ScanNodeForIdentifier((IBlockNode)baseClass.Node, name, ctxt);
 
 						if (r != null)
 							matches.AddRange(r);

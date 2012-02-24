@@ -113,7 +113,7 @@ namespace D_Parser.Resolver.ASTScanner
 									{
 										foreach (var tr in l1)
 										{
-											foreach (var m in tr.TypeNode)
+											foreach (var m in tr.Node as IBlockNode)
 												if (m.Name == cmpName && (m is DEnum || m is DClassLike))
 												{
 													csr.ResolvedIdentifiers.Add(typeId as IdentifierDeclaration, m);

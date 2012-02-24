@@ -97,10 +97,10 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 						if (baseclassDefs == null || baseclassDefs.Length < 0)
 							break;
-						if (curWatchedClass == baseclassDefs[0].TypeNode)
+						if (curWatchedClass == baseclassDefs[0].Node)
 							break;
 
-						curWatchedClass = baseclassDefs[0].TypeNode as DClassLike;
+						curWatchedClass = baseclassDefs[0].Node as DClassLike;
 					}
 				}
 				else if (curScope is DMethod)

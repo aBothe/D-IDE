@@ -113,14 +113,14 @@ namespace D_Parser.Resolver.TypeResolution
 			 * TemplateParameters will still contain static type int!
 			 * 
 			 * Therefore, and only if no writeln!int was given as foreexpression like in writeln!int(123),
-			 * try to match the call arguments with template parameters.
+			 * treat the call arguments (here: 123) as types and try to match them to at least one of the method results
 			 * 
 			 * If no template parameters were required, baseExpression will remain untouched.
 			 */
 
 			if(!(call.PostfixForeExpression is TemplateInstanceExpression))
-				TemplateInstanceParameterHandler.ResolveAndFilterTemplateResults(
-					resolvedCallArguments, baseExpression, ctxt);
+				TemplateInstanceResolver.ResolveAndFilterTemplateResults(
+					resolvedCallArguments.Count>0? resolvedCallArguments.ToArray():null, baseExpression, ctxt, false);
 
 			//TODO: Compare arguments' types with parameter types to whitelist legal method overloads
 
@@ -159,7 +159,7 @@ namespace D_Parser.Resolver.TypeResolution
 					/*
 					 * auto a = MyStruct(); -- opCall-Overloads can be used
 					 */
-					var classDef = (b as TypeResult).TypeNode as DClassLike;
+					var classDef = (b as TypeResult).Node as DClassLike;
 
 					if (classDef == null)
 						continue;
@@ -168,7 +168,7 @@ namespace D_Parser.Resolver.TypeResolution
 						if (i.Name == "opCall" &&
 							i is DMethod &&
 							(i as DNode).IsStatic)
-							r.Add(TypeDeclarationResolver.HandleNodeMatch(i, ctxt, b, call));
+							r.Add(TypeDeclarationResolver.ResolveNodeBaseType(i, ctxt, b, call));
 				}
 			}
 
@@ -195,11 +195,7 @@ namespace D_Parser.Resolver.TypeResolution
 				/*
 				 * First off, try to resolve the identifier as it was a type declaration's identifer list part
 				 */
-				var results = TypeDeclarationResolver.ResolveFurtherTypeIdentifier(
-					acc.Identifier,
-					baseExpression,
-					ctxt,
-					acc);
+				var results = TypeDeclarationResolver.ResolveFurtherTypeIdentifier(acc.Identifier,baseExpression,ctxt,acc);
 
 				if (results != null)
 					return results;
@@ -224,6 +220,17 @@ namespace D_Parser.Resolver.TypeResolution
 				return baseExpression;
 
 			return null;
+		}
+
+		public static ResolveResult[] Resolve(
+			TemplateInstanceExpression tix,
+			ResolverContextStack ctxt,
+			IEnumerable<ResolveResult> resultBases = null)
+		{
+			if (resultBases == null)
+				return TypeDeclarationResolver.ResolveIdentifier(tix.TemplateIdentifier.Id, ctxt, tix);
+
+			return TypeDeclarationResolver.ResolveFurtherTypeIdentifier(tix.TemplateIdentifier.Id, resultBases, ctxt, tix);
 		}
 	}
 }

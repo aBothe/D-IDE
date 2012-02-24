@@ -26,7 +26,7 @@ namespace D_Parser.Dom
             this.LiteralContent = Content;
         }
 
-        public virtual string ToString()
+        public override string ToString()
         {
 			if (Token == DTokens.PropertyAttribute)
 				return "@" + (LiteralContent==null?"": LiteralContent.ToString());

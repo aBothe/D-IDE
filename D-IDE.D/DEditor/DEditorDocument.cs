@@ -19,10 +19,10 @@ using D_Parser.Dom;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
 using D_Parser.Resolver;
+using D_Parser.Resolver.TypeResolution;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
-using D_Parser.Resolver.TypeResolution;
 
 namespace D_IDE.D
 {
@@ -485,9 +485,9 @@ namespace D_IDE.D
 				INode n = null;
 
 				if (res is MemberResult)
-					n = (res as MemberResult).ResolvedMember;
+					n = (res as MemberResult).Node;
 				else if (res is TypeResult)
-					n = (res as TypeResult).TypeNode;
+					n = (res as TypeResult).Node;
 				else if (res is ModuleResult)
 					n = (res as ModuleResult).ResolvedModule;
 				else
@@ -545,9 +545,9 @@ namespace D_IDE.D
 				INode n = null;
 
 				if (res is MemberResult)
-					n = (res as MemberResult).ResolvedMember;
+					n = (res as MemberResult).Node;
 				else if (res is TypeResult)
-					n = (res as TypeResult).TypeNode;
+					n = (res as TypeResult).Node;
 
 				if (n == null)
 				{

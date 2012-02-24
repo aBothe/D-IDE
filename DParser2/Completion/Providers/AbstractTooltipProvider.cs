@@ -56,9 +56,9 @@ namespace D_Parser.Completion
 			if (modRes != null)
 				description = modRes.ResolvedModule.Description;
 			else if (memRes != null)
-				description = memRes.ResolvedMember.Description;
+				description = memRes.Node.Description;
 			else if (typRes != null)
-				description = typRes.TypeNode.Description;
+				description = typRes.Node.Description;
 
 			return new AbstractTooltipContent
 			{

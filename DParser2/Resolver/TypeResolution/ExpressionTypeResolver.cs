@@ -101,9 +101,20 @@ namespace D_Parser.Resolver.TypeResolution
 				{
 					var baseTypes = Resolve((ex as UnaryExpression_And).UnaryExpression, ctxt);
 
-					// TODO: Wrap resolved type with pointer declaration
+					/*
+					 * &i -- makes an int* out of an int
+					 */
+					var r=new List<ResolveResult>();
+					if(baseTypes!=null)
+						foreach (var b in baseTypes)
+						{
+							r.Add( new StaticTypeResult { 
+								ResultBase=b,
+								DeclarationOrExpressionBase=new PointerDecl()
+							});
+						}
 
-					return baseTypes;
+					return r.Count > 0 ? r.ToArray():null;
 				}
 				else if (ex is DeleteExpression)
 					return null;
@@ -150,7 +161,7 @@ namespace D_Parser.Resolver.TypeResolution
 			}
 
 			else if (ex is TemplateInstanceExpression)
-				return Resolve(ex as TemplateInstanceExpression, ctxt);
+				return ExpressionTypeResolver.Resolve((TemplateInstanceExpression)ex, ctxt);
 
 			else if (ex is TokenExpression)
 			{
@@ -166,7 +177,7 @@ namespace D_Parser.Resolver.TypeResolution
 
 					if (classDef is DClassLike)
 					{
-						var res = TypeDeclarationResolver.HandleNodeMatch(classDef, ctxt, null, ex);
+						var res = TypeDeclarationResolver.ResolveNodeBaseType(classDef, ctxt, null, ex);
 
 						if (res != null)
 							return new[] { res };
@@ -250,21 +261,6 @@ namespace D_Parser.Resolver.TypeResolution
 			#endregion
 
 			return null;
-		}
-
-		public static ResolveResult[] Resolve(
-			TemplateInstanceExpression tix, 
-			ResolverContextStack ctxt, 
-			IEnumerable<ResolveResult> resultBases=null)
-		{
-			ResolveResult[] r = null;
-
-			if (resultBases == null)
-				r = TypeDeclarationResolver.ResolveIdentifier(tix.TemplateIdentifier.Id, ctxt,tix);
-			else
-				r = TypeDeclarationResolver.ResolveFurtherTypeIdentifier(tix.TemplateIdentifier.Id, resultBases, ctxt, tix);
-
-			return TemplateInstanceParameterHandler.ResolveAndFilterTemplateResults(tix, r, ctxt);
 		}
 	}
 }

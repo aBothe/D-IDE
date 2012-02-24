@@ -134,13 +134,14 @@ namespace D_IDE.D
 					IStatement stmt = null;
 					var block = DResolver.SearchBlockAt(module, new CodeLocation(0, codeLine),out stmt);
 
-					var res = TypeDeclarationResolver.ResolveIdentifier(Symbol.Name,
-						new ResolverContextStack(null,
-							new ResolverContext { ScopedBlock = block }), null);
+					var ctxt=new ResolverContextStack(null,
+							new ResolverContext { ScopedBlock = block });
+
+					var res = TypeDeclarationResolver.ResolveIdentifier(Symbol.Name,ctxt, null);
 
 					if (res!=null && res.Length > 0 && res[0] is MemberResult)
 					{
-						variableNode = (res[0] as MemberResult).ResolvedMember;
+						variableNode = (res[0] as MemberResult).Node;
 						//moduleCache = DCodeCompletionSupport.Instance.EnumAvailableModules(ownerPrj);
 					}
 				}

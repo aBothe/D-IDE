@@ -80,7 +80,7 @@ namespace D_Parser.Completion
 				var tr = rr as TypeResult;
 				var vis = ItemVisibility.All;
 
-				bool HasSameAncestor = HaveSameAncestors(currentlyScopedBlock, tr.TypeNode);
+				bool HasSameAncestor = HaveSameAncestors(currentlyScopedBlock, tr.Node);
 				bool IsThis = false, IsSuper = false;
 
 				if (tr.DeclarationOrExpressionBase is DTokenDeclaration)
@@ -115,10 +115,10 @@ namespace D_Parser.Completion
 
 				BuildTypeCompletionData(tr, vis);
 				if (resultParent == null)
-					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, tr.TypeNode);
+					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, tr.Node);
 
-				if(tr.TypeNode is DClassLike)
-					StaticTypePropertyProvider.AddClassTypeProperties(CompletionDataGenerator, tr.TypeNode);
+				if(tr.Node is DClassLike)
+					StaticTypePropertyProvider.AddClassTypeProperties(CompletionDataGenerator, tr.Node);
 			}
 			#endregion
 
@@ -229,12 +229,12 @@ namespace D_Parser.Completion
 				foreach (var i in mrr.MemberBaseTypes)
 				{
 					BuildCompletionData(i, currentlyScopedBlock,
-						(mrr.ResolvedMember is DVariable && (mrr.ResolvedMember as DVariable).IsAlias) ?
+						(mrr.Node is DVariable && (mrr.Node as DVariable).IsAlias) ?
 							isVariableInstance : true, mrr); // True if we obviously have a variable handled here. Otherwise depends on the samely-named parameter..
 				}
 
 			if (mrr.ResultBase == null)
-				StaticTypePropertyProvider.AddGenericProperties(mrr, CompletionDataGenerator, mrr.ResolvedMember, false);
+				StaticTypePropertyProvider.AddGenericProperties(mrr, CompletionDataGenerator, mrr.Node, false);
 
 		}
 
@@ -280,7 +280,7 @@ namespace D_Parser.Completion
 
 		void BuildTypeCompletionData(TypeResult tr, ItemVisibility visMod)
 		{
-			var n = tr.TypeNode;
+			var n = tr.Node;
 			if (n is DClassLike) // Add public static members of the class and including all base classes
 			{
 				var propertyMethodsToIgnore = new List<string>();
@@ -289,7 +289,7 @@ namespace D_Parser.Completion
 				var tvisMod = visMod;
 				while (curlevel != null)
 				{
-					foreach (var i in curlevel.TypeNode)
+					foreach (var i in curlevel.Node as IBlockNode)
 					{
 						var dn = i as DNode;
 

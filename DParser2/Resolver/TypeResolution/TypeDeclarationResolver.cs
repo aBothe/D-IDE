@@ -37,7 +37,12 @@ namespace D_Parser.Resolver.TypeResolution
 
 			var matches = NameScan.SearchMatchesAlongNodeHierarchy(ctxt, loc, id);
 
-			return HandleNodeMatches(matches, ctxt, null, idObject);
+			var r= HandleNodeMatches(matches, ctxt, null, idObject);
+
+			if (idObject is TemplateInstanceExpression)
+				return TemplateInstanceResolver.ResolveAndFilterTemplateResults(((TemplateInstanceExpression)idObject).Arguments, r, ctxt);
+
+			return TemplateInstanceResolver.ApplyDefaultTemplateParameters(r, ctxt);
 		}
 
 		public static ResolveResult[] Resolve(IdentifierDeclaration declaration, ResolverContextStack ctxt, ResolveResult[] resultBases=null)
@@ -67,17 +72,12 @@ namespace D_Parser.Resolver.TypeResolution
 		{
 			var r = new List<ResolveResult>();
 
-			var scanResults = new List<ResolveResult>();
 			var nextResults = new List<ResolveResult>();
-
 			foreach (var b in DResolver.TryRemoveAliasesFromResult(resultBases))
 			{
-				scanResults.Clear();
-				nextResults.Clear();
+				IEnumerable<ResolveResult> scanResults = new[]{ b };
 
-				scanResults.Add(b);
-
-				while (scanResults.Count > 0)
+				do
 				{
 					foreach (var scanResult in scanResults)
 					{
@@ -87,20 +87,20 @@ namespace D_Parser.Resolver.TypeResolution
 							var mr = scanResult as MemberResult;
 
 							if (mr.MemberBaseTypes != null)
-								nextResults.AddRange(DResolver.FilterOutByResultPriority(ctxt, mr.MemberBaseTypes));
+								nextResults.AddRange(mr.MemberBaseTypes);
 						}
 
 						else if (scanResult is TypeResult)
 						{
-							var tr = scanResult as TypeResult;
-							var nodeMatches = NameScan.ScanNodeForIdentifier(tr.TypeNode, nextIdentifier, ctxt);
+							var bn = ((TypeResult)scanResult).Node as IBlockNode;
+							var nodeMatches = NameScan.ScanNodeForIdentifier(bn, nextIdentifier, ctxt);
 
-							ctxt.PushNewScope(tr.TypeNode);
+							ctxt.PushNewScope(bn);
 
 							var results = HandleNodeMatches(nodeMatches, ctxt, b, typeIdObject);
 
 							if (results != null)
-								r.AddRange(DResolver.FilterOutByResultPriority(ctxt, results));
+								r.AddRange(results);
 
 							ctxt.Pop();
 						}
@@ -133,15 +133,16 @@ namespace D_Parser.Resolver.TypeResolution
 						}
 					}
 
-					scanResults = nextResults;
+					scanResults = DResolver.FilterOutByResultPriority(ctxt, nextResults);
 					nextResults = new List<ResolveResult>();
 				}
+				while (scanResults != null);
 			}
 
-			if (r.Count < 1)
-				return null;
+			if (typeIdObject is TemplateInstanceExpression)
+				return TemplateInstanceResolver.ResolveAndFilterTemplateResults(((TemplateInstanceExpression)typeIdObject).Arguments, r, ctxt);
 
-			return r.ToArray();
+			return TemplateInstanceResolver.ApplyDefaultTemplateParameters(r, ctxt);
 		}
 
 		public static ResolveResult[] Resolve(TypeOfDeclaration typeOf, ResolverContextStack ctxt)
@@ -149,7 +150,7 @@ namespace D_Parser.Resolver.TypeResolution
 			// typeof(return)
 			if (typeOf.InstanceId is TokenExpression && (typeOf.InstanceId as TokenExpression).Token == DTokens.Return)
 			{
-				var m = HandleNodeMatch(ctxt.ScopedBlock, ctxt, null, typeOf);
+				var m = ResolveNodeBaseType(ctxt.ScopedBlock, ctxt, null, typeOf);
 				if (m != null)
 					return new[] { m };
 			}
@@ -324,7 +325,7 @@ namespace D_Parser.Resolver.TypeResolution
 		/// A class' base class will be searched.
 		/// etc..
 		/// </summary>
-		public static ResolveResult HandleNodeMatch(
+		public static ResolveResult ResolveNodeBaseType(
 			INode m,
 			ResolverContextStack ctxt,
 			ResolveResult resultBase = null,
@@ -341,11 +342,14 @@ namespace D_Parser.Resolver.TypeResolution
 			if (m.Type != null && m.Type.ToString(false) == m.Name)
 				DoResolveBaseType = false;
 
+			ResolveResult ret = null;
+			ResolveResult[] memberbaseTypes = null;
+
 			if (m is DVariable)
 			{
 				var v = m as DVariable;
 
-				var memberbaseTypes = DoResolveBaseType ? TypeDeclarationResolver.Resolve(v.Type, ctxt) : null;
+				memberbaseTypes = DoResolveBaseType ? TypeDeclarationResolver.Resolve(v.Type, ctxt) : null;
 
 				// For auto variables, use the initializer to get its type
 				if (memberbaseTypes == null && DoResolveBaseType && v.Initializer != null)
@@ -353,7 +357,7 @@ namespace D_Parser.Resolver.TypeResolution
 					memberbaseTypes = ExpressionTypeResolver.Resolve(v.Initializer, ctxt);
 				}
 
-				// Resolve aliases if wished
+				#region Resolve aliases if wished
 				if (ctxt.CurrentContext.ResolveAliases && memberbaseTypes != null)
 				{
 					/*
@@ -368,9 +372,9 @@ namespace D_Parser.Resolver.TypeResolution
 						foreach (var type in memberbaseTypes)
 						{
 							var mr = type as MemberResult;
-							if (mr != null && mr.ResolvedMember is DVariable)
+							if (mr != null && mr.Node is DVariable)
 							{
-								var dv = mr.ResolvedMember as DVariable;
+								var dv = mr.Node as DVariable;
 								// Note: Normally, a variable's base type mustn't be an other variable but an alias defintion...
 								if (dv.IsAlias)
 								{
@@ -391,12 +395,14 @@ namespace D_Parser.Resolver.TypeResolution
 							break;
 					}
 				}
+				#endregion
+
+				memberbaseTypes = TemplateInstanceResolver.SubstituteTemplateParameters(memberbaseTypes, resultBase);
 
 				// Note: Also works for aliases! In this case, we simply try to resolve the aliased type, otherwise the variable's base type
-				stackNum_HandleNodeMatch--;
-				return new MemberResult()
+				ret = new MemberResult()
 				{
-					ResolvedMember = m,
+					Node = m,
 					MemberBaseTypes = memberbaseTypes,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
@@ -404,67 +410,61 @@ namespace D_Parser.Resolver.TypeResolution
 			}
 			else if (m is DMethod)
 			{
-				var ret = new MemberResult()
+				memberbaseTypes = DoResolveBaseType ? GetMethodReturnType(m as DMethod, ctxt) : null;
+
+				memberbaseTypes = TemplateInstanceResolver.SubstituteTemplateParameters(memberbaseTypes, resultBase);
+
+				ret = new MemberResult()
 				{
-					ResolvedMember = m,
-					MemberBaseTypes = DoResolveBaseType ? GetMethodReturnType(m as DMethod, ctxt) : null,
+					Node = m,
+					MemberBaseTypes = memberbaseTypes,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
 				};
-
-				stackNum_HandleNodeMatch--;
-				return ret;
 			}
 			else if (m is DClassLike)
-			{
-				var Class = m as DClassLike;
-
-				var ret = new TypeResult()
+				ret = new TypeResult()
 				{
-					TypeNode = Class,
-					BaseClass = DoResolveBaseType ? DResolver.ResolveBaseClass(Class, ctxt) : null,
+					Node = (DClassLike)m,
+					BaseClass = DoResolveBaseType ? DResolver.ResolveBaseClass((DClassLike)m, ctxt) : null,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
 				};
-
-				stackNum_HandleNodeMatch--;
-				return ret;
-			}
 			else if (m is IAbstractSyntaxTree)
-			{
-				stackNum_HandleNodeMatch--;
-				return new ModuleResult()
+				ret = new ModuleResult()
 				{
 					ResolvedModule = m as IAbstractSyntaxTree,
 					AlreadyTypedModuleNameParts = 1,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
 				};
-			}
 			else if (m is DEnum)
-			{
-				stackNum_HandleNodeMatch--;
-				return new TypeResult()
+				ret = new TypeResult()
 				{
-					TypeNode = m as IBlockNode,
+					Node = m as IBlockNode,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
 				};
-			}
 			else if (m is TemplateParameterNode)
 			{
-				stackNum_HandleNodeMatch--;
-				return new MemberResult()
+				var tmp = ((TemplateParameterNode)m).TemplateParameter;
+
+				//ResolveResult[] templateParameterType = null;
+
+				//FIXME: Resolve the specialization type correctly
+				var templateParameterType = TemplateInstanceResolver.ResolveTypeSpecialization(tmp, ctxt);
+
+				ret = new MemberResult()
 				{
-					ResolvedMember = m,
+					Node = m,
 					DeclarationOrExpressionBase = typeBase,
-					ResultBase = resultBase
+					ResultBase = resultBase,
+					MemberBaseTypes = templateParameterType
 				};
 			}
 
 			stackNum_HandleNodeMatch--;
-			// This never should happen..
-			return null;
+			return ret;
 		}
 
 		static int stackNum_HandleNodeMatch = 0;
@@ -482,7 +482,7 @@ namespace D_Parser.Resolver.TypeResolution
 					if (m == null)
 						continue;
 
-					var res = HandleNodeMatch(m, ctxt, resultBase, TypeDeclaration);
+					var res = ResolveNodeBaseType(m, ctxt, resultBase, TypeDeclaration);
 					if (res != null)
 						rl.Add(res);
 				}

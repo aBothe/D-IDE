@@ -202,42 +202,40 @@ namespace D_Parser.Resolver.TypeResolution
 			return Parent;
 		}
 
-		public static ResolveResult[] FilterOutByResultPriority(
+		public static IEnumerable<ResolveResult> FilterOutByResultPriority(
 			ResolverContextStack ctxt,
-			ResolveResult[] results)
+			IEnumerable<ResolveResult> results)
 		{
-			if (results != null && results.Length > 1)
+			if (results == null)
+				return null;
+
+			var newRes = new List<ResolveResult>();
+
+			foreach (var rb in results)
 			{
-				var newRes = new List<ResolveResult>();
-				foreach (var rb in results)
+				var n = GetResultMember(rb);
+				if (n != null)
 				{
-					var n = GetResultMember(rb);
-					if (n != null)
-					{
-						// Put priority on locals
-						if (n is DVariable &&
-							(n as DVariable).IsLocal)
-							return new[] { rb };
+					// Put priority on locals
+					if (n is DVariable &&
+						(n as DVariable).IsLocal)
+						return new[] { rb };
 
-						// If member/type etc. is part of the actual module, omit external symbols
-						if (n.NodeRoot == ctxt.CurrentContext.ScopedBlock.NodeRoot)
-							newRes.Add(rb);
-					}
+					// If member/type etc. is part of the actual module, omit external symbols
+					if (n.NodeRoot == ctxt.CurrentContext.ScopedBlock.NodeRoot)
+						newRes.Add(rb);
 				}
-
-				if (newRes.Count > 0)
-					return newRes.ToArray();
 			}
 
-			return results;
+			return newRes.Count > 0 ? newRes.ToArray():null;
 		}
 
 		public static INode GetResultMember(ResolveResult res)
 		{
 			if (res is MemberResult)
-				return ((MemberResult)res).ResolvedMember;
+				return ((MemberResult)res).Node;
 			else if (res is TypeResult)
-				return ((TypeResult)res).TypeNode;
+				return ((TypeResult)res).Node;
 			else if (res is ModuleResult)
 				return ((ModuleResult)res).ResolvedModule;
 
@@ -270,8 +268,8 @@ namespace D_Parser.Resolver.TypeResolution
 					if (mr != null &&
 
 						// Alias check
-						mr.ResolvedMember is DVariable &&
-						(mr.ResolvedMember as DVariable).IsAlias &&
+						mr.Node is DVariable &&
+						(mr.Node as DVariable).IsAlias &&
 
 						// Check if it has resolved base types
 						mr.MemberBaseTypes != null &&

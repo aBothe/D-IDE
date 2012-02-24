@@ -29,9 +29,9 @@ namespace D_Parser.Resolver.TypeResolution
 			INode relatedNode = null;
 
 			if (InitialResult is MemberResult)
-				relatedNode = (InitialResult as MemberResult).ResolvedMember;
+				relatedNode = (InitialResult as MemberResult).Node;
 			else if (InitialResult is TypeResult)
-				relatedNode = (InitialResult as TypeResult).TypeNode;
+				relatedNode = (InitialResult as TypeResult).Node;
 
 			#region init
 			if (propertyIdentifier == "init")
@@ -62,7 +62,7 @@ namespace D_Parser.Resolver.TypeResolution
 					ResultBase = InitialResult,
 					MemberBaseTypes = new[] { InitialResult },
 					DeclarationOrExpressionBase = idContainter,
-					ResolvedMember = prop_Init
+					Node = prop_Init
 				};
 			}
 			#endregion
@@ -73,7 +73,7 @@ namespace D_Parser.Resolver.TypeResolution
 				{
 					ResultBase = InitialResult,
 					DeclarationOrExpressionBase = idContainter,
-					ResolvedMember = new DVariable
+					Node = new DVariable
 					{
 						Name = "sizeof",
 						Type = new DTokenDeclaration(DTokens.Int),
@@ -89,7 +89,7 @@ namespace D_Parser.Resolver.TypeResolution
 				{
 					ResultBase = InitialResult,
 					DeclarationOrExpressionBase = idContainter,
-					ResolvedMember = new DVariable
+					Node = new DVariable
 					{
 						Name = "alignof",
 						Type = new DTokenDeclaration(DTokens.Int),
@@ -104,7 +104,7 @@ namespace D_Parser.Resolver.TypeResolution
 				{
 					ResultBase = InitialResult,
 					DeclarationOrExpressionBase = idContainter,
-					ResolvedMember = new DVariable
+					Node = new DVariable
 					{
 						Name = "mangleof",
 						Type = new IdentifierDeclaration("string"),
@@ -120,7 +120,7 @@ namespace D_Parser.Resolver.TypeResolution
 				{
 					ResultBase = InitialResult,
 					DeclarationOrExpressionBase = idContainter,
-					ResolvedMember = new DVariable
+					Node = new DVariable
 					{
 						Name = "stringof",
 						Type = new IdentifierDeclaration("string"),
@@ -169,19 +169,33 @@ namespace D_Parser.Resolver.TypeResolution
 
 				isAssocArray = ar.ArrayDeclaration.IsAssociative;
 			}
-			else if (InitialResult is TypeResult && propertyIdentifier == "classinfo")
+			else if (propertyIdentifier == "classinfo")
 			{
-				var ti=TypeDeclarationResolver.Resolve(new IdentifierDeclaration("TypeInfo_Class")
+				var tr= InitialResult as TypeResult;
+				
+				if(tr==null && InitialResult is MemberResult)
 				{
-					InnerDeclaration = new IdentifierDeclaration("object"),
-					ExpressesVariableAccess = true,
-				}, ctxt);
+					var baseTypes=DResolver.TryRemoveAliasesFromResult(((MemberResult)InitialResult).MemberBaseTypes);
 
-				return new MemberResult {
-					MemberBaseTypes=ti, 
-					ResultBase=InitialResult, 
-					DeclarationOrExpressionBase=idContainter
-				};
+					if (baseTypes != null && baseTypes.Length > 0)
+						tr = baseTypes[0] as TypeResult;
+				}
+
+				if (tr != null)
+				{
+					var ti = TypeDeclarationResolver.Resolve(new IdentifierDeclaration("TypeInfo_Class")
+					{
+						InnerDeclaration = new IdentifierDeclaration("object"),
+						ExpressesVariableAccess = true,
+					}, ctxt);
+
+					return new MemberResult
+					{
+						MemberBaseTypes = ti,
+						ResultBase = InitialResult,
+						DeclarationOrExpressionBase = idContainter
+					};
+				}
 			}
 
 			return null;

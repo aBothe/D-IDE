@@ -19,29 +19,36 @@ namespace D_Parser.Resolver
 		public abstract string ResultPath {get;}
 	}
 
-	public class MemberResult : ResolveResult
+	public abstract class TemplateInstanceResult : ResolveResult
 	{
-		public INode ResolvedMember;
+		public INode Node;
 
+		/// <summary>
+		/// T!int t;
+		/// 
+		/// t. -- will be resolved to:
+		///		1) TypeResult T; TemplateParameter[0]= StaticType int
+		///		2) MemberResult t; MemberDefinition= 1)
+		/// </summary>
+		public Dictionary<ITemplateParameter, ResolveResult[]> TemplateParameters;
+	}
+
+	public class MemberResult : TemplateInstanceResult
+	{
 		/// <summary>
 		/// Usually there should be only one resolved member type.
 		/// If the origin of ResolvedMember seems to be unclear (if there are multiple same-named types), there will be two or more items
 		/// </summary>
 		public ResolveResult[] MemberBaseTypes;
 
-		/// <summary>
-		/// If a method requires template arguments, this dictionary will store them.
-		/// </summary>
-		public Dictionary<ITemplateParameter, ResolveResult[]> TemplateParameters;
-
 		public override string ToString()
 		{
-			return "[MemberResult] " + ResolvedMember.ToString();
+			return "[MemberResult] " + Node.ToString();
 		}
 
 		public override string ResultPath
 		{
-			get { return DNode.GetNodePath(ResolvedMember, true); }
+			get { return DNode.GetNodePath(Node, true); }
 		}
 	}
 
@@ -119,33 +126,23 @@ namespace D_Parser.Resolver
 	/// <summary>
 	/// Keeps class-like definitions
 	/// </summary>
-	public class TypeResult : ResolveResult
+	public class TypeResult : TemplateInstanceResult
 	{
-		public IBlockNode TypeNode;
-
 		/// <summary>
-		/// Only will have two or more items if there are multiple definitions of its base class - theoretically, this should be marked as a precompile error then.
+		/// Only will have two or more items if there are multiple definitions of its base class - 
+		/// theoretically, this should be marked as a precompile error then.
 		/// </summary>
 		public TypeResult[] BaseClass;
 		public TypeResult[] ImplementedInterfaces;
 
-		/// <summary>
-		/// T!int t;
-		/// 
-		/// t. -- will be resolved to:
-		///		1) TypeResult T; TemplateParameter[0]= StaticType int
-		///		2) MemberResult t; MemberDefinition= 1)
-		/// </summary>
-		public Dictionary<ITemplateParameter,ResolveResult[]> TemplateParameters;
-
 		public override string ToString()
 		{
-			return "[TypeResult] " + TypeNode.ToString();
+			return "[TypeResult] " + Node.ToString();
 		}
 
 		public override string ResultPath
 		{
-			get { return DNode.GetNodePath(TypeNode, true); }
+			get { return DNode.GetNodePath(Node, true); }
 		}
 	}
 
