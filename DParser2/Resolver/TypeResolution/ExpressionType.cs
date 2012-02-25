@@ -271,7 +271,12 @@ namespace D_Parser.Resolver.TypeResolution
 
 			else if (ex is FunctionLiteral)
 			{
-				//TODO Return simple DelegateResult
+				return new[] { 
+					new DelegateResult { 
+						DeclarationOrExpressionBase=ex, 
+						ReturnType=TypeDeclarationResolver.GetMethodReturnType(((FunctionLiteral)ex).AnonymousMethod, ctxt)
+					}
+				};
 			}
 
 			else if (ex is AssertExpression)
@@ -293,7 +298,7 @@ namespace D_Parser.Resolver.TypeResolution
 			else if (ex is TypeDeclarationExpression) // should be containing a typeof() only
 				return TypeDeclarationResolver.Resolve((ex as TypeDeclarationExpression).Declaration, ctxt);
 
-			else if (ex is TypeidExpression)
+			else if (ex is TypeidExpression) //TODO: Split up into more detailed typeinfo objects (e.g. for arrays, pointers, classes etc.)
 				return TypeDeclarationResolver.Resolve(new IdentifierDeclaration("TypeInfo") { InnerDeclaration = new IdentifierDeclaration("object") }, ctxt);
 
 			else if (ex is IsExpression)
