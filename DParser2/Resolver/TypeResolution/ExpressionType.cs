@@ -104,17 +104,18 @@ namespace D_Parser.Resolver.TypeResolution
 					/*
 					 * &i -- makes an int* out of an int
 					 */
-					var r=new List<ResolveResult>();
-					if(baseTypes!=null)
+					var r = new List<ResolveResult>();
+					if (baseTypes != null)
 						foreach (var b in baseTypes)
 						{
-							r.Add( new StaticTypeResult { 
-								ResultBase=b,
-								DeclarationOrExpressionBase=new PointerDecl()
+							r.Add(new StaticTypeResult
+							{
+								ResultBase = b,
+								DeclarationOrExpressionBase = new PointerDecl()
 							});
 						}
 
-					return r.Count > 0 ? r.ToArray():null;
+					return r.Count > 0 ? r.ToArray() : null;
 				}
 				else if (ex is DeleteExpression)
 					return null;
@@ -209,12 +210,63 @@ namespace D_Parser.Resolver.TypeResolution
 
 			else if (ex is ArrayLiteralExpression)
 			{
-				//TODO
+				var arr = (ArrayLiteralExpression)ex;
+
+				if (arr.Elements != null && arr.Elements.Count > 0)
+				{
+					// Simply resolve the first element's type and take it as the array's value type
+					var valueType = Resolve(arr.Elements[0], ctxt);
+
+					if (valueType != null && valueType.Length > 0)
+					{
+						var r = new List<ResolveResult>(valueType.Length);
+
+						// If there are multiple results, return one array result per value type result
+						foreach (var vt in valueType)
+							r.Add(new ArrayResult {
+								ArrayDeclaration=new ArrayDecl(),
+								DeclarationOrExpressionBase=ex,
+								ResultBase=vt
+							});
+
+						return r.ToArray();
+					}
+				}
 			}
 
 			else if (ex is AssocArrayExpression)
 			{
-				//TODO
+				var aa = (AssocArrayExpression)ex;
+
+				if (aa.Elements != null && aa.Elements.Count > 0)
+				{
+					var firstElement = aa.Elements[0].Key;
+					var firstElementValue = aa.Elements[0].Value;
+
+					var keyType = Resolve(firstElement, ctxt);
+					var valueType = Resolve(firstElementValue, ctxt);
+
+					if (valueType != null && valueType.Length > 0)
+					{
+						var r = new List<ResolveResult>(valueType.Length);
+
+						// If there are multiple results, return one array result per value type result
+						foreach (var vt in valueType)
+							r.Add(new ArrayResult
+							{
+								DeclarationOrExpressionBase = ex,
+								ResultBase = vt,
+								KeyType = keyType,
+								ArrayDeclaration = new ArrayDecl { 
+									KeyExpression=firstElement, 
+									KeyType=null, 
+									ClampsEmpty=false
+								}
+							});
+
+						return r.ToArray();
+					}
+				}
 			}
 
 			else if (ex is FunctionLiteral)
@@ -248,17 +300,11 @@ namespace D_Parser.Resolver.TypeResolution
 				return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Int)) };
 
 			else if (ex is TraitsExpression)
-			{
-				// TODO: Return either bools, strings, array (pointers) to members or stuff
-			}
+				return TraitsResolver.Resolve((TraitsExpression)ex,ctxt);
 			#endregion
 
 			else if (ex is TypeDeclarationExpression)
 				return TypeDeclarationResolver.Resolve((ex as TypeDeclarationExpression).Declaration, ctxt);
-
-			#region Initializers
-			//TODO: Handle initializers
-			#endregion
 
 			return null;
 		}

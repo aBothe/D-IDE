@@ -991,17 +991,12 @@ namespace D_Parser.Dom.Expressions
 	/// </summary>
 	public class ArrayLiteralExpression : PrimaryExpression,ContainerExpression
 	{
-		public ArrayLiteralExpression()
-		{
-			Expressions = new List<IExpression>();
-		}
-
-		public virtual List<IExpression> Expressions { get; set; }
+		public readonly List<IExpression> Elements = new List<IExpression>();
 
 		public override string ToString()
 		{
 			var s = "[";
-			foreach (var expr in Expressions)
+			foreach (var expr in Elements)
 				s += expr.ToString() + ", ";
 			s = s.TrimEnd(' ', ',') + "]";
 			return s;
@@ -1021,18 +1016,21 @@ namespace D_Parser.Dom.Expressions
 
 		public IExpression[] SubExpressions
 		{
-			get { return Expressions!=null && Expressions.Count>0? Expressions.ToArray() : null; }
+			get { return Elements!=null && Elements.Count>0? Elements.ToArray() : null; }
 		}
 	}
 
+	/// <summary>
+	/// auto arr=['a':0xa, 'b':0xb, 'c':0xc, 'd':0xd, 'e':0xe, 'f':0xf];
+	/// </summary>
 	public class AssocArrayExpression : PrimaryExpression,ContainerExpression
 	{
-		public IDictionary<IExpression, IExpression> KeyValuePairs = new Dictionary<IExpression, IExpression>();
+		public IList<KeyValuePair<IExpression, IExpression>> Elements = new List<KeyValuePair<IExpression, IExpression>>();
 
 		public override string ToString()
 		{
 			var s = "[";
-			foreach (var expr in KeyValuePairs)
+			foreach (var expr in Elements)
 				s += expr.Key.ToString() + ":" + expr.Value.ToString() + ", ";
 			s = s.TrimEnd(' ', ',') + "]";
 			return s;
@@ -1055,7 +1053,7 @@ namespace D_Parser.Dom.Expressions
 			get {
 				var l = new List<IExpression>();
 
-				foreach (var kv in KeyValuePairs)
+				foreach (var kv in Elements)
 				{
 					if(kv.Key!=null)
 						l.Add(kv.Key);
@@ -1397,70 +1395,10 @@ namespace D_Parser.Dom.Expressions
 
 	#region Initializers
 
-	public interface DInitializer : IExpression { }
+	public interface IVariableInitializer { }
 
-	public class VoidInitializer : TokenExpression, DInitializer
+	public abstract class AbstractVariableInitializer : IVariableInitializer,IExpression
 	{
-		public VoidInitializer() : base(DTokens.Void) { }
-	}
-
-	public class ArrayInitializer : ArrayLiteralExpression, DInitializer
-	{
-		public ArrayMemberInitializer[] ArrayMemberInitializations;
-
-		public sealed override List<IExpression> Expressions
-		{
-			get
-			{
-				if (ArrayMemberInitializations == null)
-					return new List<IExpression>();
-				var l = new List<IExpression>(ArrayMemberInitializations.Length);
-				foreach (var ami in ArrayMemberInitializations)
-					l.Add( ami.Left);
-
-				return l;
-			}
-			set { }
-		}
-
-		public sealed override string ToString()
-		{
-			var ret = "[";
-
-			if (ArrayMemberInitializations != null)
-				foreach (var i in ArrayMemberInitializations)
-					ret += i.ToString() + ",";
-
-			return ret.TrimEnd(',') + "]";
-		}
-	}
-
-	public class ArrayMemberInitializer
-	{
-		public IExpression Left;
-		public IExpression Specialization;
-
-		public sealed override string ToString()
-		{
-			return Left.ToString() + (Specialization != null ? (":" + Specialization.ToString()) : "");
-		}
-	}
-
-	public class StructInitializer : DInitializer
-	{
-		public StructMemberInitializer[] StructMemberInitializers;
-
-		public sealed override string ToString()
-		{
-			var ret = "{";
-
-			if (StructMemberInitializers != null)
-				foreach (var i in StructMemberInitializers)
-					ret += i.ToString() + ",";
-
-			return ret.TrimEnd(',') + "}";
-		}
-
 		public CodeLocation Location
 		{
 			get;
@@ -1474,16 +1412,90 @@ namespace D_Parser.Dom.Expressions
 		}
 	}
 
-	public class StructMemberInitializer
+	public class VoidInitializer : AbstractVariableInitializer
 	{
-		public string MemberName = string.Empty;
-		public IExpression Specialization;
+		public VoidInitializer() { }
+	}
+
+	public class ArrayInitializer : AssocArrayExpression,IVariableInitializer
+	{
+		/// <summary>
+		/// Keys are the array keys
+		/// Values are the values associated with the respective key expression
+		/// </summary>
+		public List<KeyValuePair<IExpression, IExpression>> Members;
 
 		public sealed override string ToString()
 		{
-			return (!string.IsNullOrEmpty(MemberName) ? (MemberName + ":") : "") + Specialization.ToString();
+			var ret = "[";
+
+			if(Members!=null)
+				foreach(var kv in Members)
+					ret+= kv.Key + (kv.Value!=null?(":"+kv.Value):"") + ',';
+
+			return ret.TrimEnd(',') + "]";
+		}
+
+		public IExpression[] SubExpressions
+		{
+			get {
+				if (Members == null || Members.Count < 1)
+					return null;
+
+				var l = new List<IExpression>(Members.Count);
+
+				foreach (var kv in Members)
+				{
+					l.Add(kv.Key);
+					l.Add(kv.Value);
+				}
+
+				return l.ToArray();
+			}
 		}
 	}
 
+	public class StructInitializer : AbstractVariableInitializer, ContainerExpression
+	{
+		public StructMemberInitializer[] MemberInitializers;
+
+		public sealed override string ToString()
+		{
+			var ret = "{";
+
+			if (MemberInitializers != null)
+				foreach (var i in MemberInitializers)
+					ret += i.ToString() + ",";
+
+			return ret.TrimEnd(',') + "}";
+		}
+
+		public IExpression[] SubExpressions
+		{
+			get {
+				if (MemberInitializers == null)
+					return null;
+
+				var l = new List<IExpression>(MemberInitializers.Length);
+
+				foreach (var mi in MemberInitializers)
+					if(mi.Value!=null)
+						l.Add(mi.Value);
+
+				return l.ToArray();
+			}
+		}
+	}
+
+	public class StructMemberInitializer
+	{
+		public string MemberName = string.Empty;
+		public IExpression Value;
+
+		public sealed override string ToString()
+		{
+			return (!string.IsNullOrEmpty(MemberName) ? (MemberName + ":") : "") + Value.ToString();
+		}
+	}
 	#endregion
 }

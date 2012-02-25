@@ -1502,84 +1502,12 @@ namespace D_Parser.Parser
 
 		IExpression NonVoidInitializer(IBlockNode Scope = null)
 		{
+			var isParsingInitializer_backup = TrackerVariables.IsParsingInitializer;
 			TrackerVariables.IsParsingInitializer = true;
 
-			#region ArrayInitializer
-			if (laKind == OpenSquareBracket)
-			{
-				Step();
+			// ArrayInitializers are handled in PrimaryExpression(), whereas setting IsParsingInitializer to true is required!
 
-				// ArrayMemberInitializations
-				var ae = new ArrayInitializer() { Location=t.Location};
-				LastParsedObject = ae;
-				var inits=new List<ArrayMemberInitializer>();
-
-				bool IsInit = true;
-				while (IsInit || laKind == (Comma))
-				{
-					if (!IsInit) Step();
-					IsInit = false;
-
-					// Allow empty post-comma expression IF the following token finishes the initializer expression
-					// int[] a=[1,2,3,4,];
-					if (laKind == CloseSquareBracket)
-						break;
-
-					// ArrayMemberInitialization
-					var ami = new ArrayMemberInitializer()
-					{
-						Left = NonVoidInitializer(Scope)
-					};
-					LastParsedObject = ami;
-					bool HasBeenAssExpr = !(t.Kind == (CloseSquareBracket) || t.Kind == (CloseCurlyBrace));
-
-					// AssignExpression : NonVoidInitializer
-					if (HasBeenAssExpr && laKind == (Colon))
-					{
-						Step();
-						ami.Specialization = NonVoidInitializer(Scope);
-					}
-					inits.Add(ami);
-				}
-
-				ae.ArrayMemberInitializations = inits.ToArray();
-
-				Expect(CloseSquareBracket);
-				ae.EndLocation = t.EndLocation;
-
-				// auto i=[1,2,3].idup; // in this case, this entire thing is meant to be an AssignExpression but not a dedicated initializer..
-				if (laKind == Dot)
-				{
-					Step();
-
-					var ae2 = new PostfixExpression_Access();
-					LastParsedObject = ae2;
-					ae2.PostfixForeExpression = ae;
-
-					if (IsTemplateInstance)
-						ae2.TemplateInstance = TemplateInstance();
-					else if (laKind == Identifier)
-					{
-						Step();
-						ae2.Identifier = t.Value;
-					}
-					//TODO: Handle other cases?
-					ae2.EndLocation = t.EndLocation;
-
-					if (!IsEOF)
-						TrackerVariables.IsParsingInitializer = false;
-
-					return ae2;
-				}
-
-				if (!IsEOF)
-					TrackerVariables.IsParsingInitializer = false;
-
-				return ae;
-			}
-			#endregion
-
-			// StructInitializer
+			#region StructInitializer
 			if (laKind == OpenCurlyBrace)
 			{
 				// StructMemberInitializations
@@ -1594,7 +1522,7 @@ namespace D_Parser.Parser
 					IsInit = false;
 
 					// Allow empty post-comma expression IF the following token finishes the initializer expression
-					// int[] a=[1,2,3,4,];
+					// int[] a={1,2,3,4,};
 					if (laKind == CloseCurlyBrace)
 						break;
 
@@ -1608,31 +1536,29 @@ namespace D_Parser.Parser
 						Step();
 					}
 
-					sinit.Specialization = NonVoidInitializer(Scope);
+					sinit.Value = NonVoidInitializer(Scope);
 
 					inits.Add(sinit);
 				}
 
-				ae.StructMemberInitializers = inits.ToArray();
+				ae.MemberInitializers = inits.ToArray();
 
 				Expect(CloseCurlyBrace);
 				ae.EndLocation = t.EndLocation;
 
 				if (!IsEOF)
-					TrackerVariables.IsParsingInitializer = false;
+					TrackerVariables.IsParsingInitializer = isParsingInitializer_backup;
 
 				return ae;
 			}
+			#endregion
 
-			else
-			{
-				var expr= AssignExpression(Scope);
+			var expr= AssignExpression(Scope);
 
-				if (!IsEOF)
-					TrackerVariables.IsParsingInitializer = false;
+			if (!IsEOF)
+				TrackerVariables.IsParsingInitializer = isParsingInitializer_backup;
 
-				return expr;
-			}
+			return expr;
 		}
 
 		TypeOfDeclaration TypeOf()
@@ -2515,7 +2441,8 @@ namespace D_Parser.Parser
 						leftExpr = new PostfixExpression_Slice()
 						{
 							PostfixForeExpression=leftExpr
-						}; LastParsedObject = leftExpr;
+						}; 
+						LastParsedObject = leftExpr;
 					}
 
 					Expect(CloseSquareBracket);
@@ -2626,28 +2553,39 @@ namespace D_Parser.Parser
 					return new ArrayLiteralExpression() {Location=startLoc, EndLocation = t.EndLocation };
 				}
 
-				var firstExpression = AssignExpression();
+				/*
+				 * If it's an initializer, allow NonVoidInitializers as values.
+				 * Normal AssignExpressions otherwise.
+				 */
+				bool isInitializer = TrackerVariables.IsParsingInitializer;
+
+				var firstExpression = isInitializer? NonVoidInitializer(Scope) : AssignExpression(Scope);
 
 				// Associtative array
 				if (laKind == Colon)
 				{
 					Step();
 
-					var ae = new AssocArrayExpression() { Location=startLoc};
+					var ae = isInitializer ?
+						new ArrayInitializer { Location = startLoc } : 
+						new AssocArrayExpression { Location=startLoc };
 					LastParsedObject = ae;
 
-					var firstValueExpression = AssignExpression();
+					var firstValueExpression = isInitializer? NonVoidInitializer(Scope) : AssignExpression();
 
-					ae.KeyValuePairs.Add(firstExpression, firstValueExpression);
+					ae.Elements.Add(new KeyValuePair<IExpression,IExpression>(firstExpression, firstValueExpression));
 
 					while (laKind == Comma)
 					{
 						Step();
 						var keyExpr = AssignExpression();
-						Expect(Colon);
-						var valueExpr = AssignExpression();
+						var valExpr=Expect(Colon) ? 
+							(isInitializer? 
+								NonVoidInitializer(Scope) : 
+								AssignExpression(Scope)) : 
+							null;
 
-						ae.KeyValuePairs.Add(keyExpr, valueExpr);
+						ae.Elements.Add(new KeyValuePair<IExpression,IExpression>(keyExpr,valExpr));
 					}
 
 					Expect(CloseSquareBracket);
@@ -2656,20 +2594,18 @@ namespace D_Parser.Parser
 				}
 				else // Normal array literal
 				{
-					var ae = new ArrayLiteralExpression() { Location=startLoc};
+					var ae = new ArrayLiteralExpression() { Location=startLoc };
 					LastParsedObject = ae;
-					var expressions = new List<IExpression>();
-					expressions.Add(firstExpression);
+					
+					ae.Elements.Add(firstExpression);
 
 					while (laKind == Comma)
 					{
 						Step();
 						if (laKind == CloseSquareBracket) // And again, empty expressions are allowed
 							break;
-						expressions.Add(AssignExpression());
+						ae.Elements.Add(isInitializer? NonVoidInitializer(Scope) : AssignExpression(Scope));
 					}
-
-					ae.Expressions = expressions;
 
 					Expect(CloseSquareBracket);
 					ae.EndLocation = t.EndLocation;
