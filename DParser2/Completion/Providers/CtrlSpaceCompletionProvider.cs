@@ -207,7 +207,7 @@ namespace D_Parser.Completion
 				else if (CurrentScope is DMethod)
 				{
 					psr.Step();
-					ret = psr.BlockStatement();
+					ret = psr.BlockStatement(CurrentScope);
 				}
 				else if (CurrentScope is DModule)
 					ret = psr.Root();
@@ -216,7 +216,7 @@ namespace D_Parser.Completion
 					psr.Step();
 					if (ParseDecl)
 					{
-						var ret2 = psr.Declaration();
+						var ret2 = psr.Declaration(CurrentScope);
 
 						if (ret2 != null && ret2.Length > 0)
 							ret = ret2[0];

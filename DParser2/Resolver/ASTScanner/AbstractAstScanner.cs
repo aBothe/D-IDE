@@ -172,35 +172,36 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 			#region Global members
 			// Add all non-private and non-package-only nodes
-			foreach (var mod in ctxt.ImportCache)
-			{
-				if (mod.FileName == (ctxt.ScopedBlock.NodeRoot as IAbstractSyntaxTree).FileName)
-					continue;
-
-				foreach (var i in mod)
+			if(ctxt.ImportCache!=null)
+				foreach (var mod in ctxt.ImportCache)
 				{
-					var dn = i as DNode;
-					if (dn != null)
-					{
-						// Add anonymous enums' items
-						if (dn is DEnum &&
-							string.IsNullOrEmpty(i.Name) &&
-							dn.IsPublic &&
-							!dn.ContainsAttribute(DTokens.Package) &&
-							CanAddMemberOfType(VisibleMembers, i))
-						{
-							HandleItems((i as DEnum).Children);
-							continue;
-						}
+					if (mod.FileName == (ctxt.ScopedBlock.NodeRoot as IAbstractSyntaxTree).FileName)
+						continue;
 
-						if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package) &&
-							CanAddMemberOfType(VisibleMembers, dn))
-							HandleItem(dn);
+					foreach (var i in mod)
+					{
+						var dn = i as DNode;
+						if (dn != null)
+						{
+							// Add anonymous enums' items
+							if (dn is DEnum &&
+								string.IsNullOrEmpty(i.Name) &&
+								dn.IsPublic &&
+								!dn.ContainsAttribute(DTokens.Package) &&
+								CanAddMemberOfType(VisibleMembers, i))
+							{
+								HandleItems((i as DEnum).Children);
+								continue;
+							}
+
+							if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package) &&
+								CanAddMemberOfType(VisibleMembers, dn))
+								HandleItem(dn);
+						}
+						else
+							HandleItem(i);
 					}
-					else
-						HandleItem(i);
 				}
-			}
 			#endregion
 		}
 

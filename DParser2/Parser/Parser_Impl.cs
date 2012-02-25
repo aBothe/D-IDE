@@ -2578,6 +2578,10 @@ namespace D_Parser.Parser
 					while (laKind == Comma)
 					{
 						Step();
+
+						if (laKind == CloseSquareBracket)
+							break;
+
 						var keyExpr = AssignExpression();
 						var valExpr=Expect(Colon) ? 
 							(isInitializer? 

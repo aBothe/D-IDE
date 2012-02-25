@@ -86,19 +86,84 @@ namespace D_Parser.Resolver.TypeResolution
 			if(baseExpression==null)
 				baseExpression = Resolve(call.PostfixForeExpression, ctxt);
 
-			if (baseExpression == null)
+			#region Search possible methods, opCalls or delegates that could be called
+			var methodContainingResultsToCheck = new List<ResolveResult>();
+
+			bool requireStaticItems = true;
+			IEnumerable<ResolveResult> scanResults = DResolver.TryRemoveAliasesFromResult(baseExpression);
+			var nextResults = new List<ResolveResult>();
+
+			while (scanResults != null)
+			{
+				foreach (var b in scanResults)
+				{
+					if (b is MemberResult)
+					{
+						var mr = b as MemberResult;
+
+						if (mr.Node is DMethod)
+						{
+							methodContainingResultsToCheck.Add(mr);
+							continue;
+						}
+
+						/*
+						 * If mr.Node is not a method, so e.g. if it's a variable
+						 * pointing to a delegate
+						 * 
+						 * class Foo
+						 * {
+						 *	string opCall() {  return "asdf";  }
+						 * }
+						 * 
+						 * Foo f=new Foo();
+						 * f(); -- calls opCall, opCall is not static
+						 */
+						if (mr.MemberBaseTypes != null)
+						{
+							nextResults.AddRange(mr.MemberBaseTypes);
+
+							requireStaticItems = false;
+						}
+					}
+					else if (b is DelegateResult)
+					{
+						var dg = b as DelegateResult;
+
+						/*
+						 * int a = delegate(x) { return x*2; } (12); // a is 24 after execution
+						 * auto dg=delegate(x) {return x*3;};
+						 * int b = dg(4);
+						 */
+
+						if (!dg.IsDelegateDeclaration)
+							methodContainingResultsToCheck.Add(dg);
+					}
+					else if (b is TypeResult)
+					{
+						/*
+						 * auto a = MyStruct(); -- opCall-Overloads can be used
+						 */
+						var classDef = (b as TypeResult).Node as DClassLike;
+
+						if (classDef == null)
+							continue;
+
+						foreach (var i in classDef)
+							if (i.Name == "opCall" && i is DMethod &&	(!requireStaticItems || (i as DNode).IsStatic))
+								methodContainingResultsToCheck.Add(TypeDeclarationResolver.ResolveNodeBaseType(i, ctxt, b, call));
+					}
+				}
+
+				scanResults = nextResults.Count==0 ? null:nextResults.ToArray();
+				nextResults.Clear();
+			}
+			#endregion
+
+			if (methodContainingResultsToCheck.Count == 0)
 				return null;
 
-			// Important: To ensure correct behaviour, aliases must be removed before further handling
-			baseExpression = DResolver.TryRemoveAliasesFromResult(baseExpression);
-
-			/*
-			 * int a() { return 1+2; }
-			 * 
-			 * int result = a() // a is member method -- return the method's base type
-			 * 
-			 */
-
+			#region Compare (template) parameters with given arguments to filter out unwanted overloads
 			var resolvedCallArguments = new List<ResolveResult[]>();
 
 			// Note: If an arg wasn't able to be resolved (returns null) - add it anyway to keep the indexes parallel
@@ -118,62 +183,40 @@ namespace D_Parser.Resolver.TypeResolution
 			 * If no template parameters were required, baseExpression will remain untouched.
 			 */
 
-			if(!(call.PostfixForeExpression is TemplateInstanceExpression))
-				TemplateInstanceResolver.ResolveAndFilterTemplateResults(
-					resolvedCallArguments.Count>0? resolvedCallArguments.ToArray():null, baseExpression, ctxt, false);
+			if (!(call.PostfixForeExpression is TemplateInstanceExpression))
+			{
+				var filteredMethods = TemplateInstanceResolver.ResolveAndFilterTemplateResults(
+					resolvedCallArguments.Count > 0 ? resolvedCallArguments.ToArray() : null,
+					methodContainingResultsToCheck, ctxt, false);
 
-			//TODO: Compare arguments' types with parameter types to whitelist legal method overloads
+				methodContainingResultsToCheck.Clear();
+				methodContainingResultsToCheck.AddRange(filteredMethods);
+			}
+			#endregion
 
 			var r = new List<ResolveResult>();
 
-			foreach (var b in baseExpression)
+			foreach (var rr in methodContainingResultsToCheck)
 			{
-				if (b is MemberResult)
+				if (rr is MemberResult)
 				{
-					var mr = b as MemberResult;
-
-					/*
-					 * opCall overloads are possible
-					 */
+					var mr = (MemberResult)rr;
 
 					if (mr.MemberBaseTypes != null)
 						r.AddRange(mr.MemberBaseTypes);
 				}
-				else if (b is DelegateResult)
+				else if (rr is DelegateResult)
 				{
-					var dg = b as DelegateResult;
+					var dg = (DelegateResult)rr;
 
-					// Should never happen
-					if (dg.IsDelegateDeclaration)
-						return null;
-
-					/*
-					 * int a = delegate(x) { return x*2; } (12); // a is 24 after execution
-					 * dg() , where as dg is a delegate
-					 */
-
-					return dg.ReturnType;
-				}
-				else if (b is TypeResult)
-				{
-					/*
-					 * auto a = MyStruct(); -- opCall-Overloads can be used
-					 */
-					var classDef = (b as TypeResult).Node as DClassLike;
-
-					if (classDef == null)
-						continue;
-
-					foreach (var i in classDef)
-						if (i.Name == "opCall" &&
-							i is DMethod &&
-							(i as DNode).IsStatic)
-							r.Add(TypeDeclarationResolver.ResolveNodeBaseType(i, ctxt, b, call));
+					if (dg.ReturnType != null)
+						r.AddRange(dg.ReturnType);
 				}
 			}
 
-			if(r.Count> 0)
+			if (r.Count != 0)
 				return r.ToArray();
+
 			return null;
 		}
 

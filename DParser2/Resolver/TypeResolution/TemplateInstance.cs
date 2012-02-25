@@ -60,7 +60,7 @@ namespace D_Parser.Resolver.TypeResolution
 				var tir = rr as TemplateInstanceResult;
 				if (tir == null)
 				{
-					if (args == null)
+					if (args == null || rr is DelegateResult)
 						returnedTemplates.Add(rr);
 
 					continue;

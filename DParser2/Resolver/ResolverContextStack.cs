@@ -103,6 +103,7 @@ namespace D_Parser.Resolver
 			ctxtOverride.ScopedStatement = null;
 
 			stack.Push(ctxtOverride);
+
 			return ctxtOverride;
 		}
 
