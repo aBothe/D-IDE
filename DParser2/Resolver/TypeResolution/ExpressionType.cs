@@ -157,6 +157,8 @@ namespace D_Parser.Resolver.TypeResolution
 					return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Char)) };
 				else if (id.Format.HasFlag(LiteralFormat.FloatingPoint))
 					return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Float)) };
+				else if (id.Format == LiteralFormat.Scalar)
+					return new[] { TypeDeclarationResolver.Resolve(new DTokenDeclaration(DTokens.Int)) };
 				else if (id.Format == LiteralFormat.StringLiteral || id.Format.HasFlag(LiteralFormat.VerbatimStringLiteral))
 					return TypeDeclarationResolver.ResolveIdentifier("string", ctxt, ex);
 			}
