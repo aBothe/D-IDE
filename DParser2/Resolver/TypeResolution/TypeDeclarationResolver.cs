@@ -626,7 +626,7 @@ namespace D_Parser.Resolver.TypeResolution
 						{
 							var tr = (TypeResult)rr;
 
-							if (keyIsSearched)
+							if (keyIsSearched || !(tr.Node is IBlockNode))
 								continue;
 
 							bool foundIterPropertyMatch = false;
@@ -634,10 +634,10 @@ namespace D_Parser.Resolver.TypeResolution
 
 							// Enlist all 'back'/'front' members
 							var t_l = new List<ResolveResult>();
-							if(tr.Node is IBlockNode)
-								foreach(var n in (IBlockNode)tr.Node)
-									if (fe.IsReverse ? n.Name == "back" : n.Name == "front")
-										t_l.Add(HandleNodeMatch(n, ctxt));
+
+							foreach(var n in (IBlockNode)tr.Node)
+								if (fe.IsReverse ? n.Name == "back" : n.Name == "front")
+									t_l.Add(HandleNodeMatch(n, ctxt));
 
 							// Remove aliases
 							var iterPropertyTypes = DResolver.TryRemoveAliasesFromResult(t_l);
@@ -665,7 +665,37 @@ namespace D_Parser.Resolver.TypeResolution
 							#endregion
 
 							#region Foreach over Structs and Classes with opApply
+							t_l.Clear();
+							r.Clear();
+							
+							foreach (var n in (IBlockNode)tr.Node)
+								if (n is DMethod && 
+									(fe.IsReverse ? n.Name == "opApplyReverse" : n.Name == "opApply"))
+									t_l.Add(HandleNodeMatch(n, ctxt));
 
+							iterPropertyTypes = DResolver.TryRemoveAliasesFromResult(t_l);
+
+							foreach (var iterPropertyType in iterPropertyTypes)
+								if (iterPropertyType is MemberResult)
+								{
+									var mr = (MemberResult)iterPropertyType;
+									var dm = mr.Node as DMethod;
+
+									if (dm == null || dm.Parameters.Count != 1)
+										continue;
+
+									var dg = dm.Parameters[0].Type as DelegateDeclaration;
+
+									if (dg == null || dg.Parameters.Count != fe.ForeachTypeList.Length)
+										continue;
+
+									var paramType = Resolve(dg.Parameters[iteratorIndex].Type, ctxt);
+
+									if(paramType!=null && paramType.Length > 0)
+										r.Add(paramType[0]);
+
+									//TODO: Inform the user about multiple matches whereas there should be one allowed only..
+								}
 							#endregion
 						}
 					}
