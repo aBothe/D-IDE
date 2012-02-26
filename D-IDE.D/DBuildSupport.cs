@@ -348,7 +348,7 @@ namespace D_IDE.D
 			if (to>0)
 			{
 				to += 2;
-				string FileName = s.Substring(0, to);
+				string FileName = s.Substring(0, to).TrimStart();
 				to += 1;
 				int to2 = s.IndexOf("):", to);
 				if (to2 > 0)
