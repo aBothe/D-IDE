@@ -141,9 +141,9 @@ namespace D_Parser.Resolver.TypeResolution
 						for (; i < args.Length; i++)
 						{
 							/*
-								* HACK: If there are multiple definitions of one type passed as argument, 
-								* fuck it and add the first result only.
-								*/
+							 * HACK: If there are multiple definitions of one type passed as argument, 
+							 * fuck it and add the first result only.
+							 */
 							if (args[i] != null && args[i].Length > 0)
 								tupleTypes.Add(args[i][0]);
 						}

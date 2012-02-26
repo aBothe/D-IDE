@@ -41,6 +41,13 @@ namespace D_Parser.Resolver
 		/// </summary>
 		public ResolveResult[] MemberBaseTypes;
 
+		public bool IsAlias
+		{
+			get {
+				return Node is DVariable && ((DVariable)Node).IsAlias;
+			}
+		}
+
 		public override string ToString()
 		{
 			return "[MemberResult] " + Node.ToString();

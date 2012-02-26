@@ -77,13 +77,13 @@
     <Compile Include="Resolver\ASTScanner\CodeSymbolsScanner.IdentifierScan.cs" />
     <Compile Include="Resolver\ASTScanner\ItemEnumeration.cs" />
     <Compile Include="Resolver\ASTScanner\NameScan.cs" />
-    <Compile Include="Resolver\TypeResolution\ExpressionType.cs" />
+    <Compile Include="Resolver\TypeResolution\ExpressionTypeResolution.cs" />
     <Compile Include="Resolver\ASTScanner\ImportResolver.cs" />
     <Compile Include="Resolver\ASTScanner\AbstractAstScanner.cs" />
-    <Compile Include="Resolver\TypeResolution\PostfixExpressions.cs" />
-    <Compile Include="Resolver\TypeResolution\TemplateInstance.cs" />
-    <Compile Include="Resolver\TypeResolution\Traits.cs" />
-    <Compile Include="Resolver\TypeResolution\TypeDeclaration.cs" />
+    <Compile Include="Resolver\TypeResolution\ExpressionTypeResolution.PostfixExpressions.cs" />
+    <Compile Include="Resolver\TypeResolution\ExpressionTypeResolution.TemplateInstance.cs" />
+    <Compile Include="Resolver\TypeResolution\ExpressionTypeResolution.TraitsResolver.cs" />
+    <Compile Include="Resolver\TypeResolution\TypeDeclarationResolver.cs" />
     <Compile Include="Completion\Providers\StaticTypePropertyProvider.cs" />
     <Compile Include="Misc\ASTStorage.cs" />
     <Compile Include="Completion\ICompletionDataGenerator.cs" />
@@ -91,7 +91,7 @@
     <Compile Include="Completion\ParameterInsightResolution.cs" />
     <Compile Include="Resolver\ASTScanner\ResultCache.cs" />
     <Compile Include="Resolver\ResolverContextStack.cs" />
-    <Compile Include="Resolver\TypeResolution\StaticProperties.cs" />
+    <Compile Include="Resolver\TypeResolution\StaticPropertiesResolver.cs" />
     <Compile Include="Completion\IEditorData.cs" />
     <Compile Include="Dom\AbstractNode.cs" />
     <Compile Include="Dom\CodeLocation.cs" />

@@ -253,8 +253,6 @@ namespace D_Parser.Resolver.TypeResolution
 		/// --> resolvedType will be StaticTypeResult from char[]
 		/// 
 		/// </summary>
-		/// <param name="rr"></param>
-		/// <returns></returns>
 		public static ResolveResult[] TryRemoveAliasesFromResult(IEnumerable<ResolveResult> initialResults)
 		{
 			var ret = new List<ResolveResult>(initialResults);
@@ -268,8 +266,7 @@ namespace D_Parser.Resolver.TypeResolution
 					if (mr != null &&
 
 						// Alias check
-						mr.Node is DVariable &&
-						(mr.Node as DVariable).IsAlias &&
+						mr.Node is DVariable &&	((DVariable)mr.Node).IsAlias &&
 
 						// Check if it has resolved base types
 						mr.MemberBaseTypes != null &&
@@ -286,6 +283,41 @@ namespace D_Parser.Resolver.TypeResolution
 			}
 
 			return ret.ToArray();
+		}
+
+		/// <summary>
+		/// Removes all kinds of members from the given results.
+		/// </summary>
+		/// <param name="resolvedMember">True if a member (not an alias!) had to be bypassed</param>
+		public static ResolveResult[] ResolveMembersFromResult(IEnumerable<ResolveResult> initialResults, out bool resolvedMember)
+		{
+			resolvedMember = false;
+			var ret = new List<ResolveResult>(initialResults);
+			var l2 = new List<ResolveResult>();
+
+			while (ret.Count > 0)
+			{
+				foreach (var res in ret)
+				{
+					var mr = res as MemberResult;
+					if (mr != null && mr.MemberBaseTypes != null)
+					{
+						l2.AddRange(mr.MemberBaseTypes);
+
+						if(!(mr.Node is DVariable) || !((DVariable)mr.Node).IsAlias)
+							resolvedMember = true;
+					}
+				}
+
+				if (l2.Count < 1)
+					break;
+
+				ret.Clear();
+				ret.AddRange(l2);
+				l2.Clear();
+			}
+
+			return ret.Count == 0? null : ret.ToArray();
 		}
 	}
 }

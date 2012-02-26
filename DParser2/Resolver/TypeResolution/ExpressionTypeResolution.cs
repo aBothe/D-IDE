@@ -180,7 +180,7 @@ namespace D_Parser.Resolver.TypeResolution
 
 					if (classDef is DClassLike)
 					{
-						var res = TypeDeclarationResolver.ResolveNodeBaseType(classDef, ctxt, null, ex);
+						var res = TypeDeclarationResolver.HandleNodeMatch(classDef, ctxt, null, ex);
 
 						if (res != null)
 							return new[] { res };

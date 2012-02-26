@@ -150,7 +150,7 @@ namespace D_Parser.Resolver.TypeResolution
 			// typeof(return)
 			if (typeOf.InstanceId is TokenExpression && (typeOf.InstanceId as TokenExpression).Token == DTokens.Return)
 			{
-				var m = ResolveNodeBaseType(ctxt.ScopedBlock, ctxt, null, typeOf);
+				var m = HandleNodeMatch(ctxt.ScopedBlock, ctxt, null, typeOf);
 				if (m != null)
 					return new[] { m };
 			}
@@ -325,7 +325,7 @@ namespace D_Parser.Resolver.TypeResolution
 		/// A class' base class will be searched.
 		/// etc..
 		/// </summary>
-		public static ResolveResult ResolveNodeBaseType(
+		public static ResolveResult HandleNodeMatch(
 			INode m,
 			ResolverContextStack ctxt,
 			ResolveResult resultBase = null,
@@ -349,12 +349,17 @@ namespace D_Parser.Resolver.TypeResolution
 			{
 				var v = m as DVariable;
 
-				memberbaseTypes = DoResolveBaseType ? TypeDeclarationResolver.Resolve(v.Type, ctxt) : null;
-
-				// For auto variables, use the initializer to get its type
-				if (memberbaseTypes == null && DoResolveBaseType && v.Initializer != null)
+				if (DoResolveBaseType)
 				{
-					memberbaseTypes = ExpressionTypeResolver.Resolve(v.Initializer, ctxt);
+					memberbaseTypes = TypeDeclarationResolver.Resolve(v.Type, ctxt);
+
+					// For auto variables, use the initializer to get its type
+					if (memberbaseTypes == null && v.Initializer != null)
+						memberbaseTypes = ExpressionTypeResolver.Resolve(v.Initializer, ctxt);
+
+					// Check if inside an foreach statement header
+					if (memberbaseTypes == null && ctxt.ScopedStatement != null)
+						memberbaseTypes = GetForeachIteratorType(v, ctxt);
 				}
 
 				#region Resolve aliases if wished
@@ -482,7 +487,7 @@ namespace D_Parser.Resolver.TypeResolution
 					if (m == null)
 						continue;
 
-					var res = ResolveNodeBaseType(m, ctxt, resultBase, TypeDeclaration);
+					var res = HandleNodeMatch(m, ctxt, resultBase, TypeDeclaration);
 					if (res != null)
 						rl.Add(res);
 				}
@@ -544,6 +549,134 @@ namespace D_Parser.Resolver.TypeResolution
 			}
 
 			return returnType;
+		}
+
+		/// <summary>
+		/// string[] s;
+		/// 
+		/// foreach(i;s)
+		/// {
+		///		// i is of type 'string'
+		///		writeln(i);
+		/// }
+		/// </summary>
+		public static ResolveResult[] GetForeachIteratorType(DVariable i, ResolverContextStack ctxt)
+		{
+			var curStmt = ctxt.ScopedStatement;
+			
+			// Walk up statement hierarchy -- note that foreach loops can be nested
+			while (curStmt != null)
+			{
+				if (curStmt is ForeachStatement)
+				{
+					var fe = (ForeachStatement)curStmt;
+
+					if(fe.ForeachTypeList==null)
+						continue;
+
+					// If the searched variable is declared in the header
+					int iteratorIndex = -1;
+
+					for(int j=0;j < fe.ForeachTypeList.Length;j++)
+						if(fe.ForeachTypeList[j]==i)
+						{
+							iteratorIndex=j;
+							break;
+						}
+
+					if (iteratorIndex == -1)
+						continue;
+
+					bool keyIsSearched = iteratorIndex == 0 && fe.ForeachTypeList.Length > 1;
+
+
+					// foreach(var k, var v; 0 .. 9)
+					if (keyIsSearched && fe.IsRangeStatement)
+					{
+						// -- it's static type int, of course(?)
+						return ResolveIdentifier("size_t", ctxt, null);
+					}
+
+					var aggregateType = ExpressionTypeResolver.Resolve(fe.Aggregate, ctxt);
+
+					bool remMember = false;
+					aggregateType = DResolver.ResolveMembersFromResult(aggregateType, out remMember);
+
+					if (aggregateType == null)
+						return null;
+
+					var r = new List<ResolveResult>();
+
+					foreach (var rr in aggregateType)
+					{
+						// The most common way to do a foreach
+						if (rr is ArrayResult)
+						{
+							var ar = (ArrayResult)rr;
+
+							if (keyIsSearched)
+							{
+								if(ar.KeyType!=null)
+									r.AddRange(ar.KeyType);
+							}
+							else
+								r.Add(ar.ResultBase);
+						}
+						else if (rr is TypeResult)
+						{
+							var tr = (TypeResult)rr;
+
+							if (keyIsSearched)
+								continue;
+
+							bool foundIterPropertyMatch = false;
+							#region Foreach over Structs and Classes with Ranges
+
+							// Enlist all 'back'/'front' members
+							var t_l = new List<ResolveResult>();
+							if(tr.Node is IBlockNode)
+								foreach(var n in (IBlockNode)tr.Node)
+									if (fe.IsReverse ? n.Name == "back" : n.Name == "front")
+										t_l.Add(HandleNodeMatch(n, ctxt));
+
+							// Remove aliases
+							var iterPropertyTypes = DResolver.TryRemoveAliasesFromResult(t_l);
+
+							foreach (var iterPropType in iterPropertyTypes)
+								if (iterPropType is MemberResult)
+								{
+									foundIterPropertyMatch = true;
+
+									var itp = (MemberResult)iterPropType;
+
+									// Only take non-parameterized methods
+									if (itp.Node is DMethod && ((DMethod)itp.Node).Parameters.Count != 0)
+										continue;
+
+									// Handle its base type [return type] as iterator type
+									if (itp.MemberBaseTypes != null)
+										r.AddRange(itp.MemberBaseTypes);
+
+									foundIterPropertyMatch = true;
+								}
+
+							if (foundIterPropertyMatch)
+								continue;
+							#endregion
+
+							#region Foreach over Structs and Classes with opApply
+
+							#endregion
+						}
+					}
+
+					return r.Count == 0?null: r.ToArray();
+				}
+
+				curStmt = curStmt.Parent;
+			}
+
+			return null;
 		}
 		#endregion
 	}

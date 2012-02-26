@@ -151,7 +151,7 @@ namespace D_Parser.Resolver.TypeResolution
 
 						foreach (var i in classDef)
 							if (i.Name == "opCall" && i is DMethod &&	(!requireStaticItems || (i as DNode).IsStatic))
-								methodContainingResultsToCheck.Add(TypeDeclarationResolver.ResolveNodeBaseType(i, ctxt, b, call));
+								methodContainingResultsToCheck.Add(TypeDeclarationResolver.HandleNodeMatch(i, ctxt, b, call));
 					}
 				}
 
