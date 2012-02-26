@@ -50,7 +50,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return "[MemberResult] " + Node.ToString();
+			return Node.ToString();
 		}
 
 		public override string ResultPath
@@ -68,7 +68,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return "[Static Type] " + DeclarationOrExpressionBase.ToString();
+			return DeclarationOrExpressionBase.ToString();
 		}
 
 		public override string ResultPath
@@ -94,7 +94,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return "[ArrayResult] "+DeclarationOrExpressionBase.ToString();
+			return DeclarationOrExpressionBase.ToString();
 		}
 	}
 
@@ -111,7 +111,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return "[ModuleResult] " + ResolvedModule.ToString();
+			return ResolvedModule.ToString();
 		}
 
 		public override string ResultPath
@@ -144,7 +144,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return "[TypeResult] " + Node.ToString();
+			return Node.ToString();
 		}
 
 		public override string ResultPath
@@ -182,7 +182,7 @@ namespace D_Parser.Resolver
 
 		public override string ToString()
 		{
-			return "[DelegateResulö]";
+			return ResultPath;
 		}
 	}
 }
