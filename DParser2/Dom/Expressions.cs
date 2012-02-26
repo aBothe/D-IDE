@@ -1417,43 +1417,7 @@ namespace D_Parser.Dom.Expressions
 		public VoidInitializer() { }
 	}
 
-	public class ArrayInitializer : AssocArrayExpression,IVariableInitializer
-	{
-		/// <summary>
-		/// Keys are the array keys
-		/// Values are the values associated with the respective key expression
-		/// </summary>
-		public List<KeyValuePair<IExpression, IExpression>> Members;
-
-		public sealed override string ToString()
-		{
-			var ret = "[";
-
-			if(Members!=null)
-				foreach(var kv in Members)
-					ret+= kv.Key + (kv.Value!=null?(":"+kv.Value):"") + ',';
-
-			return ret.TrimEnd(',') + "]";
-		}
-
-		public IExpression[] SubExpressions
-		{
-			get {
-				if (Members == null || Members.Count < 1)
-					return null;
-
-				var l = new List<IExpression>(Members.Count);
-
-				foreach (var kv in Members)
-				{
-					l.Add(kv.Key);
-					l.Add(kv.Value);
-				}
-
-				return l.ToArray();
-			}
-		}
-	}
+	public class ArrayInitializer : AssocArrayExpression,IVariableInitializer { }
 
 	public class StructInitializer : AbstractVariableInitializer, ContainerExpression
 	{
