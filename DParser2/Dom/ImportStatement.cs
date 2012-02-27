@@ -14,7 +14,7 @@ namespace D_Parser.Dom
 		}
 	}
 
-	public class ImportStatement:AbstractStatement
+	public class ImportStatement:AbstractStatement, IDeclarationContainingStatement
 	{
 		public bool IsStatic
 		{
@@ -99,6 +99,9 @@ namespace D_Parser.Dom
 		}
 
 		#region Pseudo alias variable generation
+		/// <summary>
+		/// These aliases are used for better handling of aliased modules imports and/or selective imports
+		/// </summary>
 		public List<DVariable> PseudoAliases = new List<DVariable>();
 
 		internal void CreatePseudoAliases()
@@ -107,32 +110,53 @@ namespace D_Parser.Dom
 
 			foreach (var imp in Imports)
 				if (!string.IsNullOrEmpty(imp.ModuleAlias))
-					PseudoAliases.Add(new ImportSymbolAlias(imp));
+					PseudoAliases.Add(new ImportSymbolAlias(this,imp));
 
 			if (ImportBinding != null)
 			{
+				/*
+				 * import cv=std.conv : Convert = to;
+				 * 
+				 * cv can be still used as an alias for std.conv,
+				 * whereas Convert is a direct alias for std.conv.to
+				 */
+				if(!string.IsNullOrEmpty(ImportBinding.Module.ModuleAlias))
+					PseudoAliases.Add(new ImportSymbolAlias(this,ImportBinding.Module));
+
 				foreach (var bind in ImportBinding.SelectedSymbols)
-				{
-					PseudoAliases.Add();
-				}
+					PseudoAliases.Add(new ImportSymbolAlias
+					{
+						OriginalImportStatement=this,
+						Name = string.IsNullOrEmpty(bind.Value) ? bind.Key : bind.Value,
+						Type = new IdentifierDeclaration(bind.Key)
+						{
+							InnerDeclaration = ImportBinding.Module.ModuleIdentifier
+						}
+					});
 			}
 		}
 
 		#endregion
+
+		public INode[] Declarations
+		{
+			get { return PseudoAliases.Count == 0 ? null : PseudoAliases.ToArray(); }
+		}
 	}
 
 	public class ImportSymbolAlias : DVariable
 	{
-		public ImportSymbolAlias(ImportStatement.Import imp)
+		public ImportStatement OriginalImportStatement;
+
+		public ImportSymbolAlias(ImportStatement impStmt,ImportStatement.Import imp)
 		{
+			OriginalImportStatement = impStmt;
+
 			Name = imp.ModuleAlias;
 			Type = imp.ModuleIdentifier;
 			IsAlias = true;
 		}
 
-		public ImportSymbolAlias()
-		{
-
-		}
+		public ImportSymbolAlias()	{}
 	}
 }

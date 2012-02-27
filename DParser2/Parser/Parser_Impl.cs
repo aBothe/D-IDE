@@ -514,7 +514,10 @@ namespace D_Parser.Parser
 			CheckForPostSemicolonComment();
 
 			importStatement.EndLocation = t.Location;
-			
+
+			// Prepare for resolving external items
+			importStatement.CreatePseudoAliases();
+
 			return importStatement;
 		}
 
