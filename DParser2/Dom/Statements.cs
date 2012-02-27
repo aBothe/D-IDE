@@ -13,6 +13,12 @@ namespace D_Parser.Dom.Statements
 		IStatement Parent { get; set; }
 		INode ParentNode { get; set; }
 
+		/// <summary>
+		/// Mostly used for storing declaration constraints.
+		/// </summary>
+		DAttribute[] Attributes { get; set; }
+		string AttributeString { get; }
+
 		string ToCode();
 	}
 
@@ -30,10 +36,11 @@ namespace D_Parser.Dom.Statements
 	{
 		public virtual CodeLocation StartLocation { get; set; }
 		public virtual CodeLocation EndLocation { get; set; }
-		public virtual IStatement Parent { get; set; }
+		public IStatement Parent { get; set; }
+		public DAttribute[] Attributes { get; set; }
 
 		INode parent;
-		public virtual INode ParentNode {
+		public INode ParentNode {
 			get
 			{
 				if(Parent!=null)
@@ -44,7 +51,20 @@ namespace D_Parser.Dom.Statements
 			{
 				if (Parent != null)
 					Parent.ParentNode = value;
-				parent = value;
+				else
+					parent = value;
+			}
+		}
+
+		public string AttributeString
+		{
+			get
+			{
+				string s = "";
+				foreach (var attr in Attributes)
+					if (attr != null)
+						s += attr.ToString() + " ";
+				return s;
 			}
 		}
 

@@ -223,7 +223,7 @@ namespace D_Parser.Completion
 					}
 					else
 					{
-						IBlockNode bn = null;
+						DBlockNode bn = null;
 						if (CurrentScope is DClassLike)
 						{
 							var t = new DClassLike((CurrentScope as DClassLike).ClassType);

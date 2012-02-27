@@ -32,9 +32,7 @@ namespace D_Parser.Dom
 	{
 		CodeLocation BlockStartLocation { get; set; }
 		INode[] Children { get; }
-		IStatement[] Statements { get; }
 
-		void Add(IStatement Statement);
 		void Add(INode Node);
 		void AddRange(IEnumerable<INode> Nodes);
 		int Count { get; }

@@ -23,9 +23,6 @@ namespace D_Parser.Dom
 			if (Other is IAbstractSyntaxTree)
 				ParseErrors = ((IAbstractSyntaxTree)Other).ParseErrors;
 
-			if (Other is DModule)
-				Imports = ((DModule)Other).Imports;
-
 			base.AssignFrom(Other);
         }
 
@@ -73,19 +70,6 @@ namespace D_Parser.Dom
 		/// </summary>
 		public ModuleStatement OptionalModuleStatement;
 
-		ImportStatement[] imports = null;
-		public ImportStatement[] Imports
-		{
-			get { return imports; }
-			set {
-				imports = value;
-
-				if (imports != null)
-					foreach (var imp in value)
-						imp.ParentNode = this;
-			}
-		}
-
 		public override string ToString(bool Attributes, bool IncludePath)
 		{
 			if (!IncludePath)
@@ -96,23 +80,17 @@ namespace D_Parser.Dom
 
 			return ModuleName;
 		}
-
-        public bool ContainsImport(string p)
-        {
-            if (Imports != null)
-                foreach (var i in Imports)
-                    if (i.IsSimpleBinding && i.ModuleIdentifier!=null && i.ModuleIdentifier.ToString() == p)
-                        return true;
-
-            return false;
-        }
 	}
 
 	public class DBlockNode : DNode, IBlockNode
 	{
 		CodeLocation _BlockStart;
 		protected List<INode> _Children = new List<INode>();
-		protected List<IStatement> _RootStatements = new List<IStatement>();
+
+		/// <summary>
+		/// Used for storing import statement and similar stuff
+		/// </summary>
+		public List<IStatement> StaticStatements = new List<IStatement>();
 
 		public CodeLocation BlockStartLocation
 		{
@@ -129,6 +107,16 @@ namespace D_Parser.Dom
 		public INode[] Children
 		{
 			get { return _Children.ToArray(); }
+		}
+
+		public IStatement[] Statements
+		{
+			get { return StaticStatements.ToArray(); }
+		}
+
+		public void Add(IStatement Statement)
+		{
+			StaticStatements.Add(Statement);
 		}
 
 		public void Add(INode Node)
@@ -191,26 +179,21 @@ namespace D_Parser.Dom
 		public override void AssignFrom(INode other)
 		{
 			var bn = other as IBlockNode;
+
 			if (bn!=null)
 			{
 				BlockStartLocation = bn.BlockStartLocation;
 				Clear();
 				AddRange(bn);
+
+				if (bn is DBlockNode)
+				{
+					StaticStatements.Clear();
+					StaticStatements.AddRange(((DBlockNode)bn).StaticStatements);
+				}
 			}
 
 			base.AssignFrom(other);
-		}
-
-
-
-		public IStatement[] Statements
-		{
-			get { return _RootStatements.ToArray(); }
-		}
-
-		public void Add(IStatement Statement)
-		{
-			_RootStatements.Add(Statement);
 		}
 	}
 
@@ -371,20 +354,7 @@ namespace D_Parser.Dom
 		{
 			Node.Parent = this;
 			additionalChildren.Add(Node);
-			/*
-			var block = GetSubBlockAt(Node.StartLocation);
-
-			if (block == null)
-				return;
-
-			var ds = new DeclarationStatement() { 
-				Declarations=new[]{Node},
-				StartLocation=Node.StartLocation,
-				EndLocation=Node.EndLocation
-			};
-
-			block.Add(ds);*/
-
+			
 			UpdateChildrenArray();
 		}
 
@@ -395,23 +365,6 @@ namespace D_Parser.Dom
 				n.Parent = this;
 				additionalChildren.Add(n);
 			}
-			/*
-			foreach (var Node in Nodes)
-			{
-				var block = GetSubBlockAt(Node.StartLocation);
-
-				if (block == null)
-					continue;
-
-				var ds = new DeclarationStatement()
-				{
-					Declarations = new[] { Node },
-					StartLocation = Node.StartLocation,
-					EndLocation = Node.EndLocation
-				};
-
-				block.Add(ds);
-			}*/
 
 			UpdateChildrenArray();
 		}
@@ -483,21 +436,6 @@ namespace D_Parser.Dom
 		public void Clear()
 		{
 			additionalChildren.Clear();
-		}
-
-
-		public IStatement[] Statements
-		{
-			get { return new[] { In, Out, Body }; }
-		}
-
-		public void Add(IStatement Statement)
-		{
-			//TODO: Describe this method as taking static statements.
-			if (Parent is IBlockNode)
-				(Parent as IBlockNode).Add(Statement);
-			else if (NodeRoot is IBlockNode && NodeRoot!=this)
-				(NodeRoot as IBlockNode).Add(Statement);
 		}
 	}
 

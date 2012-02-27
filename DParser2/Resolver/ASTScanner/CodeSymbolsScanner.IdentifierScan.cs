@@ -43,10 +43,6 @@ namespace D_Parser.Resolver.ASTScanner
 
 					if (dm.OptionalModuleStatement != null)
 						SearchIn(dm.OptionalModuleStatement, l);
-
-					if (dm.Imports != null && dm.Imports.Length > 0)
-						foreach (var imp in dm.Imports)
-							SearchIn(imp, l);
 				}
 
 				while (l1.Count > 0)
@@ -55,6 +51,10 @@ namespace D_Parser.Resolver.ASTScanner
 					{
 						if (n.Type != null)
 							SearchIn(n.Type, l);
+
+						if (n is DBlockNode)
+							foreach (var stmt in ((DBlockNode)n).StaticStatements)
+								SearchIn(stmt, l);
 
 						if (n is DNode)
 						{
@@ -131,9 +131,13 @@ namespace D_Parser.Resolver.ASTScanner
 					{
 						if (s is ImportStatement)
 						{
-							var impStmt = s as ImportStatement;
+							var impStmt = (ImportStatement)s;
 
-							SearchIn(impStmt.ModuleIdentifier, l);
+							foreach (var imp in impStmt.Imports)
+								SearchIn(imp.ModuleIdentifier, l);
+
+							if (impStmt.ImportBinding != null)
+								SearchIn(impStmt.ImportBinding.Module.ModuleIdentifier, l);
 						}
 
 						if (s is StatementContainingStatement)

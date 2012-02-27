@@ -44,7 +44,7 @@ namespace D_Parser.Parser
 			{
 				DeclDef(module);
 			}
-			module.Imports = imports.ToArray();
+			
 			module.EndLocation = la.Location;
 			return module;
 		}
@@ -130,7 +130,7 @@ namespace D_Parser.Parser
 
 		#endregion
 
-		void DeclDef(IBlockNode module)
+		void DeclDef(DBlockNode module)
 		{
 			//AttributeSpecifier
 			while (IsAttributeSpecifier())
@@ -150,7 +150,7 @@ namespace D_Parser.Parser
 
 			//ImportDeclaration
 			if (laKind == Import)
-				ImportDeclaration(module);
+				module.Add(ImportDeclaration());
 
 			//Constructor
 			else if (laKind == (This))
@@ -481,99 +481,50 @@ namespace D_Parser.Parser
 			return td;
 		}
 
-		void ImportDeclaration(IBlockNode Scope, IStatement Parent=null)
+		ImportStatement ImportDeclaration()
 		{
-			bool IsPublic = DAttribute.ContainsAttribute(BlockAttributes, Public);
-
-			if (DAttribute.ContainsAttribute(DeclarationAttributes, Public))
-			{
-				DAttribute.CleanupAccessorAttributes(DeclarationAttributes);
-				IsPublic = true;
-			}
-
-			bool IsStatic = DAttribute.ContainsAttribute(BlockAttributes, Static);
-
-			if (DAttribute.ContainsAttribute(DeclarationAttributes, Static))
-			{
-				DAttribute.RemoveFromStack(DeclarationAttributes, Static);
-				IsStatic = true;
-			}
-
-			DeclarationAttributes.Clear();
-			
 			Expect(Import);
-			var startLoc = t.Location;
 
+			var importStatement = new ImportStatement { StartLocation=t.Location };
+
+			ApplyAttributes(importStatement);
+			
 			var imp = _Import();
 
-			imp.Parent = Parent;
-			imp.ParentNode = Scope;
-			imp.StartLocation = t.Location;
-			imp.IsPublic = IsPublic;
-			imp.IsStatic = IsStatic;
+			while (laKind == Comma)
+			{
+				importStatement.Imports.Add(imp);
 
-			if(Scope!=null)
-				Scope.Add(imp);
-			imports.Add(imp);
+				Step();
 
-			// ImportBindings
+				imp = _Import();
+			}
+
 			if (laKind == Colon)
 			{
 				Step();
-				ImportBind(imp);
-				while (laKind == Comma)
-				{
-					Step();
-					ImportBind(imp);
-				}
+				importStatement.ImportBinding = ImportBindings(imp);
 			}
 			else
-			{
-				while (laKind == Comma)
-				{
-					imp.EndLocation = t.Location;
-					
-					Step();
-					startLoc = t.EndLocation;
-					imp = _Import();
-
-					imp.Parent = Parent;
-					imp.ParentNode = Scope;
-					imp.StartLocation = startLoc;
-					imp.IsPublic = IsPublic;
-					imp.IsStatic = IsStatic;
-
-					if (Scope != null)
-						Scope.Add(imp);
-					imports.Add(imp);
-
-					if (laKind == (Colon))
-					{
-						Step();
-						ImportBind(imp);
-						while (laKind == (Comma))
-						{
-							Step();
-							ImportBind(imp);
-						}
-					}
-				}
-			}
+				importStatement.Imports.Add(imp); // Don't forget to add the last import
 
 			if (Expect(Semicolon))
 				LastParsedObject = null;
 
 			CheckForPostSemicolonComment();
-			imp.EndLocation = t.Location;
+
+			importStatement.EndLocation = t.Location;
+			
+			return importStatement;
 		}
 
-		ImportStatement _Import()
+		ImportStatement.Import _Import()
 		{
-			var import = new ImportStatement();
+			var import = new ImportStatement.Import();
 			LastParsedObject = import;
 
 			// ModuleAliasIdentifier
-			if (Lexer.CurrentPeekToken.Kind == (Assign))
+			if (Lexer.CurrentPeekToken.Kind == Assign)
 			{
 				if(Expect(Identifier))
 					import.ModuleAlias = t.Value;
@@ -585,25 +536,24 @@ namespace D_Parser.Parser
 			return import;
 		}
 
-		void ImportBind(ImportStatement imp)
+		ImportStatement.ImportBindings ImportBindings(ImportStatement.Import imp)
 		{
-			if(imp.ExclusivelyImportedSymbols==null)
-				imp.ExclusivelyImportedSymbols = new Dictionary<string, string>();
+			var importBindings = new ImportStatement.ImportBindings { Module=imp };
 
 			if (Expect(Identifier))
 			{
-				string imbBind = t.Value;
-				string imbBindDef = "";
-
-				if (laKind == (Assign))
+				if (laKind == Assign)
 				{
+					var symbolAlias = t.Value;
 					Step();
-					Expect(Identifier);
-					imbBindDef = t.Value;
+					if (Expect(Identifier))
+						importBindings.SelectedSymbols.Add(new KeyValuePair<string,string>(symbolAlias,t.Value));					
 				}
-
-				imp.ExclusivelyImportedSymbols.Add(imbBind, imbBindDef);
+				else
+					importBindings.SelectedSymbols.Add(new KeyValuePair<string,string>(t.Value,null));
 			}
+
+			return importBindings;
 		}
 
 
@@ -3607,7 +3557,7 @@ namespace D_Parser.Parser
 
 			// ImportDeclaration
 			else if (laKind == Import)
-				ImportDeclaration(Scope, Parent);
+				return ImportDeclaration();
 
 			else if (!(ClassLike[laKind] || BasicTypes[laKind] || laKind == Enum || Modifiers[laKind] || laKind == PropertyAttribute || laKind == Alias || laKind == Typedef) && IsAssignExpression())
 			{
@@ -3637,8 +3587,6 @@ namespace D_Parser.Parser
 				s.EndLocation = t.EndLocation;
 				return s;
 			}
-
-			return null;
 		}
 
 		ForeachStatement ForeachStatement(IBlockNode Scope,IStatement Parent)
@@ -3956,7 +3904,7 @@ namespace D_Parser.Parser
 			return ret;
 		}
 
-		public void ClassBody(IBlockNode ret,bool KeepBlockAttributes=false)
+		public void ClassBody(DBlockNode ret,bool KeepBlockAttributes=false)
 		{
 			var OldPreviousCommentString = PreviousComment;
 			PreviousComment = "";

@@ -250,11 +250,8 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 				Statement = Statement.Parent;
 
 			while (Statement != null)
-			{/*
-				if (Statement is ForeachStatement)
-					HandleForeachHeader(Statement as ForeachStatement);
-
-				else*/ if (Statement is IDeclarationContainingStatement)
+			{
+				if (Statement is IDeclarationContainingStatement)
 				{
 					var decls = (Statement as IDeclarationContainingStatement).Declarations;
 
@@ -281,6 +278,10 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 				if (Statement is StatementContainingStatement)
 					foreach (var s in (Statement as StatementContainingStatement).SubStatements)
 					{
+						if (s is ImportStatement)
+						{
+
+						}
 						if (s is MixinStatement)
 						{
 							// TODO: Parse MixinStatements à la mixin("int x" ~ "="~ to!string(5) ~";");
@@ -301,64 +302,6 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 					}
 
 				Statement = Statement.Parent;
-			}
-		}
-
-		void HandleForeachHeader(ForeachStatement fe)
-		{
-			DVariable keyIterator = null, valueIterator = null;
-
-			if (fe.ForeachTypeList == null || fe.ForeachTypeList.Length == 0)
-			{ }
-			else if (fe.ForeachTypeList.Length == 1)
-				valueIterator = fe.ForeachTypeList[0];
-			else if (fe.ForeachTypeList.Length > 1)
-			{
-				keyIterator = fe.ForeachTypeList[0];
-				valueIterator = fe.ForeachTypeList[1];
-			}
-
-			bool ArrayTypeResolutionRequired = false;
-
-			if (keyIterator != null && keyIterator.Type == null)
-				ArrayTypeResolutionRequired = true;
-
-			if (valueIterator != null && valueIterator.Type == null)
-				ArrayTypeResolutionRequired = true;
-
-			if (ArrayTypeResolutionRequired)
-			{
-				// foreach(v, 0 .. 10)
-				if (fe.IsRangeStatement)
-				{
-					//	Key type is integer
-					//	Value is type of the lower aggregate
-				}
-				else
-				{
-					// Resolve aggregate's type
-
-					// Note: begin to resolve type a scope level higher than this one 
-					// -- it'd end up in an infinite foreach-resolution-recursion otherwise ;)
-
-
-					// If associative array given:
-					//		Key iterator type is key type
-					//		Value iterator type is value type
-
-					// If normal array given:
-					//		Key iterator type is integer
-					//		Value iterator type is value type
-
-					/* If class-like construct given: (see 'Foreach over Structs and Classes with Ranges')
-					 * 
-					 *		If foreach:
-					 *			Value type is type of property "front"
-					 *		else if foreach_reverse:
-					 *			Value type is type of property "back"
-					 * 
-					 */
-				}
 			}
 		}
 	}
