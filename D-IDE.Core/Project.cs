@@ -154,7 +154,7 @@ namespace D_IDE.Core
 			if (file == null)
 				return null;
 
-			var f = file.Trim('\\');
+			var f = file.Trim('\\','\t');
 			if (Path.IsPathRooted(f) && f.StartsWith(BaseDirectory))
 				return f.Substring(BaseDirectory.Length).Trim('\\');
 			return f;
