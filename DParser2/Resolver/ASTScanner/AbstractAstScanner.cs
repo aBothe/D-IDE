@@ -12,14 +12,23 @@ namespace D_Parser.Resolver.ASTScanner
 {
 	public abstract class AbstractAstScanner
 	{
+		#region Properties
 		public static DVariable __ctfe;
+		Dictionary<string, List<string>> scannedModules = new Dictionary<string, List<string>>();
+
+		static ImportStatement.Import _objectImport = new ImportStatement.Import
+		{
+			ModuleIdentifier = new IdentifierDeclaration("object")
+		};
 
 		ResolverContextStack ctxt;
 		public ResolverContextStack Context { 
 			get{ return ctxt;}
 			set{ ctxt=value;}
 		}
+		#endregion
 
+		#region Constructor
 		public AbstractAstScanner(ResolverContextStack context)
 		{
 			ctxt=context;
@@ -41,6 +50,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 			__ctfe.Attributes.Add(new DAttribute(DTokens.Static));
 			__ctfe.Attributes.Add(new DAttribute(DTokens.Const));
 		}
+		#endregion
 
 		protected abstract void HandleItem(INode n);
 
@@ -292,14 +302,7 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 			}
 		}
 
-
-
-
 		#region Imports
-
-		ImportStatement.Import _objectImport = new ImportStatement.Import { 
-			ModuleIdentifier= new IdentifierDeclaration("object")
-		};
 
 		/* 
 		 * public imports only affect the directly superior module:
@@ -336,12 +339,13 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 		void HandleDBlockNode(DBlockNode dbn, MemberFilter VisibleMembers, bool takePublicImportsOnly=false)
 		{
 			if (dbn != null && dbn.StaticStatements != null)
+			{
 				foreach (var stmt in dbn.StaticStatements)
 				{
 					var dstmt = stmt as IDeclarationContainingStatement;
 
-					if (takePublicImportsOnly && 
-						dstmt is ImportStatement && 
+					if (takePublicImportsOnly &&
+						dstmt is ImportStatement &&
 						!DAttribute.ContainsAttribute(dstmt.Attributes, DTokens.Public))
 						continue;
 
@@ -358,9 +362,14 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 						foreach (var imp in impStmt.Imports)
 							if (string.IsNullOrEmpty(imp.ModuleAlias))
-								HandleNonAliasedImport(imp,VisibleMembers);
+								HandleNonAliasedImport(imp, VisibleMembers);
 					}
 				}
+			}
+
+			// Every module imports 'object' implicitly
+			if (!takePublicImportsOnly)
+				HandleNonAliasedImport(_objectImport, VisibleMembers);
 		}
 
 		void HandleNonAliasedImport(ImportStatement.Import imp, MemberFilter VisibleMembers)
@@ -368,7 +377,18 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 			if (imp == null || imp.ModuleIdentifier == null)
 				return;
 
-			foreach (var module in ctxt.ParseCache.LookupModuleName(imp.ModuleIdentifier.ToString()))
+			var thisModuleName = (ctxt.ScopedBlock.NodeRoot as IAbstractSyntaxTree).ModuleName;
+			var moduleName = imp.ModuleIdentifier.ToString();
+
+			List<string> seenModules = null;
+
+			if(!scannedModules.TryGetValue(thisModuleName,out seenModules))
+				seenModules = scannedModules[thisModuleName] = new List<string>();
+			else if (seenModules.Contains(moduleName))
+				return;
+			seenModules.Add(moduleName);
+
+			foreach (var module in ctxt.ParseCache.LookupModuleName(moduleName))
 			{
 				if (module == null || module.FileName == (ctxt.ScopedBlock.NodeRoot as IAbstractSyntaxTree).FileName)
 					continue;
