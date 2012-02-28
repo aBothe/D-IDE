@@ -18,11 +18,6 @@ namespace D_Parser.Completion
 
 		public MemberCompletionProvider(ICompletionDataGenerator cdg) : base(cdg) { }
 
-		public static bool CompletesEnteredText(string EnteredText)
-		{
-			return EnteredText == ".";
-		}
-
 		public enum ItemVisibility
 		{
 			All = 1,
@@ -44,10 +39,6 @@ namespace D_Parser.Completion
 			if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 				return;
 
-			/*
-			 * Note: When having entered a module name stub only (e.g. "std." or "core.") it's needed to show all packages that belong to that root namespace
-			 */
-
 			foreach (var rr in resolveResults)
 			{
 				lastResultPath = rr.ResultPath;
@@ -61,11 +52,14 @@ namespace D_Parser.Completion
 			bool isVariableInstance = false,
 			ResolveResult resultParent = null)
 		{
+			if (rr == null)
+				return;
+
 			if(rr.DeclarationOrExpressionBase is ITypeDeclaration)
 				isVariableInstance |= (rr.DeclarationOrExpressionBase as ITypeDeclaration).ExpressesVariableAccess;
 
 			if (rr is MemberResult)
-				BuildCompletionData(rr as MemberResult, currentlyScopedBlock, isVariableInstance);
+				BuildCompletionData((MemberResult)rr, currentlyScopedBlock, isVariableInstance);
 
 			// A module path has been typed
 			else if (!isVariableInstance && rr is ModuleResult)

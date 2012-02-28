@@ -441,6 +441,7 @@ namespace D_IDE.D
 			// After having loaded the directory paths, parse them asynchronously
 			new Thread(() =>
 			{
+				Thread.CurrentThread.Name = "Library parsing thread";
 				Thread.CurrentThread.IsBackground = true;
 
 				try

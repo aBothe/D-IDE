@@ -16,15 +16,6 @@ namespace D_Parser.Completion
 
 		public CtrlSpaceCompletionProvider(ICompletionDataGenerator cdg) : base(cdg) { }
 
-		/*
-		public static bool CompletesEnteredText(string EnteredText)
-		{
-			return string.IsNullOrWhiteSpace(EnteredText) ||
-				IsIdentifierChar(EnteredText[0]) ||
-				EnteredText[0] == '(';
-		}
-		 */
-
 		protected override void BuildCompletionDataInternal(IEditorData Editor, string EnteredText)
 		{
 			IEnumerable<INode> listedItems = null;
@@ -112,6 +103,9 @@ namespace D_Parser.Completion
 			if (listedItems != null)
 				foreach (var i in listedItems)
 				{
+					if (i is IAbstractSyntaxTree) // Modules and stuff will be added later on
+						continue;
+
 					if (CanItemBeShownGenerally(i))
 						CompletionDataGenerator.Add(i);
 				}
@@ -130,19 +124,45 @@ namespace D_Parser.Completion
 			if (visibleMembers.HasFlag(MemberFilter.Imports))
 			{
 				var nameStubs = new Dictionary<string, string>();
+				var availModules = new List<IAbstractSyntaxTree>();
 
-				foreach (var pck in Editor.ParseCache)
-				{
-					foreach (var kv in pck.Root.Packages)
-						if(!nameStubs.ContainsKey(kv.Key))
-							nameStubs.Add(kv.Key, "");
+				foreach(var sstmt in Editor.SyntaxTree.StaticStatements)
+					if (sstmt is ImportStatement)
+					{
+						var impStmt = (ImportStatement)sstmt;
 
-					foreach (var kv in pck.Root.Modules)
-						CompletionDataGenerator.Add(kv.Value.ModuleName, kv.Value);
-				}
+						foreach(var imp in impStmt.Imports)
+							if (string.IsNullOrEmpty(imp.ModuleAlias))
+							{
+								var id=imp.ModuleIdentifier.ToString();
+								
+								IAbstractSyntaxTree mod = null;
+								foreach(var m in Editor.ParseCache.LookupModuleName(id))
+								{
+									mod = m;
+									break;
+								}
+
+								if (mod == null || string.IsNullOrEmpty(mod.ModuleName))
+									continue;
+
+								var stub = imp.ModuleIdentifier.InnerMost.ToString();
+
+								if (!nameStubs.ContainsKey(stub) && !availModules.Contains(mod))
+								{
+									if (stub == mod.ModuleName)
+										availModules.Add(mod);
+									else
+										nameStubs.Add(stub, GetModulePath(mod.FileName, id.Split('.').Length, 1));
+								}
+							}
+					}
 
 				foreach (var kv in nameStubs)
 					CompletionDataGenerator.Add(kv.Key, null, kv.Value);
+
+				foreach (var mod in availModules)
+					CompletionDataGenerator.Add(mod.ModuleName, mod);
 			}
 			#endregion
 		}

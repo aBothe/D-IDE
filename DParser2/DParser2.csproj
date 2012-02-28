@@ -71,6 +71,7 @@
     <Compile Include="Completion\AbstractTooltipProvider.cs" />
     <Compile Include="Completion\Providers\AttributeCompletionProvider.cs" />
     <Compile Include="Completion\Providers\CtrlSpaceCompletionProvider.cs" />
+    <Compile Include="Completion\Providers\ImportStatementCompletionProvider.cs" />
     <Compile Include="Completion\Providers\MemberCompletionProvider.cs" />
     <Compile Include="Completion\Providers\PropertyAttributeCompletionProvider.cs" />
     <Compile Include="Dom\TemplateParameters.cs" />

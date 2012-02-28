@@ -297,6 +297,10 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 
 		#region Imports
 
+		ImportStatement.Import _objectImport = new ImportStatement.Import { 
+			ModuleIdentifier= new IdentifierDeclaration("object")
+		};
+
 		/* 
 		 * public imports only affect the directly superior module:
 		 *
@@ -363,37 +367,40 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 		{
 			if (imp == null || imp.ModuleIdentifier == null)
 				return;
-			
-			var module = ctxt.ParseCache.LookupModuleName(imp.ModuleIdentifier.ToString());
 
-			if (module == null || module.FileName == (ctxt.ScopedBlock.NodeRoot as IAbstractSyntaxTree).FileName)
-				return;
-
-			foreach (var i in module)
+			foreach (var module in ctxt.ParseCache.LookupModuleName(imp.ModuleIdentifier.ToString()))
 			{
-				var dn = i as DNode;
-				if (dn != null)
+				if (module == null || module.FileName == (ctxt.ScopedBlock.NodeRoot as IAbstractSyntaxTree).FileName)
+					continue;
+
+				HandleItem(module);
+
+				foreach (var i in module)
 				{
-					// Add anonymous enums' items
-					if (dn is DEnum &&
-						string.IsNullOrEmpty(i.Name) &&
-						dn.IsPublic &&
-						!dn.ContainsAttribute(DTokens.Package) &&
-						CanAddMemberOfType(VisibleMembers, i))
+					var dn = i as DNode;
+					if (dn != null)
 					{
-						HandleItems((i as DEnum).Children);
-						continue;
+						// Add anonymous enums' items
+						if (dn is DEnum &&
+							string.IsNullOrEmpty(i.Name) &&
+							dn.IsPublic &&
+							!dn.ContainsAttribute(DTokens.Package) &&
+							CanAddMemberOfType(VisibleMembers, i))
+						{
+							HandleItems((i as DEnum).Children);
+							continue;
+						}
+
+						if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package) &&
+							CanAddMemberOfType(VisibleMembers, dn))
+							HandleItem(dn);
 					}
-
-					if (dn.IsPublic && !dn.ContainsAttribute(DTokens.Package) &&
-						CanAddMemberOfType(VisibleMembers, dn))
-						HandleItem(dn);
+					else
+						HandleItem(i);
 				}
-				else
-					HandleItem(i);
-			}
 
-			HandleDBlockNode(module as DBlockNode,VisibleMembers,true);
+				HandleDBlockNode(module as DBlockNode, VisibleMembers, true);
+			}
 		}
 
 		#endregion

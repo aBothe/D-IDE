@@ -52,16 +52,17 @@ namespace D_Parser.Misc
 				var ppd = new ParsePerformanceData { BaseDirectory = dir };
 				performanceLogs.Add(ppd);
 
-				Parse(dir, newRoot, ppd);
+				Parse(dir, newRoot, ppd, true);
 			}
 
 			IsParsing = false;
 			ParsedDirectories = parsedDirs;
+			Root = newRoot;
 
 			return performanceLogs.ToArray();
 		}
 
-		void Parse(string dir, ModulePackage Parent, ParsePerformanceData ppd)
+		void Parse(string dir, ModulePackage Parent, ParsePerformanceData ppd, bool root=false)
 		{
 			// wild card character ? seems to behave differently across platforms
 			// msdn: -> Exactly zero or one character.
@@ -75,7 +76,7 @@ namespace D_Parser.Misc
 			ModulePackage package = null;
 			var packageName = Path.GetFileName(dir);
 
-			if (Parent is RootPackage)
+			if (root)
 				package = Parent;
 			else if (!Parent.Packages.TryGetValue(packageName, out package))
 				package = Parent.Packages[packageName] = new ModulePackage
@@ -101,7 +102,9 @@ namespace D_Parser.Misc
 					// If no debugger attached, save time + memory by skipping function bodies
 					var ast = DParser.ParseFile(file, !Debugger.IsAttached);
 
-					ast.ModuleName = DModule.GetModuleName(dir, ast);
+					if(!root)
+						ast.ModuleName =  package.Path + "." +Path.GetFileNameWithoutExtension(file);
+
 					ast.FileName = file;
 
 					package.Modules[ExtractModuleName(ast.ModuleName)] = ast;
@@ -120,6 +123,10 @@ namespace D_Parser.Misc
 			// Parse further subdirectories
 			foreach (var subDir in Directory.EnumerateDirectories(dir))
 				Parse(subDir, package, ppd);
+
+			// Removed empty packages
+			if (package.Modules.Count == 0 && package.Packages.Count == 0 && !root)
+				Parent.Packages.Remove(packageName);
 		}
 
 		public void Clear(bool parseDirectories=false)
@@ -155,7 +162,7 @@ namespace D_Parser.Misc
 			pack.Modules[ExtractModuleName(ast.ModuleName)] = ast;
 		}
 
-		ModulePackage GetOrCreatePackage(string package, bool create=false)
+		public ModulePackage GetOrCreatePackage(string package, bool create=false)
 		{
 			if (string.IsNullOrEmpty(package))
 				return Root;
@@ -221,7 +228,7 @@ namespace D_Parser.Misc
 
 			var i = ModuleName.LastIndexOf('.');
 
-			return i == -1 ? ModuleName : ModuleName.Substring(0,i);
+			return i == -1 ? "" : ModuleName.Substring(0,i);
 		}
 
 		/// <summary>
@@ -244,12 +251,17 @@ namespace D_Parser.Misc
 		#endregion
 	}
 
-	public class RootPackage : ModulePackage { }
+	public class RootPackage : ModulePackage {
+		public override string ToString()
+		{
+			return "<Root>";
+		}
+	}
 
 	public class ModulePackage
 	{
 		public ModulePackage Parent { get; internal set; }
-		public string Name { get; internal set; }
+		public string Name = "";
 
 		public Dictionary<string, ModulePackage> Packages = new Dictionary<string, ModulePackage>();
 		public Dictionary<string, IAbstractSyntaxTree> Modules = new Dictionary<string, IAbstractSyntaxTree>();
@@ -257,8 +269,13 @@ namespace D_Parser.Misc
 		public string Path
 		{
 			get{
-				return (Parent==null ? (Parent.Path+"."):"") + Name;
+				return ((Parent == null || Parent is RootPackage) ? "" : (Parent.Path+".")) + Name;
 			}
+		}
+
+		public override string ToString()
+		{
+			return Path;
 		}
 	}
 

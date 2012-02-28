@@ -14,16 +14,26 @@ namespace D_Parser.Misc
 			return pcl;
 		}
 
-		public IAbstractSyntaxTree LookupModuleName(string moduleName)
+		public IEnumerable<IAbstractSyntaxTree> LookupModuleName(string moduleName)
 		{
 			foreach (var pc in this)
 			{
 				var r = pc.GetModule(moduleName);
-				if (r != null)
-					return r;
-			}
 
-			return null;
+				if (r != null)
+					yield return r;
+			}
+		}
+
+		public IEnumerable<ModulePackage> LookupPackage(string packageName)
+		{
+			foreach (var pc in this)
+			{
+				var r = pc.GetOrCreatePackage(packageName);
+
+				if (r != null)
+					yield return r;
+			}
 		}
 	}
 }

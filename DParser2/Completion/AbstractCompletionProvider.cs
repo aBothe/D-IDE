@@ -3,6 +3,7 @@ using D_Parser.Dom.Expressions;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
 using D_Parser.Resolver.TypeResolution;
+using D_Parser.Completion.Providers;
 
 namespace D_Parser.Completion
 {
@@ -60,10 +61,14 @@ namespace D_Parser.Completion
 							Attribute = (trackVars.LastParsedObject as PragmaStatement).Pragma
 						};
 					else if (trackVars.LastParsedObject is TraitsExpression)
-						return new TraitsExpressionCompletionProvider(dataGen) 
-						{ 
+						return new TraitsExpressionCompletionProvider(dataGen)
+						{
 							//TraitsExpr=trackVars.LastParsedObject as TraitsExpression 
 						};
+					else if (trackVars.LastParsedObject is ImportStatement.Import)
+						return new ImportStatementCompletionProvider(dataGen, (ImportStatement.Import)trackVars.LastParsedObject);
+					else if (trackVars.LastParsedObject is ImportStatement.ImportBindings)
+						return new ImportStatementCompletionProvider(dataGen, (ImportStatement.ImportBindings)trackVars.LastParsedObject);
 				}
 				
 				if (EnteredText == "(")

@@ -536,12 +536,16 @@ namespace D_Parser.Parser
 
 			import.ModuleIdentifier = ModuleFullyQualifiedName();
 
+			if (!IsEOF)
+				LastParsedObject = null;
+
 			return import;
 		}
 
 		ImportStatement.ImportBindings ImportBindings(ImportStatement.Import imp)
 		{
 			var importBindings = new ImportStatement.ImportBindings { Module=imp };
+			LastParsedObject = importBindings;
 
 			if (Expect(Identifier))
 			{
@@ -555,6 +559,9 @@ namespace D_Parser.Parser
 				else
 					importBindings.SelectedSymbols.Add(new KeyValuePair<string,string>(t.Value,null));
 			}
+
+			if (!IsEOF)
+				LastParsedObject = null;
 
 			return importBindings;
 		}

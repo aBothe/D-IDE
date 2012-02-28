@@ -61,7 +61,7 @@ namespace D_Parser.Dom
 		{
 			return Path.ChangeExtension(
 					file.Substring(baseDirectory.Length), null).
-						Replace(Path.DirectorySeparatorChar, '.');
+						Replace(Path.DirectorySeparatorChar, '.').Trim('.');
 		}
 
 		public System.Collections.ObjectModel.ReadOnlyCollection<ParserError> ParseErrors
