@@ -21,15 +21,6 @@ namespace D_Parser.Resolver.ASTScanner
 
 			scan.IterateThroughScopeLayers(caret);
 
-			if (ctxt.ParseCache != null)
-				foreach (var mod in ctxt.ParseCache)
-				{
-					var modNameParts = mod.ModuleName.Split('.');
-
-					if (modNameParts[0] == name)
-						scan.Matches.Add(mod);
-				}
-
 			return scan.Matches;
 		}
 

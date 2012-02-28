@@ -75,12 +75,12 @@
     <Compile Include="Completion\Providers\PropertyAttributeCompletionProvider.cs" />
     <Compile Include="Dom\TemplateParameters.cs" />
     <Compile Include="Misc\ParseCache.cs" />
-    <Compile Include="Misc\ParseCacheCompound.cs" />
+    <Compile Include="Misc\ParseCacheList.cs" />
+    <Compile Include="Misc\ParseLog.cs" />
     <Compile Include="Resolver\ASTScanner\CodeSymbolsScanner.IdentifierScan.cs" />
     <Compile Include="Resolver\ASTScanner\ItemEnumeration.cs" />
     <Compile Include="Resolver\ASTScanner\NameScan.cs" />
     <Compile Include="Resolver\TypeResolution\ExpressionTypeResolution.cs" />
-    <Compile Include="Resolver\ASTScanner\ImportResolver.cs" />
     <Compile Include="Resolver\ASTScanner\AbstractAstScanner.cs" />
     <Compile Include="Resolver\TypeResolution\ExpressionTypeResolution.PostfixExpressions.cs" />
     <Compile Include="Resolver\TypeResolution\ExpressionTypeResolution.TemplateInstance.cs" />

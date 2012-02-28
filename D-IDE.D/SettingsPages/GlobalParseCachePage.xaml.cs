@@ -5,6 +5,8 @@ using System.Windows.Input;
 using D_IDE.Core;
 using D_Parser.Completion;
 using System.Threading;
+using D_Parser.Misc;
+using System.Collections.Generic;
 
 namespace D_IDE.D
 {
@@ -15,8 +17,9 @@ namespace D_IDE.D
 	{
 		public DMDSettingsPage ParentPage { get; private set; }
 		public DMDConfig cfg { get; private set; }
+		Thread parseThread;
 
-		readonly ObservableCollection<ASTCollection> Dirs = new ObservableCollection<ASTCollection>();
+		readonly ObservableCollection<string> Dirs = new ObservableCollection<string>();
 		public GlobalParseCachePage(DMDSettingsPage DMDPage,DMDConfig Config)
 		{
 			InitializeComponent();
@@ -30,9 +33,42 @@ namespace D_IDE.D
 
 		public override bool ApplyChanges()
 		{
-			cfg.ASTCache.ParsedGlobalDictionaries.Clear();
-			cfg.ASTCache.ParsedGlobalDictionaries.AddRange(Dirs);
-			cfg.ASTCache.UpdateEditorFastAccessCache();
+			// If current dir count != the new dir count
+			bool cacheUpdateRequired = Dirs.Count != cfg.ASTCache.ParsedDirectories.Count;
+
+			// If there's a new directory in it
+			if (!cacheUpdateRequired)
+				foreach (var path in Dirs)
+					if (!cfg.ASTCache.ParsedDirectories.Contains(path))
+					{
+						cacheUpdateRequired = true;
+						break;
+					}
+
+			if (cacheUpdateRequired)
+			{
+				if (parseThread != null && parseThread.IsAlive)
+					parseThread.Abort();
+
+				Cursor = Cursors.Wait;
+
+				parseThread = new Thread(() =>
+				{
+					try
+					{
+						cfg.ASTCache.Parse(Dirs);
+					}
+					catch (Exception ex)
+					{
+						ErrorLogger.Log(ex);
+					}
+
+					Dispatcher.Invoke(new Action(() =>	Cursor = Cursors.Arrow	));
+				});
+				parseThread.IsBackground = true;
+
+				parseThread.Start();
+			}
 
 			return true;
 		}
@@ -40,7 +76,7 @@ namespace D_IDE.D
 		public override void LoadCurrent()
 		{
 			Dirs.Clear();
-			foreach (var pd in cfg.ASTCache)
+			foreach (var pd in cfg.ASTCache.ParsedDirectories)
 				Dirs.Add(pd);
 		}
 
@@ -56,58 +92,12 @@ namespace D_IDE.D
 		{
 			var dlg = new System.Windows.Forms.FolderBrowserDialog();
 			if (dlg.ShowDialog()==System.Windows.Forms.DialogResult.OK)
-			{
-				var ac = new ASTCollection(dlg.SelectedPath);
-
-				if (System.Windows.MessageBox.Show("Parse " + ac.BaseDirectory + " ?", "Add new library path", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-					ac.UpdateFromBaseDirectory();
-
-				Dirs.Add(ac);
-			}
+				Dirs.Add(dlg.SelectedPath);
 		}
 
 		private void button_DelDir_Click(object sender, RoutedEventArgs e)
 		{
-			Dirs.Remove(list_Dirs.SelectedItem as ASTCollection);
-		}
-
-		Thread parseThread;
-
-		private void button_Reparse_Click(object sender, RoutedEventArgs e)
-		{
-			if (parseThread != null && parseThread.IsAlive)
-				parseThread.Abort();
-
-			Cursor = Cursors.Wait;
-
-			parseThread = new Thread(() =>
-			{
-				
-				try
-				{
-					foreach (var i in Dirs)
-					{
-						var astColl = (i as ASTCollection);
-						astColl.UpdateFromBaseDirectory();
-					}
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex);
-				}
-
-				Dispatcher.Invoke(new Action(() =>
-				{
-					Cursor = Cursors.Arrow;
-
-					// Update dir view
-					list_Dirs.ItemsSource = null;
-					list_Dirs.ItemsSource = Dirs;
-				}));
-			});
-			parseThread.IsBackground = true;
-
-			parseThread.Start();
+			Dirs.Remove(list_Dirs.SelectedItem as string);
 		}
 	}
 }

@@ -104,32 +104,34 @@ namespace D_Parser.Resolver.TypeResolution
 
 							ctxt.Pop();
 						}
+						else if (scanResult is ModulePackageResult)
+						{
+							var pack=((ModulePackageResult)scanResult).Package;
+
+							IAbstractSyntaxTree accessedModule=null;
+							if (pack.Modules.TryGetValue(nextIdentifier, out accessedModule))
+								r.Add(new ModuleResult(accessedModule)
+								{
+									ResultBase = scanResult,
+									DeclarationOrExpressionBase = typeIdObject
+								});
+							else if (pack.Packages.TryGetValue(nextIdentifier, out pack))
+								r.Add(new ModulePackageResult(pack)
+								{
+									ResultBase=scanResult,
+									DeclarationOrExpressionBase=typeIdObject
+								});
+						}
 						else if (scanResult is ModuleResult)
 						{
-							var modRes = scanResult as ModuleResult;
+							var modRes = (ModuleResult)scanResult;
 
-							if (modRes.IsOnlyModuleNamePartTyped())
-							{
-								var modNameParts = modRes.ResolvedModule.ModuleName.Split('.');
+							var matches = NameScan.ScanNodeForIdentifier(modRes.Module, nextIdentifier, ctxt);
 
-								if (modNameParts[modRes.AlreadyTypedModuleNameParts] == nextIdentifier)
-									r.Add(new ModuleResult()
-									{
-										ResolvedModule = modRes.ResolvedModule,
-										AlreadyTypedModuleNameParts = modRes.AlreadyTypedModuleNameParts + 1,
-										ResultBase = modRes,
-										DeclarationOrExpressionBase = typeIdObject
-									});
-							}
-							else
-							{
-								var matches = NameScan.ScanNodeForIdentifier((scanResult as ModuleResult).ResolvedModule, nextIdentifier, ctxt);
+							var results = HandleNodeMatches(matches, ctxt, b, typeIdObject);
 
-								var results = HandleNodeMatches(matches, ctxt, b, typeIdObject);
-
-								if (results != null)
-									r.AddRange(results);
-							}
+							if (results != null)
+								r.AddRange(results);
 						}
 					}
 
@@ -436,10 +438,8 @@ namespace D_Parser.Resolver.TypeResolution
 					DeclarationOrExpressionBase = typeBase
 				};
 			else if (m is IAbstractSyntaxTree)
-				ret = new ModuleResult()
+				ret = new ModuleResult((IAbstractSyntaxTree)m)
 				{
-					ResolvedModule = m as IAbstractSyntaxTree,
-					AlreadyTypedModuleNameParts = 1,
 					ResultBase = resultBase,
 					DeclarationOrExpressionBase = typeBase
 				};

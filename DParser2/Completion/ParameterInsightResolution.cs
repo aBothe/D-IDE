@@ -212,14 +212,13 @@ namespace D_Parser.Completion
 			int caretOffset,
 			CodeLocation caretLocation,
 			DMethod MethodScope,
-			IEnumerable<IAbstractSyntaxTree> parseCache, IEnumerable<IAbstractSyntaxTree> ImportCache)
+			D_Parser.Misc.ParseCacheList parseCache)
 		{
-
 			IStatement stmt = null;
 			var ctxt = new ResolverContextStack(parseCache, new ResolverContext { 
 				ScopedBlock = DResolver.SearchBlockAt(MethodScope, caretLocation, out stmt),
 				ScopedStatement = stmt
-			}, ImportCache);
+			});
 
 			return LookupArgumentRelatedStatement(code, caretOffset, caretLocation, ctxt);
 		}

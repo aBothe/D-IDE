@@ -28,7 +28,7 @@ namespace D_Parser.Completion
 		protected override void BuildCompletionDataInternal(IEditorData Editor, string EnteredText)
 		{
 			IEnumerable<INode> listedItems = null;
-			var visibleMembers = MemberTypes.All;
+			var visibleMembers = MemberFilter.All;
 
 			IStatement curStmt = null;
 			if(curBlock==null)
@@ -50,7 +50,7 @@ namespace D_Parser.Completion
 			if (trackVars == null)
 			{
 				// --> Happens if no actual declaration syntax given --> Show types/imports/keywords anyway
-				visibleMembers = MemberTypes.Imports | MemberTypes.Types | MemberTypes.Keywords;
+				visibleMembers = MemberFilter.Imports | MemberFilter.Types | MemberFilter.Keywords;
 
 				listedItems = ItemEnumeration.EnumAllAvailableMembers(curBlock, null, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
 			}
@@ -80,18 +80,18 @@ namespace D_Parser.Completion
 				}
 
 				if (trackVars.LastParsedObject is ImportStatement)
-					visibleMembers = MemberTypes.Imports;
+					visibleMembers = MemberFilter.Imports;
 				else if ((trackVars.LastParsedObject is NewExpression && trackVars.IsParsingInitializer) ||
 					trackVars.LastParsedObject is TemplateInstanceExpression && ((TemplateInstanceExpression)trackVars.LastParsedObject).Arguments==null)
-					visibleMembers = MemberTypes.Imports | MemberTypes.Types;
+					visibleMembers = MemberFilter.Imports | MemberFilter.Types;
 				else if (EnteredText == " ")
 					return;
 				// In class bodies, do not show variables
 				else if (!(parsedBlock is BlockStatement || trackVars.IsParsingInitializer))
-					visibleMembers = MemberTypes.Imports | MemberTypes.Types | MemberTypes.Keywords;
+					visibleMembers = MemberFilter.Imports | MemberFilter.Types | MemberFilter.Keywords;
 
 				// In a method, parse from the method's start until the actual caret position to get an updated insight
-				if (visibleMembers.HasFlag(MemberTypes.Variables) &&
+				if (visibleMembers.HasFlag(MemberFilter.Variables) &&
 					curBlock is DMethod &&
 					parsedBlock is BlockStatement)
 				{
@@ -104,7 +104,7 @@ namespace D_Parser.Completion
 				else
 					curStmt = null;
 
-				if (visibleMembers != MemberTypes.Imports) // Do not pass the curStmt because we already inserted all updated locals a few lines before!
+				if (visibleMembers != MemberFilter.Imports) // Do not pass the curStmt because we already inserted all updated locals a few lines before!
 					listedItems = ItemEnumeration.EnumAllAvailableMembers(curBlock, curStmt, Editor.CaretLocation, Editor.ParseCache, visibleMembers);
 			}
 
@@ -118,40 +118,31 @@ namespace D_Parser.Completion
 
 			//TODO: Split the keywords into such that are allowed within block statements and non-block statements
 			// Insert typable keywords
-			if (visibleMembers.HasFlag(MemberTypes.Keywords))
+			if (visibleMembers.HasFlag(MemberFilter.Keywords))
 				foreach (var kv in DTokens.Keywords)
 					CompletionDataGenerator.Add(kv.Key);
 
-			else if (visibleMembers.HasFlag(MemberTypes.Types))
+			else if (visibleMembers.HasFlag(MemberFilter.Types))
 				foreach (var kv in DTokens.BasicTypes_Array)
 					CompletionDataGenerator.Add(kv);
 
 			#region Add module name stubs of importable modules
-			if (visibleMembers.HasFlag(MemberTypes.Imports))
+			if (visibleMembers.HasFlag(MemberFilter.Imports))
 			{
 				var nameStubs = new Dictionary<string, string>();
-				var availModules = new List<IAbstractSyntaxTree>();
-				foreach (var mod in Editor.ParseCache)
+
+				foreach (var pck in Editor.ParseCache)
 				{
-					if (string.IsNullOrEmpty(mod.ModuleName))
-						continue;
+					foreach (var kv in pck.Root.Packages)
+						if(!nameStubs.ContainsKey(kv.Key))
+							nameStubs.Add(kv.Key, "");
 
-					var parts = mod.ModuleName.Split('.');
-
-					if (!nameStubs.ContainsKey(parts[0]) && !availModules.Contains(mod))
-					{
-						if (parts[0] == mod.ModuleName)
-							availModules.Add(mod);
-						else
-							nameStubs.Add(parts[0], GetModulePath(mod.FileName, parts.Length, 1));
-					}
+					foreach (var kv in pck.Root.Modules)
+						CompletionDataGenerator.Add(kv.Value.ModuleName, kv.Value);
 				}
 
 				foreach (var kv in nameStubs)
-					CompletionDataGenerator.Add(kv.Key, PathOverride: kv.Value);
-
-				foreach (var mod in availModules)
-					CompletionDataGenerator.Add(mod.ModuleName, mod);
+					CompletionDataGenerator.Add(kv.Key, null, kv.Value);
 			}
 			#endregion
 		}

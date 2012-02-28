@@ -104,7 +104,7 @@ namespace D_Parser.Dom
 		/// </summary>
 		public List<DVariable> PseudoAliases = new List<DVariable>();
 
-		internal void CreatePseudoAliases()
+		public void CreatePseudoAliases()
 		{
 			PseudoAliases.Clear();
 
@@ -126,6 +126,7 @@ namespace D_Parser.Dom
 				foreach (var bind in ImportBinding.SelectedSymbols)
 					PseudoAliases.Add(new ImportSymbolAlias
 					{
+						IsModuleAlias=false,
 						OriginalImportStatement=this,
 						Name = string.IsNullOrEmpty(bind.Value) ? bind.Key : bind.Value,
 						Type = new IdentifierDeclaration(bind.Key)
@@ -136,22 +137,26 @@ namespace D_Parser.Dom
 			}
 		}
 
-		#endregion
-
+		/// <summary>
+		/// Returns import pseudo-alias variables
+		/// </summary>
 		public INode[] Declarations
 		{
 			get { return PseudoAliases.Count == 0 ? null : PseudoAliases.ToArray(); }
 		}
+		#endregion
 	}
 
 	public class ImportSymbolAlias : DVariable
 	{
+		public bool IsModuleAlias;
 		public ImportStatement OriginalImportStatement;
 
 		public ImportSymbolAlias(ImportStatement impStmt,ImportStatement.Import imp)
 		{
 			OriginalImportStatement = impStmt;
 
+			IsModuleAlias = true;
 			Name = imp.ModuleAlias;
 			Type = imp.ModuleIdentifier;
 			IsAlias = true;

@@ -52,10 +52,10 @@ namespace D_Parser.Resolver.ASTScanner
 
 			if (lastResCtxt.ScopedBlock != null)
 				resCache.Add(lastResCtxt.ScopedBlock.NodeRoot as IAbstractSyntaxTree);
-
+			/*
 			foreach (var importedAST in lastResCtxt.ImportCache)
 				resCache.Add(importedAST);
-
+			*/
 			var typeObjects = IdentifierScan.ScanForTypeIdentifiers(lastResCtxt.ScopedBlock.NodeRoot);
 
 			foreach (var o in typeObjects)

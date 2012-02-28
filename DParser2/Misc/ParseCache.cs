@@ -13,13 +13,11 @@ namespace D_Parser.Misc
 	public class ParseCache
 	{
 		#region Properties
+		public bool IsParsing { get; private set; }
+
 		public RootPackage Root=new RootPackage();
 
-		public string[] ParsedDirectories
-		{
-			get;
-			private set;
-		}
+		public List<string> ParsedDirectories = new List<string>();
 
 		public Exception LastParseException { get; private set; }
 		#endregion
@@ -38,7 +36,12 @@ namespace D_Parser.Misc
 			var performanceLogs = new List<ParsePerformanceData>();
 
 			if (directoriesToParse == null)
+			{
+				ParsedDirectories.Clear();
 				return null;
+			}
+
+			IsParsing = true;
 
 			var parsedDirs = new List<string>();
 			var newRoot=new RootPackage();
@@ -52,7 +55,8 @@ namespace D_Parser.Misc
 				Parse(dir, newRoot, ppd);
 			}
 
-			ParsedDirectories = parsedDirs.ToArray();
+			IsParsing = false;
+			ParsedDirectories = parsedDirs;
 
 			return performanceLogs.ToArray();
 		}
@@ -198,6 +202,11 @@ namespace D_Parser.Misc
 			}
 
 			return null;
+		}
+
+		public IAbstractSyntaxTree GetModuleByFileName(string file, string baseDirectory)
+		{
+			return GetModule(DModule.GetModuleName(baseDirectory,file));
 		}
 		#endregion
 

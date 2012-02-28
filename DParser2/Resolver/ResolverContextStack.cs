@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using D_Parser.Dom;
 using D_Parser.Dom.Statements;
+using D_Parser.Misc;
 
 namespace D_Parser.Resolver
 {
@@ -12,19 +10,7 @@ namespace D_Parser.Resolver
 		#region Properties
 		protected Stack<ResolverContext> stack = new Stack<ResolverContext>();
 
-		public IEnumerable<IAbstractSyntaxTree> ParseCache;
-		public Dictionary<string,IEnumerable<IAbstractSyntaxTree>> ImportsDictionary= new Dictionary<string,IEnumerable<IAbstractSyntaxTree>>();
-
-		public IEnumerable<IAbstractSyntaxTree> ImportCache
-		{
-			get
-			{
-				if (CurrentContext == null || CurrentContext.ScopedBlock == null)
-					return null;
-
-				return GetImportCache(CurrentContext.ScopedBlock.NodeRoot as DModule);
-			}
-		}
+		public ParseCacheList ParseCache = new ParseCacheList();
 
 		public IBlockNode ScopedBlock
 		{
@@ -75,16 +61,11 @@ namespace D_Parser.Resolver
 		}
 		#endregion
 
-		public ResolverContextStack(
-			IEnumerable<IAbstractSyntaxTree> ParseCache,
-			ResolverContext initialContext,
-			IEnumerable<IAbstractSyntaxTree> Imports=null)
+		public ResolverContextStack(ParseCacheList ParseCache,	ResolverContext initialContext)
 		{
 			this.ParseCache = ParseCache;
 			
 			stack.Push(initialContext);
-
-			CreateImportCache(Imports);
 		}
 
 		public ResolverContext Pop()
@@ -105,38 +86,6 @@ namespace D_Parser.Resolver
 			stack.Push(ctxtOverride);
 
 			return ctxtOverride;
-		}
-
-		public void CreateImportCache(IEnumerable<IAbstractSyntaxTree> Imports=null)
-		{
-			if (CurrentContext == null || CurrentContext.ScopedBlock == null || ParseCache==null)
-				return;
-
-			var m = CurrentContext.ScopedBlock.NodeRoot as DModule;
-
-			if (m != null)
-				ImportsDictionary[m.ModuleName] = Imports ?? ImportResolver.ResolveImports(m, ParseCache);
-		}
-
-		public IEnumerable<IAbstractSyntaxTree> GetImportCache(DModule m)
-		{
-			if (m == null)
-				return null;
-
-			IEnumerable<IAbstractSyntaxTree> ret = null;
-			if (ImportsDictionary.TryGetValue(m.ModuleName, out ret))
-				return ret;
-
-			// If imports weren't resolved already, do so
-			try
-			{
-				ret = ImportResolver.ResolveImports(m, ParseCache);
-				ImportsDictionary[m.ModuleName] = ret;
-				return ret;
-			}
-			catch { }
-
-			return null;
 		}
 
 		object GetMostFittingBlock()

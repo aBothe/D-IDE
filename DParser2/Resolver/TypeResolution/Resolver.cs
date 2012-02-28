@@ -237,7 +237,7 @@ namespace D_Parser.Resolver.TypeResolution
 			else if (res is TypeResult)
 				return ((TypeResult)res).Node;
 			else if (res is ModuleResult)
-				return ((ModuleResult)res).ResolvedModule;
+				return ((ModuleResult)res).Module;
 
 			return null;
 		}

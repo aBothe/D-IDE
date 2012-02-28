@@ -23,6 +23,7 @@ using D_Parser.Resolver.TypeResolution;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
+using D_Parser.Misc;
 
 namespace D_IDE.D
 {
@@ -49,12 +50,9 @@ namespace D_IDE.D
 		{
 			get
 			{
-				if (HasProject)
-				{
-					var prj = Project as DProject;
-					if (prj != null)
-						return prj.ParsedModules[AbsoluteFilePath] as DModule;
-				}
+				var prj = Project as DProject;
+				if (prj != null)
+					return prj.ParsedModules.GetModule(ProposedModuleName) as DModule;
 
 				return _unboundTree;
 			}
@@ -62,33 +60,26 @@ namespace D_IDE.D
 			{
 				if (value != null)
 					value.FileName = AbsoluteFilePath;
-				if (HasProject)
-				{
-					var prj = Project as DProject;
-					if (prj != null)
-						prj.ParsedModules[AbsoluteFilePath] = value;
-				}
+
+				var prj = Project as DProject;
+				if (prj != null)
+					prj.ParsedModules.AddOrUpdate(value);
 
 				_unboundTree = value;
-
-				UpdateImportCache();
 			}
 		}
-		public IEnumerable<IAbstractSyntaxTree> ParseCache
-		{
-			get;
-			set;
-		}
-		public IEnumerable<IAbstractSyntaxTree> ImportCache
-		{
-			get;
-			protected set;
-		}
 
-		public void UpdateImportCache()
+		public ParseCacheList ParseCache
 		{
-			Dispatcher.Invoke(new Action(() => ParseCache = DCodeCompletionSupport.EnumAvailableModules(this)));
-			ImportCache = ImportResolver.ResolveImports(SyntaxTree, ParseCache);
+			get
+			{
+				var prj = Project as DProject;
+
+				if (prj == null)
+					return ParseCacheList.Create(CompilerConfiguration.ASTCache);
+
+				return ParseCacheList.Create(prj.ParsedModules, prj.CompilerConfiguration.ASTCache);
+			}
 		}
 
 		/// <summary>
@@ -449,10 +440,7 @@ namespace D_IDE.D
 					return;
 
 				var rr = DResolver.ResolveType(this,
-					new ResolverContextStack(
-						ParseCache,
-						new ResolverContext { ScopedBlock = lastSelectedBlock }, 
-						ImportCache),
+					new ResolverContextStack(ParseCache,	new ResolverContext { ScopedBlock = lastSelectedBlock }),
 					true, true);
 
 				ResolveResult res = null;
@@ -489,7 +477,7 @@ namespace D_IDE.D
 				else if (res is TypeResult)
 					n = (res as TypeResult).Node;
 				else if (res is ModuleResult)
-					n = (res as ModuleResult).ResolvedModule;
+					n = (res as ModuleResult).Module;
 				else
 				{
 					MessageBox.Show("Select valid symbol!");
@@ -511,8 +499,8 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var rr = DResolver.ResolveType(this,new ResolverContextStack(ParseCache,
-					new ResolverContext { ScopedBlock = lastSelectedBlock },ImportCache),
+				var rr = DResolver.ResolveType(this,
+					new ResolverContextStack(ParseCache, new ResolverContext { ScopedBlock = lastSelectedBlock }),
 					true, true);
 
 				ResolveResult res = null;
@@ -542,12 +530,7 @@ namespace D_IDE.D
 					return;
 				}
 
-				INode n = null;
-
-				if (res is MemberResult)
-					n = (res as MemberResult).Node;
-				else if (res is TypeResult)
-					n = (res as TypeResult).Node;
+				var n = DResolver.GetResultMember(res);
 
 				if (n == null)
 				{
@@ -555,7 +538,7 @@ namespace D_IDE.D
 					return;
 				}
 
-				var mod = n.NodeRoot as IAbstractSyntaxTree;
+				var mod = n.NodeRoot as DModule;
 				if (mod == null)
 					return;
 
@@ -565,7 +548,28 @@ namespace D_IDE.D
 					return;
 				}
 
-				if (SyntaxTree.ContainsImport(mod.ModuleName))
+				bool alreadyAdded= false;
+
+				foreach(var sstmt in mod.StaticStatements)
+					if (sstmt is ImportStatement)
+					{
+						var impStmt=(ImportStatement)sstmt;
+
+						foreach (var imp in impStmt.Imports)
+							if (imp.ModuleIdentifier.ToString() == mod.ModuleName)
+							{
+								alreadyAdded = true;
+								break;
+							}
+
+						if (impStmt.ImportBinding != null && impStmt.ImportBinding.Module.ModuleIdentifier.ToString() == mod.ModuleName)
+							alreadyAdded = true;
+
+						if (alreadyAdded)
+							break;
+					}
+
+				if (alreadyAdded)
 				{
 					MessageBox.Show("Module " + mod.ModuleName + " already imported!");
 					return;
@@ -621,7 +625,6 @@ namespace D_IDE.D
 				{
 					SyntaxTree.ParseErrors = newAst.ParseErrors;
 					SyntaxTree.AssignFrom(newAst);
-					UpdateImportCache();
 				}
 			else
 				SyntaxTree = newAst;
@@ -676,7 +679,6 @@ namespace D_IDE.D
 				{
 					if (HasBeenUpdatingParseCache && !cc.ASTCache.IsParsing)
 					{
-						UpdateImportCache();
 						UpdateSemanticHighlightings(true); // Perhaps new errors were detected
 						HasBeenUpdatingParseCache = false;
 					}
@@ -748,11 +750,8 @@ namespace D_IDE.D
 
 			var res = D_Parser.Resolver.ASTScanner.CodeSymbolsScanner.ScanSymbols(new ResolverContextStack(ParseCache, new ResolverContext
 			{
-				ScopedBlock=SyntaxTree,
-				// For performance reasons, do not scan down aliases
-				//ResolveAliases = false
-				// Note: for correct results, base classes and variable types have to get resolved
-			},ImportCache));
+				ScopedBlock=SyntaxTree
+			}));
 
 			sw.Stop();
 

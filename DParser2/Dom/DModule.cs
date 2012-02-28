@@ -54,8 +54,13 @@ namespace D_Parser.Dom
 		/// </summary>
 		public static string GetModuleName(string baseDirectory, IAbstractSyntaxTree ast)
 		{
+			return GetModuleName(baseDirectory, ast.FileName);
+		}
+
+		public static string GetModuleName(string baseDirectory, string file)
+		{
 			return Path.ChangeExtension(
-					ast.FileName.Substring(baseDirectory.Length), null).
+					file.Substring(baseDirectory.Length), null).
 						Replace(Path.DirectorySeparatorChar, '.');
 		}
 

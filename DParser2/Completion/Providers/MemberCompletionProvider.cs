@@ -15,7 +15,6 @@ namespace D_Parser.Completion
 		public IBlockNode ScopedBlock;
 
 		public string lastResultPath;
-		List<string> alreadyAddedModuleNameParts = new List<string>();
 
 		public MemberCompletionProvider(ICompletionDataGenerator cdg) : base(cdg) { }
 
@@ -36,13 +35,11 @@ namespace D_Parser.Completion
 
 		protected override void BuildCompletionDataInternal(IEditorData Editor, string EnteredText)
 		{
-			alreadyAddedModuleNameParts.Clear();
-
 			var resolveResults = ExpressionTypeResolver.Resolve(AccessExpression,
 				new ResolverContextStack(Editor.ParseCache,	new ResolverContext	{
 					ScopedBlock = ScopedBlock,
 					ScopedStatement = ScopedStatement
-				}, Editor.ImportCache));
+				}));
 
 			if (resolveResults == null) //TODO: Add after-space list creation when an unbound . (Dot) was entered which means to access the global scope
 				return;
@@ -68,11 +65,14 @@ namespace D_Parser.Completion
 				isVariableInstance |= (rr.DeclarationOrExpressionBase as ITypeDeclaration).ExpressesVariableAccess;
 
 			if (rr is MemberResult)
-				BuildMemberCompletionData(rr as MemberResult, currentlyScopedBlock, isVariableInstance);
+				BuildCompletionData(rr as MemberResult, currentlyScopedBlock, isVariableInstance);
 
 			// A module path has been typed
 			else if (!isVariableInstance && rr is ModuleResult)
-				BuildModuleCompletionData(rr as ModuleResult, 0, alreadyAddedModuleNameParts);
+				BuildCompletionData((ModuleResult)rr);
+
+			else if (rr is ModulePackageResult)
+				BuildCompletionData((ModulePackageResult)rr);
 
 			#region A type was referenced directly
 			else if (rr is TypeResult)
@@ -113,11 +113,11 @@ namespace D_Parser.Completion
 				else if (!isVariableInstance && HasSameAncestor)
 					vis = ItemVisibility.StaticMembers;
 
-				BuildTypeCompletionData(tr, vis);
+				BuildCompletionData(tr, vis);
 				if (resultParent == null)
 					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, tr.Node);
 
-				if(tr.Node is DClassLike)
+				if (tr.Node is DClassLike)
 					StaticTypePropertyProvider.AddClassTypeProperties(CompletionDataGenerator, tr.Node);
 			}
 			#endregion
@@ -126,7 +126,7 @@ namespace D_Parser.Completion
 			else if (rr is StaticTypeResult)
 			{
 				var srr = rr as StaticTypeResult;
-				
+
 				if (resultParent == null)
 					StaticTypePropertyProvider.AddGenericProperties(rr, CompletionDataGenerator, null);
 
@@ -138,7 +138,7 @@ namespace D_Parser.Completion
 
 				if (type is PointerDecl)
 				{
-					if(!(rr.ResultBase is StaticTypeResult && rr.ResultBase.DeclarationOrExpressionBase is PointerDecl))
+					if (!(rr.ResultBase is StaticTypeResult && rr.ResultBase.DeclarationOrExpressionBase is PointerDecl))
 						BuildCompletionData(rr.ResultBase, currentlyScopedBlock, true, rr);
 				}
 				else
@@ -220,10 +220,7 @@ namespace D_Parser.Completion
 			
 		}
 
-		void BuildMemberCompletionData(
-			MemberResult mrr,
-			IBlockNode currentlyScopedBlock,
-			bool isVariableInstance = false)
+		void BuildCompletionData(MemberResult mrr, IBlockNode currentlyScopedBlock, bool isVariableInstance = false)
 		{
 			if (mrr.MemberBaseTypes != null)
 				foreach (var i in mrr.MemberBaseTypes)
@@ -238,47 +235,33 @@ namespace D_Parser.Completion
 
 		}
 
-		void BuildModuleCompletionData(ModuleResult tr, ItemVisibility visMod,
-			List<string> alreadyAddedModuleNames)
+		void BuildCompletionData(ModulePackageResult mpr)
 		{
-			if (!tr.IsOnlyModuleNamePartTyped())
-				foreach (var i in tr.ResolvedModule)
-				{
-					var di = i as DNode;
-					if (di == null)
-					{
-						if (i != null)
-							CompletionDataGenerator.Add(i);
-						continue;
-					}
+			foreach (var kv in mpr.Package.Packages)
+				CompletionDataGenerator.Add(kv.Key);
 
-					if (di.IsPublic && CanItemBeShownGenerally(i))
-						CompletionDataGenerator.Add(i);
-				}
-			else
+			foreach (var kv in mpr.Package.Modules)
+				CompletionDataGenerator.Add(kv.Key, kv.Value);
+		}
+
+		void BuildCompletionData(ModuleResult tr)
+		{
+			foreach (var i in tr.Module)
 			{
-				var modNameParts = tr.ResolvedModule.ModuleName.Split('.');
-
-				string packageDir = modNameParts[0];
-				for (int i = 1; i <= tr.AlreadyTypedModuleNameParts; i++)
-					packageDir += "." + modNameParts[i];
-
-				if (tr.AlreadyTypedModuleNameParts < modNameParts.Length - 1)
+				var di = i as DNode;
+				if (di == null)
 				{
-					// Don't add a package name that already has been added before.. so e.g. show only the first module of package "std.c."
-					if (alreadyAddedModuleNames.Contains(packageDir))
-						return;
-
-					alreadyAddedModuleNames.Add(packageDir);
-
-					CompletionDataGenerator.Add(modNameParts[tr.AlreadyTypedModuleNameParts], PathOverride: packageDir);
+					if (i != null)
+						CompletionDataGenerator.Add(i);
+					continue;
 				}
-				else
-					CompletionDataGenerator.Add(modNameParts[modNameParts.Length - 1], tr.ResolvedModule);
+
+				if (di.IsPublic && CanItemBeShownGenerally(i))
+					CompletionDataGenerator.Add(i);
 			}
 		}
 
-		void BuildTypeCompletionData(TypeResult tr, ItemVisibility visMod)
+		void BuildCompletionData(TypeResult tr, ItemVisibility visMod)
 		{
 			var n = tr.Node;
 			if (n is DClassLike) // Add public static members of the class and including all base classes

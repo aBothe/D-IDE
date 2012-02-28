@@ -9,6 +9,7 @@ using D_IDE.D.CodeCompletion;
 using D_Parser;
 using D_Parser.Parser;
 using D_Parser.Completion;
+using D_Parser.Misc;
 
 namespace D_IDE.D
 {
@@ -40,28 +41,13 @@ namespace D_IDE.D
 			}
 		}
 
-		public override string FileName
-		{
-			get
-			{
-				return base.FileName;
-			}
-			set
-			{
-				base.FileName = value;
-				ParsedModules.BaseDirectory = Path.GetDirectoryName( value);
-			}
-		}
-
-		public readonly ASTCollection ParsedModules = new ASTCollection() { ParseFunctionBodies=true};
+		public readonly ParseCache ParsedModules = new ParseCache();
 
 		/// <summary>
 		/// Parse all D sources that belong to the project
 		/// </summary>
 		public void ParseDSources()
 		{
-			ParsedModules.Clear();
-
 			/*
 			 * Instead of parsing added files only, add all D sources that are situated in the project's base directory.
 			 * DMD allows importing local modules that are not referenced in the objects parameter.
@@ -81,36 +67,7 @@ namespace D_IDE.D
 			 * --- whereas we compiled the program only via dmd.exe A.d
 			 */
 
-			var files = Directory.EnumerateFiles(BaseDirectory, "*.d", SearchOption.AllDirectories);
-
-			foreach (var file in files)
-			{
-				try
-				{
-					var ast = DParser.ParseFile(file);
-					ParsedModules.Add(ast);
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex);
-				}
-			}
-			/*
-			foreach (var mod in _Files)
-			{
-				if (DLanguageBinding.IsDSource(mod.FileName))
-				{
-					try
-					{
-						var ast = DParser.ParseFile(mod.AbsoluteFileName);
-						ParsedModules.Add(ast);
-					}
-					catch (Exception ex)
-					{
-						ErrorLogger.Log(ex);
-					}
-				}
-			}*/
+			ParsedModules.Parse(new[] { BaseDirectory });
 		}
 
 		public DVersion DMDVersion = DVersion.D2;
