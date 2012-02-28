@@ -126,10 +126,11 @@ namespace D_Parser.Dom
 				foreach (var bind in ImportBinding.SelectedSymbols)
 					PseudoAliases.Add(new ImportSymbolAlias
 					{
-						IsModuleAlias=false,
-						OriginalImportStatement=this,
-						Name = string.IsNullOrEmpty(bind.Value) ? bind.Key : bind.Value,
-						Type = new IdentifierDeclaration(bind.Key)
+						IsAlias=true,
+						IsModuleAlias = false,
+						OriginalImportStatement = this,
+						Name = bind.Key,
+						Type = new IdentifierDeclaration(string.IsNullOrEmpty(bind.Value) ? bind.Key : bind.Value)
 						{
 							InnerDeclaration = ImportBinding.Module.ModuleIdentifier
 						}

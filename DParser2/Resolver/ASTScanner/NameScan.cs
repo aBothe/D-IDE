@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using D_Parser.Dom;
-using D_Parser.Dom.Expressions;
 using D_Parser.Resolver.TypeResolution;
 
 namespace D_Parser.Resolver.ASTScanner
@@ -28,6 +24,32 @@ namespace D_Parser.Resolver.ASTScanner
 		{
 			if (n != null && n.Name == filterId)
 				Matches.Add(n);
+
+			/*
+			 * Can't tell if workaround .. or just nice idea:
+			 * 
+			 * To still be able to show sub-packages e.g. when std. has been typed,
+			 * take the first import that begins with std.
+			 * In HandleNodeMatch, it'll be converted to a module package result then.
+			 */
+			else if (n is IAbstractSyntaxTree)
+			{
+				var modName = ((IAbstractSyntaxTree)n).ModuleName;
+				if (modName.Split('.')[0] == filterId)
+				{
+					bool canAdd = true;
+
+					foreach(var m in Matches)
+						if (m is IAbstractSyntaxTree)
+						{
+							canAdd = false;
+							break;
+						}
+
+					if(canAdd)
+						Matches.Add(n);
+				}
+			}
 		}
 
 		/// <summary>

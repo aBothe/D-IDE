@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using D_Parser.Dom;
-using D_Parser.Parser;
 using D_Parser.Dom.Expressions;
 using D_Parser.Dom.Statements;
+using D_Parser.Parser;
 using D_Parser.Resolver.ASTScanner;
 
 namespace D_Parser.Resolver.TypeResolution
@@ -347,7 +345,32 @@ namespace D_Parser.Resolver.TypeResolution
 			ResolveResult ret = null;
 			ResolveResult[] memberbaseTypes = null;
 
-			if (m is DVariable)
+			// Only import symbol aliases are allowed to search in the parse cache
+			if (m is ImportSymbolAlias)
+			{
+				var isa = (ImportSymbolAlias)m;
+
+				if (isa.IsModuleAlias ? isa.Type == null : isa.Type.InnerDeclaration == null)
+					return null;
+
+				var alias = new MemberResult { 
+					Node=m
+				};
+
+				var mods = new List<ResolveResult>();
+				foreach (var mod in ctxt.ParseCache.LookupModuleName(isa.IsModuleAlias ?
+					isa.Type.ToString() :
+					isa.Type.InnerDeclaration.ToString()))
+						mods.Add(new ModuleResult(mod));
+
+				if (isa.IsModuleAlias)
+					alias.MemberBaseTypes = mods.ToArray();
+				else
+					alias.MemberBaseTypes = ResolveFurtherTypeIdentifier(isa.Type.ToString(false), mods, ctxt, isa.Type);
+
+				ret = alias;
+			}
+			else if (m is DVariable)
 			{
 				var v = m as DVariable;
 
@@ -438,11 +461,21 @@ namespace D_Parser.Resolver.TypeResolution
 					DeclarationOrExpressionBase = typeBase
 				};
 			else if (m is IAbstractSyntaxTree)
-				ret = new ModuleResult((IAbstractSyntaxTree)m)
+			{
+				var mod=(IAbstractSyntaxTree)m;
+				if (typeBase != null && typeBase.ToString() != mod.ModuleName)
 				{
-					ResultBase = resultBase,
-					DeclarationOrExpressionBase = typeBase
-				};
+					var pack = ctxt.ParseCache.LookupPackage(typeBase.ToString()).First();
+					if(pack!=null)
+						ret = new ModulePackageResult(pack);
+				}
+				else
+					ret = new ModuleResult((IAbstractSyntaxTree)m)
+					{
+						ResultBase = resultBase,
+						DeclarationOrExpressionBase = typeBase
+					};
+			}
 			else if (m is DEnum)
 				ret = new TypeResult()
 				{
