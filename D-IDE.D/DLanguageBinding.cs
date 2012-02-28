@@ -8,6 +8,7 @@ using D_Parser.Dom;
 using D_Parser.Parser;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using D_Parser.Misc;
 
 namespace D_IDE.D
 {
@@ -206,12 +207,6 @@ namespace D_IDE.D
 		/// </summary>
 		/// <param name="file"></param>
 		/// <returns></returns>
-		public static IAbstractSyntaxTree GetFileSyntaxTree(string file)
-		{
-			DProject a = null;
-			return GetFileSyntaxTree(file, out a);
-		}
-
 		public static IAbstractSyntaxTree GetFileSyntaxTree(string file,out DProject OwnerProject)
 		{
 			OwnerProject = null;
@@ -220,21 +215,24 @@ namespace D_IDE.D
 				foreach (var prj in CoreManager.CurrentSolution)
 				{
 					var dprj = prj as DProject;
-					if (dprj == null) continue;
-					if (dprj.ContainsFile(file))
+
+					if (dprj!=null && dprj.ContainsFile(file))
 					{
 						OwnerProject = dprj;
-						return dprj.ParsedModules[file];
+						return dprj.ParsedModules.GetModuleByFileName(file, dprj.BaseDirectory);
 					}
 				}
 			}
 
-			var ret=DSettings.Instance.dmd2.ASTCache.LookUpModulePath(file);
-			if (ret == null)
-				ret = DSettings.Instance.dmd1.ASTCache.LookUpModulePath(file);
+			var pcl = ParseCacheList.Create(DSettings.Instance.dmd1.ASTCache,DSettings.Instance.dmd2.ASTCache);
 
-			if (ret != null)
-				return ret;
+			IAbstractSyntaxTree ret = null;
+			foreach (var pc in pcl)
+				foreach (var pdir in pc.ParsedDirectories)
+				{
+					if (file.StartsWith(pdir) && (ret = pc.GetModuleByFileName(file, pdir)) != null)
+						return ret;
+				}
 
 			return DParser.ParseFile(file);
 		}

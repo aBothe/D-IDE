@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using D_Parser.Misc;
 using D_Parser.Dom;
 using D_Parser.Dom.Statements;
 
-namespace D_Parser.Resolver
+namespace D_Parser.Resolver.ASTScanner
 {
+	/// <summary>
+	/// A whitelisting filter for members to show in completion menus.
+	/// </summary>
 	[Flags]
-	public enum MemberTypes
+	public enum MemberFilter
 	{
 		Imports = 1,
 		Variables = 1 << 1,
@@ -19,15 +23,15 @@ namespace D_Parser.Resolver
 		All = Imports | Variables | Methods | Types | Keywords
 	}
 
-	public class ItemEnumeration : RootsEnum
+	public class ItemEnumeration : AbstractAstScanner
 	{
 		protected ItemEnumeration(ResolverContextStack ctxt): base(ctxt) { }
 
 		public static IEnumerable<INode> EnumAllAvailableMembers(IBlockNode ScopedBlock
 			, IStatement ScopedStatement,
 			CodeLocation Caret,
-			IEnumerable<IAbstractSyntaxTree> CodeCache,
-			MemberTypes VisibleMembers)
+			ParseCacheList CodeCache,
+			MemberFilter VisibleMembers)
 		{
 			return EnumAllAvailableMembers(new ResolverContextStack(CodeCache,new ResolverContext
 			{
@@ -41,7 +45,7 @@ namespace D_Parser.Resolver
 		public static IEnumerable<INode> EnumAllAvailableMembers(
 			ResolverContextStack ctxt,
 			CodeLocation Caret,
-			MemberTypes VisibleMembers)
+			MemberFilter VisibleMembers)
 		{
 			var en = new ItemEnumeration(ctxt);
 

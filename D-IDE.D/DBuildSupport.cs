@@ -140,7 +140,7 @@ namespace D_IDE.D
 				dmd_exe = Path.Combine(dmd.BaseDirectory, dmd.SoureCompiler);
 
 			TempPrc = FileExecution.ExecuteSilentlyAsync(dmd_exe,
-					BuildDSourceCompileArgumentString(dmd.BuildArguments(DebugCompile).SoureCompiler, Module.AbsoluteFileName, obj,dmd.ASTCache.DirectoryPaths), // Compile our program always in debug mode
+					BuildDSourceCompileArgumentString(dmd.BuildArguments(DebugCompile).SoureCompiler, Module.AbsoluteFileName, obj,dmd.ASTCache.ParsedDirectories), // Compile our program always in debug mode
 					execDirectory,
 					OnOutput, delegate(string s) {
 						var err = ParseErrorMessage(s);
@@ -200,7 +200,7 @@ namespace D_IDE.D
 
 			//CRITICAL: Execute linker exe
 			TempPrc = FileExecution.ExecuteSilentlyAsync(
-					linkerExe,	BuildDLinkerArgumentString(linkerArgs, startDirectory,targetFile,dmd.ASTCache.DirectoryPaths,files), startDirectory,
+					linkerExe,	BuildDLinkerArgumentString(linkerArgs, startDirectory,targetFile,dmd.ASTCache.ParsedDirectories,files), startDirectory,
 					OnOutput, delegate(string s)
 			{
 				var err = ParseErrorMessage(s);
@@ -348,7 +348,7 @@ namespace D_IDE.D
 			if (to>0)
 			{
 				to += 2;
-				string FileName = s.Substring(0, to);
+				string FileName = s.Substring(0, to).TrimStart();
 				to += 1;
 				int to2 = s.IndexOf("):", to);
 				if (to2 > 0)

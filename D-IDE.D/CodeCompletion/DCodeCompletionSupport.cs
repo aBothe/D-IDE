@@ -69,45 +69,6 @@ namespace D_IDE.D
 			catch { }
 		}
 
-		#region Module enumeration helper
-
-		public static IEnumerable<IAbstractSyntaxTree> EnumAvailableModules(DEditorDocument Editor)
-		{
-			return EnumAvailableModules(Editor.HasProject ? Editor.Project as DProject : null);
-		}
-
-		public static IEnumerable<IAbstractSyntaxTree> EnumAvailableModules(DProject Project)
-		{
-			var ret = new List<IAbstractSyntaxTree>();
-
-			if (Project != null)
-			{
-				// Add all parsed global modules that belong to the project's compiler configuration
-				var cch = Project.CompilerConfiguration.ASTCache.ParseCache;
-				if (cch != null)
-					ret.AddRange(cch);
-
-				// Add all modules that exist in the current solution.
-				if (Project.Solution != null)
-				{
-					foreach (var prj in Project.Solution)
-						if (prj is DProject)
-							ret.AddRange((prj as DProject).ParsedModules);
-				}
-				else // If no solution present, add scanned modules of our current project only
-					ret.AddRange(Project.ParsedModules);
-			}
-			else // If no project present, only add the modules of the default compiler configuration
-			{
-				var cch = DSettings.Instance.DMDConfig().ASTCache.ParseCache;
-				if (cch != null)
-					ret.AddRange(cch);
-			}
-
-			return ret;
-		}
-		#endregion
-
 		#region Image helper
 		static Dictionary<string, ImageSource> images = new Dictionary<string, ImageSource>();
 		static bool wasInitialized = false;

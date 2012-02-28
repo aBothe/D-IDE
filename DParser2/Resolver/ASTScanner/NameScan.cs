@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using D_Parser.Dom;
-using D_Parser.Dom.Expressions;
+using D_Parser.Resolver.TypeResolution;
 
-namespace D_Parser.Resolver
+namespace D_Parser.Resolver.ASTScanner
 {
-	public class NameScan : RootsEnum
+	public class NameScan : AbstractAstScanner
 	{
 		string filterId;
 		public List<INode> Matches = new List<INode>();
@@ -20,15 +17,6 @@ namespace D_Parser.Resolver
 
 			scan.IterateThroughScopeLayers(caret);
 
-			if (ctxt.ParseCache != null)
-				foreach (var mod in ctxt.ParseCache)
-				{
-					var modNameParts = mod.ModuleName.Split('.');
-
-					if (modNameParts[0] == name)
-						scan.Matches.Add(mod);
-				}
-
 			return scan.Matches;
 		}
 
@@ -36,6 +24,32 @@ namespace D_Parser.Resolver
 		{
 			if (n != null && n.Name == filterId)
 				Matches.Add(n);
+
+			/*
+			 * Can't tell if workaround .. or just nice idea:
+			 * 
+			 * To still be able to show sub-packages e.g. when std. has been typed,
+			 * take the first import that begins with std.
+			 * In HandleNodeMatch, it'll be converted to a module package result then.
+			 */
+			else if (n is IAbstractSyntaxTree)
+			{
+				var modName = ((IAbstractSyntaxTree)n).ModuleName;
+				if (modName.Split('.')[0] == filterId)
+				{
+					bool canAdd = true;
+
+					foreach(var m in Matches)
+						if (m is IAbstractSyntaxTree)
+						{
+							canAdd = false;
+							break;
+						}
+
+					if(canAdd)
+						Matches.Add(n);
+				}
+			}
 		}
 
 		/// <summary>
@@ -53,7 +67,7 @@ namespace D_Parser.Resolver
 				foreach (var n in curScope)
 				{
 					// Scan anonymous enums
-					if (n is DEnum && n.Name == "")
+					if (n is DEnum && string.IsNullOrEmpty(n.Name))
 					{
 						foreach (var k in n as DEnum)
 							if (k.Name == name)
@@ -75,7 +89,7 @@ namespace D_Parser.Resolver
 						if (baseClass == null)
 							continue;
 						// Search for items called name in the base class(es)
-						var r = ScanNodeForIdentifier(baseClass.ResolvedTypeDefinition, name, ctxt);
+						var r = ScanNodeForIdentifier((IBlockNode)baseClass.Node, name, ctxt);
 
 						if (r != null)
 							matches.AddRange(r);

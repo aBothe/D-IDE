@@ -7,6 +7,7 @@ using D_Parser.Resolver;
 using D_IDE.Core;
 using System.Windows.Controls;
 using System.Windows;
+using D_Parser.Completion;
 
 namespace D_IDE.D.CodeCompletion
 {
@@ -19,13 +20,12 @@ namespace D_IDE.D.CodeCompletion
 
 			try
 			{
-				var argsResult = ParameterContextResolution.ResolveArgumentContext(
+				var argsResult = ParameterInsightResolution.ResolveArgumentContext(
 					doc.Editor.Text, 
 					doc.Editor.CaretOffset, 
 					doc.CaretLocation, 
 					doc.lastSelectedBlock as D_Parser.Dom.DMethod, 
-					doc.ParseCache, 
-					doc.ImportCache);
+					doc.ParseCache);
 
 				if (argsResult == null || argsResult.ResolvedTypesOrMethods == null || argsResult.ResolvedTypesOrMethods.Length < 1)
 					return null;
@@ -61,9 +61,9 @@ namespace D_IDE.D.CodeCompletion
 			get {
 
 				if (CurrentResult is MemberResult)
-					return (CurrentResult as MemberResult).ResolvedMember.Description;
+					return (CurrentResult as MemberResult).Node.Description;
 				if (CurrentResult is TypeResult)
-					return (CurrentResult as TypeResult).ResolvedTypeDefinition.Description;
+					return (CurrentResult as TypeResult).Node.Description;
 
 				return null;
 			}

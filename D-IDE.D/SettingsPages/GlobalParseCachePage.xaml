@@ -19,7 +19,6 @@
 				</GridView>
 			</ListView.View>
 		</ListView>
-		<Button Content="Reparse directories" Height="23" HorizontalAlignment="Left" Margin="250,12,0,0" Name="button_Reparse" VerticalAlignment="Top" Width="141" ToolTip="Click to update the internal code completion database. Therefore, all the directories from below will be scanned and analyzed." Click="button_Reparse_Click" />
 		<TextBlock Margin="125,0,12,12" Text="All D files (*.d;*.di) in these library directories will be analyzed and used for the code completion." TextWrapping="Wrap" Height="39" VerticalAlignment="Bottom" />
 	</Grid>
 </core:AbstractSettingsPage>

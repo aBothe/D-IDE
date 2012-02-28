@@ -45,7 +45,8 @@ namespace D_IDE
 
 			var stTh = new Thread(ThreadedInit)
 			{
-				IsBackground = true
+				IsBackground = true,
+				Name= "Environment intializer thread"
 			};
 
 			stTh.Start(args);
@@ -76,7 +77,7 @@ namespace D_IDE
 				{
 					ErrorLogger.Log(ex);
 				}
-
+			
 			// Load last solution
 			RootWindow.Dispatcher.BeginInvoke(new Action(() =>
 			{

@@ -8,6 +8,8 @@ using D_Parser;
 using System.Runtime.InteropServices;
 using D_Parser.Parser;
 using D_Parser.Dom.Statements;
+using D_Parser.Dom.Expressions;
+using D_Parser.Resolver.TypeResolution;
 
 namespace D_IDE.D
 {
@@ -132,11 +134,14 @@ namespace D_IDE.D
 					IStatement stmt = null;
 					var block = DResolver.SearchBlockAt(module, new CodeLocation(0, codeLine),out stmt);
 
-					var res = DResolver.ResolveType(new IdentifierDeclaration(Symbol.Name), new ResolverContextStack(null,new ResolverContext { ScopedBlock = block }));
+					var ctxt=new ResolverContextStack(null,
+							new ResolverContext { ScopedBlock = block });
+
+					var res = TypeDeclarationResolver.ResolveIdentifier(Symbol.Name,ctxt, null);
 
 					if (res!=null && res.Length > 0 && res[0] is MemberResult)
 					{
-						variableNode = (res[0] as MemberResult).ResolvedMember;
+						variableNode = (res[0] as MemberResult).Node;
 						//moduleCache = DCodeCompletionSupport.Instance.EnumAvailableModules(ownerPrj);
 					}
 				}

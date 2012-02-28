@@ -5,6 +5,7 @@ using System.Threading;
 using System.Xml;
 using D_IDE.Core;
 using D_Parser.Completion;
+using D_Parser.Misc;
 
 namespace D_IDE.D
 {
@@ -273,7 +274,7 @@ namespace D_IDE.D
 
 		public DVersion Version = DVersion.D2;
 
-		public readonly ASTStorage ASTCache = new ASTStorage();
+		public readonly ParseCache ASTCache = new ParseCache();
 
 		/// <summary>
 		/// If the dmd bin directory contains a 'dmd' or 'dmd2', 
@@ -300,20 +301,24 @@ namespace D_IDE.D
 					var dir = Path.Combine(dmdPath, subPath);
 
 					var wasUpdated=false;
-					if (UpdateOldPaths)
-						foreach (var pdir in ASTCache.ParsedGlobalDictionaries)
-							if (wasUpdated = pdir.BaseDirectory.Contains(Path.Combine(defaultDmdDirname, subPath)))
-								pdir.BaseDirectory = dir;
-
-					if (!wasUpdated && !ASTCache.ContainsDictionary(dir) && Directory.Exists(dir))
+					
+					if (UpdateOldPaths && ASTCache.ParsedDirectories!=null)
+						foreach (var pdir in ASTCache.ParsedDirectories.ToArray())
+							if (wasUpdated = pdir.Contains(Path.Combine(defaultDmdDirname, subPath)))
+							{
+								ASTCache.ParsedDirectories.Remove(pdir);
+								ASTCache.ParsedDirectories.Add(dir);
+							}
+					
+					if (!wasUpdated && !ASTCache.ParsedDirectories.Contains(dir) && Directory.Exists(dir))
 					{
 						DirAdded = true;
-						ASTCache.Add(dir);
+						ASTCache.ParsedDirectories.Add(dir);
 					}
 				}
 
 				if (DirAdded)
-					ASTCache.UpdateCache();
+					ASTCache.Parse();
 			}
 		}
 
@@ -413,7 +418,7 @@ namespace D_IDE.D
 								{
 									var dir = st.ReadString();
 									if(!string.IsNullOrWhiteSpace(dir))
-										ASTCache.Add(dir,System.Diagnostics.Debugger.IsAttached);
+										ASTCache.ParsedDirectories.Add(dir);
 								}
 							}
 						break;
@@ -436,11 +441,12 @@ namespace D_IDE.D
 			// After having loaded the directory paths, parse them asynchronously
 			new Thread(() =>
 			{
+				Thread.CurrentThread.Name = "Library parsing thread";
 				Thread.CurrentThread.IsBackground = true;
 
 				try
 				{
-					var ppds = ASTCache.UpdateCache();
+					var ppds = ASTCache.Parse();
 
 					// Output parse time stats
 					if (ppds != null)
@@ -459,7 +465,7 @@ namespace D_IDE.D
 				// For debugging purposes dump all parse results (errors etc.) to a log file.
 				try
 				{
-					ASTCache.WriteParseLog(IDEInterface.ConfigDirectory + "\\" + Version.ToString() + ".GlobalParseLog.log");
+					ParseLog.Write(ASTCache,IDEInterface.ConfigDirectory + "\\" + Version.ToString() + ".GlobalParseLog.log");
 				}
 				catch (Exception ex)
 				{
@@ -507,14 +513,17 @@ namespace D_IDE.D
 				x.WriteEndElement();
 			}
 
-			x.WriteStartElement("parsedDirectories");
-			foreach (var pdir in ASTCache)
+			if (ASTCache.ParsedDirectories != null && ASTCache.ParsedDirectories.Count!=0)
 			{
-				x.WriteStartElement("dir");
-				x.WriteCData(pdir.BaseDirectory);
+				x.WriteStartElement("parsedDirectories");
+				foreach (var pdir in ASTCache.ParsedDirectories)
+				{
+					x.WriteStartElement("dir");
+					x.WriteCData(pdir);
+					x.WriteEndElement();
+				}
 				x.WriteEndElement();
 			}
-			x.WriteEndElement();
 
 			x.WriteStartElement("DefaultLibs");
 			foreach (var lib in DefaultLinkedLibraries)

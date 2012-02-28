@@ -116,11 +116,6 @@ namespace D_IDE.D
 					try
 					{
 						ManagedProject.ParseDSources();
-
-						foreach (var ed in CoreManager.Instance.Editors)
-							if (ed is DEditorDocument && ManagedProject.ContainsFile(ed.AbsoluteFilePath))
-								(ed as DEditorDocument).UpdateImportCache();
-
 						DEditorDocument.UpdateSemanticHighlightings(true);
 					}
 					catch (Exception ex)

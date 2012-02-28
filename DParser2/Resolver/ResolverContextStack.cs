@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using D_Parser.Dom;
 using D_Parser.Dom.Statements;
+using D_Parser.Misc;
 
 namespace D_Parser.Resolver
 {
@@ -12,19 +10,7 @@ namespace D_Parser.Resolver
 		#region Properties
 		protected Stack<ResolverContext> stack = new Stack<ResolverContext>();
 
-		public IEnumerable<IAbstractSyntaxTree> ParseCache;
-		public Dictionary<string,IEnumerable<IAbstractSyntaxTree>> ImportsDictionary= new Dictionary<string,IEnumerable<IAbstractSyntaxTree>>();
-
-		public IEnumerable<IAbstractSyntaxTree> ImportCache
-		{
-			get
-			{
-				if (CurrentContext == null || CurrentContext.ScopedBlock == null)
-					return null;
-
-				return GetImportCache(CurrentContext.ScopedBlock.NodeRoot as DModule);
-			}
-		}
+		public ParseCacheList ParseCache = new ParseCacheList();
 
 		public IBlockNode ScopedBlock
 		{
@@ -75,16 +61,11 @@ namespace D_Parser.Resolver
 		}
 		#endregion
 
-		public ResolverContextStack(
-			IEnumerable<IAbstractSyntaxTree> ParseCache,
-			ResolverContext initialContext,
-			IEnumerable<IAbstractSyntaxTree> Imports=null)
+		public ResolverContextStack(ParseCacheList ParseCache,	ResolverContext initialContext)
 		{
 			this.ParseCache = ParseCache;
 			
 			stack.Push(initialContext);
-
-			CreateImportCache(Imports);
 		}
 
 		public ResolverContext Pop()
@@ -103,45 +84,34 @@ namespace D_Parser.Resolver
 			ctxtOverride.ScopedStatement = null;
 
 			stack.Push(ctxtOverride);
+
 			return ctxtOverride;
 		}
 
-		public void CreateImportCache(IEnumerable<IAbstractSyntaxTree> Imports=null)
+		object GetMostFittingBlock()
 		{
-			if (CurrentContext == null || CurrentContext.ScopedBlock == null || ParseCache==null)
-				return;
-
-			var m = CurrentContext.ScopedBlock.NodeRoot as DModule;
-
-			if (m != null)
-				ImportsDictionary[m.ModuleName] = Imports ?? ImportResolver.ResolveImports(m, ParseCache);
-		}
-
-		public IEnumerable<IAbstractSyntaxTree> GetImportCache(DModule m)
-		{
-			if (m == null)
+			if (CurrentContext == null)
 				return null;
 
-			IEnumerable<IAbstractSyntaxTree> ret = null;
-			if (ImportsDictionary.TryGetValue(m.ModuleName, out ret))
-				return ret;
-
-			// If imports weren't resolved already, do so
-			try
+			if (CurrentContext.ScopedStatement != null)
 			{
-				ret = ImportResolver.ResolveImports(m, ParseCache);
-				ImportsDictionary[m.ModuleName] = ret;
-				return ret;
-			}
-			catch { }
+				var r = CurrentContext.ScopedStatement;
 
-			return null;
+				while (r != null)
+				{
+					if (r is BlockStatement)
+						return r;
+					else
+						r = r.Parent;
+				}
+			}
+			
+			return CurrentContext.ScopedBlock;
 		}
 
-		public void TryAddResults(string TypeDeclarationString, ResolveResult[] NodeMatches, IBlockNode ScopedType = null)
+		public void TryAddResults(string TypeDeclarationString, ResolveResult[] NodeMatches)
 		{
-			if (ScopedType == null && CurrentContext != null)
-				ScopedType = CurrentContext.ScopedBlock;
+			var ScopedType = GetMostFittingBlock();
 
 			Dictionary<string, ResolveResult[]> subDict = null;
 
@@ -152,10 +122,9 @@ namespace D_Parser.Resolver
 				subDict.Add(TypeDeclarationString, NodeMatches);
 		}
 
-		public bool TryGetAlreadyResolvedType(string TypeDeclarationString, out ResolveResult[] NodeMatches, object ScopedType = null)
+		public bool TryGetAlreadyResolvedType(string TypeDeclarationString, out ResolveResult[] NodeMatches)
 		{
-			if (ScopedType == null && CurrentContext!=null)
-				ScopedType = CurrentContext.ScopedBlock;
+			var ScopedType = GetMostFittingBlock();
 
 			Dictionary<string, ResolveResult[]> subDict = null;
 

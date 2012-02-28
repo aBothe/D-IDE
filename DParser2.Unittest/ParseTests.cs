@@ -108,6 +108,8 @@ namespace ParserTests
 
 		public static decimal TestMathExpression(string mathExpression)
 		{
+			return 0;
+			/*
 			var ex = DParser.ParseExpression(mathExpression);
 
 			if (ex == null || !ex.IsConstant)
@@ -117,7 +119,7 @@ namespace ParserTests
 			}
 
 			Console.WriteLine(ex.ToString()+" = "+ex.DecValue);
-			return ex.DecValue;
+			return ex.DecValue;*/
 		}
 
 		public static void TestTypeEval(string e)
@@ -127,9 +129,9 @@ namespace ParserTests
 			Console.WriteLine("Code:\t\t"+e);
 			Console.WriteLine("Expression:\t"+ex.ToString());
 
-			var tr = ex.ExpressionTypeRepresentation;
+			//var tr = ex.ExpressionTypeRepresentation;
 
-			Console.WriteLine("Type representation:\t"+tr.ToString());
+			//Console.WriteLine("Type representation:\t"+tr.ToString());
 		}
 
 		public static void TestExpressionStartFinder(string code_untilCaretOffset)
