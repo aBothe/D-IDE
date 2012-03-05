@@ -598,9 +598,9 @@ namespace D_Parser.Resolver.TypeResolution
 			var curStmt = ctxt.ScopedStatement;
 
             bool init = true;
-			// Walk up statement hierarchy -- note that foreach loops can be nested
-			while (curStmt != null)
-			{
+            // Walk up statement hierarchy -- note that foreach loops can be nested
+            while (curStmt != null)
+            {
                 if (init)
                     init = false;
                 else
