@@ -48,7 +48,7 @@ namespace D_Parser.Resolver.ASTScanner
 		{
 			var csr = new CodeScanResult();
 
-			var resCache = new ResultCache();
+			var resCache = new CodeScanCache();
 
 			if (lastResCtxt.ScopedBlock != null)
 				resCache.Add(lastResCtxt.ScopedBlock.NodeRoot as IAbstractSyntaxTree);
@@ -68,7 +68,7 @@ namespace D_Parser.Resolver.ASTScanner
 			CodeScanResult csr,
 			object typeId,
 			ResolverContextStack lastResCtxt,
-			ResultCache resCache)
+			CodeScanCache resCache)
 		{
 			if (typeId == null)
 				return null;

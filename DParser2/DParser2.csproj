@@ -91,7 +91,7 @@
     <Compile Include="Completion\ICompletionDataGenerator.cs" />
     <Compile Include="Parser\CaretContextAnalyzer.cs" />
     <Compile Include="Completion\ParameterInsightResolution.cs" />
-    <Compile Include="Resolver\ASTScanner\ResultCache.cs" />
+    <Compile Include="Resolver\ASTScanner\CodeScanCache.cs" />
     <Compile Include="Resolver\ResolverContextStack.cs" />
     <Compile Include="Resolver\TypeResolution\StaticPropertiesResolver.cs" />
     <Compile Include="Completion\IEditorData.cs" />
