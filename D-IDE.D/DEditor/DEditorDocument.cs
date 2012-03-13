@@ -900,7 +900,7 @@ namespace D_IDE.D
 			{
 				// Update highlit bracket offsets
 				if (DSettings.Instance.EnableMatchingBracketHighlighting)
-					CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, Editor.CaretOffset);
+					CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, Editor.CaretOffset, Editor.TextArea.Caret.Location);
 				else
 					CurrentlyHighlitBrackets = null;
 

@@ -3,13 +3,15 @@ using D_Parser.Dom;
 using D_Parser.Parser;
 using ICSharpCode.AvalonEdit.AddIn;
 using ICSharpCode.AvalonEdit.Document;
+using System.IO;
 
 namespace D_IDE.D.DEditor
 {
 	public class DBracketSearcher
 	{
-		public static BracketSearchResult SearchBrackets(TextDocument doc, int caretOffset)
+		public static BracketSearchResult SearchBrackets(TextDocument doc, int caretOffset, TextLocation caret)
 		{
+			var caretLocation = new CodeLocation(caret.Column, caret.Line);
 			try
 			{
 				if (caretOffset < 1 || caretOffset>=doc.TextLength-2)
@@ -17,17 +19,18 @@ namespace D_IDE.D.DEditor
 
 				// Search backward
 				DToken lastToken=null;
-				var tk_start = SearchBackward(doc, caretOffset,out lastToken);
+				var tk_start = SearchBackward(doc, caretOffset, caretLocation,out lastToken);
 
 				if (tk_start == null)
 					return null;
 
+
+
 				// Search forward
 				var tk_end = SearchForward(doc, 
-					lastToken.Kind!=DTokens.Literal?
-					doc.GetOffset(lastToken.EndLocation.Line,lastToken.EndLocation.Column):
-					doc.GetOffset(lastToken.Location.Line, lastToken.Location.Column)
-					, getOppositeBracketToken(tk_start.Kind));
+					doc.GetOffset(lastToken.EndLocation.Line,lastToken.EndLocation.Column),
+					lastToken.EndLocation,
+					getOppositeBracketToken(tk_start.Kind));
 
 				if (tk_end == null)
 					return null;
@@ -59,13 +62,12 @@ namespace D_IDE.D.DEditor
 			return -1;
 		}
 
-		static DToken SearchBackward(TextDocument doc, int caretOffset,out DToken lastToken)
+		static DToken SearchBackward(TextDocument doc, int caretOffset, CodeLocation caret,out DToken lastToken)
 		{
-			var lexer = new Lexer(new System.IO.StringReader(doc.GetText(0,caretOffset)));
+			var ttp = doc.GetText(0, caretOffset);
+			var sr = new StringReader(ttp);
+			var lexer = new Lexer(sr);
 			lexer.NextToken();
-
-			var caret_=doc.GetLocation(caretOffset);
-			var caret = new CodeLocation(caret_.Column, caret_.Line);
 
 			var stk=new Stack<DToken>();
 
@@ -74,7 +76,7 @@ namespace D_IDE.D.DEditor
 				if (lexer.LookAhead.Kind == DTokens.OpenParenthesis || lexer.LookAhead.Kind==DTokens.OpenSquareBracket || lexer.LookAhead.Kind==DTokens.OpenCurlyBrace)
 					stk.Push(lexer.LookAhead);
 
-				if (lexer.LookAhead.Kind == DTokens.CloseParenthesis || lexer.LookAhead.Kind == DTokens.CloseSquareBracket || lexer.LookAhead.Kind == DTokens.CloseCurlyBrace)
+				else if (lexer.LookAhead.Kind == DTokens.CloseParenthesis || lexer.LookAhead.Kind == DTokens.CloseSquareBracket || lexer.LookAhead.Kind == DTokens.CloseCurlyBrace)
 				{
 					if (stk.Peek().Kind == getOppositeBracketToken( lexer.LookAhead.Kind))
 						stk.Pop();
@@ -85,6 +87,7 @@ namespace D_IDE.D.DEditor
 
 			lastToken = lexer.CurrentToken;
 
+			sr.Close();
 			lexer.Dispose();
 
 			if (stk.Count < 1)
@@ -93,13 +96,10 @@ namespace D_IDE.D.DEditor
 			return stk.Pop();
 		}
 
-		static DToken SearchForward(TextDocument doc, int caretOffset, int searchedBracketToken)
+		static DToken SearchForward(TextDocument doc, int caretOffset, CodeLocation caret, int searchedBracketToken)
 		{
 			var code = doc.GetText(caretOffset, doc.TextLength - caretOffset);
 			var lexer = new Lexer(new System.IO.StringReader(code));
-
-			var caret_ = doc.GetLocation(caretOffset);
-			var caret = new CodeLocation(caret_.Column, caret_.Line);
 
 			lexer.SetInitialLocation(caret);
 			lexer.NextToken();
@@ -108,16 +108,19 @@ namespace D_IDE.D.DEditor
 
 			while (lexer.LookAhead.Kind!=DTokens.EOF)
 			{
-				if (lexer.LookAhead.Kind == DTokens.OpenParenthesis || lexer.LookAhead.Kind == DTokens.OpenSquareBracket || lexer.LookAhead.Kind == DTokens.OpenCurlyBrace)
+				if (lexer.LookAhead.Kind == DTokens.OpenParenthesis || 
+					lexer.LookAhead.Kind == DTokens.OpenSquareBracket || 
+					lexer.LookAhead.Kind == DTokens.OpenCurlyBrace)
 					stk.Push(lexer.LookAhead);
 
-				if (lexer.LookAhead.Kind == DTokens.CloseParenthesis || lexer.LookAhead.Kind == DTokens.CloseSquareBracket || lexer.LookAhead.Kind == DTokens.CloseCurlyBrace)
+				else if (lexer.LookAhead.Kind == DTokens.CloseParenthesis || 
+					lexer.LookAhead.Kind == DTokens.CloseSquareBracket || 
+					lexer.LookAhead.Kind == DTokens.CloseCurlyBrace)
 				{
-					if (lexer.LookAhead.Kind == searchedBracketToken && (stk.Count < 1 || stk.Peek().Kind != getOppositeBracketToken(lexer.LookAhead.Kind)))
-						return lexer.LookAhead;
-
-					if (stk.Peek().Kind == getOppositeBracketToken( lexer.LookAhead.Kind))
+					if(stk.Count != 0)
 						stk.Pop();
+					else if (lexer.LookAhead.Kind == searchedBracketToken)
+						return lexer.LookAhead;
 				}
 
 				lexer.NextToken();
