@@ -67,7 +67,7 @@ namespace D_IDE.D
 			 * --- whereas we compiled the program only via dmd.exe A.d
 			 */
 
-			ParsedModules.Parse(new[] { BaseDirectory });
+			ParsedModules.Parse(new[] { BaseDirectory },BaseDirectory);
 		}
 
 		public DVersion DMDVersion = DVersion.D2;

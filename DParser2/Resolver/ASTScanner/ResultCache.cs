@@ -4,7 +4,7 @@ using D_Parser.Dom;
 
 namespace D_Parser.Resolver.TypeResolution
 {
-	public class CodeScanCache
+	public class ResultCache
 	{
 		#region Properties
 		/// <summary>

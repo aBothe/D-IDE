@@ -56,7 +56,7 @@ namespace D_IDE.D
 				{
 					try
 					{
-						cfg.ASTCache.Parse(Dirs);
+						cfg.ASTCache.Parse(Dirs,cfg.BaseDirectory);
 					}
 					catch (Exception ex)
 					{
