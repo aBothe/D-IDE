@@ -111,7 +111,8 @@ namespace D_IDE.D
 			}
 		}
 
-		public IBlockNode lastSelectedBlock { get; protected set; }
+		public IBlockNode lastSelectedBlock { get; private set; }
+		IStatement lastSelectedStatement;
 
 		DispatcherOperation typeLookupUpdateOperation = null;
 		//DispatcherOperation showCompletionWindowOperation = null;
@@ -440,7 +441,7 @@ namespace D_IDE.D
 					return;
 
 				var rr = DResolver.ResolveType(this,
-					new ResolverContextStack(ParseCache,	new ResolverContext { ScopedBlock = lastSelectedBlock }),
+					new ResolverContextStack(ParseCache,	new ResolverContext { ScopedBlock = lastSelectedBlock, ScopedStatement=lastSelectedStatement }),
 					true, true);
 
 				ResolveResult res = null;
@@ -500,7 +501,7 @@ namespace D_IDE.D
 					return;
 
 				var rr = DResolver.ResolveType(this,
-					new ResolverContextStack(ParseCache, new ResolverContext { ScopedBlock = lastSelectedBlock }),
+					new ResolverContextStack(ParseCache, new ResolverContext { ScopedBlock = lastSelectedBlock, ScopedStatement=lastSelectedStatement }),
 					true, true);
 
 				ResolveResult res = null;
@@ -630,6 +631,7 @@ namespace D_IDE.D
 				SyntaxTree = newAst;
 
 			lastSelectedBlock = null;
+			lastSelectedStatement = null;
 
 			if (SyntaxTree != null)
 			{
@@ -911,8 +913,7 @@ namespace D_IDE.D
 					return;
 				}
 
-				IStatement curStmt = null;
-				var curBlock = DResolver.SearchBlockAt(SyntaxTree, CaretLocation, out curStmt);
+				var curBlock = DResolver.SearchBlockAt(SyntaxTree, CaretLocation, out lastSelectedStatement);
 
 				if (curBlock == null)
 					curBlock = SyntaxTree;

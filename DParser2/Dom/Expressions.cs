@@ -42,6 +42,13 @@ namespace D_Parser.Dom.Expressions
 				foreach (var se in subExpressions)
 					if (se != null && Where >= se.Location && Where <= se.EndLocation)
 					{
+						/*
+						 * a.b -- take the entire access expression instead of b only in order to be able to resolve it correctly
+						 */
+						var pfa = e as PostfixExpression_Access;
+						if (pfa != null && pfa.AccessExpression == se && !(pfa.AccessExpression is ContainerExpression))
+							continue;
+
 						e = se;
 						foundOne = true;
 						break;
