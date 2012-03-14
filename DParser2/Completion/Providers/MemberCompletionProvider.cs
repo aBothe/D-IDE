@@ -208,7 +208,7 @@ namespace D_Parser.Completion
 						});
 					}
 				}
-				// Pointer conversions (e.g. (myInt*).sizeof)
+				// Reference conversions (e.g. (myInt*).sizeof)
 			}
 			*/
 			

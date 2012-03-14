@@ -21,45 +21,6 @@ namespace D_Parser.Dom.Expressions
 
 	public class ExpressionHelper
 	{
-		public static bool ToBool(object value)
-		{
-			bool b = false;
-
-			try
-			{
-				b = Convert.ToBoolean(value);
-			}
-			catch { }
-
-			return b;
-		}
-
-		public static double ToDouble(object value)
-		{
-			double d = 0;
-
-			try
-			{
-				d = Convert.ToDouble(value);
-			}
-			catch { }
-
-			return d;
-		}
-
-		public static long ToLong(object value)
-		{
-			long d = 0;
-
-			try
-			{
-				d = Convert.ToInt64(value);
-			}
-			catch { }
-
-			return d;
-		}
-
 		/// <summary>
 		/// Scans through all container expressions recursively and returns the one that's nearest to 'Where'.
 		/// Will return 'e' if nothing found or if there wasn't anything to scan
