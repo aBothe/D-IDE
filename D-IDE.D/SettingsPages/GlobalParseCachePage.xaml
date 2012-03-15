@@ -11,11 +11,10 @@
 		<Label Content="D Library Paths" Height="22" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Padding="3" Width="107" />
 		<Button Content="Add" Height="23" HorizontalAlignment="Left" Margin="125,12,0,0" Name="button_AddDir" VerticalAlignment="Top" Width="50" Click="button_AddDir_Click" />
 		<Button Content="Delete" Height="23" HorizontalAlignment="Left" Margin="181,12,0,0" Name="button_DelDir" VerticalAlignment="Top" Width="50" Click="button_DelDir_Click" />
-		<ListView  Margin="125,41,12,57" Name="list_Dirs" SelectionMode="Multiple">
+		<ListView  Margin="125,41,12,57" Name="list_Dirs" SelectionMode="Extended">
 			<ListView.View>
 				<GridView>
-					<GridViewColumn Header="Directory" DisplayMemberBinding="{Binding BaseDirectory}" Width="250"/>
-					<GridViewColumn Header="Parsed files" DisplayMemberBinding="{Binding Count}" Width="80" />
+					<GridViewColumn Header="Directory" DisplayMemberBinding="{Binding .}" Width="400"/>
 				</GridView>
 			</ListView.View>
 		</ListView>
