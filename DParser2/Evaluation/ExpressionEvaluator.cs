@@ -13,12 +13,39 @@ namespace D_Parser.Evaluation
 
 		private ExpressionEvaluator() { }
 
+		/// <summary>
+		/// Evaluates a constant expression.
+		/// Returns null if expression is non-const.
+		/// The returned object can either be boolean, long, double, string or char.
+		/// 
+		/// Used for resolving mixins, constraint checks and for resolving expressions debug-time(?)
+		/// </summary>
 		public static object Evaluate(IExpression expression, ResolverContextStack ctxt)
 		{
 			return new ExpressionEvaluator { ctxt = ctxt }.Evaluate(expression);
 		}
 
 		public object Evaluate(IExpression x)
+		{
+			return null;
+		}
+
+		public object Evaluate(OperatorBasedExpression x)
+		{
+			return null;
+		}
+
+		public object Evaluate(RelExpression x)
+		{
+			return null;
+		}
+
+		public object Evaluate(UnaryExpression x)
+		{
+			return null;
+		}
+
+		public object Evaluate(PrimaryExpression x)
 		{
 			return null;
 		}
