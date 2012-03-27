@@ -1,9 +1,6 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using D_Parser.Dom.Expressions;
 using D_Parser.Dom;
+using D_Parser.Dom.Expressions;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
 using D_Parser.Resolver;
@@ -65,50 +62,12 @@ namespace D_Parser.Completion
 		/// counts its already typed arguments
 		/// and returns a wrapper containing all the information.
 		/// </summary>
-		public static ArgumentsResolutionResult LookupArgumentRelatedStatement(
-			string code, 
-			int caret, 
-			CodeLocation caretLocation,
+		public static ArgumentsResolutionResult ResolveArgumentContext(
+			IEditorData data,
 			ResolverContextStack ctxt)
 		{
-			IStatement scopedStatement = null;
-			var MethodScope = ctxt.ScopedBlock as DMethod;
-
-			if (MethodScope == null)
-				return null;
-
-			var curMethodBody = MethodScope.GetSubBlockAt(caretLocation);
-
-			if (curMethodBody == null && MethodScope.Parent is DMethod)
-			{
-				MethodScope = MethodScope.Parent as DMethod;
-				curMethodBody = MethodScope.GetSubBlockAt(caretLocation);
-			}
-
-			if (curMethodBody == null)
-				return null;
-
-			var blockOpenerLocation = curMethodBody.StartLocation;
-			var blockOpenerOffset = blockOpenerLocation.Line <= 0 ? blockOpenerLocation.Column :
-				DocumentHelper.LocationToOffset(code, blockOpenerLocation);
-
-			if (blockOpenerOffset >= 0 && caret - blockOpenerOffset > 0)
-			{
-				var codeToParse = code.Substring(blockOpenerOffset, caret - blockOpenerOffset);
-
-				curMethodBody = DParser.ParseBlockStatement(codeToParse, blockOpenerLocation, MethodScope);
-
-				if (curMethodBody != null)
-					ctxt.ScopedStatement = scopedStatement = curMethodBody.SearchStatementDeeply(caretLocation);
-				else
-					return null;
-			}
-
-			if (scopedStatement == null)
-				return null;
-
-			var e= SearchForMethodCallsOrTemplateInstances(scopedStatement, caretLocation);
-
+			var e = DResolver.GetScopedCodeObject(data, ctxt, DResolver.AstReparseOptions.ReturnRawParsedExpression);
+			
 			/*
 			 * 1) foo(			-- normal arguments only
 			 * 2) foo!(...)(	-- normal arguments + template args
@@ -119,7 +78,7 @@ namespace D_Parser.Completion
 			 * 7) mystruct(		-- opCall call
 			 */
 			var res = new ArgumentsResolutionResult() { 
-				ParsedExpression = e
+				ParsedExpression = e as IExpression
 			};
 
 			// 1), 2)
@@ -135,7 +94,7 @@ namespace D_Parser.Completion
 					int i = 0;
 					foreach (var arg in call.Arguments)
 					{
-						if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
+						if (data.CaretLocation >= arg.Location && data.CaretLocation <= arg.EndLocation)
 						{
 							res.CurrentlyTypedArgumentIndex = i;
 							break;
@@ -149,13 +108,13 @@ namespace D_Parser.Completion
 			{
 				var acc = e as PostfixExpression_Access;
 
-				var baseTypes = ExpressionTypeResolver.Resolve(acc.PostfixForeExpression, ctxt);
+				res.ResolvedTypesOrMethods = ExpressionTypeResolver.Resolve(acc.PostfixForeExpression, ctxt);
 
-				if (baseTypes == null)
+				if (res.ResolvedTypesOrMethods == null)
 					return res;
 
 				if (acc.AccessExpression is NewExpression)
-					Handle(acc.AccessExpression as NewExpression, res, caretLocation, ctxt, baseTypes);
+					CalculateCurrentArgument(acc.AccessExpression as NewExpression, res, data.CaretLocation, ctxt, res.ResolvedTypesOrMethods);
 			}
 			// 3)
 			else if (e is TemplateInstanceExpression)
@@ -164,14 +123,14 @@ namespace D_Parser.Completion
 
 				res.IsTemplateInstanceArguments = true;
 
-
+				res.ResolvedTypesOrMethods = TypeDeclarationResolver.ResolveIdentifier(templ.TemplateIdentifier.Id, ctxt, e);
 
 				if (templ.Arguments != null)
 				{
 					int i = 0;
 					foreach (var arg in templ.Arguments)
 					{
-						if (caretLocation >= arg.Location && caretLocation <= arg.EndLocation)
+						if (data.CaretLocation >= arg.Location && data.CaretLocation <= arg.EndLocation)
 						{
 							res.CurrentlyTypedArgumentIndex = i;
 							break;
@@ -181,12 +140,46 @@ namespace D_Parser.Completion
 				}
 			}
 			else if (e is NewExpression)
-				Handle(e as NewExpression, res, caretLocation, ctxt);
+				CalculateCurrentArgument(e as NewExpression, res, data.CaretLocation, ctxt);
+
+			/*
+			 * alias int function(int a, bool b) myDeleg;
+			 * alias myDeleg myDeleg2;
+			 * 
+			 * myDeleg dg;
+			 * 
+			 * dg( -- it's not needed to have myDeleg but the base type for what it stands for
+			 * 
+			 * ISSUE:
+			 * myDeleg( -- not allowed though
+			 * myDeleg2( -- allowed neither!
+			 */
+			if (res.ResolvedTypesOrMethods != null)
+			{
+				var finalResults = new List<ResolveResult>();
+
+				foreach (var _r in res.ResolvedTypesOrMethods)
+				{
+					var r = _r;
+					while (r is MemberResult && !(((MemberResult)r).Node is DMethod))
+					{
+						var mr = (MemberResult)r;
+
+						if (mr.MemberBaseTypes == null || mr.MemberBaseTypes.Length == 0)
+							break;
+
+						r = mr.MemberBaseTypes[0];
+					}
+					finalResults.Add(r);
+				}
+
+				res.ResolvedTypesOrMethods = finalResults.ToArray();
+			}
 
 			return res;
 		}
 
-		static void Handle(NewExpression nex, 
+		static void CalculateCurrentArgument(NewExpression nex, 
 			ArgumentsResolutionResult res, 
 			CodeLocation caretLocation, 
 			ResolverContextStack ctxt,
@@ -207,20 +200,9 @@ namespace D_Parser.Completion
 			}
 		}
 
-		public static ArgumentsResolutionResult ResolveArgumentContext(
-			string code,
-			int caretOffset,
-			CodeLocation caretLocation,
-			DMethod MethodScope,
-			D_Parser.Misc.ParseCacheList parseCache)
+		public static ArgumentsResolutionResult ResolveArgumentContext(IEditorData editorData)
 		{
-			IStatement stmt = null;
-			var ctxt = new ResolverContextStack(parseCache, new ResolverContext { 
-				ScopedBlock = DResolver.SearchBlockAt(MethodScope, caretLocation, out stmt),
-				ScopedStatement = stmt
-			});
-
-			return LookupArgumentRelatedStatement(code, caretOffset, caretLocation, ctxt);
+			return ResolveArgumentContext(editorData, ResolverContextStack.Create(editorData));
 		}
 
 		static IExpression SearchForMethodCallsOrTemplateInstances(IStatement Statement, CodeLocation Caret)

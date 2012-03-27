@@ -441,8 +441,11 @@ namespace D_IDE.D
 					return;
 
 				var rr = DResolver.ResolveType(this,
-					new ResolverContextStack(ParseCache,	new ResolverContext { ScopedBlock = lastSelectedBlock, ScopedStatement=lastSelectedStatement }),
-					true, true);
+					new ResolverContextStack(ParseCache,	new ResolverContext { 
+						ScopedBlock = lastSelectedBlock, 
+						ScopedStatement=lastSelectedStatement 
+					}), 
+					DResolver.AstReparseOptions.AlsoParseBeyondCaret | DResolver.AstReparseOptions.OnlyAssumeIdentifierList);
 
 				ResolveResult res = null;
 				// If there are multiple types, show a list of those items
@@ -501,8 +504,11 @@ namespace D_IDE.D
 					return;
 
 				var rr = DResolver.ResolveType(this,
-					new ResolverContextStack(ParseCache, new ResolverContext { ScopedBlock = lastSelectedBlock, ScopedStatement=lastSelectedStatement }),
-					true, true);
+					new ResolverContextStack(ParseCache, new ResolverContext { 
+						ScopedBlock = lastSelectedBlock, 
+						ScopedStatement=lastSelectedStatement 
+					}),
+					DResolver.AstReparseOptions.OnlyAssumeIdentifierList | DResolver.AstReparseOptions.AlsoParseBeyondCaret);
 
 				ResolveResult res = null;
 				// If there are multiple types, show a list of those items

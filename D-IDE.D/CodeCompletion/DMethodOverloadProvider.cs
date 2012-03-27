@@ -15,17 +15,9 @@ namespace D_IDE.D.CodeCompletion
 	{
 		public static DMethodOverloadProvider Create(DEditorDocument doc)
 		{
-			if (!(doc.lastSelectedBlock is D_Parser.Dom.DMethod))
-				return null;
-
 			try
 			{
-				var argsResult = ParameterInsightResolution.ResolveArgumentContext(
-					doc.Editor.Text, 
-					doc.Editor.CaretOffset, 
-					doc.CaretLocation, 
-					doc.lastSelectedBlock as D_Parser.Dom.DMethod, 
-					doc.ParseCache);
+				var argsResult = ParameterInsightResolution.ResolveArgumentContext(doc);
 
 				if (argsResult == null || argsResult.ResolvedTypesOrMethods == null || argsResult.ResolvedTypesOrMethods.Length < 1)
 					return null;
