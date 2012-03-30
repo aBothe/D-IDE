@@ -17,13 +17,13 @@ using D_IDE.D.DEditor;
 using D_Parser.Completion;
 using D_Parser.Dom;
 using D_Parser.Dom.Statements;
+using D_Parser.Misc;
 using D_Parser.Parser;
 using D_Parser.Resolver;
 using D_Parser.Resolver.TypeResolution;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
-using D_Parser.Misc;
 
 namespace D_IDE.D
 {
@@ -1078,11 +1078,17 @@ namespace D_IDE.D
 
 				var cData = new List<ICompletionData>();
 
+				var sw = new Stopwatch();
+				sw.Start();
 				DCodeCompletionSupport.BuildCompletionData(
 					this,
 					cData,
 					EnteredText,
 					out lastCompletionListResultPath);
+				sw.Stop();
+
+				if(Debugger.IsAttached)
+					CoreManager.Instance.MainWindow.ThirdStatusText = sw.ElapsedMilliseconds + "ms (Completion)";
 
 				// If no data present, return
 				if (cData.Count < 1)
@@ -1098,7 +1104,7 @@ namespace D_IDE.D
 					completionWindow.CompletionList.InsertionRequested += new EventHandler(CompletionList_InsertionRequested);
 					//completionWindow.CloseAutomatically = true;
 
-					//HACK: Fill in data
+					//HACK: Fill in data directly instead of iterating through the data
 					foreach (var e in cData)
 						completionWindow.CompletionList.CompletionData.Add(e);
 				}
@@ -1124,7 +1130,7 @@ namespace D_IDE.D
 					// 'Backup' the selected completion data
 					lastSelectedCompletionData = completionWindow.CompletionList.SelectedItem;
 					completionWindow = null; // After the window closed, reset it to null
-				}; 
+				};
 				completionWindow.Show();
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); completionWindow = null; }
@@ -1283,9 +1289,19 @@ namespace D_IDE.D
 								handled = true;
 								break;
 							}
-						
+
 						if (!handled)
+						{
+							var sw = new Stopwatch();
+							sw.Start();
+
 							DCodeCompletionSupport.BuildToolTip(this, ttArgs);
+
+							sw.Stop();
+
+							if (Debugger.IsAttached)
+								CoreManager.Instance.MainWindow.ThirdStatusText = sw.ElapsedMilliseconds + "ms (Tooltip)";
+						}
 					}
 					catch (Exception ex)
 					{

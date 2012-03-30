@@ -59,6 +59,18 @@ namespace D_IDE
 			}
 		}
 
+		public string ThirdStatusText
+		{
+			get
+			{
+				return StatusLabel3.Text;
+			}
+			set
+			{
+				StatusLabel3.Text = value;
+			}
+		}
+
 		public ISearchResultPanel SearchResultPanel
 		{
 			get { return Panel_SearchResult; }

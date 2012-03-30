@@ -22,6 +22,7 @@ namespace D_IDE.Core.Controls
 
 		string LeftStatusText { get; set; }
 		string SecondLeftStatusText { get; set; }
+		string ThirdStatusText { get; set; }
 	}
 
 	public interface ISearchResultPanel

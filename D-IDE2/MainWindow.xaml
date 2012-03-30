@@ -227,6 +227,9 @@
 			<StatusBarItem>
 				<TextBlock HorizontalAlignment="Stretch" Name="StatusLabel2" Padding="10,0,0,0" />
 			</StatusBarItem>
+			<StatusBarItem>
+				<TextBlock HorizontalAlignment="Stretch" Name="StatusLabel3" Padding="10,0,0,0" />
+			</StatusBarItem>
 			<StatusBarItem HorizontalAlignment="Right">
 				<Image Source="Resources/mail.png" Height="16" Width="16" ToolTip="Give Feedback" Name="Image_Feedback" MouseDown="Image_Feedback_MouseDown" Cursor="Hand" />
 			</StatusBarItem>
