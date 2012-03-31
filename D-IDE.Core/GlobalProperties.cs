@@ -9,6 +9,7 @@ using D_IDE.Core;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
+using System.Diagnostics;
 
 namespace D_IDE
 {
@@ -276,6 +277,11 @@ namespace D_IDE
                                     p.ShowDebugConsole = xr.Value == "1";
                                 }
                                 break;
+
+							case "ShowSpeedInfo":
+								if (xr.MoveToAttribute("value"))
+									p.ShowSpeedInfo = xr.Value == "true";
+								break;
                         }
                     }
                 }
@@ -416,6 +422,10 @@ namespace D_IDE
             xw.WriteAttributeString("value", Instance.ShowDebugConsole ? "1" : "0");
             xw.WriteEndElement();
 
+			xw.WriteStartElement("ShowSpeedInfo");
+			xw.WriteAttributeString("value", Instance.ShowSpeedInfo?"true":"false");
+			xw.WriteEndElement();
+
             //Code templates
             //CodeTemplate.Save(xw);
 
@@ -506,6 +516,7 @@ namespace D_IDE
 		public string DefaultProjectDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\D Projects";
 		public bool OpenLastPrj = true;
 		public bool OpenLastFiles = true;
+		public bool ShowSpeedInfo = false;
 		#endregion
 
 		public string lastSearchDir =Util.ApplicationStartUpPath;

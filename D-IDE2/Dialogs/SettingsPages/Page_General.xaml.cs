@@ -37,6 +37,7 @@ namespace D_IDE.Dialogs.SettingsPages
 			GlobalProperties.Instance.DefaultProjectDirectory = tb_PrjRepo.Text;
 			GlobalProperties.Instance.OpenLastPrj = cb_OpenLastSln.IsChecked.Value;
 			GlobalProperties.Instance.OpenLastFiles = cb_OpenLastFiles.IsChecked.Value;
+			GlobalProperties.Instance.ShowSpeedInfo = cb_DisplaySpeedInfo.IsChecked.Value;
 			return true;
 		}
 		
@@ -56,6 +57,7 @@ namespace D_IDE.Dialogs.SettingsPages
 			tb_PrjRepo.Text = GlobalProperties.Instance.DefaultProjectDirectory;
 			cb_OpenLastSln.IsChecked = GlobalProperties.Instance.OpenLastPrj;
 			cb_OpenLastFiles.IsChecked = GlobalProperties.Instance.OpenLastFiles;
+			cb_DisplaySpeedInfo.IsChecked = GlobalProperties.Instance.ShowSpeedInfo;
 		}
 
 		private void bt_Search_PrjRepo_Click(object sender, RoutedEventArgs e)

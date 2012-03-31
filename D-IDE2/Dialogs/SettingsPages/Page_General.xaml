@@ -15,6 +15,7 @@
 				<w:CheckBox Content="Get last blog updates" Height="16" HorizontalAlignment="Left" Margin="6,72,0,0" Name="cb_RetrieveBlog" VerticalAlignment="Top" />
 				<w:CheckBox Content="Store settings at user documents" Height="16" HorizontalAlignment="Left" Margin="6,94,0,0" Name="cb_UserSpecSettings" VerticalAlignment="Top" />
 				<w:Button Content="Show Config Directory" Height="23" HorizontalAlignment="Right" Margin="0,0,6,6" Name="button_ShowCfgDir" VerticalAlignment="Bottom" Width="137" Click="button_ShowCfgDir_Click" />
+				<w:CheckBox Content="Display speed info" Height="16" HorizontalAlignment="Left" Margin="313,6,0,0" Name="cb_DisplaySpeedInfo" VerticalAlignment="Top" />
 			</w:Grid>
 		</w:GroupBox>
 

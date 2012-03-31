@@ -657,7 +657,7 @@ namespace D_IDE.D
 			{
 				try
 				{
-					if (System.Diagnostics.Debugger.IsAttached)
+					if (GlobalProperties.Instance.ShowSpeedInfo)
 						CoreManager.Instance.MainWindow.SecondLeftStatusText = 
 							Math.Round((decimal)stopWatch.ElapsedMilliseconds, 3).ToString() + "ms (Parsing duration)";
 
@@ -808,7 +808,7 @@ namespace D_IDE.D
 				if (RefreshErrorList)
 					CoreManager.ErrorManagement.RefreshErrorList();
 
-				if(System.Diagnostics.Debugger.IsAttached)
+				if(GlobalProperties.Instance.ShowSpeedInfo)
 					CoreManager.Instance.MainWindow.LeftStatusText =
 						Math.Round((decimal)highPrecTimer.ElapsedMilliseconds, 2).ToString() +
 						"ms (Semantic Highlighting)";
@@ -1087,7 +1087,7 @@ namespace D_IDE.D
 					out lastCompletionListResultPath);
 				sw.Stop();
 
-				if(Debugger.IsAttached)
+				if(GlobalProperties.Instance.ShowSpeedInfo)
 					CoreManager.Instance.MainWindow.ThirdStatusText = sw.ElapsedMilliseconds + "ms (Completion)";
 
 				// If no data present, return
@@ -1299,7 +1299,7 @@ namespace D_IDE.D
 
 							sw.Stop();
 
-							if (Debugger.IsAttached)
+							if (GlobalProperties.Instance.ShowSpeedInfo)
 								CoreManager.Instance.MainWindow.ThirdStatusText = sw.ElapsedMilliseconds + "ms (Tooltip)";
 						}
 					}
