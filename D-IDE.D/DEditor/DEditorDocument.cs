@@ -82,6 +82,13 @@ namespace D_IDE.D
 			}
 		}
 
+		public CompletionOptions Options
+		{
+			get { 
+				return DSettings.Instance.CompletionOptions; 
+			}
+		}
+
 		/// <summary>
 		/// Variable that indicates if document is parsed currently.
 		/// </summary>

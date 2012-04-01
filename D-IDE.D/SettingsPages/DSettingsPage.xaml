@@ -14,5 +14,6 @@
 		<CheckBox Height="16" Margin="12,78,12,0" Name="checkBox_CodeInsertionOnNonLetter" VerticalAlignment="Top" ToolTip="Enable this to automatically insert the completion text when the editor popup closes down." Content="Code insertion when completion popup closed down" />
 		<CheckBox Content="Enable semantic code highlighting (Experimental)" Height="16" Margin="12,100,12,0" Name="checkBox_UseSemanticHighlighting" VerticalAlignment="Top" />
 		<CheckBox Content="Enable smart indentation" Height="16" HorizontalAlignment="Left" Margin="12,122,0,0" Name="checkBox_SmartIndentation" VerticalAlignment="Top" />
+		<CheckBox Content="Enable UFCS completion (Currently very slow)" Height="16" HorizontalAlignment="Left" Margin="12,158,0,0" Name="checkBox_EnableUFCSCompletion" VerticalAlignment="Top" />
 	</Grid>
 </core:AbstractSettingsPage>

@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
+using D_Parser.Completion.Providers;
 using D_Parser.Dom;
 using D_Parser.Dom.Expressions;
 using D_Parser.Dom.Statements;
 using D_Parser.Parser;
 using D_Parser.Resolver;
 using D_Parser.Resolver.TypeResolution;
-using D_Parser.Completion.Providers;
 
 namespace D_Parser.Completion
 {
@@ -42,7 +42,8 @@ namespace D_Parser.Completion
 				lastResultPath = rr.ResultPath;
 				BuildCompletionData(rr, ScopedBlock);
 
-				UFCSCompletionProvider.Generate(rr, ctxt, Editor, CompletionDataGenerator);
+				if(Editor.Options.ShowUFCSItems)
+					UFCSCompletionProvider.Generate(rr, ctxt, Editor, CompletionDataGenerator);
 			}
 		}
 

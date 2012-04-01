@@ -59,6 +59,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Completion\AbstractCompletionProvider.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Dom\TemplateParameters.cs" />
     <Compile Include="Evaluation\ExpressionEvaluator.cs" />
     <Compile Include="Evaluation\PrimitiveValue.cs" />
+    <Compile Include="Misc\CompletionOptions.cs" />
     <Compile Include="Misc\ParseCache.cs" />
     <Compile Include="Misc\ParseCacheList.cs" />
     <Compile Include="Misc\ParseLog.cs" />

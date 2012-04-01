@@ -1,16 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Collections.Generic;
 using D_IDE.Core;
 
 namespace D_IDE.D
@@ -36,6 +24,7 @@ namespace D_IDE.D
 			sett.ForceCodeCompetionPopupCommit = checkBox_CodeInsertionOnNonLetter.IsChecked.Value;
 			sett.UseSemanticHighlighting = checkBox_UseSemanticHighlighting.IsChecked.Value;
 			sett.EnableSmartIndentation = checkBox_SmartIndentation.IsChecked.Value;
+			sett.CompletionOptions.ShowUFCSItems = checkBox_EnableUFCSCompletion.IsChecked.Value;
 
 			return true;
 		}
@@ -50,6 +39,7 @@ namespace D_IDE.D
 			checkBox_CodeInsertionOnNonLetter.IsChecked = sett.ForceCodeCompetionPopupCommit;
 			checkBox_UseSemanticHighlighting.IsChecked = sett.UseSemanticHighlighting;
 			checkBox_SmartIndentation.IsChecked = sett.EnableSmartIndentation;
+			checkBox_EnableUFCSCompletion.IsChecked = sett.CompletionOptions.ShowUFCSItems;
 		}
 
 		public override string SettingCategoryName
