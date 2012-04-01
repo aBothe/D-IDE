@@ -80,6 +80,7 @@
     <Compile Include="Resolver\ASTScanner\CodeSymbolsScanner.IdentifierScan.cs" />
     <Compile Include="Resolver\ASTScanner\ItemEnumeration.cs" />
     <Compile Include="Resolver\ASTScanner\NameScan.cs" />
+    <Compile Include="Resolver\ASTScanner\UFCSVisitor.cs" />
     <Compile Include="Resolver\ResolutionOptions.cs" />
     <Compile Include="Resolver\TypeResolution\ExpressionTypeResolution.cs" />
     <Compile Include="Resolver\ASTScanner\AbstractVisitor.cs" />

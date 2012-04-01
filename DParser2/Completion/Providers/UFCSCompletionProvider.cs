@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using D_Parser.Resolver;
+using D_Parser.Resolver.ASTScanner;
 
 namespace D_Parser.Completion.Providers
 {
@@ -11,7 +12,7 @@ namespace D_Parser.Completion.Providers
 	/// </summary>
 	public class UFCSCompletionProvider
 	{
-		public static void Generate(ResolveResult rr, ICompletionDataGenerator gen)
+		public static void Generate(ResolveResult rr, ResolverContextStack ctxt, IEditorData ed, ICompletionDataGenerator gen)
 		{
 			/*
 			 * 1) Have visitor.
@@ -22,6 +23,18 @@ namespace D_Parser.Completion.Providers
 			 *	-- Result comparison!?
 			 * 6) Add to completion list if comparison successful
 			 */
+
+			// 1)
+			var vis = new UFCSVisitor(ctxt) { FirstParamToCompareWith=rr };
+
+			// 2), 3), 4), 5)
+			vis.IterateThroughScopeLayers(ed.CaretLocation);
+
+
+			// 6)
+			if (vis.Matches.Count != 0)
+				foreach (var m in vis.Matches)
+					gen.Add(m);
 		}
 	}
 }

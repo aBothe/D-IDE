@@ -40,42 +40,10 @@ namespace D_Parser.Resolver.TypeResolution
 
 			vis.IterateThroughScopeLayers(acc.Location);
 
-			if (vis.Match != null)
-				return new[] {TypeDeclarationResolver.HandleNodeMatch(vis.Match, ctxt, null, acc)};
+			if (vis.Matches.Count!=0)
+				return TypeDeclarationResolver.HandleNodeMatches(vis.Matches, ctxt, null, acc);
 
 			return null;
-		}
-
-		public class UFCSVisitor : AbstractVisitor
-		{
-			public UFCSVisitor(ResolverContextStack ctxt) : base(ctxt) { }
-
-			public string NameToSearch;
-			public ResolveResult FirstParamToCompareWith;
-
-			public DMethod Match;
-
-			protected override bool HandleItem(INode n)
-			{
-				if (n.Name == NameToSearch && n is DMethod)
-				{
-					var dm = (DMethod)n;
-
-					if (dm.Parameters.Count != 0)
-					{
-						var firstParam = TypeResolution.TypeDeclarationResolver.Resolve(dm.Parameters[0].Type,Context);
-
-						//TODO: Compare the resolved parameter with the first parameter given
-						if (true)
-						{
-							Match = dm;
-							return true;
-						}
-					}
-				}
-
-				return false;
-			}
 		}
 	}
 }
