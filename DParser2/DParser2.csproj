@@ -68,6 +68,7 @@
     <Compile Include="Completion\Providers\ImportStatementCompletionProvider.cs" />
     <Compile Include="Completion\Providers\MemberCompletionProvider.cs" />
     <Compile Include="Completion\Providers\PropertyAttributeCompletionProvider.cs" />
+    <Compile Include="Completion\Providers\UFCSCompletionProvider.cs" />
     <Compile Include="Dom\ISyntaxRegion.cs" />
     <Compile Include="Dom\TemplateParameters.cs" />
     <Compile Include="Evaluation\ExpressionEvaluator.cs" />

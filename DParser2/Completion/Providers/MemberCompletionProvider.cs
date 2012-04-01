@@ -5,6 +5,7 @@ using D_Parser.Dom.Statements;
 using D_Parser.Parser;
 using D_Parser.Resolver;
 using D_Parser.Resolver.TypeResolution;
+using D_Parser.Completion.Providers;
 
 namespace D_Parser.Completion
 {
@@ -39,6 +40,8 @@ namespace D_Parser.Completion
 			{
 				lastResultPath = rr.ResultPath;
 				BuildCompletionData(rr, ScopedBlock);
+
+				UFCSCompletionProvider.Generate(rr, CompletionDataGenerator);
 			}
 		}
 
@@ -222,7 +225,6 @@ namespace D_Parser.Completion
 
 			if (mrr.ResultBase == null)
 				StaticTypePropertyProvider.AddGenericProperties(mrr, CompletionDataGenerator, mrr.Node, false);
-
 		}
 
 		void BuildCompletionData(ModulePackageResult mpr)
