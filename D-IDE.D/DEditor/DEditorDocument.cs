@@ -625,6 +625,9 @@ namespace D_IDE.D
 
 				newAst = parser.Parse();
 
+				if (string.IsNullOrWhiteSpace(newAst.ModuleName))
+					newAst.ModuleName = ProposedModuleName;
+
 				stopWatch.Stop();
 
 				ParseTime = stopWatch.Elapsed.TotalSeconds;
