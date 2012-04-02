@@ -30,6 +30,7 @@ namespace D_Parser.Resolver.ASTScanner
 
 		Thread[] resolveThreads = new Thread[Environment.ProcessorCount];
 		Stack<DMethod>[] queues = new Stack<DMethod>[Environment.ProcessorCount];
+		bool[] go = new bool[Environment.ProcessorCount];
 		bool finishedQueuing;
 
 		public override void IterateThroughScopeLayers(CodeLocation Caret, MemberFilter VisibleMembers = MemberFilter.All)
@@ -43,8 +44,9 @@ namespace D_Parser.Resolver.ASTScanner
 			if (WorkAsync)
 				for (int i = 0; i < Environment.ProcessorCount; i++)
 				{
+					queues[i] = new Stack<DMethod>();
 					var th = resolveThreads[i] = new Thread(_th);
-					th.Start(queues[i] = new Stack<DMethod>());
+					th.Start(i);
 				}
 
 			base.IterateThroughScopeLayers(Caret, VisibleMembers);
@@ -65,17 +67,18 @@ namespace D_Parser.Resolver.ASTScanner
 
 		void _th(object s)
 		{
+			int i = (int)s;
 			Thread.CurrentThread.IsBackground = true;
 
-			var q=(Stack<DMethod>)s;
+			var q=queues[i];
 			do
 			{
 				while (q.Count > 0)
 					HandleMethod(q.Pop());
 
-				Thread.Sleep(10);
+				Thread.Sleep(1);
 			}
-			while (q.Count!= 0 && !finishedQueuing);
+			while ((q.Count!= 0 && !finishedQueuing) || !go[i]);
 		}
 		#endregion
 
@@ -90,7 +93,11 @@ namespace D_Parser.Resolver.ASTScanner
 				if (dm.Parameters.Count != 0)
 				{
 					if (WorkAsync) // Assign items to threads evenly
-						queues[k++ % Environment.ProcessorCount].Push(dm);
+					{
+						k++;
+						queues[k % Environment.ProcessorCount].Push(dm);
+						go[k % Environment.ProcessorCount] = true;
+					}
 					else
 						HandleMethod(dm);
 				}
