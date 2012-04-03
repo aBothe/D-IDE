@@ -28,7 +28,7 @@ namespace D_Parser.Resolver.ASTScanner
 		/// </summary>
 		public bool WorkAsync;
 
-		static int threadCount = (int)Math.Ceiling((decimal)Environment.ProcessorCount / 2);
+		static int threadCount = Environment.ProcessorCount;
 		Thread[] resolveThreads = new Thread[threadCount];
 		Stack<DMethod>[] queues = new Stack<DMethod>[threadCount];
 
