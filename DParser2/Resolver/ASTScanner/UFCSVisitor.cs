@@ -67,8 +67,11 @@ namespace D_Parser.Resolver.ASTScanner
 
 			Thread.CurrentThread.IsBackground = true;
 
+			var threadSafeContext = Context.Clone();
+			threadSafeContext.CurrentContext.Options |= ResolutionOptions.StopAfterFirstOverloads;
+
 			while (q.Count > 0)
-				HandleMethod(q.Pop());
+				HandleMethod(threadSafeContext,q.Pop());
 		}
 		#endregion
 
@@ -88,18 +91,16 @@ namespace D_Parser.Resolver.ASTScanner
 						queues[k % threadCount].Push(dm);
 					}
 					else
-						HandleMethod(dm);
+						HandleMethod(Context,dm);
 				}
 			}
 
 			return false;
 		}
 
-		void HandleMethod(object s)
+		void HandleMethod(ResolverContextStack threadSafeContext,object s)
 		{
 			var dm = (DMethod)s;
-
-			var threadSafeContext = Context.Clone();
 
 			var firstParam = TypeResolution.TypeDeclarationResolver.Resolve(dm.Parameters[0].Type, threadSafeContext);
 
