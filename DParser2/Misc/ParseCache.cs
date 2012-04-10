@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using D_Parser.Dom;
+using D_Parser.Resolver.ASTScanner;
 
 namespace D_Parser.Misc
 {
@@ -14,6 +15,7 @@ namespace D_Parser.Misc
 		public bool IsParsing { get; private set; }
 
 		public RootPackage Root = new RootPackage ();
+		public UFCSCache UfcsCache = new UFCSCache();
 		/// <summary>
 		/// If a parse directory is relative, like ../ or similar, use this path as base path
 		/// </summary>

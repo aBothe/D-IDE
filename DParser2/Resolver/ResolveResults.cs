@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using D_Parser.Dom.Expressions;
 using D_Parser.Misc;
+using System;
 
 namespace D_Parser.Resolver
 {
-	public abstract class ResolveResult
+	public abstract class ResolveResult : IEqualityComparer<ResolveResult>
 	{
 		/// <summary>
 		/// If the entire resolution took more than one level of type searching, this field represents the resolution base that was used to find the current items.
@@ -18,6 +19,16 @@ namespace D_Parser.Resolver
 		public object DeclarationOrExpressionBase;
 
 		public abstract string ResultPath {get;}
+
+		public bool Equals(ResolveResult x, ResolveResult y)
+		{
+			return ResultComparer.IsEqual(x, y);
+		}
+
+		public int GetHashCode(ResolveResult obj)
+		{
+			return base.GetHashCode();
+		}
 	}
 
 	public abstract class TemplateInstanceResult : ResolveResult
