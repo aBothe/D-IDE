@@ -52,8 +52,7 @@ namespace D_Parser.Resolver.ASTScanner
 					preMatchList.Add(kv.Key);
 			}
 
-			var mv = new MatchVisitor<DMethod> {
-				Context=ctxt,
+			var mv = new MatchVisitor<DMethod>(ctxt) {
 				rawList=preMatchList
 			};
 
@@ -72,6 +71,8 @@ namespace D_Parser.Resolver.ASTScanner
 			/// Contains items that passed the filter successfully.
 			/// </summary>
 			public List<T> filteredList=new List<T>();
+
+			public MatchVisitor(ResolverContextStack ctxt) : base(ctxt) { }
 
 			protected override bool HandleItem(INode n)
 			{
