@@ -6,7 +6,7 @@ using System;
 
 namespace D_Parser.Resolver
 {
-	public abstract class ResolveResult : IEqualityComparer<ResolveResult>
+	public abstract class ResolveResult
 	{
 		/// <summary>
 		/// If the entire resolution took more than one level of type searching, this field represents the resolution base that was used to find the current items.
@@ -20,9 +20,12 @@ namespace D_Parser.Resolver
 
 		public abstract string ResultPath {get;}
 
-		public bool Equals(ResolveResult x, ResolveResult y)
+		public override bool Equals(object obj)
 		{
-			return ResultComparer.IsEqual(x, y);
+			if(obj is ResolveResult)
+				return ResultComparer.IsEqual(this,(ResolveResult)obj);
+
+			return base.Equals(obj);
 		}
 
 		public int GetHashCode(ResolveResult obj)

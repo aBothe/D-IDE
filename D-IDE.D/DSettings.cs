@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Xml;
 using D_IDE.Core;
-using D_Parser.Completion;
 using D_Parser.Misc;
 
 namespace D_IDE.D
@@ -163,6 +161,9 @@ namespace D_IDE.D
 		{
 			DebugArgs.Reset();
 			ReleaseArgs.Reset();
+
+			ASTCache.FinishedParsing += parsedSources;
+			ASTCache.FinishedUfcsCaching += new Action(ASTCache_FinishedUfcsCaching);
 		}
 
 		public class DBuildArguments
@@ -328,7 +329,7 @@ namespace D_IDE.D
 				}
 
 				if (DirAdded)
-					ASTCache.Parse();
+					ASTCache.BeginParse();
 			}
 		}
 
@@ -449,39 +450,37 @@ namespace D_IDE.D
 			}
 
 			// After having loaded the directory paths, parse them asynchronously
-			new Thread(() =>
+			ASTCache.BeginParse();
+		}
+
+		void parsedSources(ParsePerformanceData[] pfd)
+		{
+			// Output parse time stats
+			if (pfd != null)
+				foreach (var ppd in pfd)
+					ErrorLogger.Log("Parsed " + ppd.AmountFiles + " files in " +
+						ppd.BaseDirectory + " in " +
+						Math.Round(ppd.TotalDuration, 2).ToString() + "s (~" +
+						Math.Round(ppd.FileDuration, 3).ToString() + "s per file)",
+						ErrorType.Information, ErrorOrigin.Parser);
+
+			// For debugging purposes dump all parse results (errors etc.) to a log file.
+			try
 			{
-				Thread.CurrentThread.Name = "Library parsing thread";
-				Thread.CurrentThread.IsBackground = true;
+				ParseLog.Write(ASTCache, IDEInterface.ConfigDirectory + "\\" + Version.ToString() + ".GlobalParseLog.log");
+			}
+			catch (Exception ex)
+			{
+				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System);
+			}
+		}
 
-				try
-				{
-					var ppds = ASTCache.Parse();
-
-					// Output parse time stats
-					if (ppds != null)
-						foreach (var ppd in ppds)
-							ErrorLogger.Log("Parsed " + ppd.AmountFiles + " files in " +
-								ppd.BaseDirectory + " in " +
-								Math.Round(ppd.TotalDuration, 2).ToString() + "s (~" +
-								Math.Round(ppd.FileDuration, 3).ToString() + "s per file)",
-								ErrorType.Information, ErrorOrigin.Parser);
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex,ErrorType.Error,ErrorOrigin.Parser);
-				}
-
-				// For debugging purposes dump all parse results (errors etc.) to a log file.
-				try
-				{
-					ParseLog.Write(ASTCache,IDEInterface.ConfigDirectory + "\\" + Version.ToString() + ".GlobalParseLog.log");
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex,ErrorType.Warning,ErrorOrigin.System);
-				}
-			}).Start();
+		void ASTCache_FinishedUfcsCaching()
+		{
+			ErrorLogger.Log("Created UFCS Cache in " + 
+				Math.Round(ASTCache.UfcsCache.CachingDuration.TotalSeconds, 2).ToString() + "s ("+
+				ASTCache.UfcsCache.CachedMethods.Count + " cached methods; ~" + Math.Round(ASTCache.UfcsCache.CachingDuration.TotalSeconds/ASTCache.UfcsCache.CachedMethods.Count*1000, 1) + "ms per result)",
+				ErrorType.Information,ErrorOrigin.Parser);
 		}
 
 		public void Save(XmlWriter x)

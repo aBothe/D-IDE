@@ -46,7 +46,7 @@ namespace D_IDE.D
 		/// <summary>
 		/// Parse all D sources that belong to the project
 		/// </summary>
-		public void ParseDSources()
+		public void ParseDSourcesAsync()
 		{
 			/*
 			 * Instead of parsing added files only, add all D sources that are situated in the project's base directory.
@@ -66,8 +66,13 @@ namespace D_IDE.D
 			 * 
 			 * --- whereas we compiled the program only via dmd.exe A.d
 			 */
+			ParsedModules.FinishedParsing += finishedProjectModuleAnalysis;
+			ParsedModules.BeginParse(new[] { BaseDirectory },BaseDirectory);
+		}
 
-			ParsedModules.Parse(new[] { BaseDirectory },BaseDirectory);
+		void finishedProjectModuleAnalysis(ParsePerformanceData[] pfd)
+		{
+			DEditorDocument.UpdateSemanticHighlightings(true);
 		}
 
 		public DVersion DMDVersion = DVersion.D2;

@@ -17,7 +17,6 @@ namespace D_IDE.D
 	{
 		public DMDSettingsPage ParentPage { get; private set; }
 		public DMDConfig cfg { get; private set; }
-		Thread parseThread;
 
 		readonly ObservableCollection<string> Dirs = new ObservableCollection<string>();
 		public GlobalParseCachePage(DMDSettingsPage DMDPage,DMDConfig Config)
@@ -47,30 +46,27 @@ namespace D_IDE.D
 
 			if (cacheUpdateRequired)
 			{
-				if (parseThread != null && parseThread.IsAlive)
-					parseThread.Abort();
-
 				Cursor = Cursors.Wait;
 
-				parseThread = new Thread(() =>
+				cfg.ASTCache.FinishedParsing += finishedAnalysis;
+
+				try
 				{
-					try
-					{
-						cfg.ASTCache.Parse(Dirs,cfg.BaseDirectory);
-					}
-					catch (Exception ex)
-					{
-						ErrorLogger.Log(ex);
-					}
-
-					Dispatcher.Invoke(new Action(() =>	Cursor = Cursors.Arrow	));
-				});
-				parseThread.IsBackground = true;
-
-				parseThread.Start();
+					cfg.ASTCache.BeginParse(Dirs, cfg.BaseDirectory);
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex);
+				}
 			}
 
 			return true;
+		}
+
+		void finishedAnalysis(ParsePerformanceData[] pfd)
+		{
+			cfg.ASTCache.FinishedParsing -= finishedAnalysis;
+			Dispatcher.Invoke(new Action(() => Cursor = Cursors.Arrow));
 		}
 
 		public override void LoadCurrent()

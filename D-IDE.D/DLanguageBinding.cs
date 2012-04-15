@@ -179,7 +179,7 @@ namespace D_IDE.D
 		{
 			var ret = new DProject(sln,FileName);
 			ret.ReloadProject();
-			ret.ParseDSources();
+			ret.ParseDSourcesAsync();
 			return ret;
 		}
 		#endregion

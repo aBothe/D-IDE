@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using D_IDE.Core;
 using System.Collections.ObjectModel;
+using D_Parser.Misc;
 
 namespace D_IDE.D
 {
@@ -110,18 +111,19 @@ namespace D_IDE.D
 
 		private void button_ReparseProjSources_Click(object sender, RoutedEventArgs e)
 		{
-			if (ManagedProject != null)
-				Dispatcher.BeginInvoke(new Action(() => {
-					button_ReparsePrjDirectory.IsEnabled = false;
-					try
-					{
-						ManagedProject.ParseDSources();
-						DEditorDocument.UpdateSemanticHighlightings(true);
-					}
-					catch (Exception ex)
-					{ ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
-					button_ReparsePrjDirectory.IsEnabled = true;				
-				}),System.Windows.Threading.DispatcherPriority.Background);
+			if (ManagedProject == null)
+				return;
+
+			button_ReparsePrjDirectory.IsEnabled = false;
+			ManagedProject.ParsedModules.FinishedParsing += analysisDone;
+
+			ManagedProject.ParseDSourcesAsync();
+		}
+
+		void analysisDone(ParsePerformanceData[] pfd)
+		{
+			ManagedProject.ParsedModules.FinishedParsing -= analysisDone;
+			Dispatcher.Invoke(new Action(()=>button_ReparsePrjDirectory.IsEnabled=true));
 		}
 	}
 }

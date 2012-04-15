@@ -63,7 +63,12 @@ namespace D_IDE.D
 
 				var prj = Project as DProject;
 				if (prj != null)
+				{
+					// Enable incremental update of the ufcs cache -- speed boost!
+					prj.ParsedModules.UfcsCache.RemoveModuleItems(_unboundTree);
 					prj.ParsedModules.AddOrUpdate(value);
+					prj.ParsedModules.UfcsCache.CacheModuleMethods(value, this);
+				}
 
 				_unboundTree = value;
 			}
@@ -269,8 +274,7 @@ namespace D_IDE.D
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CtrlSpaceCompletion, CtrlSpaceCompletion));
 
 			// Init parser loop
-			parseThread = new Thread(ParserLoop);
-			parseThread.IsBackground = true;
+			parseThread = new Thread(ParserLoop) { IsBackground=true, Name="ParseLoop "+ProposedModuleName };
 			parseThread.Start();
 		}
 
