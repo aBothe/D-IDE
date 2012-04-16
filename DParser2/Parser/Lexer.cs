@@ -842,8 +842,10 @@ namespace D_Parser.Parser
 						if (peek == '.')
 						{
 							ReaderRead();
-							nextToken = new DToken(DTokens.DoubleDot, Col - 1, Line);
+							nextToken = new DToken(DTokens.DoubleDot, Col - 1, Line, 2);
 						}
+						else
+							nextToken = new DToken(DTokens.Dot, Col - 1, Line, 1);
 					}
 					else
 					{
