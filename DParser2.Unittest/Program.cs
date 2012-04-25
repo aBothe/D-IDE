@@ -17,8 +17,10 @@ namespace ParserTests
 		public static void Main(string[] args)
 		{
 			//FormatterTest.RunTests();
-			ParseTests.TestSourcePackages(false);
+			//ParseTests.TestSourcePackages(false);
+			EvaluationTests.Run();
 
+			Console.WriteLine("~ Tests finished");
 			Console.ReadKey();
 		}
 

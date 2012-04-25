@@ -12,7 +12,7 @@ namespace ParserTests
 	{
 		public static void RunTests()
 		{
-			Console.WriteLine("Indentation tests...");
+			Console.WriteLine("~ Indentation tests...");
 
 			TestLastLine("", 0);
 

@@ -41,37 +41,52 @@ namespace D_IDE.D
 			}
 		}
 
-		public readonly ParseCache ParsedModules = new ParseCache();
+		/// <summary>
+		/// UfcsCaching got disabled because of concurrency problems:
+		/// This local cache requires the global cache to be parsed completely in order to e.g. resolve symbols like "string".
+		/// Without or with partly finished analysis the created ufcs parameter cache will exclude some methods that use parameter types which are defined in the global cache -- like string or File*
+		/// </summary>
+		public readonly ParseCache ParsedModules = new ParseCache { EnableUfcsCaching=false };
 
 		/// <summary>
 		/// Parse all D sources that belong to the project
 		/// </summary>
 		public void ParseDSourcesAsync()
 		{
-			/*
-			 * Instead of parsing added files only, add all D sources that are situated in the project's base directory.
-			 * DMD allows importing local modules that are not referenced in the objects parameter.
-			 * 
-			 * ---
-			 * module A;
-			 * 
-			 * void foo();
-			 * 
-			 * ---
-			 * module B;
-			 * 
-			 * import A;
-			 * 
-			 * ... foo(); ... // Allowed!
-			 * 
-			 * --- whereas we compiled the program only via dmd.exe A.d
-			 */
+			localCacheAnalysisFinished = false;
 			ParsedModules.FinishedParsing += finishedProjectModuleAnalysis;
 			ParsedModules.BeginParse(new[] { BaseDirectory },BaseDirectory);
 		}
 
+		public void BuildUfcsCache()
+		{
+			ParsedModules.UfcsCache.Update(ParseCacheList.Create(ParsedModules, CompilerConfiguration.ASTCache), ParsedModules);
+		}
+
+		/*
+		 * Build the local UFCS Cache just AFTER the global cache analysis has been finished!
+		 * So check both local & global parse states and ensure that both local&global caches have been built so
+		 * it can proceed with resolving methods' first parameters.
+		 */
+		bool globalCacheAnalysisFinished = false, localCacheAnalysisFinished=false;
+
+		void finishedCmpCacheAnalysis(ParsePerformanceData[] pfd)
+		{
+			if (localCacheAnalysisFinished)
+				BuildUfcsCache();
+			else
+				globalCacheAnalysisFinished = true;
+		}
+
 		void finishedProjectModuleAnalysis(ParsePerformanceData[] pfd)
 		{
+			localCacheAnalysisFinished = true;
+
+			if (globalCacheAnalysisFinished || !CompilerConfiguration.ASTCache.IsParsing)
+				BuildUfcsCache();
+
+			ParsedModules.FinishedParsing -= finishedProjectModuleAnalysis;
+
 			DEditorDocument.UpdateSemanticHighlightings(true);
 		}
 
@@ -115,6 +130,8 @@ namespace D_IDE.D
 						break;
 					default: break;
 				}
+
+			CompilerConfiguration.ASTCache.FinishedParsing += finishedCmpCacheAnalysis;
 		}
 
 		protected override void SaveLanguageSpecificSettings(XmlWriter xw)

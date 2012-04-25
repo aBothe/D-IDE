@@ -59,13 +59,16 @@ namespace D_IDE.D
 			set
 			{
 				if (value != null)
+				{
 					value.FileName = AbsoluteFilePath;
+					value.ModuleName = ProposedModuleName;
+				}
 
 				var prj = Project as DProject;
-				if (prj != null)
+				if (prj != null && !prj.ParsedModules.IsParsing)
 				{
 					// Enable incremental update of the ufcs cache -- speed boost!
-					prj.ParsedModules.UfcsCache.RemoveModuleItems(_unboundTree);
+					prj.ParsedModules.UfcsCache.RemoveModuleItems(SyntaxTree);
 					prj.ParsedModules.AddOrUpdate(value);
 					prj.ParsedModules.UfcsCache.CacheModuleMethods(value, this);
 				}
@@ -627,10 +630,7 @@ namespace D_IDE.D
 				var parser = DParser.Create(new StringReader(code));
 				code = null;
 
-				newAst = parser.Parse();
-
-				if (string.IsNullOrWhiteSpace(newAst.ModuleName))
-					newAst.ModuleName = ProposedModuleName;
+				SyntaxTree = newAst = parser.Parse();
 
 				stopWatch.Stop();
 
@@ -641,22 +641,13 @@ namespace D_IDE.D
 				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.Parser);
 			}
 
-			if (SyntaxTree != null && newAst != null)
-				lock (SyntaxTree)
-				{
-					SyntaxTree.ParseErrors = newAst.ParseErrors;
-					SyntaxTree.AssignFrom(newAst);
-				}
-			else
-				SyntaxTree = newAst;
-
 			lastSelectedBlock = null;
 			lastSelectedStatement = null;
 
-			if (SyntaxTree != null)
+			if (newAst != null)
 			{
-				SyntaxTree.FileName = AbsoluteFilePath;
-				SyntaxTree.ModuleName = ProposedModuleName;
+				newAst.FileName = AbsoluteFilePath;
+				newAst.ModuleName = ProposedModuleName;
 			}
 			//TODO: Make semantic highlighting 1) faster and 2) redraw symbols immediately
 			UpdateSemanticHighlighting(true);

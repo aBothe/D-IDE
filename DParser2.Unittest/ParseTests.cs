@@ -45,6 +45,8 @@ namespace ParserTests
 
 		public static void TestSourcePackages(bool parseOuterStructureOnly=false, int repetitions=1)
 		{
+			Console.WriteLine("~ Library parsing test...");
+
 			var Files = new Dictionary<string, string>();
 
 			foreach (string fn in Directory.GetFiles(dmdDir + "\\src\\phobos", "*.d?", SearchOption.AllDirectories))
