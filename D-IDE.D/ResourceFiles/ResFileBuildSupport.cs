@@ -32,7 +32,8 @@ namespace D_IDE.ResourceFiles
 
 		public override void BuildModule(SourceModule Module, 
 			string OutputDirectory, 
-			string ExecDirectory, 
+			string ExecDirectory,
+			bool DebugCompile,
 			bool LinkToStandAlone)
 		{
 			var src = Module.AbsoluteFileName;

@@ -12,7 +12,7 @@ namespace D_IDE.Core
 	{
 		protected Thread buildThread;
 		public abstract void BuildProject(Project Project);
-		public abstract void BuildModule(SourceModule Module, string OutputDirectory, string ExecDirectory, bool LinkToStandAlone);
+		public abstract void BuildModule(SourceModule Module, string OutputDirectory, string ExecDirectory, bool DebugCompile, bool LinkToStandAlone);
 
 		public delegate void BuildFinishedEvent(BuildResult Result);
 		public event BuildFinishedEvent BuildFinished;
@@ -46,7 +46,7 @@ namespace D_IDE.Core
 				return;
 		}
 
-		public void BuildModuleAsync(SourceModule Module, string OutputDirectory, string ExecDirectory, bool LinkToStandAlone)
+		public void BuildModuleAsync(SourceModule Module, string OutputDirectory, string ExecDirectory, bool Debug, bool LinkToStandAlone)
 		{
 			if (Module == null)
 				return;
@@ -55,7 +55,7 @@ namespace D_IDE.Core
 
 			buildThread = new Thread(delegate()
 			{
-				BuildModule(Module, OutputDirectory,ExecDirectory, LinkToStandAlone);
+				BuildModule(Module, OutputDirectory,ExecDirectory,Debug, LinkToStandAlone);
 				OnBuildFinished(Module.LastBuildResult);
 			});
 
@@ -69,12 +69,12 @@ namespace D_IDE.Core
 				return;
 
 			var dir=Path.GetDirectoryName(Module.AbsoluteFileName);
-			BuildModuleAsync(Module, dir, dir, true);
+			BuildModuleAsync(Module, dir, dir, true, true);
 		}
 
 		public void BuildStandAlone(SourceModule Module)
 		{
-			BuildModule(Module, Path.GetDirectoryName(Module.FileName), Path.GetDirectoryName(Module.FileName), true);
+			BuildModule(Module, Path.GetDirectoryName(Module.FileName), Path.GetDirectoryName(Module.FileName), true, true);
 		}
 
 		public BuildResult BuildStandAlone(string file)

@@ -68,7 +68,7 @@ namespace D_IDE.D
 				if (lang == null || _u || !lang.CanBuild || !lang.BuildSupport.CanBuildFile(f.FileName))
 					continue;
 
-				lang.BuildSupport.BuildModule(f,objectDirectory,prj.BaseDirectory,false);
+				lang.BuildSupport.BuildModule(f,objectDirectory,prj.BaseDirectory, !dprj.IsRelease,false);
 
 				if (!f.LastBuildResult.Successful)
 					return;
@@ -226,11 +226,10 @@ namespace D_IDE.D
 			return br;
 		}
 
-		public override void BuildModule(SourceModule Module, string OutputDirectory,string ExecDir, bool Link)
+		public override void BuildModule(SourceModule Module, string OutputDirectory,string ExecDir, bool DebugCompile, bool Link)
 		{
 			var dmd = CurrentDMDConfig;
 			var dmd_exe = dmd.SoureCompiler;
-			bool compileDebug = true;
 			var src = Module.AbsoluteFileName;
 
 			var outputDir = Path.IsPathRooted(OutputDirectory) ? OutputDirectory : Path.Combine(Path.GetDirectoryName(src), OutputDirectory);
@@ -248,7 +247,7 @@ namespace D_IDE.D
 				return;
 			}
 
-			var br =Module.LastBuildResult= CompileSource(Module,dmd,compileDebug,obj,ExecDir);
+			var br =Module.LastBuildResult= CompileSource(Module,dmd,DebugCompile,obj,ExecDir);
 
 			if (br.Successful)
 				Module.ResetModifiedTime();
@@ -266,7 +265,7 @@ namespace D_IDE.D
 					return;
 				}
 
-				var br_ = LinkFiles(dmd,dmd.ExeLinker, dmd.BuildArguments(compileDebug).ExeLinker, Path.GetDirectoryName(obj), exe,compileDebug, obj);
+				var br_ = LinkFiles(dmd,dmd.ExeLinker, dmd.BuildArguments(DebugCompile).ExeLinker, Path.GetDirectoryName(obj), exe, DebugCompile, obj);
 				
 				br.BuildErrors.AddRange(br_.BuildErrors);
 				br.AdditionalFiles = br_.AdditionalFiles;

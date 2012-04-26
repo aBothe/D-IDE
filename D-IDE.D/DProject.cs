@@ -137,7 +137,7 @@ namespace D_IDE.D
 		protected override void SaveLanguageSpecificSettings(XmlWriter xw)
 		{
 			xw.WriteElementString("type", ((int)OutputType).ToString());
-			xw.WriteElementString("isrelease", IsRelease.ToString());
+			xw.WriteElementString("isrelease", IsRelease?"true":"false");
 			xw.WriteElementString("dversion",((int)DMDVersion).ToString());
 			xw.WriteStartElement("libs");
 			foreach (var lib in LinkedLibraries)
