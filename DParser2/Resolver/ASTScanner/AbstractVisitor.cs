@@ -317,12 +317,9 @@ to avoid op­er­a­tions which are for­bid­den at com­pile time.",
 								var tr = (TypeResult)rr;
 								var dc = tr.Node as DClassLike;
 
-								if (dc != null && dc.ClassType != DTokens.Struct && dc.ClassType != DTokens.Union)
-								{
-									bool brk = false;
-									if (IterateThrough(dc, VisibleMembers, ref brk) || brk)
-										return true;
-								}
+								bool brk = false;
+								if (IterateThrough(dc, VisibleMembers, ref brk) || brk)
+									return true;
 							}
 						}
 				}
