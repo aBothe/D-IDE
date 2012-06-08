@@ -69,8 +69,11 @@ namespace D_IDE.D
 				{
 					// Enable incremental update of the ufcs cache -- speed boost!
 					prj.ParsedModules.UfcsCache.RemoveModuleItems(SyntaxTree);
-					prj.ParsedModules.AddOrUpdate(value);
-					prj.ParsedModules.UfcsCache.CacheModuleMethods(value, this);
+					if (value != null)
+					{
+						prj.ParsedModules.AddOrUpdate(value);
+						prj.ParsedModules.UfcsCache.CacheModuleMethods(value, new ResolverContextStack(ParseCache, new ResolverContext { ScopedBlock = value }));
+					}
 				}
 
 				_unboundTree = value;
