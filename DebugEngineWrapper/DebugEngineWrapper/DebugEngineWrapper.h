@@ -46,6 +46,16 @@ namespace DebugEngineWrapper {
 			}
 		}
 
+		ULONG GetTargetProcessId()
+		{
+				DbgSystemObjects* so;
+				client->QueryInterface(__uuidof(DbgSystemObjects), (void**)&so);
+				
+				ULONG  pid=0;
+				so->GetCurrentProcessSystemId(&pid);
+				return pid;
+		}
+
 		DebugSymbols^ Symbols;
 		DebugDataSpaces^ Memory;
 
