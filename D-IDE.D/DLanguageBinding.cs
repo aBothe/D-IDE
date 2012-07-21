@@ -5,14 +5,14 @@ using System.Windows;
 using System.Xml;
 using D_IDE.Core;
 using D_Parser.Dom;
+using D_Parser.Misc;
 using D_Parser.Parser;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using D_Parser.Misc;
 
 namespace D_IDE.D
 {
-	public class DLanguageBinding:AbstractLanguageBinding
+	public class DLanguageBinding : AbstractLanguageBinding
 	{
 		public override object LanguageIcon{get	{return DIcons.dproj32; }}
 

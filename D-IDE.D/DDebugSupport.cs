@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using D_IDE.Core;
-using DebugEngineWrapper;
 using D_Parser.Dom;
 using D_Parser.Resolver;
-using D_Parser;
-using System.Runtime.InteropServices;
 using D_Parser.Parser;
 using D_Parser.Dom.Statements;
-using D_Parser.Dom.Expressions;
 using D_Parser.Resolver.TypeResolution;
+using DebugEngineWrapper;
 
 namespace D_IDE.D
 {
-	public class DDebugSupport:GenericDebugSupport
+	public class DDebugSupport : GenericDebugSupport
 	{
 		Dictionary<DebugScopedSymbol, DebugSymbolWrapper[]> _childArray=new Dictionary<DebugScopedSymbol,DebugSymbolWrapper[]>();
 

@@ -4,14 +4,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using D_IDE.Core;
-using D_Parser.Dom;
-using D_Parser.Dom.Expressions;
-using D_Parser.Dom.Statements;
-using D_Parser.Parser;
-using D_Parser.Resolver;
 using ICSharpCode.AvalonEdit.CodeCompletion;
+using D_IDE.Core;
 using D_Parser.Completion;
+using D_Parser.Dom;
+using D_Parser.Parser;
 
 namespace D_IDE.D
 {

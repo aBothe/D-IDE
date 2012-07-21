@@ -4,8 +4,6 @@
 // Modified by A. Bothe
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Windows.Media;
 
 using ICSharpCode.AvalonEdit.Document;

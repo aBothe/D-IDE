@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using D_IDE.Core;
-using System.IO;
-using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+﻿using System.IO;
 using System.Xml;
+using D_IDE.Core;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Highlighting;
 
 namespace D_IDE.ResourceFiles

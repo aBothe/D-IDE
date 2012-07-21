@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.ComponentModel;
 using System.Linq;
 using System.IO;
 using System.Xml;
-using System.ComponentModel;
 using System.Windows.Media;
 
 namespace D_IDE.Core

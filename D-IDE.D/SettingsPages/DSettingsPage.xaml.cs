@@ -6,7 +6,7 @@ namespace D_IDE.D
 	/// <summary>
 	/// Interaktionslogik für DSettingsPage.xaml
 	/// </summary>
-	public partial class DSettingsPage : D_IDE.Core.AbstractSettingsPage
+	public partial class DSettingsPage : AbstractSettingsPage
 	{
 		public DSettingsPage()
 		{
