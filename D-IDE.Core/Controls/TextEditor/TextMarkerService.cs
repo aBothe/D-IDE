@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using ICSharpCode.AvalonEdit.Document;
-using System.Windows.Media;
-using ICSharpCode.AvalonEdit.Rendering;
-using ICSharpCode.AvalonEdit;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
+using ICSharpCode.AvalonEdit;
+using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Rendering;
 
 namespace D_IDE.Core.Controls.Editor
 {

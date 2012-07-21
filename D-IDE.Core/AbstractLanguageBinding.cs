@@ -1,8 +1,6 @@
-﻿using System.IO;
-using DebugEngineWrapper;
-using System.Windows.Controls;
-using System;
-using System.Windows.Forms;
+﻿using System;
+using System.IO;
+
 
 namespace D_IDE.Core
 {

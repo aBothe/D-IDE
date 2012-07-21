@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using D_Parser.Dom;
 using D_Parser.Parser;
 using ICSharpCode.AvalonEdit.AddIn;
 using ICSharpCode.AvalonEdit.Document;
-using System.IO;
 
 namespace D_IDE.D.DEditor
 {

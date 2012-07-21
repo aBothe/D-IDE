@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Input;
-using System.Windows;
+﻿using System.Collections.Generic;
 
 namespace D_IDE.Core.Controls
 {

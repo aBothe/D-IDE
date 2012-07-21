@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using D_IDE.Core;
-using System.IO;
-using Microsoft.Win32;
-using D_IDE.Dialogs;
 using System.Windows;
+using Microsoft.Win32;
+using D_IDE.Core;
+using D_IDE.Dialogs;
 
 namespace D_IDE
 {

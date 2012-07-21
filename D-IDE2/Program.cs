@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Windows;
-using D_IDE.Core;
 using D_IDE.Dialogs;
 
 namespace D_IDE
@@ -16,7 +15,7 @@ namespace D_IDE
 		}
 	}*/
 	
-	internal class Program :Microsoft.VisualBasic.ApplicationServices.WindowsFormsApplicationBase
+	internal class Program : Microsoft.VisualBasic.ApplicationServices.WindowsFormsApplicationBase
 	{
 		[STAThread]
 		public static void Main(string[] args)

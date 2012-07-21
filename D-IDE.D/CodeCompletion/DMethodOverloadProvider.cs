@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ICSharpCode.AvalonEdit.CodeCompletion;
-using D_Parser.Resolver;
-using D_IDE.Core;
 using System.Windows.Controls;
 using System.Windows;
+using ICSharpCode.AvalonEdit.CodeCompletion;
+using D_IDE.Core;
 using D_Parser.Completion;
+using D_Parser.Resolver;
 
 namespace D_IDE.D.CodeCompletion
 {
