@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using D_IDE.Core;
-using System.Xml;
 using System.IO;
-using D_IDE.D.CodeCompletion;
-using D_Parser;
-using D_Parser.Parser;
-using D_Parser.Completion;
+using System.Xml;
+using D_IDE.Core;
 using D_Parser.Misc;
 
 namespace D_IDE.D
 {
-	public class DProject:Project
+	public class DProject : Project
 	{
 		public DProject()
 		{ }

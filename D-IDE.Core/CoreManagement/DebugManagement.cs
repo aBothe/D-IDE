@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Windows.Media;
 using DebugEngineWrapper;
 using D_IDE.Core.Controls.Editor;
-using System.Windows.Media;
 
 namespace D_IDE.Core
 {

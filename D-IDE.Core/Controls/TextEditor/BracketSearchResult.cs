@@ -3,8 +3,6 @@
 
 // Modified by A. Bothe
 
-using System;
-
 namespace ICSharpCode.AvalonEdit.AddIn
 {
 	/// <summary>

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using D_IDE.Core;
 using System.Reflection;
+using D_IDE.Core;
 
 namespace D_IDE
 {

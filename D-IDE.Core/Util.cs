@@ -1,12 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Media.Imaging;
 using System.Windows.Data;
 using System.Windows.Forms;
-using System.Runtime.InteropServices;
-using Microsoft.VisualBasic;
-using System.Threading;
 
 namespace D_IDE.Core
 {

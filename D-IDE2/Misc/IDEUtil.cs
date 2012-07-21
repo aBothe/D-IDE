@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using D_IDE.Core;
-using System.Net;
-using System.IO;
-using System.Windows;
-using System.Threading;
-using D_IDE.Dialogs;
-using System.Windows.Threading;
 using System.Collections.Specialized;
+using System.IO;
+using System.Net;
+using System.Threading;
+using System.Windows;
+using System.Windows.Threading;
+using D_IDE.Core;
+using D_IDE.Dialogs;
 
 namespace D_IDE
 {

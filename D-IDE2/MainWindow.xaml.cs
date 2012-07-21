@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Threading;
 using AvalonDock;
 using D_IDE.Controls.Panels;
 using D_IDE.Core;
