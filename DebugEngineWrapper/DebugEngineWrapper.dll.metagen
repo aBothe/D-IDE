@@ -1,0 +1,559 @@
+ImageRuntimeVersion: v4.0.30319
+Assembly DebugEngineWrapper, Version=1.0.*, Culture=Invariante Sprache (Invariantes Land): 
+	hash=SHA1, flags=PublicKey
+Assembly mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly Microsoft.VisualC, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a: 
+	hash=None, flags=None
+Assembly Microsoft.VisualC.STLCLR, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a: 
+	hash=None, flags=None
+Struct DebugEngineWrapper.DebugCreateProcessOptions: AutoLayout, AnsiClass, Class, Public, SequentialLayout, Sealed, BeforeFieldInit
+  :System.ValueType
+  Fields:
+    DebugEngineWrapper.CreateFlags CreateFlags : Public
+    DebugEngineWrapper.EngCreateFlags EngCreateFlags : Public
+    UInt32 VerifierFlags IsLong : Public
+    UInt32 Reserved IsLong : Public
+Struct DebugEngineWrapper.DArray: AutoLayout, AnsiClass, Class, Public, SequentialLayout, Sealed, BeforeFieldInit
+  :System.ValueType
+Class DebugEngineWrapper.DClassInfo: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  Fields:
+    System.String Name : Public
+    UInt64 Base : Public
+  Properties:
+    DebugEngineWrapper.DClassInfo BaseClass 'get ' : 
+  Methods:
+    get_BaseClass(): PrivateScope, Public, HideBySig, SpecialName
+Class DebugEngineWrapper.CodeException: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  Fields:
+    DebugEngineWrapper.DClassInfo TypeInfo : Public
+    System.String Message : Public
+    System.String SourceFile : Public
+    UInt32 SourceLine IsLong : Public
+    Boolean IsFirstChance : Public
+    UInt32 Type IsLong : Public
+    Boolean IsContinuable : Public
+    UInt64 Address : Public
+    UInt64 ExceptionObjectAddress : Public
+Class DebugEngineWrapper.DebugSymbolData: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(System.String, UInt64): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.String Name : Public
+    UInt64 Offset : Public
+Class DebugEngineWrapper.DebugScopedSymbol: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(DebugEngineWrapper.DebugSymbolGroup, UInt32): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    DebugEngineWrapper.DebugSymbolGroup SymGroup : Public
+    UInt32 Depth IsLong : Public
+    UInt32 ParentId IsLong : Public
+    System.Enum Flags DebugSymbolFlags IsBoxed : Public
+    UInt32 Id IsLong : Public
+    System.String Name : Public
+    System.String TypeName : Public
+    System.String TextValue : Public
+    UInt64 Offset : Public
+    UInt32 Size IsLong : Public
+  Properties:
+    DebugEngineWrapper.DebugScopedSymbol[] Children 'get ' : 
+    UInt32 ChildrenCount 'get ' IsLong : 
+    DebugEngineWrapper.DebugScopedSymbol Parent 'get ' : 
+  Methods:
+    get_Parent(): PrivateScope, Public, HideBySig, SpecialName
+    get_ChildrenCount(): PrivateScope, Public, HideBySig, SpecialName
+    get_Children(): PrivateScope, Public, HideBySig, SpecialName
+Class DebugEngineWrapper.DebugDataSpaces: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  Methods:
+    ReadVirtual(UInt64, UInt32 IsLong): PrivateScope, Public, HideBySig
+    ReadArray(UInt64, UInt32 IsLong): PrivateScope, Public, HideBySig
+    ReadVirtualByte(UInt64): PrivateScope, Public, HideBySig
+Struct DebugEngineWrapper.SegInfo: AutoLayout, AnsiClass, Class, Public, SequentialLayout, Sealed, BeforeFieldInit
+  :System.ValueType
+Struct DebugEngineWrapper.ModuleHeader: AutoLayout, AnsiClass, Class, Public, SequentialLayout, Sealed, BeforeFieldInit
+  :System.ValueType
+Class DebugEngineWrapper.CodeViewModule: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(DebugEngineWrapper.ModuleHeader*): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    DebugEngineWrapper.ModuleHeader* modhdr : Public
+    DebugEngineWrapper.SegInfo*[] SegmentInfo : Public
+    System.String Name : Public
+Class DebugEngineWrapper.BreakPoint: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  Properties:
+    System.String TriggerExpression 'get set' : 
+    UInt64 Offset 'get set' : 
+    DebugEngineWrapper.BreakPointOptions Flags 'get set' : 
+    UInt32 Id  'get ' IsLong : 
+    Boolean IsPassed 'get ' : 
+    UInt32 MinimumHits 'get set' IsLong : 
+    UInt32 HitCount 'get ' IsLong : 
+  Methods:
+    get_HitCount(): PrivateScope, Public, HideBySig, SpecialName
+    get_MinimumHits(): PrivateScope, Public, HideBySig, SpecialName
+    set_MinimumHits(UInt32 IsLong): PrivateScope, Public, HideBySig, SpecialName
+    get_IsPassed(): PrivateScope, Public, HideBySig, SpecialName
+    get_Id(): PrivateScope, Public, HideBySig, SpecialName
+    get_Flags(): PrivateScope, Public, HideBySig, SpecialName
+    set_Flags(BreakPointOptions): PrivateScope, Public, HideBySig, SpecialName
+    get_Offset(): PrivateScope, Public, HideBySig, SpecialName
+    set_Offset(UInt64): PrivateScope, Public, HideBySig, SpecialName
+    get_TriggerExpression(): PrivateScope, Public, HideBySig, SpecialName
+    set_TriggerExpression(String): PrivateScope, Public, HideBySig, SpecialName
+Class DebugEngineWrapper.DebugSymbolGroup: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  Interfaces:
+    System.IDisposable
+  Properties:
+    DebugEngineWrapper.DebugScopedSymbol[] Symbols 'get ' : 
+    UInt32 Count 'get ' IsLong : 
+  Methods:
+    ExpandChildren(UInt32 IsLong, Boolean(HasFieldMarshal)): PrivateScope, Public, HideBySig
+    get_Count(): PrivateScope, Public, HideBySig, SpecialName
+    SymbolName(UInt32 IsLong): PrivateScope, Public, HideBySig
+    SymbolOffset(UInt32 IsLong): PrivateScope, Public, HideBySig
+    SymbolSize(UInt32 IsLong): PrivateScope, Public, HideBySig
+    TypeName(UInt32 IsLong): PrivateScope, Public, HideBySig
+    ValueText(UInt32 IsLong): PrivateScope, Public, HideBySig
+    get_Symbols(): PrivateScope, Public, HideBySig, SpecialName
+    op_Subscript(UInt32 IsLong): PrivateScope, Public, HideBySig, SpecialName
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig
+Class DebugEngineWrapper.DebugSymbols: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  Interfaces:
+    System.IDisposable
+  Properties:
+    System.String SourcePath 'get set' : 
+    System.String SymbolPath 'get set' : 
+    DebugEngineWrapper.DebugSymbolGroup ScopeLocalSymbols 'get ' : 
+    DebugEngineWrapper.DebugSymbolData[] Symbols 'get ' : 
+  Methods:
+    GetOffsetbyName(String): PrivateScope, Public, HideBySig
+    GetNameByOffset(UInt64): PrivateScope, Public, HideBySig
+    GetSymbols(String): PrivateScope, Public, HideBySig
+    get_Symbols(): PrivateScope, Public, HideBySig, SpecialName
+    get_ScopeLocalSymbols(): PrivateScope, Public, HideBySig, SpecialName
+    RetrieveClassInfo(UInt64): PrivateScope, Public, HideBySig
+    ReadExceptionString(UInt64, String&(Out), String&(Out), UInt32&(Out)): PrivateScope, Public, HideBySig
+    ReadArray(UInt64, Type, UInt32 IsLong): PrivateScope, Public, HideBySig
+    ReadArrayArray(UInt64, Type, UInt32 IsLong): PrivateScope, Public, HideBySig
+    set_SymbolPath(String): PrivateScope, Public, HideBySig, SpecialName
+    get_SymbolPath(): PrivateScope, Public, HideBySig, SpecialName
+    set_SourcePath(String): PrivateScope, Public, HideBySig, SpecialName
+    get_SourcePath(): PrivateScope, Public, HideBySig, SpecialName
+    GetLineByOffset(UInt64, String&(Out), UInt32&(Out)): PrivateScope, Public, HideBySig
+    GetOffsetByLine(String, UInt32 IsLong, UInt64&(Out)): PrivateScope, Public, HideBySig
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig
+Class DebugEngineWrapper.StackFrame: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  Properties:
+    Boolean IsVirtual 'get ' : 
+    UInt32 FrameNumber 'get ' IsLong : 
+    UInt64[] ArgumentOffsets 'get ' : 
+    UInt64 FunctionTableEntry 'get ' : 
+    UInt64 StackOffset 'get ' : 
+    UInt64 FrameOffset 'get ' : 
+    UInt64 ReturnOffset 'get ' : 
+    UInt64 InstructionOffset 'get ' : 
+  Methods:
+    get_InstructionOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_ReturnOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_FrameOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_StackOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_FunctionTableEntry(): PrivateScope, Public, HideBySig, SpecialName
+    get_ArgumentOffsets(): PrivateScope, Public, HideBySig, SpecialName
+    get_FrameNumber(): PrivateScope, Public, HideBySig, SpecialName
+    get_IsVirtual(): PrivateScope, Public, HideBySig, SpecialName
+Class DebugEngineWrapper.DBGEngine: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(DebugEngineWrapper.DBGEngine): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.IDisposable
+  Fields:
+    DebugEngineWrapper.DebugSymbols Symbols : Public
+    DebugEngineWrapper.DebugDataSpaces Memory : Public
+  Properties:
+    DebugEngineWrapper.DebugStatus ExecutionStatus 'get set' : 
+    DebugEngineWrapper.BreakPoint[] Breakpoints 'get ' : 
+    UInt32 BreakpointCount 'get ' IsLong : 
+    Boolean IsInterruptRequested 'get ' : 
+    UInt32 InterruptTimeOut 'get set' IsLong : 
+    Boolean IsRunning 'get ' : 
+    UInt32 ExitCode 'get ' IsLong : 
+    DebugEngineWrapper.StackFrame[] CallStack 'get ' : 
+    UInt64 CurrentFrameOffset 'get ' : 
+    UInt64 CurrentInstructionOffset 'get ' : 
+    DebugEngineWrapper.StackFrame CurrentFrame 'get ' : 
+    Boolean IsSourceCodeOrientedStepping 'set' : 
+    System.Diagnostics.Process MainProcess 'get ' : 
+  Events:
+    SessionStatusHandler OnSessionStatusChanged: SpecialName
+    ExitProcHandler OnExitProcess: SpecialName
+    OutputHandler Output: SpecialName
+    InputHandler InputRequest: SpecialName
+    CreateProcHandler OnCreateProcess: SpecialName
+    UnloadModuleHandler OnUnloadModule: SpecialName
+    LoadModuleHandler OnLoadModule: SpecialName
+    ExcHandler OnException: SpecialName
+    BreakPointHandler OnBreakPoint: SpecialName
+  Methods:
+    get_MainProcess(): PrivateScope, Public, HideBySig, SpecialName
+    GetTargetProcessId(): PrivateScope, Public, HideBySig
+    CreateProcessAndAttach(String, String): PrivateScope, Public, HideBySig
+    CreateProcessAndAttach(UInt64, String, DebugCreateProcessOptions, String, String, UInt32 IsLong, AttachFlags): PrivateScope, Public, HideBySig
+    set_IsSourceCodeOrientedStepping(Boolean(HasFieldMarshal)): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentFrame(): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentInstructionOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentFrameOffset(): PrivateScope, Public, HideBySig, SpecialName
+    get_CallStack(): PrivateScope, Public, HideBySig, SpecialName
+    get_ExitCode(): PrivateScope, Public, HideBySig, SpecialName
+    get_IsRunning(): PrivateScope, Public, HideBySig, SpecialName
+    Terminate(): PrivateScope, Public, HideBySig
+    EndPendingWaits(): PrivateScope, Public, HideBySig
+    Interrupt(): PrivateScope, Public, HideBySig
+    get_InterruptTimeOut(): PrivateScope, Public, HideBySig, SpecialName
+    set_InterruptTimeOut(UInt32 IsLong): PrivateScope, Public, HideBySig, SpecialName
+    get_IsInterruptRequested(): PrivateScope, Public, HideBySig, SpecialName
+    AddBreakPoint(BreakPointOptions): PrivateScope, Public, HideBySig
+    RemoveBreakPoint(BreakPoint): PrivateScope, Public, HideBySig
+    GetBreakPointById(UInt32 IsLong): PrivateScope, Public, HideBySig
+    GetBreakPointByIndex(UInt32 IsLong): PrivateScope, Public, HideBySig
+    get_BreakpointCount(): PrivateScope, Public, HideBySig, SpecialName
+    get_Breakpoints(): PrivateScope, Public, HideBySig, SpecialName
+    set_ExecutionStatus(DebugStatus): PrivateScope, Public, HideBySig, SpecialName
+    get_ExecutionStatus(): PrivateScope, Public, HideBySig, SpecialName
+    WaitForEvent(): PrivateScope, Public, HideBySig
+    WaitForEvent(UInt32 IsLong): PrivateScope, Public, HideBySig
+    Execute(String): PrivateScope, Public, HideBySig
+    Execute(DebugOutputControl, String, DebugExecuteFlags): PrivateScope, Public, HideBySig
+    add_OnBreakPoint(BreakPointHandler): PrivateScope, Public, HideBySig, SpecialName
+    remove_OnBreakPoint(BreakPointHandler): PrivateScope, Public, HideBySig, SpecialName
+    add_OnException(ExcHandler): PrivateScope, Public, HideBySig, SpecialName
+    remove_OnException(ExcHandler): PrivateScope, Public, HideBySig, SpecialName
+    add_OnLoadModule(LoadModuleHandler): PrivateScope, Public, HideBySig, SpecialName
+    remove_OnLoadModule(LoadModuleHandler): PrivateScope, Public, HideBySig, SpecialName
+    add_OnUnloadModule(UnloadModuleHandler): PrivateScope, Public, HideBySig, SpecialName
+    remove_OnUnloadModule(UnloadModuleHandler): PrivateScope, Public, HideBySig, SpecialName
+    add_OnCreateProcess(CreateProcHandler): PrivateScope, Public, HideBySig, SpecialName
+    remove_OnCreateProcess(CreateProcHandler): PrivateScope, Public, HideBySig, SpecialName
+    add_InputRequest(InputHandler): PrivateScope, Public, HideBySig, SpecialName
+    remove_InputRequest(InputHandler): PrivateScope, Public, HideBySig, SpecialName
+    add_Output(OutputHandler): PrivateScope, Public, HideBySig, SpecialName
+    remove_Output(OutputHandler): PrivateScope, Public, HideBySig, SpecialName
+    add_OnExitProcess(ExitProcHandler): PrivateScope, Public, HideBySig, SpecialName
+    remove_OnExitProcess(ExitProcHandler): PrivateScope, Public, HideBySig, SpecialName
+    add_OnSessionStatusChanged(SessionStatusHandler): PrivateScope, Public, HideBySig, SpecialName
+    remove_OnSessionStatusChanged(SessionStatusHandler): PrivateScope, Public, HideBySig, SpecialName
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig
+Class DebugEngineWrapper.DBGEngine+BreakPointHandler: AutoLayout, AnsiClass, Class, NestedPublic, Sealed, BeforeFieldInit
+  :System.MulticastDelegate
+    Void .ctor(System.Object, IntPtr): PrivateScope, Public, SpecialName, RTSpecialName
+  Methods:
+    Invoke(UInt32 IsLong, String, UInt64, String): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    BeginInvoke(UInt32 IsLong, String, UInt64, String, AsyncCallback, Object): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    EndInvoke(IAsyncResult): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+Class DebugEngineWrapper.DBGEngine+ExcHandler: AutoLayout, AnsiClass, Class, NestedPublic, Sealed, BeforeFieldInit
+  :System.MulticastDelegate
+    Void .ctor(System.Object, IntPtr): PrivateScope, Public, SpecialName, RTSpecialName
+  Methods:
+    Invoke(CodeException): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    BeginInvoke(CodeException, AsyncCallback, Object): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    EndInvoke(IAsyncResult): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+Class DebugEngineWrapper.DBGEngine+LoadModuleHandler: AutoLayout, AnsiClass, Class, NestedPublic, Sealed, BeforeFieldInit
+  :System.MulticastDelegate
+    Void .ctor(System.Object, IntPtr): PrivateScope, Public, SpecialName, RTSpecialName
+  Methods:
+    Invoke(UInt64, UInt32 IsLong, String, UInt32 IsLong, UInt32 IsLong): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    BeginInvoke(UInt64, UInt32 IsLong, String, UInt32 IsLong, UInt32 IsLong, AsyncCallback, Object): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    EndInvoke(IAsyncResult): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+Class DebugEngineWrapper.DBGEngine+UnloadModuleHandler: AutoLayout, AnsiClass, Class, NestedPublic, Sealed, BeforeFieldInit
+  :System.MulticastDelegate
+    Void .ctor(System.Object, IntPtr): PrivateScope, Public, SpecialName, RTSpecialName
+  Methods:
+    Invoke(UInt64, String): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    BeginInvoke(UInt64, String, AsyncCallback, Object): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    EndInvoke(IAsyncResult): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+Class DebugEngineWrapper.DBGEngine+CreateProcHandler: AutoLayout, AnsiClass, Class, NestedPublic, Sealed, BeforeFieldInit
+  :System.MulticastDelegate
+    Void .ctor(System.Object, IntPtr): PrivateScope, Public, SpecialName, RTSpecialName
+  Methods:
+    Invoke(UInt64, UInt32 IsLong, String, UInt32 IsLong, UInt32 IsLong): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    BeginInvoke(UInt64, UInt32 IsLong, String, UInt32 IsLong, UInt32 IsLong, AsyncCallback, Object): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    EndInvoke(IAsyncResult): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+Class DebugEngineWrapper.DBGEngine+InputHandler: AutoLayout, AnsiClass, Class, NestedPublic, Sealed, BeforeFieldInit
+  :System.MulticastDelegate
+    Void .ctor(System.Object, IntPtr): PrivateScope, Public, SpecialName, RTSpecialName
+  Methods:
+    Invoke(UInt32 IsLong): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    BeginInvoke(UInt32 IsLong, AsyncCallback, Object): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    EndInvoke(IAsyncResult): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+Class DebugEngineWrapper.DBGEngine+OutputHandler: AutoLayout, AnsiClass, Class, NestedPublic, Sealed, BeforeFieldInit
+  :System.MulticastDelegate
+    Void .ctor(System.Object, IntPtr): PrivateScope, Public, SpecialName, RTSpecialName
+  Methods:
+    Invoke(OutputFlags, String): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    BeginInvoke(OutputFlags, String, AsyncCallback, Object): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    EndInvoke(IAsyncResult): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+Class DebugEngineWrapper.DBGEngine+ExitProcHandler: AutoLayout, AnsiClass, Class, NestedPublic, Sealed, BeforeFieldInit
+  :System.MulticastDelegate
+    Void .ctor(System.Object, IntPtr): PrivateScope, Public, SpecialName, RTSpecialName
+  Methods:
+    Invoke(UInt32 IsLong): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    BeginInvoke(UInt32 IsLong, AsyncCallback, Object): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    EndInvoke(IAsyncResult): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+Class DebugEngineWrapper.DBGEngine+SessionStatusHandler: AutoLayout, AnsiClass, Class, NestedPublic, Sealed, BeforeFieldInit
+  :System.MulticastDelegate
+    Void .ctor(System.Object, IntPtr): PrivateScope, Public, SpecialName, RTSpecialName
+  Methods:
+    Invoke(SessionStatus): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    BeginInvoke(SessionStatus, AsyncCallback, Object): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+    EndInvoke(IAsyncResult): PrivateScope, Public, Final, Virtual, VtableLayoutMask
+Struct DebugEngineWrapper.DebugEvent: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.DebugEvent ChangeSymbolState = 4096 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent ChangeEngineState = 2048 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent ChangeDebuggeeState = 1024 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent SessionStatus = 512 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent SystemError = 256 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent UnloadModule = 128 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent LoadModule = 64 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent ExitProcess = 32 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent ExitThread = 8 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent CreateThread = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent Exception = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent Breakpoint = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugEvent CreateProcessW = 16 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.CreateFlags: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.CreateFlags ProcessThroughRTL = 65536 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.CreateFlags NoDebugHeap = 1024 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.CreateFlags InheritCallerPriority = 131072 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.CreateFlags StackSizeParamIsAReservation = 65536 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.CreateFlags CreateNewConsole = 16 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.CreateFlags CreateSuspended = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.CreateFlags DebugOnlyThisProcess = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.CreateFlags DebugProcess = 1 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.EngCreateFlags: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.EngCreateFlags UseImplicitCommandLine = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.EngCreateFlags UseVerifierFlags = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.EngCreateFlags InheritHandles = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.EngCreateFlags Default = 0 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.OutputFlags: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.OutputFlags DebuggeePrompt = 256 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.OutputFlags Debuggee = 128 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.OutputFlags ExtensionWarning = 64 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.OutputFlags PromptRegisters = 32 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.OutputFlags Prompt = 16 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.OutputFlags Verbose = 8 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.OutputFlags Warning = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.OutputFlags Normal = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.OutputFlags Symbols = 512 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.OutputFlags Error = 2 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.DbgExpressionType: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.DbgExpressionType CPP = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgExpressionType MASM = 0 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.DbgValueType: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.DbgValueType Vector128 = 11 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Vector64 = 10 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Float128 = 9 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Float82 = 8 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Float80 = 7 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Float64 = 6 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Float32 = 5 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Integer64 = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Integer32 = 3 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Integer16 = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Integer8 = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DbgValueType Invalid = 0 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.SymbolMode: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.SymbolMode Dia = 7 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SymbolMode Deferred = 5 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SymbolMode Export = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SymbolMode Pdb = 3 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SymbolMode CodeView = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SymbolMode Coff = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SymbolMode NoType = 0 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SymbolMode Sym = 6 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.ModuleFlags: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.ModuleFlags BadChecksum = 65536 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ModuleFlags UserMode = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ModuleFlags Unloaded = 1 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.DumpType: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.DumpType Full = 1026 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpType Small = 1024 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpType Default = 1025 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.DumpFlags: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.DumpFlags CodeSegments = 4096 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags ThreadInfo = 2048 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags FullMemoryInfo = 1024 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags NoOptionalData = 512 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags PrivateRWMemroy = 256 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags ThreadData = 128 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags FilterPaths = 64 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags FilterMemory = 32 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags DataSegments = 16 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags IndirectMemory = 8 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags UnloadedModules = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags HandleData = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DumpFlags FullMemory = 1 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.AttachFlags: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.AttachFlags InvasiveResumeProcess = 16 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.AttachFlags InvasiveNoInitialBreak = 8 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.AttachFlags NonInvasiveNoSuspend = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.AttachFlags Existing = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.AttachFlags NonInvasive = 1 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.DebugStatus: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.DebugStatus ReverseStepInto = 14 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus ReverseStepOver = 13 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus ReverseStepBranch = 12 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus ReverseGo = 11 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus RestartRequested = 10 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus IgnoreEvent = 9 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus StopBranch = 8 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus NoDebuggee = 7 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus Break = 6 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus StepInto = 5 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus StepOver = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus GoNotHandled = 3 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus GoHandled = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus Go = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugStatus NoChange = 0 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.DebugOutputControl: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.DebugOutputControl Ambient = -1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugOutputControl OverrideMask = 16 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugOutputControl NotLogged = 8 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugOutputControl SendMask = 7 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugOutputControl LogOnly = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugOutputControl Ignore = 3 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugOutputControl AllOtherClients = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugOutputControl AllClients = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugOutputControl ThisClient = 0 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.DebugExecuteFlags: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.DebugExecuteFlags NoRepeat = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugExecuteFlags NotLogged = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugExecuteFlags Echo = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugExecuteFlags Default = 0 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.TypeOptions: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.TypeOptions MatchMaxsize = 8 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.TypeOptions ForceRadisOutput = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.TypeOptions LongStatusDisplay = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.TypeOptions UnicodeDisplay = 1 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.GetMethodFlags: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.GetMethodFlags NoUloadedModules = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.GetMethodFlags NoLoadedModules = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.GetMethodFlags Default = 0 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.BreakPointOptions: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.BreakPointOptions Deferred = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.BreakPointOptions OneShot = 16 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.BreakPointOptions GoOnly = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.BreakPointOptions ThisClientOnly = 8 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.BreakPointOptions Enabled = 4 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.ExceptionType: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.ExceptionType DException = -532414463 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType StackOverflow = -1073741571 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType SingleStep = -2147483644 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType PrivilegedInstruction = -1073741674 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType NoncontinuableException = -1073741787 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType InvalidHandle = -1073741816 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType InvalidDisposition = -1073741786 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType IntegerOverflow = -1073741675 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType IntegerDivideByZero = -1073741676 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType PageError = -1073741818 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType InvalidInstruction = -1073741795 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType PageGuardAccess = -2147483647 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType FloatUnderflow = -1073741677 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType FloatStackCheck = -1073741678 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType FloatOverflow = -1073741679 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType FloatInvalidOperation = -1073741680 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType FloatInexactResult = -1073741681 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType FloatDivideByZero = -1073741682 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType FloatDenormalOperand = -1073741683 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType DatatypeMisalignment = -2147483646 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType ArrayBoundsExceeded = -1073741684 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType AccessViolation = -1073741819 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.ExceptionType Breakpoint = -2147483645 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.SessionStatus: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.SessionStatus EngineFailure = 7 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SessionStatus TargetHibernate = 6 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SessionStatus TargetReboot = 5 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SessionStatus Ended = 4 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SessionStatus EndedPassive = 3 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SessionStatus EndedBySessionDetach = 2 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SessionStatus EndedBySessionTerminate = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.SessionStatus Active = 0 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.WaitResult: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.WaitResult AlreadyWaiting = -2147467259 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.WaitResult Unexpected = -2147418113 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.WaitResult InterruptRequested = -2147483638 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.WaitResult TimeOut = 1 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.WaitResult OK = 0 : Public, Static, Literal, HasDefault
+Struct DebugEngineWrapper.DebugSymbolFlags: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    DebugEngineWrapper.DebugSymbolFlags IsLocal = 512 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugSymbolFlags IsArgument = 256 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugSymbolFlags IsFloat = 128 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugSymbolFlags IsArray = 64 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugSymbolFlags IsReadonly = 32 : Public, Static, Literal, HasDefault
+    DebugEngineWrapper.DebugSymbolFlags IsExpanded = 16 : Public, Static, Literal, HasDefault

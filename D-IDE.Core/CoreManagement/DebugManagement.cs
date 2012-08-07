@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Media;
 using DebugEngineWrapper;
 using D_IDE.Core.Controls.Editor;
+using System;
 
 namespace D_IDE.Core
 {
@@ -10,7 +11,19 @@ namespace D_IDE.Core
 	{
 		public class DebugManagement
 		{
-			public static DBGEngine Engine=new DBGEngine();
+			public static DBGEngine Engine;
+
+			static DebugManagement()
+			{
+				try
+				{
+					Engine = new DBGEngine();
+				}
+				catch (Exception ex)
+				{
+					ErrorLogger.Log(ex);
+				}
+			}
 
 			public static bool IsDebugging
 			{

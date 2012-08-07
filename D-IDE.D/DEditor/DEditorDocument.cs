@@ -341,7 +341,7 @@ namespace D_IDE.D
 			if (completionData == null)
 				return;
 
-			Editor.TextArea.Caret.Position = new TextViewPosition(completionData.Node.StartLocation.Line, completionData.Node.StartLocation.Column);
+			Editor.TextArea.Caret.Position = new TextViewPosition(completionData.Node.Location.Line, completionData.Node.Location.Column);
 			Editor.TextArea.Caret.BringCaretToView();
 			Editor.Focus();
 		}
@@ -464,7 +464,7 @@ namespace D_IDE.D
 					}), 
 					DResolver.AstReparseOptions.AlsoParseBeyondCaret | DResolver.AstReparseOptions.OnlyAssumeIdentifierList);
 
-				ResolveResult res = null;
+				AbstractType res = null;
 				// If there are multiple types, show a list of those items
 				if (rr != null && rr.Length > 1)
 				{
@@ -493,12 +493,8 @@ namespace D_IDE.D
 
 				INode n = null;
 
-				if (res is MemberResult)
-					n = (res as MemberResult).Node;
-				else if (res is TypeResult)
-					n = (res as TypeResult).Node;
-				else if (res is ModuleResult)
-					n = (res as ModuleResult).Module;
+				if (res is DSymbol)
+					n = ((DSymbol)res).Definition;
 				else
 				{
 					MessageBox.Show("Select valid symbol!");
@@ -508,7 +504,7 @@ namespace D_IDE.D
 				var mod = n.NodeRoot as IAbstractSyntaxTree;
 				if (mod == null)
 					return;
-				CoreManager.Instance.OpenFile(mod.FileName, n.StartLocation.Line, n.StartLocation.Column);
+				CoreManager.Instance.OpenFile(mod.FileName, n.Location.Line, n.Location.Column);
 			}
 			catch { }
 		}
@@ -527,7 +523,7 @@ namespace D_IDE.D
 					}),
 					DResolver.AstReparseOptions.OnlyAssumeIdentifierList | DResolver.AstReparseOptions.AlsoParseBeyondCaret);
 
-				ResolveResult res = null;
+				AbstractType res = null;
 				// If there are multiple types, show a list of those items
 				if (rr != null && rr.Length > 1)
 				{
@@ -900,7 +896,7 @@ namespace D_IDE.D
 				foreach (var n in Parent)
 				{
 					var completionData = new DCompletionData(n);
-					if (selectedItem == null && CaretLocation >= n.StartLocation && CaretLocation <= n.EndLocation)
+					if (selectedItem == null && CaretLocation >= n.Location && CaretLocation <= n.EndLocation)
 						selectedItem = completionData;
 					types.Add(completionData);
 				}
@@ -958,7 +954,7 @@ namespace D_IDE.D
 								if (n is DClassLike || n is DEnum)
 								{
 									var completionData = new DCompletionData(n);
-									if (CaretLocation >= n.StartLocation && CaretLocation <= n.EndLocation)
+									if (CaretLocation >= n.Location && CaretLocation <= n.EndLocation)
 									{
 										selectedItem = completionData;
 										curBlock = n as IBlockNode;
@@ -1012,7 +1008,7 @@ namespace D_IDE.D
 											continue;
 
 										var cData = new DCompletionData(n);
-										if (selectedItem == null && cData.Node!=null && CaretLocation >= cData.Node.StartLocation && CaretLocation < cData.Node.EndLocation)
+										if (selectedItem == null && cData.Node!=null && CaretLocation >= cData.Node.Location && CaretLocation < cData.Node.EndLocation)
 											selectedItem = cData;
 										members.Add(cData);
 									}

@@ -20,9 +20,6 @@ namespace D_IDE.D
 			lastResultPath = null;
 
 			var provider = AbstractCompletionProvider.BuildCompletionData(new IDECompletionDataGenerator(l), EditorDocument, EnteredText);
-
-			if (provider is MemberCompletionProvider)
-				lastResultPath = (provider as MemberCompletionProvider).lastResultPath;
 		}
 
 		public static bool CanShowCompletionWindow(DEditorDocument EditorDocument)

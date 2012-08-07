@@ -38,7 +38,7 @@ namespace D_IDE.D.CodeCompletion
 			get { return args.ResolvedTypesOrMethods.Length; }
 		}
 
-		public ResolveResult CurrentResult { get { return args.ResolvedTypesOrMethods[selIndex]; } }
+		public AbstractType CurrentResult { get { return args.ResolvedTypesOrMethods[selIndex]; } }
 
 		public object CurrentHeader
 		{
@@ -49,11 +49,8 @@ namespace D_IDE.D.CodeCompletion
 		{
 			get {
 
-				if (CurrentResult is MemberResult)
-					return (CurrentResult as MemberResult).Node.Description;
-				if (CurrentResult is TypeResult)
-					return (CurrentResult as TypeResult).Node.Description;
-
+				if (CurrentResult is DSymbol)
+					return ((DSymbol)CurrentResult).Definition.Description;
 				return null;
 			}
 		}

@@ -113,8 +113,8 @@ namespace D_IDE
 
 		public void RefreshMenu()
 		{
-			Dispatcher.Invoke(new ParameterizedThreadStart(delegate(object o)
-			{
+			//Dispatcher.Invoke(new ParameterizedThreadStart(delegate(object o){
+
 				var ed = IDEManager.Instance.CurrentEditor as EditorDocument;
 				var IsEditable = ed != null;
 				var HasProject = IsEditable && ed.HasProject;
@@ -149,7 +149,7 @@ namespace D_IDE
 					encoding_DropDown.Label = ed.Editor.Encoding.EncodingName;
 				else
 					encoding_DropDown.Label = "(No Encoding)";
-			}), this);
+			//}), this);
 		}
 
 		#endregion

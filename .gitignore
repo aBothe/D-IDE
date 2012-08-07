@@ -4,3 +4,5 @@ d-ide upload/
 *.suo
 *.user
 d-ide.zip
+*.sdf
+*.pdb

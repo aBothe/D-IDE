@@ -137,9 +137,9 @@ namespace D_IDE.D
 
 					var res = TypeDeclarationResolver.ResolveIdentifier(Symbol.Name,ctxt, null);
 
-					if (res!=null && res.Length > 0 && res[0] is MemberResult)
+					if (res!=null && res.Length > 0 && res[0] is DSymbol)
 					{
-						variableNode = (res[0] as MemberResult).Node;
+						variableNode = ((DSymbol)res[0]).Definition;
 						//moduleCache = DCodeCompletionSupport.Instance.EnumAvailableModules(ownerPrj);
 					}
 				}
