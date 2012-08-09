@@ -1186,9 +1186,19 @@ namespace D_IDE.D
 				var tt = new ToolTip();
 				(insightWindow as Control).Background = tt.Background;
 
-
 				insightWindow.Show();
 
+				// Reposition the popup window to stick directly under the identifier expression
+				if (data.ParameterData.MethodIdentifier is ISyntaxRegion)
+				{
+					var loc=((ISyntaxRegion)data.ParameterData.MethodIdentifier).Location;
+					var visPos = Editor.TextArea.TextView.GetVisualPosition(new TextViewPosition(loc.Line, loc.Column), ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineBottom);
+
+					visPos = Editor.TextArea.TextView.PointToScreen(visPos);
+
+					//insightWindow.Top = visPos.Y;
+					insightWindow.Left = visPos.X;
+				}
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex); }
 		}
