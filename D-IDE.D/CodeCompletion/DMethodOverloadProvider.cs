@@ -26,19 +26,19 @@ namespace D_IDE.D.CodeCompletion
 		
 		DMethodOverloadProvider(ArgumentsResolutionResult argsResult)
 		{
-			args = argsResult;
-			SelectedIndex = args.CurrentlyCalledMethod;
+			ParameterData = argsResult;
+			SelectedIndex = ParameterData.CurrentlyCalledMethod;
 		}
 
-		ArgumentsResolutionResult args;
+		public readonly ArgumentsResolutionResult ParameterData;
 		int selIndex = 0;
 
 		public int Count
 		{
-			get { return args.ResolvedTypesOrMethods.Length; }
+			get { return ParameterData.ResolvedTypesOrMethods.Length; }
 		}
 
-		public AbstractType CurrentResult { get { return args.ResolvedTypesOrMethods[selIndex]; } }
+		public AbstractType CurrentResult { get { return ParameterData.ResolvedTypesOrMethods[selIndex]; } }
 
 		public object CurrentHeader
 		{
@@ -57,7 +57,7 @@ namespace D_IDE.D.CodeCompletion
 
 		public string CurrentIndexText
 		{
-			get { return (SelectedIndex+1).ToString()+"/"+args.ResolvedTypesOrMethods.Length.ToString(); }
+			get { return (SelectedIndex+1).ToString()+"/"+ParameterData.ResolvedTypesOrMethods.Length.ToString(); }
 		}
 
 		public int SelectedIndex
