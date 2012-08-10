@@ -458,10 +458,11 @@ namespace D_IDE.D
 					return;
 
 				var rr = DResolver.ResolveType(this,
-					new ResolverContextStack(ParseCache,	new ResolverContext { 
-						ScopedBlock = lastSelectedBlock, 
-						ScopedStatement=lastSelectedStatement 
-					}), 
+					new ResolverContextStack(ParseCache, new ResolverContext
+					{
+						ScopedBlock = lastSelectedBlock,
+						ScopedStatement = lastSelectedStatement
+					}) { ContextIndependentOptions = ResolutionOptions.ReturnMethodReferencesOnly },
 					DResolver.AstReparseOptions.AlsoParseBeyondCaret | DResolver.AstReparseOptions.OnlyAssumeIdentifierList);
 
 				AbstractType res = null;
@@ -519,8 +520,8 @@ namespace D_IDE.D
 				var rr = DResolver.ResolveType(this,
 					new ResolverContextStack(ParseCache, new ResolverContext { 
 						ScopedBlock = lastSelectedBlock, 
-						ScopedStatement=lastSelectedStatement 
-					}),
+						ScopedStatement=lastSelectedStatement
+					}) { ContextIndependentOptions = ResolutionOptions.ReturnMethodReferencesOnly },
 					DResolver.AstReparseOptions.OnlyAssumeIdentifierList | DResolver.AstReparseOptions.AlsoParseBeyondCaret);
 
 				AbstractType res = null;
