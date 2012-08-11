@@ -1248,13 +1248,22 @@ namespace D_IDE.D
 		{
 			// If typed a block-related char, update line indentation
 			if (e.Text == "{" || e.Text == "}" || e.Text == ":")
+			{
+				int lastBegin;
+				int lastEnd;
+				var caretCtxt = CaretContextAnalyzer.GetTokenContext(ModuleCode, CaretOffset, out lastBegin, out lastEnd);
+
+				if (lastBegin >= 0 && caretCtxt != TokenContext.None)
+					return;
+
 				indentationStrategy.UpdateIndentation(e.Text);
+			}
 
 			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
-			if ((e.Text == "." || e.Text==" " || e.Text=="(") && CanShowCodeCompletionPopup)
+			else if ((e.Text == "." || e.Text==" " || e.Text=="(") && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
 
-			if (e.Text == "," || e.Text == "(" || e.Text == "!")
+			else if (e.Text == "," || e.Text == "(" || e.Text == "!")
 				ShowInsightWindow(e.Text);
 
 			else if (e.Text == ")" && insightWindow != null && insightWindow.IsLoaded)
