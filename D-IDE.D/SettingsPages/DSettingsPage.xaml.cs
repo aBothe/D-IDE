@@ -22,6 +22,7 @@ namespace D_IDE.D
 			sett.EnableMatchingBracketHighlighting = checkBox_EnableBracketHighlighting.IsChecked.Value;
 			sett.UseMethodInsight = checkBox_MethodInsight.IsChecked.Value;
 			sett.ForceCodeCompetionPopupCommit = checkBox_CodeInsertionOnNonLetter.IsChecked.Value;
+			sett.UseSemanticErrorHighlighting = checkBox_EnableSemanticErrorHighlighting.IsChecked.Value;
 			sett.UseSemanticHighlighting = checkBox_UseSemanticHighlighting.IsChecked.Value;
 			sett.EnableSmartIndentation = checkBox_SmartIndentation.IsChecked.Value;
 			sett.CompletionOptions.ShowUFCSItems = checkBox_EnableUFCSCompletion.IsChecked.Value;
@@ -37,6 +38,7 @@ namespace D_IDE.D
 			checkBox_EnableBracketHighlighting.IsChecked = sett.EnableMatchingBracketHighlighting;
 			checkBox_MethodInsight.IsChecked = sett.UseMethodInsight;
 			checkBox_CodeInsertionOnNonLetter.IsChecked = sett.ForceCodeCompetionPopupCommit;
+			checkBox_EnableSemanticErrorHighlighting.IsChecked = sett.UseSemanticErrorHighlighting;
 			checkBox_UseSemanticHighlighting.IsChecked = sett.UseSemanticHighlighting;
 			checkBox_SmartIndentation.IsChecked = sett.EnableSmartIndentation;
 			checkBox_EnableUFCSCompletion.IsChecked = sett.CompletionOptions.ShowUFCSItems;

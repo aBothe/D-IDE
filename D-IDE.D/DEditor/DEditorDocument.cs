@@ -24,6 +24,7 @@ using D_Parser.Resolver.TypeResolution;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
+using D_Parser.Refactoring;
 
 namespace D_IDE.D
 {
@@ -761,34 +762,27 @@ namespace D_IDE.D
 			var sw=new Stopwatch();
 			sw.Start();
 
-			var res = D_Parser.Resolver.ASTScanner.CodeSymbolsScanner.ScanSymbols(new ResolverContextStack(ParseCache, new ResolverContext
-			{
-				ScopedBlock=SyntaxTree
-			}));
+			var res = TypeReferenceFinder.Scan(SyntaxTree, ParseCache);
 
 			sw.Stop();
 
 			#region Step 3: Create/Update markers
 			try
 			{
-				Dispatcher.Invoke(new Action<
-					Dictionary<IdentifierDeclaration, INode>,
-					List<IdentifierDeclaration>,
-					Stopwatch>
-					((Dictionary<IdentifierDeclaration, INode> resolvedItems,
-						List<IdentifierDeclaration> unresolvedItems,
-						Stopwatch highPrecTimer) =>
+				Dispatcher.Invoke(new Action<TypeReferencesResult, Stopwatch>
+					((TypeReferencesResult results, Stopwatch highPrecTimer) =>
 			{
 				// Clear old markers
 				foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
 					if (marker is CodeSymbolMarker)
 						marker.Delete();
 
-				if (resolvedItems!=null && resolvedItems.Count > 0)
-					foreach (var kv in resolvedItems)
+				int len=0;
+				if (results.ResolvedTypes.Count != 0)
+					foreach (var kv in results.ResolvedTypes)
 						if (kv.Key.Location.Line > 0)
 						{
-							var m = new CodeSymbolMarker(this, kv.Key) { ResolveResult = kv.Value };
+							var m = new CodeSymbolMarker(this, kv.Key, DeepASTVisitor.ExtractIdLocation(kv.Key, out len), len);
 							MarkerStrategy.Add(m);
 
 							m.Redraw();
@@ -796,8 +790,8 @@ namespace D_IDE.D
 
 				SemanticErrors.Clear();
 
-				if (unresolvedItems!=null && unresolvedItems.Count > 0)
-					foreach (var id in unresolvedItems)
+				if (results.UnresolvedIdentifiers.Count != 0 && DSettings.Instance.UseSemanticErrorHighlighting)
+					foreach (var id in results.UnresolvedIdentifiers)
 						if (id.Location.Line > 0)
 						{
 							SemanticErrors.Add(new DSemanticError
@@ -805,8 +799,9 @@ namespace D_IDE.D
 								FileName=AbsoluteFilePath,
 								IsSemantic = true,
 								Message = id.ToString() + " couldn't get resolved",
-								Location = id.Location,
-								MarkerColor=Colors.Blue
+								Location = DeepASTVisitor.ExtractIdLocation(id, out len),
+								MarkerColor=Colors.Blue,
+								Length = len
 							});
 						}
 
@@ -817,8 +812,7 @@ namespace D_IDE.D
 					CoreManager.Instance.MainWindow.LeftStatusText =
 						Math.Round((decimal)highPrecTimer.ElapsedMilliseconds, 2).ToString() +
 						"ms (Semantic Highlighting)";
-			}), DispatcherPriority.Background,
-				res.ResolvedIdentifiers, res.UnresolvedIdentifiers, sw);
+			}), DispatcherPriority.Background, res, sw);
 			}
 			catch (Exception ex)
 			{
@@ -830,7 +824,7 @@ namespace D_IDE.D
 		public class CodeSymbolMarker : TextMarker
 		{
 			public readonly EditorDocument EditorDocument;
-			public readonly IdentifierDeclaration Id;
+			public readonly ISyntaxRegion Id;
 			INode rr;
 			public INode ResolveResult
 			{
@@ -845,19 +839,16 @@ namespace D_IDE.D
 				}
 			}
 
-			public CodeSymbolMarker(EditorDocument EditorDoc, IdentifierDeclaration Id, int StartOffset, int Length)
+			public CodeSymbolMarker(EditorDocument EditorDoc, ISyntaxRegion Id, int StartOffset, int Length)
 				: base(EditorDoc.MarkerStrategy, StartOffset, Length)
 			{
 				this.EditorDocument = EditorDoc;
 				this.Id = Id;
 				Init();
 			}
-			public CodeSymbolMarker(EditorDocument EditorDoc, IdentifierDeclaration Id)
-				: base(EditorDoc.MarkerStrategy, EditorDoc.Editor.Document.GetOffset(Id.Location.Line, Id.Location.Column), Id.ToString(false).Length)
+			public CodeSymbolMarker(EditorDocument EditorDoc, ISyntaxRegion Id, CodeLocation Location, int length)
+				: this(EditorDoc, Id, EditorDoc.Editor.Document.GetOffset(Location.Line, Location.Column), length)
 			{
-				this.EditorDocument = EditorDoc;
-				this.Id = Id;
-				Init();
 			}
 
 			void Init()
@@ -1260,10 +1251,10 @@ namespace D_IDE.D
 			}
 
 			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
-			else if ((e.Text == "." || e.Text==" " || e.Text=="(") && CanShowCodeCompletionPopup)
+			else if ((e.Text == "." || e.Text==" ") && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
 
-			else if (e.Text == "," || e.Text == "(" || e.Text == "!")
+			if (e.Text == "," || e.Text == "(" || e.Text == "!")
 				ShowInsightWindow(e.Text);
 
 			else if (e.Text == ")" && insightWindow != null && insightWindow.IsLoaded)

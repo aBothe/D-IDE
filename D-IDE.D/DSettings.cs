@@ -32,6 +32,8 @@ namespace D_IDE.D
 		public bool UseCodeCompletion = true;
 		public bool UseMethodInsight = true;
 		public bool EnableMatchingBracketHighlighting = true;
+
+		public bool UseSemanticErrorHighlighting = false;
 		public bool UseSemanticHighlighting = true;
 
 		public bool EnableSmartIndentation = true;
@@ -70,6 +72,10 @@ namespace D_IDE.D
 
 			x.WriteStartElement("ForceCodeCompetionPopupCommit");
 			x.WriteAttributeString("value", ForceCodeCompetionPopupCommit. ToString().ToLower());
+			x.WriteEndElement();
+
+			x.WriteStartElement("UseSemanticErrorHighlighting");
+			x.WriteAttributeString("value", UseSemanticErrorHighlighting.ToString().ToLower());
 			x.WriteEndElement();
 
 			x.WriteStartElement("UseSemanticHighlighting");
@@ -114,6 +120,11 @@ namespace D_IDE.D
 					case "ForceCodeCompetionPopupCommit":
 						if (x.MoveToAttribute("value"))
 							ForceCodeCompetionPopupCommit = x.ReadContentAsBoolean();
+						break;
+
+					case "UseSemanticErrorHighlighting":
+						if (x.MoveToAttribute("value"))
+							UseSemanticErrorHighlighting = x.ReadContentAsBoolean();
 						break;
 
 					case "UseSemanticHighlighting":
