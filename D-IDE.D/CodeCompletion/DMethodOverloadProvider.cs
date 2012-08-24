@@ -42,7 +42,7 @@ namespace D_IDE.D.CodeCompletion
 
 		public object CurrentHeader
 		{
-			get { return new TextBlock() { Text=CurrentResult.ToString(), FontWeight=FontWeights.DemiBold}; }
+			get { return new TextBlock() { Text=CurrentResult == null ? "" : CurrentResult.ToString(), FontWeight=FontWeights.DemiBold}; }
 		}
 
 		public object CurrentContent
