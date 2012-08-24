@@ -778,18 +778,18 @@ namespace D_IDE.D
 						marker.Delete();
 
 				int len=0;
-				if (results.ResolvedTypes.Count != 0)
-					foreach (var kv in results.ResolvedTypes)
-						if (kv.Key.Location.Line > 0)
+				if (results.TypeMatches.Count != 0)
+					foreach (var kv in results.TypeMatches)
+						if (kv.Location.Line > 0)
 						{
-							var m = new CodeSymbolMarker(this, kv.Key, DeepASTVisitor.ExtractIdLocation(kv.Key, out len), len);
+							var m = new CodeSymbolMarker(this, kv, DeepASTVisitor.ExtractIdLocation(kv, out len), len);
 							MarkerStrategy.Add(m);
 
 							m.Redraw();
 						}
-
+				
 				SemanticErrors.Clear();
-
+				/*
 				if (results.UnresolvedIdentifiers.Count != 0 && DSettings.Instance.UseSemanticErrorHighlighting)
 					foreach (var id in results.UnresolvedIdentifiers)
 						if (id.Location.Line > 0)
@@ -804,7 +804,7 @@ namespace D_IDE.D
 								Length = len
 							});
 						}
-
+				*/
 				if (RefreshErrorList)
 					CoreManager.ErrorManagement.RefreshErrorList();
 
@@ -1315,7 +1315,7 @@ namespace D_IDE.D
 							sw.Stop();
 
 							if (GlobalProperties.Instance.ShowSpeedInfo)
-								CoreManager.Instance.MainWindow.ThirdStatusText = sw.ElapsedMilliseconds + "ms (Tooltip)";
+								CoreManager.Instance.MainWindow.ThirdStatusText = sw.Elapsed.TotalMilliseconds + "ms (Tooltip)";
 						}
 					}
 					catch (Exception ex)
