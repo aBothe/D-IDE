@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using D_Parser.Misc;
 using D_Parser.Parser;
-using D_Parser.Dom;
-using D_Parser.Dom.Expressions;
+using D_Parser.Resolver;
+using D_Parser.Resolver.ExpressionSemantics;
 
 namespace DCalculator
 {
@@ -22,38 +13,31 @@ namespace DCalculator
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		ResolverContextStack ctxt = new ResolverContextStack(ParseCacheList.Create(), new ResolverContext());
+
 		public MainWindow()
 		{
 			InitializeComponent();
 
-			text_input.Text = "2+2";
+			text_input.Text = "2+4";
 		}
 
 		public void Calc()
 		{
-			IExpression expr = null;
 			try
 			{
-				expr = DParser.ParseExpression(text_input.Text);
+				var e = DParser.ParseExpression(text_input.Text);
+				var v = Evaluation.EvaluateValue(e, ctxt);
 
-				if (expr == null || !expr.IsConstant)
-				{
-					text_result.Text = "[Not a mathematical expression!]";
-					return;
-				}
+				text_result.Text = v==null ? "[No result]" : v.ToCode();
+			}
+			catch (EvaluationException ee)
+			{
+				text_result.Text = "[\""+ee.EvaluatedExpression.ToString() + "\": "+ee.Message+"]";
 			}
 			catch (Exception ex)
 			{
-				text_result.Text = "[Expression parsing error | "+ex.Message+"]";
-			}
-
-			try
-			{
-				text_result.Text = expr.DecValue.ToString();
-			}
-			catch (Exception ex)
-			{
-				text_result.Text = "["+ex.Message + "]";
+				text_result.Text = "[Expression parsing error | " + ex.Message + "]";
 			}
 		}
 
