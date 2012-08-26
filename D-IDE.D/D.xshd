@@ -1,269 +1,267 @@
 <?xml version="1.0"?>
 <!-- Taken from CSharp-Mode.xshd -->
 <SyntaxDefinition name="D" extensions=".d" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
-	<Color name="Comment" foreground="Green" exampleText="// comment" />
-	<Color name="String" foreground="Red" exampleText="string text = &quot;Hello, World!&quot;"/>
-	<Color name="Char" foreground="Red" exampleText="char linefeed = '\n';"/>
-	<Color name="Punctuation" exampleText="a(b.c);" />
-	<Color name="ValueTypes" foreground="Blue" exampleText="bool b = true;" />
-	<Color name="ReferenceTypes" foreground="Blue" exampleText="object o;" />
-	<Color name="NumberLiteral" exampleText="3.1415f"/>
-	<Color name="ThisOrSuperReference" fontWeight="bold" exampleText="this.Do(); base.Do();"/>
-	<Color name="NullKeywords" fontWeight="bold" exampleText="if (value == null)"/>
-	<Color name="Keywords" foreground="Blue" exampleText="if (a) {} else {}"/>
-	<Color name="GotoKeywords" foreground="Navy" exampleText="continue; return null;"/>
-	<Color name="ExceptionKeywords" fontWeight="bold" foreground="Blue" exampleText="try {} catch {} finally {}"/>
-	<Color name="ParameterModifiers" foreground="DeepPink" exampleText="(ref int a, params int[] b)"/>
-	<Color name="Modifiers" foreground="Blue" exampleText="static readonly int a;"/>
-	<Color name="Visibility" foreground="Blue" exampleText="public override void ToString();"/>
-	<Color name="NamespaceKeywords" foreground="Blue" exampleText="namespace A.B { using System; }"/>
-	<Color name="TrueFalse" foreground="Blue" exampleText="b = false; a = true;" />
-	<Color name="TypeKeywords" foreground="DarkCyan" exampleText="if (x is int) { a = x as int; type = typeof(int); size = sizeof(int); c = new object(); }"/>
-<!--
-	<Color name="TypeIdentifiers" foreground="0x2b91af" />-->
-	
-	<RuleSet name="CommentMarkerSet">
-		<Keywords fontWeight="bold" foreground="Red">
-			<Word>TODO</Word>
-			<Word>FIXME</Word>
-		</Keywords>
-		<Keywords fontWeight="bold" foreground="#E0E000">
-			<Word>HACK</Word>
-			<Word>UNDONE</Word>
-		</Keywords>
-	</RuleSet>
+  <Color name="Comment" foreground="Green" exampleText="// comment" />
+  <Color name="String" foreground="Red" exampleText="string text = &quot;Hello, World!&quot;"/>
+  <Color name="Char" foreground="Red" exampleText="char linefeed = '\n';"/>
+  <Color name="Punctuation" exampleText="a(b.c);" />
+  <Color name="ValueTypes" foreground="Blue" exampleText="bool b = true;" />
+  <Color name="ReferenceTypes" foreground="Blue" exampleText="object o;" />
+  <Color name="NumberLiteral" exampleText="3.1415f"/>
+  <Color name="ThisOrSuperReference" fontWeight="bold" exampleText="this.Do(); base.Do();"/>
+  <Color name="NullKeywords" fontWeight="bold" exampleText="if (value == null)"/>
+  <Color name="Keywords" foreground="Blue" exampleText="if (a) {} else {}"/>
+  <Color name="GotoKeywords" foreground="Navy" exampleText="continue; return null;"/>
+  <Color name="ExceptionKeywords" fontWeight="bold" foreground="Blue" exampleText="try {} catch {} finally {}"/>
+  <Color name="ParameterModifiers" foreground="DeepPink" exampleText="(ref int a, params int[] b)"/>
+  <Color name="Modifiers" foreground="Blue" exampleText="static readonly int a;"/>
+  <Color name="Visibility" foreground="Blue" exampleText="public override void ToString();"/>
+  <Color name="NamespaceKeywords" foreground="Blue" exampleText="namespace A.B { using System; }"/>
+  <Color name="TrueFalse" foreground="Blue" exampleText="b = false; a = true;" />
+  <Color name="TypeKeywords" foreground="DarkCyan" exampleText="if (x is int) { a = x as int; type = typeof(int); size = sizeof(int); c = new object(); }"/>
+  <!-- <Color name="TypeIdentifiers" foreground="0x2b91af" />-->
 
-	<!-- This is the main ruleset. -->
-	<RuleSet>
+  <RuleSet name="CommentMarkerSet">
+	<Keywords fontWeight="bold" foreground="Red">
+	  <Word>TODO</Word>
+	  <Word>FIXME</Word>
+	</Keywords>
+	<Keywords fontWeight="bold" foreground="#E0E000">
+	  <Word>HACK</Word>
+	  <Word>UNDONE</Word>
+	</Keywords>
+  </RuleSet>
 
-		<Span color="Comment" ruleSet="CommentMarkerSet">
-			<Begin>//</Begin>
-		</Span>
+  <!-- This is the main ruleset. -->
+  <RuleSet>
+	<Span color="Comment" ruleSet="CommentMarkerSet">
+	  <Begin>//</Begin>
+	</Span>
 
-		<Span color="Comment" ruleSet="CommentMarkerSet" multiline="true">
-			<Begin>/\*</Begin>
-			<End>\*/</End>
-		</Span>
+	<Span color="Comment" ruleSet="CommentMarkerSet" multiline="true">
+	  <Begin>/\*</Begin>
+	  <End>\*/</End>
+	</Span>
 
-			<Span color="Comment" ruleSet="CommentMarkerSet" multiline="true">
-				<Begin>/\+</Begin>
-				<End>\+/</End>
-			</Span>
+	<Span color="Comment" ruleSet="CommentMarkerSet" multiline="true">
+	  <Begin>/\+</Begin>
+	  <End>\+/</End>
+	</Span>
 
-		<Span color="String" multiline="true">
-			<Begin>"</Begin>
-			<End>"</End>
-			<RuleSet>
-				<!-- span for escape sequences -->
-				<Span begin="\\" end="."/>
-			</RuleSet>
-		</Span>
+	<Span color="String" multiline="true">
+	  <Begin>"</Begin>
+	  <End>"</End>
+	  <RuleSet>
+		<!-- span for escape sequences -->
+		<Span begin="\\" end="."/>
+	  </RuleSet>
+	</Span>
 
-		<Span color="Char">
-			<Begin>'</Begin>
-			<End>'</End>
-			<RuleSet>
-				<!-- span for escape sequences -->
-				<Span begin="\\" end="."/>
-			</RuleSet>
-		</Span>
+	<Span color="Char">
+	  <Begin>'</Begin>
+	  <End>'</End>
+	  <RuleSet>
+		<!-- span for escape sequences -->
+		<Span begin="\\" end="."/>
+	  </RuleSet>
+	</Span>
 
-		<Span color="String" multiline="true">
-			<Begin color="String">r"</Begin>
-			<End>"</End>
-			<RuleSet>
-				<!-- span for escape sequences -->
-				<Span begin='""' end=""/>
-			</RuleSet>
-		</Span>
+	<Span color="String" multiline="true">
+	  <Begin color="String">r"</Begin>
+	  <End>"</End>
+	  <RuleSet>
+		<!-- span for escape sequences -->
+		<Span begin='""' end=""/>
+	  </RuleSet>
+	</Span>
 
-		<Span color="String" multiline="true">
-			<Begin color="String">`</Begin>
-			<End>`</End>
-		</Span>
+	<Span color="String" multiline="true">
+	  <Begin color="String">`</Begin>
+	  <End>`</End>
+	</Span>
 
-		<Keywords color="ThisOrSuperReference">
-			<Word>this</Word>
-			<Word>super</Word>
-		</Keywords>
+	<Keywords color="ThisOrSuperReference">
+	  <Word>this</Word>
+	  <Word>super</Word>
+	</Keywords>
 
-		<Keywords color="TrueFalse">
-			<Word>true</Word>
-			<Word>false</Word>
-		</Keywords>
+	<Keywords color="TrueFalse">
+	  <Word>true</Word>
+	  <Word>false</Word>
+	</Keywords>
 
-		<Keywords color="Keywords">
-			<Word>alias</Word>
-			<Word>align</Word>
-			<Word>asm</Word>
-			<Word>assert</Word>
+	<Keywords color="Keywords">
+	  <Word>alias</Word>
+	  <Word>align</Word>
+	  <Word>asm</Word>
+	  <Word>assert</Word>
 
-			<Word>case</Word>
-			<Word>cast</Word>
+	  <Word>case</Word>
+	  <Word>cast</Word>
 
-			<Word>debug</Word>
-			<Word>default</Word>
-			<Word>delete</Word>
-			<Word>do</Word>
+	  <Word>debug</Word>
+	  <Word>default</Word>
+	  <Word>delete</Word>
+	  <Word>do</Word>
 
-			<Word>else</Word>
-			<Word>export</Word>
+	  <Word>else</Word>
+	  <Word>export</Word>
 
-			<Word>for</Word>
-			<Word>foreach</Word>
-			<Word>foreach_reverse</Word>
+	  <Word>for</Word>
+	  <Word>foreach</Word>
+	  <Word>foreach_reverse</Word>
 
-			<Word>if</Word>
-			<Word>is</Word>
+	  <Word>if</Word>
+	  <Word>is</Word>
 
-			<Word>macro</Word>
-			<Word>mixin</Word>
+	  <Word>macro</Word>
+	  <Word>mixin</Word>
 
-			<Word>new</Word>
+	  <Word>new</Word>
 
-			<Word>pragma</Word>
+	  <Word>pragma</Word>
 
-			<Word>switch</Word>
+	  <Word>switch</Word>
 
-			<Word>typedef</Word>
-			<Word>typeid</Word>
-			<Word>typeof</Word>
+	  <Word>typedef</Word>
+	  <Word>typeid</Word>
+	  <Word>typeof</Word>
 
-			<Word>unittest</Word>
+	  <Word>unittest</Word>
 
-			<Word>version</Word>
-			
-			<Word>while</Word>
-			<Word>with</Word>
-			
-			<Word>__FILE__</Word>
-			<Word>__LINE__</Word>
-			<Word>__gshared</Word>
-			<Word>__thread</Word>
-			<Word>__traits</Word>
-		</Keywords>
+	  <Word>version</Word>
 
-		<Keywords color="GotoKeywords">
-			<Word>break</Word>
-			<Word>continue</Word>
-			<Word>goto</Word>
-			<Word>return</Word>
-		</Keywords>
+	  <Word>while</Word>
+	  <Word>with</Word>
 
-		<Keywords color="ValueTypes">
-			<Word>bool</Word>
-			<Word>byte</Word>
-			<Word>cdouble</Word>
-			<Word>char</Word>
-			<Word>cfloat</Word>
-			<Word>cent</Word>
-			<Word>creal</Word>
-			<Word>dchar</Word>
-			<Word>decimal</Word>
-			<Word>double</Word>
-			<Word>enum</Word>
-			<Word>float</Word>
-			<Word>int</Word>
-			<Word>idouble</Word>
-			<Word>ifloat</Word>
-			<Word>ireal</Word>
-			<Word>long</Word>
-			<Word>sbyte</Word>
-			<Word>short</Word>
-			<Word>ubyte</Word>
-			<Word>ucent</Word>
-			<Word>uint</Word>
-			<Word>ushort</Word>
-			<Word>ulong</Word>
-			<Word>real</Word>
-			<Word>wchar</Word>
-		</Keywords>
+	  <Word>__FILE__</Word>
+	  <Word>__LINE__</Word>
+	  <Word>__gshared</Word>
+	  <Word>__thread</Word>
+	  <Word>__traits</Word>
+	</Keywords>
 
-		<Keywords color="ReferenceTypes">
-			<Word>struct</Word>
-			<Word>union</Word>
-			<Word>class</Word>
-			<Word>template</Word>
-			<Word>interface</Word>
-			
-			<Word>delegate</Word>
-			<Word>function</Word>
-			
-			<Word>object</Word>
-			<Word>string</Word>
-			<Word>wstring</Word>
-			<Word>dstring</Word>
-			<Word>void</Word>
-			
-			<Word>auto</Word>
-		</Keywords>
+	<Keywords color="GotoKeywords">
+	  <Word>break</Word>
+	  <Word>continue</Word>
+	  <Word>goto</Word>
+	  <Word>return</Word>
+	</Keywords>
 
-		<Keywords color="ParameterModifiers">
-			<Word>body</Word>
-			<Word>in</Word>
-			<Word>inout</Word>
-			<Word>ref</Word>
-			<Word>out</Word>
-		</Keywords>
+	<Keywords color="ValueTypes">
+	  <Word>bool</Word>
+	  <Word>byte</Word>
+	  <Word>cdouble</Word>
+	  <Word>char</Word>
+	  <Word>cfloat</Word>
+	  <Word>cent</Word>
+	  <Word>creal</Word>
+	  <Word>dchar</Word>
+	  <Word>decimal</Word>
+	  <Word>double</Word>
+	  <Word>enum</Word>
+	  <Word>float</Word>
+	  <Word>int</Word>
+	  <Word>idouble</Word>
+	  <Word>ifloat</Word>
+	  <Word>ireal</Word>
+	  <Word>long</Word>
+	  <Word>sbyte</Word>
+	  <Word>short</Word>
+	  <Word>ubyte</Word>
+	  <Word>ucent</Word>
+	  <Word>uint</Word>
+	  <Word>ushort</Word>
+	  <Word>ulong</Word>
+	  <Word>real</Word>
+	  <Word>wchar</Word>
+	</Keywords>
 
-		<Keywords color="Modifiers">
-			<Word>abstract</Word>
-			<Word>const</Word>
-			<Word>deprecated</Word>
-			<Word>extern</Word>
-			<Word>final</Word>
-			<Word>lazy</Word>
-			<Word>immutable</Word>
-			<Word>invariant</Word>
-			<Word>nothrow</Word>
-			<Word>override</Word>
-			<Word>pure</Word>
-			<Word>scope</Word>
-			<Word>shared</Word>
-			<Word>static</Word>
-			<Word>synchronized</Word>
-			<Word>virtual</Word>
-			<Word>volatile</Word>
-		</Keywords>
+	<Keywords color="ReferenceTypes">
+	  <Word>struct</Word>
+	  <Word>union</Word>
+	  <Word>class</Word>
+	  <Word>template</Word>
+	  <Word>interface</Word>
 
-		<!-- Property attributes -->
-		<Rule color="Modifiers">@[a-zA-Z]+</Rule>
+	  <Word>delegate</Word>
+	  <Word>function</Word>
 
-		<Keywords color="Visibility">
-			<Word>public</Word>
-			<Word>protected</Word>
-			<Word>private</Word>
-			<Word>package</Word>
-		</Keywords>
+	  <Word>object</Word>
+	  <Word>string</Word>
+	  <Word>wstring</Word>
+	  <Word>dstring</Word>
+	  <Word>void</Word>
 
-		<Keywords color="ExceptionKeywords">
-			<Word>try</Word>
-			<Word>throw</Word>
-			<Word>catch</Word>
-			<Word>finally</Word>
-		</Keywords>
+	  <Word>auto</Word>
+	</Keywords>
 
-		<Keywords color="NamespaceKeywords">
-			<Word>module</Word>
-			<Word>import</Word>
-		</Keywords>
+	<Keywords color="ParameterModifiers">
+	  <Word>body</Word>
+	  <Word>in</Word>
+	  <Word>inout</Word>
+	  <Word>ref</Word>
+	  <Word>out</Word>
+	</Keywords>
 
-		<Keywords color="NullKeywords">
-			<Word>null</Word>
-		</Keywords>
+	<Keywords color="Modifiers">
+	  <Word>abstract</Word>
+	  <Word>const</Word>
+	  <Word>deprecated</Word>
+	  <Word>extern</Word>
+	  <Word>final</Word>
+	  <Word>lazy</Word>
+	  <Word>immutable</Word>
+	  <Word>invariant</Word>
+	  <Word>nothrow</Word>
+	  <Word>override</Word>
+	  <Word>pure</Word>
+	  <Word>scope</Word>
+	  <Word>shared</Word>
+	  <Word>static</Word>
+	  <Word>synchronized</Word>
+	  <Word>virtual</Word>
+	  <Word>volatile</Word>
+	</Keywords>
 
-		<!-- Digits -->
-		<Rule color="NumberLiteral">
-			\b0[xX][0-9a-fA-F]+  # hex number
-			|
-			(	\b\d+(\.[0-9]+)?   #number with optional floating point
-			|	\.[0-9]+           #or just starting with floating point
-			)
-			([eE][+-]?[0-9]+)? # optional exponent
-		</Rule>
+	<!-- Property attributes -->
+	<Rule color="Modifiers">@[a-zA-Z]+</Rule>
 
-		<Rule color="Punctuation">
-			[?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
-		</Rule>
-	</RuleSet>
+	<Keywords color="Visibility">
+	  <Word>public</Word>
+	  <Word>protected</Word>
+	  <Word>private</Word>
+	  <Word>package</Word>
+	</Keywords>
+
+	<Keywords color="ExceptionKeywords">
+	  <Word>try</Word>
+	  <Word>throw</Word>
+	  <Word>catch</Word>
+	  <Word>finally</Word>
+	</Keywords>
+
+	<Keywords color="NamespaceKeywords">
+	  <Word>module</Word>
+	  <Word>import</Word>
+	</Keywords>
+
+	<Keywords color="NullKeywords">
+	  <Word>null</Word>
+	</Keywords>
+
+	<!-- Digits -->
+	<Rule color="NumberLiteral">
+	  \b0[xX][0-9a-fA-F]+  # hex number
+	  |
+	  (	\b\d+(\.[0-9]+)?   #number with optional floating point
+	  |	\.[0-9]+           #or just starting with floating point
+	  )
+	  ([eE][+-]?[0-9]+)? # optional exponent
+	</Rule>
+
+	<Rule color="Punctuation">
+	  [?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
+	</Rule>
+  </RuleSet>
 </SyntaxDefinition>
