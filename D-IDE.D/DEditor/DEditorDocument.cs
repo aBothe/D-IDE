@@ -38,7 +38,7 @@ namespace D_IDE.D
 		FoldingManager foldingManager;
 
 		/// <summary>
-		/// Parse duration (in seconds) of the last code analysis
+		/// Parse duration (in milliseconds) of the last code analysis
 		/// </summary>
 		public double ParseTime
 		{
@@ -68,8 +68,15 @@ namespace D_IDE.D
 				var prj = Project as DProject;
 				if (prj != null && !prj.ParsedModules.IsParsing)
 				{
-					// Enable incremental update of the ufcs cache -- speed boost!
-					prj.ParsedModules.UfcsCache.RemoveModuleItems(SyntaxTree);
+					var oldAst = SyntaxTree;
+					if (oldAst != null)
+					{
+						// Enable incremental update of the ufcs cache -- speed boost!
+						prj.ParsedModules.UfcsCache.RemoveModuleItems(oldAst);
+						prj.ParsedModules.Remove(oldAst.ModuleName);
+						oldAst = null;
+					}
+
 					if (value != null)
 					{
 						prj.ParsedModules.AddOrUpdate(value);
@@ -112,7 +119,6 @@ namespace D_IDE.D
 		/// </summary>
 		bool KeysTyped = false;
 		Thread parseThread = null;
-		readonly Stopwatch stopWatch = new Stopwatch();
 		//bool CanRefreshSemanticHighlightings = false;
 
 		bool isUpdatingLookupDropdowns = false;
@@ -623,19 +629,27 @@ namespace D_IDE.D
 			string code = "";
 
 			Dispatcher.Invoke(new Action(() => code = Editor.Text));
-
+			GC.Collect();
 			DModule newAst = null;
 			try
 			{
-				stopWatch.Restart();
-				var parser = DParser.Create(new StringReader(code));
-				code = null;
+				SyntaxTree = null;
+				using (var sr = new StringReader(code))
+					using (var parser = DParser.Create(sr))
+					{
+						var sw = new Stopwatch();
+						code = null;
 
-				SyntaxTree = newAst = parser.Parse();
+						sw.Restart();
 
-				stopWatch.Stop();
+						newAst = parser.Parse();
 
-				ParseTime = stopWatch.Elapsed.TotalSeconds;
+						sw.Stop();
+
+						SyntaxTree = newAst;
+
+						ParseTime = sw.Elapsed.TotalMilliseconds;
+					}
 			}
 			catch (Exception ex)
 			{
@@ -665,7 +679,7 @@ namespace D_IDE.D
 				{
 					if (GlobalProperties.Instance.ShowSpeedInfo)
 						CoreManager.Instance.MainWindow.SecondLeftStatusText = 
-							Math.Round((decimal)stopWatch.ElapsedMilliseconds, 3).ToString() + "ms (Parsing duration)";
+							Math.Round((decimal)ParseTime, 3).ToString() + "ms (Parsing duration)";
 
 					UpdateFoldings();
 					CoreManager.ErrorManagement.RefreshErrorList();
