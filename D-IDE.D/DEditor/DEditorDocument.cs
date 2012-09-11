@@ -25,6 +25,7 @@ using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
 using D_Parser.Refactoring;
+using System.Threading.Tasks;
 
 namespace D_IDE.D
 {
@@ -103,8 +104,9 @@ namespace D_IDE.D
 
 		public CompletionOptions Options
 		{
-			get { 
-				return DSettings.Instance.CompletionOptions; 
+			get
+			{
+				return DSettings.Instance.CompletionOptions;
 			}
 		}
 
@@ -139,7 +141,7 @@ namespace D_IDE.D
 		public IBlockNode lastSelectedBlock { get; private set; }
 		IStatement lastSelectedStatement;
 
-		DispatcherOperation typeLookupUpdateOperation = null;
+		Thread typeLookupUpdateThread = null;
 		//DispatcherOperation showCompletionWindowOperation = null;
 		DispatcherOperation parseOperation = null;
 
@@ -287,7 +289,7 @@ namespace D_IDE.D
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CtrlSpaceCompletion, CtrlSpaceCompletion));
 
 			// Init parser loop
-			parseThread = new Thread(ParserLoop) { IsBackground=true, Name="ParseLoop "+ProposedModuleName };
+			parseThread = new Thread(ParserLoop) { IsBackground = true, Name = "ParseLoop " + ProposedModuleName };
 			parseThread.Start();
 		}
 
@@ -317,10 +319,11 @@ namespace D_IDE.D
 			if (block == null)
 				return;
 
-			if (!(block is IAbstractSyntaxTree) && !block.BlockStartLocation.IsEmpty && block.EndLocation > block.BlockStartLocation)
+			var bs = block.BlockStartLocation;
+			if (!(block is IAbstractSyntaxTree) && bs.Line > 0 && block.EndLocation > bs)
 			{
-				var startOff=Editor.Document.GetOffset(block.BlockStartLocation.Line, block.BlockStartLocation.Column);
-				var endOff=Editor.Document.GetOffset(block.EndLocation.Line, block.EndLocation.Column);
+				var startOff = Editor.Document.GetOffset(bs.Line, bs.Column);
+				var endOff = Editor.Document.GetOffset(block.EndLocation.Line, block.EndLocation.Column);
 
 				if (startOff < endOff)
 				{
@@ -381,9 +384,9 @@ namespace D_IDE.D
 					Editor.Document.UndoStack.StartUndoGroup();
 
 					var ctxt = CaretContextAnalyzer.GetTokenContext(Editor.Text, Editor.SelectionStart);
-					
-					if (ctxt!=TokenContext.BlockComment &&
-						ctxt!= TokenContext.NestedComment)
+
+					if (ctxt != TokenContext.BlockComment &&
+						ctxt != TokenContext.NestedComment)
 					{
 						Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "*/");
 						Editor.Document.Insert(Editor.SelectionStart, "/*");
@@ -405,7 +408,7 @@ namespace D_IDE.D
 		{
 			var CaretOffset = Editor.CaretOffset;
 
-			if (CaretOffset < 2) 
+			if (CaretOffset < 2)
 				return;
 
 			int commStart = CaretOffset;
@@ -420,10 +423,10 @@ namespace D_IDE.D
 			{
 				int removedSlashCount = 0;
 
-				while(Editor.Document.GetCharAt(commStart+removedSlashCount)=='/')
+				while (Editor.Document.GetCharAt(commStart + removedSlashCount) == '/')
 					removedSlashCount++;
 
-				Editor.Document.Remove(commStart,removedSlashCount);
+				Editor.Document.Remove(commStart, removedSlashCount);
 				return;
 			}
 
@@ -433,13 +436,13 @@ namespace D_IDE.D
 				context != TokenContext.NestedComment)
 				return;
 
-			if (commEnd < 0) 
+			if (commEnd < 0)
 				return;
 
 			int removeCount_initialStarToken = 1;
 			int removeCount_finalStarToken = 1;
 
-			char starToken = context== TokenContext.NestedComment?'+':'*';
+			char starToken = context == TokenContext.NestedComment ? '+' : '*';
 
 			// Find and strip all leading and trailing * (+ on nested comments)
 			while (Editor.Document.GetCharAt(commStart + removeCount_initialStarToken) == starToken)
@@ -450,7 +453,7 @@ namespace D_IDE.D
 
 			Editor.Document.UndoStack.StartUndoGroup();
 
-			Editor.Document.Remove(commEnd-removeCount_finalStarToken, removeCount_finalStarToken);
+			Editor.Document.Remove(commEnd - removeCount_finalStarToken, removeCount_finalStarToken);
 			Editor.Document.Remove(commStart, removeCount_initialStarToken);
 
 			Editor.Document.UndoStack.EndUndoGroup();
@@ -524,92 +527,51 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var rr = DResolver.ResolveType(this,
-					new ResolverContextStack(ParseCache, new ResolverContext { 
-						ScopedBlock = lastSelectedBlock, 
-						ScopedStatement=lastSelectedStatement
-					}) { ContextIndependentOptions = ResolutionOptions.ReturnMethodReferencesOnly },
-					DResolver.AstReparseOptions.OnlyAssumeIdentifierList | DResolver.AstReparseOptions.AlsoParseBeyondCaret);
-
-				AbstractType res = null;
-				// If there are multiple types, show a list of those items
-				if (rr != null && rr.Length > 1)
+				try
 				{
-					var dlg = new ListSelectionDialog();
-
-					var l = new List<string>();
-					int j = 0;
-					foreach (var i in rr)
-						l.Add("(" + (++j).ToString() + ") " + i.ToString()); // Bug: To make items unique (which is needed for the listbox to run properly), it's needed to add some kind of an identifier to the beginning of the string
-					dlg.List.ItemsSource = l;
-
-					dlg.List.SelectedIndex = 0;
-
-					if (dlg.ShowDialog().Value)
-					{
-						res = rr[dlg.List.SelectedIndex];
-					}
+					ImportGen_CustomImplementation.CreateImportDirectiveForHighlightedSymbol(this, new ImportGen_CustomImplementation(this));
 				}
-				else if (rr.Length == 1)
-					res = rr[0];
-				else
+				catch (Exception ex)
 				{
-					MessageBox.Show("No symbol found!");
-					return;
+					MessageBox.Show(ex.Message);
 				}
-
-				var n = DResolver.GetResultMember(res);
-
-				if (n == null)
-				{
-					MessageBox.Show("Select valid symbol!");
-					return;
-				}
-
-				var mod = n.NodeRoot as DModule;
-				if (mod == null)
-					return;
-
-				if (mod == SyntaxTree)
-				{
-					MessageBox.Show("Symbol is part of the current module. No import required!");
-					return;
-				}
-
-				bool alreadyAdded= false;
-
-				foreach(var sstmt in mod.StaticStatements)
-					if (sstmt is ImportStatement)
-					{
-						var impStmt=(ImportStatement)sstmt;
-
-						foreach (var imp in impStmt.Imports)
-							if (imp.ModuleIdentifier.ToString() == mod.ModuleName)
-							{
-								alreadyAdded = true;
-								break;
-							}
-
-						if (impStmt.ImportBinding != null && impStmt.ImportBinding.Module.ModuleIdentifier.ToString() == mod.ModuleName)
-							alreadyAdded = true;
-
-						if (alreadyAdded)
-							break;
-					}
-
-				if (alreadyAdded)
-				{
-					MessageBox.Show("Module " + mod.ModuleName + " already imported!");
-					return;
-				}
-
-				var loc = DParser.FindLastImportStatementEndLocation(Editor.Text);
-				Editor.Document.BeginUpdate();
-				Editor.Document.Insert(Editor.Document.GetOffset(loc.Line + 1, 0), "import " + mod.ModuleName + ";\r\n");
-				KeysTyped = true;
-				Editor.Document.EndUpdate();
 			}
 			catch { }
+		}
+
+		class ImportGen_CustomImplementation : ImportDirectiveCreator
+		{
+			public ImportGen_CustomImplementation(DEditorDocument doc)
+			{
+				this.ddoc = doc;
+			}
+
+			public DEditorDocument ddoc;
+
+			public override INode HandleMultipleResults(INode[] matches)
+			{
+				var dlg = new ListSelectionDialog();
+
+				var l = new List<string>();
+				int j = 0;
+				foreach (var n in matches)
+					l.Add("(" + (++j).ToString() + ") " + n.ToString()); // Bug: To make items unique (which is needed for the listbox to run properly), it's needed to add some kind of an identifier to the beginning of the string
+				dlg.List.ItemsSource = l;
+
+				dlg.List.SelectedIndex = 0;
+
+				if (dlg.ShowDialog().Value)
+					return matches[dlg.List.SelectedIndex];
+				return null;
+			}
+
+			public override void InsertIntoCode(CodeLocation loc, string codeToInsert)
+			{
+				ddoc.Editor.Document.BeginUpdate();
+				ddoc.Editor.Document.Insert(ddoc.Editor.Document.GetOffset(loc.Line, loc.Column), codeToInsert);
+				ddoc.KeysTyped = true;
+				ddoc.Editor.Document.EndUpdate();
+			}
 		}
 		#endregion
 
@@ -635,21 +597,21 @@ namespace D_IDE.D
 			{
 				SyntaxTree = null;
 				using (var sr = new StringReader(code))
-					using (var parser = DParser.Create(sr))
-					{
-						var sw = new Stopwatch();
-						code = null;
+				using (var parser = DParser.Create(sr))
+				{
+					var sw = new Stopwatch();
+					code = null;
 
-						sw.Restart();
+					sw.Restart();
 
-						newAst = parser.Parse();
+					newAst = parser.Parse();
 
-						sw.Stop();
+					sw.Stop();
 
-						SyntaxTree = newAst;
+					SyntaxTree = newAst;
 
-						ParseTime = sw.Elapsed.TotalMilliseconds;
-					}
+					ParseTime = sw.Elapsed.TotalMilliseconds;
+				}
 			}
 			catch (Exception ex)
 			{
@@ -669,7 +631,7 @@ namespace D_IDE.D
 			//CanRefreshSemanticHighlightings = false;
 
 			UpdateTypeLookupData();
-			
+
 			if (parseOperation != null && parseOperation.Status != DispatcherOperationStatus.Completed)
 				parseOperation.Abort();
 
@@ -678,7 +640,7 @@ namespace D_IDE.D
 				try
 				{
 					if (GlobalProperties.Instance.ShowSpeedInfo)
-						CoreManager.Instance.MainWindow.SecondLeftStatusText = 
+						CoreManager.Instance.MainWindow.SecondLeftStatusText =
 							Math.Round((decimal)ParseTime, 3).ToString() + "ms (Parsing duration)";
 
 					UpdateFoldings();
@@ -741,16 +703,16 @@ namespace D_IDE.D
 		{
 			IEnumerable<AbstractEditorDocument> editors = null;
 			CoreManager.Instance.MainWindow.Dispatcher.Invoke(new Action(() =>
-				editors=CoreManager.Instance.Editors
+				editors = CoreManager.Instance.Editors
 			));
 
-			if(editors!=null)
+			if (editors != null)
 				foreach (var ed in editors)
 					if (ed is DEditorDocument)
 						(ed as DEditorDocument).UpdateSemanticHighlighting(false);
 
 			// Only refresh it once
-			if(RefreshErrorList)
+			if (RefreshErrorList)
 				CoreManager.Instance.MainWindow.Dispatcher.Invoke(new Action(() =>
 					CoreManager.ErrorManagement.RefreshErrorList()
 					));
@@ -765,7 +727,7 @@ namespace D_IDE.D
 					foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
 						if (marker is CodeSymbolMarker)
 							marker.Delete();
-				},false);
+				}, false);
 
 				return;
 			}
@@ -773,7 +735,7 @@ namespace D_IDE.D
 			if (SyntaxTree == null || CompilerConfiguration.ASTCache.IsParsing)
 				return;
 
-			var sw=new Stopwatch();
+			var sw = new Stopwatch();
 			sw.Start();
 
 			var res = TypeReferenceFinder.Scan(SyntaxTree, ParseCache);
@@ -791,7 +753,7 @@ namespace D_IDE.D
 					if (marker is CodeSymbolMarker)
 						marker.Delete();
 
-				int len=0;
+				int len = 0;
 				if (results.TypeMatches.Count != 0)
 					foreach (var kv in results.TypeMatches)
 						if (kv.Location.Line > 0)
@@ -801,7 +763,7 @@ namespace D_IDE.D
 
 							m.Redraw();
 						}
-				
+
 				SemanticErrors.Clear();
 				/*
 				if (results.UnresolvedIdentifiers.Count != 0 && DSettings.Instance.UseSemanticErrorHighlighting)
@@ -822,7 +784,7 @@ namespace D_IDE.D
 				if (RefreshErrorList)
 					CoreManager.ErrorManagement.RefreshErrorList();
 
-				if(GlobalProperties.Instance.ShowSpeedInfo)
+				if (GlobalProperties.Instance.ShowSpeedInfo)
 					CoreManager.Instance.MainWindow.LeftStatusText =
 						Math.Round((decimal)highPrecTimer.ElapsedMilliseconds, 2).ToString() +
 						"ms (Semantic Highlighting)";
@@ -843,7 +805,8 @@ namespace D_IDE.D
 			public INode ResolveResult
 			{
 				get { return rr; }
-				set {
+				set
+				{
 					rr = value;
 
 					if (rr is IAbstractSyntaxTree)
@@ -916,131 +879,153 @@ namespace D_IDE.D
 		{
 			try
 			{
+				var ast = SyntaxTree;
+
+				var curBlock = DResolver.SearchBlockAt(ast, CaretLocation, out lastSelectedStatement);
+				if (curBlock == null)
+					curBlock = ast;
+
 				// Update highlit bracket offsets
 				if (DSettings.Instance.EnableMatchingBracketHighlighting)
-					CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, Editor.CaretOffset, Editor.TextArea.Caret.Location);
+					CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, this, curBlock, lastSelectedStatement);
 				else
 					CurrentlyHighlitBrackets = null;
 
-
-				if (SyntaxTree == null)
+				if (ast == null)
 				{
 					lookup_Members.ItemsSource = lookup_Types.ItemsSource = null;
 					return;
 				}
 
-				var curBlock = DResolver.SearchBlockAt(SyntaxTree, CaretLocation, out lastSelectedStatement);
-
-				if (curBlock == null)
-					curBlock = SyntaxTree;
-
-				if (typeLookupUpdateOperation != null && typeLookupUpdateOperation.Status != DispatcherOperationStatus.Completed)
-					typeLookupUpdateOperation.Abort();
+				if (typeLookupUpdateThread != null && typeLookupUpdateThread.IsAlive)
+					typeLookupUpdateThread.Abort();
 
 				lastSelectedBlock = curBlock;
 
-				typeLookupUpdateOperation = Dispatcher.BeginInvoke(new Action(() =>
-				{
-					try
-					{
-						#region Update the type & member selectors
-						isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
+				typeLookupUpdateThread = new Thread(_updateTypeLookupDataTh) 
+				{ 
+					IsBackground = true, 
+					Priority = ThreadPriority.BelowNormal, 
+					Name = "UpdateTypeLookupData() thread" 
+				};
 
-						// First fill the Types-Dropdown
-						var types = new List<DCompletionData>();
-						ICompletionData selectedItem = null;
-						var l1 = new List<INode> { SyntaxTree };
-						var l2 = new List<INode>();
-
-						while (l1.Count > 0)
-						{
-							foreach (var n in l1)
-							{
-								// Show all type declarations of the current module
-								if (n is DClassLike || n is DEnum)
-								{
-									var completionData = new DCompletionData(n);
-									if (CaretLocation >= n.Location && CaretLocation <= n.EndLocation)
-									{
-										selectedItem = completionData;
-										curBlock = n as IBlockNode;
-									}
-									types.Add(completionData);
-								}
-
-								if (n is IBlockNode)
-								{
-									var ch = (n as IBlockNode).Children;
-									if (ch != null)
-										l2.AddRange(ch);
-								}
-							}
-
-							l1.Clear();
-							l1.AddRange(l2);
-							l2.Clear();
-						}
-
-						if (selectedItem == null && SyntaxTree != null)
-							curBlock = SyntaxTree;
-
-						// For better usability, pre-sort items
-						try
-						{
-							types.Sort();
-						}
-						catch { }
-
-						lookup_Types.ItemsSource = types;
-						lookup_Types.SelectedItem = selectedItem;
-
-						if (curBlock is IBlockNode)
-						{
-							selectedItem = null;
-							// Fill the Members-Dropdown
-							var members = new List<DCompletionData>();
-
-							// Search a parent class to show all this one's members and to select that member where the caret currently is located
-							var watchedParent = curBlock as IBlockNode;
-
-							while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum || watchedParent is IAbstractSyntaxTree))
-								watchedParent = watchedParent.Parent as IBlockNode;
-
-							if (watchedParent != null)
-								lock(watchedParent)
-									foreach (var n in watchedParent)
-									{
-										if (n == null)
-											continue;
-
-										var cData = new DCompletionData(n);
-										if (selectedItem == null && cData.Node!=null && CaretLocation >= cData.Node.Location && CaretLocation < cData.Node.EndLocation)
-											selectedItem = cData;
-										members.Add(cData);
-									}
-
-							try
-							{
-								members.Sort();
-							}
-							catch { }
-
-							lookup_Members.ItemsSource = members;
-							lookup_Members.SelectedItem = selectedItem;
-						}
-						else
-						{
-							lookup_Members.ItemsSource = null;
-							lookup_Members.SelectedItem = null;
-						}
-
-						isUpdatingLookupDropdowns = false;
-						#endregion
-					}
-					catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
-				}), DispatcherPriority.Background);
+				typeLookupUpdateThread.Start(new Tuple<DModule, IBlockNode, CodeLocation>(ast, curBlock, CaretLocation));
 			}
 			catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
+		}
+
+		void _updateTypeLookupDataTh(object p)
+		{
+			// SyntaxTree, curBlock, CaretLocation
+			var ed = (Tuple<DModule, IBlockNode, CodeLocation>)p;
+			var curBlock = ed.Item2;
+
+			try
+			{
+				#region Update the type & member selectors
+				isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
+
+				// First fill the Types-Dropdown
+				var types = new List<DCompletionData>();
+				ICompletionData selectedItem = null;
+				var l1 = new List<INode> { ed.Item1 };
+				var l2 = new List<INode>();
+
+				while (l1.Count > 0)
+				{
+					foreach (var n in l1)
+					{
+						// Show all type declarations of the current module
+						if (n is DClassLike || n is DEnum)
+						{
+							var completionData = new DCompletionData(n);
+							if (ed.Item3 >= n.Location && ed.Item3 <= n.EndLocation)
+							{
+								selectedItem = completionData;
+								curBlock = n as IBlockNode;
+							}
+							types.Add(completionData);
+						}
+
+						if (n is IBlockNode)
+						{
+							var ch = ((IBlockNode)n).Children;
+							if (ch.Count != 0)
+								l2.AddRange(ch);
+						}
+					}
+
+					l1.Clear();
+					l1.AddRange(l2);
+					l2.Clear();
+				}
+
+				if (selectedItem == null && ed.Item1 != null)
+					curBlock = ed.Item1;
+
+				// For better usability, pre-sort items
+				try
+				{
+					types.Sort();
+				}
+				catch { }
+				
+				Dispatcher.Invoke(new Action(() =>
+				{
+					lookup_Types.ItemsSource = types;
+					lookup_Types.SelectedItem = selectedItem;
+				}));
+				
+				if (curBlock is IBlockNode)
+				{
+					selectedItem = null;
+					// Fill the Members-Dropdown
+					var members = new List<DCompletionData>();
+
+					// Search a parent class to show all this one's members and to select that member where the caret currently is located
+					var watchedParent = curBlock as IBlockNode;
+
+					while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum || watchedParent is IAbstractSyntaxTree))
+						watchedParent = watchedParent.Parent as IBlockNode;
+
+					if (watchedParent != null)
+						lock (watchedParent)
+							foreach (var n in watchedParent)
+							{
+								if (n == null)
+									continue;
+
+								var cData = new DCompletionData(n);
+								if (selectedItem == null && cData.Node != null && CaretLocation >= cData.Node.Location && CaretLocation < cData.Node.EndLocation)
+									selectedItem = cData;
+								members.Add(cData);
+							}
+
+					try
+					{
+						members.Sort();
+					}
+					catch { }
+
+					Dispatcher.Invoke(new Action(() =>
+					{
+						lookup_Members.ItemsSource = members;
+						lookup_Members.SelectedItem = selectedItem;
+					}));
+				}
+				else
+				{
+					Dispatcher.Invoke(new Action(() =>
+					{
+						lookup_Members.ItemsSource = null;
+						lookup_Members.SelectedItem = null;
+					}));
+				}
+
+				isUpdatingLookupDropdowns = false;
+				#endregion
+			}
+			catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); isUpdatingLookupDropdowns = false; }
 		}
 
 		void TextArea_SelectionChanged(object sender, EventArgs e)
@@ -1063,16 +1048,16 @@ namespace D_IDE.D
 		{
 			try
 			{
-				if ((EnteredText!=null && EnteredText.Length>0 && !(
-					EnteredText=="@"||
-					EnteredText=="(" ||
-					EnteredText==" " || 
-					AbstractCompletionProvider.IsIdentifierChar(EnteredText[0]) || 
-					EnteredText[0] == '.')) || 
-					!DCodeCompletionSupport.CanShowCompletionWindow(this) || 
+				if ((EnteredText != null && EnteredText.Length > 0 && !(
+					EnteredText == "@" ||
+					EnteredText == "(" ||
+					EnteredText == " " ||
+					AbstractCompletionProvider.IsIdentifierChar(EnteredText[0]) ||
+					EnteredText[0] == '.')) ||
+					!DCodeCompletionSupport.CanShowCompletionWindow(this) ||
 					Editor.IsReadOnly)
 					return;
-				
+
 				/*
 				 * Note: Once we opened the completion list, it's not needed to care about a later refill of that list.
 				 * The completionWindow will search the items that are partly typed into the editor automatically and on its own.
@@ -1097,7 +1082,7 @@ namespace D_IDE.D
 					out lastCompletionListResultPath);
 				sw.Stop();
 
-				if(GlobalProperties.Instance.ShowSpeedInfo)
+				if (GlobalProperties.Instance.ShowSpeedInfo)
 					CoreManager.Instance.MainWindow.ThirdStatusText = sw.ElapsedMilliseconds + "ms (Completion)";
 
 				// If no data present, return
@@ -1124,7 +1109,7 @@ namespace D_IDE.D
 
 				if (lastCompletionListResultPath != null &&
 					!LastSelectedCCItems.TryGetValue(lastCompletionListResultPath, out selectedString))
-						LastSelectedCCItems.Add(lastCompletionListResultPath, "");
+					LastSelectedCCItems.Add(lastCompletionListResultPath, "");
 
 				if (!string.IsNullOrEmpty(selectedString))
 				{
@@ -1136,7 +1121,8 @@ namespace D_IDE.D
 				else // Select first item by default
 					completionWindow.CompletionList.SelectedItem = completionWindow.CompletionList.CompletionData[0];
 
-				completionWindow.Closed += (object o, EventArgs _e) => { 
+				completionWindow.Closed += (object o, EventArgs _e) =>
+				{
 					// 'Backup' the selected completion data
 					lastSelectedCompletionData = completionWindow.CompletionList.SelectedItem;
 					completionWindow = null; // After the window closed, reset it to null
@@ -1149,7 +1135,7 @@ namespace D_IDE.D
 		void CompletionList_InsertionRequested(object sender, EventArgs e)
 		{
 			// After item got inserted, overwrite last-selected-item string
-			if (lastCompletionListResultPath != null && lastSelectedCompletionData!=null)
+			if (lastCompletionListResultPath != null && lastSelectedCompletionData != null)
 				LastSelectedCCItems[lastCompletionListResultPath] = lastSelectedCompletionData.Text;
 		}
 
@@ -1197,7 +1183,7 @@ namespace D_IDE.D
 				// Reposition the popup window to stick directly under the identifier expression
 				if (data.ParameterData.MethodIdentifier is ISyntaxRegion)
 				{
-					var loc=((ISyntaxRegion)data.ParameterData.MethodIdentifier).Location;
+					var loc = ((ISyntaxRegion)data.ParameterData.MethodIdentifier).Location;
 					var visPos = Editor.TextArea.TextView.GetVisualPosition(new TextViewPosition(loc.Line, loc.Column), ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineBottom);
 
 					visPos = Editor.TextArea.TextView.PointToScreen(visPos);
@@ -1219,8 +1205,8 @@ namespace D_IDE.D
 			get
 			{
 				return
-					DSettings.Instance.UseCodeCompletion &&	
-					SyntaxTree != null && 
+					DSettings.Instance.UseCodeCompletion &&
+					SyntaxTree != null &&
 					DCodeCompletionSupport.CanShowCompletionWindow(this);
 			}
 		}
@@ -1245,7 +1231,7 @@ namespace D_IDE.D
 				return;
 
 			// Note: Show completion window even before the first key has been processed by the editor!
-			else if (e.Text=="@" || char.IsLetter(e.Text[0]) || e.Text=="_")
+			else if (e.Text == "@" || char.IsLetter(e.Text[0]) || e.Text == "_")
 				ShowCodeCompletionWindow(e.Text);
 		}
 
@@ -1265,7 +1251,7 @@ namespace D_IDE.D
 			}
 
 			// Show the cc window after the dot has been inserted in the text because the cc win would overwrite it anyway
-			else if ((e.Text == "." || e.Text==" ") && CanShowCodeCompletionPopup)
+			else if ((e.Text == "." || e.Text == " ") && CanShowCodeCompletionPopup)
 				ShowCodeCompletionWindow(e.Text);
 
 			if (e.Text == "," || e.Text == "(" || e.Text == "!")
@@ -1296,8 +1282,8 @@ namespace D_IDE.D
 					// Avoid showing a tooltip if the cursor is located after a line-end
 					var vpos = Editor.TextArea.TextView.GetVisualPosition(
 						new TextViewPosition(
-							pos.Value.Line, 
-							Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength), 
+							pos.Value.Line,
+							Editor.Document.GetLineByNumber(pos.Value.Line).TotalLength),
 						ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineMiddle);
 					// Add TextView position to Editor-related point
 					vpos = Editor.TextArea.TextView.TranslatePoint(vpos, Editor);

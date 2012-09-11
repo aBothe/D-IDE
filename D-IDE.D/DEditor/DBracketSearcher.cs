@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using D_Parser.Completion;
 using D_Parser.Dom;
-using D_Parser.Parser;
+using D_Parser.Dom.Expressions;
+using D_Parser.Dom.Statements;
 using ICSharpCode.AvalonEdit.AddIn;
 using ICSharpCode.AvalonEdit.Document;
 
@@ -9,129 +9,53 @@ namespace D_IDE.D.DEditor
 {
 	public class DBracketSearcher
 	{
-		public static BracketSearchResult SearchBrackets(TextDocument doc, int caretOffset, TextLocation caret)
+		public static BracketSearchResult SearchBrackets(TextDocument doc, IEditorData ed, IBlockNode curBlock, IStatement stmt)
 		{
-			var caretLocation = new CodeLocation(caret.Column, caret.Line);
-			try
+			while (stmt != null)
 			{
-				if (caretOffset < 1 || caretOffset>=doc.TextLength-2)
-					return null;
-
-				// Search backward
-				DToken lastToken=null;
-				var tk_start = SearchBackward(doc, caretOffset, caretLocation,out lastToken);
-
-				if (tk_start == null)
-					return null;
-
-
-
-				// Search forward
-				var tk_end = SearchForward(doc, 
-					doc.GetOffset(lastToken.EndLocation.Line,lastToken.EndLocation.Column),
-					lastToken.EndLocation,
-					getOppositeBracketToken(tk_start.Kind));
-
-				if (tk_end == null)
-					return null;
-
-				int start = doc.GetOffset(tk_start.Location.Line, tk_start.Location.Column),
-					end = doc.GetOffset(tk_end.Location.Line, tk_end.Location.Column);
-
-				return new BracketSearchResult(start, 1, end, 1);
-			}
-			catch { return null; }
-		}
-
-		static int getOppositeBracketToken(int tk)
-		{
-			if(tk==DTokens.OpenParenthesis)
-				return DTokens.CloseParenthesis;
-			if (tk == DTokens.OpenSquareBracket)
-				return DTokens.CloseSquareBracket;
-			if (tk == DTokens.OpenCurlyBrace)
-				return DTokens.CloseCurlyBrace;
-
-			if (tk == DTokens.CloseParenthesis)
-				return DTokens.OpenParenthesis;
-			if (tk == DTokens.CloseSquareBracket)
-				return DTokens.OpenSquareBracket;
-			if(tk==DTokens.CloseCurlyBrace)
-				return DTokens.OpenCurlyBrace;
-
-			return -1;
-		}
-
-		static DToken SearchBackward(TextDocument doc, int caretOffset, CodeLocation caret,out DToken lastToken)
-		{
-			var ttp = doc.GetText(0, caretOffset);
-			var sr = new StringReader(ttp);
-			var lexer = new Lexer(sr);
-			lexer.NextToken();
-
-			var stk=new Stack<DToken>();
-
-			while (lexer.LookAhead.Kind!=DTokens.EOF)
-			{
-				if (lexer.LookAhead.Kind == DTokens.OpenParenthesis || lexer.LookAhead.Kind==DTokens.OpenSquareBracket || lexer.LookAhead.Kind==DTokens.OpenCurlyBrace)
-					stk.Push(lexer.LookAhead);
-
-				else if (lexer.LookAhead.Kind == DTokens.CloseParenthesis || lexer.LookAhead.Kind == DTokens.CloseSquareBracket || lexer.LookAhead.Kind == DTokens.CloseCurlyBrace)
+				if (stmt is IExpressionContainingStatement)
 				{
-					if (stk.Peek().Kind == getOppositeBracketToken( lexer.LookAhead.Kind))
-						stk.Pop();
-				}
-				
-				lexer.NextToken();
-			}
+					var ecs = (IExpressionContainingStatement)stmt;
+					foreach (var x in ecs.SubExpressions)
+					{
+						SurroundingParenthesesExpression spe = null;
+						var xx = x;
+						while (xx is ContainerExpression)
+						{
+							if (xx is SurroundingParenthesesExpression)
+								spe = (SurroundingParenthesesExpression)xx;
 
-			lastToken = lexer.CurrentToken;
+							var subX = ((ContainerExpression)xx).SubExpressions;
+							if (subX != null && subX.Length != 0)
+							{
+								xx = null;
+								foreach (var sx in subX)
+									if (ed.CaretLocation > sx.Location && ed.CaretLocation < sx.EndLocation)
+									{
+										xx = sx as ContainerExpression;
+										break;
+									}
+							}
+						}
 
-			sr.Close();
-			lexer.Dispose();
-
-			if (stk.Count < 1)
-				return null;
-
-			return stk.Pop();
-		}
-
-		static DToken SearchForward(TextDocument doc, int caretOffset, CodeLocation caret, int searchedBracketToken)
-		{
-			var code = doc.GetText(caretOffset, doc.TextLength - caretOffset);
-			var lexer = new Lexer(new System.IO.StringReader(code));
-
-			lexer.SetInitialLocation(caret);
-			lexer.NextToken();
-
-			var stk = new Stack<DToken>();
-
-			while (lexer.LookAhead.Kind!=DTokens.EOF)
-			{
-				if (lexer.LookAhead.Kind == DTokens.OpenParenthesis || 
-					lexer.LookAhead.Kind == DTokens.OpenSquareBracket || 
-					lexer.LookAhead.Kind == DTokens.OpenCurlyBrace)
-					stk.Push(lexer.LookAhead);
-
-				else if (lexer.LookAhead.Kind == DTokens.CloseParenthesis || 
-					lexer.LookAhead.Kind == DTokens.CloseSquareBracket || 
-					lexer.LookAhead.Kind == DTokens.CloseCurlyBrace)
-				{
-					if(stk.Count != 0)
-						stk.Pop();
-					else if (lexer.LookAhead.Kind == searchedBracketToken)
-						return lexer.LookAhead;
+						if (spe != null)
+							return new BracketSearchResult(
+								doc.GetOffset(spe.Location.Line, spe.Location.Column), 1,
+								doc.GetOffset(spe.EndLocation.Line, spe.EndLocation.Column) - 1, 1);
+					}
 				}
 
-				lexer.NextToken();
+				if (stmt is BlockStatement)
+					return new BracketSearchResult(
+						doc.GetOffset(stmt.Location.Line, stmt.Location.Column), 1,
+						doc.GetOffset(stmt.EndLocation.Line, stmt.EndLocation.Column) - 1, 1);
+				stmt = stmt.Parent;
 			}
 
-			lexer.Dispose();
-
-			if (stk.Count < 1)
-				return null;
-
-			return stk.Pop();
+			//TODO: Meta blocks, everything that could contain parentheses
+			return curBlock == null || curBlock is IAbstractSyntaxTree ? null : new BracketSearchResult(
+				doc.GetOffset(curBlock.BlockStartLocation.Line, curBlock.BlockStartLocation.Column), 1,
+				doc.GetOffset(curBlock.EndLocation.Line, curBlock.EndLocation.Column) - 1, 1);
 		}
 	}
 }
