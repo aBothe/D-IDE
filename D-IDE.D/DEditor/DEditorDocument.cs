@@ -142,8 +142,9 @@ namespace D_IDE.D
 		IStatement lastSelectedStatement;
 
 		Thread typeLookupUpdateThread = null;
+		AutoResetEvent typeLookupUpdateSignal = new AutoResetEvent(false);
 		//DispatcherOperation showCompletionWindowOperation = null;
-		DispatcherOperation parseOperation = null;
+		DispatcherOperation postParseOperation = null;
 
 		public DMDConfig CompilerConfiguration
 		{
@@ -157,6 +158,64 @@ namespace D_IDE.D
 
 		internal CompletionWindow completionWindow;
 		OverloadInsightWindow insightWindow;
+
+		readonly List<GenericError> SemanticErrors = new List<GenericError>();
+		
+		public override System.Collections.Generic.IEnumerable<GenericError> ParserErrors
+		{
+			get
+			{
+				if (SyntaxTree != null)
+				{
+					var l = new List<GenericError>(SyntaxTree.ParseErrors.Count);
+					foreach (var pe in SyntaxTree.ParseErrors)
+						l.Add(new DParseError(pe) { Project = HasProject ? Project : null, FileName = AbsoluteFilePath });
+					l.AddRange(SemanticErrors);
+					return l;
+				}
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Key: Path of the accessed item
+		/// </summary>
+		public readonly Dictionary<string, string> LastSelectedCCItems = new Dictionary<string, string>();
+		ICompletionData lastSelectedCompletionData = null;
+
+		/// <summary>
+		/// Needed for pre-selection when completion list becomes opened next time
+		/// </summary>
+		string lastCompletionListResultPath = "";
+
+		public CodeLocation CaretLocation
+		{
+			get { return new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line); }
+		}
+
+		public string ModuleCode
+		{
+			get
+			{
+				return Editor.Document.Text;
+			}
+			set
+			{
+				Editor.Document.Text = value;
+			}
+		}
+
+		public int CaretOffset
+		{
+			get
+			{
+				return Editor.CaretOffset;
+			}
+			set
+			{
+				Editor.CaretOffset = value;
+			}
+		}
 		#endregion
 
 		public DEditorDocument()
@@ -632,10 +691,10 @@ namespace D_IDE.D
 
 			UpdateTypeLookupData();
 
-			if (parseOperation != null && parseOperation.Status != DispatcherOperationStatus.Completed)
-				parseOperation.Abort();
+			if (postParseOperation != null && postParseOperation.Status != DispatcherOperationStatus.Completed)
+				postParseOperation.Abort();
 
-			parseOperation = Dispatcher.BeginInvoke(new Action(() =>
+			postParseOperation = Dispatcher.BeginInvoke(new Action(() =>
 			{
 				try
 				{
@@ -648,7 +707,7 @@ namespace D_IDE.D
 					RefreshErrorHighlightings();
 				}
 				catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System); }
-			}));
+			}), DispatcherPriority.ApplicationIdle);
 
 			IsParsing = false;
 		}
@@ -836,29 +895,6 @@ namespace D_IDE.D
 			}
 		}
 
-		readonly List<GenericError> SemanticErrors = new List<GenericError>();
-
-		public override System.Collections.Generic.IEnumerable<GenericError> ParserErrors
-		{
-			get
-			{
-				if (SyntaxTree != null)
-				{
-					var l = new List<GenericError>(SyntaxTree.ParseErrors.Count);
-					foreach (var pe in SyntaxTree.ParseErrors)
-						l.Add(new DParseError(pe) { Project = HasProject ? Project : null, FileName = AbsoluteFilePath });
-					l.AddRange(SemanticErrors);
-					return l;
-				}
-				return null;
-			}
-		}
-
-		public CodeLocation CaretLocation
-		{
-			get { return new CodeLocation(Editor.TextArea.Caret.Column, Editor.TextArea.Caret.Line); }
-		}
-
 		void _insertTypeDataInternal(IBlockNode Parent, ref DCompletionData selectedItem, List<DCompletionData> types)
 		{
 			if (Parent != null)
@@ -897,152 +933,150 @@ namespace D_IDE.D
 					return;
 				}
 
-				if (typeLookupUpdateThread != null && typeLookupUpdateThread.IsAlive)
-					typeLookupUpdateThread.Abort();
+				if (typeLookupUpdateThread == null || !typeLookupUpdateThread.IsAlive)
+				{
+					typeLookupUpdateThread = new Thread(_updateTypeLookupDataTh)
+					{
+						IsBackground = true,
+						Name = "updateTypeLookupThread",
+						Priority = ThreadPriority.BelowNormal
+					};
+					typeLookupUpdateThread.Start(this);
+				}
 
 				lastSelectedBlock = curBlock;
 
-				typeLookupUpdateThread = new Thread(_updateTypeLookupDataTh) 
-				{ 
-					IsBackground = true, 
-					Priority = ThreadPriority.BelowNormal, 
-					Name = "UpdateTypeLookupData() thread" 
-				};
-
-				typeLookupUpdateThread.Start(new Tuple<DModule, IBlockNode, CodeLocation>(ast, curBlock, CaretLocation));
-			}
+				typeLookupUpdateSignal.Set();
+				}
 			catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); }
 		}
 
 		void _updateTypeLookupDataTh(object p)
 		{
-			// SyntaxTree, curBlock, CaretLocation
-			var ed = (Tuple<DModule, IBlockNode, CodeLocation>)p;
-			var curBlock = ed.Item2;
-
-			try
+			while (true)
 			{
-				#region Update the type & member selectors
-				isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
+				typeLookupUpdateSignal.WaitOne();
 
-				// First fill the Types-Dropdown
-				var types = new List<DCompletionData>();
-				ICompletionData selectedItem = null;
-				var l1 = new List<INode> { ed.Item1 };
-				var l2 = new List<INode>();
-
-				while (l1.Count > 0)
-				{
-					foreach (var n in l1)
-					{
-						// Show all type declarations of the current module
-						if (n is DClassLike || n is DEnum)
-						{
-							var completionData = new DCompletionData(n);
-							if (ed.Item3 >= n.Location && ed.Item3 <= n.EndLocation)
-							{
-								selectedItem = completionData;
-								curBlock = n as IBlockNode;
-							}
-							types.Add(completionData);
-						}
-
-						if (n is IBlockNode)
-						{
-							var ch = ((IBlockNode)n).Children;
-							if (ch.Count != 0)
-								l2.AddRange(ch);
-						}
-					}
-
-					l1.Clear();
-					l1.AddRange(l2);
-					l2.Clear();
-				}
-
-				if (selectedItem == null && ed.Item1 != null)
-					curBlock = ed.Item1;
-
-				// For better usability, pre-sort items
+				var ed = (IEditorData)p;
+				// SyntaxTree, curBlock, CaretLocation
+				var ast = ed.SyntaxTree;
+				var caret = ed.CaretLocation;
+				var curBlock = lastSelectedBlock;
 				try
 				{
-					types.Sort();
-				}
-				catch { }
-				
-				Dispatcher.Invoke(new Action(() =>
-				{
-					lookup_Types.ItemsSource = types;
-					lookup_Types.SelectedItem = selectedItem;
-				}));
-				
-				if (curBlock is IBlockNode)
-				{
-					selectedItem = null;
-					// Fill the Members-Dropdown
-					var members = new List<DCompletionData>();
+					#region Update the type & member selectors
+					isUpdatingLookupDropdowns = true; // Temporarily disable SelectionChanged event handling
 
-					// Search a parent class to show all this one's members and to select that member where the caret currently is located
-					var watchedParent = curBlock as IBlockNode;
+					// First fill the Types-Dropdown
+					var types = new List<DCompletionData>();
+					ICompletionData selectedItem = null;
+					var l1 = new List<INode> { ast };
+					var l2 = new List<INode>();
 
-					while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum || watchedParent is IAbstractSyntaxTree))
-						watchedParent = watchedParent.Parent as IBlockNode;
-
-					if (watchedParent != null)
-						lock (watchedParent)
-							foreach (var n in watchedParent)
+					while (l1.Count > 0)
+					{
+						foreach (var n in l1)
+						{
+							// Show all type declarations of the current module
+							if (n is DClassLike || n is DEnum)
 							{
-								if (n == null)
-									continue;
-
-								var cData = new DCompletionData(n);
-								if (selectedItem == null && cData.Node != null && CaretLocation >= cData.Node.Location && CaretLocation < cData.Node.EndLocation)
-									selectedItem = cData;
-								members.Add(cData);
+								var completionData = new DCompletionData(n);
+								if (caret >= n.Location && caret <= n.EndLocation)
+								{
+									selectedItem = completionData;
+									curBlock = n as IBlockNode;
+								}
+								types.Add(completionData);
 							}
 
+							if (n is IBlockNode)
+							{
+								var ch = ((IBlockNode)n).Children;
+								if (ch.Count != 0)
+									l2.AddRange(ch);
+							}
+						}
+
+						l1.Clear();
+						l1.AddRange(l2);
+						l2.Clear();
+					}
+
+					if (selectedItem == null && ast != null)
+						curBlock = ast;
+
+					// For better usability, pre-sort items
 					try
 					{
-						members.Sort();
+						types.Sort();
 					}
 					catch { }
 
 					Dispatcher.Invoke(new Action(() =>
 					{
-						lookup_Members.ItemsSource = members;
-						lookup_Members.SelectedItem = selectedItem;
+						lookup_Types.ItemsSource = types;
+						lookup_Types.SelectedItem = selectedItem;
 					}));
-				}
-				else
-				{
-					Dispatcher.Invoke(new Action(() =>
-					{
-						lookup_Members.ItemsSource = null;
-						lookup_Members.SelectedItem = null;
-					}));
-				}
 
-				isUpdatingLookupDropdowns = false;
-				#endregion
+					if (curBlock is IBlockNode)
+					{
+						selectedItem = null;
+						// Fill the Members-Dropdown
+						var members = new List<DCompletionData>();
+
+						// Search a parent class to show all this one's members and to select that member where the caret currently is located
+						var watchedParent = curBlock as IBlockNode;
+
+						while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum || watchedParent is IAbstractSyntaxTree))
+							watchedParent = watchedParent.Parent as IBlockNode;
+
+						if (watchedParent != null)
+							lock (watchedParent)
+								foreach (var n in watchedParent)
+								{
+									if (n == null)
+										continue;
+
+									var cData = new DCompletionData(n);
+									if (selectedItem == null && cData.Node != null && caret >= cData.Node.Location && caret < cData.Node.EndLocation)
+										selectedItem = cData;
+									members.Add(cData);
+								}
+
+						try
+						{
+							members.Sort();
+						}
+						catch { }
+
+						Dispatcher.Invoke(new Action(() =>
+						{
+							lookup_Members.ItemsSource = members;
+							lookup_Members.SelectedItem = selectedItem;
+						}));
+					}
+					else
+					{
+						Dispatcher.Invoke(new Action(() =>
+						{
+							lookup_Members.ItemsSource = null;
+							lookup_Members.SelectedItem = null;
+						}));
+					}
+					#endregion
+				}
+				catch (Exception ex) 
+				{ 
+					ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); 
+				}
+				isUpdatingLookupDropdowns = false; 
 			}
-			catch (Exception ex) { ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser); isUpdatingLookupDropdowns = false; }
 		}
 
 		void TextArea_SelectionChanged(object sender, EventArgs e)
 		{
 			UpdateTypeLookupData();
 		}
-
-		/// <summary>
-		/// Key: Path of the accessed item
-		/// </summary>
-		public readonly Dictionary<string, string> LastSelectedCCItems = new Dictionary<string, string>();
-		ICompletionData lastSelectedCompletionData = null;
-
-		/// <summary>
-		/// Needed for pre-selection when completion list becomes opened next time
-		/// </summary>
-		string lastCompletionListResultPath = "";
 
 		void ShowCodeCompletionWindow(string EnteredText)
 		{
@@ -1262,8 +1296,6 @@ namespace D_IDE.D
 		}
 		#endregion
 
-		#region Editor events
-
 		#region Document ToolTips
 		void Editor_MouseHoverStopped(object sender, System.Windows.Input.MouseEventArgs e)
 		{
@@ -1340,7 +1372,6 @@ namespace D_IDE.D
 			catch { }
 		}
 		#endregion
-		#endregion
 
 		/// <summary>
 		/// Reformats all code lines.
@@ -1350,30 +1381,6 @@ namespace D_IDE.D
 		public void ReformatFileCmd(object sender, ExecutedRoutedEventArgs e)
 		{
 			indentationStrategy.IndentLines(Editor.Document, 1, Editor.Document.LineCount);
-		}
-
-		public string ModuleCode
-		{
-			get
-			{
-				return Editor.Document.Text;
-			}
-			set
-			{
-				Editor.Document.Text = value;
-			}
-		}
-
-		public int CaretOffset
-		{
-			get
-			{
-				return Editor.CaretOffset;
-			}
-			set
-			{
-				Editor.CaretOffset = value;
-			}
 		}
 	}
 
