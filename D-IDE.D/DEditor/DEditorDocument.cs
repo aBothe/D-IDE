@@ -115,12 +115,8 @@ namespace D_IDE.D
 		/// </summary>
 		public bool IsParsing { get; protected set; }
 
-		/// <summary>
-		/// Variable that is used for the parser loop to recognize user interaction.
-		/// So, if the user typed a character, this will be set to true, whereas it later, after the text has become parsed, will be reset
-		/// </summary>
-		bool KeysTyped = false;
 		Thread parseThread = null;
+		AutoResetEvent parseSignal = new AutoResetEvent(true);
 		//bool CanRefreshSemanticHighlightings = false;
 
 		bool isUpdatingLookupDropdowns = false;
@@ -628,7 +624,7 @@ namespace D_IDE.D
 			{
 				ddoc.Editor.Document.BeginUpdate();
 				ddoc.Editor.Document.Insert(ddoc.Editor.Document.GetOffset(loc.Line, loc.Column), codeToInsert);
-				ddoc.KeysTyped = true;
+				ddoc.parseSignal.Set();
 				ddoc.Editor.Document.EndUpdate();
 			}
 		}
@@ -636,7 +632,7 @@ namespace D_IDE.D
 
 		void Document_Changed(object sender, ICSharpCode.AvalonEdit.Document.DocumentChangeEventArgs e)
 		{
-			KeysTyped = true;
+			parseSignal.Set();
 			Modified = true;
 		}
 
@@ -717,14 +713,13 @@ namespace D_IDE.D
 			// Initially parse the document
 			Parse();
 			bool HasBeenUpdatingParseCache = false;
-			KeysTyped = false;
 
 			while (true)
 			{
 				var cc = CompilerConfiguration;
 
 				// While no keys were typed, do nothing
-				while (!KeysTyped)
+				while (!parseSignal.WaitOne(100))
 				{
 					if (HasBeenUpdatingParseCache && !cc.ASTCache.IsParsing)
 					{
@@ -733,22 +728,10 @@ namespace D_IDE.D
 					}
 					else if (cc.ASTCache.IsParsing)
 						HasBeenUpdatingParseCache = true;
-
-					Thread.Sleep(50);
 				}
 
-				// Reset keystyped state for waiting again
-				KeysTyped = false;
-
-				// If a key was typed, wait.
-				Thread.Sleep(500);
-
-				// If no other key was typed after waiting, parse the file
-				if (KeysTyped)
-					continue;
-
-				// Prevent parsing it again; Assign 'false' to it before parsing the document, so if something was typed while parsing, it'll simply parse again
-				KeysTyped = false;
+				// If a key is typed in the next 500ms, go wait again for no further keys to be typed.
+				while (parseSignal.WaitOne(250));
 
 				Parse();
 			}
@@ -956,6 +939,7 @@ namespace D_IDE.D
 			while (true)
 			{
 				typeLookupUpdateSignal.WaitOne();
+				while (typeLookupUpdateSignal.WaitOne(100));
 
 				var ed = (IEditorData)p;
 				// SyntaxTree, curBlock, CaretLocation
