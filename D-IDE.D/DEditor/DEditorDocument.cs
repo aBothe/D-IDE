@@ -886,11 +886,11 @@ namespace D_IDE.D
 					curBlock = ast;
 
 				// Update highlit bracket offsets
-				if (DSettings.Instance.EnableMatchingBracketHighlighting)
+				/*if (DSettings.Instance.EnableMatchingBracketHighlighting)
 					CurrentlyHighlitBrackets = DBracketSearcher.SearchBrackets(Editor.Document, this, curBlock, lastSelectedStatement);
 				else
 					CurrentlyHighlitBrackets = null;
-
+				*/
 				if (ast == null)
 				{
 					lookup_Members.ItemsSource = lookup_Types.ItemsSource = null;

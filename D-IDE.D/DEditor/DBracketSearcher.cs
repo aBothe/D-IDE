@@ -52,8 +52,14 @@ namespace D_IDE.D.DEditor
 				stmt = stmt.Parent;
 			}
 
+			if (curBlock != null && ed.CaretLocation < curBlock.BlockStartLocation)
+				curBlock = curBlock.Parent as IBlockNode;
+
+			if (curBlock == null || curBlock is IAbstractSyntaxTree)
+				return null;
+
 			//TODO: Meta blocks, everything that could contain parentheses
-			return curBlock == null || curBlock is IAbstractSyntaxTree ? null : new BracketSearchResult(
+			return new BracketSearchResult(
 				doc.GetOffset(curBlock.BlockStartLocation.Line, curBlock.BlockStartLocation.Column), 1,
 				doc.GetOffset(curBlock.EndLocation.Line, curBlock.EndLocation.Column) - 1, 1);
 		}
