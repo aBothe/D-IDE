@@ -375,10 +375,11 @@ namespace D_IDE.D
 				return;
 
 			var bs = block.BlockStartLocation;
-			if (!(block is IAbstractSyntaxTree) && bs.Line > 0 && block.EndLocation > bs)
+			var be = block.EndLocation;
+			if (be.Line > 0 && bs.Line > 0 && be > bs)
 			{
 				var startOff = Editor.Document.GetOffset(bs.Line, bs.Column);
-				var endOff = Editor.Document.GetOffset(block.EndLocation.Line, block.EndLocation.Column);
+				var endOff = Editor.Document.GetOffset(be.Line, be.Column);
 
 				if (startOff < endOff)
 				{
