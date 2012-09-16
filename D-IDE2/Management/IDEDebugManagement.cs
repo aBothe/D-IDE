@@ -328,6 +328,8 @@ namespace D_IDE
 				dbgEngineInited = true;
 			}
 
+			protected virtual void PostLaunchInit(Process p) { }
+
 			/// <summary>
 			/// Launch the debugger asynchronously
 			/// </summary>
@@ -373,14 +375,16 @@ namespace D_IDE
 				opt.EngCreateFlags = EngCreateFlags.Default;
 
 				Engine.CreateProcessAndAttach(0, exe + (string.IsNullOrWhiteSpace(args) ? "" : (" " + args)), opt, Path.GetDirectoryName(exe), "", 0, 0);
+
 				
 				Engine.Symbols.SourcePath = string.IsNullOrWhiteSpace(sourcePath) ? sourcePath : Path.GetDirectoryName(exe);
 				Engine.IsSourceCodeOrientedStepping = true;
-
+				
 				Engine.WaitForEvent();
 				Engine.Execute("bc"); // Clear breakpoint list
 				Engine.WaitForEvent();
 
+				CoreManager.DebugManagement.CurrentDebugSupport.PostlaunchInit(Engine);
 				BreakpointManagement.SetupBreakpoints();
 
 				EngineStarting = false;

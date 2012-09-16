@@ -15,6 +15,10 @@ namespace D_IDE.D
 	{
 		Dictionary<DebugScopedSymbol, DebugSymbolWrapper[]> _childArray=new Dictionary<DebugScopedSymbol,DebugSymbolWrapper[]>();
 
+		ValueType toStringFunc;
+		ValueType varAddr;
+		ValueType hProcess;
+
 		public DebugSymbolWrapper[] GetChildren(DebugSymbolGroup locals, DebugSymbolWrapper parent)
 		{
 			var ret = new List<DDebugSymbolWrapper>();
@@ -26,7 +30,7 @@ namespace D_IDE.D
 			{
 				foreach (var sym in scache)
 					if (sym.Depth < 1)
-						ret.Add(new DDebugSymbolWrapper(sym));
+						ret.Add(new DDebugSymbolWrapper(sym, this));
 
 				return ret.ToArray();
 			}
@@ -48,7 +52,7 @@ namespace D_IDE.D
 				if (d == parent.Symbol.Depth + 1) // Only add direct child items
 				{
 					//TODO: Scan for base classes
-					ret.Add(new DDebugSymbolWrapper(scache[j]));
+					ret.Add(new DDebugSymbolWrapper(scache[j], this));
 				}
 				else if(d<=parent.Symbol.Depth) 
 					break; // If on the same level again or moved up a level, break
@@ -78,6 +82,11 @@ namespace D_IDE.D
 			return ret != null && ret.Length > 0;
 		}
 
+		public override void PostlaunchInit(DBGEngine Engine)
+		{
+			CodeInjection.InjectToStringCode(hProcess = Engine.ProcessHandle, out toStringFunc, out varAddr);
+		}
+
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 2)]
 		public struct DObject
 		{
@@ -92,14 +101,16 @@ namespace D_IDE.D
 
 		public class DDebugSymbolWrapper : DebugSymbolWrapper
 		{
+			DDebugSupport supp;
 			IAbstractSyntaxTree module;
 			int codeLine;
 			INode variableNode;
 			//INode typeNode;
 			//IEnumerable<IAbstractSyntaxTree> moduleCache;
 
-			public DDebugSymbolWrapper(DebugScopedSymbol sym):base(sym)
+			public DDebugSymbolWrapper(DebugScopedSymbol sym, DDebugSupport support):base(sym)
 			{
+				this.supp = support;
 				try
 				{
 					/*var ci=CoreManager.DebugManagement.Engine.Symbols.GetPointerTarget(sym.Offset);
@@ -158,45 +169,52 @@ namespace D_IDE.D
 
 
 				// Set value string
-				_valueString=base.ValueString;
+				if (_typeString.StartsWith("class "))
+				{
+					_valueString = CodeInjection.EvaluateObjectString(supp.hProcess, supp.toStringFunc, supp.varAddr, (uint)sym.Offset);
+				}
+				else
+				{
+					_valueString=base.ValueString;
 
-				if(variableNode!=null)
-				{
-				ITypeDeclaration curValueType=variableNode.Type;
-				if (curValueType != null)
-				{
-					if (!IsBasicType(curValueType))
+					if (variableNode != null)
 					{
-						if (TypeString == "string") //TODO: Replace this by searching the alias definition in the cache
-							curValueType = new ArrayDecl() { InnerDeclaration=new DTokenDeclaration(DTokens.Char)};
-						else if (TypeString == "wstring")
-							curValueType = new ArrayDecl() { InnerDeclaration = new DTokenDeclaration(DTokens.Wchar) };
-						else if (TypeString == "dstring")
-							curValueType = new ArrayDecl() { InnerDeclaration = new DTokenDeclaration(DTokens.Dchar) };
-
-						if (IsArray(curValueType))
+						ITypeDeclaration curValueType = variableNode.Type;
+						if (curValueType != null)
 						{
-							var clampDecl = curValueType as ArrayDecl;
-							var valueType = clampDecl.InnerDeclaration;
-
-							if (valueType is DTokenDeclaration)
+							if (!IsBasicType(curValueType))
 							{
-								bool IsString = false;
-								uint elsz = 0;
-								var realType = DetermineArrayType((valueType as DTokenDeclaration).Token, out elsz, out IsString);
+								if (TypeString == "string") //TODO: Replace this by searching the alias definition in the cache
+									curValueType = new ArrayDecl() { InnerDeclaration = new DTokenDeclaration(DTokens.Char) };
+								else if (TypeString == "wstring")
+									curValueType = new ArrayDecl() { InnerDeclaration = new DTokenDeclaration(DTokens.Wchar) };
+								else if (TypeString == "dstring")
+									curValueType = new ArrayDecl() { InnerDeclaration = new DTokenDeclaration(DTokens.Dchar) };
 
-								var arr = CoreManager.DebugManagement.Engine.Symbols.ReadArray(sym.Offset, realType, elsz);
+								if (IsArray(curValueType))
+								{
+									var clampDecl = curValueType as ArrayDecl;
+									var valueType = clampDecl.InnerDeclaration;
 
-								if (arr != null)_valueString = BuildArrayContentString(arr, IsString);
+									if (valueType is DTokenDeclaration)
+									{
+										bool IsString = false;
+										uint elsz = 0;
+										var realType = DetermineArrayType((valueType as DTokenDeclaration).Token, out elsz, out IsString);
+
+										var arr = CoreManager.DebugManagement.Engine.Symbols.ReadArray(sym.Offset, realType, elsz);
+
+										if (arr != null) _valueString = BuildArrayContentString(arr, IsString);
+									}
+								}
+
+								else
+								{
+									//TODO: call an object's toString method somehow to obtain its representing string manually
+								}
 							}
 						}
-
-						else
-						{
-							//TODO: call an object's toString method somehow to obtain its representing string manually
-						}
 					}
-				}
 				}
 			}
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using DebugEngineWrapper;
 
 namespace D_IDE.Core
@@ -31,6 +32,8 @@ namespace D_IDE.Core
 		{
 			return Symbol.Symbol.ChildrenCount > 0;
 		}
+
+		public virtual void PostlaunchInit(DBGEngine Engine) { }
 	}
 
 	/// <summary>

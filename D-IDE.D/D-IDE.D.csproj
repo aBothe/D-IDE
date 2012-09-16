@@ -57,8 +57,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Misc\AvalonDock.dll</HintPath>
     </Reference>
-    <Reference Include="DebugEngineWrapper">
-      <HintPath>..\DebugEngineWrapper\DebugEngineWrapper.dll</HintPath>
+    <Reference Include="DebugEngineWrapper, Version=1.0.4586.33791, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\DebugEngineWrapper\bin\DebugEngineWrapper.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.AvalonEdit, Version=4.0.0.6963, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
