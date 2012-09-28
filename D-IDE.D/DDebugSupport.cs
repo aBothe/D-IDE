@@ -17,7 +17,6 @@ namespace D_IDE.D
 
 		ValueType toStringFunc;
 		ValueType varAddr;
-		ValueType hProcess;
 
 		public DebugSymbolWrapper[] GetChildren(DebugSymbolGroup locals, DebugSymbolWrapper parent)
 		{
@@ -84,7 +83,8 @@ namespace D_IDE.D
 
 		public override void PostlaunchInit(DBGEngine Engine)
 		{
-			CodeInjection.InjectToStringCode(hProcess = Engine.ProcessHandle, out toStringFunc, out varAddr);
+			base.PostlaunchInit(Engine);
+			CodeInjection.InjectToStringCode(hProcess, out toStringFunc, out varAddr);
 		}
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 2)]
@@ -171,7 +171,18 @@ namespace D_IDE.D
 				// Set value string
 				if (_typeString.StartsWith("class "))
 				{
-					_valueString = CodeInjection.EvaluateObjectString(supp.hProcess, supp.toStringFunc, supp.varAddr, (uint)sym.Offset);
+					_valueString = base.ValueString;
+					/*
+					CodeInjection.WriteObjectVariable(supp.hProcess, supp.varAddr, (uint)sym.Offset);
+
+					var th = CodeInjection.BeginExecuteMethod(supp.hProcess, supp.toStringFunc);
+
+					CoreManager.DebugManagement.Engine.Execute("~2 g");
+					CoreManager.DebugManagement.Engine.WaitForEvent();
+
+					CodeInjection.WaitForExecutionEnd(th);
+
+					_valueString = CodeInjection.ReadDString(supp.hProcess, supp.varAddr);*/
 				}
 				else
 				{

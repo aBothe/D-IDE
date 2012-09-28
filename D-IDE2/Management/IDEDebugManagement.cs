@@ -459,8 +459,8 @@ namespace D_IDE
 			{
 				if (IsDebugging)
 				{
-					Engine.InterruptTimeOut = 50;
-					Engine.Interrupt();
+					Engine.Interrupt(CoreManager.DebugManagement.CurrentDebugSupport.hProcess);
+					WaitForDebugEvent();
 				}
 			}
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using DebugEngineWrapper;
 
@@ -6,6 +7,8 @@ namespace D_IDE.Core
 {
 	public class GenericDebugSupport
 	{
+		public IntPtr hProcess;
+
 		/// <summary>
 		/// Retrieves child symbols of a debug symbol.
 		/// Primarily used when showing local symbols when debugging.
@@ -33,7 +36,7 @@ namespace D_IDE.Core
 			return Symbol.Symbol.ChildrenCount > 0;
 		}
 
-		public virtual void PostlaunchInit(DBGEngine Engine) { }
+		public virtual void PostlaunchInit(DBGEngine Engine) { hProcess = (IntPtr)Engine.ProcessHandle; }
 	}
 
 	/// <summary>

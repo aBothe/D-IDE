@@ -129,23 +129,45 @@ public:
 
 
 
-
-
-
-	// Returns the last error code if an error occurred, otherwise 0
-	static int ExecuteMethod(const HANDLE hProcess, const ULONG funcAddress)
+	static HANDLE BeginExecuteMethod(const HANDLE hProcess, const ULONG funcAddress)
 	{
-		HANDLE thread = CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)&funcAddress, 0, 0, 0);
-		if(thread == 0)
-			return GetLastError();
+		return CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)&funcAddress, 0, 0, 0);
+	}
 
-		int tt = ResumeThread(thread);
+	static IntPtr^ BeginExecuteMethod(IntPtr^ process, IntPtr^ funcAddress)
+	{
+		HANDLE th = BeginExecuteMethod(process->ToPointer(), funcAddress->ToInt32());
+		if(th == 0)
+			throw gcnew Win32Exception(GetLastError());
 
+		return gcnew IntPtr(th);
+	}
+
+	static BOOL WaitForExecutionEnd(HANDLE thread)
+	{
 		DWORD singleObject = WaitForSingleObject(thread, INFINITE);
 		if(!(singleObject == 0 || singleObject == INFINITE))
 			return GetLastError();
 
 		return 0;
+	}
+
+
+	static void WaitForExecutionEnd(IntPtr^ thread)
+	{
+		int r = WaitForExecutionEnd(thread->ToPointer());
+		if(r!=0)
+			throw gcnew Win32Exception(r);
+	}
+
+	// Returns the last error code if an error occurred, otherwise 0
+	static int ExecuteMethod(const HANDLE hProcess, const ULONG funcAddress)
+	{
+		HANDLE thread = BeginExecuteMethod(hProcess, funcAddress);
+		if(thread == 0)
+			return GetLastError();
+
+		return WaitForExecutionEnd(thread);
 	}
 
 	static void ExecuteMethod(IntPtr^ process, IntPtr^ funcAddress)
@@ -155,21 +177,23 @@ public:
 			throw gcnew Win32Exception(r);
 	}
 
-
-	static String^ EvaluateObjectString(IntPtr^ process, IntPtr^ toStringFunctionAddress, IntPtr^ variableAddress, const ULONG virtualTargetObjectAddress)
+	static void WriteObjectVariable(IntPtr^ process, IntPtr^ variableAddress, const ULONG virtualTargetObjectAddress)
 	{
 		HANDLE hProcess = process->ToPointer();
 		byte* varAddr = static_cast<byte*>(variableAddress->ToPointer());
 		ULONG bytesWritten = 0;
 
-		ULONG stringLength = 0;
-
 		// Write the object's virtual address into the variable
 		if(WriteProcessMemory(hProcess, varAddr, &virtualTargetObjectAddress, sizeof(virtualTargetObjectAddress), &bytesWritten)==0)
 			throw gcnew Win32Exception(GetLastError());
+	}
 
-		// Execute the injected function
-		ExecuteMethod(process, toStringFunctionAddress);
+	static String^ ReadDString(IntPtr^ process, IntPtr^ variableAddress)
+	{
+		HANDLE hProcess = process->ToPointer();
+		byte* varAddr = static_cast<byte*>(variableAddress->ToPointer());
+		ULONG bytesWritten = 0;
+		ULONG stringLength = 0;
 
 		// Read out the string's length
 		if(ReadProcessMemory(hProcess, varAddr, &stringLength, 4, &bytesWritten)==0)
@@ -192,6 +216,16 @@ public:
 		}
 
 		return String::Empty;
+	}
+
+	static String^ EvaluateObjectString(IntPtr^ process, IntPtr^ toStringFunctionAddress, IntPtr^ variableAddress, const ULONG virtualTargetObjectAddress)
+	{
+		WriteObjectVariable(process, variableAddress, virtualTargetObjectAddress);
+
+		// Execute the injected function
+		ExecuteMethod(process, toStringFunctionAddress);
+
+		return ReadDString(process, variableAddress);
 	}
 };
 }

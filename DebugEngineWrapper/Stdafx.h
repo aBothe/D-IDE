@@ -5,8 +5,6 @@
 #pragma once
 #include "windows.h"
 #include "dbghelp.h"
-#include "wdbgexts.h"
-WINDBG_EXTENSION_APIS  ExtensionApis;
 #include "dbgeng.h"
 #include "tools.h"
 
