@@ -22,7 +22,13 @@ namespace D_IDE.D
 		{
 			var ret = new List<DDebugSymbolWrapper>();
 
+			if (locals == null)
+				return null;
+
 			var scache=locals.Symbols;
+
+			if (scache == null)
+				return null;
 
 			// If requesting root-leveled items, return all whose depth equals 0
 			if (parent == null)
