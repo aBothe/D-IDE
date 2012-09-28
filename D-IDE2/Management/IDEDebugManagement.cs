@@ -457,11 +457,11 @@ namespace D_IDE
 
 			public static void PauseExecution()
 			{
-				if (IsDebugging)
+				/*if (IsDebugging)
 				{
 					Engine.Interrupt(CoreManager.DebugManagement.CurrentDebugSupport.hProcess);
 					WaitForDebugEvent();
-				}
+				}*/
 			}
 
 			public static void StopExecution()

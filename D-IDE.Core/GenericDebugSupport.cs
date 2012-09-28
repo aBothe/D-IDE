@@ -36,7 +36,9 @@ namespace D_IDE.Core
 			return Symbol.Symbol.ChildrenCount > 0;
 		}
 
-		public virtual void PostlaunchInit(DBGEngine Engine) { hProcess = (IntPtr)Engine.ProcessHandle; }
+		public virtual void PostlaunchInit(DBGEngine Engine) { 
+			//hProcess = (IntPtr)Engine.ProcessHandle; 
+		}
 	}
 
 	/// <summary>

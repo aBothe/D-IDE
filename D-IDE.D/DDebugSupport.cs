@@ -90,7 +90,7 @@ namespace D_IDE.D
 		public override void PostlaunchInit(DBGEngine Engine)
 		{
 			base.PostlaunchInit(Engine);
-			CodeInjection.InjectToStringCode(hProcess, out toStringFunc, out varAddr);
+			//CodeInjection.InjectToStringCode(hProcess, out toStringFunc, out varAddr);
 		}
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 2)]
