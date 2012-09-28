@@ -376,8 +376,12 @@ namespace D_IDE.D
 
 			var bs = block.BlockStartLocation;
 			var be = block.EndLocation;
+
 			if (be.Line > 0 && bs.Line > 0 && be > bs)
 			{
+				if (be.Line > Editor.Document.LineCount)
+					be = new CodeLocation(1, Editor.Document.LineCount);
+
 				var startOff = Editor.Document.GetOffset(bs.Line, bs.Column);
 				var endOff = Editor.Document.GetOffset(be.Line, be.Column);
 
