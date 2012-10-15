@@ -178,17 +178,19 @@ namespace D_IDE.D
 				if (_typeString.StartsWith("class "))
 				{
 					_valueString = base.ValueString;
+					
+					//CodeInjection.WriteObjectVariable(supp.hProcess, supp.varAddr, (uint)sym.Offset);
+					
+					//_valueString = CodeInjection.EvaluateObjectString(supp.hProcess, supp.toStringFunc, supp.varAddr, (uint)sym.Offset);
 					/*
-					CodeInjection.WriteObjectVariable(supp.hProcess, supp.varAddr, (uint)sym.Offset);
-
 					var th = CodeInjection.BeginExecuteMethod(supp.hProcess, supp.toStringFunc);
 
 					CoreManager.DebugManagement.Engine.Execute("~2 g");
 					CoreManager.DebugManagement.Engine.WaitForEvent();
 
 					CodeInjection.WaitForExecutionEnd(th);
-
-					_valueString = CodeInjection.ReadDString(supp.hProcess, supp.varAddr);*/
+					*/
+					//_valueString = CodeInjection.ReadDString(supp.hProcess, supp.varAddr);
 				}
 				else
 				{

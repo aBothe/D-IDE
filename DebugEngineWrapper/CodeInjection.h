@@ -129,14 +129,14 @@ public:
 
 
 
-	static HANDLE BeginExecuteMethod(const HANDLE hProcess, const ULONG funcAddress)
+	static HANDLE BeginExecuteMethod(const HANDLE hProcess, const ULONG funcAddress, DWORD* threadId)
 	{
-		return CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)&funcAddress, 0, 0, 0);
+		return CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)&funcAddress, 0, 0, threadId);
 	}
 
-	static IntPtr^ BeginExecuteMethod(IntPtr^ process, IntPtr^ funcAddress)
+	static IntPtr^ BeginExecuteMethod(IntPtr^ process, IntPtr^ funcAddress, DWORD& threadId)
 	{
-		HANDLE th = BeginExecuteMethod(process->ToPointer(), funcAddress->ToInt32());
+		HANDLE th = BeginExecuteMethod(process->ToPointer(), funcAddress->ToInt32(), (DWORD*)threadId);
 		if(th == 0)
 			throw gcnew Win32Exception(GetLastError());
 
@@ -163,9 +163,19 @@ public:
 	// Returns the last error code if an error occurred, otherwise 0
 	static int ExecuteMethod(const HANDLE hProcess, const ULONG funcAddress)
 	{
-		HANDLE thread = BeginExecuteMethod(hProcess, funcAddress);
+		DWORD tid=0;
+		HANDLE thread = BeginExecuteMethod(hProcess, funcAddress, &tid);
 		if(thread == 0)
 			return GetLastError();
+
+		//FIXME: this does not work!
+		tid = GetThreadId(thread);
+		ContinueDebugEvent(GetProcessId(hProcess), tid, DBG_CONTINUE);
+		
+		DEBUG_EVENT de = DEBUG_EVENT();
+		WaitForDebugEvent(&de, INFINITE);
+
+		WaitForDebugEvent(&de, INFINITE);
 
 		return WaitForExecutionEnd(thread);
 	}
