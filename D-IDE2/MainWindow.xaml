@@ -24,6 +24,7 @@
 		<CommandBinding Command="d:IDEUICommands.StepIn" Executed="Button_StepIn_Click" />
 		<CommandBinding Command="d:IDEUICommands.StepOver" Executed="Button_StepOver_Click" />
 
+        <CommandBinding Command="d:IDEUICommands.BuildSolution" Executed="BuildSolution_Click" />
 		<CommandBinding Command="d:IDEUICommands.LaunchDebugger" Executed="LaunchDebugger_Click" />
 		<CommandBinding Command="d:IDEUICommands.LaunchWithoutDebugger" Executed="LaunchWithoutDebugger_Click" />
 		
@@ -146,9 +147,9 @@
 			<r:RibbonTab Header="Build" Name="Tab_Build">
 				<r:RibbonGroup Header="Build">
 					<r:RibbonButton 
-						Click="BuildSolution_Click" 
-						Label="Build" 
-						ToolTipTitle="Build current solution or module" 
+						Label="Build"
+                        Command="d:IDEUICommands.BuildSolution"
+						ToolTipTitle="Build current solution or module (Ctrl+F5)" 
 						ToolTipDescription="Note: If the 'Current Module' Checkbox has been ticked, the current module will be built only" 
 						SmallImageSource="Resources/Icons.16x16.BuildCurrentSelectedProject.png" />
 					<r:RibbonButton 

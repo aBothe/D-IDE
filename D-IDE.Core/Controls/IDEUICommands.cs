@@ -26,6 +26,9 @@ namespace D_IDE.Core.Controls
 		public static readonly RoutedUICommand StepOver = new RoutedUICommand("", "StepOver", typeof(Window),
 			new InputGestureCollection(new[] { new KeyGesture(Key.F10) }));
 
+		public static readonly RoutedUICommand BuildSolution = new RoutedUICommand("", "BuildSolution", typeof(Window),
+			new InputGestureCollection(new[] { new KeyGesture(Key.F5, ModifierKeys.Control) }));
+
 		public static readonly RoutedUICommand LaunchDebugger = new RoutedUICommand("", "LaunchDebugger", typeof(Window),
 			new InputGestureCollection(new[] { new KeyGesture(Key.F5) }));
 

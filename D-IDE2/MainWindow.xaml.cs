@@ -322,7 +322,7 @@ namespace D_IDE
 			WorkbenchLogic.Instance.DoShowGlobalSettings();
 		}
 
-		private void BuildSolution_Click(object sender, RoutedEventArgs e)
+		private void BuildSolution_Click(object sender, ExecutedRoutedEventArgs e)
 		{
 			WorkbenchLogic.Instance.DoBuild();
 		}
