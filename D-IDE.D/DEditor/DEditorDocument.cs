@@ -1371,8 +1371,7 @@ namespace D_IDE.D
 
 		public int VersionNumber
 		{
-			get;
-			set;
+			get { return 0; }
 		}
 
 		public string[] GlobalVersionIds
@@ -1387,14 +1386,12 @@ namespace D_IDE.D
 
 		public int DebugLevel
 		{
-			get;
-			set;
+			get { return 0; }
 		}
 
 		public string[] GlobalDebugIds
 		{
-			get;
-			set;
+			get { return null; }
 		}
 	}
 
