@@ -81,7 +81,7 @@ namespace D_IDE.D
 					if (value != null)
 					{
 						prj.ParsedModules.AddOrUpdate(value);
-						prj.ParsedModules.UfcsCache.CacheModuleMethods(value, new ResolverContextStack(ParseCache, new ResolverContext { ScopedBlock = value }));
+						prj.ParsedModules.UfcsCache.CacheModuleMethods(value, ResolutionContext.Create(ParseCache, value));
 					}
 				}
 
@@ -527,13 +527,10 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var rr = DResolver.ResolveType(this,
-					new ResolverContextStack(ParseCache, new ResolverContext
-					{
-						ScopedBlock = lastSelectedBlock,
-						ScopedStatement = lastSelectedStatement
-					}) { ContextIndependentOptions = ResolutionOptions.ReturnMethodReferencesOnly },
-					DResolver.AstReparseOptions.AlsoParseBeyondCaret | DResolver.AstReparseOptions.OnlyAssumeIdentifierList);
+				var ctxt = ResolutionContext.Create(ParseCache, lastSelectedBlock, lastSelectedStatement);
+				ctxt.ContextIndependentOptions |= ResolutionOptions.ReturnMethodReferencesOnly;
+
+				var rr = DResolver.ResolveType(this, ctxt, DResolver.AstReparseOptions.AlsoParseBeyondCaret | DResolver.AstReparseOptions.OnlyAssumeIdentifierList);
 
 				AbstractType res = null;
 				// If there are multiple types, show a list of those items
@@ -653,8 +650,7 @@ namespace D_IDE.D
 			Dispatcher.Invoke(new Action(() => code = Editor.Text));
 			GC.Collect();
 			DModule newAst = null;
-			try
-			{
+			//try	{
 				SyntaxTree = null;
 				using (var sr = new StringReader(code))
 				using (var parser = DParser.Create(sr))
@@ -672,11 +668,11 @@ namespace D_IDE.D
 
 					ParseTime = sw.Elapsed.TotalMilliseconds;
 				}
-			}
+			/*}
 			catch (Exception ex)
 			{
 				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.Parser);
-			}
+			}*/
 
 			lastSelectedBlock = null;
 			lastSelectedStatement = null;
@@ -1370,6 +1366,35 @@ namespace D_IDE.D
 		public void ReformatFileCmd(object sender, ExecutedRoutedEventArgs e)
 		{
 			indentationStrategy.IndentLines(Editor.Document, 1, Editor.Document.LineCount);
+		}
+
+
+		public int VersionNumber
+		{
+			get;
+			set;
+		}
+
+		public string[] GlobalVersionIds
+		{
+			get { return D_Parser.Misc.VersionIdEvaluation.GetOSAndCPUVersions(); }
+		}
+
+		public bool IsDebug
+		{
+			get { return !HasProject || !(Project as DProject).IsRelease; }
+		}
+
+		public int DebugLevel
+		{
+			get;
+			set;
+		}
+
+		public string[] GlobalDebugIds
+		{
+			get;
+			set;
 		}
 	}
 

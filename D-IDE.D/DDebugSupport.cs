@@ -149,8 +149,7 @@ namespace D_IDE.D
 					IStatement stmt = null;
 					var block = DResolver.SearchBlockAt(module, new CodeLocation(0, codeLine),out stmt);
 
-					var ctxt=new ResolverContextStack(null,
-							new ResolverContext { ScopedBlock = block });
+					var ctxt=ResolutionContext.Create(null, block);
 
 					var res = TypeDeclarationResolver.ResolveIdentifier(Symbol.Name,ctxt, null);
 
