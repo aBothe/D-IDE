@@ -54,7 +54,7 @@ namespace D_IDE.D
 
 		public void BuildUfcsCache()
 		{
-			ParsedModules.UfcsCache.Update(ParseCacheList.Create(ParsedModules, CompilerConfiguration.ASTCache), ParsedModules);
+			ParsedModules.UfcsCache.Update(ParseCacheList.Create(ParsedModules, CompilerConfiguration.ASTCache), null, ParsedModules);
 		}
 
 		/*

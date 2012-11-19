@@ -81,7 +81,7 @@ namespace D_IDE.D
 					if (value != null)
 					{
 						prj.ParsedModules.AddOrUpdate(value);
-						prj.ParsedModules.UfcsCache.CacheModuleMethods(value, ResolutionContext.Create(ParseCache, value));
+						prj.ParsedModules.UfcsCache.CacheModuleMethods(value, ResolutionContext.Create(ParseCache, null, value));
 					}
 				}
 
@@ -527,7 +527,7 @@ namespace D_IDE.D
 				if (SyntaxTree == null)
 					return;
 
-				var ctxt = ResolutionContext.Create(ParseCache, lastSelectedBlock, lastSelectedStatement);
+				var ctxt = ResolutionContext.Create(ParseCache, null, lastSelectedBlock, lastSelectedStatement);
 				ctxt.ContextIndependentOptions |= ResolutionOptions.ReturnMethodReferencesOnly;
 
 				var rr = DResolver.ResolveType(this, ctxt, DResolver.AstReparseOptions.AlsoParseBeyondCaret | DResolver.AstReparseOptions.OnlyAssumeIdentifierList);
