@@ -13,7 +13,7 @@ namespace DCalculator
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		ResolverContextStack ctxt = new ResolverContextStack(ParseCacheList.Create(), new ResolverContext());
+		ResolutionContext ctxt = ResolutionContext.Create(ParseCacheList.Create(),null,null);
 
 		public MainWindow()
 		{
