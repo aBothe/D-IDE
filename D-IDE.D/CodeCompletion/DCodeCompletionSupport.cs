@@ -160,7 +160,7 @@ namespace D_IDE.D
 			CompletionList = l;
 		}
 
-		public void Add(int Token)
+		public void Add(byte Token)
 		{
 			CompletionList.Add(new TokenCompletionData(Token));
 		}
@@ -276,7 +276,7 @@ namespace D_IDE.D
 	{
 		public int Token { get; set; }
 
-		public TokenCompletionData(int Token)
+		public TokenCompletionData(byte Token)
 		{
 			try
 			{
