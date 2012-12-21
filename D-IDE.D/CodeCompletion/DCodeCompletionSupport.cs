@@ -170,11 +170,6 @@ namespace D_IDE.D
 			CompletionList.Add(new DCompletionData(Node));
 		}
 
-		public void Add(string ModuleName, IAbstractSyntaxTree Module = null, string PathOverride = null)
-		{
-			CompletionList.Add(new NamespaceCompletionData(ModuleName, Module) { ExplicitModulePath=PathOverride });
-		}
-
 		public void AddPropertyAttribute(string AttributeText)
 		{
 			CompletionList.Add(new PropertyAttributeCompletionData(AttributeText));
@@ -183,6 +178,16 @@ namespace D_IDE.D
 		public void AddTextItem(string ItemText, string Description)
 		{
 			CompletionList.Add(new TextCompletionData(ItemText,Description));
+		}
+		
+		public void AddModule(IAbstractSyntaxTree module, string nameOverride)
+		{
+			CompletionList.Add(new NamespaceCompletionData(nameOverride ?? module.ModuleName, module) { ExplicitModulePath=module.ModuleName });
+		}
+		
+		public void AddPackage(string packageName)
+		{
+			CompletionList.Add(new NamespaceCompletionData(packageName));
 		}
 	}
 
@@ -392,7 +397,7 @@ namespace D_IDE.D
 
 		public string Text
 		{
-			get { return ModuleName; }
+			get { return ModuleName ?? "<anonymous Module>"; }
 		}
 
 		public int CompareTo(ICompletionData other)
