@@ -74,7 +74,7 @@ namespace D_IDE.D
 					{
 						// Enable incremental update of the ufcs cache -- speed boost!
 						prj.ParsedModules.UfcsCache.RemoveModuleItems(oldAst);
-						prj.ParsedModules.Remove(oldAst.ModuleName);
+						prj.ParsedModules.Remove(oldAst);
 						oldAst = null;
 					}
 
