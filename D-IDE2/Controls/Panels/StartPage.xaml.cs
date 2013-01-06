@@ -27,8 +27,8 @@ namespace D_IDE.Controls.Panels
 
 		private void Button_Open_Click(object sender, RoutedEventArgs e)
 		{
-			if (RecentProjectsList.SelectedItem != null)
-				IDEManager.Instance.OpenFile((RecentProjectsList.SelectedItem as RecentPrjItem).Path);
+			if (RecentProjectsList.SelectedNode != null && RecentProjectsList.SelectedNode.Tag is RecentPrjItem)
+				IDEManager.Instance.OpenFile((RecentProjectsList.SelectedNode.Tag as RecentPrjItem).Path);
 		}
 
 		private void Button_CreatePrj_Click(object sender, RoutedEventArgs e)
