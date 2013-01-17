@@ -4,7 +4,7 @@ using ICSharpCode.AvalonEdit.Indentation;
 
 namespace D_IDE.D
 {
-	public class DIndentationStrategy : DFormatter, IIndentationStrategy
+	public class DIndentationStrategy : IIndentationStrategy
 	{
 		readonly DEditorDocument dEditor;
 		bool _doBeginUpdateManually = false;
@@ -14,7 +14,7 @@ namespace D_IDE.D
 			dEditor = DEditorDocument;
 		}
 
-		public void RawlyIndentLine(int tabsToInsert, TextDocument document, DocumentLine line)
+		public void RawlyIndentLine(int tabsToInsert, ICSharpCode.AvalonEdit.Document.TextDocument document, DocumentLine line)
 		{
 			if (!_doBeginUpdateManually)
 				document.BeginUpdate();
@@ -47,39 +47,66 @@ namespace D_IDE.D
 			if (!_doBeginUpdateManually)
 				document.EndUpdate();
 		}
+		
+		public void RawlyIndentLine(string indentString, ICSharpCode.AvalonEdit.Document.TextDocument document, DocumentLine line)
+		{
+			if (!_doBeginUpdateManually)
+				document.BeginUpdate();
+
+			// 1)
+			int prevInd = 0;
+			int curOff = line.Offset;
+			if (curOff < document.TextLength)
+			{
+				char curChar = '\0';
+				while (curOff < document.TextLength && ((curChar = document.GetCharAt(curOff)) == ' ' || curChar == '\t'))
+				{
+					prevInd++;
+					curOff++;
+				}
+
+				document.Remove(line.Offset, prevInd);
+			}
+
+			document.Insert(line.Offset, indentString);
+			if (!_doBeginUpdateManually)
+				document.EndUpdate();
+		}
 
 		public void UpdateIndentation(string typedText)
 		{
 			IndentLine(dEditor.Editor.Document, dEditor.Editor.Document.GetLineByNumber(dEditor.Editor.TextArea.Caret.Line),true);
 		}
 
-		public void IndentLine(TextDocument document, DocumentLine line)
+		public void IndentLine(ICSharpCode.AvalonEdit.Document.TextDocument document, DocumentLine line)
 		{
 			IndentLine(document, line, false);
 		}
 
-		public void IndentLine(TextDocument document, DocumentLine line, bool TakeCaret)
+		public void IndentLine(ICSharpCode.AvalonEdit.Document.TextDocument document, DocumentLine line, bool TakeCaret)
 		{
 			if (line.PreviousLine == null)
 				return;
 
 			if (!DSettings.Instance.EnableSmartIndentation)
 			{
-				var prevIndent = ReadRawLineIndentation(document.GetText(line));
+				var t = document.GetText(line);
+				int c=0;
+				for(;c<t.Length && (t[c] == ' ' || t[c] == '\t');c++);
 
-				RawlyIndentLine(prevIndent, document, line);
+				RawlyIndentLine(t.Length==0 ? string.Empty : t.Substring(0, c+1), document, line);
 
 				return;
 			}
 
 			var tr=document.CreateReader();
-			var block = CalculateIndentation(tr, line.LineNumber);
+			var newIndent = D_Parser.Formatting.Indent.IndentEngineWrapper.CalculateIndent(tr, line.LineNumber, dEditor.Editor.Options.ConvertTabsToSpaces, dEditor.Editor.Options.IndentationSize);
 			tr.Close();
 
-			RawlyIndentLine(block != null ? block.GetLineIndentation(line.LineNumber) : 0, document, line);
+			RawlyIndentLine(newIndent, document, line);
 		}
 
-		public void IndentLines(TextDocument document, int beginLine, int endLine)
+		public void IndentLines(ICSharpCode.AvalonEdit.Document.TextDocument document, int beginLine, int endLine)
 		{
 			_doBeginUpdateManually = true;
 			document.BeginUpdate();
