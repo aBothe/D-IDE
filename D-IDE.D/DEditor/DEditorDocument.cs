@@ -338,7 +338,7 @@ namespace D_IDE.D
 			cm.Items.Add(cmi);
 			#endregion
 
-			//CommandBindings.Add(new CommandBinding(IDEUICommands.ReformatDoc,ReformatFileCmd));
+			CommandBindings.Add(new CommandBinding(IDEUICommands.ReformatDoc,ReformatFileCmd));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CommentBlock, CommentBlock));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock, UncommentBlock));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CtrlSpaceCompletion, CtrlSpaceCompletion));
@@ -1358,14 +1358,9 @@ namespace D_IDE.D
 		}
 		#endregion
 
-		/// <summary>
-		/// Reformats all code lines.
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
 		public void ReformatFileCmd(object sender, ExecutedRoutedEventArgs e)
 		{
-			indentationStrategy.IndentLines(Editor.Document, 1, Editor.Document.LineCount);
+			indentationStrategy.FormatDocument();
 		}
 
 

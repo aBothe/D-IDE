@@ -1,4 +1,7 @@
-﻿using D_Parser.Formatting;
+﻿using System;
+using D_IDE.Core;
+using D_Parser.Dom;
+using D_Parser.Formatting;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Indentation;
 
@@ -105,18 +108,80 @@ namespace D_IDE.D
 
 			RawlyIndentLine(newIndent, document, line);
 		}
-
+		
+		public void FormatDocument(DFormattingOptions policy = null)
+		{
+			policy = policy ?? DFormattingOptions.CreateDStandard();
+			
+			var formatter = new DFormattingVisitor(policy, new DocAdapter(dEditor.Editor.Document), dEditor.SyntaxTree);
+			
+			formatter.WalkThroughAst();
+			
+			dEditor.Editor.Document.UndoStack.StartUndoGroup();
+			try
+			{
+				formatter.ApplyChanges(dEditor.Editor.Document.Replace);
+			}
+			catch(Exception ex)
+			{
+				ErrorLogger.Log(ex, ErrorType.Error, ErrorOrigin.Parser);
+			}
+			dEditor.Editor.Document.UndoStack.EndUndoGroup();
+		}
+		
+		class DocAdapter : IDocumentAdapter
+		{
+			ICSharpCode.AvalonEdit.Document.TextDocument document;
+			
+			public DocAdapter(ICSharpCode.AvalonEdit.Document.TextDocument doc)
+			{
+				this.document = doc;
+			}
+			
+			public char this[int o] {
+				get {
+					return document.GetCharAt(o);
+				}
+			}
+			
+			public int TextLength {
+				get {
+					return document.TextLength;
+				}
+			}
+			
+			public int LineCount {
+				get {
+					return document.LineCount;
+				}
+			}
+			
+			public string Text {
+				get {
+					return document.Text;
+				}
+			}
+			
+			public int ToOffset(CodeLocation loc)
+			{
+				return document.GetOffset(loc.Line, loc.Column);
+			}
+			
+			public int ToOffset(int line, int column)
+			{
+				return document.GetOffset(line, column);
+			}
+			
+			public D_Parser.Dom.CodeLocation ToLocation(int offset)
+			{
+				var dl = document.GetLocation(offset);
+				return new CodeLocation(dl.Column, dl.Line);
+			}
+		}
+		
 		public void IndentLines(ICSharpCode.AvalonEdit.Document.TextDocument document, int beginLine, int endLine)
 		{
-			_doBeginUpdateManually = true;
-			document.BeginUpdate();
-			while (beginLine <= endLine)
-			{
-				IndentLine(document, document.GetLineByNumber(beginLine));
-				beginLine++;
-			}
-			document.EndUpdate();
-			_doBeginUpdateManually = false;
+			
 		}
 	}
 }
