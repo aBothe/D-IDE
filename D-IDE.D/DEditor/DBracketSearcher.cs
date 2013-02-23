@@ -55,7 +55,7 @@ namespace D_IDE.D.DEditor
 			if (curBlock != null && ed.CaretLocation < curBlock.BlockStartLocation)
 				curBlock = curBlock.Parent as IBlockNode;
 
-			if (curBlock == null || curBlock is IAbstractSyntaxTree)
+			if (curBlock == null || curBlock is DModule)
 				return null;
 
 			//TODO: Meta blocks, everything that could contain parentheses

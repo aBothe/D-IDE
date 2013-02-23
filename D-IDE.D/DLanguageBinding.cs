@@ -207,7 +207,7 @@ namespace D_IDE.D
 		/// </summary>
 		/// <param name="file"></param>
 		/// <returns></returns>
-		public static IAbstractSyntaxTree GetFileSyntaxTree(string file,out DProject OwnerProject)
+		public static DModule GetFileSyntaxTree(string file,out DProject OwnerProject)
 		{
 			OwnerProject = null;
 			if (CoreManager.CurrentSolution != null)
@@ -226,7 +226,7 @@ namespace D_IDE.D
 
 			var pcl = ParseCacheList.Create(DSettings.Instance.dmd1.ASTCache,DSettings.Instance.dmd2.ASTCache);
 
-			IAbstractSyntaxTree ret = null;
+			DModule ret = null;
 			foreach (var pc in pcl)
 				foreach (var pdir in pc.ParsedDirectories)
 				{

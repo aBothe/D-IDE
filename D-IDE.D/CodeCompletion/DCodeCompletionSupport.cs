@@ -180,7 +180,7 @@ namespace D_IDE.D
 			CompletionList.Add(new TextCompletionData(ItemText,Description));
 		}
 		
-		public void AddModule(IAbstractSyntaxTree module, string nameOverride)
+		public void AddModule(DModule module, string nameOverride)
 		{
 			CompletionList.Add(new NamespaceCompletionData(nameOverride ?? module.ModuleName, module) { ExplicitModulePath=module.ModuleName });
 		}
@@ -339,9 +339,9 @@ namespace D_IDE.D
 	{
 		public string ModuleName { get; private set; }
 		public string ExplicitModulePath { get; set; }
-		public IAbstractSyntaxTree AssociatedModule { get; private set; }
+		public DModule AssociatedModule { get; private set; }
 
-		public NamespaceCompletionData(string ModuleName, IAbstractSyntaxTree AssocModule=null)
+		public NamespaceCompletionData(string ModuleName, DModule AssocModule=null)
 		{
 			this.ModuleName = ModuleName;
 			AssociatedModule = AssocModule;
@@ -584,7 +584,7 @@ namespace D_IDE.D
 
 						var realParent = n.Parent as DNode;
 
-						if (n.Parent is IAbstractSyntaxTree && !(n as DVariable).IsAlias)
+						if (n.Parent is DModule && !(n as DVariable).IsAlias)
 							return DCodeCompletionSupport.GetNodeImage("field");
 
 						if (realParent == null)

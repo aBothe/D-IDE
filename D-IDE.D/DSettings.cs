@@ -490,7 +490,7 @@ namespace D_IDE.D
 		{
 			ErrorLogger.Log("Created UFCS Cache in " + 
 				Math.Round(ASTCache.UfcsCache.CachingDuration.TotalSeconds, 2).ToString() + "s ("+
-				ASTCache.UfcsCache.CachedMethods.Count + " cached methods; ~" + Math.Round(ASTCache.UfcsCache.CachingDuration.TotalMilliseconds/ASTCache.UfcsCache.CachedMethods.Count, 4) + "ms per result)",
+				ASTCache.UfcsCache.MethodCacheCount + " cached methods; ~" + Math.Round(ASTCache.UfcsCache.CachingDuration.TotalMilliseconds/ASTCache.UfcsCache.MethodCacheCount, 4) + "ms per result)",
 				ErrorType.Information,ErrorOrigin.Parser);
 		}
 

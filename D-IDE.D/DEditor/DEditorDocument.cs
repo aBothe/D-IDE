@@ -72,8 +72,6 @@ namespace D_IDE.D
 					var oldAst = SyntaxTree;
 					if (oldAst != null)
 					{
-						// Enable incremental update of the ufcs cache -- speed boost!
-						prj.ParsedModules.UfcsCache.RemoveModuleItems(oldAst);
 						prj.ParsedModules.Remove(oldAst);
 						oldAst = null;
 					}
@@ -569,7 +567,7 @@ namespace D_IDE.D
 					return;
 				}
 
-				var mod = n.NodeRoot as IAbstractSyntaxTree;
+				var mod = n.NodeRoot as DModule;
 				if (mod == null)
 					return;
 				CoreManager.Instance.OpenFile(mod.FileName, n.Location.Line, n.Location.Column);
@@ -852,7 +850,7 @@ namespace D_IDE.D
 				{
 					rr = value;
 
-					if (rr is IAbstractSyntaxTree)
+					if (rr is DModule)
 						ForegroundColor = Colors.DarkRed;
 					else
 						ForegroundColor = Color.FromRgb(0x2b, 0x91, 0xaf);
@@ -1012,7 +1010,7 @@ namespace D_IDE.D
 						// Search a parent class to show all this one's members and to select that member where the caret currently is located
 						var watchedParent = curBlock as IBlockNode;
 
-						while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum || watchedParent is IAbstractSyntaxTree))
+						while (watchedParent != null && !(watchedParent is DClassLike || watchedParent is DEnum || watchedParent is DModule))
 							watchedParent = watchedParent.Parent as IBlockNode;
 
 						if (watchedParent != null)

@@ -108,7 +108,7 @@ namespace D_IDE.D
 		public class DDebugSymbolWrapper : DebugSymbolWrapper
 		{
 			DDebugSupport supp;
-			IAbstractSyntaxTree module;
+			DModule module;
 			int codeLine;
 			INode variableNode;
 			//INode typeNode;
