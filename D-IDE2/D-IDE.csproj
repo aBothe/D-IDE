@@ -384,6 +384,10 @@
       <Project>{97A8A088-8820-4A2D-82F4-2AA5CBDE093F}</Project>
       <Name>D-IDE.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\D-IDE.D\D-IDE.D.csproj">
+      <Project>{03252637-eb2c-4cee-9194-d67f6f03d605}</Project>
+      <Name>D-IDE.D</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Misc\Notes.txt" />

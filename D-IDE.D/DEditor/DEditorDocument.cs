@@ -104,7 +104,7 @@ namespace D_IDE.D
 		{
 			get
 			{
-				return DSettings.Instance.CompletionOptions;
+				return CompletionOptions.Instance;
 			}
 		}
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using D_IDE.Core;
+using D_Parser.Misc;
 
 namespace D_IDE.D
 {
@@ -25,7 +26,7 @@ namespace D_IDE.D
 			sett.UseSemanticErrorHighlighting = checkBox_EnableSemanticErrorHighlighting.IsChecked.Value;
 			sett.UseSemanticHighlighting = checkBox_UseSemanticHighlighting.IsChecked.Value;
 			sett.EnableSmartIndentation = checkBox_SmartIndentation.IsChecked.Value;
-			sett.CompletionOptions.ShowUFCSItems = checkBox_EnableUFCSCompletion.IsChecked.Value;
+			CompletionOptions.Instance.ShowUFCSItems = checkBox_EnableUFCSCompletion.IsChecked.Value;
 
 			return true;
 		}
@@ -41,7 +42,7 @@ namespace D_IDE.D
 			checkBox_EnableSemanticErrorHighlighting.IsChecked = sett.UseSemanticErrorHighlighting;
 			checkBox_UseSemanticHighlighting.IsChecked = sett.UseSemanticHighlighting;
 			checkBox_SmartIndentation.IsChecked = sett.EnableSmartIndentation;
-			checkBox_EnableUFCSCompletion.IsChecked = sett.CompletionOptions.ShowUFCSItems;
+			checkBox_EnableUFCSCompletion.IsChecked = CompletionOptions.Instance.ShowUFCSItems;
 		}
 
 		public override string SettingCategoryName

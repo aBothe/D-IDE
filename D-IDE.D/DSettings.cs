@@ -38,8 +38,6 @@ namespace D_IDE.D
 
 		public bool EnableSmartIndentation = true;
 
-		public CompletionOptions CompletionOptions;
-
 		/// <summary>
 		/// If non-letter has been typed, the popup will close down and insert the selected item's completion text.
 		/// If this value is false, the completion text will _not_ be inserted.
@@ -87,7 +85,7 @@ namespace D_IDE.D
 			x.WriteEndElement();
 
 			x.WriteStartElement("CompletionOptions");
-			CompletionOptions.Save(x);
+			CompletionOptions.Instance.Save(x);
 			x.WriteEndElement();
 
 			dmd1.Save(x);
@@ -138,7 +136,7 @@ namespace D_IDE.D
 						break;
 
 					case "CompletionOptions":
-						this.CompletionOptions.Load(x.ReadSubtree());
+						CompletionOptions.Instance.Load(x.ReadSubtree());
 						break;
 
 					case "cv2pdb":
