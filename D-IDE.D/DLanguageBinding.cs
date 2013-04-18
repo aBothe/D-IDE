@@ -75,7 +75,7 @@ namespace D_IDE.D
 			});
 
 			// Associate highlighting definitions
-			var ms = new MemoryStream(DResources.D_xshd);
+            var ms = new FileStream("D.xshd", FileMode.Open);
 			var hi = HighlightingLoader.Load(new XmlTextReader(ms), HighlightingManager.Instance);
 			HighlightingManager.Instance.RegisterHighlighting(
 				"D", new[] { ".d", ".di" }, hi);
