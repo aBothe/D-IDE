@@ -79,7 +79,7 @@ namespace D_IDE.D
 
 			Stream inp;
 			if(File.Exists(DSyntaxDefFile))
-				inp = new FileStream("D.xshd", FileMode.Open);
+				inp = new FileStream(DSyntaxDefFile, FileMode.Open);
 			else
 				inp = new MemoryStream(DResources.D_xshd);
 
