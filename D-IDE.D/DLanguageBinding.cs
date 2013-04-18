@@ -75,11 +75,18 @@ namespace D_IDE.D
 			});
 
 			// Associate highlighting definitions
-            var ms = new FileStream("D.xshd", FileMode.Open);
-			var hi = HighlightingLoader.Load(new XmlTextReader(ms), HighlightingManager.Instance);
+			string DSyntaxDefFile = "D.xshd";
+
+			Stream inp;
+			if(File.Exists(DSyntaxDefFile))
+				inp = new FileStream("D.xshd", FileMode.Open);
+			else
+				inp = new MemoryStream(DResources.D_xshd);
+
+			var hi = HighlightingLoader.Load(new XmlTextReader(inp), HighlightingManager.Instance);
 			HighlightingManager.Instance.RegisterHighlighting(
 				"D", new[] { ".d", ".di" }, hi);
-			ms.Close();
+			inp.Close();
 		}
 
 		public override string LanguageName	{	get { return "D"; }	}
