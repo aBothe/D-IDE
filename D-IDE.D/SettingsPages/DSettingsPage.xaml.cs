@@ -27,6 +27,7 @@ namespace D_IDE.D
 			sett.UseSemanticHighlighting = checkBox_UseSemanticHighlighting.IsChecked.Value;
 			sett.EnableSmartIndentation = checkBox_SmartIndentation.IsChecked.Value;
 			CompletionOptions.Instance.ShowUFCSItems = checkBox_EnableUFCSCompletion.IsChecked.Value;
+			CompletionOptions.Instance.DisableMixinAnalysis = !checkBox_EnableMixinCompletion.IsChecked.Value;
 
 			return true;
 		}
@@ -43,6 +44,7 @@ namespace D_IDE.D
 			checkBox_UseSemanticHighlighting.IsChecked = sett.UseSemanticHighlighting;
 			checkBox_SmartIndentation.IsChecked = sett.EnableSmartIndentation;
 			checkBox_EnableUFCSCompletion.IsChecked = CompletionOptions.Instance.ShowUFCSItems;
+			checkBox_EnableMixinCompletion.IsChecked = !CompletionOptions.Instance.DisableMixinAnalysis;
 		}
 
 		public override string SettingCategoryName

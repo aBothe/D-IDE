@@ -16,5 +16,6 @@
 		<CheckBox Content="Enable smart indentation" Height="16" HorizontalAlignment="Left" Margin="12,148,0,0" Name="checkBox_SmartIndentation" VerticalAlignment="Top" />
 		<CheckBox Content="Enable UFCS completion" Height="16" Margin="12,182,0,0" Name="checkBox_EnableUFCSCompletion" VerticalAlignment="Top" HorizontalAlignment="Left" Width="147" />
 		<CheckBox Content="Enable semantic error highlighting (very unreliable right now)" Height="16" HorizontalAlignment="Left" Margin="35,122,0,0" Name="checkBox_EnableSemanticErrorHighlighting" VerticalAlignment="Top" />
+		<CheckBox Content="Enable [template] mixin Completion" Height="16" Margin="12,203,0,0" x:Name="checkBox_EnableMixinCompletion" VerticalAlignment="Top" HorizontalAlignment="Left" Width="218" />
 	</Grid>
 </core:AbstractSettingsPage>
