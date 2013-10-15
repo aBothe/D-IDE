@@ -9,13 +9,28 @@ namespace D_IDE.D
 {
 	public class DProject : Project
 	{
-		public DProject()
-		{ }
-
-		public DProject(Solution sln,string file)
+		#region Properties
+		public DVersion version = DVersion.D2;
+		public DVersion DMDVersion
 		{
-			Solution = sln;
-			FileName = sln.ToAbsoluteFileName( file);
+			get{return version;}
+			set{
+				CompilerConfiguration.ParsingFinished -= globalCacheAnalysisFinished;
+				version = value;
+				CompilerConfiguration.ParsingFinished += globalCacheAnalysisFinished;
+			}
+		}
+
+		public bool IsParsing { get { return !localCacheAnalysisFinished; } }
+		public bool IsRelease = false;
+		public List<string> LinkedLibraries = new List<string>();
+
+		public DMDConfig CompilerConfiguration
+		{
+			get
+			{
+				return DSettings.Instance.DMDConfig(DMDVersion);
+			}
 		}
 
 		public override string OutputFile
@@ -24,7 +39,7 @@ namespace D_IDE.D
 			{
 				var f = base.OutputFile;
 				if (OutputType == OutputTypes.StaticLibrary)
-					return Path.ChangeExtension(f,".lib");
+					return Path.ChangeExtension(f, ".lib");
 				if (OutputType == OutputTypes.DynamicLibary)
 					return Path.ChangeExtension(f, ".dll");
 				return f;
@@ -35,66 +50,53 @@ namespace D_IDE.D
 			}
 		}
 
-		/// <summary>
-		/// UfcsCaching got disabled because of concurrency problems:
-		/// This local cache requires the global cache to be parsed completely in order to e.g. resolve symbols like "string".
-		/// Without or with partly finished analysis the created ufcs parameter cache will exclude some methods that use parameter types which are defined in the global cache -- like string or File*
-		/// </summary>
-		public readonly ParseCache ParsedModules = new ParseCache { EnableUfcsCaching=false };
+		public ParseCacheView CacheView
+		{
+			get {
+				var pcl = new ParseCacheView(CompilerConfiguration.ImportDirectories);
+				pcl.Add(new[]{BaseDirectory});
+				return pcl;
+			}
+		}
+		#endregion
 
+		#region Constructor/Init
+		public DProject()
+		{ }
+
+		public DProject(Solution sln,string file)
+		{
+			Solution = sln;
+			FileName = sln.ToAbsoluteFileName( file);
+		}
+		#endregion
+		
 		/// <summary>
 		/// Parse all D sources that belong to the project
 		/// </summary>
 		public void ParseDSourcesAsync()
 		{
 			localCacheAnalysisFinished = false;
-			ParsedModules.FinishedParsing += finishedProjectModuleAnalysis;
-			ParsedModules.BeginParse(new[] { BaseDirectory },BaseDirectory);
+			GlobalParseCache.BeginAddOrUpdatePaths(new[] { BaseDirectory }, false, (ParsingFinishedEventArgs ea) => {
+				localCacheAnalysisFinished = true;
+				BuildUfcsCache();
+			});
 		}
 
 		public void BuildUfcsCache()
 		{
-			ParsedModules.UfcsCache.Update(ParseCacheList.Create(ParsedModules, CompilerConfiguration.ASTCache), null, ParsedModules);
+			if (localCacheAnalysisFinished && CompilerConfiguration.InitialParsingDone)
+				GlobalParseCache.GetRootPackage(BaseDirectory).UfcsCache.BeginUpdate(CacheView);
 		}
 
-		/*
-		 * Build the local UFCS Cache just AFTER the global cache analysis has been finished!
-		 * So check both local & global parse states and ensure that both local&global caches have been built so
-		 * it can proceed with resolving methods' first parameters.
-		 */
-		bool globalCacheAnalysisFinished = false, localCacheAnalysisFinished=false;
+		bool localCacheAnalysisFinished=false;
 
-		void finishedCmpCacheAnalysis(ParsePerformanceData[] pfd)
+		void globalCacheAnalysisFinished()
 		{
-			if (localCacheAnalysisFinished)
-				BuildUfcsCache();
-			else
-				globalCacheAnalysisFinished = true;
+			BuildUfcsCache();
 		}
 
-		void finishedProjectModuleAnalysis(ParsePerformanceData[] pfd)
-		{
-			localCacheAnalysisFinished = true;
-
-			if (globalCacheAnalysisFinished || !CompilerConfiguration.ASTCache.IsParsing)
-				BuildUfcsCache();
-
-			ParsedModules.FinishedParsing -= finishedProjectModuleAnalysis;
-
-			DEditorDocument.UpdateSemanticHighlightings(true);
-		}
-
-		public DVersion DMDVersion = DVersion.D2;
-		public bool IsRelease=false;
-		public List<string> LinkedLibraries = new List<string>();
-
-		public DMDConfig CompilerConfiguration
-		{
-			get
-			{
-				return DSettings.Instance.DMDConfig(DMDVersion);
-			}
-		}
+		
 
 		protected override void LoadLanguageSpecificSettings(XmlReader xr)
 		{
@@ -124,8 +126,6 @@ namespace D_IDE.D
 						break;
 					default: break;
 				}
-
-			CompilerConfiguration.ASTCache.FinishedParsing += finishedCmpCacheAnalysis;
 		}
 
 		protected override void SaveLanguageSpecificSettings(XmlWriter xw)

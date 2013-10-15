@@ -30,12 +30,12 @@ namespace D_IDE.D
 		public override bool ApplyChanges()
 		{
 			// If current dir count != the new dir count
-			bool cacheUpdateRequired = Dirs.Count != cfg.ASTCache.ParsedDirectories.Count;
+			bool cacheUpdateRequired = Dirs.Count != cfg.ImportDirectories.Count;
 
 			// If there's a new directory in it
 			if (!cacheUpdateRequired)
 				foreach (var path in Dirs)
-					if (!cfg.ASTCache.ParsedDirectories.Contains(path))
+					if (!cfg.ImportDirectories.Contains(path))
 					{
 						cacheUpdateRequired = true;
 						break;
@@ -44,32 +44,23 @@ namespace D_IDE.D
 			if (cacheUpdateRequired)
 			{
 				Cursor = Cursors.Wait;
-
-				cfg.ASTCache.FinishedParsing += finishedAnalysis;
-
-				try
-				{
-					cfg.ASTCache.BeginParse(Dirs, cfg.BaseDirectory);
-				}
-				catch (Exception ex)
-				{
-					ErrorLogger.Log(ex);
-				}
+				cfg.ParsingFinished += finishedAnalysis;
+				cfg.ReparseImportDirectories();
 			}
 
 			return true;
 		}
 
-		void finishedAnalysis(ParsePerformanceData[] pfd)
+		void finishedAnalysis()
 		{
-			cfg.ASTCache.FinishedParsing -= finishedAnalysis;
+			cfg.ParsingFinished -= finishedAnalysis;
 			Dispatcher.Invoke(new Action(() => Cursor = Cursors.Arrow));
 		}
 
 		public override void LoadCurrent()
 		{
 			Dirs.Clear();
-			foreach (var pd in cfg.ASTCache.ParsedDirectories)
+			foreach (var pd in cfg.ImportDirectories)
 				Dirs.Add(pd);
 		}
 

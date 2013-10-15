@@ -217,31 +217,18 @@ namespace D_IDE.D
 		public static DModule GetFileSyntaxTree(string file,out DProject OwnerProject)
 		{
 			OwnerProject = null;
+			var mod = GlobalParseCache.GetModule(file);
+
 			if (CoreManager.CurrentSolution != null)
-			{
 				foreach (var prj in CoreManager.CurrentSolution)
 				{
 					var dprj = prj as DProject;
 
-					if (dprj!=null && dprj.ContainsFile(file))
-					{
+					if (dprj != null && dprj.ContainsFile(file))
 						OwnerProject = dprj;
-						return dprj.ParsedModules.GetModuleByFileName(file, dprj.BaseDirectory);
-					}
-				}
-			}
-
-			var pcl = ParseCacheList.Create(DSettings.Instance.dmd1.ASTCache,DSettings.Instance.dmd2.ASTCache);
-
-			DModule ret = null;
-			foreach (var pc in pcl)
-				foreach (var pdir in pc.ParsedDirectories)
-				{
-					if (file.StartsWith(pdir) && (ret = pc.GetModuleByFileName(file, pdir)) != null)
-						return ret;
 				}
 
-			return DParser.ParseFile(file);
+			return mod ?? DParser.ParseFile(file);
 		}
 
 		#endregion

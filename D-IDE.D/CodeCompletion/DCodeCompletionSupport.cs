@@ -608,9 +608,9 @@ namespace D_IDE.D
 							return DCodeCompletionSupport.GetNodeImage("local");
 						}
 					}
-					else if (Node is TemplateParameterNode)
+					else if (Node is ITemplateParameterDeclaration)
 					{
-						var tpl = Node as TemplateParameterNode;
+						var tpl = Node as ITemplateParameterDeclaration;
 
 						if (tpl.TemplateParameter is TemplateValueParameter)
 							return DCodeCompletionSupport.GetNodeImage("parameter");

@@ -4,6 +4,7 @@ using System.IO;
 using System.Xml;
 using D_IDE.Core;
 using D_Parser.Misc;
+using D_Parser.Dom;
 
 namespace D_IDE.D
 {
@@ -170,9 +171,6 @@ namespace D_IDE.D
 		{
 			DebugArgs.Reset();
 			ReleaseArgs.Reset();
-
-			ASTCache.FinishedParsing += parsedSources;
-			ASTCache.FinishedUfcsCaching += new Action(ASTCache_FinishedUfcsCaching);
 		}
 
 		public class DBuildArguments
@@ -294,15 +292,13 @@ namespace D_IDE.D
 
 		public DVersion Version = DVersion.D2;
 
-		public readonly ParseCache ASTCache = new ParseCache();
-
 		/// <summary>
 		/// If the dmd bin directory contains a 'dmd' or 'dmd2', 
 		/// check if phobos and/or core paths are existing, 
 		/// and add them to the ASTCache
 		/// OR empirically update the directory paths
 		/// </summary>
-		public void TryAddImportPaths(bool UpdateOldPaths=true)
+		public void TryAddImportPaths()
 		{
 			var defaultDmdDirname=Version==DVersion.D2? "dmd2":"dmd";
 
@@ -313,32 +309,22 @@ namespace D_IDE.D
 
 				var dirs=new[]{@"src\phobos",@"src\druntime\import"};
 
-				bool DirAdded = false;
 				// Check for phobos on both D1 and D2
+				var newImports = new List<string>();
 
 				foreach (var subPath in dirs)
 				{
 					var dir = Path.Combine(dmdPath, subPath);
 
-					var wasUpdated=false;
-					
-					if (UpdateOldPaths && ASTCache.ParsedDirectories!=null)
-						foreach (var pdir in ASTCache.ParsedDirectories.ToArray())
-							if (wasUpdated = pdir.Contains(Path.Combine(defaultDmdDirname, subPath)))
-							{
-								ASTCache.ParsedDirectories.Remove(pdir);
-								ASTCache.ParsedDirectories.Add(dir);
-							}
-					
-					if (!wasUpdated && !ASTCache.ParsedDirectories.Contains(dir) && Directory.Exists(dir))
-					{
-						DirAdded = true;
-						ASTCache.ParsedDirectories.Add(dir);
-					}
+					if (ImportDirectories.Count != 0)
+						foreach (var pdir in ImportDirectories)
+							if (!pdir.Contains(Path.Combine(defaultDmdDirname, subPath)))
+								newImports.Add(dir);
 				}
+				ImportDirectories.AddRange(newImports);
 
-				if (DirAdded)
-					ASTCache.BeginParse();
+				if (newImports.Count != 0)
+					ReparseImportDirectories();
 			}
 		}
 
@@ -372,6 +358,7 @@ namespace D_IDE.D
 		public string LibLinker = "dmd.exe";
 
 		public List<string> DefaultLinkedLibraries = new List<string>();
+		public List<string> ImportDirectories = new List<string>();
 
 		public DBuildArguments BuildArguments(bool IsDebug)
 		{
@@ -437,8 +424,8 @@ namespace D_IDE.D
 								if (st.LocalName == "dir")
 								{
 									var dir = st.ReadString();
-									if(!string.IsNullOrWhiteSpace(dir))
-										ASTCache.ParsedDirectories.Add(dir);
+									if(!string.IsNullOrWhiteSpace(dir) && !ImportDirectories.Contains(dir))
+										ImportDirectories.Add(dir);
 								}
 							}
 						break;
@@ -459,14 +446,38 @@ namespace D_IDE.D
 			}
 
 			// After having loaded the directory paths, parse them asynchronously
-			ASTCache.BeginParse();
+			ReparseImportDirectories();
 		}
 
-		void parsedSources(ParsePerformanceData[] pfd)
+		public void ReparseImportDirectories()
 		{
+			InitialParsingDone = false;
+			GlobalParseCache.BeginAddOrUpdatePaths(tempImports = ImportDirectories.ToArray(), true, parsedSources);
+		}
+
+		public Action ParsingFinished;
+		public bool InitialParsingDone { private set; get; }
+		string[] tempImports;
+
+		void parsedSources(ParsingFinishedEventArgs pfd)
+		{
+			InitialParsingDone = true;
+			if(ParsingFinished != null)
+				ParsingFinished();
+
+			var pcw = new ParseCacheView(tempImports);
+			foreach (var dir in tempImports)
+			{
+				var root = GlobalParseCache.GetRootPackage(dir);
+				if (root == null)
+					throw new InvalidOperationException("root shouldn't be null!");
+				root.UfcsCache.AnalysisFinished += FinishedUfcsCaching;
+				root.UfcsCache.BeginUpdate(pcw);
+			}
+
 			// Output parse time stats
-			if (pfd != null)
-				foreach (var ppd in pfd)
+			/*if (pfd != null)
+				foreach (var path )
 					ErrorLogger.Log("Parsed " + ppd.AmountFiles + " files in " +
 						ppd.BaseDirectory + " in " +
 						Math.Round(ppd.TotalDuration, 2).ToString() + "s (~" +
@@ -481,15 +492,15 @@ namespace D_IDE.D
 			catch (Exception ex)
 			{
 				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System);
-			}
+			}*/
 		}
 
-		void ASTCache_FinishedUfcsCaching()
-		{
+		void FinishedUfcsCaching(RootPackage pack)
+		{/*
 			ErrorLogger.Log("Created UFCS Cache in " + 
 				Math.Round(ASTCache.UfcsCache.CachingDuration.TotalSeconds, 2).ToString() + "s ("+
 				ASTCache.UfcsCache.MethodCacheCount + " cached methods; ~" + Math.Round(ASTCache.UfcsCache.CachingDuration.TotalMilliseconds/ASTCache.UfcsCache.MethodCacheCount, 4) + "ms per result)",
-				ErrorType.Information,ErrorOrigin.Parser);
+				ErrorType.Information,ErrorOrigin.Parser);*/
 		}
 
 		public void Save(XmlWriter x)
@@ -531,10 +542,10 @@ namespace D_IDE.D
 				x.WriteEndElement();
 			}
 
-			if (ASTCache.ParsedDirectories != null && ASTCache.ParsedDirectories.Count!=0)
+			if (ImportDirectories.Count != 0)
 			{
 				x.WriteStartElement("parsedDirectories");
-				foreach (var pdir in ASTCache.ParsedDirectories)
+				foreach (var pdir in ImportDirectories)
 				{
 					x.WriteStartElement("dir");
 					x.WriteCData(pdir);

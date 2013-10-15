@@ -105,15 +105,7 @@ namespace D_IDE.D
 				return;
 
 			button_ReparsePrjDirectory.IsEnabled = false;
-			ManagedProject.ParsedModules.FinishedParsing += analysisDone;
-
-			ManagedProject.ParseDSourcesAsync();
-		}
-
-		void analysisDone(ParsePerformanceData[] pfd)
-		{
-			ManagedProject.ParsedModules.FinishedParsing -= analysisDone;
-			Dispatcher.Invoke(new Action(()=>button_ReparsePrjDirectory.IsEnabled=true));
+			GlobalParseCache.BeginAddOrUpdatePaths(new[] { ManagedProject.BaseDirectory }, false, (ParsingFinishedEventArgs ea) => button_ReparsePrjDirectory.IsEnabled = true);
 		}
 	}
 }

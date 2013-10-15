@@ -38,6 +38,8 @@ namespace D_IDE.D
 		DIndentationStrategy indentationStrategy;
 		FoldingManager foldingManager;
 
+		public RootPackage ModuleRoot { get { return HasProject ? GlobalParseCache.GetRootPackage(Project.BaseDirectory) : null; } }
+
 		/// <summary>
 		/// Parse duration (in milliseconds) of the last code analysis
 		/// </summary>
@@ -52,9 +54,8 @@ namespace D_IDE.D
 		{
 			get
 			{
-				var prj = Project as DProject;
-				if (prj != null)
-					return prj.ParsedModules.GetModule(ProposedModuleName) as DModule;
+				if (HasProject)
+					return ModuleRoot.GetSubModule(ProposedModuleName);
 
 				return _unboundTree;
 			}
@@ -63,40 +64,35 @@ namespace D_IDE.D
 				if (value != null)
 				{
 					value.FileName = AbsoluteFilePath;
-					value.ModuleName = ProposedModuleName;
+					if (string.IsNullOrEmpty(value.ModuleName))
+						value.ModuleName = ProposedModuleName;
 				}
 
 				var prj = Project as DProject;
-				if (prj != null && !prj.ParsedModules.IsParsing)
+				ModulePackage pack;
+				if (prj != null && !prj.IsParsing && GlobalParseCache.AddOrUpdateModule(value, out pack))
 				{
-					var oldAst = SyntaxTree;
-					if (oldAst != null)
-					{
-						prj.ParsedModules.Remove(oldAst);
-						oldAst = null;
-					}
-
-					if (value != null)
-					{
-						prj.ParsedModules.AddOrUpdate(value);
-						prj.ParsedModules.UfcsCache.CacheModuleMethods(value, ResolutionContext.Create(ParseCache, null, value));
-					}
+					pack.Root.UfcsCache.CacheModuleMethods(value,ResolutionContext.Create(ParseCache, null, value));
 				}
 
 				_unboundTree = value;
 			}
 		}
 
-		public ParseCacheList ParseCache
+		public ParseCacheView ParseCache
 		{
 			get
 			{
 				var prj = Project as DProject;
 
 				if (prj == null)
-					return ParseCacheList.Create(CompilerConfiguration.ASTCache);
+				{
+					var pcw = new ParseCacheView(CompilerConfiguration.ImportDirectories);
+					pcw.Add(ModuleRoot);
+					return pcw;
+				}
 
-				return ParseCacheList.Create(prj.ParsedModules, prj.CompilerConfiguration.ASTCache);
+				return prj.CacheView;
 			}
 		}
 
@@ -720,12 +716,12 @@ namespace D_IDE.D
 				// While no keys were typed, do nothing
 				while (!parseSignal.WaitOne(100))
 				{
-					if (HasBeenUpdatingParseCache && !cc.ASTCache.IsParsing)
+					if (HasBeenUpdatingParseCache && cc.InitialParsingDone)
 					{
 						UpdateSemanticHighlightings(true); // Perhaps new errors were detected
 						HasBeenUpdatingParseCache = false;
 					}
-					else if (cc.ASTCache.IsParsing)
+					else if (!cc.InitialParsingDone)
 						HasBeenUpdatingParseCache = true;
 				}
 
@@ -773,7 +769,7 @@ namespace D_IDE.D
 				return;
 			}
 
-			if (SyntaxTree == null || CompilerConfiguration.ASTCache.IsParsing)
+			if (SyntaxTree == null || !CompilerConfiguration.InitialParsingDone)
 				return;
 
 			var sw = new Stopwatch();
