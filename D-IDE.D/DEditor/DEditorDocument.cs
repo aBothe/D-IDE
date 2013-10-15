@@ -54,10 +54,7 @@ namespace D_IDE.D
 		{
 			get
 			{
-				if (HasProject)
-					return ModuleRoot.GetSubModule(ProposedModuleName);
-
-				return _unboundTree;
+				return GlobalParseCache.GetModule(AbsoluteFilePath) ?? _unboundTree;
 			}
 			set
 			{

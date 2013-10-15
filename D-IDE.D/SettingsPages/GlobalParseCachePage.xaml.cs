@@ -15,7 +15,6 @@ namespace D_IDE.D
 		public DMDSettingsPage ParentPage { get; private set; }
 		public DMDConfig cfg { get; private set; }
 
-		readonly ObservableCollection<string> Dirs = new ObservableCollection<string>();
 		public GlobalParseCachePage(DMDSettingsPage DMDPage,DMDConfig Config)
 		{
 			InitializeComponent();
@@ -23,14 +22,14 @@ namespace D_IDE.D
 			this.ParentPage = DMDPage;
 			this.cfg = Config;
 
-			list_Dirs.ItemsSource = Dirs;
 			LoadCurrent();
 		}
 
 		public override bool ApplyChanges()
 		{
+			var Dirs = importPathBox.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 			// If current dir count != the new dir count
-			bool cacheUpdateRequired = Dirs.Count != cfg.ImportDirectories.Count;
+			bool cacheUpdateRequired = Dirs.Length != cfg.ImportDirectories.Count;
 
 			// If there's a new directory in it
 			if (!cacheUpdateRequired)
@@ -45,6 +44,8 @@ namespace D_IDE.D
 			{
 				Cursor = Cursors.Wait;
 				cfg.ParsingFinished += finishedAnalysis;
+				cfg.ImportDirectories.Clear();
+				cfg.ImportDirectories.AddRange(Dirs);
 				cfg.ReparseImportDirectories();
 			}
 
@@ -59,9 +60,7 @@ namespace D_IDE.D
 
 		public override void LoadCurrent()
 		{
-			Dirs.Clear();
-			foreach (var pd in cfg.ImportDirectories)
-				Dirs.Add(pd);
+			importPathBox.Text = string.Join(Environment.NewLine,cfg.ImportDirectories);
 		}
 
 		public override string SettingCategoryName
@@ -76,12 +75,7 @@ namespace D_IDE.D
 		{
 			var dlg = new System.Windows.Forms.FolderBrowserDialog();
 			if (dlg.ShowDialog()==System.Windows.Forms.DialogResult.OK)
-				Dirs.Add(dlg.SelectedPath);
-		}
-
-		private void button_DelDir_Click(object sender, RoutedEventArgs e)
-		{
-			Dirs.Remove(list_Dirs.SelectedItem as string);
+				importPathBox.AppendText(Environment.NewLine + dlg.SelectedPath);
 		}
 	}
 }

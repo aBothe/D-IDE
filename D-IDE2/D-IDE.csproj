@@ -388,6 +388,10 @@
       <Project>{03252637-eb2c-4cee-9194-d67f6f03d605}</Project>
       <Name>D-IDE.D</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Parser\DParser2\DParser2.csproj">
+      <Project>{0290a229-9aa1-41c3-b525-cafb86d8bc42}</Project>
+      <Name>DParser2</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Misc\Notes.txt" />
