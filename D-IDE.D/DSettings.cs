@@ -474,18 +474,17 @@ namespace D_IDE.D
 				root.UfcsCache.AnalysisFinished += FinishedUfcsCaching;
 				root.UfcsCache.BeginUpdate(pcw);
 			}
-
+			
 			// Output parse time stats
-			/*if (pfd != null)
-				foreach (var path )
-					ErrorLogger.Log("Parsed " + ppd.AmountFiles + " files in " +
-						ppd.BaseDirectory + " in " +
-						Math.Round(ppd.TotalDuration, 2).ToString() + "s (~" +
-						Math.Round(ppd.FileDuration, 3).ToString() + "s per file)",
+			if (pfd != null)
+				ErrorLogger.Log("Parsed " + pfd.FileAmount + " files in [" +
+						string.Join(",",tempImports) + "] in " +
+						Math.Round(pfd.ParseDuration/1000.0, 2).ToString() + "s (~" +
+						Math.Round(pfd.FileParseDuration, 3).ToString() + "ms per file)",
 						ErrorType.Information, ErrorOrigin.Parser);
 
 			// For debugging purposes dump all parse results (errors etc.) to a log file.
-			try
+			/*try
 			{
 				ParseLog.Write(ASTCache, IDEInterface.ConfigDirectory + "\\" + Version.ToString() + ".GlobalParseLog.log");
 			}
@@ -496,11 +495,11 @@ namespace D_IDE.D
 		}
 
 		void FinishedUfcsCaching(RootPackage pack)
-		{/*
+		{
 			ErrorLogger.Log("Created UFCS Cache in " + 
-				Math.Round(ASTCache.UfcsCache.CachingDuration.TotalSeconds, 2).ToString() + "s ("+
-				ASTCache.UfcsCache.MethodCacheCount + " cached methods; ~" + Math.Round(ASTCache.UfcsCache.CachingDuration.TotalMilliseconds/ASTCache.UfcsCache.MethodCacheCount, 4) + "ms per result)",
-				ErrorType.Information,ErrorOrigin.Parser);*/
+				Math.Round(pack.UfcsCache.CachingDuration.TotalSeconds, 2).ToString() + "s ("+
+				pack.UfcsCache.MethodCacheCount + " cached methods; ~" + Math.Round(pack.UfcsCache.CachingDuration.TotalMilliseconds / pack.UfcsCache.MethodCacheCount, 4) + "ms per result)",
+				ErrorType.Information,ErrorOrigin.Parser);
 		}
 
 		public void Save(XmlWriter x)
