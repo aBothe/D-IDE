@@ -772,7 +772,7 @@ namespace D_IDE.D
 			var sw = new Stopwatch();
 			sw.Start();
 
-			var res = TypeReferenceFinder.Scan(SyntaxTree, ParseCache);
+			var res = TypeReferenceFinder.Scan(SyntaxTree, ResolutionContext.Create(ParseCache, null, null));
 
 			sw.Stop();
 
