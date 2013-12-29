@@ -466,14 +466,6 @@ namespace D_IDE.D
 				ParsingFinished();
 
 			var pcw = new ParseCacheView(tempImports);
-			foreach (var dir in tempImports)
-			{
-				var root = GlobalParseCache.GetRootPackage(dir);
-				if (root == null)
-					throw new InvalidOperationException("root shouldn't be null!");
-				root.UfcsCache.AnalysisFinished += FinishedUfcsCaching;
-				root.UfcsCache.BeginUpdate(pcw);
-			}
 			
 			// Output parse time stats
 			if (pfd != null)
@@ -492,14 +484,6 @@ namespace D_IDE.D
 			{
 				ErrorLogger.Log(ex, ErrorType.Warning, ErrorOrigin.System);
 			}*/
-		}
-
-		void FinishedUfcsCaching(RootPackage pack)
-		{
-			ErrorLogger.Log("Created UFCS Cache in " + 
-				Math.Round(pack.UfcsCache.CachingDuration.TotalSeconds, 2).ToString() + "s ("+
-				pack.UfcsCache.MethodCacheCount + " cached methods; ~" + Math.Round(pack.UfcsCache.CachingDuration.TotalMilliseconds / pack.UfcsCache.MethodCacheCount, 4) + "ms per result)",
-				ErrorType.Information,ErrorOrigin.Parser);
 		}
 
 		public void Save(XmlWriter x)

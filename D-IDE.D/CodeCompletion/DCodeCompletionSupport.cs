@@ -19,7 +19,7 @@ namespace D_IDE.D
 		{
 			lastResultPath = null;
 
-			var provider = AbstractCompletionProvider.BuildCompletionData(new IDECompletionDataGenerator(l), EditorDocument, EnteredText);
+			D_Parser.Completion.CodeCompletion.GenerateCompletionData(EditorDocument,new IDECompletionDataGenerator(l), string.IsNullOrEmpty(EnteredText) ? '\0' : EnteredText[0]);
 		}
 
 		public static bool CanShowCompletionWindow(DEditorDocument EditorDocument)

@@ -26,6 +26,7 @@ using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
 using D_Parser.Refactoring;
 using System.Threading.Tasks;
+using D_Parser.Dom.Expressions;
 
 namespace D_IDE.D
 {
@@ -65,12 +66,8 @@ namespace D_IDE.D
 						value.ModuleName = ProposedModuleName;
 				}
 
-				var prj = Project as DProject;
 				ModulePackage pack;
-				if (prj != null && !prj.IsParsing && GlobalParseCache.AddOrUpdateModule(value, out pack))
-				{
-					pack.Root.UfcsCache.CacheModuleMethods(value,ResolutionContext.Create(ParseCache, null, value));
-				}
+				GlobalParseCache.AddOrUpdateModule(value, out pack);
 
 				_unboundTree = value;
 			}
@@ -331,7 +328,7 @@ namespace D_IDE.D
 
 			CommandBindings.Add(new CommandBinding(IDEUICommands.ReformatDoc,ReformatFileCmd));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CommentBlock, CommentBlock));
-			CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock, UncommentBlock));
+			//CommandBindings.Add(new CommandBinding(IDEUICommands.UncommentBlock, UncommentBlock));
 			CommandBindings.Add(new CommandBinding(IDEUICommands.CtrlSpaceCompletion, CtrlSpaceCompletion));
 
 			// Init parser loop
@@ -434,81 +431,14 @@ namespace D_IDE.D
 				{
 					Editor.Document.UndoStack.StartUndoGroup();
 
-					var ctxt = CaretContextAnalyzer.GetTokenContext(Editor.Text, Editor.SelectionStart);
-
-					if (ctxt != TokenContext.BlockComment &&
-						ctxt != TokenContext.NestedComment)
-					{
-						Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "*/");
-						Editor.Document.Insert(Editor.SelectionStart, "/*");
-					}
-					else
-					{
-						Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "+/");
-						Editor.Document.Insert(Editor.SelectionStart, "/+");
-					}
+					Editor.Document.Insert(Editor.SelectionStart + Editor.SelectionLength, "+/");
+					Editor.Document.Insert(Editor.SelectionStart, "/+");
 
 					Editor.SelectionLength -= 2;
 
 					Editor.Document.UndoStack.EndUndoGroup();
 				}
 			}
-		}
-
-		void UncommentBlock(object s, ExecutedRoutedEventArgs e)
-		{
-			var CaretOffset = Editor.CaretOffset;
-
-			if (CaretOffset < 2)
-				return;
-
-			int commStart = CaretOffset;
-			int commEnd = 0;
-			var context = CaretContextAnalyzer.GetTokenContext(Editor.Text, CaretOffset, out commStart, out commEnd);
-
-			if (commStart < 0)
-				return;
-
-			// Remove single-line comments
-			if (context == TokenContext.LineComment)
-			{
-				int removedSlashCount = 0;
-
-				while (Editor.Document.GetCharAt(commStart + removedSlashCount) == '/')
-					removedSlashCount++;
-
-				Editor.Document.Remove(commStart, removedSlashCount);
-				return;
-			}
-
-			#region If no single-line comment was removed, delete multi-line comment block tags
-
-			if (context != TokenContext.BlockComment &&
-				context != TokenContext.NestedComment)
-				return;
-
-			if (commEnd < 0)
-				return;
-
-			int removeCount_initialStarToken = 1;
-			int removeCount_finalStarToken = 1;
-
-			char starToken = context == TokenContext.NestedComment ? '+' : '*';
-
-			// Find and strip all leading and trailing * (+ on nested comments)
-			while (Editor.Document.GetCharAt(commStart + removeCount_initialStarToken) == starToken)
-				removeCount_initialStarToken++;
-
-			while (Editor.Document.GetCharAt(commEnd - 1 - removeCount_finalStarToken) == starToken)
-				removeCount_finalStarToken++;
-
-			Editor.Document.UndoStack.StartUndoGroup();
-
-			Editor.Document.Remove(commEnd - removeCount_finalStarToken, removeCount_finalStarToken);
-			Editor.Document.Remove(commStart, removeCount_initialStarToken);
-
-			Editor.Document.UndoStack.EndUndoGroup();
-			#endregion
 		}
 
 		void ContextMenu_GotoDefinition_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -521,7 +451,7 @@ namespace D_IDE.D
 				var ctxt = ResolutionContext.Create(ParseCache, null, lastSelectedBlock, lastSelectedStatement);
 				ctxt.ContextIndependentOptions |= ResolutionOptions.ReturnMethodReferencesOnly;
 
-				var rr = DResolver.ResolveType(this, ctxt, DResolver.AstReparseOptions.AlsoParseBeyondCaret | DResolver.AstReparseOptions.OnlyAssumeIdentifierList);
+				var rr = DResolver.ResolveType(this, ctxt);
 
 				AbstractType res = null;
 				// If there are multiple types, show a list of those items
@@ -577,7 +507,7 @@ namespace D_IDE.D
 
 				try
 				{
-					ImportGen_CustomImplementation.CreateImportDirectiveForHighlightedSymbol(this, new ImportGen_CustomImplementation(this));
+					//ImportGen_CustomImplementation.CreateImportDirectiveForHighlightedSymbol(this, new ImportGen_CustomImplementation(this));
 				}
 				catch (Exception ex)
 				{
@@ -587,7 +517,7 @@ namespace D_IDE.D
 			catch { }
 		}
 
-		class ImportGen_CustomImplementation : ImportDirectiveCreator
+		/*class ImportGen_CustomImplementation : ImportDirectiveCreator
 		{
 			public ImportGen_CustomImplementation(DEditorDocument doc)
 			{
@@ -620,7 +550,7 @@ namespace D_IDE.D
 				ddoc.parseSignal.Set();
 				ddoc.Editor.Document.EndUpdate();
 			}
-		}
+		}*/
 		#endregion
 
 		void Document_Changed(object sender, ICSharpCode.AvalonEdit.Document.DocumentChangeEventArgs e)
@@ -779,24 +709,41 @@ namespace D_IDE.D
 			#region Step 3: Create/Update markers
 			try
 			{
-				Dispatcher.Invoke(new Action<TypeReferencesResult, Stopwatch>
-					((TypeReferencesResult results, Stopwatch highPrecTimer) =>
+				Dispatcher.Invoke(new Action<Dictionary<int, List<ISyntaxRegion>>, Stopwatch>
+					((Dictionary<int, List<ISyntaxRegion>> results, Stopwatch highPrecTimer) =>
 			{
 				// Clear old markers
 				foreach (var marker in MarkerStrategy.TextMarkers.ToArray())
 					if (marker is CodeSymbolMarker)
 						marker.Delete();
 
-				int len = 0;
-				if (results.TypeMatches.Count != 0)
-					foreach (var kv in results.TypeMatches)
-						if (kv.Location.Line > 0)
-						{
-							var m = new CodeSymbolMarker(this, kv, DeepASTVisitor.ExtractIdLocation(kv, out len), len);
-							MarkerStrategy.Add(m);
+				int len, off;
 
-							m.Redraw();
+				foreach (var kv in res)
+				{
+					foreach (var sr in kv.Value)
+					{
+						if (sr is INode)
+						{
+							var n = sr as INode;
+							off = this.Editor.Document.GetOffset(n.NameLocation.Line, n.NameLocation.Column);
+							len = n.Name.Length;
 						}
+						else
+						{
+							var sr_ = sr;
+							CodeSymbolMarker.GetIdentifier(ref sr_);
+							off = this.Editor.Document.GetOffset(sr_.Location.Line, sr_.Location.Column);
+							len = sr_.EndLocation.Column - sr_.Location.Column;
+						}
+
+
+						var m = new CodeSymbolMarker(this, sr, off, len);
+						MarkerStrategy.Add(m);
+
+						m.Redraw();
+					}
+				}
 
 				SemanticErrors.Clear();
 				/*
@@ -833,6 +780,20 @@ namespace D_IDE.D
 
 		public class CodeSymbolMarker : TextMarker
 		{
+			public static void GetIdentifier(ref ISyntaxRegion sr)
+			{
+				if (sr is TemplateInstanceExpression)
+				{
+					sr = (sr as TemplateInstanceExpression).Identifier;
+					GetIdentifier(ref sr);
+				}
+				else if (sr is NewExpression)
+				{
+					sr = (sr as NewExpression).Type;
+					GetIdentifier(ref sr);
+				}
+			}
+
 			public readonly EditorDocument EditorDocument;
 			public readonly ISyntaxRegion Id;
 			INode rr;
@@ -1062,7 +1023,8 @@ namespace D_IDE.D
 					EnteredText == "@" ||
 					EnteredText == "(" ||
 					EnteredText == " " ||
-					AbstractCompletionProvider.IsIdentifierChar(EnteredText[0]) ||
+					EnteredText == "_" ||
+					char.IsLetter(EnteredText[0]) ||
 					EnteredText[0] == '.')) ||
 					!DCodeCompletionSupport.CanShowCompletionWindow(this) ||
 					Editor.IsReadOnly)
@@ -1226,7 +1188,7 @@ namespace D_IDE.D
 			if (completionWindow != null)
 			{
 				// If entered key isn't part of the identifier anymore, close the completion window and insert the item text.
-				if (!AbstractCompletionProvider.IsIdentifierChar(e.Text[0]))
+				if (!char.IsLetterOrDigit(e.Text[0]) && e.Text[0] != '_')
 					if (DSettings.Instance.ForceCodeCompetionPopupCommit)
 						completionWindow.CompletionList.RequestInsertion(e);
 					else
@@ -1249,14 +1211,14 @@ namespace D_IDE.D
 		{
 			// If typed a block-related char, update line indentation
 			if (e.Text == "{" || e.Text == "}" || e.Text == ":")
-			{
+			{/*
 				int lastBegin;
 				int lastEnd;
 				var caretCtxt = CaretContextAnalyzer.GetTokenContext(ModuleCode, CaretOffset, out lastBegin, out lastEnd);
 
 				if (lastBegin >= 0 && caretCtxt != TokenContext.None)
 					return;
-
+				*/
 				indentationStrategy.UpdateIndentation(e.Text);
 			}
 

@@ -14,14 +14,9 @@ namespace D_IDE.D
 		public DVersion DMDVersion
 		{
 			get{return version;}
-			set{
-				CompilerConfiguration.ParsingFinished -= globalCacheAnalysisFinished;
-				version = value;
-				CompilerConfiguration.ParsingFinished += globalCacheAnalysisFinished;
-			}
+			set{version = value;}
 		}
 
-		public bool IsParsing { get { return !localCacheAnalysisFinished; } }
 		public bool IsRelease = false;
 		public List<string> LinkedLibraries = new List<string>();
 
@@ -76,27 +71,8 @@ namespace D_IDE.D
 		/// </summary>
 		public void ParseDSourcesAsync()
 		{
-			localCacheAnalysisFinished = false;
-			GlobalParseCache.BeginAddOrUpdatePaths(new[] { BaseDirectory }, false, (ParsingFinishedEventArgs ea) => {
-				localCacheAnalysisFinished = true;
-				BuildUfcsCache();
-			});
+			GlobalParseCache.BeginAddOrUpdatePaths(new[] { BaseDirectory }, false);
 		}
-
-		public void BuildUfcsCache()
-		{
-			if (localCacheAnalysisFinished && CompilerConfiguration.InitialParsingDone)
-				GlobalParseCache.GetRootPackage(BaseDirectory).UfcsCache.BeginUpdate(CacheView);
-		}
-
-		bool localCacheAnalysisFinished=false;
-
-		void globalCacheAnalysisFinished()
-		{
-			BuildUfcsCache();
-		}
-
-		
 
 		protected override void LoadLanguageSpecificSettings(XmlReader xr)
 		{
