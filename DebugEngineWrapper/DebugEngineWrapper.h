@@ -1,8 +1,10 @@
 // DebugEngineWrapper.h
 
 #pragma once
-#include "CodeInjection.h"
+#include "CommunicationInterfaces.h"
 #include "stdafx.h"
+#include "dbgeng.h"
+#include "dbghelp.h"
 
 using namespace System;
 using namespace System::Diagnostics;
@@ -19,16 +21,13 @@ namespace DebugEngineWrapper {
 			DbgControl * ctrl;
 			DbgSymbols * sym;
 			DbgDataSpaces* datas;
-			//DbgSystemObjects * so;
 			
 			cl->QueryInterface(__uuidof(DbgControl), (void**)&ctrl);
 			cl->QueryInterface(__uuidof(DbgSymbols), (void**)&sym);
 			cl->QueryInterface(__uuidof(DbgDataSpaces), (void**)&datas);
-			//cl->QueryInterface(__uuidof(DbgSystemObjects), (void**)&so);
 
 			this->client=cl;
 			this->control=ctrl;
-			//this->systemObjects = so;
 			this->Symbols=gcnew DebugSymbols(sym,datas);
 
 			AssignCallbacks();
@@ -38,38 +37,23 @@ namespace DebugEngineWrapper {
 		{
 			Process^ get()
 			{
-				return Process::GetProcessById(GetTargetProcessId());
-			}
-		}
-		
-		property IntPtr^ ProcessHandle
-		{
-			IntPtr^ get()
-			{
-				DbgSystemObjects * so=0;
-				ULONG64 p=0;
-
+				DbgSystemObjects* so;
 				client->QueryInterface(__uuidof(DbgSystemObjects), (void**)&so);
 				
-				so->GetCurrentProcessHandle(&p);
-				so->Release();
-
-				return gcnew IntPtr((long long)p);
+				ULONG pid=0;
+				so->GetEventProcess(&pid);
+				return Process::GetProcessById(pid);
 			}
 		}
-
-		//HANDLE hProcess;
 
 		ULONG GetTargetProcessId()
 		{
-			DbgSystemObjects * so=0;
-			ULONG  pid=0;
-
-			client->QueryInterface(__uuidof(DbgSystemObjects), (void**)&so);
-
-			so->GetCurrentProcessSystemId(&pid);
-
-			return pid;
+				DbgSystemObjects* so;
+				client->QueryInterface(__uuidof(DbgSystemObjects), (void**)&so);
+				
+				ULONG  pid=0;
+				so->GetCurrentProcessSystemId(&pid);
+				return pid;
 		}
 
 		DebugSymbols^ Symbols;
@@ -129,6 +113,15 @@ namespace DebugEngineWrapper {
 			
 			delete Symbols;
 			
+			delete OnBreakPoint;
+			delete OnException;
+			delete OnLoadModule;
+			delete OnUnloadModule;
+			delete OnCreateProcess;
+			delete Output;
+			delete OnExitProcess;
+			delete OnSessionStatusChanged;
+
 			this->!DBGEngine();
 		}
 
@@ -136,7 +129,6 @@ namespace DebugEngineWrapper {
 		{
 			if(NULL != client) client->Release();
 			if(NULL != control) control->Release();
-			//if(NULL!= systemObjects) systemObjects->Release();
 		}
 
 		bool CreateProcessAndAttach(ULONG64 server, String ^commandLine, DebugCreateProcessOptions options, String ^initialDirectory, String ^environment, ULONG processId, AttachFlags flags)
@@ -144,19 +136,7 @@ namespace DebugEngineWrapper {
 			pin_ptr<const wchar_t> pCommandLine = PtrToStringChars(commandLine);
 			pin_ptr<const wchar_t> pInitialDirectory = PtrToStringChars(initialDirectory);
 			pin_ptr<const wchar_t> pEnvironment = PtrToStringChars(environment);
-
-			HRESULT res = client->CreateProcessAndAttach2Wide(server, 
-				(PWSTR)pCommandLine, 
-				&options.ToLegacy(), 
-				sizeof(DEBUG_CREATE_PROCESS_OPTIONS), 
-				pInitialDirectory, 
-				pEnvironment, 
-				processId, 
-				(ULONG)flags);
-
-			if(res!=S_OK)
-				throw gcnew Win32Exception(GetLastError());
-			return res;
+			return client->CreateProcessAndAttach2Wide(server, (PWSTR)pCommandLine, &options.ToLegacy(), sizeof(DEBUG_CREATE_PROCESS_OPTIONS), pInitialDirectory, pEnvironment, processId, (ULONG)flags)==0;
 		}
 
 		bool CreateProcessAndAttach(String ^commandLine, String ^initialDirectory)
@@ -196,10 +176,10 @@ namespace DebugEngineWrapper {
 			{
 				DbgRegisters* reg=nullptr;
 				client->QueryInterface(__uuidof(DbgRegisters), (void**)&reg);
-				
+
 				ULONG64 ret=0;
 				reg->GetInstructionOffset2(DEBUG_REGSRC_FRAME,&ret);
-				reg->Release();
+
 				return ret;
 			}
 		}
@@ -213,7 +193,7 @@ namespace DebugEngineWrapper {
 
 				ULONG64 ret=0;
 				reg->GetFrameOffset2(DEBUG_REGSRC_FRAME,&ret);
-				reg->Release();
+
 				return ret;
 			}
 		}
@@ -269,11 +249,9 @@ namespace DebugEngineWrapper {
 		{
 			control->SetInterrupt(DEBUG_INTERRUPT_EXIT);
 		}
-		
-		void Interrupt(IntPtr^ process)
+		void Interrupt()
 		{
-			if(!DebugBreakProcess(process->ToPointer()))
-				throw gcnew Win32Exception(GetLastError());
+			control->SetInterrupt(DEBUG_INTERRUPT_ACTIVE);
 		}
 
 		property ULONG InterruptTimeOut
@@ -288,6 +266,14 @@ namespace DebugEngineWrapper {
 			void set(ULONG v)
 			{
 				control->SetInterruptTimeout(v);
+			}
+		}
+
+		property bool IsInterruptRequested
+		{
+			bool get()
+			{
+				return control->GetInterrupt()==0;
 			}
 		}
 
@@ -434,7 +420,6 @@ namespace DebugEngineWrapper {
 		{	Output(of,s);	}
 #pragma endregion
 
-		//DbgSystemObjects * systemObjects;
 		DbgClient * client;
 		DbgControl * control;
 	};

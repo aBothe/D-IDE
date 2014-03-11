@@ -451,7 +451,7 @@ namespace D_IDE.D
 				var ctxt = ResolutionContext.Create(ParseCache, null, lastSelectedBlock, lastSelectedStatement);
 				ctxt.ContextIndependentOptions |= ResolutionOptions.ReturnMethodReferencesOnly;
 
-				var rr = DResolver.ResolveType(this, ctxt);
+				var rr = AmbiguousType.TryDissolve(DResolver.ResolveType(this, ctxt)).ToArray();
 
 				AbstractType res = null;
 				// If there are multiple types, show a list of those items
@@ -684,6 +684,7 @@ namespace D_IDE.D
 
 		public void UpdateSemanticHighlighting(bool RefreshErrorList = false)
 		{
+			return;
 			if (!DSettings.Instance.UseSemanticHighlighting)
 			{
 				Util.ExecuteOnUIThread(() =>
@@ -718,7 +719,7 @@ namespace D_IDE.D
 						marker.Delete();
 
 				int len, off;
-
+				/*TODO
 				foreach (var kv in res)
 				{
 					foreach (var sr in kv.Value)
@@ -743,7 +744,7 @@ namespace D_IDE.D
 
 						m.Redraw();
 					}
-				}
+				}*/
 
 				SemanticErrors.Clear();
 				/*

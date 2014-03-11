@@ -189,6 +189,17 @@ namespace D_IDE.D
 		{
 			CompletionList.Add(new NamespaceCompletionData(packageName));
 		}
+
+
+		public void AddIconItem(string iconName, string text, string description)
+		{
+			CompletionList.Add(new TextCompletionData(text,description));
+		}
+
+		public void AddCodeGeneratingNodeItem(INode node, string codeToGenerate)
+		{
+			//TODO
+		}
 	}
 
 	public class TextCompletionData : ICompletionData
@@ -608,9 +619,9 @@ namespace D_IDE.D
 							return DCodeCompletionSupport.GetNodeImage("local");
 						}
 					}
-					else if (Node is ITemplateParameterDeclaration)
+					else if (Node is TemplateParameter.Node)
 					{
-						var tpl = Node as ITemplateParameterDeclaration;
+						var tpl = Node as TemplateParameter.Node;
 
 						if (tpl.TemplateParameter is TemplateValueParameter)
 							return DCodeCompletionSupport.GetNodeImage("parameter");

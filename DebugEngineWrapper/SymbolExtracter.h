@@ -9,7 +9,6 @@ using namespace System::Runtime::InteropServices;
 using namespace System::IO;
 using namespace System::Collections;
 using namespace System::Collections::Generic;
-using namespace System::Windows::Forms;
 
 namespace DebugEngineWrapper
 {
@@ -42,7 +41,7 @@ namespace DebugEngineWrapper
 		{
 			if(!File::Exists(binFile)) return false;
 
-			FileStream^ fs=gcnew FileStream(binFile,FileMode::Open,FileAccess::Read,FileShare::Read);
+			FileStream^ fs=gcnew FileStream(binFile,System::IO::FileMode::Open,System::IO::FileAccess::Read,System::IO::FileShare::Read);
 			System::IO::BinaryReader^ br=gcnew BinaryReader(fs);
 
 #pragma region Read out header data
@@ -51,11 +50,11 @@ namespace DebugEngineWrapper
 			UINT headersize=0;
 
 			// Skip to the offset of the PE signature
-			fs->Seek(0x3c,SeekOrigin::Begin);
+			fs->Seek(0x3c,System::IO::SeekOrigin::Begin);
 			pe_offset=br->ReadUInt32();
 
 			// Skip to the PE signature which should be "PE\0\0"
-			fs->Seek(pe_offset,SeekOrigin::Begin);
+			fs->Seek(pe_offset,System::IO::SeekOrigin::Begin);
 			pe_sig=br->ReadUInt32();
 			if ( pe_sig != 0x4550 )
 				throw gcnew Exception("File is not an COFF PE executable");
@@ -85,7 +84,7 @@ namespace DebugEngineWrapper
 			}
 
 			// Seek the IMAGE_DIRECTORY_ENTRY_DEBUG entry
-			br->BaseStream->Seek(RVAToFileOffset(opt_header->DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress),SeekOrigin::Begin);
+			br->BaseStream->Seek(RVAToFileOffset(opt_header->DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress),System::IO::SeekOrigin::Begin);
 			ULONG NumberOfDirEntries=opt_header->DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size/sizeof(IMAGE_DEBUG_DIRECTORY);
 			tbuf=br->ReadBytes(opt_header->DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size);
 			ptr = &tbuf[0];
@@ -127,7 +126,7 @@ namespace DebugEngineWrapper
 			ULONG64 oldoffset=br->BaseStream->Position;
 
 			// Head to the section data
-			br->BaseStream->Seek(Header->PointerToRawData,SeekOrigin::Begin);
+			br->BaseStream->Seek(Header->PointerToRawData,System::IO::SeekOrigin::Begin);
 
 			// Store CV essential Base address
 			// Note: All offset given by CV are related to lfaBase!
@@ -145,7 +144,7 @@ namespace DebugEngineWrapper
 
 			// lfo = Long File Offset that is related from lfaBase
 			UINT lfoDir=br->ReadUInt32();
-			br->BaseStream->Seek(ToAbsOffset(lfoDir),SeekOrigin::Begin);
+			br->BaseStream->Seek(ToAbsOffset(lfoDir),System::IO::SeekOrigin::Begin);
 
 			// Read out subsection header
 			tbuf=br->ReadBytes(sizeof(SubsectionHeader));
@@ -168,7 +167,7 @@ namespace DebugEngineWrapper
 				SubsectionTableEntry* ent=secs[i];
 
 				// Head to the subsection data
-				br->BaseStream->Seek(ToAbsOffset(ent->DataOffset),SeekOrigin::Begin);
+				br->BaseStream->Seek(ToAbsOffset(ent->DataOffset),System::IO::SeekOrigin::Begin);
 
 				switch ( ent->subsection )
 				{
@@ -265,7 +264,7 @@ namespace DebugEngineWrapper
 				}
 			}
 
-			br->BaseStream->Seek(oldoffset,SeekOrigin::Begin);
+			br->BaseStream->Seek(oldoffset,System::IO::SeekOrigin::Begin);
 		}
 #pragma endregion
 	};

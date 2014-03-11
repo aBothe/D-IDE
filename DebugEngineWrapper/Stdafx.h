@@ -3,9 +3,10 @@
 // die nur in unregelm‰ﬂigen Abst‰nden ge‰ndert werden.
 
 #pragma once
-#include "windows.h"
-#include "dbghelp.h"
+
 #include "dbgeng.h"
+#include "dbghelp.h"
+#include "windows.h"
 #include "tools.h"
 
 typedef IDebugAdvanced3 DbgAdvanced;

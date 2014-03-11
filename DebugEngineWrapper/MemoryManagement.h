@@ -44,7 +44,5 @@ namespace DebugEngineWrapper
 			delete [] ret;
 			return ret2;
 		}
-
-		void Write(){}
 	};
 }

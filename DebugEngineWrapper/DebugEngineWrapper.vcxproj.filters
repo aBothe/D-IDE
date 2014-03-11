@@ -62,9 +62,6 @@
     <ClInclude Include="Tools.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="CodeInjection.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.ico">
